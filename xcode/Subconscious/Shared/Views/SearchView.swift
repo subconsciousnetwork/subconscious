@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SearchView: View {
-    @Binding var threads: [Thread]
+    var threads: [Thread] = []
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,9 +20,8 @@ struct SearchView: View {
     }
 }
 
-//struct SearchView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        SearchView(
-//        )
-//    }
-//}
+struct SearchView_Previews: PreviewProvider {
+    static var previews: some View {
+        SearchView()
+    }
+}

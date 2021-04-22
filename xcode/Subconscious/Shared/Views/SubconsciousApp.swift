@@ -9,9 +9,15 @@ import SwiftUI
 
 @main
 struct SubconsciousApp: App {
+    @StateObject private var store: AppStore = AppStore(
+        state: .init(),
+        reducer: appReducer,
+        environment: AppEnvironment()
+    )
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView().environmentObject(store)
         }
     }
 }

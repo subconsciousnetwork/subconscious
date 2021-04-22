@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var appModel = AppModel()
-    @State private var isEditPresented = false
-    @State private var isSearchOpen = false
+    @EnvironmentObject var store: AppStore;
+    @State private var isEditPresented: Bool = false
+    @State private var isSearchOpen = true
     @State private var editorText = ""
     @State private var editorTitle = ""
 
@@ -23,32 +23,35 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
-                if !appModel.comittedQuery.isEmpty {
+                if !self.isSearchOpen && !store.state.threadQuery.isEmpty {
                     Button(action: {
-                        appModel.comittedQuery = ""
-                        appModel.liveQuery = ""
+                        store.send(AppAction.search(query: ""))
                         self.isSearchOpen = false
                     }) {
                         Icon(image: Image(systemName: "chevron.left"))
                     }
                 }
                 SearchBarView(
-                    comittedQuery: $appModel.comittedQuery,
-                    liveQuery: $appModel.liveQuery,
+                    comittedQuery: store.binding(
+                        get: { state in state.threadQuery },
+                        send: { query in AppAction.search(query: query) }
+                    ),
+                    liveQuery: store.binding(
+                        get: { state in state.resultQuery },
+                        send: { query in AppAction.searchResults(query: query) }
+                    ),
                     isOpen: $isSearchOpen
                 )
             }
             .padding(8)
             Divider()
             ZStack {
-                Group {
-                    if appModel.comittedQuery.isEmpty {
-                        StreamView()
-                    } else {
-                        SearchView(
-                            threads: $appModel.threads
-                        )
-                    }
+                if store.state.threadQuery.isEmpty {
+                    StreamView()
+                } else {
+                    SearchView(
+                        threads: store.state.threads
+                    )
                 }
 
                 PinBottomRight {
@@ -65,15 +68,19 @@ struct ContentView: View {
                 VStack {
                     if isSearchOpen {
                         ResultListView(
-                            results: appModel.results
+                            results: store.state.results
                         ) { result in
-                            appModel.comittedQuery = result.text
-                            appModel.liveQuery = result.text
+                            store.send(
+                                AppAction.search(query: result.text)
+                            )
                             self.isSearchOpen = false
                         }
                     }
                 }
             }
+        }
+        .onAppear {
+            store.send(.appear)
         }
         .sheet(isPresented: $isEditPresented) {
             Editor(
@@ -82,12 +89,15 @@ struct ContentView: View {
                 isPresented: $isEditPresented
             )
         }
-        .environmentObject(appModel)
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        ContentView().environmentObject(AppStore(
+            state: .init(),
+            reducer: appReducer,
+            environment: AppEnvironment()
+        ))
     }
 }
