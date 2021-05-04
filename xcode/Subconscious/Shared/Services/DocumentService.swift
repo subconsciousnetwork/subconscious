@@ -50,7 +50,7 @@ struct DocumentService {
     /// Get URL for title. URL may or may not exist already.
     func urlForTitle(title: String) -> URL? {
         return documentDirectory?
-            .appendingFilename(name: title, ext: ".subtext")
+            .appendingFilename(name: title, ext: "subtext")
     }
     
     /// Find and read SubconsciousDocument by title
