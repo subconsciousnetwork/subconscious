@@ -96,6 +96,7 @@ struct ThreadView: View {
                 }
             }
         }
+        .contentShape(Rectangle())
         .onTapGesture {
             send(.requestEdit(thread.document))
         }
