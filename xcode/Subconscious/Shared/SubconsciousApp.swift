@@ -11,8 +11,8 @@ import SwiftUI
 struct SubconsciousApp: App {
     @StateObject private var store: AppStore = AppStore(
         state: .init(),
-        reducer: appReducer,
-        environment: AppEnvironment()
+        reducer: updateApp,
+        environment: .init()
     )
 
     var body: some Scene {

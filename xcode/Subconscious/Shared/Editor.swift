@@ -14,6 +14,8 @@ enum EditorAction {
     case setTitle(title: String)
     case setBody(body: String)
     case edit(SubconsciousDocument)
+    case cancel
+    case clear
     case requestSave(SubconsciousDocument)
     case requestEditorUnpresent
 }
@@ -36,6 +38,19 @@ func editorReducer(
     case .edit(let document):
         state.title = document.title
         state.body = document.content.description
+    case .cancel:
+        let unpresent = Just(EditorAction.requestEditorUnpresent)
+        // Delay for a bit. Should clear just after sheet animation completes.
+        // Note that SwiftUI animations don't yet have reasonable
+        // onComplete handlers, so we're making do.
+        let clear = Just(EditorAction.clear).delay(
+            for: .milliseconds(500),
+            scheduler: RunLoop.main
+        )
+        return Publishers.Merge(unpresent, clear).eraseToAnyPublisher()
+    case .clear:
+        state.title = ""
+        state.body = ""
     case .requestSave:
         environment.logger.warning(
             """
@@ -46,7 +61,7 @@ func editorReducer(
     case .requestEditorUnpresent:
         environment.logger.warning(
             """
-            EditorAction.requestCloseEditor
+            EditorAction.requestEditorUnpresent
             should be handled by the parent view.
             """
         )
@@ -66,7 +81,7 @@ struct EditorView: View {
         VStack(spacing: 0) {
             HStack {
                 Button(cancel) {
-                    send(.requestEditorUnpresent)
+                    send(.cancel)
                 }
                 Spacer()
                 Button(action: {

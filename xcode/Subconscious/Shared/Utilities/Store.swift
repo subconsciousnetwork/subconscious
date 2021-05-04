@@ -26,14 +26,12 @@ final class Store<State, Action, Environment>: ObservableObject {
     private let environment: Environment
     /// Mutates state in response to an action, returning an effect stream
     private let reducer: Reducer<State, Action, Environment>
-    /// Queue of effects to be run
     private var cancellables: Set<AnyCancellable> = []
 
     init(
         state: State,
         reducer: @escaping Reducer<State, Action, Environment>,
-        environment: Environment,
-        logger: Logger? = nil
+        environment: Environment
     ) {
         self.state = state
         self.reducer = reducer
@@ -45,13 +43,37 @@ final class Store<State, Action, Environment>: ObservableObject {
             return
         }
         
-        effect
+        let publisher = effect
             /// Specifies the schedular used to pull events
             /// <https://developer.apple.com/documentation/combine/fail/receive(on:options:)>
             .receive(on: DispatchQueue.main)
-            .sink(receiveValue: send)
-            .store(in: &cancellables)
+            .eraseToAnyPublisher()
+        exhaustPublisherAndThenRelease(publisher: publisher, receiveValue: send)
     }
+}
+
+/// Consumes publisher, keeping it alive until it is complete.
+/// After the publisher completes, it is cancelled so that it may be released from memory.
+/// Ordinarily, an AnyCancellable self-cancels if a reference to it is not held somewhere.
+/// See <https://www.apeth.com/UnderstandingCombine/subscribers/subscribersoneshot.html>
+///
+/// 2021-05-04 tested with timer to ensure the cancellable stays alive.
+///
+/// The alternative implementation would be to implement a queue that empties itself on completion
+/// within send, as seen here:
+/// <https://www.pointfree.co/collections/combine/introduction/ep81-the-combine-framework-and-effects-part-2>
+/// <https://github.com/pointfreeco/swift-composable-architecture/blob/0f026d395d414efab5cfdf8d697ec0ae766dd021/Sources/ComposableArchitecture/Store.swift>
+func exhaustPublisherAndThenRelease<Input, Failure:Error>(
+    publisher: AnyPublisher<Input, Failure>,
+    receiveValue: @escaping (Input) -> Void
+) {
+    var cancellable: AnyCancellable?
+    cancellable = publisher.sink(
+        receiveCompletion: { _ in
+            cancellable?.cancel()
+        },
+        receiveValue: receiveValue
+    )
 }
 
 /// Creates a tagged send function that can be used in a sub-view.
