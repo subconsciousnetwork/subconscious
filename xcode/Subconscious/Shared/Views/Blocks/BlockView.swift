@@ -9,39 +9,89 @@ import SwiftUI
 
 /// Provides a single concrete view for all kinds of block
 struct BlockView: View {
-    var block: Block
+    var block: Subtext.Block
     
     var body: some View {
         Group {
-            switch block {
-            case .text(let block):
-                TextBlockView(block: block)
-                    .lineLimit(nil)
-            case .heading(let block):
+            switch block.sigil {
+            case .text:
+                GenericBlockView(block: block)
+            case .link:
+                GenericBlockView(block: block)
+            case .list:
+                GenericBlockView(block: block)
+            case .heading:
                 HeadingBlockView(block: block)
-                    .lineLimit(nil)
+            case .quote:
+                QuoteBlockView(block: block)
             }
         }
     }
 }
 
-struct BlockView_Previews: PreviewProvider {
-    static var previews: some View {
-        VStack {
-            BlockView(
-                block: Block.heading(
-                    HeadingBlock(
-                        text: "Hello, world!"
-                    )
-                )
+struct GenericBlockView: View {
+    var block: Subtext.Block
+
+    var body: some View {
+        Text(block.value)
+            .font(.body)
+            .padding(.bottom, 8)
+            .padding(.top, 8)
+            .padding(.leading, 16)
+            .padding(.trailing, 16)
+            .frame(
+                maxWidth: .infinity,
+                alignment: .leading
             )
-            BlockView(
-                block: Block.text(
-                    TextBlock(
-                        text: "Hello, world!"
-                    )
-                )
-            )
-        }
     }
 }
+
+struct HeadingBlockView: View {
+    var block: Subtext.Block
+
+    var body: some View {
+        Text(block.value)
+            .font(.body)
+            .bold()
+            .padding(.bottom, 8)
+            .padding(.top, 8)
+            .padding(.leading, 16)
+            .padding(.trailing, 16)
+            .frame(
+                maxWidth: .infinity,
+                alignment: .leading
+            )
+    }
+}
+
+struct QuoteBlockView: View {
+    var block: Subtext.Block
+
+    var body: some View {
+        Text(block.value)
+            .font(.body)
+            .padding(.bottom, 8)
+            .padding(.top, 8)
+            .padding(.leading, 16)
+            .padding(.trailing, 16)
+            .foregroundColor(.purple)
+            .frame(
+                maxWidth: .infinity,
+                alignment: .leading
+            )
+    }
+}
+
+//struct BlockView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        VStack {
+//            BlockView(
+//                block: Block.heading(
+//                    HeadingBlock(
+//                        text: "Hello, world!"
+//                    )
+//                )
+//            )
+//        }
+//    }
+//}

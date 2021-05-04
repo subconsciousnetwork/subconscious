@@ -6,17 +6,50 @@
 //
 
 import SwiftUI
+import Combine
+
+enum ThreadAction {
+    case setFolded(_ isFolded: Bool)
+    case requestEdit(_ document: SubconsciousDocument)
+}
+
+struct ThreadModel: Identifiable {
+    var document: SubconsciousDocument
+    var isFolded: Bool = true
+    var id: Int {
+        document.id
+    }
+}
+
+func updateThread(
+    state: inout ThreadModel,
+    action: ThreadAction,
+    environment: AppEnvironment
+) -> AnyPublisher<ThreadAction, Never> {
+    switch action {
+    case .setFolded(let isFolded):
+        state.isFolded = isFolded
+    case .requestEdit:
+        environment.logger.warning(
+            """
+            ThreadAction.requestEdit
+            This action should have been handled by the parent view.
+            """
+        )
+    }
+    return Empty().eraseToAnyPublisher()
+}
 
 /// A foldable thread
 struct ThreadView: View {
-    var thread: Thread
-    @Binding var isFolded: Bool
-    var maxBlocksWhenFolded = 1
+    var thread: ThreadModel
+    var send: (ThreadAction) -> Void
+    var maxBlocksWhenFolded = 2
 
     var body: some View {
         VStack(spacing: 0) {
-            if let title = thread.title {
-                Text(title)
+            if !thread.document.title.isEmpty {
+                Text(thread.document.title)
                     .font(.body)
                     .bold()
                     .padding(.bottom, 8)
@@ -29,16 +62,19 @@ struct ThreadView: View {
                     )
             }
 
-            if thread.blocks.count > maxBlocksWhenFolded && isFolded {
-                ForEach(
-                    thread.blocks[0..<max(1, maxBlocksWhenFolded)]
-                ) { block in
+            if (
+                thread.document.content.blocks.count >
+                maxBlocksWhenFolded && thread.isFolded
+            ) {
+                ForEach(thread.document.content.blocks[
+                    0..<max(1, maxBlocksWhenFolded)
+                ]) { block in
                     BlockView(block: block)
                 }
 
                 HStack {
                     Button(action: {
-                        self.isFolded.toggle()
+                        send(.setFolded(false))
                     }) {
                         Image(systemName: "ellipsis")
                             .foregroundColor(Color("IconSecondary"))
@@ -55,51 +91,54 @@ struct ThreadView: View {
                 .padding(.leading, 16)
                 .padding(.trailing, 16)
             } else {
-                ForEach(thread.blocks) { block in
+                ForEach(thread.document.content.blocks) { block in
                     BlockView(block: block)
                 }
             }
         }
-    }
-}
-
-struct FoldedThreadView: View {
-    @State private var isFolded = true
-    var thread: Thread
-    var body: some View {
-        ThreadView(
-            thread: thread,
-            isFolded: $isFolded
-        )
-    }
-}
-
-struct UnfoldedThreadView: View {
-    @State private var isFolded = false
-    var thread: Thread
-    var body: some View {
-        ThreadView(
-            thread: thread,
-            isFolded: $isFolded
-        )
+        .onTapGesture {
+            send(.requestEdit(thread.document))
+        }
     }
 }
 
 struct ThreadView_Previews: PreviewProvider {
     static var previews: some View {
-        FoldedThreadView(
-            thread: Thread(
-                id: UUID(),
-                title: "Tenuki",
-                blocks: [
-                    Block.text(TextBlock(text: "Roughly refers to doing things for no reason, or just for fun, and then they happen to play a critical role later.")),
-                    Block.text(TextBlock(text: "One of the most common novice mistakes is getting locked into the local fight and continuing to play there when there are larger plays elsewhere. Tenuki is always an option.")),
-                    Block.text(TextBlock(text: "Following this advice many advanced amateurs acquired the habit to make coffee breaks regularly, that is playing tenuki - often from fights - to play a small move somewhere.")),
-                    Block.heading(HeadingBlock(text: "Proverbs")),
-                    Block.text(TextBlock(text: "A debatable proverb says: If it's worth only 15 points, play tenuki.")),
-                    Block.text(TextBlock(text: "Yet another debatable proverb counsels us to play tenuki when at a loss as where to play locally, When in doubt, tenuki.")),
-                ]
-            )
+        ThreadView(
+            thread: ThreadModel(
+                document: SubconsciousDocument(
+                    title: "",
+                    markup:
+                        """
+                        # Overview
+
+                        Evolution is a behavior that emerges in any system with:
+
+                        - Mutation
+                        - Heredity
+                        - Selection
+
+                        Evolutionary systems often generate unexpected solutions. Nature selects for good enough.
+
+                        > There is no such thing as advantageous in a general sense. There is only advantageous for the circumstances you’re living in. (Olivia Judson, Santa Fe Institute)
+
+                        Evolving systems exist in punctuated equilibrium.
+
+                        & punctuated-equilibrium.st
+
+                        # Questions
+
+                        - What systems (beside biology) exhibit evolutionary behavior? Remember, evolution happens in any system with mutation, heredity, selection.
+                        - What happens to an evolutionary system when you remove mutation? Heredity? Selection?
+                        - Do you see a system with one of these properties? How can you introduce the other two?
+
+                        # See also
+
+                        & https://en.wikipedia.org/wiki/Evolutionary_systems
+                        """
+                )
+            ),
+            send: { action in }
         )
     }
 }

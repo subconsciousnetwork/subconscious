@@ -26,6 +26,7 @@ struct SearchBarView: View {
                     text: $liveQuery,
                     onCommit: {
                         self.comittedQuery = self.liveQuery
+                        self.isOpen = false
                     }
                 )
                 .foregroundColor(.primary)

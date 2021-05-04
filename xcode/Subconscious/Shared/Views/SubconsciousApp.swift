@@ -17,7 +17,7 @@ struct SubconsciousApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView().environmentObject(store)
+            ContentView(store: store)
         }
     }
 }

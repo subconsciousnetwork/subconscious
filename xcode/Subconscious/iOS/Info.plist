@@ -71,14 +71,21 @@
 				<string>public.plain-text</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>Example Text</string>
+			<string>Subtext</string>
+			<key>UTTypeIconFiles</key>
+			<array/>
 			<key>UTTypeIdentifier</key>
-			<string>com.example.plain-text</string>
+			<string>com.subconscious.subtext</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
 				<array>
-					<string>exampletext</string>
+					<string>subtext</string>
+					<string>sub</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>text/subtext</string>
 				</array>
 			</dict>
 		</dict>

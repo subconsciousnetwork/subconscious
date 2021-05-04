@@ -8,37 +8,32 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var store: AppStore;
-    @State private var isEditPresented: Bool = false
-    @State private var isSearchOpen = true
-    @State private var editorText = ""
-    @State private var editorTitle = ""
+    @State private var isSearchOpen = false
+    @StateObject var store: AppStore
 
-    func invokeEdit(title: String, text: String) {
-        self.isEditPresented = true
-        self.editorTitle = title
-        self.editorText = text
-    }
-    
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 if !self.isSearchOpen && !store.state.threadQuery.isEmpty {
                     Button(action: {
-                        store.send(AppAction.search(query: ""))
+                        store.send(.query(""))
                         self.isSearchOpen = false
                     }) {
                         Icon(image: Image(systemName: "chevron.left"))
                     }
                 }
                 SearchBarView(
-                    comittedQuery: store.binding(
-                        get: { state in state.threadQuery },
-                        send: { query in AppAction.search(query: query) }
+                    comittedQuery: Binding(
+                        get: { store.state.threadQuery },
+                        set: { query in
+                            store.send(.query(query))
+                        }
                     ),
-                    liveQuery: store.binding(
-                        get: { state in state.resultQuery },
-                        send: { query in AppAction.searchResults(query: query) }
+                    liveQuery: Binding(
+                        get: { store.state.resultQuery },
+                        set: { query in
+                            store.send(.searchResults(query: query))
+                        }
                     ),
                     isOpen: $isSearchOpen
                 )
@@ -50,16 +45,17 @@ struct ContentView: View {
                     StreamView()
                 } else {
                     SearchView(
-                        threads: store.state.threads
+                        state: store.state.search,
+                        send: address(
+                            send: store.send,
+                            tag: tagSearchView
+                        )
                     )
                 }
 
                 PinBottomRight {
                     Button(action: {
-                        self.invokeEdit(
-                            title: "",
-                            text: ""
-                        )
+                        store.send(.setEditorPresented(true))
                     }) {
                         ActionButton()
                     }
@@ -70,9 +66,7 @@ struct ContentView: View {
                         ResultListView(
                             results: store.state.results
                         ) { result in
-                            store.send(
-                                AppAction.search(query: result.text)
-                            )
+                            store.send(.query(result.text))
                             self.isSearchOpen = false
                         }
                     }
@@ -82,19 +76,45 @@ struct ContentView: View {
         .onAppear {
             store.send(.appear)
         }
-        .sheet(isPresented: $isEditPresented) {
-            Editor(
-                title: $editorTitle,
-                text: $editorText,
-                isPresented: $isEditPresented
+        .sheet(
+            isPresented: Binding(
+                get: { store.state.isEditorPresented },
+                set: { isPresented in
+                    store.send(.setEditorPresented(isPresented))
+                }
+            )
+        ) {
+            EditorView(
+                state: store.state.editor,
+                send: address(send: store.send, tag: tagEditorView)
             )
         }
     }
 }
 
+func tagEditorView(_ action: EditorAction) -> AppAction {
+    switch action {
+    case .requestEditorUnpresent:
+        return .setEditorPresented(false)
+    case .requestSave(let thread):
+        return .saveThread(thread)
+    default:
+        return .editor(action)
+    }
+}
+
+func tagSearchView(_ action: SearchAction) -> AppAction {
+    switch action {
+    case .requestEdit(let document):
+        return .edit(document)
+    default:
+        return .search(action)
+    }
+}
+
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView().environmentObject(AppStore(
+        ContentView(store: AppStore(
             state: .init(),
             reducer: appReducer,
             environment: AppEnvironment()
