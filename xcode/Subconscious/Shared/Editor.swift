@@ -10,7 +10,9 @@ import Combine
 import SwiftUI
 import os
 
+//  MARK: Actions
 enum EditorAction {
+    case titleField(_ action: TextFieldWithToggleAction)
     case edit(SubconsciousDocument)
     case save(SubconsciousDocument)
     case cancel
@@ -20,37 +22,56 @@ enum EditorAction {
     case requestSuggestions(SubconsciousDocument)
     case requestTitleMatch(_ title: String)
     case requestEditorUnpresent
-    case setTitleSuggestionsOpen(isOpen: Bool)
-    case setTitle(title: String)
     case setBody(body: String)
 }
 
+
+//  MARK: State
 struct EditorState {
-    var title: String = ""
-    var body: String = ""
+    var titleField = TextFieldWithToggleState(
+        text: "",
+        placeholder: ""
+    )
+    var body = ""
     var titleSuggestions: [Suggestion] = [
         .query(.init(text: "Evolution")),
         .query(.init(text: "Evolution selects for good enough")),
         .query(.init(text: "The Evolution of Civilizations￼"))
     ]
-    var isTitleSuggestionsOpen = false
 }
 
+
+func tagTitleField(_ action: TextFieldWithToggleAction) -> EditorAction {
+    switch action {
+    default:
+        return EditorAction.titleField(action)
+    }
+}
+
+
+//  MARK: Reducer
 func editorReducer(
     state: inout EditorState,
     action: EditorAction,
     environment: AppEnvironment
 ) -> AnyPublisher<EditorAction, Never> {
     switch action {
-    case .setTitleSuggestionsOpen(let isOpen):
-        state.isTitleSuggestionsOpen = isOpen
-    case .setTitle(let title):
-        state.title = title
+    case .titleField(let action):
+        return updateTextFieldWithToggle(
+            state: &state.titleField,
+            action: action
+        ).map(tagTitleField).eraseToAnyPublisher()
     case .setBody(let body):
         state.body = body
     case .edit(let document):
-        state.title = document.title
-        state.body = document.content.description
+        let setTitle = Just(
+            EditorAction.titleField(.setText(document.title))
+        )
+        let setBody = Just(
+            EditorAction.setBody(body: document.content.description)
+        )
+        return Publishers.Merge(setTitle, setBody)
+            .eraseToAnyPublisher()
     case .save(let document):
         let save = Just(EditorAction.requestSave(document))
         let unpresent = Just(EditorAction.requestEditorUnpresent)
@@ -71,13 +92,21 @@ func editorReducer(
         )
         return Publishers.Merge(unpresent, clear).eraseToAnyPublisher()
     case .clear:
-        state.title = ""
-        state.body = ""
+        let setTitle = Just(
+            EditorAction.titleField(.setText(""))
+        )
+        let setBody = Just(
+            EditorAction.setBody(body: "")
+        )
+        return Publishers.Merge(setTitle, setBody)
+            .eraseToAnyPublisher()
     case .selectTitle(let text):
-        let title = Just(EditorAction.setTitle(title: text))
-        let match = Just(EditorAction.requestTitleMatch(text))
-        let close = Just(EditorAction.setTitleSuggestionsOpen(isOpen: false))
-        return Publishers.Merge3(title, match, close)
+        let setTitle = Just(EditorAction.titleField(.setText(text)))
+        let requestMatch = Just(EditorAction.requestTitleMatch(text))
+        let closeSuggestions = Just(
+            EditorAction.titleField(.setToggle(isActive: false))
+        )
+        return Publishers.Merge3(setTitle, requestMatch, closeSuggestions)
             .eraseToAnyPublisher()
     case .requestSave:
         environment.logger.warning(
@@ -111,6 +140,8 @@ func editorReducer(
     return Empty().eraseToAnyPublisher()
 }
 
+
+//  MARK: View
 struct EditorView: View {
     var state: EditorState
     var send: (EditorAction) -> Void
@@ -129,7 +160,7 @@ struct EditorView: View {
                 Button(action: {
                     send(.save(
                         SubconsciousDocument(
-                            title: state.title,
+                            title: state.titleField.text,
                             markup: state.body
                         )
                     ))
@@ -140,63 +171,19 @@ struct EditorView: View {
             HStack(spacing: 8) {
                 Text(titlePlaceholder)
                     .foregroundColor(.secondary)
-                TextField(
-                    "",
-                    text: Binding(
-                        get: { state.title },
-                        set: { value in
-                            send(.setTitle(title: value))
-                        }
-                    ),
-                    onEditingChanged: { editingChanged in
-                        send(.setTitleSuggestionsOpen(isOpen: editingChanged))
-                    },
-                    onCommit: {
-                        send(.selectTitle(state.title))
-                    }
+                TextFieldWithToggleView(
+                    state: state.titleField,
+                    send: address(
+                        send: send,
+                        tag: tagTitleField
+                    )
                 )
-                .onTapGesture(perform: {
-                    send(.setTitleSuggestionsOpen(isOpen: true))
-                })
-                Group {
-                    if !state.title.isEmpty {
-                        Button(
-                            action: {
-                                send(.setTitle(title: ""))
-                            },
-                            label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.primary)
-                            }
-                        )
-                    } else if state.isTitleSuggestionsOpen {
-                        Button(
-                            action: {
-                                send(.setTitleSuggestionsOpen(isOpen: false))
-                            },
-                            label: {
-                                Image(systemName: "chevron.up.circle")
-                                    .foregroundColor(.primary)
-                            }
-                        )
-                    } else {
-                        Button(
-                            action: {
-                                send(.setTitleSuggestionsOpen(isOpen: true))
-                            },
-                            label: {
-                                Image(systemName: "chevron.down.circle")
-                                    .foregroundColor(.primary)
-                            }
-                        )
-                    }
-                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             Divider()
             Group {
-                if state.isTitleSuggestionsOpen {
+                if state.titleField.isToggleActive {
                     List(state.titleSuggestions) { suggestion in
                         Button(
                             action: {
