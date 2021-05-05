@@ -17,8 +17,10 @@ enum EditorAction {
     case clear
     case selectTitle(_ text: String)
     case requestSave(SubconsciousDocument)
+    case requestSuggestions(SubconsciousDocument)
+    case requestTitleMatch(_ title: String)
     case requestEditorUnpresent
-    case setTitleSearchOpen(isOpen: Bool)
+    case setTitleSuggestionsOpen(isOpen: Bool)
     case setTitle(title: String)
     case setBody(body: String)
 }
@@ -26,12 +28,12 @@ enum EditorAction {
 struct EditorState {
     var title: String = ""
     var body: String = ""
-    var titleResults: [Result] = [
+    var titleSuggestions: [Suggestion] = [
         .query(.init(text: "Evolution")),
         .query(.init(text: "Evolution selects for good enough")),
         .query(.init(text: "The Evolution of Civilizations￼"))
     ]
-    var isTitleSearchOpen = false
+    var isTitleSuggestionsOpen = false
 }
 
 func editorReducer(
@@ -40,8 +42,8 @@ func editorReducer(
     environment: AppEnvironment
 ) -> AnyPublisher<EditorAction, Never> {
     switch action {
-    case .setTitleSearchOpen(let isOpen):
-        state.isTitleSearchOpen = isOpen
+    case .setTitleSuggestionsOpen(let isOpen):
+        state.isTitleSuggestionsOpen = isOpen
     case .setTitle(let title):
         state.title = title
     case .setBody(let body):
@@ -73,14 +75,29 @@ func editorReducer(
         state.body = ""
     case .selectTitle(let text):
         let title = Just(EditorAction.setTitle(title: text))
-        let close = Just(EditorAction.setTitleSearchOpen(isOpen: false))
-        return Publishers.Merge(title, close)
+        let match = Just(EditorAction.requestTitleMatch(text))
+        let close = Just(EditorAction.setTitleSuggestionsOpen(isOpen: false))
+        return Publishers.Merge3(title, match, close)
             .eraseToAnyPublisher()
     case .requestSave:
         environment.logger.warning(
             """
             EditorAction.requestSave
             should be handled by the parent view.
+            """
+        )
+    case .requestSuggestions:
+        environment.logger.warning(
+            """
+            EditorAction.requestSuggestions
+            should be handled by the parent view.
+            """
+        )
+    case .requestTitleMatch:
+        environment.logger.warning(
+            """
+            EditorAction.requestTitleMatch
+            should be handled by parent view.
             """
         )
     case .requestEditorUnpresent:
@@ -100,7 +117,7 @@ struct EditorView: View {
     var save: LocalizedStringKey = "Save"
     var cancel: LocalizedStringKey = "Cancel"
     var edit: LocalizedStringKey = "Edit"
-    var titlePlaceholder: LocalizedStringKey = "Title"
+    var titlePlaceholder: LocalizedStringKey = "Title:"
     
     var body: some View {
         VStack(spacing: 0) {
@@ -120,30 +137,73 @@ struct EditorView: View {
                     Text(save)
                 }
             }.padding(16)
-            TextField(
-                titlePlaceholder,
-                text: Binding(
-                    get: { state.title },
-                    set: { value in
-                        send(EditorAction.setTitle(title: value))
+            HStack(spacing: 8) {
+                Text(titlePlaceholder)
+                    .foregroundColor(.secondary)
+                TextField(
+                    "",
+                    text: Binding(
+                        get: { state.title },
+                        set: { value in
+                            send(.setTitle(title: value))
+                        }
+                    ),
+                    onEditingChanged: { editingChanged in
+                        send(.setTitleSuggestionsOpen(isOpen: editingChanged))
+                    },
+                    onCommit: {
+                        send(.selectTitle(state.title))
                     }
                 )
-            )
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .onTapGesture(perform: {
-                send(.setTitleSearchOpen(isOpen: true))
-            })
-            Divider()
-            Group {
-                if state.isTitleSearchOpen {
-                    List(state.titleResults) { result in
+                .onTapGesture(perform: {
+                    send(.setTitleSuggestionsOpen(isOpen: true))
+                })
+                Group {
+                    if !state.title.isEmpty {
                         Button(
                             action: {
-                                send(.selectTitle(result.text))
+                                send(.setTitle(title: ""))
                             },
                             label: {
-                                ResultRowView(result: result)
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.primary)
+                            }
+                        )
+                    } else if state.isTitleSuggestionsOpen {
+                        Button(
+                            action: {
+                                send(.setTitleSuggestionsOpen(isOpen: false))
+                            },
+                            label: {
+                                Image(systemName: "chevron.up.circle")
+                                    .foregroundColor(.primary)
+                            }
+                        )
+                    } else {
+                        Button(
+                            action: {
+                                send(.setTitleSuggestionsOpen(isOpen: true))
+                            },
+                            label: {
+                                Image(systemName: "chevron.down.circle")
+                                    .foregroundColor(.primary)
+                            }
+                        )
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            Divider()
+            Group {
+                if state.isTitleSuggestionsOpen {
+                    List(state.titleSuggestions) { suggestion in
+                        Button(
+                            action: {
+                                send(.selectTitle(suggestion.text))
+                            },
+                            label: {
+                                SuggestionRowView(suggestion: suggestion)
                             }
                         )
                     }

@@ -1,5 +1,5 @@
 //
-//  ResultsView.swift
+//  SearchView.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 4/7/21.

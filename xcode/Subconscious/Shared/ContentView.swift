@@ -23,10 +23,10 @@ enum AppAction {
     case appear
     case edit(_ document: SubconsciousDocument)
     case query(_ query: String)
-    case queryResults(query: String)
+    case querySuggestions(query: String)
     case setEditorPresented(_ isPresented: Bool)
-    case setResultsOpen(_ isOpen: Bool)
-    case setResults(results: [Result])
+    case setSuggestionsOpen(_ isOpen: Bool)
+    case setSuggestions(_ suggestions: [Suggestion])
     case saveThread(SubconsciousDocument)
     case warning(_ message: String)
     case info(_ message: String)
@@ -64,20 +64,20 @@ struct AppEnvironment {
 
     let documentService = DocumentService()
         
-    func fetchResults(query: String) -> AnyPublisher<[Result], Never> {
+    func fetchSuggestions(query: String) -> AnyPublisher<[Suggestion], Never> {
         return Just(
             [
-                Result.thread(
-                    ThreadResult(text: "If you have 70 notecards, you have a movie")
+                Suggestion.thread(
+                    ThreadSuggestion(text: "If you have 70 notecards, you have a movie")
                 ),
-                Result.thread(
-                    ThreadResult(text: "Tenuki")
+                Suggestion.thread(
+                    ThreadSuggestion(text: "Tenuki")
                 ),
-                Result.query(
-                    QueryResult(text: "Notecard")
+                Suggestion.query(
+                    QuerySuggestion(text: "Notecard")
                 ),
-                Result.create(
-                    CreateResult(text: "Notecard")
+                Suggestion.create(
+                    CreateSuggestion(text: "Notecard")
                 ),
             ]
         ).eraseToAnyPublisher()
@@ -87,11 +87,11 @@ struct AppEnvironment {
 //  MARK: App State
 /// Central source of truth for all shared app state
 struct AppState {
-    var resultQuery: String = ""
+    var suggestionQuery: String = ""
     var threadQuery: String = ""
-    var results: [Result] = []
+    var suggestions: [Suggestion] = []
     var search: SearchModel = SearchModel(documents: [])
-    var isResultsOpen = false
+    var isSuggestionsOpen = false
     var isEditorPresented = false
     var editor: EditorState = EditorState.init()
 }
@@ -114,7 +114,7 @@ func updateApp(
             User Directory: \(dir)
             """
         )
-        return Just(.queryResults(query: state.resultQuery))
+        return Just(.querySuggestions(query: state.suggestionQuery))
             .eraseToAnyPublisher()
     case .edit(let document):
         state.isEditorPresented = true
@@ -134,26 +134,26 @@ func updateApp(
     case .setEditorPresented(let isPresented):
         state.isEditorPresented = isPresented
     case .query(let query):
-        state.resultQuery = query
+        state.suggestionQuery = query
         state.threadQuery = query
-        state.isResultsOpen = false
+        state.isSuggestionsOpen = false
         return Publishers.Merge(
-            environment.fetchResults(query: query)
-                .map(AppAction.setResults(results:)),
+            environment.fetchSuggestions(query: query)
+                .map(AppAction.setSuggestions),
             environment.documentService.query(query: query)
                 .map({ documents in .search(.setItems(documents)) })
         ).eraseToAnyPublisher()
-    case .queryResults(let query):
-        state.resultQuery = query
+    case .querySuggestions(let query):
+        state.suggestionQuery = query
         return environment
-            .fetchResults(query: query)
-            .map(AppAction.setResults(results:))
+            .fetchSuggestions(query: query)
+            .map(AppAction.setSuggestions)
             .eraseToAnyPublisher()
-    case .setResultsOpen(let isOpen):
-        state.isResultsOpen = isOpen
-    case let .setResults(results):
-        state.results = results
-    case let .saveThread(thread):
+    case .setSuggestionsOpen(let isOpen):
+        state.isSuggestionsOpen = isOpen
+    case .setSuggestions(let suggestions):
+        state.suggestions = suggestions
+    case .saveThread(let thread):
         return environment.documentService.write(thread)
             .map({ AppAction.info("Saved thread") })
             .eraseToAnyPublisher()
@@ -173,7 +173,7 @@ struct ContentView: View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 if (
-                    !store.state.isResultsOpen &&
+                    !store.state.isSuggestionsOpen &&
                     !store.state.threadQuery.isEmpty
                 ) {
                     Button(action: {
@@ -190,20 +190,19 @@ struct ContentView: View {
                         }
                     ),
                     liveQuery: Binding(
-                        get: { store.state.resultQuery },
+                        get: { store.state.suggestionQuery },
                         set: { query in
-                            store.send(.queryResults(query: query))
+                            store.send(.querySuggestions(query: query))
                         }
                     ),
                     isOpen: Binding(
-                        get: { store.state.isResultsOpen },
+                        get: { store.state.isSuggestionsOpen },
                         set: { isOpen in
-                            store.send(.setResultsOpen(isOpen))
+                            store.send(.setSuggestionsOpen(isOpen))
                         }
                     )
                 )
-            }
-            .padding(8)
+            }.padding(8)
             Divider()
             ZStack {
                 if store.state.threadQuery.isEmpty {
@@ -227,9 +226,9 @@ struct ContentView: View {
                 }
 
                 VStack {
-                    if store.state.isResultsOpen {
-                        ResultsView(
-                            results: store.state.results,
+                    if store.state.isSuggestionsOpen {
+                        SuggestionsView(
+                            suggestions: store.state.suggestions,
                             send: store.send
                         )
                     }

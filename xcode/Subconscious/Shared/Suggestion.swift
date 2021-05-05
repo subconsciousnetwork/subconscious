@@ -1,5 +1,5 @@
 //
-//  Result.swift
+//  Suggestion.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 5/5/21.
@@ -7,35 +7,35 @@
 
 import SwiftUI
 
-//  MARK: Result model
-struct ThreadResult: Identifiable, Codable {
+//  MARK: Suggestion models
+struct ThreadSuggestion: Identifiable, Codable {
     var id: String {
         "thread/\(text.hash)"
     }
     var text: String
 }
 
-struct QueryResult: Identifiable, Codable {
+struct QuerySuggestion: Identifiable, Codable {
     var id: String {
         "query/\(text.hash)"
     }
     var text: String
 }
 
-struct CreateResult: Identifiable, Codable {
+struct CreateSuggestion: Identifiable, Codable {
     var id: String {
         "create/\(text.hash)"
     }
     var text: String
 }
 
-enum Result {
-    case thread(ThreadResult)
-    case query(QueryResult)
-    case create(CreateResult)
+enum Suggestion {
+    case thread(ThreadSuggestion)
+    case query(QuerySuggestion)
+    case create(CreateSuggestion)
 }
 
-extension Result: Identifiable {
+extension Suggestion: Identifiable {
     var id: String {
         switch self {
         case .thread(let block):
@@ -48,7 +48,7 @@ extension Result: Identifiable {
     }
 }
 
-extension Result {
+extension Suggestion {
     var text: String {
         switch self {
         case .thread(let block):
@@ -62,29 +62,29 @@ extension Result {
 }
 
 //  MARK: Row View
-struct ResultRowView: View {
-    var result: Result
+struct SuggestionRowView: View {
+    var suggestion: Suggestion
 
     var body: some View {
-        switch result {
-        case .thread(let result):
-            Label(result.text, systemImage: "doc.text")
+        switch suggestion {
+        case .thread(let suggestion):
+            Label(suggestion.text, systemImage: "doc.text")
                 .lineLimit(1)
-        case .query(let result):
-            Label(result.text, systemImage: "magnifyingglass")
+        case .query(let suggestion):
+            Label(suggestion.text, systemImage: "magnifyingglass")
                 .lineLimit(1)
-        case .create(let result):
-            Label("New: \(result.text)", systemImage: "plus.circle")
+        case .create(let suggestion):
+            Label("New: \(suggestion.text)", systemImage: "plus.circle")
                 .lineLimit(1)
         }
     }
 }
 
-struct Result_Previews: PreviewProvider {
+struct SuggestionRow_Previews: PreviewProvider {
     static var previews: some View {
-        ResultRowView(
-            result: Result.query(
-                QueryResult(text: "Search term")
+        SuggestionRowView(
+            suggestion: Suggestion.query(
+                QuerySuggestion(text: "Search term")
             )
         )
     }
