@@ -33,6 +33,7 @@ enum AppAction {
 }
 
 //  MARK: Tagging functions
+
 func tagEditorAction(_ action: EditorAction) -> AppAction {
     switch action {
     case .requestEditorUnpresent:

@@ -11,18 +11,27 @@ import SwiftUI
 import os
 
 enum EditorAction {
-    case setTitle(title: String)
-    case setBody(body: String)
     case edit(SubconsciousDocument)
+    case save(SubconsciousDocument)
     case cancel
     case clear
+    case selectTitle(_ text: String)
     case requestSave(SubconsciousDocument)
     case requestEditorUnpresent
+    case setTitleSearchOpen(isOpen: Bool)
+    case setTitle(title: String)
+    case setBody(body: String)
 }
 
 struct EditorState {
     var title: String = ""
     var body: String = ""
+    var titleResults: [Result] = [
+        .query(.init(text: "Evolution")),
+        .query(.init(text: "Evolution selects for good enough")),
+        .query(.init(text: "The Evolution of Civilizations￼"))
+    ]
+    var isTitleSearchOpen = false
 }
 
 func editorReducer(
@@ -31,6 +40,8 @@ func editorReducer(
     environment: AppEnvironment
 ) -> AnyPublisher<EditorAction, Never> {
     switch action {
+    case .setTitleSearchOpen(let isOpen):
+        state.isTitleSearchOpen = isOpen
     case .setTitle(let title):
         state.title = title
     case .setBody(let body):
@@ -38,6 +49,15 @@ func editorReducer(
     case .edit(let document):
         state.title = document.title
         state.body = document.content.description
+    case .save(let document):
+        let save = Just(EditorAction.requestSave(document))
+        let unpresent = Just(EditorAction.requestEditorUnpresent)
+        let clear = Just(EditorAction.clear).delay(
+            for: .milliseconds(500),
+            scheduler: RunLoop.main
+        )
+        return Publishers.Merge3(save, unpresent, clear)
+            .eraseToAnyPublisher()
     case .cancel:
         let unpresent = Just(EditorAction.requestEditorUnpresent)
         // Delay for a bit. Should clear just after sheet animation completes.
@@ -51,6 +71,11 @@ func editorReducer(
     case .clear:
         state.title = ""
         state.body = ""
+    case .selectTitle(let text):
+        let title = Just(EditorAction.setTitle(title: text))
+        let close = Just(EditorAction.setTitleSearchOpen(isOpen: false))
+        return Publishers.Merge(title, close)
+            .eraseToAnyPublisher()
     case .requestSave:
         environment.logger.warning(
             """
@@ -85,7 +110,7 @@ struct EditorView: View {
                 }
                 Spacer()
                 Button(action: {
-                    send(.requestSave(
+                    send(.save(
                         SubconsciousDocument(
                             title: state.title,
                             markup: state.body
@@ -106,25 +131,46 @@ struct EditorView: View {
             )
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
+            .onTapGesture(perform: {
+                send(.setTitleSearchOpen(isOpen: true))
+            })
             Divider()
-            TextEditor(
-                text: Binding(
-                    get: { state.body },
-                    set: { value in
-                        send(EditorAction.setBody(body: value))
+            Group {
+                if state.isTitleSearchOpen {
+                    List(state.titleResults) { result in
+                        Button(
+                            action: {
+                                send(.selectTitle(result.text))
+                            },
+                            label: {
+                                ResultRowView(result: result)
+                            }
+                        )
                     }
-                )
-            )
-            // Note that TextEditor has some internal padding
-            // about 4px, eyeballing it with a straightedge.
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
+                } else {
+                    TextEditor(
+                        text: Binding(
+                            get: { state.body },
+                            set: { value in
+                                send(EditorAction.setBody(body: value))
+                            }
+                        )
+                    )
+                    // Note that TextEditor has some internal padding
+                    // about 4px, eyeballing it with a straightedge.
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 12)
+                }
+            }
         }
     }
 }
 
-//struct EditorView_Previews: PreviewProvider {
-//    static var previews: some View {
-//
-//    }
-//}
+struct EditorView_Previews: PreviewProvider {
+    static var previews: some View {
+        EditorView(
+            state: EditorState(),
+            send: { action in }
+        )
+    }
+}
