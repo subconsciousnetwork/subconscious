@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B805AAF626447BF30051F205 /* TextToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = B805AAF526447BF30051F205 /* TextToken.swift */; };
 		B811E60F261D0FBF00484E45 /* ThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B811E60E261D0FBF00484E45 /* ThreadView.swift */; };
 		B811E610261D0FBF00484E45 /* ThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B811E60E261D0FBF00484E45 /* ThreadView.swift */; };
 		B81BD764263885DE00BAEC67 /* Editor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81BD763263885DE00BAEC67 /* Editor.swift */; };
@@ -57,6 +58,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B805AAF526447BF30051F205 /* TextToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TextToken.swift; path = Shared/TextToken.swift; sourceTree = SOURCE_ROOT; };
 		B811E60E261D0FBF00484E45 /* ThreadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadView.swift; sourceTree = "<group>"; };
 		B81BD763263885DE00BAEC67 /* Editor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Editor.swift; sourceTree = "<group>"; };
 		B82211F426375A9C005CFBBE /* URLUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLUtilities.swift; sourceTree = "<group>"; };
@@ -129,6 +131,7 @@
 		B804C09D2620FFDD00D59CC6 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				B805AAF526447BF30051F205 /* TextToken.swift */,
 				B83B527F261E460A0031988E /* ThickDivider.swift */,
 				B838FF14261F7CE30055C5CF /* SearchBarView.swift */,
 				B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */,
@@ -137,34 +140,6 @@
 				B8F41F07262F8FD500D134F8 /* Icon.swift */,
 			);
 			path = Helpers;
-			sourceTree = "<group>";
-		};
-		B846CAB2261D28AD001788F1 /* Blocks */ = {
-			isa = PBXGroup;
-			children = (
-				B87C7D7B261E0E6C003EFC6F /* BlockView.swift */,
-			);
-			path = Blocks;
-			sourceTree = "<group>";
-		};
-		B846CABB261D28BA001788F1 /* Threads */ = {
-			isa = PBXGroup;
-			children = (
-				B811E60E261D0FBF00484E45 /* ThreadView.swift */,
-			);
-			path = Threads;
-			sourceTree = "<group>";
-		};
-		B846CAC0261D28FF001788F1 /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				B846CABB261D28BA001788F1 /* Threads */,
-				B846CAB2261D28AD001788F1 /* Blocks */,
-				B804C09D2620FFDD00D59CC6 /* Helpers */,
-				B83B5295261E58260031988E /* SearchView.swift */,
-				B87DA9182624DDEA00BA5232 /* StreamView.swift */,
-			);
-			path = Views;
 			sourceTree = "<group>";
 		};
 		B853EB2326326F9F001BB584 /* Utilities */ = {
@@ -195,8 +170,12 @@
 			children = (
 				B853EB2326326F9F001BB584 /* Utilities */,
 				B86F339B261AB2C6009D3D48 /* SubconsciousDocument.swift */,
-				B846CAC0261D28FF001788F1 /* Views */,
+				B804C09D2620FFDD00D59CC6 /* Helpers */,
 				B86F339D261AB2C7009D3D48 /* Assets.xcassets */,
+				B83B5295261E58260031988E /* SearchView.swift */,
+				B87DA9182624DDEA00BA5232 /* StreamView.swift */,
+				B87C7D7B261E0E6C003EFC6F /* BlockView.swift */,
+				B811E60E261D0FBF00484E45 /* ThreadView.swift */,
 				B838FF35261FB7B40055C5CF /* Suggestions.swift */,
 				B88715122642F2D0009BEE1E /* Suggestion.swift */,
 				B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */,
@@ -428,6 +407,7 @@
 				B87651242630A07A00AD029A /* Store.swift in Sources */,
 				B838FF15261F7CE30055C5CF /* SearchBarView.swift in Sources */,
 				B8F41F08262F8FD500D134F8 /* Icon.swift in Sources */,
+				B805AAF626447BF30051F205 /* TextToken.swift in Sources */,
 				B86F33C6261AB2C7009D3D48 /* SubconsciousDocument.swift in Sources */,
 				B8B00041262621C60068F688 /* PinBottomRight.swift in Sources */,
 				B86F33C4261AB2C7009D3D48 /* SubconsciousApp.swift in Sources */,
