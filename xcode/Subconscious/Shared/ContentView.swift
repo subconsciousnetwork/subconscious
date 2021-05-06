@@ -63,24 +63,22 @@ struct AppEnvironment {
     )
 
     let documentService = DocumentService()
-        
-    func fetchSuggestions(query: String) -> AnyPublisher<[Suggestion], Never> {
-        return Just(
-            [
+    
+    ///  FIXME: this just serves up static suggestions
+    func fetchSuggestions(query: String) -> Future<[Suggestion], Never> {
+        Future({ promise in
+            var suggestions = [
                 Suggestion.thread(
-                    ThreadSuggestion(text: "If you have 70 notecards, you have a movie")
+                    .init(text: "If you have 70 notecards, you have a movie")
                 ),
-                Suggestion.thread(
-                    ThreadSuggestion(text: "Tenuki")
-                ),
-                Suggestion.query(
-                    QuerySuggestion(text: "Notecard")
-                ),
-                Suggestion.create(
-                    CreateSuggestion(text: "Notecard")
-                ),
+                Suggestion.thread(.init(text: "Tenuki")),
+                Suggestion.query(.init(text: "Notecard")),
             ]
-        ).eraseToAnyPublisher()
+            if !query.isEmpty {
+                suggestions.append(.create(.init(text: query)))
+            }
+            promise(.success(suggestions))
+        })
     }
 }
 

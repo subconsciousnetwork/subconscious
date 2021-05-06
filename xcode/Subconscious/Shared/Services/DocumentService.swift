@@ -73,9 +73,9 @@ struct DocumentService {
         }
     }
 
-    // FIXME: This is just serves up all documents right now
+    //  FIXME: This is just serves up all documents right now
     func query(query: String) -> Future<[SubconsciousDocument], Never> {
-        Future { promise in
+        Future({ promise in
             let urls = listSubtextUrls()
             let threads = urls.compactMap { url in
                 try? SubconsciousDocument(
@@ -84,7 +84,7 @@ struct DocumentService {
                 )
             }
             promise(.success(threads))
-        }
+        })
     }
     
     func write(_ document: SubconsciousDocument) -> Future<Void, Never> {

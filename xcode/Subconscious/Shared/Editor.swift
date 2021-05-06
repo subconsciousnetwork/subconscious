@@ -19,10 +19,12 @@ enum EditorAction {
     case clear
     case selectTitle(_ text: String)
     case requestSave(SubconsciousDocument)
-    case requestSuggestions(SubconsciousDocument)
+    case queryTitleSuggestions(_ query: String)
     case requestTitleMatch(_ title: String)
     case requestEditorUnpresent
+    case updateTitle(_ title: String)
     case setBody(body: String)
+    case setTitleSuggestions(_ suggestions: [Suggestion])
 }
 
 
@@ -43,6 +45,8 @@ struct EditorState {
 
 func tagTitleField(_ action: TextFieldWithToggleAction) -> EditorAction {
     switch action {
+    case .setText(let text):
+        return .updateTitle(text)
     default:
         return EditorAction.titleField(action)
     }
@@ -61,8 +65,17 @@ func editorReducer(
             state: &state.titleField,
             action: action
         ).map(tagTitleField).eraseToAnyPublisher()
+    case .updateTitle(let title):
+        let setTitle = EditorAction.titleField(.setText(title))
+        let querySuggestions = EditorAction.queryTitleSuggestions(title)
+        return Publishers.Merge(
+            Just(setTitle),
+            Just(querySuggestions)
+        ).eraseToAnyPublisher()
     case .setBody(let body):
         state.body = body
+    case .setTitleSuggestions(let suggestions):
+        state.titleSuggestions = suggestions
     case .edit(let document):
         let setTitle = Just(
             EditorAction.titleField(.setText(document.title))
@@ -98,7 +111,10 @@ func editorReducer(
         let setBody = Just(
             EditorAction.setBody(body: "")
         )
-        return Publishers.Merge(setTitle, setBody)
+        let setSuggestions = Just(
+            EditorAction.setTitleSuggestions([])
+        )
+        return Publishers.Merge3(setTitle, setBody, setSuggestions)
             .eraseToAnyPublisher()
     case .selectTitle(let text):
         let setTitle = Just(EditorAction.titleField(.setText(text)))
@@ -108,17 +124,14 @@ func editorReducer(
         )
         return Publishers.Merge3(setTitle, requestMatch, closeSuggestions)
             .eraseToAnyPublisher()
+    case .queryTitleSuggestions(let query):
+        return environment.fetchSuggestions(query: query)
+            .map({ suggestions in .setTitleSuggestions(suggestions) })
+            .eraseToAnyPublisher()
     case .requestSave:
         environment.logger.warning(
             """
             EditorAction.requestSave
-            should be handled by the parent view.
-            """
-        )
-    case .requestSuggestions:
-        environment.logger.warning(
-            """
-            EditorAction.requestSuggestions
             should be handled by the parent view.
             """
         )

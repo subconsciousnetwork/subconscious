@@ -55,8 +55,8 @@ extension Suggestion {
             return block.text
         case .query(let block):
             return block.text
-        case .create:
-            return ""
+        case .create(let block):
+            return block.text
         }
     }
 }
@@ -74,7 +74,7 @@ struct SuggestionRowView: View {
             Label(suggestion.text, systemImage: "magnifyingglass")
                 .lineLimit(1)
         case .create(let suggestion):
-            Label("New: \(suggestion.text)", systemImage: "plus.circle")
+            Label(suggestion.text, systemImage: "plus.circle")
                 .lineLimit(1)
         }
     }
