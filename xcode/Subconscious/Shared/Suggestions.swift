@@ -17,7 +17,7 @@ struct SuggestionsView: View {
     var body: some View {
         List(suggestions) { suggestion in
             Button(action: {
-                send(.query(suggestion.text))
+                send(.query(suggestion.description))
             }) {
                 SuggestionRowView(suggestion: suggestion)
             }
@@ -31,16 +31,16 @@ struct SuggestionsView_Previews: PreviewProvider {
         SuggestionsView(
             suggestions: [
                 Suggestion.thread(
-                    ThreadSuggestion(text: "If you have 70 notecards, you have a movie")
+                    "If you have 70 notecards, you have a movie"
                 ),
                 Suggestion.thread(
-                    ThreadSuggestion(text: "Tenuki")
+                    "Tenuki"
                 ),
                 Suggestion.query(
-                    QuerySuggestion(text: "Notecard")
+                    "Notecard"
                 ),
                 Suggestion.create(
-                    CreateSuggestion(text: "Notecard")
+                    "Notecard"
                 ),
             ],
             send:  { query in }

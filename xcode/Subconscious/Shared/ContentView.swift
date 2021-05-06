@@ -69,13 +69,17 @@ struct AppEnvironment {
         Future({ promise in
             var suggestions = [
                 Suggestion.thread(
-                    .init(text: "If you have 70 notecards, you have a movie")
+                    "If you have 70 notecards, you have a movie"
                 ),
-                Suggestion.thread(.init(text: "Tenuki")),
-                Suggestion.query(.init(text: "Notecard")),
+                Suggestion.thread(
+                    "Tenuki"
+                ),
+                Suggestion.query(
+                    "Notecard"
+                ),
             ]
             if !query.isEmpty {
-                suggestions.append(.create(.init(text: query)))
+                suggestions.append(.create(query))
             }
             promise(.success(suggestions))
         })

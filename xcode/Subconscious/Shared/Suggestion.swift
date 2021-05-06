@@ -7,56 +7,34 @@
 
 import SwiftUI
 
-//  MARK: Suggestion models
-struct ThreadSuggestion: Identifiable, Codable {
-    var id: String {
-        "thread/\(text.hash)"
-    }
-    var text: String
-}
-
-struct QuerySuggestion: Identifiable, Codable {
-    var id: String {
-        "query/\(text.hash)"
-    }
-    var text: String
-}
-
-struct CreateSuggestion: Identifiable, Codable {
-    var id: String {
-        "create/\(text.hash)"
-    }
-    var text: String
-}
-
 enum Suggestion {
-    case thread(ThreadSuggestion)
-    case query(QuerySuggestion)
-    case create(CreateSuggestion)
+    case thread(_ text: String)
+    case query(_ text: String)
+    case create(_ text: String)
 }
 
 extension Suggestion: Identifiable {
     var id: String {
         switch self {
-        case .thread(let block):
-            return block.id
-        case .query(let block):
-            return block.id
-        case .create(let block):
-            return block.id
+        case .thread(let text):
+            return "thread/\(text.hash)"
+        case .query(let text):
+            return "query/\(text.hash)"
+        case .create(let text):
+            return "create/\(text.hash)"
         }
     }
 }
 
-extension Suggestion {
-    var text: String {
+extension Suggestion: CustomStringConvertible {
+    var description: String {
         switch self {
-        case .thread(let block):
-            return block.text
-        case .query(let block):
-            return block.text
-        case .create(let block):
-            return block.text
+        case .thread(let text):
+            return text
+        case .query(let text):
+            return text
+        case .create(let text):
+            return text
         }
     }
 }
@@ -67,14 +45,14 @@ struct SuggestionRowView: View {
 
     var body: some View {
         switch suggestion {
-        case .thread(let suggestion):
-            Label(suggestion.text, systemImage: "doc.text")
+        case .thread(let text):
+            Label(text, systemImage: "doc.text")
                 .lineLimit(1)
-        case .query(let suggestion):
-            Label(suggestion.text, systemImage: "magnifyingglass")
+        case .query(let text):
+            Label(text, systemImage: "magnifyingglass")
                 .lineLimit(1)
-        case .create(let suggestion):
-            Label(suggestion.text, systemImage: "plus.circle")
+        case .create(let text):
+            Label(text, systemImage: "plus.circle")
                 .lineLimit(1)
         }
     }
@@ -83,9 +61,7 @@ struct SuggestionRowView: View {
 struct SuggestionRow_Previews: PreviewProvider {
     static var previews: some View {
         SuggestionRowView(
-            suggestion: Suggestion.query(
-                QuerySuggestion(text: "Search term")
-            )
+            suggestion: Suggestion.query("Search term")
         )
     }
 }

@@ -13,6 +13,7 @@ import os
 //  MARK: Actions
 enum EditorAction {
     case titleField(_ action: TextFieldWithToggleAction)
+    case appear
     case edit(SubconsciousDocument)
     case save(SubconsciousDocument)
     case cancel
@@ -22,7 +23,7 @@ enum EditorAction {
     case queryTitleSuggestions(_ query: String)
     case requestTitleMatch(_ title: String)
     case requestEditorUnpresent
-    case updateTitle(_ title: String)
+    case setTitle(_ title: String)
     case setBody(body: String)
     case setTitleSuggestions(_ suggestions: [Suggestion])
 }
@@ -35,18 +36,14 @@ struct EditorState {
         placeholder: ""
     )
     var body = ""
-    var titleSuggestions: [Suggestion] = [
-        .query(.init(text: "Evolution")),
-        .query(.init(text: "Evolution selects for good enough")),
-        .query(.init(text: "The Evolution of Civilizations￼"))
-    ]
+    var titleSuggestions: [Suggestion] = []
 }
 
 
 func tagTitleField(_ action: TextFieldWithToggleAction) -> EditorAction {
     switch action {
     case .setText(let text):
-        return .updateTitle(text)
+        return .setTitle(text)
     default:
         return EditorAction.titleField(action)
     }
@@ -65,7 +62,11 @@ func editorReducer(
             state: &state.titleField,
             action: action
         ).map(tagTitleField).eraseToAnyPublisher()
-    case .updateTitle(let title):
+    case .appear:
+        let querySuggestions = EditorAction.queryTitleSuggestions("")
+        return Just(querySuggestions)
+            .eraseToAnyPublisher()
+    case .setTitle(let title):
         let setTitle = EditorAction.titleField(.setText(title))
         let querySuggestions = EditorAction.queryTitleSuggestions(title)
         return Publishers.Merge(
@@ -78,7 +79,7 @@ func editorReducer(
         state.titleSuggestions = suggestions
     case .edit(let document):
         let setTitle = Just(
-            EditorAction.titleField(.setText(document.title))
+            EditorAction.setTitle(document.title)
         )
         let setBody = Just(
             EditorAction.setBody(body: document.content.description)
@@ -106,24 +107,24 @@ func editorReducer(
         return Publishers.Merge(unpresent, clear).eraseToAnyPublisher()
     case .clear:
         let setTitle = Just(
-            EditorAction.titleField(.setText(""))
+            EditorAction.setTitle("")
         )
         let setBody = Just(
             EditorAction.setBody(body: "")
         )
-        let setSuggestions = Just(
-            EditorAction.setTitleSuggestions([])
-        )
-        return Publishers.Merge3(setTitle, setBody, setSuggestions)
+        return Publishers.Merge(setTitle, setBody)
             .eraseToAnyPublisher()
     case .selectTitle(let text):
-        let setTitle = Just(EditorAction.titleField(.setText(text)))
-        let requestMatch = Just(EditorAction.requestTitleMatch(text))
-        let closeSuggestions = Just(
-            EditorAction.titleField(.setToggle(isActive: false))
+        let setTitle = EditorAction.setTitle(text)
+        let requestMatch = EditorAction.requestTitleMatch(text)
+        let closeSuggestions = EditorAction.titleField(
+            .setToggle(isActive: false)
         )
-        return Publishers.Merge3(setTitle, requestMatch, closeSuggestions)
-            .eraseToAnyPublisher()
+        return Publishers.Merge3(
+            Just(setTitle),
+            Just(requestMatch),
+            Just(closeSuggestions)
+        ).eraseToAnyPublisher()
     case .queryTitleSuggestions(let query):
         return environment.fetchSuggestions(query: query)
             .map({ suggestions in .setTitleSuggestions(suggestions) })
@@ -200,7 +201,7 @@ struct EditorView: View {
                     List(state.titleSuggestions) { suggestion in
                         Button(
                             action: {
-                                send(.selectTitle(suggestion.text))
+                                send(.selectTitle(suggestion.description))
                             },
                             label: {
                                 SuggestionRowView(suggestion: suggestion)
@@ -222,6 +223,8 @@ struct EditorView: View {
                     .padding(.vertical, 12)
                 }
             }
+        }.onAppear {
+            send(.appear)
         }
     }
 }
