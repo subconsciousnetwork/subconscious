@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TextToken: View {
+struct TextTokenView: View {
     var text: String
 
     var body: some View {
@@ -23,8 +23,8 @@ struct TextToken: View {
     }
 }
 
-struct TextToken_Previews: PreviewProvider {
+struct TextTokenView_Previews: PreviewProvider {
     static var previews: some View {
-        TextToken(text: "#log")
+        TextTokenView(text: "#log")
     }
 }

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B805AAF626447BF30051F205 /* TextToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = B805AAF526447BF30051F205 /* TextToken.swift */; };
+		B805AAFA26447F4E0051F205 /* TextTokenBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B805AAF926447F4E0051F205 /* TextTokenBar.swift */; };
 		B811E60F261D0FBF00484E45 /* ThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B811E60E261D0FBF00484E45 /* ThreadView.swift */; };
 		B811E610261D0FBF00484E45 /* ThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B811E60E261D0FBF00484E45 /* ThreadView.swift */; };
 		B81BD764263885DE00BAEC67 /* Editor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81BD763263885DE00BAEC67 /* Editor.swift */; };
@@ -59,6 +60,7 @@
 
 /* Begin PBXFileReference section */
 		B805AAF526447BF30051F205 /* TextToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TextToken.swift; path = Shared/TextToken.swift; sourceTree = SOURCE_ROOT; };
+		B805AAF926447F4E0051F205 /* TextTokenBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextTokenBar.swift; sourceTree = "<group>"; };
 		B811E60E261D0FBF00484E45 /* ThreadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadView.swift; sourceTree = "<group>"; };
 		B81BD763263885DE00BAEC67 /* Editor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Editor.swift; sourceTree = "<group>"; };
 		B82211F426375A9C005CFBBE /* URLUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLUtilities.swift; sourceTree = "<group>"; };
@@ -183,6 +185,7 @@
 				B81BD763263885DE00BAEC67 /* Editor.swift */,
 				B887151426433652009BEE1E /* TextFieldWithToggle.swift */,
 				B8FD070126321A8D00128FDC /* Services */,
+				B805AAF926447F4E0051F205 /* TextTokenBar.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -410,6 +413,7 @@
 				B805AAF626447BF30051F205 /* TextToken.swift in Sources */,
 				B86F33C6261AB2C7009D3D48 /* SubconsciousDocument.swift in Sources */,
 				B8B00041262621C60068F688 /* PinBottomRight.swift in Sources */,
+				B805AAFA26447F4E0051F205 /* TextTokenBar.swift in Sources */,
 				B86F33C4261AB2C7009D3D48 /* SubconsciousApp.swift in Sources */,
 				B838FF36261FB7B40055C5CF /* Suggestions.swift in Sources */,
 				B811E60F261D0FBF00484E45 /* ThreadView.swift in Sources */,
