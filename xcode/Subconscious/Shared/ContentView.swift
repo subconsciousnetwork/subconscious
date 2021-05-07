@@ -54,6 +54,13 @@ func tagSearchAction(_ action: SearchAction) -> AppAction {
     }
 }
 
+func tagSuggestionListAction(_ action: SuggestionListAction) -> AppAction {
+    switch action {
+    case .select(let suggestion):
+        return .query(suggestion.description)
+    }
+}
+
 //  MARK: App Environment
 /// Access to external network services and other supporting services
 struct AppEnvironment {
@@ -107,6 +114,18 @@ func updateApp(
     environment: AppEnvironment
 ) -> AnyPublisher<AppAction, Never> {
     switch action {
+    case .editor(let action):
+        return editorReducer(
+            state: &state.editor,
+            action: action,
+            environment: environment
+        ).map(tagEditorAction).eraseToAnyPublisher()
+    case .search(let action):
+        return updateSearch(
+            state: &state.search,
+            action: action,
+            environment: environment
+        ).map(tagSearchAction).eraseToAnyPublisher()
     case .appear:
         let dir = environment.documentService.documentDirectory?
             .absoluteString ?? ""
@@ -121,18 +140,6 @@ func updateApp(
     case .edit(let document):
         state.isEditorPresented = true
         return Just(.editor(.edit(document))).eraseToAnyPublisher()
-    case .editor(let action):
-        return editorReducer(
-            state: &state.editor,
-            action: action,
-            environment: environment
-        ).map(tagEditorAction).eraseToAnyPublisher()
-    case .search(let action):
-        return updateSearch(
-            state: &state.search,
-            action: action,
-            environment: environment
-        ).map(tagSearchAction).eraseToAnyPublisher()
     case .setEditorPresented(let isPresented):
         state.isEditorPresented = isPresented
     case .query(let query):
@@ -204,8 +211,7 @@ struct ContentView: View {
                         }
                     )
                 )
-            }.padding(8)
-            Divider()
+            }.padding(.horizontal, 8).padding(.bottom, 8)
             ZStack {
                 if store.state.threadQuery.isEmpty {
                     StreamView()
@@ -227,12 +233,30 @@ struct ContentView: View {
                     }
                 }
 
-                VStack {
+                Group {
                     if store.state.isSuggestionsOpen {
-                        SuggestionsView(
-                            suggestions: store.state.suggestions,
-                            send: store.send
-                        )
+                        ScrollView {
+                            VStack(spacing: 0) {
+                                if (store.state.suggestionQuery.isEmpty) {
+                                    TextTokenBarView(
+                                        tokens: [
+                                            "#floop"
+                                        ],
+                                        send: { action in }
+                                    )
+                                    .padding(.top, 0)
+                                    .padding(.bottom, 8)
+                                }
+                                Divider()
+                                SuggestionListView(
+                                    suggestions: store.state.suggestions,
+                                    send: address(
+                                        send: store.send,
+                                        tag: tagSuggestionListAction
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
             }

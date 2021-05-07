@@ -49,6 +49,13 @@ func tagTitleField(_ action: TextFieldWithToggleAction) -> EditorAction {
     }
 }
 
+func tagTitleSuggestionList(_ action: SuggestionListAction) -> EditorAction {
+    switch action {
+    case .select(let suggestion):
+        return .selectTitle(suggestion.description)
+    }
+}
+
 
 //  MARK: Reducer
 func editorReducer(
@@ -198,14 +205,10 @@ struct EditorView: View {
             Divider()
             Group {
                 if state.titleField.isToggleActive {
-                    List(state.titleSuggestions) { suggestion in
-                        Button(
-                            action: {
-                                send(.selectTitle(suggestion.description))
-                            },
-                            label: {
-                                SuggestionRowView(suggestion: suggestion)
-                            }
+                    ScrollView {
+                        SuggestionListView(
+                            suggestions: state.titleSuggestions,
+                            send: address(send: send, tag: tagTitleSuggestionList)
                         )
                     }
                 } else {

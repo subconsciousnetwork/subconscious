@@ -30,7 +30,7 @@ struct TextTokenBarView: View {
                     .foregroundColor(.primary)
                 }
             }
-            .padding()
+            .padding(.horizontal, 8)
         }
     }
 }

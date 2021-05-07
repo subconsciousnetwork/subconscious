@@ -44,16 +44,25 @@ struct SuggestionRowView: View {
     var suggestion: Suggestion
 
     var body: some View {
-        switch suggestion {
-        case .thread(let text):
-            Label(text, systemImage: "doc.text")
-                .lineLimit(1)
-        case .query(let text):
-            Label(text, systemImage: "magnifyingglass")
-                .lineLimit(1)
-        case .create(let text):
-            Label(text, systemImage: "plus.circle")
-                .lineLimit(1)
+        VStack(spacing: 0) {
+            Group {
+                switch suggestion {
+                case .thread(let text):
+                    Label(text, systemImage: "doc.text")
+                        .lineLimit(1)
+                case .query(let text):
+                    Label(text, systemImage: "magnifyingglass")
+                        .lineLimit(1)
+                case .create(let text):
+                    Label(text, systemImage: "plus.circle")
+                        .lineLimit(1)
+                }
+            }
+            .contentShape(Rectangle())
+            .frame(
+                maxWidth: .infinity,
+                alignment: .leading
+            )
         }
     }
 }

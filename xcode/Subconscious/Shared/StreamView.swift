@@ -10,7 +10,6 @@ import SwiftUI
 struct StreamView: View {
     var body: some View {
         VStack(spacing: 0) {
-            Text("Stream")
         }
     }
 }
