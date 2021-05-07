@@ -37,6 +37,7 @@
 		B887151726435774009BEE1E /* BasicEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B887151626435774009BEE1E /* BasicEnvironment.swift */; };
 		B8B00041262621C60068F688 /* PinBottomRight.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B00040262621C60068F688 /* PinBottomRight.swift */; };
 		B8B00047262622280068F688 /* ActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B00046262622280068F688 /* ActionButton.swift */; };
+		B8B2C1832645E8C0008AA3EC /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */; };
 		B8F41F08262F8FD500D134F8 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F41F07262F8FD500D134F8 /* Icon.swift */; };
 		B8FD06FC26321A8600128FDC /* DocumentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FD06FB26321A8600128FDC /* DocumentService.swift */; };
 /* End PBXBuildFile section */
@@ -94,6 +95,7 @@
 		B887151626435774009BEE1E /* BasicEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicEnvironment.swift; sourceTree = "<group>"; };
 		B8B00040262621C60068F688 /* PinBottomRight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinBottomRight.swift; sourceTree = "<group>"; };
 		B8B00046262622280068F688 /* ActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButton.swift; sourceTree = "<group>"; };
+		B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		B8F41F07262F8FD500D134F8 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
 		B8FD06FB26321A8600128FDC /* DocumentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -241,6 +243,7 @@
 			children = (
 				B887151626435774009BEE1E /* BasicEnvironment.swift */,
 				B8FD06FB26321A8600128FDC /* DocumentService.swift */,
+				B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -423,6 +426,7 @@
 				B87DA9192624DDEA00BA5232 /* StreamView.swift in Sources */,
 				B853EB412633959E001BB584 /* StringUtilities.swift in Sources */,
 				B86F33C8261AB2C7009D3D48 /* ContentView.swift in Sources */,
+				B8B2C1832645E8C0008AA3EC /* AppEnvironment.swift in Sources */,
 				B887151526433652009BEE1E /* TextFieldWithToggle.swift in Sources */,
 				B88715132642F2D0009BEE1E /* Suggestion.swift in Sources */,
 				B8B00047262622280068F688 /* ActionButton.swift in Sources */,

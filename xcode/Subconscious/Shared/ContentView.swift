@@ -20,6 +20,7 @@ typealias AppStore = Store<AppState, AppAction, AppEnvironment>
 enum AppAction {
     case editor(_ action: EditorAction)
     case search(_ action: SearchAction)
+    case suggestionTokens(_ action: TextTokenBarAction)
     case appear
     case edit(_ document: SubconsciousDocument)
     case query(_ query: String)
@@ -61,35 +62,12 @@ func tagSuggestionListAction(_ action: SuggestionListAction) -> AppAction {
     }
 }
 
-//  MARK: App Environment
-/// Access to external network services and other supporting services
-struct AppEnvironment {
-    let logger = Logger(
-        subsystem: "com.subconscious.Subconscious",
-        category: "main"
-    )
-
-    let documentService = DocumentService()
-    
-    ///  FIXME: this just serves up static suggestions
-    func fetchSuggestions(query: String) -> Future<[Suggestion], Never> {
-        Future({ promise in
-            var suggestions = [
-                Suggestion.thread(
-                    "If you have 70 notecards, you have a movie"
-                ),
-                Suggestion.thread(
-                    "Tenuki"
-                ),
-                Suggestion.query(
-                    "Notecard"
-                ),
-            ]
-            if !query.isEmpty {
-                suggestions.append(.create(query))
-            }
-            promise(.success(suggestions))
-        })
+func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> AppAction {
+    switch action {
+    case .select(let text):
+        return .query(text)
+    default:
+        return .suggestionTokens(action)
     }
 }
 
@@ -98,7 +76,11 @@ struct AppEnvironment {
 struct AppState {
     var suggestionQuery: String = ""
     var threadQuery: String = ""
+    /// Live-as-you-type suggestions
     var suggestions: [Suggestion] = []
+    /// Semi-permanent suggestions that show up as tokens in the search view.
+    /// We don't differentiate between types of token, so these are all just strings.
+    var suggestionTokens = TextTokenBarState()
     var search: SearchModel = SearchModel(documents: [])
     var isSuggestionsOpen = false
     var isEditorPresented = false
@@ -126,6 +108,12 @@ func updateApp(
             action: action,
             environment: environment
         ).map(tagSearchAction).eraseToAnyPublisher()
+    case .suggestionTokens(let action):
+        return updateTextTokenBar(
+            state: &state.suggestionTokens,
+            action: action,
+            environment: BasicEnvironment(logger: environment.logger)
+        ).map(tagSuggestionTokensAction).eraseToAnyPublisher()
     case .appear:
         let dir = environment.documentService.documentDirectory?
             .absoluteString ?? ""
@@ -135,8 +123,18 @@ func updateApp(
             User Directory: \(dir)
             """
         )
-        return Just(.querySuggestions(query: state.suggestionQuery))
-            .eraseToAnyPublisher()
+        let querySuggestions = Just(AppAction.querySuggestions(
+            query: state.suggestionQuery
+        ))
+        let fetchSuggestionTokens = environment
+            .fetchSuggestionTokens()
+            .map({ suggestions in
+                AppAction.suggestionTokens(.setTokens(suggestions))
+            })
+        return Publishers.Merge(
+            querySuggestions,
+            fetchSuggestionTokens
+        ).eraseToAnyPublisher()
     case .edit(let document):
         state.isEditorPresented = true
         return Just(.editor(.edit(document))).eraseToAnyPublisher()
@@ -239,10 +237,11 @@ struct ContentView: View {
                             VStack(spacing: 0) {
                                 if (store.state.suggestionQuery.isEmpty) {
                                     TextTokenBarView(
-                                        tokens: [
-                                            "#floop"
-                                        ],
-                                        send: { action in }
+                                        state: store.state.suggestionTokens,
+                                        send: address(
+                                            send: store.send,
+                                            tag: tagSuggestionTokensAction
+                                        )
                                     )
                                     .padding(.top, 0)
                                     .padding(.bottom, 8)

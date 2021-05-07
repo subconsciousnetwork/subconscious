@@ -12,7 +12,7 @@ struct TextTokenView: View {
 
     var body: some View {
         Text(text)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(
                 Capsule()
