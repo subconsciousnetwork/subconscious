@@ -74,7 +74,7 @@ struct QuoteBlockView: View {
             .padding(.top, 8)
             .padding(.leading, 16)
             .padding(.trailing, 16)
-            .foregroundColor(.purple)
+            .foregroundColor(Color.Subconscious.quotedText)
             .frame(
                 maxWidth: .infinity,
                 alignment: .leading

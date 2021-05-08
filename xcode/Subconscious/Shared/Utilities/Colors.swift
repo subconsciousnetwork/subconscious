@@ -19,6 +19,7 @@ extension Color {
         static let text = Color(.label)
         static let secondaryText = Color(.secondaryLabel)
         static let placeholderText = Color(.placeholderText)
+        static let quotedText = Color(.systemPurple)
         static let link = Color(.link)
         static let accent = Color.accentColor
         static let fabBackground = Color.black
