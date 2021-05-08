@@ -34,7 +34,7 @@ struct SuggestionListView: View {
                     SuggestionRowView(
                         suggestion: suggestion
                     )
-                    .foregroundColor(.primary)
+                    .foregroundColor(Color.Subconscious.text)
                 }
                 .padding(.trailing, 16)
                 .padding(.leading, 0)

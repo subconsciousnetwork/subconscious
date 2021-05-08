@@ -15,7 +15,7 @@
 		B82211F526375A9C005CFBBE /* URLUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82211F426375A9C005CFBBE /* URLUtilities.swift */; };
 		B838FF15261F7CE30055C5CF /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B838FF14261F7CE30055C5CF /* SearchBarView.swift */; };
 		B838FF36261FB7B40055C5CF /* SuggestionList.swift in Sources */ = {isa = PBXBuildFile; fileRef = B838FF35261FB7B40055C5CF /* SuggestionList.swift */; };
-		B83B5280261E460A0031988E /* ThickDivider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83B527F261E460A0031988E /* ThickDivider.swift */; };
+		B83B5280261E460A0031988E /* ThickSeparator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83B527F261E460A0031988E /* ThickSeparator.swift */; };
 		B83B5296261E58260031988E /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83B5295261E58260031988E /* Search.swift */; };
 		B853EB37263274DD001BB584 /* Subtext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B853EB36263274DD001BB584 /* Subtext.swift */; };
 		B853EB412633959E001BB584 /* StringUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B853EB402633959E001BB584 /* StringUtilities.swift */; };
@@ -39,6 +39,9 @@
 		B8B00047262622280068F688 /* ActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B00046262622280068F688 /* ActionButton.swift */; };
 		B8B2C1832645E8C0008AA3EC /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */; };
 		B8B2C18526470EC0008AA3EC /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18426470EC0008AA3EC /* Post.swift */; };
+		B8B2C1872647172A008AA3EC /* PostHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C1862647172A008AA3EC /* PostHeader.swift */; };
+		B8B2C18926471E6B008AA3EC /* FakeTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18826471E6B008AA3EC /* FakeTextField.swift */; };
+		B8B2C18B26474326008AA3EC /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18A26474326008AA3EC /* Colors.swift */; };
 		B8F41F08262F8FD500D134F8 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F41F07262F8FD500D134F8 /* Icon.swift */; };
 		B8FD06FC26321A8600128FDC /* DocumentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FD06FB26321A8600128FDC /* DocumentService.swift */; };
 /* End PBXBuildFile section */
@@ -68,7 +71,7 @@
 		B82211F426375A9C005CFBBE /* URLUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLUtilities.swift; sourceTree = "<group>"; };
 		B838FF14261F7CE30055C5CF /* SearchBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarView.swift; sourceTree = "<group>"; };
 		B838FF35261FB7B40055C5CF /* SuggestionList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionList.swift; sourceTree = "<group>"; };
-		B83B527F261E460A0031988E /* ThickDivider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThickDivider.swift; sourceTree = "<group>"; };
+		B83B527F261E460A0031988E /* ThickSeparator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThickSeparator.swift; sourceTree = "<group>"; };
 		B83B5295261E58260031988E /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
 		B853EB36263274DD001BB584 /* Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext.swift; sourceTree = "<group>"; };
 		B853EB402633959E001BB584 /* StringUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringUtilities.swift; sourceTree = "<group>"; };
@@ -98,6 +101,9 @@
 		B8B00046262622280068F688 /* ActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButton.swift; sourceTree = "<group>"; };
 		B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		B8B2C18426470EC0008AA3EC /* Post.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Post.swift; sourceTree = "<group>"; };
+		B8B2C1862647172A008AA3EC /* PostHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostHeader.swift; sourceTree = "<group>"; };
+		B8B2C18826471E6B008AA3EC /* FakeTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeTextField.swift; sourceTree = "<group>"; };
+		B8B2C18A26474326008AA3EC /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		B8F41F07262F8FD500D134F8 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
 		B8FD06FB26321A8600128FDC /* DocumentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -140,12 +146,13 @@
 				B887151426433652009BEE1E /* TextFieldWithToggle.swift */,
 				B805AAF926447F4E0051F205 /* TextTokenBar.swift */,
 				B805AAF526447BF30051F205 /* TextToken.swift */,
-				B83B527F261E460A0031988E /* ThickDivider.swift */,
+				B83B527F261E460A0031988E /* ThickSeparator.swift */,
 				B838FF14261F7CE30055C5CF /* SearchBarView.swift */,
 				B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */,
 				B8B00040262621C60068F688 /* PinBottomRight.swift */,
 				B8B00046262622280068F688 /* ActionButton.swift */,
 				B8F41F07262F8FD500D134F8 /* Icon.swift */,
+				B8B2C18826471E6B008AA3EC /* FakeTextField.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -157,6 +164,7 @@
 				B853EB36263274DD001BB584 /* Subtext.swift */,
 				B853EB402633959E001BB584 /* StringUtilities.swift */,
 				B82211F426375A9C005CFBBE /* URLUtilities.swift */,
+				B8B2C18A26474326008AA3EC /* Colors.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -189,6 +197,7 @@
 				B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */,
 				B86F339C261AB2C6009D3D48 /* ContentView.swift */,
 				B8B2C18426470EC0008AA3EC /* Post.swift */,
+				B8B2C1862647172A008AA3EC /* PostHeader.swift */,
 				B81BD763263885DE00BAEC67 /* Editor.swift */,
 				B8FD070126321A8D00128FDC /* Services */,
 			);
@@ -409,6 +418,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B887151726435774009BEE1E /* BasicEnvironment.swift in Sources */,
+				B8B2C18B26474326008AA3EC /* Colors.swift in Sources */,
 				B87C7D7C261E0E6C003EFC6F /* Block.swift in Sources */,
 				B83B5296261E58260031988E /* Search.swift in Sources */,
 				B81BD764263885DE00BAEC67 /* Editor.swift in Sources */,
@@ -419,12 +429,13 @@
 				B805AAF626447BF30051F205 /* TextToken.swift in Sources */,
 				B86F33C6261AB2C7009D3D48 /* SubconsciousDocument.swift in Sources */,
 				B8B00041262621C60068F688 /* PinBottomRight.swift in Sources */,
+				B8B2C18926471E6B008AA3EC /* FakeTextField.swift in Sources */,
 				B805AAFA26447F4E0051F205 /* TextTokenBar.swift in Sources */,
 				B86F33C4261AB2C7009D3D48 /* SubconsciousApp.swift in Sources */,
 				B838FF36261FB7B40055C5CF /* SuggestionList.swift in Sources */,
 				B811E60F261D0FBF00484E45 /* Thread.swift in Sources */,
 				B8FD06FC26321A8600128FDC /* DocumentService.swift in Sources */,
-				B83B5280261E460A0031988E /* ThickDivider.swift in Sources */,
+				B83B5280261E460A0031988E /* ThickSeparator.swift in Sources */,
 				B87DA91F26250CF900BA5232 /* SearchBarRepresentable.swift in Sources */,
 				B87DA9192624DDEA00BA5232 /* Stream.swift in Sources */,
 				B853EB412633959E001BB584 /* StringUtilities.swift in Sources */,
@@ -434,6 +445,7 @@
 				B88715132642F2D0009BEE1E /* Suggestion.swift in Sources */,
 				B8B2C18526470EC0008AA3EC /* Post.swift in Sources */,
 				B8B00047262622280068F688 /* ActionButton.swift in Sources */,
+				B8B2C1872647172A008AA3EC /* PostHeader.swift in Sources */,
 				B853EB37263274DD001BB584 /* Subtext.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

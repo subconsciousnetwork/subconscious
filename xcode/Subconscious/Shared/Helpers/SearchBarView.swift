@@ -29,7 +29,7 @@ struct SearchBarView: View {
                         self.isOpen = false
                     }
                 )
-                .foregroundColor(.primary)
+                .foregroundColor(.Subconscious.text)
                 .transition(.move(edge: .trailing))
                     .onTapGesture {
                         self.isOpen = true
@@ -51,8 +51,8 @@ struct SearchBarView: View {
                     trailing: 8
                 )
             )
-            .foregroundColor(.secondary)
-            .background(Color(.secondarySystemBackground))
+            .foregroundColor(Color.Subconscious.secondaryIcon)
+            .background(Color.Subconscious.inputBackground)
             .cornerRadius(8.0)
             
             if isOpen {

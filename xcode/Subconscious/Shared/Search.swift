@@ -103,7 +103,7 @@ struct SearchView: View {
                                 }
                             )
                         )
-                        ThickDivider().padding(.vertical, 4)
+                        ThickSeparator().padding(.vertical, 4)
                     }
                 }
                 .padding(.vertical, 8)

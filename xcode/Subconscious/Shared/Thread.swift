@@ -77,10 +77,10 @@ struct ThreadView: View {
                         send(.setFolded(false))
                     }) {
                         Image(systemName: "ellipsis")
-                            .foregroundColor(Color("IconSecondary"))
+                            .foregroundColor(Color.Subconscious.secondaryIcon)
                             .padding(8)
                     }
-                    .background(Color("ButtonSecondary"))
+                    .background(Color.Subconscious.buttonBackground)
                     .cornerRadius(8)
                     .padding(.vertical, 4)
 

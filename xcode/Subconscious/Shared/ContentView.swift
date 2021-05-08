@@ -256,7 +256,7 @@ struct ContentView: View {
                                 )
                             }
                         }
-                        .background(Color.white)
+                        .background(Color.Subconscious.background)
                     }
                 }
             }

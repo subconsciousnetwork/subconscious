@@ -191,7 +191,7 @@ struct EditorView: View {
             }.padding(16)
             HStack(spacing: 8) {
                 Text(titlePlaceholder)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color.Subconscious.secondaryText)
                 TextFieldWithToggleView(
                     state: state.titleField,
                     send: address(

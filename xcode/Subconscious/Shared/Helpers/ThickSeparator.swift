@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct ThickDivider: View {
-    var color: Color = Color("Divider")
+struct ThickSeparator: View {
+    var color: Color = .Subconscious.thickSeparator
 
     var body: some View {
         Rectangle()
@@ -20,6 +20,6 @@ struct ThickDivider: View {
 
 struct ThickDivider_Previews: PreviewProvider {
     static var previews: some View {
-        ThickDivider()
+        ThickSeparator()
     }
 }

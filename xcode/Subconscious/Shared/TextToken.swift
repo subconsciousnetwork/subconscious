@@ -13,12 +13,10 @@ struct TextTokenView: View {
     var body: some View {
         Text(text)
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.vertical, 6)
             .background(
                 Capsule()
-                    .foregroundColor(
-                        Color("ButtonSecondary")
-                    )
+                    .foregroundColor(.Subconscious.buttonBackground)
             )
     }
 }
