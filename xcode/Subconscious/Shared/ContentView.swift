@@ -80,7 +80,7 @@ struct AppModel {
     var suggestions: [Suggestion] = []
     /// Semi-permanent suggestions that show up as tokens in the search view.
     /// We don't differentiate between types of token, so these are all just strings.
-    var suggestionTokens = TextTokenBarState()
+    var suggestionTokens = TextTokenBarModel()
     var search: SearchModel = SearchModel(documents: [])
     var isSuggestionsOpen = false
     var isEditorPresented = false

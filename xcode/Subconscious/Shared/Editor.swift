@@ -31,7 +31,7 @@ enum EditorAction {
 
 //  MARK: State
 struct EditorModel {
-    var titleField = TextFieldWithToggleState(
+    var titleField = TextFieldWithToggleModel(
         text: "",
         placeholder: ""
     )

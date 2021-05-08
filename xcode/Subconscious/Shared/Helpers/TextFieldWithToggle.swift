@@ -14,7 +14,7 @@ enum TextFieldWithToggleAction {
     case setToggle(isActive: Bool)
 }
 
-struct TextFieldWithToggleState {
+struct TextFieldWithToggleModel {
     var text = ""
     var placeholder = ""
     var isEditing = false
@@ -22,7 +22,7 @@ struct TextFieldWithToggleState {
 }
 
 func updateTextFieldWithToggle(
-    state: inout TextFieldWithToggleState,
+    state: inout TextFieldWithToggleModel,
     action: TextFieldWithToggleAction
 ) -> AnyPublisher<TextFieldWithToggleAction, Never> {
     switch action {
@@ -37,7 +37,7 @@ func updateTextFieldWithToggle(
 }
 
 struct TextFieldWithToggleView: View {
-    var state: TextFieldWithToggleState
+    var state: TextFieldWithToggleModel
     var send: (TextFieldWithToggleAction) -> Void
 
     var body: some View {
@@ -96,7 +96,7 @@ struct TextFieldWithToggleView: View {
 struct EditorTitleView_Previews: PreviewProvider {
     static var previews: some View {
         TextFieldWithToggleView(
-            state: TextFieldWithToggleState(
+            state: TextFieldWithToggleModel(
                 placeholder: "Title"
             ),
             send: { action in }

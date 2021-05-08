@@ -13,12 +13,12 @@ enum TextTokenBarAction {
     case setTokens(_ tokens: [String])
 }
 
-struct TextTokenBarState {
+struct TextTokenBarModel {
     var tokens: [String] = []
 }
 
 func updateTextTokenBar(
-    state: inout TextTokenBarState,
+    state: inout TextTokenBarModel,
     action: TextTokenBarAction,
     environment: BasicEnvironment
 ) -> AnyPublisher<TextTokenBarAction, Never> {
@@ -38,7 +38,7 @@ func updateTextTokenBar(
 
 
 struct TextTokenBarView: View {
-    var state: TextTokenBarState
+    var state: TextTokenBarModel
     var send: (TextTokenBarAction) -> Void
 
     var body: some View {
