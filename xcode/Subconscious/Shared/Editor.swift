@@ -30,7 +30,7 @@ enum EditorAction {
 
 
 //  MARK: State
-struct EditorState {
+struct EditorModel {
     var titleField = TextFieldWithToggleState(
         text: "",
         placeholder: ""
@@ -58,8 +58,8 @@ func tagTitleSuggestionList(_ action: SuggestionListAction) -> EditorAction {
 
 
 //  MARK: Reducer
-func editorReducer(
-    state: inout EditorState,
+func updateEditor(
+    state: inout EditorModel,
     action: EditorAction,
     environment: AppEnvironment
 ) -> AnyPublisher<EditorAction, Never> {
@@ -164,7 +164,7 @@ func editorReducer(
 
 //  MARK: View
 struct EditorView: View {
-    var state: EditorState
+    var state: EditorModel
     var send: (EditorAction) -> Void
     var save: LocalizedStringKey = "Save"
     var cancel: LocalizedStringKey = "Cancel"
@@ -235,7 +235,7 @@ struct EditorView: View {
 struct EditorView_Previews: PreviewProvider {
     static var previews: some View {
         EditorView(
-            state: EditorState(),
+            state: EditorModel(),
             send: { action in }
         )
     }

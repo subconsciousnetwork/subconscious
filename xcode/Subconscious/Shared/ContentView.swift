@@ -12,7 +12,7 @@ import os
 
 
 //  MARK: AppStore typealias
-typealias AppStore = Store<AppState, AppAction, AppEnvironment>
+typealias AppStore = Store<AppModel, AppAction, AppEnvironment>
 
 
 //  MARK: App Actions
@@ -73,7 +73,7 @@ func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> AppAction {
 
 //  MARK: App State
 /// Central source of truth for all shared app state
-struct AppState {
+struct AppModel {
     var suggestionQuery: String = ""
     var threadQuery: String = ""
     /// Live-as-you-type suggestions
@@ -84,20 +84,20 @@ struct AppState {
     var search: SearchModel = SearchModel(documents: [])
     var isSuggestionsOpen = false
     var isEditorPresented = false
-    var editor: EditorState = EditorState.init()
+    var editor: EditorModel = .init()
 }
 
 //  MARK: App Reducer
 /// Reducer for state
 /// Mutates state in response to actions, returning effects
 func updateApp(
-    state: inout AppState,
+    state: inout AppModel,
     action: AppAction,
     environment: AppEnvironment
 ) -> AnyPublisher<AppAction, Never> {
     switch action {
     case .editor(let action):
-        return editorReducer(
+        return updateEditor(
             state: &state.editor,
             action: action,
             environment: environment
