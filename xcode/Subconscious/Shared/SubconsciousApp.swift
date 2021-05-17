@@ -15,9 +15,14 @@ struct SubconsciousApp: App {
         environment: .init()
     )
 
+    init() {
+        print("SubconsciousApp.init")
+    }
+    
     var body: some Scene {
-        WindowGroup {
-            ContentView(store: store)
+        print("SubconsciousApp.body")
+        return WindowGroup {
+            ContentView(store: store).equatable()
         }
     }
 }

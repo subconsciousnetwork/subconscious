@@ -14,7 +14,7 @@ enum TextFieldWithToggleAction {
     case setToggle(isActive: Bool)
 }
 
-struct TextFieldWithToggleModel {
+struct TextFieldWithToggleModel: Equatable {
     var text = ""
     var placeholder = ""
     var isEditing = false
@@ -36,41 +36,40 @@ func updateTextFieldWithToggle(
     return Empty().eraseToAnyPublisher()
 }
 
-struct TextFieldWithToggleView: View {
-    var state: TextFieldWithToggleModel
-    var send: (TextFieldWithToggleAction) -> Void
+struct TextFieldWithToggleView: View, Equatable {
+    let store: ViewStore<TextFieldWithToggleModel, TextFieldWithToggleAction>
 
     var body: some View {
         HStack(spacing: 8) {
             TextField(
-                state.placeholder,
+                store.state.placeholder,
                 text: Binding(
-                    get: { state.text },
-                    set: { text in send(.setText(text)) }
+                    get: { store.state.text },
+                    set: { text in store.send(.setText(text)) }
                 ),
                 onEditingChanged: { editingChanged in
-                    send(.setEditing(editingChanged))
+                    store.send(.setEditing(editingChanged))
                 },
                 onCommit: {
-                    send(.setText(state.text))
+                    store.send(.setText(store.state.text))
                 }
             )
             .onTapGesture(perform: {
-                send(.setToggle(isActive: true))
+                store.send(.setToggle(isActive: true))
             })
             Group {
-                if state.isEditing && !state.text.isEmpty {
+                if store.state.isEditing && !store.state.text.isEmpty {
                     Button(
-                        action: { send(.setText("")) },
+                        action: { store.send(.setText("")) },
                         label: {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundColor(.Subconscious.secondaryIcon)
                         }
                     )
-                } else if state.isToggleActive {
+                } else if store.state.isToggleActive {
                     Button(
                         action: {
-                            send(.setToggle(isActive: false))
+                            store.send(.setToggle(isActive: false))
                         },
                         label: {
                             Image(systemName: "chevron.up.circle")
@@ -80,7 +79,7 @@ struct TextFieldWithToggleView: View {
                 } else {
                     Button(
                         action: {
-                            send(.setToggle(isActive: true))
+                            store.send(.setToggle(isActive: true))
                         },
                         label: {
                             Image(systemName: "chevron.down.circle")
@@ -96,10 +95,12 @@ struct TextFieldWithToggleView: View {
 struct EditorTitleView_Previews: PreviewProvider {
     static var previews: some View {
         TextFieldWithToggleView(
-            state: TextFieldWithToggleModel(
-                placeholder: "Title"
-            ),
-            send: { action in }
+            store: ViewStore(
+                state: TextFieldWithToggleModel(
+                    placeholder: "Title"
+                ),
+                send: { action in }
+            )
         )
     }
 }

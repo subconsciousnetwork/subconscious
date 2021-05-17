@@ -13,7 +13,7 @@ enum TextTokenBarAction {
     case setTokens(_ tokens: [String])
 }
 
-struct TextTokenBarModel {
+struct TextTokenBarModel: Equatable {
     var tokens: [String] = []
 }
 
@@ -37,17 +37,16 @@ func updateTextTokenBar(
 }
 
 
-struct TextTokenBarView: View {
-    var state: TextTokenBarModel
-    var send: (TextTokenBarAction) -> Void
+struct TextTokenBarView: View, Equatable {
+    let store: ViewStore<TextTokenBarModel, TextTokenBarAction>
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {
-                ForEach(state.tokens, id: \.self) { text in
+                ForEach(store.state.tokens, id: \.self) { text in
                     Button(
                         action: {
-                            send(.select(text: text))
+                            store.send(.select(text: text))
                         },
                         label: {
                             TextTokenView(text: text)
@@ -64,15 +63,17 @@ struct TextTokenBarView: View {
 struct TextTokenBarView_Previews: PreviewProvider {
     static var previews: some View {
         TextTokenBarView(
-            state: .init(tokens: [
-                "#log",
-                "#idea",
-                "#pattern",
-                "#quote",
-                "#project",
-                "#decision"
-            ]),
-            send: { action in }
+            store: ViewStore(
+                state: .init(tokens: [
+                    "#log",
+                    "#idea",
+                    "#pattern",
+                    "#quote",
+                    "#project",
+                    "#decision"
+                ]),
+                send: { action in }
+            )
         )
     }
 }

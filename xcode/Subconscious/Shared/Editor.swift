@@ -12,6 +12,7 @@ import os
 
 //  MARK: Actions
 enum EditorAction {
+    case body(_ action: TextareaAction)
     case titleField(_ action: TextFieldWithToggleAction)
     case appear
     case edit(SubconsciousDocument)
@@ -24,23 +25,28 @@ enum EditorAction {
     case requestTitleMatch(_ title: String)
     case requestEditorUnpresent
     case setTitle(_ title: String)
-    case setBody(body: String)
     case setTitleSuggestions(_ suggestions: [Suggestion])
 }
 
 
 //  MARK: State
-struct EditorModel {
+struct EditorModel: Equatable {
     var titleField = TextFieldWithToggleModel(
         text: "",
         placeholder: ""
     )
-    var body = ""
+    var body = TextareaModel()
     var titleSuggestions: [Suggestion] = []
 }
 
+func tagEditorBody(_ action: TextareaAction) -> EditorAction {
+    switch action {
+    default:
+        return EditorAction.body(action)
+    }
+}
 
-func tagTitleField(_ action: TextFieldWithToggleAction) -> EditorAction {
+func tagEditorTitleField(_ action: TextFieldWithToggleAction) -> EditorAction {
     switch action {
     case .setText(let text):
         return .setTitle(text)
@@ -64,11 +70,16 @@ func updateEditor(
     environment: AppEnvironment
 ) -> AnyPublisher<EditorAction, Never> {
     switch action {
+    case .body(let action):
+        return updateTextarea(
+            state: &state.body,
+            action: action
+        ).map(tagEditorBody).eraseToAnyPublisher()
     case .titleField(let action):
         return updateTextFieldWithToggle(
             state: &state.titleField,
             action: action
-        ).map(tagTitleField).eraseToAnyPublisher()
+        ).map(tagEditorTitleField).eraseToAnyPublisher()
     case .appear:
         let querySuggestions = EditorAction.queryTitleSuggestions("")
         return Just(querySuggestions)
@@ -80,8 +91,6 @@ func updateEditor(
             Just(setTitle),
             Just(querySuggestions)
         ).eraseToAnyPublisher()
-    case .setBody(let body):
-        state.body = body
     case .setTitleSuggestions(let suggestions):
         state.titleSuggestions = suggestions
     case .edit(let document):
@@ -89,7 +98,7 @@ func updateEditor(
             EditorAction.setTitle(document.title)
         )
         let setBody = Just(
-            EditorAction.setBody(body: document.content.description)
+            EditorAction.body(.set(document.content.description))
         )
         return Publishers.Merge(setTitle, setBody)
             .eraseToAnyPublisher()
@@ -117,7 +126,7 @@ func updateEditor(
             EditorAction.setTitle("")
         )
         let setBody = Just(
-            EditorAction.setBody(body: "")
+            EditorAction.body(.set(""))
         )
         return Publishers.Merge(setTitle, setBody)
             .eraseToAnyPublisher()
@@ -161,28 +170,37 @@ func updateEditor(
     return Empty().eraseToAnyPublisher()
 }
 
-
 //  MARK: View
-struct EditorView: View {
-    var state: EditorModel
-    var send: (EditorAction) -> Void
-    var save: LocalizedStringKey = "Save"
-    var cancel: LocalizedStringKey = "Cancel"
-    var edit: LocalizedStringKey = "Edit"
-    var titlePlaceholder: LocalizedStringKey = "Title:"
+struct EditorView: View, Equatable {
+    static func == (lhs: EditorView, rhs: EditorView) -> Bool {
+        lhs.store == rhs.store
+    }
+    
+    let store: ViewStore<EditorModel, EditorAction>
+    let save: LocalizedStringKey = "Save"
+    let cancel: LocalizedStringKey = "Cancel"
+    let edit: LocalizedStringKey = "Edit"
+    let titlePlaceholder: LocalizedStringKey = "Title:"
+    
+    init(store: ViewStore<EditorModel, EditorAction>) {
+        print("EditorView.init")
+        self.store = store
+    }
     
     var body: some View {
-        VStack(spacing: 0) {
+        print("EditorView.body")
+        
+        return VStack(spacing: 0) {
             HStack {
                 Button(cancel) {
-                    send(.cancel)
+                    store.send(.cancel)
                 }
                 Spacer()
                 Button(action: {
-                    send(.save(
+                    store.send(.save(
                         SubconsciousDocument(
-                            title: state.titleField.text,
-                            markup: state.body
+                            title: store.state.titleField.text,
+                            markup: store.state.body.text
                         )
                     ))
                 }) {
@@ -193,33 +211,36 @@ struct EditorView: View {
                 Text(titlePlaceholder)
                     .foregroundColor(Color.Subconscious.secondaryText)
                 TextFieldWithToggleView(
-                    state: state.titleField,
-                    send: address(
-                        send: send,
-                        tag: tagTitleField
+                    store: ViewStore(
+                        state: store.state.titleField,
+                        send: store.send,
+                        tag: tagEditorTitleField
                     )
-                )
+                ).equatable()
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             Divider()
             Group {
-                if state.titleField.isToggleActive {
+                if store.state.titleField.isToggleActive {
                     ScrollView {
                         SuggestionListView(
-                            suggestions: state.titleSuggestions,
-                            send: address(send: send, tag: tagTitleSuggestionList)
-                        )
+                            store: ViewStore(
+                                state: store.state.titleSuggestions,
+                                send: store.send,
+                                tag: tagTitleSuggestionList
+                            )
+                        ).equatable()
                     }
                 } else {
-                    TextEditor(
-                        text: Binding(
-                            get: { state.body },
-                            set: { value in
-                                send(EditorAction.setBody(body: value))
-                            }
+                    TextareaView(
+                        store: ViewStore(
+                            state: store.state.body,
+                            send: store.send,
+                            tag: tagEditorBody
                         )
                     )
+                    .equatable()
                     // Note that TextEditor has some internal padding
                     // about 4px, eyeballing it with a straightedge.
                     .padding(.horizontal, 12)
@@ -227,7 +248,7 @@ struct EditorView: View {
                 }
             }
         }.onAppear {
-            send(.appear)
+            store.send(.appear)
         }
     }
 }
@@ -235,8 +256,7 @@ struct EditorView: View {
 struct EditorView_Previews: PreviewProvider {
     static var previews: some View {
         EditorView(
-            state: EditorModel(),
-            send: { action in }
+            store: ViewStore(state: EditorModel(), send: { action in })
         )
     }
 }

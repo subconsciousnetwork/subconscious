@@ -19,7 +19,15 @@ typealias Reducer<State, Action, Environment> =
 /// Instead, store is udpdated deterministically by using `send` to dispatch actions to a reducer, which
 /// is responsible for mutating the state. The same actions result in the same state.
 /// Inspired by the [Elm App Architecture](https://guide.elm-lang.org/architecture/).
-final class Store<State, Action, Environment>: ObservableObject {
+final class Store<State, Action, Environment>: ObservableObject, Equatable
+    where State: Equatable {
+    static func == (
+        lhs: Store<State, Action, Environment>,
+        rhs: Store<State, Action, Environment>
+    ) -> Bool {
+        lhs.state == rhs.state
+    }
+    
     @Published private(set) var state: State
 
     /// Holds references to things like services
@@ -74,6 +82,34 @@ func exhaustPublisherAndThenRelease<Input, Failure:Error>(
         },
         receiveValue: receiveValue
     )
+}
+
+/// ViewStore acts as a state container, typically for some view over the application's central store.
+/// You construct a ViewStore and pass it to a subview. Because it is Equatable, you can
+/// make the subview Equatable as well, with `.equatable()`. The subview will then only render
+/// when the actual value of the state changes.
+struct ViewStore<LocalState, LocalAction>: Equatable
+    where LocalState: Equatable {
+    static func == (
+        lhs: ViewStore<LocalState, LocalAction>,
+        rhs: ViewStore<LocalState, LocalAction>
+    ) -> Bool {
+        lhs.state == rhs.state
+    }
+    
+    let state: LocalState
+    let send: (LocalAction) -> Void
+}
+
+extension ViewStore {
+    init<Action>(
+        state: LocalState,
+        send: @escaping (Action) -> Void,
+        tag: @escaping (LocalAction) -> Action
+    ) {
+        self.state = state
+        self.send = address(send: send, tag: tag)
+    }
 }
 
 /// Creates a tagged send function that can be used in a sub-view.

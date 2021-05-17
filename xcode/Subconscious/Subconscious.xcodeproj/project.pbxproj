@@ -42,6 +42,9 @@
 		B8B2C1872647172A008AA3EC /* PostHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C1862647172A008AA3EC /* PostHeader.swift */; };
 		B8B2C18926471E6B008AA3EC /* FakeTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18826471E6B008AA3EC /* FakeTextField.swift */; };
 		B8B2C18B26474326008AA3EC /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18A26474326008AA3EC /* Colors.swift */; };
+		B8C602E32649B39100812C90 /* MinimalEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C602E22649B39100812C90 /* MinimalEditor.swift */; };
+		B8C602E5264A16E100812C90 /* Textarea.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C602E4264A16E100812C90 /* Textarea.swift */; };
+		B8C602E7264A34EB00812C90 /* TextEditorRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C602E6264A34EB00812C90 /* TextEditorRepresentable.swift */; };
 		B8F41F08262F8FD500D134F8 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F41F07262F8FD500D134F8 /* Icon.swift */; };
 		B8FD06FC26321A8600128FDC /* DocumentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FD06FB26321A8600128FDC /* DocumentService.swift */; };
 /* End PBXBuildFile section */
@@ -104,6 +107,9 @@
 		B8B2C1862647172A008AA3EC /* PostHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostHeader.swift; sourceTree = "<group>"; };
 		B8B2C18826471E6B008AA3EC /* FakeTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeTextField.swift; sourceTree = "<group>"; };
 		B8B2C18A26474326008AA3EC /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		B8C602E22649B39100812C90 /* MinimalEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalEditor.swift; sourceTree = "<group>"; };
+		B8C602E4264A16E100812C90 /* Textarea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Textarea.swift; sourceTree = "<group>"; };
+		B8C602E6264A34EB00812C90 /* TextEditorRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextEditorRepresentable.swift; sourceTree = "<group>"; };
 		B8F41F07262F8FD500D134F8 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
 		B8FD06FB26321A8600128FDC /* DocumentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -149,10 +155,12 @@
 				B83B527F261E460A0031988E /* ThickSeparator.swift */,
 				B838FF14261F7CE30055C5CF /* SearchBarView.swift */,
 				B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */,
+				B8C602E6264A34EB00812C90 /* TextEditorRepresentable.swift */,
 				B8B00040262621C60068F688 /* PinBottomRight.swift */,
 				B8B00046262622280068F688 /* ActionButton.swift */,
 				B8F41F07262F8FD500D134F8 /* Icon.swift */,
 				B8B2C18826471E6B008AA3EC /* FakeTextField.swift */,
+				B8C602E4264A16E100812C90 /* Textarea.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -200,6 +208,7 @@
 				B8B2C1862647172A008AA3EC /* PostHeader.swift */,
 				B81BD763263885DE00BAEC67 /* Editor.swift */,
 				B8FD070126321A8D00128FDC /* Services */,
+				B8C602E22649B39100812C90 /* MinimalEditor.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -419,6 +428,7 @@
 			files = (
 				B887151726435774009BEE1E /* BasicEnvironment.swift in Sources */,
 				B8B2C18B26474326008AA3EC /* Colors.swift in Sources */,
+				B8C602E7264A34EB00812C90 /* TextEditorRepresentable.swift in Sources */,
 				B87C7D7C261E0E6C003EFC6F /* Block.swift in Sources */,
 				B83B5296261E58260031988E /* Search.swift in Sources */,
 				B81BD764263885DE00BAEC67 /* Editor.swift in Sources */,
@@ -428,6 +438,7 @@
 				B8F41F08262F8FD500D134F8 /* Icon.swift in Sources */,
 				B805AAF626447BF30051F205 /* TextToken.swift in Sources */,
 				B86F33C6261AB2C7009D3D48 /* SubconsciousDocument.swift in Sources */,
+				B8C602E32649B39100812C90 /* MinimalEditor.swift in Sources */,
 				B8B00041262621C60068F688 /* PinBottomRight.swift in Sources */,
 				B8B2C18926471E6B008AA3EC /* FakeTextField.swift in Sources */,
 				B805AAFA26447F4E0051F205 /* TextTokenBar.swift in Sources */,
@@ -440,6 +451,7 @@
 				B87DA9192624DDEA00BA5232 /* Stream.swift in Sources */,
 				B853EB412633959E001BB584 /* StringUtilities.swift in Sources */,
 				B86F33C8261AB2C7009D3D48 /* ContentView.swift in Sources */,
+				B8C602E5264A16E100812C90 /* Textarea.swift in Sources */,
 				B8B2C1832645E8C0008AA3EC /* AppEnvironment.swift in Sources */,
 				B887151526433652009BEE1E /* TextFieldWithToggle.swift in Sources */,
 				B88715132642F2D0009BEE1E /* Suggestion.swift in Sources */,
@@ -609,6 +621,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = LA8RNJ2LQP;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -630,6 +643,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = LA8RNJ2LQP;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;

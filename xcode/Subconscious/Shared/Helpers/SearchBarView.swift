@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+
 struct SearchBarView: View {
     /// `isOpen` is essentially focused mode, but doesn't necessitate actual
     /// input focus.
@@ -17,7 +18,8 @@ struct SearchBarView: View {
     var cancel: LocalizedStringKey = "Cancel"
 
     var body: some View {
-        HStack {
+        print("SearchBarView.body")
+        return HStack {
             HStack {
                 Image(systemName: "magnifyingglass")
 

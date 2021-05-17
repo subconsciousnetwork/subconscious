@@ -14,7 +14,7 @@ enum SearchAction {
     case requestEdit(_ document: SubconsciousDocument)
 }
 
-struct SearchModel {
+struct SearchModel: Equatable {
     var threads: [ThreadModel]
     
     init(documents: [SubconsciousDocument]) {
@@ -82,19 +82,18 @@ func tagSearchItem(key: Int, action: ThreadAction) -> SearchAction {
     }
 }
 
-struct SearchView: View {
-    var state: SearchModel
-    var send: (SearchAction) -> Void
+struct SearchView: View, Equatable {
+    let store: ViewStore<SearchModel, SearchAction>
 
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 8) {
-                    ForEach(state.threads) { thread in
+                    ForEach(store.state.threads) { thread in
                         ThreadView(
-                            thread: thread,
-                            send: address(
-                                send: send,
+                            store: ViewStore(
+                                state: thread,
+                                send: store.send,
                                 tag: { action in
                                     tagSearchItem(
                                         key: thread.id,
@@ -102,7 +101,7 @@ struct SearchView: View {
                                     )
                                 }
                             )
-                        )
+                        ).equatable()
                         ThickSeparator().padding(.vertical, 4)
                     }
                 }
@@ -116,10 +115,12 @@ struct SearchView: View {
 struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
         SearchView(
-            state: SearchModel(
-                documents: []
-            ),
-            send: { action in }
+            store: ViewStore(
+                state: SearchModel(
+                    documents: []
+                ),
+                send: { action in }
+            )
         )
     }
 }

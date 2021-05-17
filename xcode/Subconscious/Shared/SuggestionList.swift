@@ -21,15 +21,20 @@ enum SuggestionListAction {
 ///
 /// Deliberately does not handle scrolling. This is meant to be placed within a ScrollView along with other
 /// types of search results.
-struct SuggestionListView: View {
-    var suggestions: [Suggestion]
-    let send: (SuggestionListAction) -> Void
+struct SuggestionListView: View, Equatable {
+    let store: ViewStore<[Suggestion], SuggestionListAction>
+
+    init(store: ViewStore<[Suggestion], SuggestionListAction>) {
+        print("SuggestionList.init")
+        self.store = store
+    }
     
     var body: some View {
-        VStack(spacing: 0) {
-            ForEach(suggestions) { suggestion in
+        print("SuggestionList.body")
+        return VStack(spacing: 0) {
+            ForEach(store.state) { suggestion in
                 Button(action: {
-                    send(.select(suggestion))
+                    store.send(.select(suggestion))
                 }) {
                     SuggestionRowView(
                         suggestion: suggestion
@@ -49,21 +54,23 @@ struct SuggestionListView: View {
 struct SuggestionListView_Previews: PreviewProvider {
     static var previews: some View {
         SuggestionListView(
-            suggestions: [
-                Suggestion.thread(
-                    "If you have 70 notecards, you have a movie"
-                ),
-                Suggestion.thread(
-                    "Tenuki"
-                ),
-                Suggestion.query(
-                    "Notecard"
-                ),
-                Suggestion.create(
-                    "Notecard"
-                ),
-            ],
-            send:  { query in }
+            store: ViewStore(
+                state: [
+                    Suggestion.thread(
+                        "If you have 70 notecards, you have a movie"
+                    ),
+                    Suggestion.thread(
+                        "Tenuki"
+                    ),
+                    Suggestion.query(
+                        "Notecard"
+                    ),
+                    Suggestion.create(
+                        "Notecard"
+                    ),
+                ],
+                send:  { query in }
+            )
         )
     }
 }

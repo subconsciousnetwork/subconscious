@@ -81,17 +81,3 @@ struct QuoteBlockView: View {
             )
     }
 }
-
-//struct BlockView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        VStack {
-//            BlockView(
-//                block: Block.heading(
-//                    HeadingBlock(
-//                        text: "Hello, world!"
-//                    )
-//                )
-//            )
-//        }
-//    }
-//}

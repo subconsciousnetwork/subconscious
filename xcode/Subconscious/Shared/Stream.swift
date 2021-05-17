@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct StreamView: View {
+struct StreamView: View, Equatable {
     var body: some View {
         VStack(spacing: 0) {
         }

@@ -69,9 +69,12 @@ struct PostView: View {
                 )
             )
             ThreadView(
-                thread: state.thread,
-                send: address(send: send, tag: tagPostThread)
-            )
+                store: ViewStore(
+                    state: state.thread,
+                    send: send,
+                    tag: tagPostThread
+                )
+            ).equatable()
         }
     }
 }

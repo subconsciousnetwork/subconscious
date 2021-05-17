@@ -72,20 +72,6 @@ struct DocumentService {
             promise(.success(doc))
         }
     }
-
-    //  FIXME: This is just serves up all documents right now
-    func query(query: String) -> Future<[SubconsciousDocument], Never> {
-        Future({ promise in
-            let urls = listSubtextUrls()
-            let threads = urls.compactMap { url in
-                try? SubconsciousDocument(
-                    title: url.stem,
-                    markup: String(contentsOf: url, encoding: .utf8)
-                )
-            }
-            promise(.success(threads))
-        })
-    }
     
     func write(_ document: SubconsciousDocument) -> Future<Void, Never> {
         Future({ promise in
@@ -98,6 +84,20 @@ struct DocumentService {
                     )
                 } catch {}
             }
+        })
+    }
+
+    //  FIXME: This is just serves up all documents right now
+    func query(query: String) -> Future<[SubconsciousDocument], Never> {
+        Future({ promise in
+            let urls = listSubtextUrls()
+            let threads = urls.compactMap { url in
+                try? SubconsciousDocument(
+                    title: url.stem,
+                    markup: String(contentsOf: url, encoding: .utf8)
+                )
+            }
+            promise(.success(threads))
         })
     }
 }

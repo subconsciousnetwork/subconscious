@@ -13,7 +13,7 @@ enum ThreadAction {
     case requestEdit(_ document: SubconsciousDocument)
 }
 
-struct ThreadModel: Identifiable {
+struct ThreadModel: Identifiable, Equatable {
     var document: SubconsciousDocument
     var isFolded: Bool = true
     var id: Int {
@@ -41,15 +41,14 @@ func updateThread(
 }
 
 /// A foldable thread
-struct ThreadView: View {
-    var thread: ThreadModel
-    var send: (ThreadAction) -> Void
-    var maxBlocksWhenFolded = 2
+struct ThreadView: View, Equatable {
+    let store: ViewStore<ThreadModel, ThreadAction>
+    let maxBlocksWhenFolded = 2
 
     var body: some View {
         VStack(spacing: 0) {
-            if !thread.document.title.isEmpty {
-                Text(thread.document.title)
+            if !store.state.document.title.isEmpty {
+                Text(store.state.document.title)
                     .font(.body)
                     .bold()
                     .padding(.bottom, 8)
@@ -63,10 +62,10 @@ struct ThreadView: View {
             }
 
             if (
-                thread.document.content.blocks.count >
-                maxBlocksWhenFolded && thread.isFolded
+                store.state.document.content.blocks.count >
+                maxBlocksWhenFolded && store.state.isFolded
             ) {
-                ForEach(thread.document.content.blocks[
+                ForEach(store.state.document.content.blocks[
                     0..<max(1, maxBlocksWhenFolded)
                 ]) { block in
                     BlockView(block: block)
@@ -74,7 +73,7 @@ struct ThreadView: View {
 
                 HStack {
                     Button(action: {
-                        send(.setFolded(false))
+                        store.send(.setFolded(false))
                     }) {
                         Image(systemName: "ellipsis")
                             .foregroundColor(Color.Subconscious.secondaryIcon)
@@ -91,14 +90,14 @@ struct ThreadView: View {
                 .padding(.leading, 16)
                 .padding(.trailing, 16)
             } else {
-                ForEach(thread.document.content.blocks) { block in
+                ForEach(store.state.document.content.blocks) { block in
                     BlockView(block: block)
                 }
             }
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            send(.requestEdit(thread.document))
+            store.send(.requestEdit(store.state.document))
         }
     }
 }
@@ -106,40 +105,42 @@ struct ThreadView: View {
 struct ThreadView_Previews: PreviewProvider {
     static var previews: some View {
         ThreadView(
-            thread: ThreadModel(
-                document: SubconsciousDocument(
-                    title: "",
-                    markup:
-                        """
-                        # Overview
+            store: ViewStore(
+                state: ThreadModel(
+                    document: SubconsciousDocument(
+                        title: "",
+                        markup:
+                            """
+                            # Overview
 
-                        Evolution is a behavior that emerges in any system with:
+                            Evolution is a behavior that emerges in any system with:
 
-                        - Mutation
-                        - Heredity
-                        - Selection
+                            - Mutation
+                            - Heredity
+                            - Selection
 
-                        Evolutionary systems often generate unexpected solutions. Nature selects for good enough.
+                            Evolutionary systems often generate unexpected solutions. Nature selects for good enough.
 
-                        > There is no such thing as advantageous in a general sense. There is only advantageous for the circumstances you’re living in. (Olivia Judson, Santa Fe Institute)
+                            > There is no such thing as advantageous in a general sense. There is only advantageous for the circumstances you’re living in. (Olivia Judson, Santa Fe Institute)
 
-                        Evolving systems exist in punctuated equilibrium.
+                            Evolving systems exist in punctuated equilibrium.
 
-                        & punctuated-equilibrium.st
+                            & punctuated-equilibrium.st
 
-                        # Questions
+                            # Questions
 
-                        - What systems (beside biology) exhibit evolutionary behavior? Remember, evolution happens in any system with mutation, heredity, selection.
-                        - What happens to an evolutionary system when you remove mutation? Heredity? Selection?
-                        - Do you see a system with one of these properties? How can you introduce the other two?
+                            - What systems (beside biology) exhibit evolutionary behavior? Remember, evolution happens in any system with mutation, heredity, selection.
+                            - What happens to an evolutionary system when you remove mutation? Heredity? Selection?
+                            - Do you see a system with one of these properties? How can you introduce the other two?
 
-                        # See also
+                            # See also
 
-                        & https://en.wikipedia.org/wiki/Evolutionary_systems
-                        """
-                )
-            ),
-            send: { action in }
+                            & https://en.wikipedia.org/wiki/Evolutionary_systems
+                            """
+                    )
+                ),
+                send: { action in }
+            )
         )
     }
 }

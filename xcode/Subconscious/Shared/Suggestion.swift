@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum Suggestion {
+enum Suggestion: Equatable {
     case thread(_ text: String)
     case query(_ text: String)
     case create(_ text: String)
@@ -40,7 +40,7 @@ extension Suggestion: CustomStringConvertible {
 }
 
 //  MARK: Row View
-struct SuggestionRowView: View {
+struct SuggestionRowView: View, Equatable {
     var suggestion: Suggestion
 
     var body: some View {

@@ -73,7 +73,7 @@ func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> AppAction {
 
 //  MARK: App State
 /// Central source of truth for all shared app state
-struct AppModel {
+struct AppModel: Equatable {
     var suggestionQuery: String = ""
     var threadQuery: String = ""
     /// Live-as-you-type suggestions
@@ -81,10 +81,10 @@ struct AppModel {
     /// Semi-permanent suggestions that show up as tokens in the search view.
     /// We don't differentiate between types of token, so these are all just strings.
     var suggestionTokens = TextTokenBarModel()
-    var search: SearchModel = SearchModel(documents: [])
+    var search = SearchModel(documents: [])
     var isSuggestionsOpen = false
     var isEditorPresented = false
-    var editor: EditorModel = .init()
+    var editor = EditorModel()
 }
 
 //  MARK: App Reducer
@@ -173,11 +173,21 @@ func updateApp(
 }
 
 //  MARK: ContentView
-struct ContentView: View {
-    @StateObject var store: AppStore
+struct ContentView: View, Equatable {
+    static func == (lhs: ContentView, rhs: ContentView) -> Bool {
+        lhs.store.state == rhs.store.state
+    }
+    
+    @ObservedObject var store: AppStore
 
+    init(store: AppStore) {
+        print("ContentView.init")
+        self.store = store
+    }
+    
     var body: some View {
-        VStack(spacing: 0) {
+        print("ContentView.body")
+        return VStack(spacing: 0) {
             HStack(spacing: 8) {
                 if (
                     !store.state.isSuggestionsOpen &&
@@ -212,15 +222,15 @@ struct ContentView: View {
             }.padding(.horizontal, 8).padding(.bottom, 8)
             ZStack {
                 if store.state.threadQuery.isEmpty {
-                    StreamView()
+                    StreamView().equatable()
                 } else {
                     SearchView(
-                        state: store.state.search,
-                        send: address(
+                        store: ViewStore(
+                            state: store.state.search,
                             send: store.send,
                             tag: tagSearchAction
                         )
-                    )
+                    ).equatable()
                 }
 
                 PinBottomRight {
@@ -237,23 +247,24 @@ struct ContentView: View {
                             VStack(spacing: 0) {
                                 if (store.state.suggestionQuery.isEmpty) {
                                     TextTokenBarView(
-                                        state: store.state.suggestionTokens,
-                                        send: address(
+                                        store: ViewStore(
+                                            state: store.state.suggestionTokens,
                                             send: store.send,
                                             tag: tagSuggestionTokensAction
                                         )
                                     )
+                                    .equatable()
                                     .padding(.top, 0)
                                     .padding(.bottom, 8)
                                 }
                                 Divider()
                                 SuggestionListView(
-                                    suggestions: store.state.suggestions,
-                                    send: address(
+                                    store: ViewStore(
+                                        state: store.state.suggestions,
                                         send: store.send,
                                         tag: tagSuggestionListAction
                                     )
-                                )
+                                ).equatable()
                             }
                         }
                         .background(Color.Subconscious.background)
@@ -273,9 +284,12 @@ struct ContentView: View {
             )
         ) {
             EditorView(
-                state: store.state.editor,
-                send: address(send: store.send, tag: tagEditorAction)
-            )
+                store: ViewStore(
+                    state: store.state.editor,
+                    send: store.send,
+                    tag: tagEditorAction
+                )
+            ).equatable()
         }
     }
 }
