@@ -181,16 +181,9 @@ struct EditorView: View, Equatable {
     let cancel: LocalizedStringKey = "Cancel"
     let edit: LocalizedStringKey = "Edit"
     let titlePlaceholder: LocalizedStringKey = "Title:"
-    
-    init(store: ViewStore<EditorModel, EditorAction>) {
-        print("EditorView.init")
-        self.store = store
-    }
-    
-    var body: some View {
-        print("EditorView.body")
         
-        return VStack(spacing: 0) {
+    var body: some View {
+        VStack(spacing: 0) {
             HStack {
                 Button(cancel) {
                     store.send(.cancel)

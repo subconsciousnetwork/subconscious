@@ -25,7 +25,6 @@ func updateTextarea(
     case .change(let text):
         state.text = text
     case .set(let text):
-        print("updateTextarea", text)
         state.text = text
     }
     return Empty().eraseToAnyPublisher()
@@ -45,8 +44,7 @@ struct TextareaView: View, Equatable {
     let store: ViewStore<TextareaModel, TextareaAction>
     
     var body: some View {
-        print("TextareaView.body")
-        return TextEditor(
+        TextEditor(
             text: $textState
         )
         .onChange(

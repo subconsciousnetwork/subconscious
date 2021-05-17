@@ -180,14 +180,8 @@ struct ContentView: View, Equatable {
     
     @ObservedObject var store: AppStore
 
-    init(store: AppStore) {
-        print("ContentView.init")
-        self.store = store
-    }
-    
     var body: some View {
-        print("ContentView.body")
-        return VStack(spacing: 0) {
+        VStack(spacing: 0) {
             HStack(spacing: 8) {
                 if (
                     !store.state.isSuggestionsOpen &&

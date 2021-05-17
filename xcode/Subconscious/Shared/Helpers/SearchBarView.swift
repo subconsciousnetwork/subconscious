@@ -18,8 +18,7 @@ struct SearchBarView: View {
     var cancel: LocalizedStringKey = "Cancel"
 
     var body: some View {
-        print("SearchBarView.body")
-        return HStack {
+        HStack {
             HStack {
                 Image(systemName: "magnifyingglass")
 

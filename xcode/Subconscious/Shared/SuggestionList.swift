@@ -23,15 +23,9 @@ enum SuggestionListAction {
 /// types of search results.
 struct SuggestionListView: View, Equatable {
     let store: ViewStore<[Suggestion], SuggestionListAction>
-
-    init(store: ViewStore<[Suggestion], SuggestionListAction>) {
-        print("SuggestionList.init")
-        self.store = store
-    }
     
     var body: some View {
-        print("SuggestionList.body")
-        return VStack(spacing: 0) {
+        VStack(spacing: 0) {
             ForEach(store.state) { suggestion in
                 Button(action: {
                     store.send(.select(suggestion))
