@@ -209,7 +209,10 @@ struct EditorView: View, Equatable {
                         send: store.send,
                         tag: tagEditorTitleField
                     )
-                ).equatable()
+                )
+                .equatable()
+                .id("App/Editor/TitleField")
+                .animation(nil)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -225,6 +228,8 @@ struct EditorView: View, Equatable {
                             )
                         ).equatable()
                     }
+                    .id("App/Editor/SuggestionScrollView")
+                    .animation(nil)
                 } else {
                     TextareaView(
                         store: ViewStore(
