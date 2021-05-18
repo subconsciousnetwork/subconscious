@@ -34,7 +34,7 @@ final class Store<State, Action, Environment>: ObservableObject, Equatable
     private let environment: Environment
     /// Mutates state in response to an action, returning an effect stream
     private let reducer: Reducer<State, Action, Environment>
-    private var cancellables: Set<AnyCancellable> = []
+    private var effects: [UUID: AnyCancellable] = [:]
 
     init(
         state: State,
@@ -51,37 +51,24 @@ final class Store<State, Action, Environment>: ObservableObject, Equatable
             return
         }
         
-        let publisher = effect
+        /// Create a UUID for the cancellable.
+        /// Store cancellable in dictionary by UUID.
+        /// Remove cancellable from dictionary upon effect completion.
+        /// This retains the effect pipeline for as long as it takes to complete the effect,
+        /// and then removes it, so we don't have a cancellables memory leak.
+        let cancellableId = UUID()
+        let cancellable = effect
             /// Specifies the schedular used to pull events
             /// <https://developer.apple.com/documentation/combine/fail/receive(on:options:)>
             .receive(on: DispatchQueue.main)
-            .eraseToAnyPublisher()
-        exhaustPublisherAndThenRelease(publisher: publisher, receiveValue: send)
+            .sink(
+                receiveCompletion: { [weak self] _ in
+                    self?.effects.removeValue(forKey: cancellableId)
+                },
+                receiveValue: self.send
+            )
+        self.effects[cancellableId] = cancellable
     }
-}
-
-/// Consumes publisher, keeping it alive until it is complete.
-/// After the publisher completes, it is cancelled so that it may be released from memory.
-/// Ordinarily, an AnyCancellable self-cancels if a reference to it is not held somewhere.
-/// See <https://www.apeth.com/UnderstandingCombine/subscribers/subscribersoneshot.html>
-///
-/// 2021-05-04 tested with timer to ensure the cancellable stays alive.
-///
-/// The alternative implementation would be to implement a queue that empties itself on completion
-/// within send, as seen here:
-/// <https://www.pointfree.co/collections/combine/introduction/ep81-the-combine-framework-and-effects-part-2>
-/// <https://github.com/pointfreeco/swift-composable-architecture/blob/0f026d395d414efab5cfdf8d697ec0ae766dd021/Sources/ComposableArchitecture/Store.swift>
-func exhaustPublisherAndThenRelease<Input, Failure:Error>(
-    publisher: AnyPublisher<Input, Failure>,
-    receiveValue: @escaping (Input) -> Void
-) {
-    var cancellable: AnyCancellable?
-    cancellable = publisher.sink(
-        receiveCompletion: { _ in
-            cancellable?.cancel()
-        },
-        receiveValue: receiveValue
-    )
 }
 
 /// ViewStore acts as a state container, typically for some view over the application's central store.
