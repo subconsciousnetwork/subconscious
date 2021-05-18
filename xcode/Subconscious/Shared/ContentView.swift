@@ -19,14 +19,14 @@ typealias AppStore = Store<AppModel, AppAction, AppEnvironment>
 /// Actions that may be taken on the Store
 enum AppAction {
     case editor(_ action: EditorAction)
+    case searchBar(_ action: SubSearchBarAction)
     case search(_ action: SearchAction)
     case suggestionTokens(_ action: TextTokenBarAction)
     case appear
     case edit(_ document: SubconsciousDocument)
-    case query(_ query: String)
-    case querySuggestions(query: String)
+    case commitQuery(_ query: String)
+    case setLiveQuery(_ query: String)
     case setEditorPresented(_ isPresented: Bool)
-    case setSuggestionsOpen(_ isOpen: Bool)
     case setSuggestions(_ suggestions: [Suggestion])
     case saveThread(SubconsciousDocument)
     case warning(_ message: String)
@@ -46,6 +46,17 @@ func tagEditorAction(_ action: EditorAction) -> AppAction {
     }
 }
 
+func tagSearchBarAction(_ action: SubSearchBarAction) -> AppAction {
+    switch action {
+    case .commitQuery(let query):
+        return .commitQuery(query)
+    case .setLiveQuery(let query):
+        return .setLiveQuery(query)
+    default:
+        return .searchBar(action)
+    }
+}
+
 func tagSearchAction(_ action: SearchAction) -> AppAction {
     switch action {
     case .requestEdit(let document):
@@ -58,14 +69,14 @@ func tagSearchAction(_ action: SearchAction) -> AppAction {
 func tagSuggestionListAction(_ action: SuggestionListAction) -> AppAction {
     switch action {
     case .select(let suggestion):
-        return .query(suggestion.description)
+        return .commitQuery(suggestion.description)
     }
 }
 
 func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> AppAction {
     switch action {
     case .select(let text):
-        return .query(text)
+        return .commitQuery(text)
     default:
         return .suggestionTokens(action)
     }
@@ -74,17 +85,15 @@ func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> AppAction {
 //  MARK: App State
 /// Central source of truth for all shared app state
 struct AppModel: Equatable {
-    var suggestionQuery: String = ""
-    var threadQuery: String = ""
-    /// Live-as-you-type suggestions
-    var suggestions: [Suggestion] = []
+    var searchBar = SubSearchBarModel()
+    var search = SearchModel(documents: [])
     /// Semi-permanent suggestions that show up as tokens in the search view.
     /// We don't differentiate between types of token, so these are all just strings.
     var suggestionTokens = TextTokenBarModel()
-    var search = SearchModel(documents: [])
-    var isSuggestionsOpen = false
-    var isEditorPresented = false
+    /// Live-as-you-type suggestions
+    var suggestions: [Suggestion] = []
     var editor = EditorModel()
+    var isEditorPresented = false
 }
 
 //  MARK: App Reducer
@@ -102,6 +111,11 @@ func updateApp(
             action: action,
             environment: environment
         ).map(tagEditorAction).eraseToAnyPublisher()
+    case .searchBar(let action):
+        return updateSubSearchBar(
+            state: &state.searchBar,
+            action: action
+        ).map(tagSearchBarAction).eraseToAnyPublisher()
     case .search(let action):
         return updateSearch(
             state: &state.search,
@@ -123,41 +137,54 @@ func updateApp(
             User Directory: \(dir)
             """
         )
-        let querySuggestions = Just(AppAction.querySuggestions(
-            query: state.suggestionQuery
-        ))
-        let fetchSuggestionTokens = environment
+        let initialQueryEffect = Just(AppAction.commitQuery(""))
+        let suggestionTokensEffect = environment
             .fetchSuggestionTokens()
             .map({ suggestions in
                 AppAction.suggestionTokens(.setTokens(suggestions))
             })
         return Publishers.Merge(
-            querySuggestions,
-            fetchSuggestionTokens
+            initialQueryEffect,
+            suggestionTokensEffect
         ).eraseToAnyPublisher()
     case .edit(let document):
         state.isEditorPresented = true
         return Just(.editor(.edit(document))).eraseToAnyPublisher()
     case .setEditorPresented(let isPresented):
         state.isEditorPresented = isPresented
-    case .query(let query):
-        state.suggestionQuery = query
-        state.threadQuery = query
-        state.isSuggestionsOpen = false
-        return Publishers.Merge(
-            environment.fetchSuggestions(query: query)
-                .map(AppAction.setSuggestions),
-            environment.documentService.query(query: query)
-                .map({ documents in .search(.setItems(documents)) })
-        ).eraseToAnyPublisher()
-    case .querySuggestions(let query):
-        state.suggestionQuery = query
-        return environment
+    case .commitQuery(let query):
+        let searchBarEffect = updateSubSearchBar(
+            state: &state.searchBar,
+            action: .commitQuery(query)
+        ).map(tagSearchBarAction)
+
+        let suggestionsEffect = environment
             .fetchSuggestions(query: query)
             .map(AppAction.setSuggestions)
-            .eraseToAnyPublisher()
-    case .setSuggestionsOpen(let isOpen):
-        state.isSuggestionsOpen = isOpen
+
+        let documentQueryEffect = environment
+            .documentService.query(query: query)
+            .map({ documents in AppAction.search(.setItems(documents)) })
+        
+        return Publishers.Merge3(
+            searchBarEffect,
+            suggestionsEffect,
+            documentQueryEffect
+        ).eraseToAnyPublisher()
+    case .setLiveQuery(let query):
+        let searchBarEffect = updateSubSearchBar(
+            state: &state.searchBar,
+            action: .setLiveQuery(query)
+        ).map(tagSearchBarAction)
+
+        let suggestionsEffect = environment
+            .fetchSuggestions(query: query)
+            .map(AppAction.setSuggestions)
+
+        return Publishers.Merge(
+            searchBarEffect,
+            suggestionsEffect
+        ).eraseToAnyPublisher()
     case .setSuggestions(let suggestions):
         state.suggestions = suggestions
     case .saveThread(let thread):
@@ -184,38 +211,29 @@ struct ContentView: View, Equatable {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 if (
-                    !store.state.isSuggestionsOpen &&
-                    !store.state.threadQuery.isEmpty
+                    !store.state.searchBar.isOpen &&
+                    !store.state.searchBar.comittedQuery.isEmpty
                 ) {
-                    Button(action: {
-                        store.send(.query(""))
-                    }) {
-                        Icon(image: Image(systemName: "chevron.left"))
-                    }
-                }
-                SearchBarView(
-                    comittedQuery: Binding(
-                        get: { store.state.threadQuery },
-                        set: { query in
-                            store.send(.query(query))
-                        }
-                    ),
-                    liveQuery: Binding(
-                        get: { store.state.suggestionQuery },
-                        set: { query in
-                            store.send(.querySuggestions(query: query))
-                        }
-                    ),
-                    isOpen: Binding(
-                        get: { store.state.isSuggestionsOpen },
-                        set: { isOpen in
-                            store.send(.setSuggestionsOpen(isOpen))
+                    Button(
+                        action: {
+                            store.send(.commitQuery(""))
+                        },
+                        label: {
+                            Icon(image: Image(systemName: "chevron.left"))
                         }
                     )
-                )
-            }.padding(.horizontal, 8).padding(.bottom, 8)
+                }
+                SubSearchBarView(
+                    store: ViewStore(
+                        state: store.state.searchBar,
+                        send: store.send,
+                        tag: tagSearchBarAction
+                    )
+                ).equatable()
+            }.padding(8)
+
             ZStack {
-                if store.state.threadQuery.isEmpty {
+                if store.state.searchBar.comittedQuery.isEmpty {
                     StreamView().equatable()
                 } else {
                     SearchView(
@@ -236,10 +254,10 @@ struct ContentView: View, Equatable {
                 }
 
                 Group {
-                    if store.state.isSuggestionsOpen {
+                    if store.state.searchBar.isOpen {
                         ScrollView {
                             VStack(spacing: 0) {
-                                if (store.state.suggestionQuery.isEmpty) {
+                                if (store.state.searchBar.liveQuery.isEmpty) {
                                     TextTokenBarView(
                                         store: ViewStore(
                                             state: store.state.suggestionTokens,
