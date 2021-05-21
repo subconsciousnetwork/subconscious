@@ -17,6 +17,7 @@ struct AppEnvironment {
         category: "main"
     )
 
+    let searchService = SearchService()
     let documentService = DocumentService()
     
     //  FIXME: this just serves up static suggestions

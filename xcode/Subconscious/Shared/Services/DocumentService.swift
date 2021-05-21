@@ -16,40 +16,18 @@ struct DocumentService {
         case write(message: String)
     }
 
-    private let fileManager = FileManager.default
-
-    /// Get the URL for the user's document directory, if any.
-    var documentDirectory: URL? {
-        fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
-    }
+    let fileManager = FileManager.default
     
-    /// List all URLs for files in the user's document directory.
-    /// Omits hidden files.
-    private func listDocumentUrls() -> [URL] {
-        if let dir = documentDirectory {
-            let files = try? fileManager.contentsOfDirectory(
-                at: dir,
-                includingPropertiesForKeys: nil,
-                options: .skipsHiddenFiles
-            )
-            return files ?? []
-        } else {
-            return []
-        }
-    }
-
-    private func listDocumentUrlsWithSuffix(suffix: String) -> [URL] {
-        listDocumentUrls().filter({url in url.pathExtension == suffix})
-    }
-
     /// List all Subtext URLs in the app's root directory
     func listSubtextUrls() -> [URL] {
-        return listDocumentUrlsWithSuffix(suffix: "subtext")
+        self.fileManager
+            .listDocumentDirectoryContents()
+            .withPathExtension("subtext")
     }
 
     /// Get URL for title. URL may or may not exist already.
     func urlForTitle(title: String) -> URL? {
-        return documentDirectory?
+        return self.fileManager.documentDirectoryUrl?
             .appendingFilename(name: title, ext: "subtext")
     }
     

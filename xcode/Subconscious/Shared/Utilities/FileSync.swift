@@ -1,24 +1,22 @@
 //
-//  ChangeCheck.swift
+//  FileSync.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 5/19/21.
 //
 import Foundation
 
-struct ChangeCheck {
-    typealias Path = String
-
+struct FileSync {
     /// Fingerprint a file revision with a combination of file path, modified date, and file size.
     /// Useful as an signal for file change when syncing.
     ///
-    /// This isn't perfect. You can't really know unless you do a checksum, but its a fast good-enough
-    /// heuristics for simple cases.
+    /// This isn't perfect. You can't really know unless you do a checksum, but it is a fast good-enough
+    /// heuristic for simple cases.
     ///
     /// This is the same strategy rsync uses when not doing full checksums.
     struct FileFingerprint: Hashable, Equatable, Identifiable {
-        var id: Path { self.path }
-        let path: Path
+        var id: String { self.url.path }
+        let url: URL
         let modified: Date
         let size: Int
     }
@@ -33,7 +31,7 @@ struct ChangeCheck {
             if let modified = attr[FileAttributeKey.modificationDate] as? Date,
                let size = attr[FileAttributeKey.size] as? Int {
                 return FileFingerprint(
-                    path: url.path,
+                    url: url,
                     modified: modified,
                     size: size
                 )
@@ -62,19 +60,16 @@ struct ChangeCheck {
     /// Given a set of FileFingerprints, return a dictionary, indexed by key
     static private func indexFileFingerprints(
         _ fingerprints: [FileFingerprint]
-    ) -> Dictionary<Path, FileFingerprint> {
+    ) -> Dictionary<URL, FileFingerprint> {
         Dictionary(
-            fingerprints.map({ fingerprint in (fingerprint.id, fingerprint)}),
+            fingerprints.map({ fingerprint in (fingerprint.url, fingerprint)}),
             uniquingKeysWith: { a, b in b }
         )
     }
 
     /// Changes are a left and right FileFingerprint?, zipped by id (file path).
     struct Change: Hashable, Equatable {
-        enum ChangeError: Error {
-            case nonMatchingIdError
-        }
-
+        /// Possible change statuses
         enum Status {
             case leftOnly
             case rightOnly
@@ -106,11 +101,11 @@ struct ChangeCheck {
         let left: FileFingerprint?
         let right: FileFingerprint?
 
-        init(left: FileFingerprint?, right: FileFingerprint?) throws {
+        init?(left: FileFingerprint?, right: FileFingerprint?) {
             /// If we have a left and right fingerprint, but their IDs don't match, throw.
             if let l = left, let r = right {
                 guard l.id == r.id else {
-                    throw ChangeError.nonMatchingIdError
+                    return nil
                 }
             }
             self.left = left
@@ -129,14 +124,12 @@ struct ChangeCheck {
 
         var changes: [Change] = []
         for key in allKeys {
-            do {
-                changes.append(
-                    try Change(
-                        left: leftIndex[key],
-                        right: rightIndex[key]
-                    )
-                )
-            } catch {}
+            if let change = Change(
+                left: leftIndex[key],
+                right: rightIndex[key]
+            ) {
+                changes.append(change)
+            }
         }
 
         return changes

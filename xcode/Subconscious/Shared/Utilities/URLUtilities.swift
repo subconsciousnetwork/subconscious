@@ -22,3 +22,9 @@ extension URL {
         return url
     }
 }
+
+extension Sequence where Iterator.Element == URL {
+    func withPathExtension(_ ext: String) -> [URL] {
+        self.filter({url in url.pathExtension == ext})
+    }
+}

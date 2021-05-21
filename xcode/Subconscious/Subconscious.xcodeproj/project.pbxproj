@@ -37,7 +37,7 @@
 		B887151726435774009BEE1E /* BasicEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B887151626435774009BEE1E /* BasicEnvironment.swift */; };
 		B8B00041262621C60068F688 /* PinBottomRight.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B00040262621C60068F688 /* PinBottomRight.swift */; };
 		B8B00047262622280068F688 /* ActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B00046262622280068F688 /* ActionButton.swift */; };
-		B8B24FA52655CDF500EE6CB9 /* ChangeCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B24FA42655CDF500EE6CB9 /* ChangeCheck.swift */; };
+		B8B24FA52655CDF500EE6CB9 /* FileSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B24FA42655CDF500EE6CB9 /* FileSync.swift */; };
 		B8B2C1832645E8C0008AA3EC /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */; };
 		B8B2C18526470EC0008AA3EC /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18426470EC0008AA3EC /* Post.swift */; };
 		B8B2C1872647172A008AA3EC /* PostHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C1862647172A008AA3EC /* PostHeader.swift */; };
@@ -46,6 +46,8 @@
 		B8C602E5264A16E100812C90 /* Textarea.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C602E4264A16E100812C90 /* Textarea.swift */; };
 		B8C602E7264A34EB00812C90 /* TextEditorRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C602E6264A34EB00812C90 /* TextEditorRepresentable.swift */; };
 		B8E152F02656F2D20032F5A7 /* SubconsciousApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */; };
+		B8E152F226570B890032F5A7 /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E152F126570B890032F5A7 /* SearchService.swift */; };
+		B8E152F426570C010032F5A7 /* FileManagerUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */; };
 		B8F41F08262F8FD500D134F8 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F41F07262F8FD500D134F8 /* Icon.swift */; };
 		B8FD06FC26321A8600128FDC /* DocumentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FD06FB26321A8600128FDC /* DocumentService.swift */; };
 /* End PBXBuildFile section */
@@ -103,7 +105,7 @@
 		B887151626435774009BEE1E /* BasicEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicEnvironment.swift; sourceTree = "<group>"; };
 		B8B00040262621C60068F688 /* PinBottomRight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinBottomRight.swift; sourceTree = "<group>"; };
 		B8B00046262622280068F688 /* ActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButton.swift; sourceTree = "<group>"; };
-		B8B24FA42655CDF500EE6CB9 /* ChangeCheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeCheck.swift; sourceTree = "<group>"; };
+		B8B24FA42655CDF500EE6CB9 /* FileSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSync.swift; sourceTree = "<group>"; };
 		B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		B8B2C18426470EC0008AA3EC /* Post.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Post.swift; sourceTree = "<group>"; };
 		B8B2C1862647172A008AA3EC /* PostHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostHeader.swift; sourceTree = "<group>"; };
@@ -111,6 +113,8 @@
 		B8B2C18A26474326008AA3EC /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		B8C602E4264A16E100812C90 /* Textarea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Textarea.swift; sourceTree = "<group>"; };
 		B8C602E6264A34EB00812C90 /* TextEditorRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextEditorRepresentable.swift; sourceTree = "<group>"; };
+		B8E152F126570B890032F5A7 /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
+		B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManagerUtilities.swift; sourceTree = "<group>"; };
 		B8F41F07262F8FD500D134F8 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
 		B8FD06FB26321A8600128FDC /* DocumentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -150,6 +154,7 @@
 		B804C09D2620FFDD00D59CC6 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */,
 				B83B5295261E58260031988E /* Search.swift */,
 				B87DA9182624DDEA00BA5232 /* Stream.swift */,
 				B87C7D7B261E0E6C003EFC6F /* Block.swift */,
@@ -173,7 +178,8 @@
 				B853EB402633959E001BB584 /* StringUtilities.swift */,
 				B82211F426375A9C005CFBBE /* URLUtilities.swift */,
 				B8B2C18A26474326008AA3EC /* Colors.swift */,
-				B8B24FA42655CDF500EE6CB9 /* ChangeCheck.swift */,
+				B8B24FA42655CDF500EE6CB9 /* FileSync.swift */,
+				B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -195,7 +201,6 @@
 			children = (
 				B853EB2326326F9F001BB584 /* Utilities */,
 				B86F339B261AB2C6009D3D48 /* SubconsciousDocument.swift */,
-				B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */,
 				B804C09D2620FFDD00D59CC6 /* Components */,
 				B86F339D261AB2C7009D3D48 /* Assets.xcassets */,
 				B8FD070126321A8D00128FDC /* Services */,
@@ -274,6 +279,7 @@
 				B887151626435774009BEE1E /* BasicEnvironment.swift */,
 				B8FD06FB26321A8600128FDC /* DocumentService.swift */,
 				B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */,
+				B8E152F126570B890032F5A7 /* SearchService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -440,8 +446,10 @@
 				B8C602E7264A34EB00812C90 /* TextEditorRepresentable.swift in Sources */,
 				B87C7D7C261E0E6C003EFC6F /* Block.swift in Sources */,
 				B874D7AD26540A7800351C8E /* SubSearchBar.swift in Sources */,
+				B8E152F226570B890032F5A7 /* SearchService.swift in Sources */,
 				B83B5296261E58260031988E /* Search.swift in Sources */,
 				B81BD764263885DE00BAEC67 /* Editor.swift in Sources */,
+				B8E152F426570C010032F5A7 /* FileManagerUtilities.swift in Sources */,
 				B82211F526375A9C005CFBBE /* URLUtilities.swift in Sources */,
 				B87651242630A07A00AD029A /* Store.swift in Sources */,
 				B8F41F08262F8FD500D134F8 /* Icon.swift in Sources */,
@@ -458,7 +466,7 @@
 				B87DA91F26250CF900BA5232 /* SearchBarRepresentable.swift in Sources */,
 				B87DA9192624DDEA00BA5232 /* Stream.swift in Sources */,
 				B853EB412633959E001BB584 /* StringUtilities.swift in Sources */,
-				B8B24FA52655CDF500EE6CB9 /* ChangeCheck.swift in Sources */,
+				B8B24FA52655CDF500EE6CB9 /* FileSync.swift in Sources */,
 				B86F33C8261AB2C7009D3D48 /* ContentView.swift in Sources */,
 				B8C602E5264A16E100812C90 /* Textarea.swift in Sources */,
 				B8B2C1832645E8C0008AA3EC /* AppEnvironment.swift in Sources */,
