@@ -4,6 +4,7 @@
 //
 //  Created by Gordon Brander on 4/23/21.
 //
+import Foundation
 
 /// Remove leading `prefix` from `value` if it exists.
 /// - Returns: modified string

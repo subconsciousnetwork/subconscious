@@ -7,89 +7,168 @@
 
 import Foundation
 
-struct Subtext: LosslessStringConvertible, Identifiable, Equatable, Hashable {
-    struct Block: LosslessStringConvertible, Identifiable, Equatable, Hashable {
-        /// Special characters used to denote a block type
-        enum Sigil: String {
-            case text = ""
-            case link = "& "
-            case list = "- "
-            case heading = "# "
-            case quote = "> "
-        }
+struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
+    struct BlankBlock:
+        CustomStringConvertible, Identifiable, Equatable, Hashable {
+        let id = UUID()
+        var description: String { "" }
+    }
 
-        let sigil: Sigil
-
+    struct TextBlock:
+        CustomStringConvertible, Identifiable, Equatable, Hashable {
+        let id = UUID()
+        var description: String { self.value }
         let value: String
+    }
+    
+    struct LinkBlock:
+        CustomStringConvertible, Identifiable, Equatable, Hashable {
+        static let sigil = "&"
+        let id = UUID()
+        var description: String { "& " + self.value }
+        let value: String
+    }
+
+    struct ListBlock:
+        CustomStringConvertible, Identifiable, Equatable, Hashable {
+        static let sigil = "-"
+        let id = UUID()
+        var description: String { "- " + self.value }
+        let value: String
+    }
+
+    struct HeadingBlock:
+        CustomStringConvertible, Identifiable, Equatable, Hashable {
+        static let sigil = "#"
+        let id = UUID()
+        var description: String { "# " + self.value }
+        let value: String
+    }
+
+    struct QuoteBlock:
+        CustomStringConvertible, Identifiable, Equatable, Hashable {
+        static let sigil = ">"
+        let id = UUID()
+        var description: String { "> " + self.value }
+        let value: String
+    }
+    
+    enum Block: CustomStringConvertible, Identifiable, Equatable, Hashable {
+        case blank(BlankBlock)
+        case text(TextBlock)
+        case link(LinkBlock)
+        case list(ListBlock)
+        case heading(HeadingBlock)
+        case quote(QuoteBlock)
+
+        var id: UUID {
+            switch self {
+            case .blank(let block):
+                return block.id
+            case .text(let block):
+                return block.id
+            case .link(let block):
+                return block.id
+            case .list(let block):
+                return block.id
+            case .heading(let block):
+                return block.id
+            case .quote(let block):
+                return block.id
+            }
+        }
 
         var description: String {
-            sigil.rawValue + value
+            switch self {
+            case .blank(let block):
+                return block.description
+            case .text(let block):
+                return block.description
+            case .link(let block):
+                return block.description
+            case .list(let block):
+                return block.description
+            case .heading(let block):
+                return block.description
+            case .quote(let block):
+                return block.description
+            }
         }
 
-        var id: Int {
-            self.hashValue
+        private static func trimSigil(from value: String, sigil: String) -> String {
+            ltrim(prefix: LinkBlock.sigil + " ", value: value)
         }
         
-        init(sigil: Sigil, value: String) {
-            self.sigil = sigil
-            self.value = value
-        }
-
-        /// Init block from line of markup
-        init(_ line: String) {
-            if line.hasPrefix(Sigil.link.rawValue) {
-                self.sigil = Sigil.link
-                self.value = ltrim(prefix: Sigil.link.rawValue, value: line)
-            } else if line.hasPrefix(Sigil.list.rawValue) {
-                self.sigil = Sigil.list
-                self.value = ltrim(prefix: Sigil.list.rawValue, value: line)
-            } else if line.hasPrefix(Sigil.heading.rawValue) {
-                self.sigil = Sigil.heading
-                self.value = ltrim(prefix: Sigil.heading.rawValue, value: line)
-            } else if line.hasPrefix(Sigil.quote.rawValue) {
-                self.sigil = Sigil.quote
-                self.value = ltrim(prefix: Sigil.quote.rawValue, value: line)
+        static func fromLine(_ line: String) -> Block {
+            if line.hasPrefix(LinkBlock.sigil) {
+                return Block.link(
+                    .init(
+                        value: trimSigil(
+                            from: line,
+                            sigil: LinkBlock.sigil
+                        )
+                    )
+                )
+            } else if line.hasPrefix(ListBlock.sigil) {
+                return Block.list(
+                    .init(
+                        value: trimSigil(
+                            from: line,
+                            sigil: ListBlock.sigil
+                        )
+                    )
+                )
+            } else if line.hasPrefix(HeadingBlock.sigil) {
+                return Block.heading(
+                    .init(
+                        value: trimSigil(
+                            from: line,
+                            sigil: HeadingBlock.sigil
+                        )
+                    )
+                )
+            } else if line.hasPrefix(QuoteBlock.sigil) {
+                return Block.quote(
+                    .init(
+                        value: trimSigil(
+                            from: line,
+                            sigil: QuoteBlock.sigil
+                        )
+                    )
+                )
+            } else if line.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ).isEmpty {
+                return Block.blank(BlankBlock())
             } else {
-                self.sigil = Sigil.text
-                self.value = line
+                return Block.text(TextBlock(value: line))
             }
         }
     }
-
+    
     let blocks: [Block]
 
     var id: Int {
         self.hashValue
     }
-    
-    /// Get Subtext as markup string
+
     var description: String {
-        blocks.map({ block in block.description }).joined(separator: "\n\n")
+        blocks.map({ block in block.description }).joined(separator: "\n")
     }
-
-    // Get contents of first text block
-    var firstText: String {
-        for block in blocks {
-            if block.sigil == Block.Sigil.text {
-                return block.value
-            }
-        }
-        return ""
-    }
-
+        
     init(blocks: [Block]) {
         self.blocks = blocks
     }
 
-    
     init(_ markup: String) {
         self.init(
             blocks: markup
-                // Note that split omits empty subsequences by default.
-                // This means we do not have to filter out blank lines caused
-                // by multiple concurrent line breaks, since split omits them.
-                .split(whereSeparator: \.isNewline)
-                .map({ sub in Block(String(sub)) })
+                .split(
+                    maxSplits: Int.max,
+                    omittingEmptySubsequences: false,
+                    whereSeparator: \.isNewline
+                )
+                .map({ sub in Block.fromLine(String(sub)) })
         )
     }
 }

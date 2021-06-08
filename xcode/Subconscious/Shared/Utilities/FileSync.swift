@@ -19,6 +19,29 @@ struct FileSync {
         let url: URL
         let modified: Date
         let size: Int
+
+        enum FileFingerprintError: Error {
+            case fileAttributeError
+        }
+        
+        /// Get a FileChangeFingerprint for a given URL
+        static func from(
+            url: URL,
+            with manager: FileManager = FileManager.default
+        ) throws -> FileFingerprint {
+            let attr = try manager.attributesOfItem(atPath: url.path)
+            guard
+                let modified = attr[FileAttributeKey.modificationDate] as? Date,
+                let size = attr[FileAttributeKey.size] as? Int
+            else {
+                throw FileFingerprintError.fileAttributeError
+            }
+            return FileFingerprint(
+                url: url,
+                modified: modified,
+                size: size
+            )
+        }
     }
     
     /// Get a FileChangeFingerprint for a given URL
@@ -46,14 +69,11 @@ struct FileSync {
     /// Given an array of URLs, get an array of FileFingerprints.
     /// If we can't read a fingerprint for the file, we filter it out of the list.
     static func readFileFingerprints(
-        with manager: FileManager,
-        urls: [URL]
-    ) -> [FileFingerprint] {
-        urls.compactMap({ url in
-            readFileFingerprint(
-                with: manager,
-                url: url
-            )
+        urls: [URL],
+        with manager: FileManager = FileManager.default
+    ) throws -> [FileFingerprint] {
+        try urls.compactMap({ url in
+            return try FileFingerprint.from(url: url, with: manager)
         })
     }
 

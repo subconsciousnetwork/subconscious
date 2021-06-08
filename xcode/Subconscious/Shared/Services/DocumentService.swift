@@ -55,7 +55,7 @@ struct DocumentService {
         Future({ promise in
             if let url = urlForTitle(title: document.title) {
                 do {
-                    try String(document.content).write(
+                    try String(document.description).write(
                         to: url,
                         atomically: true,
                         encoding: .utf8

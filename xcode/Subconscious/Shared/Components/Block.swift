@@ -13,24 +13,26 @@ struct BlockView: View {
     
     var body: some View {
         Group {
-            switch block.sigil {
-            case .text:
-                GenericBlockView(block: block)
-            case .link:
-                GenericBlockView(block: block)
-            case .list:
-                GenericBlockView(block: block)
-            case .heading:
+            switch block {
+            case .text(let block):
+                TextBlockView(block: block)
+            case .link(let block):
+                LinkBlockView(block: block)
+            case .list(let block):
+                ListBlockView(block: block)
+            case .heading(let block):
                 HeadingBlockView(block: block)
-            case .quote:
+            case .quote(let block):
                 QuoteBlockView(block: block)
+            case .blank:
+                BlankBlockView()
             }
         }
     }
 }
 
-struct GenericBlockView: View {
-    var block: Subtext.Block
+struct TextBlockView: View {
+    var block: Subtext.TextBlock
 
     var body: some View {
         Text(block.value)
@@ -46,8 +48,42 @@ struct GenericBlockView: View {
     }
 }
 
+struct ListBlockView: View {
+    var block: Subtext.ListBlock
+
+    var body: some View {
+        Text(block.value)
+            .font(.body)
+            .padding(.bottom, 8)
+            .padding(.top, 8)
+            .padding(.leading, 24)
+            .padding(.trailing, 16)
+            .frame(
+                maxWidth: .infinity,
+                alignment: .leading
+            )
+    }
+}
+
+struct LinkBlockView: View {
+    var block: Subtext.LinkBlock
+
+    var body: some View {
+        Text(block.value)
+            .font(.body)
+            .padding(.bottom, 8)
+            .padding(.top, 8)
+            .padding(.leading, 24)
+            .padding(.trailing, 16)
+            .frame(
+                maxWidth: .infinity,
+                alignment: .leading
+            )
+    }
+}
+
 struct HeadingBlockView: View {
-    var block: Subtext.Block
+    var block: Subtext.HeadingBlock
 
     var body: some View {
         Text(block.value)
@@ -65,7 +101,7 @@ struct HeadingBlockView: View {
 }
 
 struct QuoteBlockView: View {
-    var block: Subtext.Block
+    var block: Subtext.QuoteBlock
 
     var body: some View {
         Text(block.value)
@@ -79,5 +115,11 @@ struct QuoteBlockView: View {
                 maxWidth: .infinity,
                 alignment: .leading
             )
+    }
+}
+
+struct BlankBlockView: View {
+    var body: some View {
+        Spacer().frame(height: 16)
     }
 }

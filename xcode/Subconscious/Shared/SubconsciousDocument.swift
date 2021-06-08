@@ -28,7 +28,7 @@ struct SubconsciousDocument: Identifiable, Hashable, Equatable {
 extension SubconsciousDocument: CustomStringConvertible {
     var description: String {
         return """
-        SubconsciousDocument("\(title)", "\(content.firstText)...")
+        SubconsciousDocument("\(title)")
         """
     }
 }

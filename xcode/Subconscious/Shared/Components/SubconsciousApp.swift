@@ -192,7 +192,7 @@ func updateApp(
             .map({ AppAction.info("Saved thread") })
             .eraseToAnyPublisher()
     case .syncSearchIndex:
-        _ = environment.searchService.syncIndex()
+        _ = environment.searchService?.syncIndex()
     case .warning(let message):
         environment.logger.warning("\(message)")
     case .info(let message):

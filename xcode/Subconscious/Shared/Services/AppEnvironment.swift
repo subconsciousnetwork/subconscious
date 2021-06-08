@@ -12,13 +12,32 @@ import Combine
 //  MARK: App Environment
 /// Access to external network services and other supporting services
 struct AppEnvironment {
+    let fileManager = FileManager.default
     let logger = Logger(
         subsystem: "com.subconscious.Subconscious",
         category: "main"
     )
-
-    let searchService = SearchService()
+    let searchService: SearchService?
     let documentService = DocumentService()
+    
+    init() {
+        do {
+            let databaseUrl = try fileManager.url(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask,
+                appropriateFor: nil,
+                create: true
+            ).appendingPathComponent("database.sqlite")
+
+            self.searchService = try SearchService(databaseUrl: databaseUrl)
+        } catch {
+            log.error("""
+            Failed to setup SearchService with error:
+            \(error.localizedDescription)
+            """)
+            self.searchService = nil
+        }
+    }
     
     //  FIXME: this just serves up static suggestions
     func fetchSuggestions(query: String) -> Future<[Suggestion], Never> {
