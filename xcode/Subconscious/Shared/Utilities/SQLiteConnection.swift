@@ -324,9 +324,8 @@ final class SQLiteConnection {
 /// Formatter for string dates.
 /// Note that this formatter defaults to GMT when no time zone is explicitly specified.
 struct SQLiteMigrations {
-    enum SQLiteMigrationError: Error {
-        case version(message: String)
-        case abort(message: String)
+    enum SQLiteMigrationsError: Error {
+        case invalidVersion(message: String)
         case migration(message: String)
     }
 
@@ -347,20 +346,18 @@ struct SQLiteMigrations {
             self.sql = sql
         }
         
-        init(date: String, sql: String) throws {
-            var formatter = ISO8601DateFormatter()
+        init?(date: String, sql: String) {
+            let formatter = ISO8601DateFormatter()
             formatter.formatOptions = [
                 .withFullDate,
                 .withDashSeparatorInDate,
                 .withColonSeparatorInTime
             ]
-
+            guard let date = formatter.date(from: date) else {
+                return nil
+            }
             self.init(
-                date: try formatter
-                    .date(from: date)
-                    .unwrap(or: MigrationError.date(
-                        message: "Could not parse date")
-                    ),
+                date: date,
                 sql: sql
             )
         }
@@ -371,49 +368,39 @@ struct SQLiteMigrations {
     }
 
     let migrations: [Migration]
+
+    var versions: [Int] {
+        migrations.map({ migration in migration.version })
+    }
     
-    var latest: Migration? {
-        migrations.max()
+    var latest: Migration {
+        migrations.max()!
     }
 
-    init(_ migrations: [Migration]) {
+    init?(_ migrations: [Migration]) {
+        guard !migrations.isEmpty else {
+            return nil
+        }
         self.migrations = migrations
     }
     
-    func isMigrated(
-        db: SQLiteConnection
-    ) throws -> Bool {
-        if let latest = self.latest {
-            return try db.getUserVersion() == latest.version
-        } else {
-            return false
-        }
+    /// Allows for a quick check against latest migration version.
+    /// Does not make sure that the version you supply is actually valid.
+    func isMigrated(version: Int) -> Bool {
+        return version == latest.version
     }
-    
-    /// Get migrations that need to be applied.
-    func filterOutstandingMigrations(since version: Int) throws -> [Migration] {
-        // Migrations MUST be monotonically ordered by version.
-        // We sort to prevent accidents.
-        // Then we filter the list down to only those migrations which have
-        // not yet been applied.
-        let validVersions = migrations.map({ migration in migration.version })
 
-        // Make sure the current version is initial version, or
-        // that it is some known migration version.
-        guard
+    /// Make sure the version supplied is a legit migration version.
+    /// It must either be one of the versions in the migrations list, or the `DEFAULT_USER_VERSION`.
+    func isValidVersion(version: Int) -> Bool {
+        return (
             version == SQLiteConnection.DEFAULT_USER_VERSION ||
-            validVersions.contains(version)
-        else {
-            throw SQLiteMigrationError.abort(
-                message: """
-                Database version does not match any version in migration list.
-                
-                Database version: \(version)
-                Valid versions: \(validVersions)
-                """
-            )
-        }
+            self.versions.contains(version)
+        )
+    }
 
+    /// Get migrations that need to be applied.
+    func filterOutstandingMigrations(since version: Int) -> [Migration] {
         return migrations
             .sorted()
             .filter({ migration in migration.version > version })
@@ -425,19 +412,32 @@ struct SQLiteMigrations {
     ///
     /// All migrations are applied during same transaction. If any migration fails, the database is
     /// rolled back to its pre-migration state.
-    func migrate(db: SQLiteConnection) throws {
-        let databaseVersion = try db.getUserVersion()
+    func migrate(database: SQLiteConnection) throws {
+        let databaseVersion = try database.getUserVersion()
 
-        let outstandingMigrations = try filterOutstandingMigrations(
+        // Make sure the current version is initial version, or
+        // that it is some known migration version.
+        guard isValidVersion(version: databaseVersion)
+        else {
+            throw SQLiteMigrationsError.invalidVersion(
+                message: """
+                Database version does not match any version in migration list.
+                Database version: \(databaseVersion)
+                Valid versions: \(self.versions)
+                """
+            )
+        }
+        
+        let outstandingMigrations = filterOutstandingMigrations(
             since: databaseVersion
         )
 
         if (outstandingMigrations.count > 0) {
-            try db.executescript(sql: "SAVEPOINT premigration;")
+            try database.executescript(sql: "SAVEPOINT premigration;")
 
             for migration in outstandingMigrations {
                 do {
-                    try db.executescript(sql: """
+                    try database.executescript(sql: """
                     PRAGMA user_version = \(migration.version);
                     \(migration.sql)
                     """)
@@ -447,11 +447,11 @@ struct SQLiteMigrations {
                     // out as if it never happened, whereas ROLLBACK TO rewinds
                     // to the beginning of the transaction. We want the former.
                     // https://sqlite.org/lang_savepoint.html
-                    try db.executescript(
+                    try database.executescript(
                         sql: "ROLLBACK TO SAVEPOINT premigration;"
                     )
 
-                    throw SQLiteMigrationError.migration(
+                    throw SQLiteMigrationsError.migration(
                         message: """
                         Migration failed. Rolling back to pre-migration savepoint.
                         
@@ -462,7 +462,26 @@ struct SQLiteMigrations {
             }
 
             // We made it through all the migrations. Release savepoint.
-            try db.executescript(sql: "RELEASE SAVEPOINT premigration;")
+            try database.executescript(sql: "RELEASE SAVEPOINT premigration;")
+        }
+    }
+}
+
+extension SQLiteMigrations.SQLiteMigrationsError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .invalidVersion(let message):
+            return """
+            Invalid database version (SQLiteMigrations.SQLiteMigrationsError.invalidVersion)
+
+            \(message)
+            """
+        case .migration(let message):
+            return """
+            Migration error (SQLiteMigrations.SQLiteMigrationsError.migration)
+
+            \(message)
+            """
         }
     }
 }

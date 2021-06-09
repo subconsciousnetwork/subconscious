@@ -15,6 +15,7 @@ typealias AppStore = Store<AppModel, AppAction, AppEnvironment>
 //  MARK: App Actions
 /// Actions that may be taken on the Store
 enum AppAction {
+    case database(_ action: DatabaseAction)
     case editor(_ action: EditorAction)
     case searchBar(_ action: SubSearchBarAction)
     case search(_ action: SearchAction)
@@ -26,12 +27,19 @@ enum AppAction {
     case setEditorPresented(_ isPresented: Bool)
     case setSuggestions(_ suggestions: [Suggestion])
     case saveThread(SubconsciousDocument)
-    case syncSearchIndex
     case warning(_ message: String)
     case info(_ message: String)
 }
 
 //  MARK: Tagging functions
+
+func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
+    print("tagDatabaseAction \(action)")
+    switch action {
+    default:
+        return .database(action)
+    }
+}
 
 func tagEditorAction(_ action: EditorAction) -> AppAction {
     switch action {
@@ -83,6 +91,7 @@ func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> AppAction {
 //  MARK: App State
 /// Central source of truth for all shared app state
 struct AppModel: Equatable {
+    var database = DatabaseModel()
     var searchBar = SubSearchBarModel()
     var search = SearchModel(documents: [])
     /// Semi-permanent suggestions that show up as tokens in the search view.
@@ -103,6 +112,12 @@ func updateApp(
     environment: AppEnvironment
 ) -> AnyPublisher<AppAction, Never> {
     switch action {
+    case .database(let action):
+        return updateDatabase(
+            state: &state.database,
+            action: action,
+            environment: environment.database
+        ).map(tagDatabaseAction).eraseToAnyPublisher()
     case .editor(let action):
         return updateEditor(
             state: &state.editor,
@@ -127,12 +142,10 @@ func updateApp(
             environment: BasicEnvironment(logger: environment.logger)
         ).map(tagSuggestionTokensAction).eraseToAnyPublisher()
     case .appear:
-        let dir = environment.documentService.fileManager.documentDirectoryUrl?
-            .absoluteString ?? ""
         environment.logger.info(
             """
             AppAction.appear
-            User Directory: \(dir)
+            User Directory: \(environment.documentsUrl.absoluteString)
             """
         )
         let initialQueryEffect = Just(AppAction.commitQuery(""))
@@ -141,11 +154,11 @@ func updateApp(
             .map({ suggestions in
                 AppAction.suggestionTokens(.setTokens(suggestions))
             })
-        let syncSearchIndexEffect = Just(AppAction.syncSearchIndex)
+        let setupDatabaseEffect = Just(AppAction.database(.setup))
         return Publishers.Merge3(
             initialQueryEffect,
             suggestionTokensEffect,
-            syncSearchIndexEffect
+            setupDatabaseEffect
         ).eraseToAnyPublisher()
     case .edit(let document):
         state.isEditorPresented = true
@@ -191,8 +204,6 @@ func updateApp(
         return environment.documentService.write(thread)
             .map({ AppAction.info("Saved thread") })
             .eraseToAnyPublisher()
-    case .syncSearchIndex:
-        _ = environment.searchService?.syncIndex()
     case .warning(let message):
         environment.logger.warning("\(message)")
     case .info(let message):

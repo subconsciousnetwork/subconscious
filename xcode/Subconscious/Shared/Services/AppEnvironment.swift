@@ -17,26 +17,26 @@ struct AppEnvironment {
         subsystem: "com.subconscious.Subconscious",
         category: "main"
     )
-    let searchService: SearchService?
+    let documentsUrl: URL
+    let databaseUrl: URL
+    let database: DatabaseEnvironment
     let documentService = DocumentService()
     
     init() {
-        do {
-            let databaseUrl = try fileManager.url(
-                for: .applicationSupportDirectory,
-                in: .userDomainMask,
-                appropriateFor: nil,
-                create: true
-            ).appendingPathComponent("database.sqlite")
+        self.databaseUrl = try! fileManager.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        ).appendingPathComponent("database.sqlite")
 
-            self.searchService = try SearchService(databaseUrl: databaseUrl)
-        } catch {
-            log.error("""
-            Failed to setup SearchService with error:
-            \(error.localizedDescription)
-            """)
-            self.searchService = nil
-        }
+        self.documentsUrl = fileManager.documentDirectoryUrl!
+        
+        self.database = DatabaseEnvironment(
+            databaseUrl: databaseUrl,
+            documentsUrl: documentsUrl,
+            migrations: DatabaseEnvironment.getMigrations()
+        )
     }
     
     //  FIXME: this just serves up static suggestions

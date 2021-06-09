@@ -47,6 +47,7 @@ final class Store<State, Action, Environment>: ObservableObject, Equatable
     }
     
     func send(_ action: Action) {
+        print("Action: \(action)")
         guard let effect = reducer(&state, action, environment) else {
             return
         }
@@ -59,6 +60,8 @@ final class Store<State, Action, Environment>: ObservableObject, Equatable
         let cancellableId = UUID()
         let cancellable = effect
             /// Specifies the schedular used to pull events
+            /// This drives UI, so it MUST use main thread, since SwiftUI currently does not allow
+            /// publishing changes on background threads.
             /// <https://developer.apple.com/documentation/combine/fail/receive(on:options:)>
             .receive(on: DispatchQueue.main)
             .sink(
