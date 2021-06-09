@@ -1,6 +1,7 @@
 import SQLite3
 import Foundation
 
+//  MARK: SQLiteConnection
 /// SQLite connection manager designed along RAII lines.
 /// Connection lifetime is object lifetime.
 /// Initializing opens a connection to the database.
@@ -321,6 +322,41 @@ final class SQLiteConnection {
     }
 }
 
+//  MARK: SQLiteConnection extensions
+extension SQLiteConnection.SQLiteConnectionError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .execution(let message):
+            return """
+            Execution error (SQLiteConnection.SQLiteConnectionError.execution)
+            
+            \(message)
+            """
+        case .openDatabase:
+            return "Could not open database (SQLiteConnection.SQLiteConnectionError.openDatabase)"
+        case .parameter(let message):
+            return """
+            Parameter error (SQLiteConnection.SQLiteConnectionError.parameter)
+            
+            \(message)
+            """
+        case .prepare(let message):
+            return """
+            Could not prepare SQL (SQLiteConnection.SQLiteConnectionError.prepare)
+            
+            \(message)
+            """
+        case .value(let message):
+            return """
+            Value error
+            
+            \(message)
+            """
+        }
+    }
+}
+
+//  MARK: SQLiteMigrations
 /// Formatter for string dates.
 /// Note that this formatter defaults to GMT when no time zone is explicitly specified.
 struct SQLiteMigrations {
@@ -467,6 +503,7 @@ struct SQLiteMigrations {
     }
 }
 
+//  MARK: SQLiteMigrations extensions
 extension SQLiteMigrations.SQLiteMigrationsError: LocalizedError {
     public var errorDescription: String? {
         switch self {

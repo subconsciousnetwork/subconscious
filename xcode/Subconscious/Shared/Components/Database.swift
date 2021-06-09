@@ -340,7 +340,7 @@ struct DatabaseEnvironment {
             }
             log.info("Database sync finished")
         } catch {
-            log.warning("Database sync failed")
+            log.warning("Database sync failed: \(error.localizedDescription)")
             throw error
         }
     }
