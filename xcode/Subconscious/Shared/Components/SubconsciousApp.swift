@@ -34,7 +34,6 @@ enum AppAction {
 //  MARK: Tagging functions
 
 func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
-    print("tagDatabaseAction \(action)")
     switch action {
     default:
         return .database(action)

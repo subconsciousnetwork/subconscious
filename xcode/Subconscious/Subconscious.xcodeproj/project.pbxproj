@@ -49,7 +49,7 @@
 		B8C602E5264A16E100812C90 /* Textarea.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C602E4264A16E100812C90 /* Textarea.swift */; };
 		B8C602E7264A34EB00812C90 /* TextEditorRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C602E6264A34EB00812C90 /* TextEditorRepresentable.swift */; };
 		B8E152F02656F2D20032F5A7 /* SubconsciousApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */; };
-		B8E152F226570B890032F5A7 /* DatabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E152F126570B890032F5A7 /* DatabaseService.swift */; };
+		B8E152F226570B890032F5A7 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E152F126570B890032F5A7 /* Database.swift */; };
 		B8E152F426570C010032F5A7 /* FileManagerUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */; };
 		B8EB2ACC265EBE52008F4D91 /* Tests_SQLiteConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EB2ACB265EBE52008F4D91 /* Tests_SQLiteConnection.swift */; };
 		B8EB2ACE265ECB2B008F4D91 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B8EB2ACD265ECB2B008F4D91 /* libsqlite3.tbd */; };
@@ -124,7 +124,7 @@
 		B8B2C18A26474326008AA3EC /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		B8C602E4264A16E100812C90 /* Textarea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Textarea.swift; sourceTree = "<group>"; };
 		B8C602E6264A34EB00812C90 /* TextEditorRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextEditorRepresentable.swift; sourceTree = "<group>"; };
-		B8E152F126570B890032F5A7 /* DatabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseService.swift; sourceTree = "<group>"; };
+		B8E152F126570B890032F5A7 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
 		B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManagerUtilities.swift; sourceTree = "<group>"; };
 		B8EB2ACB265EBE52008F4D91 /* Tests_SQLiteConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_SQLiteConnection.swift; sourceTree = "<group>"; };
 		B8EB2ACD265ECB2B008F4D91 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
@@ -172,6 +172,7 @@
 		B804C09D2620FFDD00D59CC6 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				B8E152F126570B890032F5A7 /* Database.swift */,
 				B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */,
 				B83B5295261E58260031988E /* Search.swift */,
 				B87DA9182624DDEA00BA5232 /* Stream.swift */,
@@ -310,7 +311,6 @@
 				B887151626435774009BEE1E /* BasicEnvironment.swift */,
 				B8FD06FB26321A8600128FDC /* DocumentService.swift */,
 				B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */,
-				B8E152F126570B890032F5A7 /* DatabaseService.swift */,
 				B843FF3F2666C3AB001CC05F /* Logger.swift */,
 			);
 			path = Services;
@@ -478,7 +478,7 @@
 				B8C602E7264A34EB00812C90 /* TextEditorRepresentable.swift in Sources */,
 				B87C7D7C261E0E6C003EFC6F /* Block.swift in Sources */,
 				B874D7AD26540A7800351C8E /* SubSearchBar.swift in Sources */,
-				B8E152F226570B890032F5A7 /* DatabaseService.swift in Sources */,
+				B8E152F226570B890032F5A7 /* Database.swift in Sources */,
 				B83B5296261E58260031988E /* Search.swift in Sources */,
 				B81BD764263885DE00BAEC67 /* Editor.swift in Sources */,
 				B8E152F426570C010032F5A7 /* FileManagerUtilities.swift in Sources */,

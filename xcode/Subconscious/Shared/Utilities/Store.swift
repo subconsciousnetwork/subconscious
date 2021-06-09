@@ -47,7 +47,6 @@ final class Store<State, Action, Environment>: ObservableObject, Equatable
     }
     
     func send(_ action: Action) {
-        print("Action: \(action)")
         guard let effect = reducer(&state, action, environment) else {
             return
         }
