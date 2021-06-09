@@ -242,18 +242,26 @@ final class SQLiteConnection {
             // Flag used for blob and text bindings
             // NOTE: Text & BLOB values passed to a C-API do not work correctly
             // if they are not marked as transient.
+            // See https://www.sqlite.org/c3ref/bind_blob.html
+            // and https://www.sqlite.org/c3ref/c_static.html
             let SQLITE_TRANSIENT = unsafeBitCast(
                 -1,
                 to: sqlite3_destructor_type.self
             )
 
             for (i, parameter) in parameters.enumerated() {
+                // Per the SQLite3 docs, the leftmost parameter is 1-indexed.
+                // Enumerated indices are 0-indexed.
+                // We therefore increment by 1.
+                // See https://www.sqlite.org/c3ref/bind_blob.html
+                let parameterIndex = i + 1
+
                 var flag: CInt = 0
                 switch parameter {
                 case .blob(let data):
                     flag = sqlite3_bind_blob(
                         statement,
-                        CInt(i),
+                        CInt(parameterIndex),
                         (data as NSData).bytes,
                         CInt(data.count),
                         SQLITE_TRANSIENT
@@ -261,21 +269,28 @@ final class SQLiteConnection {
                 case .text(let string):
                     flag = sqlite3_bind_text(
                         statement,
-                        CInt(i),
+                        CInt(parameterIndex),
                         (string as NSString).utf8String,
                         -1,
                         SQLITE_TRANSIENT
                     )
                 case .integer(let int):
-                    flag = sqlite3_bind_int(statement, CInt(i), CInt(int))
+                    flag = sqlite3_bind_int(
+                        statement,
+                        CInt(parameterIndex),
+                        CInt(int)
+                    )
                 case .real(let double):
                     flag = sqlite3_bind_double(
                         statement,
-                        CInt(i),
+                        CInt(parameterIndex),
                         CDouble(double)
                     )
                 case .null:
-                    flag = sqlite3_bind_null(statement, CInt(i))
+                    flag = sqlite3_bind_null(
+                        statement,
+                        CInt(parameterIndex)
+                    )
                 }
                 // Check for errors
                 if flag != SQLITE_OK {
