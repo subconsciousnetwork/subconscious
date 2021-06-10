@@ -24,13 +24,13 @@ struct ThreadModel: Identifiable, Equatable {
 func updateThread(
     state: inout ThreadModel,
     action: ThreadAction,
-    environment: AppEnvironment
+    environment: BasicService
 ) -> AnyPublisher<ThreadAction, Never> {
     switch action {
     case .setFolded(let isFolded):
         state.isFolded = isFolded
     case .requestEdit:
-        environment.logger.warning(
+        environment.log.warning(
             """
             ThreadAction.requestEdit
             This action should have been handled by the parent view.

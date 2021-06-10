@@ -227,7 +227,7 @@ struct DatabaseEnvironment {
     func writeEntry(_ url: URL) throws {
         let db = try openDatabase()
         let contents = try fileManager.contents(atPath: url.path).unwrap()
-        let fingerprint = try FileSync.FileFingerprint.from(
+        let fingerprint = try FileSync.FileFingerprint(
             url: url,
             with: fileManager
         )
@@ -267,7 +267,7 @@ struct DatabaseEnvironment {
             DELETE FROM entry WHERE path = ?
             """,
             parameters: [
-                .text(url.absoluteString)
+                .text(url.lastPathComponent)
             ]
         )
     }
@@ -315,13 +315,12 @@ struct DatabaseEnvironment {
                     size: try row[2].asInt().unwrap()
                 )
             })
-            print(right)
             
             let changes = FileSync.calcChanges(
                 left: left,
                 right: right
             )
-            
+
             for change in changes {
                 switch change.status {
                 // .leftOnly = create.

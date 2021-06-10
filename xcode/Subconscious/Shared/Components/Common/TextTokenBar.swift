@@ -20,13 +20,13 @@ struct TextTokenBarModel: Equatable {
 func updateTextTokenBar(
     state: inout TextTokenBarModel,
     action: TextTokenBarAction,
-    environment: BasicEnvironment
+    environment: BasicService
 ) -> AnyPublisher<TextTokenBarAction, Never> {
     switch action {
     case .setTokens(let tokens):
         state.tokens = tokens
     case .select:
-        environment.logger.warning(
+        environment.log.warning(
             """
             TextTokenBarAction.select
             action should be handled by parent

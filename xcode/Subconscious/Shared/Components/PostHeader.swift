@@ -19,11 +19,11 @@ enum PostHeaderAction {
 func updatePostHeader(
     state: inout PostHeaderModel,
     action: PostHeaderAction,
-    environment: AppEnvironment
+    environment: BasicService
 ) -> AnyPublisher<PostHeaderAction, Never> {
     switch action {
     case .tapProfile:
-        environment.logger.warning(
+        environment.log.warning(
             """
             PostHeaderAction.tapProfile
             action should be handled by parent

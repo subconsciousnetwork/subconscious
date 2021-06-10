@@ -8,6 +8,13 @@ import os
 
 /// A basic services environment for reducers that exposes a logger.
 /// We may expand this to cover a few other non-destructive services.
-struct BasicEnvironment {
-    let logger: Logger
+struct BasicService {
+    static let `default` = BasicService(
+        log: Logger(
+            subsystem: Constants.rdns,
+            category: "main"
+        )
+    )
+    
+    let log: Logger
 }

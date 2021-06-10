@@ -19,6 +19,7 @@ struct AppEnvironment {
     )
     let documentsUrl: URL
     let databaseUrl: URL
+    let basic = BasicService.default
     let database: DatabaseEnvironment
     let documentService = DocumentService()
     

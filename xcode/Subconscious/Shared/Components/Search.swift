@@ -27,7 +27,7 @@ struct SearchModel: Equatable {
 func updateSearch(
     state: inout SearchModel,
     action: SearchAction,
-    environment: AppEnvironment
+    environment: BasicService
 ) -> AnyPublisher<SearchAction, Never> {
     switch action {
     case .item(let action):
@@ -45,7 +45,7 @@ func updateSearch(
                 )
             }).eraseToAnyPublisher()
         } else {
-            environment.logger.info(
+            environment.log.info(
                 """
                 SearchAction.item
                 Passed non-existant item key: \(action.key).
@@ -60,7 +60,7 @@ func updateSearch(
             .enumerated()
             .map({ (i, doc) in ThreadModel(document: doc, isFolded: i > 0) })
     case .requestEdit:
-        environment.logger.warning(
+        environment.log.warning(
             """
             SearchAction.requestEdit
             This action should have been handled by parent view.

@@ -21,7 +21,7 @@ enum PostAction {
 func updatePost(
     state: inout PostModel,
     action: PostAction,
-    environment: AppEnvironment
+    environment: BasicService
 ) -> AnyPublisher<PostAction, Never> {
     switch action {
     case .header(let action):
@@ -37,7 +37,6 @@ func updatePost(
             environment: environment
         ).map(tagPostThread).eraseToAnyPublisher()
     }
-    return Empty().eraseToAnyPublisher()
 }
 
 func tagPostHeader(_ action: PostHeaderAction) -> PostAction {
