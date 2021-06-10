@@ -171,12 +171,12 @@ struct DatabaseEnvironment {
     let documentsUrl: URL
     let migrations: SQLiteMigrations
 
-    func connect() throws -> SQLiteConnection {
+    func openDatabase() throws -> SQLiteConnection {
         try SQLiteConnection(url: databaseUrl)
     }
     
     func migrateDatabase() throws {
-        let db = try connect()
+        let db = try openDatabase()
         let version = try db.getUserVersion()
         do {
             log.notice("Performing database migration from \(version) to \(migrations.latest.version).")
@@ -225,9 +225,8 @@ struct DatabaseEnvironment {
     }
     
     func writeEntry(_ url: URL) throws {
-        let db = try connect()
-        let contents = try fileManager.contents(atPath: url.path)
-            .unwrap()
+        let db = try openDatabase()
+        let contents = try fileManager.contents(atPath: url.path).unwrap()
         let fingerprint = try FileSync.FileFingerprint.from(
             url: url,
             with: fileManager
@@ -239,7 +238,9 @@ struct DatabaseEnvironment {
             VALUES (?, ?, ?, ?, ?)
             """,
             parameters: [
-                .text(url.absoluteString),
+                // Must store relative path, since absolute path
+                // can change during testing.
+                .text(url.lastPathComponent),
                 .text(url.stem),
                 .text(body),
                 .date(fingerprint.modified),
@@ -260,7 +261,7 @@ struct DatabaseEnvironment {
     }
     
     func removeEntry(_ url: URL) throws {
-        let db = try connect()
+        let db = try openDatabase()
         try db.execute(
             sql: """
             DELETE FROM entry WHERE path = ?
@@ -297,7 +298,8 @@ struct DatabaseEnvironment {
                 with: fileManager
             )
 
-            let db = try connect()
+            let db = try openDatabase()
+
             // Right = Follower (search index)
             let right = try db.execute(
                 sql: "SELECT path, modified, size FROM entry"
@@ -306,12 +308,14 @@ struct DatabaseEnvironment {
                     url: URL(
                         fileURLWithPath: try row[0]
                             .asString()
-                            .unwrap()
+                            .unwrap(),
+                        relativeTo: documentsUrl
                     ),
                     modified: try row[1].asDate().unwrap(),
                     size: try row[2].asInt().unwrap()
                 )
             })
+            print(right)
             
             let changes = FileSync.calcChanges(
                 left: left,

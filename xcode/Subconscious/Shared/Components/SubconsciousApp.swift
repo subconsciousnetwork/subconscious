@@ -143,8 +143,8 @@ func updateApp(
     case .appear:
         environment.logger.info(
             """
-            AppAction.appear
-            User Directory: \(environment.documentsUrl.absoluteString)
+            User Directory:
+            \(environment.documentsUrl.absoluteString)
             """
         )
         let initialQueryEffect = Just(AppAction.commitQuery(""))
