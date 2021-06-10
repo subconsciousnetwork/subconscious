@@ -457,13 +457,24 @@ struct SQLiteMigrations {
             .filter({ migration in migration.version > version })
     }
     
+    // Information about successful migrations
+    struct MigrationSuccess {
+        let from: Int
+        let to: Int
+        let migrations: [Int]
+    }
+    
     /// Apply migrations to a database, skipping migrations that have already been applied.
     /// Versions MUST monotonically increase, and migrations will be sorted by version before being
     /// applied. It is recommended to use a UNIX time stamp as the version.
     ///
     /// All migrations are applied during same transaction. If any migration fails, the database is
     /// rolled back to its pre-migration state.
-    func migrate(database: SQLiteConnection) throws {
+    ///
+    /// - Returns: `(from: Int, to: Int)`, a tuple representing version
+    @discardableResult func migrate(
+        database: SQLiteConnection
+    ) throws -> MigrationSuccess {
         let databaseVersion = try database.getUserVersion()
 
         // Make sure the current version is initial version, or
@@ -515,6 +526,16 @@ struct SQLiteMigrations {
             // We made it through all the migrations. Release savepoint.
             try database.executescript(sql: "RELEASE SAVEPOINT premigration;")
         }
+
+        return MigrationSuccess(
+            from: databaseVersion,
+            to: self.latest.version,
+            migrations: Array(
+                outstandingMigrations.map({ migration in
+                    migration.version
+                })
+            )
+        )
     }
 }
 

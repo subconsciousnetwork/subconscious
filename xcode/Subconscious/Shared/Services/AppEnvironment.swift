@@ -13,10 +13,6 @@ import Combine
 /// Access to external network services and other supporting services
 struct AppEnvironment {
     let fileManager = FileManager.default
-    let logger = Logger(
-        subsystem: "com.subconscious.Subconscious",
-        category: "main"
-    )
     let documentsUrl: URL
     let databaseUrl: URL
     let basic = BasicService.default

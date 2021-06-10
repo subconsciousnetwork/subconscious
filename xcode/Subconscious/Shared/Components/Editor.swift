@@ -146,21 +146,21 @@ func updateEditor(
             .map({ suggestions in .setTitleSuggestions(suggestions) })
             .eraseToAnyPublisher()
     case .requestSave:
-        environment.logger.warning(
+        environment.basic.log.warning(
             """
             EditorAction.requestSave
             should be handled by the parent view.
             """
         )
     case .requestTitleMatch:
-        environment.logger.warning(
+        environment.basic.log.warning(
             """
             EditorAction.requestTitleMatch
             should be handled by parent view.
             """
         )
     case .requestEditorUnpresent:
-        environment.logger.warning(
+        environment.basic.log.warning(
             """
             EditorAction.requestEditorUnpresent
             should be handled by the parent view.

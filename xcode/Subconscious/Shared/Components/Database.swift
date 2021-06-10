@@ -176,15 +176,20 @@ struct DatabaseEnvironment {
     }
     
     func migrateDatabase() throws {
+        log.info("Performing database migration")
         let db = try openDatabase()
-        let version = try db.getUserVersion()
         do {
-            log.notice("Performing database migration from \(version) to \(migrations.latest.version).")
-            try migrations.migrate(database: db)
-            log.notice("Database migration succeeded. Upgraded from \(version) to \(migrations.latest.version).")
+            let success = try migrations.migrate(database: db)
+            if success.to == success.from {
+                log.info("Database up-to-date. No migration needed. Version: \(success.from).")
+            } else {
+                let versionsString = success.migrations
+                    .map({ i in String(i) })
+                    .joined(separator: ", ")
+                log.info("Database migration succeeded. From \(success.from) to \(success.to) through versions \(versionsString).")
+            }
         } catch {
-            log.warning("Database migration failed. Rolling back to premigration snapshot."
-            )
+            log.warning("Database migration failed. Rolling back to premigration snapshot.")
             throw error
         }
     }
