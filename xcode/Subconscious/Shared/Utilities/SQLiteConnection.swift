@@ -92,7 +92,7 @@ final class SQLiteConnection {
 
     /// The internal GCD queue
     /// We use this queue to ensure database access is threadsafe
-    private var queue = DispatchQueue(label: "SQLiteConnection", attributes: [])
+    private var queue = DispatchQueue(label: "SQLite3Connection", attributes: [])
     
     init(path: String) throws {
         // Open database

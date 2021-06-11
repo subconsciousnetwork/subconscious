@@ -34,7 +34,7 @@ final class Store<State, Action, Environment>: ObservableObject, Equatable
     private let environment: Environment
     /// Mutates state in response to an action, returning an effect stream
     private let reducer: Reducer<State, Action, Environment>
-    private var effects: [UUID: AnyCancellable] = [:]
+    private var effects: PublisherManager<Action, Never>
 
     init(
         state: State,
@@ -44,6 +44,7 @@ final class Store<State, Action, Environment>: ObservableObject, Equatable
         self.state = state
         self.reducer = reducer
         self.environment = environment
+        self.effects = PublisherManager()
     }
     
     func send(_ action: Action) {
@@ -51,25 +52,16 @@ final class Store<State, Action, Environment>: ObservableObject, Equatable
             return
         }
         
-        /// Create a UUID for the cancellable.
-        /// Store cancellable in dictionary by UUID.
-        /// Remove cancellable from dictionary upon effect completion.
-        /// This retains the effect pipeline for as long as it takes to complete the effect,
-        /// and then removes it, so we don't have a cancellables memory leak.
-        let cancellableId = UUID()
-        let cancellable = effect
-            /// Specifies the schedular used to pull events
-            /// This drives UI, so it MUST use main thread, since SwiftUI currently does not allow
-            /// publishing changes on background threads.
-            /// <https://developer.apple.com/documentation/combine/fail/receive(on:options:)>
-            .receive(on: DispatchQueue.main)
-            .sink(
-                receiveCompletion: { [weak self] _ in
-                    self?.effects.removeValue(forKey: cancellableId)
-                },
-                receiveValue: self.send
-            )
-        self.effects[cancellableId] = cancellable
+        effects.sink(
+            publisher: effect
+                /// Specifies the schedular used to pull events
+                /// This drives UI, so it MUST use main thread, since SwiftUI currently does not allow
+                /// publishing changes on background threads.
+                /// <https://developer.apple.com/documentation/combine/fail/receive(on:options:)>
+                .receive(on: DispatchQueue.main)
+                .eraseToAnyPublisher(),
+            receiveValue: self.send
+        )
     }
 }
 

@@ -229,65 +229,6 @@ struct DatabaseEnvironment {
         })
     }
     
-    func writeEntry(_ url: URL) throws {
-        let db = try openDatabase()
-        let contents = try fileManager.contents(atPath: url.path).unwrap()
-        let fingerprint = try FileSync.FileFingerprint(
-            url: url,
-            with: fileManager
-        )
-        let body = String(decoding: contents, as: UTF8.self)
-        try db.execute(
-            sql: """
-            INSERT INTO entry (path, title, body, modified, size)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            parameters: [
-                // Must store relative path, since absolute path
-                // can change during testing.
-                .text(url.lastPathComponent),
-                .text(url.stem),
-                .text(body),
-                .date(fingerprint.modified),
-                .integer(fingerprint.size)
-            ]
-        )
-    }
-    
-    func promiseWriteEntry(_ url: URL) -> Future<Void, Error> {
-        Future({ promise in
-            do {
-                try writeEntry(url)
-                promise(.success(Void()))
-            } catch {
-                promise(.failure(error))
-            }
-        })
-    }
-    
-    func removeEntry(_ url: URL) throws {
-        let db = try openDatabase()
-        try db.execute(
-            sql: """
-            DELETE FROM entry WHERE path = ?
-            """,
-            parameters: [
-                .text(url.lastPathComponent)
-            ]
-        )
-    }
-
-    func promiseRemoveEntry(_ url: URL) -> Future<Void, Error> {
-        Future({ promise in
-            do {
-                try removeEntry(url)
-                promise(.success(Void()))
-            } catch {
-                promise(.failure(error))
-            }
-        })
-    }
-    
     func syncDatabase() throws {
         log.info("Syncing database")
         do {
@@ -363,6 +304,65 @@ struct DatabaseEnvironment {
                     promise(.failure(error))
                 }
             })
+        })
+    }
+
+    func writeEntry(_ url: URL) throws {
+        let db = try openDatabase()
+        let contents = try fileManager.contents(atPath: url.path).unwrap()
+        let fingerprint = try FileSync.FileFingerprint(
+            url: url,
+            with: fileManager
+        )
+        let body = String(decoding: contents, as: UTF8.self)
+        try db.execute(
+            sql: """
+            INSERT INTO entry (path, title, body, modified, size)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            parameters: [
+                // Must store relative path, since absolute path
+                // can change during testing.
+                .text(url.lastPathComponent),
+                .text(url.stem),
+                .text(body),
+                .date(fingerprint.modified),
+                .integer(fingerprint.size)
+            ]
+        )
+    }
+    
+    func promiseWriteEntry(_ url: URL) -> Future<Void, Error> {
+        Future({ promise in
+            do {
+                try writeEntry(url)
+                promise(.success(Void()))
+            } catch {
+                promise(.failure(error))
+            }
+        })
+    }
+    
+    func removeEntry(_ url: URL) throws {
+        let db = try openDatabase()
+        try db.execute(
+            sql: """
+            DELETE FROM entry WHERE path = ?
+            """,
+            parameters: [
+                .text(url.lastPathComponent)
+            ]
+        )
+    }
+
+    func promiseRemoveEntry(_ url: URL) -> Future<Void, Error> {
+        Future({ promise in
+            do {
+                try removeEntry(url)
+                promise(.success(Void()))
+            } catch {
+                promise(.failure(error))
+            }
         })
     }
 }
