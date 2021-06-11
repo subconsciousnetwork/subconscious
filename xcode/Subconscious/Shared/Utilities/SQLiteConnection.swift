@@ -1,5 +1,6 @@
 import SQLite3
 import Foundation
+import Combine
 
 //  MARK: SQLiteConnection
 /// SQLite connection manager designed along RAII lines.
@@ -10,6 +11,7 @@ final class SQLiteConnection {
     /// The default value of the user_version pragma.
     /// This constant is for code readability purposes.
     public static let DEFAULT_USER_VERSION = 0;
+    public static let dispatchQueueLabel = "SQLite3Connection"
 
     /// Column data types for SQLite
     enum SQLValue {
@@ -91,10 +93,21 @@ final class SQLiteConnection {
     private var db: OpaquePointer?
 
     /// The internal GCD queue
-    /// We use this queue to ensure database access is threadsafe
-    private var queue = DispatchQueue(label: "SQLite3Connection", attributes: [])
+    /// We use this queue to make database connections  threadsafe
+    /// and to allow for non-blocking off-main-thread database calls.
+    private var queue: DispatchQueue
     
-    init(path: String) throws {
+    init(path: String, qos: Dispatch.DispatchQoS = .default) throws {
+        // Create GCD dispatch queue for running database queries.
+        // SQLite3Connection objects are threadsafe.
+        // The queue is *always* serial, ensuring that SQL queries to this
+        // database are run in-order, whether called sync or async.
+        self.queue = DispatchQueue(
+            label: SQLiteConnection.dispatchQueueLabel,
+            qos: qos,
+            attributes: []
+        )
+        
         // Open database
         let pathCString = path.cString(using: String.Encoding.utf8)
         let result = sqlite3_open(pathCString!, &db)
@@ -105,13 +118,13 @@ final class SQLiteConnection {
     }
 
     /// Initialize an in-memory database
-    convenience init() throws {
-        try self.init(path: ":memory:")
+    convenience init(qos: Dispatch.DispatchQoS = .default) throws {
+        try self.init(path: ":memory:", qos: qos)
     }
 
     /// Initialize a database file at a URL
-    convenience init(url: URL) throws {
-        try self.init(path: url.path)
+    convenience init(url: URL, qos: Dispatch.DispatchQoS = .default) throws {
+        try self.init(path: url.path, qos: qos)
     }
     
     deinit {
@@ -137,11 +150,10 @@ final class SQLiteConnection {
         try queue.sync {
             let result = sqlite3_exec(db, sql, nil, nil, nil)
             if result != SQLITE_OK {
-                let error = (
+                throw SQLiteConnectionError.execution(
                     String(validatingUTF8: sqlite3_errmsg(self.db)) ??
                     "Unknown error"
                 )
-                throw SQLiteConnectionError.execution(error)
             }
         }
     }
@@ -180,6 +192,71 @@ final class SQLiteConnection {
         return rows
     }
 
+    /// Executes multiple SQL statements in one go.
+    /// Useful for setting up a database.
+    /// This form does not allow for parameter binding.
+    /// This method is asyncronous, and returns a Future.
+    func executescriptAsync(sql: String) -> Future<Void, Error> {
+        Future({ promise in
+            self.queue.async {
+                let result = sqlite3_exec(self.db, sql, nil, nil, nil)
+                if result != SQLITE_OK {
+                    let error = SQLiteConnectionError.execution(
+                        String(validatingUTF8: sqlite3_errmsg(self.db)) ??
+                        "Unknown error"
+                    )
+                    promise(.failure(error))
+                } else {
+                    promise(.success(Void()))
+                }
+            }
+        })
+    }
+    
+    /// Execute a single SQL statement
+    /// This method is asyncronous, and returns a Future.
+    ///
+    /// - Parameters:
+    ///   - sql: The SQL query to be executed
+    ///   - parameters: An array of optional parameters in case the SQL statement includes
+    ///     bound parameters - indicated by `?`
+    /// - Returns: SQL rows
+    func executeAsync(
+        sql: String,
+        parameters: [SQLValue] = []
+    ) throws -> Future<[[SQLValue]], Error> {
+        Future({ promise in
+            self.queue.async {
+                do {
+                    var rows: [[SQLValue]] = []
+                    let statement = try self.prepare(
+                        sql: sql,
+                        parameters: parameters
+                    )
+                    if let statement = statement {
+                        let columnCount = sqlite3_column_count(statement)
+                        while sqlite3_step(statement) == SQLITE_ROW {
+                            // Get row data for each column
+                            var row: [SQLValue] = []
+                            for index in 0..<columnCount {
+                                let sqlData = SQLiteConnection.getDataForRow(
+                                    statement: statement,
+                                    index: index
+                                )
+                                row.append(sqlData)
+                            }
+                            rows.append(row)
+                        }
+                        sqlite3_finalize(statement)
+                        promise(.success(rows))
+                    }
+                } catch {
+                    promise(.failure(error))
+                }
+            }
+        })
+    }
+    
     /// Get user_version as integer
     func getUserVersion() throws -> Int {
         let rows = try execute(sql: "PRAGMA user_version")
@@ -365,194 +442,6 @@ extension SQLiteConnection.SQLiteConnectionError: LocalizedError {
             return """
             Value error
             
-            \(message)
-            """
-        }
-    }
-}
-
-//  MARK: SQLiteMigrations
-/// Formatter for string dates.
-/// Note that this formatter defaults to GMT when no time zone is explicitly specified.
-struct SQLiteMigrations {
-    enum SQLiteMigrationsError: Error {
-        case invalidVersion(message: String)
-        case migration(message: String)
-    }
-
-    struct Migration: Equatable, Comparable, Hashable {
-        enum MigrationError: Error {
-            case date(message: String)
-        }
-        
-        static func < (lhs: Migration, rhs: Migration) -> Bool {
-            lhs.version < rhs.version
-        }
-        
-        let version: Int
-        let sql: String
-
-        init(version: Int, sql: String) {
-            self.version = version
-            self.sql = sql
-        }
-        
-        init?(date: String, sql: String) {
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [
-                .withFullDate,
-                .withDashSeparatorInDate,
-                .withColonSeparatorInTime
-            ]
-            guard let date = formatter.date(from: date) else {
-                return nil
-            }
-            self.init(
-                date: date,
-                sql: sql
-            )
-        }
-        
-        init(date: Date, sql: String) {
-            self.init(version: Int(date.timeIntervalSince1970), sql: sql)
-        }
-    }
-
-    let migrations: [Migration]
-
-    var versions: [Int] {
-        migrations.map({ migration in migration.version })
-    }
-    
-    var latest: Migration {
-        migrations.max()!
-    }
-
-    init?(_ migrations: [Migration]) {
-        guard !migrations.isEmpty else {
-            return nil
-        }
-        self.migrations = migrations
-    }
-    
-    /// Allows for a quick check against latest migration version.
-    /// Does not make sure that the version you supply is actually valid.
-    func isMigrated(version: Int) -> Bool {
-        return version == latest.version
-    }
-
-    /// Make sure the version supplied is a legit migration version.
-    /// It must either be one of the versions in the migrations list, or the `DEFAULT_USER_VERSION`.
-    func isValidVersion(version: Int) -> Bool {
-        return (
-            version == SQLiteConnection.DEFAULT_USER_VERSION ||
-            self.versions.contains(version)
-        )
-    }
-
-    /// Get migrations that need to be applied.
-    func filterOutstandingMigrations(since version: Int) -> [Migration] {
-        return migrations
-            .sorted()
-            .filter({ migration in migration.version > version })
-    }
-    
-    // Information about successful migrations
-    struct MigrationSuccess {
-        let from: Int
-        let to: Int
-        let migrations: [Int]
-    }
-    
-    /// Apply migrations to a database, skipping migrations that have already been applied.
-    /// Versions MUST monotonically increase, and migrations will be sorted by version before being
-    /// applied. It is recommended to use a UNIX time stamp as the version.
-    ///
-    /// All migrations are applied during same transaction. If any migration fails, the database is
-    /// rolled back to its pre-migration state.
-    ///
-    /// - Returns: `(from: Int, to: Int)`, a tuple representing version
-    @discardableResult func migrate(
-        database: SQLiteConnection
-    ) throws -> MigrationSuccess {
-        let databaseVersion = try database.getUserVersion()
-
-        // Make sure the current version is initial version, or
-        // that it is some known migration version.
-        guard isValidVersion(version: databaseVersion)
-        else {
-            throw SQLiteMigrationsError.invalidVersion(
-                message: """
-                Database version does not match any version in migration list.
-                Database version: \(databaseVersion)
-                Valid versions: \(self.versions)
-                """
-            )
-        }
-        
-        let outstandingMigrations = filterOutstandingMigrations(
-            since: databaseVersion
-        )
-
-        if (outstandingMigrations.count > 0) {
-            try database.executescript(sql: "SAVEPOINT premigration;")
-
-            for migration in outstandingMigrations {
-                do {
-                    try database.executescript(sql: """
-                    PRAGMA user_version = \(migration.version);
-                    \(migration.sql)
-                    """)
-                } catch {
-                    // If failure, roll back all changes to original savepoint.
-                    // Note that ROLLBACK without a TO clause just backs everything
-                    // out as if it never happened, whereas ROLLBACK TO rewinds
-                    // to the beginning of the transaction. We want the former.
-                    // https://sqlite.org/lang_savepoint.html
-                    try database.executescript(
-                        sql: "ROLLBACK TO SAVEPOINT premigration;"
-                    )
-
-                    throw SQLiteMigrationsError.migration(
-                        message: """
-                        Migration failed. Rolling back to pre-migration savepoint.
-                        
-                        Error: \(error)
-                        """
-                    )
-                }
-            }
-
-            // We made it through all the migrations. Release savepoint.
-            try database.executescript(sql: "RELEASE SAVEPOINT premigration;")
-        }
-
-        return MigrationSuccess(
-            from: databaseVersion,
-            to: self.latest.version,
-            migrations: Array(
-                outstandingMigrations.map({ migration in
-                    migration.version
-                })
-            )
-        )
-    }
-}
-
-//  MARK: SQLiteMigrations extensions
-extension SQLiteMigrations.SQLiteMigrationsError: LocalizedError {
-    public var errorDescription: String? {
-        switch self {
-        case .invalidVersion(let message):
-            return """
-            Invalid database version (SQLiteMigrations.SQLiteMigrationsError.invalidVersion)
-
-            \(message)
-            """
-        case .migration(let message):
-            return """
-            Migration error (SQLiteMigrations.SQLiteMigrationsError.migration)
-
             \(message)
             """
         }
