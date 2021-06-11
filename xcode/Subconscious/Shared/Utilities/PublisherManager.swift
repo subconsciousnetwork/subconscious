@@ -23,7 +23,7 @@ import Combine
 /// Publisher Cancellables are stored in a map by UUID.
 /// The UUID is returned by `PublisherManager.sink`
 /// You can also cancel a publisher by calling `PublisherManager.cancel` with the UUID.
-final class PublisherManager<T, E> where E: Error {
+final class PublisherManager {
     /// Hashmap to store cancellables by ID
     private var cancellables: [UUID: AnyCancellable] = [:]
 
@@ -36,7 +36,7 @@ final class PublisherManager<T, E> where E: Error {
     /// Similar in concept to `Publisher.sink` except that it holds on to the cancellable reference
     /// until the cancellable is complete.
     /// Returns a UUID that may be used with `cancel` to cancel the publisher.
-    @discardableResult func sink(
+    @discardableResult func sink<T, E: Error> (
         publisher: AnyPublisher<T, E>,
         receiveValue: @escaping (T) -> Void
     ) -> UUID {

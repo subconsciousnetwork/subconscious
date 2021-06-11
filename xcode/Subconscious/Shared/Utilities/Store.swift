@@ -34,7 +34,7 @@ final class Store<State, Action, Environment>: ObservableObject, Equatable
     private let environment: Environment
     /// Mutates state in response to an action, returning an effect stream
     private let reducer: Reducer<State, Action, Environment>
-    private var effects: PublisherManager<Action, Never>
+    private var effects = PublisherManager()
 
     init(
         state: State,
@@ -44,7 +44,6 @@ final class Store<State, Action, Environment>: ObservableObject, Equatable
         self.state = state
         self.reducer = reducer
         self.environment = environment
-        self.effects = PublisherManager()
     }
     
     func send(_ action: Action) {
