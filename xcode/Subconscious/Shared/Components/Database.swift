@@ -166,6 +166,7 @@ struct DatabaseEnvironment {
         subsystem: "com.subconscious.Subconscious",
         category: "database"
     )
+    let databasePublishers = PublisherManager()
     let fileManager = FileManager.default
     let databaseUrl: URL
     let documentsUrl: URL
