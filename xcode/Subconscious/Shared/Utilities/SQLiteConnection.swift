@@ -94,7 +94,6 @@ final class SQLiteConnection {
 
     /// The internal GCD queue
     /// We use this queue to make database connections  threadsafe
-    /// and to allow for non-blocking off-main-thread database calls.
     private var queue: DispatchQueue
     
     init(path: String, qos: Dispatch.DispatchQoS = .default) throws {
@@ -195,19 +194,17 @@ final class SQLiteConnection {
     /// Executes multiple SQL statements in one go.
     /// Useful for setting up a database.
     /// This form does not allow for parameter binding.
-    /// This method is asyncronous, and returns a Future.
-    func executescriptAsync(sql: String) -> Future<Void, Error> {
+    /// This method is asyncronous. It executes asyncronously on a global thread and returns a Future.
+    func executescriptAsync(
+        sql: String, qos: DispatchQoS.QoSClass = .default
+    ) -> Future<Void, Error> {
         Future({ promise in
-            self.queue.async {
-                let result = sqlite3_exec(self.db, sql, nil, nil, nil)
-                if result != SQLITE_OK {
-                    let error = SQLiteConnectionError.execution(
-                        String(validatingUTF8: sqlite3_errmsg(self.db)) ??
-                        "Unknown error"
-                    )
-                    promise(.failure(error))
-                } else {
+            DispatchQueue.global(qos: qos).async {
+                do {
+                    try self.executescript(sql: sql)
                     promise(.success(Void()))
+                } catch {
+                    promise(.failure(error))
                 }
             }
         })
@@ -223,33 +220,14 @@ final class SQLiteConnection {
     /// - Returns: SQL rows
     func executeAsync(
         sql: String,
-        parameters: [SQLValue] = []
+        parameters: [SQLValue] = [],
+        qos: DispatchQoS.QoSClass
     ) throws -> Future<[[SQLValue]], Error> {
         Future({ promise in
-            self.queue.async {
+            DispatchQueue.global(qos: qos).async {
                 do {
-                    var rows: [[SQLValue]] = []
-                    let statement = try self.prepare(
-                        sql: sql,
-                        parameters: parameters
-                    )
-                    if let statement = statement {
-                        let columnCount = sqlite3_column_count(statement)
-                        while sqlite3_step(statement) == SQLITE_ROW {
-                            // Get row data for each column
-                            var row: [SQLValue] = []
-                            for index in 0..<columnCount {
-                                let sqlData = SQLiteConnection.getDataForRow(
-                                    statement: statement,
-                                    index: index
-                                )
-                                row.append(sqlData)
-                            }
-                            rows.append(row)
-                        }
-                        sqlite3_finalize(statement)
-                        promise(.success(rows))
-                    }
+                    let result = try self.execute(sql: sql)
+                    promise(.success(result))
                 } catch {
                     promise(.failure(error))
                 }
@@ -440,7 +418,7 @@ extension SQLiteConnection.SQLiteConnectionError: LocalizedError {
             """
         case .value(let message):
             return """
-            Value error
+            Value error (SQLiteConnection.SQLiteConnectionError.value)
             
             \(message)
             """

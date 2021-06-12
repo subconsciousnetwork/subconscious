@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 //  MARK: SQLiteMigrations
 struct SQLiteMigrations {
@@ -117,7 +118,7 @@ struct SQLiteMigrations {
         else {
             throw SQLiteMigrationsError.invalidVersion(
                 message: """
-                Database version does not match any version in migration list.
+                Database version \(databaseVersion) does not match any version in migration list.
                 Database version: \(databaseVersion)
                 Valid versions: \(self.versions)
                 """
@@ -170,6 +171,22 @@ struct SQLiteMigrations {
                 })
             )
         )
+    }
+    
+    func migrateAsync(
+        database: SQLiteConnection,
+        qos: DispatchQoS.QoSClass = .default
+    ) -> Future<MigrationSuccess, Error> {
+        Future({ promise in
+            DispatchQueue.global(qos: qos).async {
+                do {
+                    let success = try self.migrate(database: database)
+                    promise(.success(success))
+                } catch {
+                    promise(.failure(error))
+                }
+            }
+        })
     }
 }
 
