@@ -182,7 +182,6 @@ struct DatabaseEnvironment {
         subsystem: "com.subconscious.Subconscious",
         category: "database"
     )
-    let databasePublishers = PublisherManager()
     let fileManager = FileManager.default
     let databaseUrl: URL
     let documentsUrl: URL
@@ -308,7 +307,7 @@ struct DatabaseEnvironment {
     }
     
     func removeEntry(_ url: URL) throws {
-        try SQLiteConnection(path: url.path)
+        try SQLiteConnection(path: databaseUrl.path)
             .unwrap()
             .execute(
                 sql: """
@@ -324,5 +323,23 @@ struct DatabaseEnvironment {
         CombineUtilities.async {
             try removeEntry(url)
         }
+    }
+
+    func search(query: String) ->
+        AnyPublisher<[[SQLiteConnection.SQLValue]], Error> {
+        CombineUtilities.async(qos: .userInitiated, execute: {
+            try SQLiteConnection(
+                path: databaseUrl.path,
+                qos: .userInitiated
+            ).unwrap()
+            .execute(
+                sql: """
+                SELECT * FROM entry WHERE entry MATCH ? ORDER BY rank;
+                """,
+                parameters: [
+                    SQLiteConnection.SQLValue.text(query)
+                ]
+            )
+        })
     }
 }
