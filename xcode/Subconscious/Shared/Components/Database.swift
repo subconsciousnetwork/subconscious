@@ -20,7 +20,6 @@ enum DatabaseAction {
     /// stuff out of the way early.
     case setup
     case setupSuccess(_ success: SQLiteMigrations.MigrationSuccess)
-    case setupFailure
     /// Rebuild database if it is somehow impossible to migrate.
     /// This should not happen, but it allows us to recover if it does.
     case rebuild
@@ -60,7 +59,7 @@ func updateDatabase(
         state.state = .setup
         return environment.migrateDatabaseAsync()
             .map({ success in DatabaseAction.setupSuccess(success) })
-            .replaceError(with: DatabaseAction.setupFailure)
+            .replaceError(with: DatabaseAction.rebuild)
             .eraseToAnyPublisher()
     case .setupSuccess(let success):
         state.state = .ready
@@ -70,10 +69,9 @@ func updateDatabase(
             environment.logger.info("Database migrated from \(success.from) to \(success.to) via \(success.migrations)")
         }
         return Just(DatabaseAction.sync).eraseToAnyPublisher()
-    case .setupFailure:
-        state.state = .broken
-        return Just(DatabaseAction.rebuild).eraseToAnyPublisher()
     case .rebuild:
+        state.state = .broken
+        environment.logger.warning("Database is broken or has wrong schema. Attempting to rebuild.")
         return environment.deleteDatabaseAsync()
             .flatMap(environment.migrateDatabaseAsync)
             .map({ success in DatabaseAction.setupSuccess(success) })
@@ -95,8 +93,14 @@ struct DatabaseEnvironment {
     static func getMigrations() -> SQLiteMigrations {
         return SQLiteMigrations([
             SQLiteMigrations.Migration(
-                date: "2021-06-04T5:23:00",
+                date: "2021-06-14T16:22:00",
                 sql: """
+                CREATE TABLE search (
+                    id TEXT PRIMARY KEY,
+                    query TEXT NOT NULL,
+                    created TEXT NOT NULL
+                );
+
                 CREATE TABLE entry (
                   path TEXT PRIMARY KEY,
                   title TEXT NOT NULL,
@@ -196,20 +200,16 @@ struct DatabaseEnvironment {
     }
 
     func deleteDatabaseAsync() -> AnyPublisher<Void, Error> {
-        Future({ promise in
+        CombineUtilities.async(execute: {
+            logger.notice("Deleting database")
             do {
-                logger.notice("Deleting database")
-                do {
-                    try fileManager.removeItem(at: databaseUrl)
-                    logger.notice("Deleted database")
-                } catch {
-                    logger.warning("Failed to delete database")
-                    throw error
-                }
+                try fileManager.removeItem(at: databaseUrl)
+                logger.notice("Deleted database")
             } catch {
-                promise(.failure(error))
+                logger.warning("Failed to delete database: \(error.localizedDescription)")
+                throw error
             }
-        }).eraseToAnyPublisher()
+        })
     }
 
     func syncDatabaseAsync() -> AnyPublisher<Void, Error> {
