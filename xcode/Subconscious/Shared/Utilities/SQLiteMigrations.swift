@@ -172,11 +172,14 @@ struct SQLiteMigrations {
             )
         )
     }
-    
+}
+
+//  MARK: SQLiteMigrations async extensions
+extension SQLiteMigrations {
     func migrateAsync(
         database: SQLiteConnection,
-        qos: DispatchQoS.QoSClass = .default
-    ) -> Future<MigrationSuccess, Error> {
+        qos: DispatchQoS.QoSClass
+    ) -> AnyPublisher<MigrationSuccess, Error> {
         Future({ promise in
             DispatchQueue.global(qos: qos).async {
                 do {
@@ -186,11 +189,22 @@ struct SQLiteMigrations {
                     promise(.failure(error))
                 }
             }
-        })
+        }).eraseToAnyPublisher()
+    }
+
+    func migrateAsync(
+        path: String,
+        qos: DispatchQoS.QoSClass = .default
+    ) -> AnyPublisher<MigrationSuccess, Error> {
+        SQLiteConnection.open(path: path)
+            .flatMap({ db in
+                self.migrateAsync(database: db, qos: qos)
+            })
+            .eraseToAnyPublisher()
     }
 }
 
-//  MARK: SQLiteMigrations extensions
+//  MARK: SQLiteMigrationsError extensions
 extension SQLiteMigrations.SQLiteMigrationsError: LocalizedError {
     public var errorDescription: String? {
         switch self {

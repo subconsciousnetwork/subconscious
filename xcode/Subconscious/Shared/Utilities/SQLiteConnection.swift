@@ -96,7 +96,7 @@ final class SQLiteConnection {
     /// We use this queue to make database connections  threadsafe
     private var queue: DispatchQueue
     
-    init(path: String, qos: Dispatch.DispatchQoS = .default) throws {
+    init(path: String, qos: DispatchQoS = .default) throws {
         // Create GCD dispatch queue for running database queries.
         // SQLite3Connection objects are threadsafe.
         // The queue is *always* serial, ensuring that SQL queries to this
@@ -117,12 +117,12 @@ final class SQLiteConnection {
     }
 
     /// Initialize an in-memory database
-    convenience init(qos: Dispatch.DispatchQoS = .default) throws {
+    convenience init(qos: DispatchQoS = .default) throws {
         try self.init(path: ":memory:", qos: qos)
     }
 
     /// Initialize a database file at a URL
-    convenience init(url: URL, qos: Dispatch.DispatchQoS = .default) throws {
+    convenience init(url: URL, qos: DispatchQoS = .default) throws {
         try self.init(path: url.path, qos: qos)
     }
     
@@ -189,50 +189,6 @@ final class SQLiteConnection {
             }
         }
         return rows
-    }
-
-    /// Executes multiple SQL statements in one go.
-    /// Useful for setting up a database.
-    /// This form does not allow for parameter binding.
-    /// This method is asyncronous. It executes asyncronously on a global thread and returns a Future.
-    func executescriptAsync(
-        sql: String, qos: DispatchQoS.QoSClass = .default
-    ) -> Future<Void, Error> {
-        Future({ promise in
-            DispatchQueue.global(qos: qos).async {
-                do {
-                    try self.executescript(sql: sql)
-                    promise(.success(Void()))
-                } catch {
-                    promise(.failure(error))
-                }
-            }
-        })
-    }
-    
-    /// Execute a single SQL statement
-    /// This method is asyncronous, and returns a Future.
-    ///
-    /// - Parameters:
-    ///   - sql: The SQL query to be executed
-    ///   - parameters: An array of optional parameters in case the SQL statement includes
-    ///     bound parameters - indicated by `?`
-    /// - Returns: SQL rows
-    func executeAsync(
-        sql: String,
-        parameters: [SQLValue] = [],
-        qos: DispatchQoS.QoSClass
-    ) throws -> Future<[[SQLValue]], Error> {
-        Future({ promise in
-            DispatchQueue.global(qos: qos).async {
-                do {
-                    let result = try self.execute(sql: sql)
-                    promise(.success(result))
-                } catch {
-                    promise(.failure(error))
-                }
-            }
-        })
     }
     
     /// Get user_version as integer
@@ -392,7 +348,69 @@ final class SQLiteConnection {
     }
 }
 
-//  MARK: SQLiteConnection extensions
+//  MARK: SQLiteConnection async extensions
+extension SQLiteConnection {
+    /// Alternative initializer that returns a publisher.
+    static func open(
+        path: String,
+        qos: DispatchQoS = .default
+    ) -> AnyPublisher<SQLiteConnection, Error> {
+        Future({ promise in
+            do {
+                let db = try SQLiteConnection(path: path, qos: qos)
+                promise(.success(db))
+            } catch {
+                promise(.failure(error))
+            }
+        }).eraseToAnyPublisher()
+    }
+
+    /// Executes multiple SQL statements in one go.
+    /// Useful for setting up a database.
+    /// This form does not allow for parameter binding.
+    /// This method is asyncronous. It executes asyncronously on a global thread and returns a Future.
+    func executescriptAsync(
+        sql: String, qos: DispatchQoS.QoSClass = .default
+    ) -> Future<Void, Error> {
+        Future({ promise in
+            DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
+                do {
+                    try self.executescript(sql: sql)
+                    promise(.success(Void()))
+                } catch {
+                    promise(.failure(error))
+                }
+            }
+        })
+    }
+
+    /// Execute a single SQL statement
+    /// This method is asyncronous, and returns a Future.
+    ///
+    /// - Parameters:
+    ///   - sql: The SQL query to be executed
+    ///   - parameters: An array of optional parameters in case the SQL statement includes
+    ///     bound parameters - indicated by `?`
+    /// - Returns: SQL rows
+    func executeAsync(
+        sql: String,
+        parameters: [SQLValue] = [],
+        qos: DispatchQoS.QoSClass
+    ) throws -> Future<[[SQLValue]], Error> {
+        Future({ promise in
+            DispatchQueue.global(qos: qos).async {
+                do {
+                    let result = try self.execute(sql: sql)
+                    promise(.success(result))
+                } catch {
+                    promise(.failure(error))
+                }
+            }
+        })
+    }
+}
+
+//  MARK: SQLiteConnectionError extensions
 extension SQLiteConnection.SQLiteConnectionError: LocalizedError {
     public var errorDescription: String? {
         switch self {
