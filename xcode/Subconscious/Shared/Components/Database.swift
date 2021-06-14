@@ -214,74 +214,67 @@ struct DatabaseEnvironment {
     }
 
     func syncDatabaseAsync() -> AnyPublisher<Void, Error> {
-        Future({ promise in
-            DispatchQueue.global(qos: .utility).async(execute: {
-                do {
-                    let fileUrls = try fileManager.contentsOfDirectory(
-                        at: documentsUrl,
-                        includingPropertiesForKeys: nil,
-                        options: .skipsHiddenFiles
-                    ).withPathExtension("subtext")
+        CombineUtilities.async(qos: .utility) {
+            let fileUrls = try fileManager.contentsOfDirectory(
+                at: documentsUrl,
+                includingPropertiesForKeys: nil,
+                options: .skipsHiddenFiles
+            ).withPathExtension("subtext")
 
-                    // Left = Leader (files)
-                    let left = try FileSync.readFileFingerprints(
-                        urls: fileUrls,
-                        with: fileManager
-                    )
+            // Left = Leader (files)
+            let left = try FileSync.readFileFingerprints(
+                urls: fileUrls,
+                with: fileManager
+            )
 
-                    let db = try SQLiteConnection(
-                        path: databaseUrl.path,
-                        qos: .utility
-                    ).unwrap()
+            let db = try SQLiteConnection(
+                path: databaseUrl.path,
+                qos: .utility
+            ).unwrap()
 
-                    // Right = Follower (search index)
-                    let right = try db.execute(
-                        sql: "SELECT path, modified, size FROM entry"
-                    ).map({ row  in
-                        FileSync.FileFingerprint(
-                            url: URL(
-                                fileURLWithPath: try row[0]
-                                    .asString()
-                                    .unwrap(),
-                                relativeTo: documentsUrl
-                            ),
-                            modified: try row[1].asDate().unwrap(),
-                            size: try row[2].asInt().unwrap()
-                        )
-                    })
-                    
-                    let changes = FileSync.calcChanges(
-                        left: left,
-                        right: right
-                    )
-
-                    for change in changes {
-                        switch change.status {
-                        // .leftOnly = create.
-                        // .leftNewer = update.
-                        // .rightNewer = Follower shouldn't be ahead.
-                        //               Leader wins.
-                        // .conflict. Leader wins.
-                        case .leftOnly, .leftNewer, .rightNewer, .conflict:
-                            if let left = change.left {
-                                try writeEntry(left.url)
-                            }
-                        // .rightOnly = delete. Remove from search index
-                        case .rightOnly:
-                            if let right = change.right {
-                                try removeEntry(right.url)
-                            }
-                        // .same = no change. Do nothing.
-                        case .same:
-                            break
-                        }
-                    }
-                    promise(.success(Void()))
-                } catch {
-                    promise(.failure(error))
-                }
+            // Right = Follower (search index)
+            let right = try db.execute(
+                sql: "SELECT path, modified, size FROM entry"
+            ).map({ row  in
+                FileSync.FileFingerprint(
+                    url: URL(
+                        fileURLWithPath: try row[0]
+                            .asString()
+                            .unwrap(),
+                        relativeTo: documentsUrl
+                    ),
+                    modified: try row[1].asDate().unwrap(),
+                    size: try row[2].asInt().unwrap()
+                )
             })
-        }).eraseToAnyPublisher()
+            
+            let changes = FileSync.calcChanges(
+                left: left,
+                right: right
+            )
+
+            for change in changes {
+                switch change.status {
+                // .leftOnly = create.
+                // .leftNewer = update.
+                // .rightNewer = Follower shouldn't be ahead.
+                //               Leader wins.
+                // .conflict. Leader wins.
+                case .leftOnly, .leftNewer, .rightNewer, .conflict:
+                    if let left = change.left {
+                        try writeEntry(left.url)
+                    }
+                // .rightOnly = delete. Remove from search index
+                case .rightOnly:
+                    if let right = change.right {
+                        try removeEntry(right.url)
+                    }
+                // .same = no change. Do nothing.
+                case .same:
+                    break
+                }
+            }
+        }
     }
     
     func writeEntry(_ url: URL) throws {
@@ -308,15 +301,10 @@ struct DatabaseEnvironment {
         )
     }
     
-    func writeEntryAsync(_ url: URL) -> Future<Void, Error> {
-        Future({ promise in
-            do {
-                try writeEntry(url)
-                promise(.success(Void()))
-            } catch {
-                promise(.failure(error))
-            }
-        })
+    func writeEntryAsync(_ url: URL) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async {
+            try writeEntry(url)
+        }
     }
     
     func removeEntry(_ url: URL) throws {
@@ -332,14 +320,9 @@ struct DatabaseEnvironment {
             )
     }
 
-    func removeEntryAsync(_ url: URL) -> Future<Void, Error> {
-        Future({ promise in
-            do {
-                try removeEntry(url)
-                promise(.success(Void()))
-            } catch {
-                promise(.failure(error))
-            }
-        })
+    func removeEntryAsync(_ url: URL) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async {
+            try removeEntry(url)
+        }
     }
 }

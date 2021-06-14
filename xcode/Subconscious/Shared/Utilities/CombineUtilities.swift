@@ -9,15 +9,20 @@ import Foundation
 import Combine
 
 struct CombineUtilities {
-    static func throwable<T>(_ execute: @escaping () throws -> T) ->
-        AnyPublisher<T, Error> {
+    /// Run a throwing function asyncronously on the global DispatchQueue.
+    static func async<T>(
+        qos: DispatchQoS.QoSClass = .default,
+        execute: @escaping () throws -> T
+    ) -> AnyPublisher<T, Error> {
         Future({ promise in
-            do {
-                let success = try execute()
-                promise(.success(success))
-            } catch {
-                promise(.failure(error))
-            }
+            DispatchQueue.global(qos: qos).async(execute: {
+                do {
+                    let success = try execute()
+                    promise(.success(success))
+                } catch {
+                    promise(.failure(error))
+                }
+            })
         }).eraseToAnyPublisher()
     }
 }
