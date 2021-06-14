@@ -18,7 +18,7 @@ enum DatabaseAction {
     /// However it's a good idea to run this action when the app starts so that you get the expensive
     /// stuff out of the way early.
     case setup
-    case setupSuccess
+    case setupSuccess(_ success: SQLiteMigrations.MigrationSuccess)
     case setupFailure
     /// Rebuild database if it is somehow impossible to migrate.
     /// This should not happen, but it allows us to recover if it does.
@@ -48,20 +48,25 @@ func updateDatabase(
     switch action {
     case .setup:
         state.state = .setup
-        return environment.promiseMigrateDatabase()
-            .map({ _ in DatabaseAction.setupSuccess })
+        return environment.migrateDatabase()
+            .map({ success in DatabaseAction.setupSuccess(success) })
             .replaceError(with: DatabaseAction.setupFailure)
             .eraseToAnyPublisher()
-    case .setupSuccess:
+    case .setupSuccess(let success):
         state.state = .ready
+        if success.from == success.to {
+            environment.log.info("Database up-to-date. No migration needed")
+        } else {
+            environment.log.info("Database migrated from \(success.from) to \(success.to) via \(success.migrations)")
+        }
         return Just(DatabaseAction.sync).eraseToAnyPublisher()
     case .setupFailure:
         state.state = .broken
         return Just(DatabaseAction.rebuild).eraseToAnyPublisher()
     case .rebuild:
         return environment.promiseDeleteDatabase()
-            .flatMap(environment.promiseMigrateDatabase)
-            .map({ _ in DatabaseAction.setupSuccess })
+            .flatMap(environment.migrateDatabase)
+            .map({ success in DatabaseAction.setupSuccess(success) })
             .replaceError(with: DatabaseAction.noop)
             .eraseToAnyPublisher()
     case .sync:
@@ -176,38 +181,14 @@ struct DatabaseEnvironment {
         try SQLiteConnection(url: databaseUrl)
     }
     
-    func migrateDatabase() throws {
-        log.info("Performing database migration")
-        let db = try openDatabase()
-        do {
-            let success = try migrations.migrate(database: db)
-            if success.to == success.from {
-                log.info("Database up-to-date. No migration needed. Version: \(success.from).")
-            } else {
-                let versionsString = success.migrations
-                    .map({ i in String(i) })
-                    .joined(separator: ", ")
-                log.info("Database migration succeeded. From \(success.from) to \(success.to) through versions \(versionsString).")
-            }
-        } catch {
-            log.warning("Database migration failed. Rolling back to premigration snapshot.")
-            throw error
-        }
+    func migrateDatabase()
+        -> AnyPublisher<SQLiteMigrations.MigrationSuccess, Error> {
+        migrations.migrateAsync(
+            path: databaseUrl.path,
+            qos: .utility
+        )
     }
-    
-    func promiseMigrateDatabase() -> Future<Void, Error> {
-        Future({ promise in
-            DispatchQueue.global(qos: .utility).async(execute: {
-                do {
-                    try migrateDatabase()
-                    promise(.success(Void()))
-                } catch {
-                    promise(.failure(error))
-                }
-            })
-        })
-    }
-    
+
     func deleteDatabase() throws {
         log.notice("Deleting database")
         do {
