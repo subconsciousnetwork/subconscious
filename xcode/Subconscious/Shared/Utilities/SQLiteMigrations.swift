@@ -36,6 +36,7 @@ struct SQLiteMigrations {
             let formatter = ISO8601DateFormatter()
             formatter.formatOptions = [
                 .withFullDate,
+                .withTime,
                 .withDashSeparatorInDate,
                 .withColonSeparatorInTime
             ]
