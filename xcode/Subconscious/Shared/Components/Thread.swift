@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import os
 
 enum ThreadAction {
     case setFolded(_ isFolded: Bool)
@@ -24,13 +25,13 @@ struct ThreadModel: Identifiable, Equatable {
 func updateThread(
     state: inout ThreadModel,
     action: ThreadAction,
-    environment: BasicService
+    environment: Logger
 ) -> AnyPublisher<ThreadAction, Never> {
     switch action {
     case .setFolded(let isFolded):
         state.isFolded = isFolded
     case .requestEdit:
-        environment.log.warning(
+        environment.warning(
             """
             ThreadAction.requestEdit
             This action should have been handled by the parent view.

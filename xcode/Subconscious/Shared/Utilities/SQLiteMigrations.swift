@@ -196,7 +196,8 @@ extension SQLiteMigrations {
         path: String,
         qos: DispatchQoS.QoSClass = .default
     ) -> AnyPublisher<MigrationSuccess, Error> {
-        SQLiteConnection.open(path: path)
+        SQLiteConnection(path: path)
+            .publisher
             .flatMap({ db in
                 self.migrateAsync(database: db, qos: qos)
             })

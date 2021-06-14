@@ -11,6 +11,7 @@ import os
 
 //  MARK: Actions
 enum DatabaseAction {
+    case log(_ action: LoggerAction)
     /// Trigger a database migration.
     /// Does an early exit if version is up-to-date.
     /// All calls to the query interface in the environment perform these steps to ensure the
@@ -24,7 +25,11 @@ enum DatabaseAction {
     /// This should not happen, but it allows us to recover if it does.
     case rebuild
     case sync
-    case noop
+}
+
+//  MARK: Tagging functions
+func tagDatabaseLoggerAction(_ action: LoggerAction) -> DatabaseAction {
+    .log(action)
 }
 
 //  MARK: Model
@@ -46,37 +51,43 @@ func updateDatabase(
     environment: DatabaseEnvironment
 ) -> AnyPublisher<DatabaseAction, Never> {
     switch action {
+    case .log(let action):
+        LoggerAction.log(
+            action: action,
+            environment: environment.logger
+        )
     case .setup:
         state.state = .setup
-        return environment.migrateDatabase()
+        return environment.migrateDatabaseAsync()
             .map({ success in DatabaseAction.setupSuccess(success) })
             .replaceError(with: DatabaseAction.setupFailure)
             .eraseToAnyPublisher()
     case .setupSuccess(let success):
         state.state = .ready
         if success.from == success.to {
-            environment.log.info("Database up-to-date. No migration needed")
+            environment.logger.info("Database up-to-date. No migration needed")
         } else {
-            environment.log.info("Database migrated from \(success.from) to \(success.to) via \(success.migrations)")
+            environment.logger.info("Database migrated from \(success.from) to \(success.to) via \(success.migrations)")
         }
         return Just(DatabaseAction.sync).eraseToAnyPublisher()
     case .setupFailure:
         state.state = .broken
         return Just(DatabaseAction.rebuild).eraseToAnyPublisher()
     case .rebuild:
-        return environment.promiseDeleteDatabase()
-            .flatMap(environment.migrateDatabase)
+        return environment.deleteDatabaseAsync()
+            .flatMap(environment.migrateDatabaseAsync)
             .map({ success in DatabaseAction.setupSuccess(success) })
-            .replaceError(with: DatabaseAction.noop)
+            .replaceError(
+                with: .log(.critical("Failed to rebuild database"))
+            )
             .eraseToAnyPublisher()
     case .sync:
-        return environment.promiseSyncDatabase()
-            .map({ _ in DatabaseAction.noop })
-            .replaceError(with: DatabaseAction.noop)
+        return environment.syncDatabaseAsync()
+            .map({ _ in .log(.info("File sync done")) })
+            .replaceError(with: .log(.error("File sync failed")))
             .eraseToAnyPublisher()
-    case .noop:
-        return Empty().eraseToAnyPublisher()
     }
+    return Empty().eraseToAnyPublisher()
 }
 
 //  MARK: Environment
@@ -167,7 +178,7 @@ struct DatabaseEnvironment {
         ])!
     }
 
-    let log = Logger(
+    let logger = Logger(
         subsystem: "com.subconscious.Subconscious",
         category: "database"
     )
@@ -177,127 +188,110 @@ struct DatabaseEnvironment {
     let documentsUrl: URL
     let migrations: SQLiteMigrations
 
-    func openDatabase() throws -> SQLiteConnection {
-        try SQLiteConnection(url: databaseUrl)
-    }
-    
-    func migrateDatabase()
-        -> AnyPublisher<SQLiteMigrations.MigrationSuccess, Error> {
+    func migrateDatabaseAsync() ->
+        AnyPublisher<SQLiteMigrations.MigrationSuccess, Error> {
         migrations.migrateAsync(
             path: databaseUrl.path,
             qos: .utility
         )
     }
 
-    func deleteDatabase() throws {
-        log.notice("Deleting database")
-        do {
-            try fileManager.removeItem(at: databaseUrl)
-            log.notice("Deleted database")
-        } catch {
-            log.warning("Failed to delete database")
-            throw error
-        }
-    }
-    
-    func promiseDeleteDatabase() -> Future<Void, Error> {
+    func deleteDatabaseAsync() -> AnyPublisher<Void, Error> {
         Future({ promise in
             do {
-                try deleteDatabase()
-                promise(.success(Void()))
+                logger.notice("Deleting database")
+                do {
+                    try fileManager.removeItem(at: databaseUrl)
+                    logger.notice("Deleted database")
+                } catch {
+                    logger.warning("Failed to delete database")
+                    throw error
+                }
             } catch {
                 promise(.failure(error))
             }
-        })
+        }).eraseToAnyPublisher()
     }
-    
-    func syncDatabase() throws {
-        log.info("Syncing database")
-        do {
-            let fileUrls = try fileManager.contentsOfDirectory(
-                at: documentsUrl,
-                includingPropertiesForKeys: nil,
-                options: .skipsHiddenFiles
-            ).withPathExtension("subtext")
 
-            // Left = Leader (files)
-            let left = try FileSync.readFileFingerprints(
-                urls: fileUrls,
-                with: fileManager
-            )
-
-            let db = try openDatabase()
-
-            // Right = Follower (search index)
-            let right = try db.execute(
-                sql: "SELECT path, modified, size FROM entry"
-            ).map({ row  in
-                FileSync.FileFingerprint(
-                    url: URL(
-                        fileURLWithPath: try row[0]
-                            .asString()
-                            .unwrap(),
-                        relativeTo: documentsUrl
-                    ),
-                    modified: try row[1].asDate().unwrap(),
-                    size: try row[2].asInt().unwrap()
-                )
-            })
-            
-            let changes = FileSync.calcChanges(
-                left: left,
-                right: right
-            )
-
-            for change in changes {
-                switch change.status {
-                // .leftOnly = create.
-                // .leftNewer = update.
-                // .rightNewer = ??? Follower should not be ahead. Leader wins.
-                // .conflict. Leader wins.
-                case .leftOnly, .leftNewer, .rightNewer, .conflict:
-                    if let left = change.left {
-                        try writeEntry(left.url)
-                    }
-                // .rightOnly = delete. Remove from search index
-                case .rightOnly:
-                    if let right = change.right {
-                        try removeEntry(right.url)
-                    }
-                // .same = no change. Do nothing.
-                case .same:
-                    break
-                }
-            }
-            log.info("Database sync finished")
-        } catch {
-            log.warning("Database sync failed: \(error.localizedDescription)")
-            throw error
-        }
-    }
-    
-    func promiseSyncDatabase() -> Future<Void, Error> {
+    func syncDatabaseAsync() -> AnyPublisher<Void, Error> {
         Future({ promise in
             DispatchQueue.global(qos: .utility).async(execute: {
                 do {
-                    try syncDatabase()
+                    let fileUrls = try fileManager.contentsOfDirectory(
+                        at: documentsUrl,
+                        includingPropertiesForKeys: nil,
+                        options: .skipsHiddenFiles
+                    ).withPathExtension("subtext")
+
+                    // Left = Leader (files)
+                    let left = try FileSync.readFileFingerprints(
+                        urls: fileUrls,
+                        with: fileManager
+                    )
+
+                    let db = try SQLiteConnection(
+                        path: databaseUrl.path,
+                        qos: .utility
+                    ).unwrap()
+
+                    // Right = Follower (search index)
+                    let right = try db.execute(
+                        sql: "SELECT path, modified, size FROM entry"
+                    ).map({ row  in
+                        FileSync.FileFingerprint(
+                            url: URL(
+                                fileURLWithPath: try row[0]
+                                    .asString()
+                                    .unwrap(),
+                                relativeTo: documentsUrl
+                            ),
+                            modified: try row[1].asDate().unwrap(),
+                            size: try row[2].asInt().unwrap()
+                        )
+                    })
+                    
+                    let changes = FileSync.calcChanges(
+                        left: left,
+                        right: right
+                    )
+
+                    for change in changes {
+                        switch change.status {
+                        // .leftOnly = create.
+                        // .leftNewer = update.
+                        // .rightNewer = Follower shouldn't be ahead.
+                        //               Leader wins.
+                        // .conflict. Leader wins.
+                        case .leftOnly, .leftNewer, .rightNewer, .conflict:
+                            if let left = change.left {
+                                try writeEntry(left.url)
+                            }
+                        // .rightOnly = delete. Remove from search index
+                        case .rightOnly:
+                            if let right = change.right {
+                                try removeEntry(right.url)
+                            }
+                        // .same = no change. Do nothing.
+                        case .same:
+                            break
+                        }
+                    }
                     promise(.success(Void()))
-                } catch (let error) {
+                } catch {
                     promise(.failure(error))
                 }
             })
-        })
+        }).eraseToAnyPublisher()
     }
-
+    
     func writeEntry(_ url: URL) throws {
-        let db = try openDatabase()
         let contents = try fileManager.contents(atPath: url.path).unwrap()
         let fingerprint = try FileSync.FileFingerprint(
             url: url,
             with: fileManager
         )
         let body = String(decoding: contents, as: UTF8.self)
-        try db.execute(
+        try SQLiteConnection(path: databaseUrl.path).unwrap().execute(
             sql: """
             INSERT INTO entry (path, title, body, modified, size)
             VALUES (?, ?, ?, ?, ?)
@@ -314,7 +308,7 @@ struct DatabaseEnvironment {
         )
     }
     
-    func promiseWriteEntry(_ url: URL) -> Future<Void, Error> {
+    func writeEntryAsync(_ url: URL) -> Future<Void, Error> {
         Future({ promise in
             do {
                 try writeEntry(url)
@@ -326,18 +320,19 @@ struct DatabaseEnvironment {
     }
     
     func removeEntry(_ url: URL) throws {
-        let db = try openDatabase()
-        try db.execute(
-            sql: """
-            DELETE FROM entry WHERE path = ?
-            """,
-            parameters: [
-                .text(url.lastPathComponent)
-            ]
-        )
+        try SQLiteConnection(path: url.path)
+            .unwrap()
+            .execute(
+                sql: """
+                DELETE FROM entry WHERE path = ?
+                """,
+                parameters: [
+                    .text(url.lastPathComponent)
+                ]
+            )
     }
 
-    func promiseRemoveEntry(_ url: URL) -> Future<Void, Error> {
+    func removeEntryAsync(_ url: URL) -> Future<Void, Error> {
         Future({ promise in
             do {
                 try removeEntry(url)

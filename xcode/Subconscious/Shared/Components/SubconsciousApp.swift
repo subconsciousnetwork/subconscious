@@ -132,16 +132,16 @@ func updateApp(
         return updateSearch(
             state: &state.search,
             action: action,
-            environment: environment.basic
+            environment: environment.logger
         ).map(tagSearchAction).eraseToAnyPublisher()
     case .suggestionTokens(let action):
         return updateTextTokenBar(
             state: &state.suggestionTokens,
             action: action,
-            environment: environment.basic
+            environment: environment.logger
         ).map(tagSuggestionTokensAction).eraseToAnyPublisher()
     case .appear:
-        environment.basic.log.info(
+        environment.logger.info(
             """
             User Directory:
             \(environment.documentsUrl.absoluteString)
@@ -204,9 +204,9 @@ func updateApp(
             .map({ AppAction.info("Saved thread") })
             .eraseToAnyPublisher()
     case .warning(let message):
-        environment.basic.log.warning("\(message)")
+        environment.logger.warning("\(message)")
     case .info(let message):
-        environment.basic.log.info("\(message)")
+        environment.logger.info("\(message)")
     }
     return Empty().eraseToAnyPublisher()
 }

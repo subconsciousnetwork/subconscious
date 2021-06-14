@@ -20,6 +20,8 @@
 		B853EB412633959E001BB584 /* StringUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B853EB402633959E001BB584 /* StringUtilities.swift */; };
 		B85CABF3265C511100BE1BE6 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B85CABF2265C510300BE1BE6 /* libsqlite3.tbd */; };
 		B85CABF8265C68AF00BE1BE6 /* SQLiteConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85CABF7265C68AF00BE1BE6 /* SQLiteConnection.swift */; };
+		B862343C2677FF960099CD87 /* CombineUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B862343B2677FF960099CD87 /* CombineUtilities.swift */; };
+		B862343E267805240099CD87 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = B862343D267805240099CD87 /* Logger.swift */; };
 		B86F33B7261AB2C7009D3D48 /* Tests_iOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F33B6261AB2C7009D3D48 /* Tests_iOS.swift */; };
 		B86F33C2261AB2C7009D3D48 /* Tests_macOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F33C1261AB2C7009D3D48 /* Tests_macOS.swift */; };
 		B86F33C4261AB2C7009D3D48 /* SubconsciousApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */; };
@@ -36,7 +38,6 @@
 		B87DA91F26250CF900BA5232 /* SearchBarRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */; };
 		B88715132642F2D0009BEE1E /* Suggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88715122642F2D0009BEE1E /* Suggestion.swift */; };
 		B887151526433652009BEE1E /* TextFieldWithToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B887151426433652009BEE1E /* TextFieldWithToggle.swift */; };
-		B887151726435774009BEE1E /* BasicService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B887151626435774009BEE1E /* BasicService.swift */; };
 		B8B00041262621C60068F688 /* PinBottomRight.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B00040262621C60068F688 /* PinBottomRight.swift */; };
 		B8B00047262622280068F688 /* ActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B00046262622280068F688 /* ActionButton.swift */; };
 		B8B24FA52655CDF500EE6CB9 /* FileSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B24FA42655CDF500EE6CB9 /* FileSync.swift */; };
@@ -92,6 +93,8 @@
 		B853EB402633959E001BB584 /* StringUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringUtilities.swift; sourceTree = "<group>"; };
 		B85CABF2265C510300BE1BE6 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.5.sdk/usr/lib/libsqlite3.tbd; sourceTree = DEVELOPER_DIR; };
 		B85CABF7265C68AF00BE1BE6 /* SQLiteConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteConnection.swift; sourceTree = "<group>"; };
+		B862343B2677FF960099CD87 /* CombineUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombineUtilities.swift; sourceTree = "<group>"; };
+		B862343D267805240099CD87 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubconsciousApp.swift; sourceTree = "<group>"; };
 		B86F339B261AB2C6009D3D48 /* SubconsciousDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubconsciousDocument.swift; sourceTree = "<group>"; };
 		B86F339C261AB2C6009D3D48 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -114,7 +117,6 @@
 		B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarRepresentable.swift; sourceTree = "<group>"; };
 		B88715122642F2D0009BEE1E /* Suggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestion.swift; sourceTree = "<group>"; };
 		B887151426433652009BEE1E /* TextFieldWithToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldWithToggle.swift; sourceTree = "<group>"; };
-		B887151626435774009BEE1E /* BasicService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicService.swift; sourceTree = "<group>"; };
 		B8B00040262621C60068F688 /* PinBottomRight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinBottomRight.swift; sourceTree = "<group>"; };
 		B8B00046262622280068F688 /* ActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButton.swift; sourceTree = "<group>"; };
 		B8B24FA42655CDF500EE6CB9 /* FileSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSync.swift; sourceTree = "<group>"; };
@@ -189,6 +191,7 @@
 				B8B2C1862647172A008AA3EC /* PostHeader.swift */,
 				B81BD763263885DE00BAEC67 /* Editor.swift */,
 				B8E152EF2656F2A30032F5A7 /* Common */,
+				B862343D267805240099CD87 /* Logger.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -208,6 +211,7 @@
 				B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */,
 				B8EC23D626694A33009E4474 /* OptionalUtilities.swift */,
 				B8E6281D2672BA68005B86CE /* Constants.swift */,
+				B862343B2677FF960099CD87 /* CombineUtilities.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -315,7 +319,6 @@
 		B8FD070126321A8D00128FDC /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				B887151626435774009BEE1E /* BasicService.swift */,
 				B8FD06FB26321A8600128FDC /* DocumentService.swift */,
 				B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */,
 			);
@@ -480,7 +483,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B8E628242673B54B005B86CE /* SQLiteMigrations.swift in Sources */,
-				B887151726435774009BEE1E /* BasicService.swift in Sources */,
 				B8E6281E2672BA68005B86CE /* Constants.swift in Sources */,
 				B8B2C18B26474326008AA3EC /* Colors.swift in Sources */,
 				B8C602E7264A34EB00812C90 /* TextEditorRepresentable.swift in Sources */,
@@ -496,6 +498,7 @@
 				B805AAF626447BF30051F205 /* TextToken.swift in Sources */,
 				B86F33C6261AB2C7009D3D48 /* SubconsciousDocument.swift in Sources */,
 				B8B00041262621C60068F688 /* PinBottomRight.swift in Sources */,
+				B862343C2677FF960099CD87 /* CombineUtilities.swift in Sources */,
 				B85CABF8265C68AF00BE1BE6 /* SQLiteConnection.swift in Sources */,
 				B8B2C18926471E6B008AA3EC /* FakeTextField.swift in Sources */,
 				B805AAFA26447F4E0051F205 /* TextTokenBar.swift in Sources */,
@@ -503,6 +506,7 @@
 				B838FF36261FB7B40055C5CF /* SuggestionList.swift in Sources */,
 				B811E60F261D0FBF00484E45 /* Thread.swift in Sources */,
 				B8FD06FC26321A8600128FDC /* DocumentService.swift in Sources */,
+				B862343E267805240099CD87 /* Logger.swift in Sources */,
 				B83B5280261E460A0031988E /* ThickSeparator.swift in Sources */,
 				B87DA91F26250CF900BA5232 /* SearchBarRepresentable.swift in Sources */,
 				B87DA9192624DDEA00BA5232 /* Stream.swift in Sources */,

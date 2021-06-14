@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import os
 
 enum SearchAction {
     case item(_ item: ItemAction<Int, ThreadAction>)
@@ -27,7 +28,7 @@ struct SearchModel: Equatable {
 func updateSearch(
     state: inout SearchModel,
     action: SearchAction,
-    environment: BasicService
+    environment: Logger
 ) -> AnyPublisher<SearchAction, Never> {
     switch action {
     case .item(let action):
@@ -45,7 +46,7 @@ func updateSearch(
                 )
             }).eraseToAnyPublisher()
         } else {
-            environment.log.info(
+            environment.info(
                 """
                 SearchAction.item
                 Passed non-existant item key: \(action.key).
@@ -60,7 +61,7 @@ func updateSearch(
             .enumerated()
             .map({ (i, doc) in ThreadModel(document: doc, isFolded: i > 0) })
     case .requestEdit:
-        environment.log.warning(
+        environment.warning(
             """
             SearchAction.requestEdit
             This action should have been handled by parent view.

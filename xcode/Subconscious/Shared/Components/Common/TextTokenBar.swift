@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import os
 
 enum TextTokenBarAction {
     case select(text: String)
@@ -20,13 +21,13 @@ struct TextTokenBarModel: Equatable {
 func updateTextTokenBar(
     state: inout TextTokenBarModel,
     action: TextTokenBarAction,
-    environment: BasicService
+    environment: Logger
 ) -> AnyPublisher<TextTokenBarAction, Never> {
     switch action {
     case .setTokens(let tokens):
         state.tokens = tokens
     case .select:
-        environment.log.warning(
+        environment.warning(
             """
             TextTokenBarAction.select
             action should be handled by parent

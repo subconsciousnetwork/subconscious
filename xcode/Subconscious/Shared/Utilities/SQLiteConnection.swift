@@ -82,7 +82,6 @@ final class SQLiteConnection {
     }
 
     enum SQLiteConnectionError: Error {
-        case openDatabase
         case execution(_ message: String)
         case prepare(_ message: String)
         case parameter(_ message: String)
@@ -96,7 +95,7 @@ final class SQLiteConnection {
     /// We use this queue to make database connections  threadsafe
     private var queue: DispatchQueue
     
-    init(path: String, qos: DispatchQoS = .default) throws {
+    init?(path: String, qos: DispatchQoS = .default) {
         // Create GCD dispatch queue for running database queries.
         // SQLite3Connection objects are threadsafe.
         // The queue is *always* serial, ensuring that SQL queries to this
@@ -112,20 +111,15 @@ final class SQLiteConnection {
         let result = sqlite3_open(pathCString!, &db)
         if result != SQLITE_OK {
             sqlite3_close(db)
-            throw SQLiteConnectionError.openDatabase
+            return nil
         }
     }
 
     /// Initialize an in-memory database
-    convenience init(qos: DispatchQoS = .default) throws {
-        try self.init(path: ":memory:", qos: qos)
+    convenience init?(qos: DispatchQoS = .default) {
+        self.init(path: ":memory:", qos: qos)
     }
 
-    /// Initialize a database file at a URL
-    convenience init(url: URL, qos: DispatchQoS = .default) throws {
-        try self.init(path: url.path, qos: qos)
-    }
-    
     deinit {
         // We use sqlite3_close_v2 because it knows how to clean up
         // after itself if there are any unfinalized prepared statements.
@@ -350,21 +344,6 @@ final class SQLiteConnection {
 
 //  MARK: SQLiteConnection async extensions
 extension SQLiteConnection {
-    /// Alternative initializer that returns a publisher.
-    static func open(
-        path: String,
-        qos: DispatchQoS = .default
-    ) -> AnyPublisher<SQLiteConnection, Error> {
-        Future({ promise in
-            do {
-                let db = try SQLiteConnection(path: path, qos: qos)
-                promise(.success(db))
-            } catch {
-                promise(.failure(error))
-            }
-        }).eraseToAnyPublisher()
-    }
-
     /// Executes multiple SQL statements in one go.
     /// Useful for setting up a database.
     /// This form does not allow for parameter binding.
@@ -420,8 +399,6 @@ extension SQLiteConnection.SQLiteConnectionError: LocalizedError {
             
             \(message)
             """
-        case .openDatabase:
-            return "Could not open database (SQLiteConnection.SQLiteConnectionError.openDatabase)"
         case .parameter(let message):
             return """
             Parameter error (SQLiteConnection.SQLiteConnectionError.parameter)

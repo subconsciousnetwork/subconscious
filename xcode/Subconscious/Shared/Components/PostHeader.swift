@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import os
 
 struct PostHeaderModel {
     var name: String
@@ -19,11 +20,11 @@ enum PostHeaderAction {
 func updatePostHeader(
     state: inout PostHeaderModel,
     action: PostHeaderAction,
-    environment: BasicService
+    environment: Logger
 ) -> AnyPublisher<PostHeaderAction, Never> {
     switch action {
     case .tapProfile:
-        environment.log.warning(
+        environment.warning(
             """
             PostHeaderAction.tapProfile
             action should be handled by parent

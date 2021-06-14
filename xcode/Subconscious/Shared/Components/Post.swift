@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import os
 
 struct PostModel {
     var header: PostHeaderModel
@@ -21,7 +22,7 @@ enum PostAction {
 func updatePost(
     state: inout PostModel,
     action: PostAction,
-    environment: BasicService
+    environment: Logger
 ) -> AnyPublisher<PostAction, Never> {
     switch action {
     case .header(let action):
