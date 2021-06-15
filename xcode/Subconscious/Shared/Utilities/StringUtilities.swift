@@ -15,3 +15,10 @@ func ltrim(prefix: String, value: String) -> String {
         return value
     }
 }
+
+extension StringProtocol {
+    /// Check if a string contains only whitespace characters
+    var isWhitespace: Bool {
+        self.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
