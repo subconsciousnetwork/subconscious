@@ -21,10 +21,20 @@ final class SQLiteConnection {
         case real(Double)
         case blob(Data)
 
-        private static let ISO8601Formatter = ISO8601DateFormatter()
+        private static func iso8601Formatter() -> ISO8601DateFormatter {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [
+                .withFullDate,
+                .withTime,
+                .withDashSeparatorInDate,
+                .withColonSeparatorInTime
+            ]
+            return formatter
+        }
         
         static func date(_ date: Date) -> SQLValue {
-            return self.text(ISO8601Formatter.string(from: date))
+            let formatter = iso8601Formatter()
+            return self.text(formatter.string(from: date))
         }
 
         func map<T>(_ read: (SQLValue) -> T?) -> T? {
@@ -47,7 +57,8 @@ final class SQLiteConnection {
         func asDate() -> Date? {
             switch self {
             case .text(let value):
-                return SQLValue.ISO8601Formatter.date(from: value)
+                let formatter = SQLValue.iso8601Formatter()
+                return formatter.date(from: value)
             default:
                 return nil
             }

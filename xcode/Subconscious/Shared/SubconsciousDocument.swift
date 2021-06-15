@@ -22,7 +22,7 @@ struct SubconsciousDocument: Identifiable, Hashable, Equatable {
 
     init(title: String, markup: String) {
         self.init(title: title, content: Subtext(markup))
-    }    
+    }
 }
 
 extension SubconsciousDocument: CustomStringConvertible {

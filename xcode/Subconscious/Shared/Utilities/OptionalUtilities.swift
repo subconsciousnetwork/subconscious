@@ -42,3 +42,15 @@ extension Optional {
         }
     }
 }
+
+extension Optional.NilError: LocalizedError {
+    public var errorDescription: String? {
+        """
+        Failed to unwrap nil value (Optional.NilError)
+        File: \(self.file)
+        Line: \(self.line)
+        Column: \(self.column)
+        Function: \(self.function)
+        """
+    }
+}

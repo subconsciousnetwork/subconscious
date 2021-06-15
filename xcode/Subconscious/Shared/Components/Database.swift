@@ -24,6 +24,8 @@ enum DatabaseAction {
     /// This should not happen, but it allows us to recover if it does.
     case rebuild
     case sync
+    case search(_ query: String)
+    case searchSuccess([TextFile])
 }
 
 //  MARK: Tagging functions
@@ -84,6 +86,13 @@ func updateDatabase(
             .map({ _ in .log(.info("File sync done")) })
             .replaceError(with: .log(.error("File sync failed")))
             .eraseToAnyPublisher()
+    case .search(let query):
+        return environment.search(query: query)
+            .map({ results in .searchSuccess(results) })
+            .replaceError(with: .log(.error("Search failed")))
+            .eraseToAnyPublisher()
+    case .searchSuccess:
+        environment.logger.warning("searchSuccess should be handled by parent component")
     }
     return Empty().eraseToAnyPublisher()
 }
@@ -277,12 +286,7 @@ struct DatabaseEnvironment {
     }
     
     func writeEntry(_ url: URL) throws {
-        let contents = try fileManager.contents(atPath: url.path).unwrap()
-        let fingerprint = try FileSync.FileFingerprint(
-            url: url,
-            with: fileManager
-        )
-        let body = String(decoding: contents, as: UTF8.self)
+        let textFile = try TextFile(url: url).unwrap()
         try SQLiteConnection(path: databaseUrl.path).unwrap().execute(
             sql: """
             INSERT INTO entry (path, title, body, modified, size)
@@ -293,9 +297,9 @@ struct DatabaseEnvironment {
                 // can change during testing.
                 .text(url.lastPathComponent),
                 .text(url.stem),
-                .text(body),
-                .date(fingerprint.modified),
-                .integer(fingerprint.size)
+                .text(textFile.content),
+                .date(textFile.attributes.modified),
+                .integer(textFile.attributes.size)
             ]
         )
     }
@@ -325,21 +329,36 @@ struct DatabaseEnvironment {
         }
     }
 
-    func search(query: String) ->
-        AnyPublisher<[[SQLiteConnection.SQLValue]], Error> {
+    func search(query: String) -> AnyPublisher<[TextFile], Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
             try SQLiteConnection(
                 path: databaseUrl.path,
                 qos: .userInitiated
-            ).unwrap()
+            )
+            .unwrap()
             .execute(
                 sql: """
-                SELECT * FROM entry WHERE entry MATCH ? ORDER BY rank;
+                SELECT path, body, modified, size
+                FROM entry_search
+                WHERE entry_search MATCH ?
+                ORDER BY rank;
                 """,
                 parameters: [
                     SQLiteConnection.SQLValue.text(query)
                 ]
             )
+            .map({ row in
+                let path = try row[0].asString().unwrap()
+                let content = try row[1].asString().unwrap()
+                let modified = try row[2].asDate().unwrap()
+                let size = try row[3].asInt().unwrap()
+                return TextFile(
+                    url: documentsUrl.appendingPathComponent(path),
+                    content: content,
+                    modified: modified,
+                    size: size
+                )
+            })
         })
     }
 }

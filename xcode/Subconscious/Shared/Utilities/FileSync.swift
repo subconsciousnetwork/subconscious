@@ -15,60 +15,62 @@ struct FileSync {
     ///
     /// This is the same strategy rsync uses when not doing full checksums.
     struct FileFingerprint: Hashable, Equatable, Identifiable {
-        var id: String { self.url.path }
-        let url: URL
-        let modified: Date
-        let size: Int
-
         enum FileFingerprintError: Error {
             case fileAttributeError
         }
+
+        struct Attributes: Hashable, Equatable {
+            let modified: Date
+            let size: Int
+
+            init(modified: Date, size: Int) {
+                self.modified = modified
+                self.size = size
+            }
+            
+            init?(url: URL, manager: FileManager = .default) {
+                guard
+                    let attr = try? manager.attributesOfItem(atPath: url.path),
+                    let modified = attr[FileAttributeKey.modificationDate] as? Date,
+                    let size = attr[FileAttributeKey.size] as? Int
+                else {
+                    return nil
+                }
+                self.init(modified: modified, size: size)
+            }
+        }
         
-        init(url: URL, modified: Date, size: Int) {
+        var id: String { self.url.path }
+        let url: URL
+        let attributes: Attributes
+
+        init(url: URL, attributes: Attributes) {
             self.url = url.absoluteURL
-            self.modified = modified
-            self.size = size
+            self.attributes = attributes
         }
 
-        init(
-            url: URL,
-            with manager: FileManager = FileManager.default
-        ) throws {
-            let attr = try manager.attributesOfItem(atPath: url.path)
-            if
-                let modified = attr[FileAttributeKey.modificationDate] as? Date,
-                let size = attr[FileAttributeKey.size] as? Int
-            {
-                self.init(
-                    url: url,
+        init(url: URL, modified: Date, size: Int) {
+            self.init(
+                url: url,
+                attributes: Attributes(
                     modified: modified,
                     size: size
                 )
-            } else {
-                throw FileFingerprintError.fileAttributeError
-            }
+            )
         }
-    }
-    
-    /// Get a FileChangeFingerprint for a given URL
-    static func readFileFingerprint(
-        with manager: FileManager,
-        url: URL
-    ) -> FileFingerprint? {
-        do {
-            let attr = try manager.attributesOfItem(atPath: url.path)
-            if let modified = attr[FileAttributeKey.modificationDate] as? Date,
-               let size = attr[FileAttributeKey.size] as? Int {
-                return FileFingerprint(
+        
+        init?(
+            url: URL,
+            with manager: FileManager = FileManager.default
+        ) {
+            if let attributes = Attributes(url: url, manager: manager) {
+                self.init(
                     url: url,
-                    modified: modified,
-                    size: size
+                    attributes: attributes
                 )
             } else {
                 return nil
             }
-        } catch {
-            return nil
         }
     }
 
@@ -78,8 +80,8 @@ struct FileSync {
         urls: [URL],
         with manager: FileManager = FileManager.default
     ) throws -> [FileFingerprint] {
-        try urls.compactMap({ url in
-            return try FileFingerprint(url: url, with: manager)
+        urls.compactMap({ url in
+            FileFingerprint(url: url, with: manager)
         })
     }
 
@@ -109,9 +111,9 @@ struct FileSync {
             if let left = self.left, let right = self.right {
                 if left == right {
                     return .same
-                } else if left.modified > right.modified {
+                } else if left.attributes.modified > right.attributes.modified {
                     return .leftNewer
-                } else if left.modified < right.modified {
+                } else if left.attributes.modified < right.attributes.modified {
                     return .rightNewer
                 /// Left and right have the same modified time, but a different size
                 } else {

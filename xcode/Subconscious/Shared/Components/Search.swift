@@ -21,7 +21,12 @@ struct SearchModel: Equatable {
     init(documents: [SubconsciousDocument]) {
         self.threads = documents
             .enumerated()
-            .map({ (i, doc) in ThreadModel(document: doc, isFolded: i > 0) })
+            .map({ (i, document) in
+                ThreadModel(
+                    document: document,
+                    isFolded: i > 0
+                )
+            })
     }
 }
 

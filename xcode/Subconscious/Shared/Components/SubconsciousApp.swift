@@ -35,6 +35,17 @@ enum AppAction {
 
 func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
     switch action {
+    case .searchSuccess(let results):
+        return .search(
+            .setItems(
+                results.map({ textFile in
+                    SubconsciousDocument(
+                        title: textFile.url.stem,
+                        markup: textFile.content
+                    )
+                })
+            )
+        )
     default:
         return .database(action)
     }
@@ -174,14 +185,12 @@ func updateApp(
             .fetchSuggestions(query: query)
             .map(AppAction.setSuggestions)
 
-        let documentQueryEffect = environment
-            .documentService.query(query: query)
-            .map({ documents in AppAction.search(.setItems(documents)) })
+        let databaseSearchEffect = Just(AppAction.database(.search(query)))
         
         return Publishers.Merge3(
             searchBarEffect,
             suggestionsEffect,
-            documentQueryEffect
+            databaseSearchEffect
         ).eraseToAnyPublisher()
     case .setLiveQuery(let query):
         let searchBarEffect = updateSubSearchBar(

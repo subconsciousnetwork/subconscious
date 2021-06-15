@@ -61,6 +61,7 @@
 		B8EC23D726694A33009E4474 /* OptionalUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC23D626694A33009E4474 /* OptionalUtilities.swift */; };
 		B8F41F08262F8FD500D134F8 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F41F07262F8FD500D134F8 /* Icon.swift */; };
 		B8FD06FC26321A8600128FDC /* DocumentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FD06FB26321A8600128FDC /* DocumentService.swift */; };
+		B8FDE3372678474D00BA307D /* TextFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FDE3362678474D00BA307D /* TextFile.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -137,6 +138,7 @@
 		B8EC23D626694A33009E4474 /* OptionalUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionalUtilities.swift; sourceTree = "<group>"; };
 		B8F41F07262F8FD500D134F8 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
 		B8FD06FB26321A8600128FDC /* DocumentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentService.swift; sourceTree = "<group>"; };
+		B8FDE3362678474D00BA307D /* TextFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFile.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -212,6 +214,7 @@
 				B8EC23D626694A33009E4474 /* OptionalUtilities.swift */,
 				B8E6281D2672BA68005B86CE /* Constants.swift */,
 				B862343B2677FF960099CD87 /* CombineUtilities.swift */,
+				B8FDE3362678474D00BA307D /* TextFile.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -488,6 +491,7 @@
 				B8C602E7264A34EB00812C90 /* TextEditorRepresentable.swift in Sources */,
 				B87C7D7C261E0E6C003EFC6F /* Block.swift in Sources */,
 				B874D7AD26540A7800351C8E /* SubSearchBar.swift in Sources */,
+				B8FDE3372678474D00BA307D /* TextFile.swift in Sources */,
 				B8E152F226570B890032F5A7 /* Database.swift in Sources */,
 				B83B5296261E58260031988E /* Search.swift in Sources */,
 				B81BD764263885DE00BAEC67 /* Editor.swift in Sources */,
