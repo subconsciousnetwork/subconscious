@@ -23,9 +23,15 @@ enum DatabaseAction {
     /// Rebuild database if it is somehow impossible to migrate.
     /// This should not happen, but it allows us to recover if it does.
     case rebuild
+    /// Sync files with database
     case sync
+    /// Perform a search with query string
     case search(_ query: String)
     case searchSuccess([TextFile])
+    /// Perform a search over suggestions with query string
+    case searchSuggestions(_ query: String)
+    /// Search suggestion success with array of results
+    case searchSuggestionsSuccess(_ results: [Suggestion])
 }
 
 //  MARK: Tagging functions
@@ -68,12 +74,16 @@ func updateDatabase(
         if success.from == success.to {
             environment.logger.info("Database up-to-date. No migration needed")
         } else {
-            environment.logger.info("Database migrated from \(success.from) to \(success.to) via \(success.migrations)")
+            environment.logger.info(
+                "Database migrated from \(success.from) to \(success.to) via \(success.migrations)"
+            )
         }
         return Just(DatabaseAction.sync).eraseToAnyPublisher()
     case .rebuild:
         state.state = .broken
-        environment.logger.warning("Database is broken or has wrong schema. Attempting to rebuild.")
+        environment.logger.warning(
+            "Database is broken or has wrong schema. Attempting to rebuild."
+        )
         return environment.deleteDatabaseAsync()
             .flatMap(environment.migrateDatabaseAsync)
             .map({ success in DatabaseAction.setupSuccess(success) })
@@ -92,7 +102,18 @@ func updateDatabase(
             .replaceError(with: .log(.error("Search failed")))
             .eraseToAnyPublisher()
     case .searchSuccess:
-        environment.logger.warning("searchSuccess should be handled by parent component")
+        environment.logger.warning(
+            "DatabaseAction.searchSuccess should be handled by parent component"
+        )
+    case .searchSuggestions(let query):
+        return environment.searchSuggestions(query: query)
+            .map({ results in .searchSuggestionsSuccess(results) })
+            .replaceError(with: .log(.error("Query search failed")))
+            .eraseToAnyPublisher()
+    case .searchSuggestionsSuccess:
+        environment.logger.warning(
+            "DatabaseAction.searchQueriesSuccess should be handled by parent component"
+        )
     }
     return Empty().eraseToAnyPublisher()
 }
@@ -329,25 +350,65 @@ struct DatabaseEnvironment {
         }
     }
 
-    func search(query: String) -> AnyPublisher<[TextFile], Error> {
+    /// Search through query strings
+    func searchSuggestions(query: String) -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
-            try SQLiteConnection(
+            let db = try SQLiteConnection(
                 path: databaseUrl.path,
                 qos: .userInitiated
+            ).unwrap()
+            
+            let quoted = SQLiteConnection.quotePrefixQueryFTS5(query)
+            
+            let rows = try db.execute(
+                sql: """
+                SELECT title
+                FROM entry_search
+                WHERE entry_search.title MATCH ?
+                ORDER BY rank
+                LIMIT 8
+                """,
+                parameters: [
+                    SQLiteConnection.SQLValue.text(quoted)
+                ]
             )
-            .unwrap()
-            .execute(
+
+            var threads = try rows.compactMap({ row in
+                try Suggestion.thread(row[0].asString().unwrap())
+            })
+
+            if !query.isWhitespace {
+                let create = Suggestion.create(query)
+                threads.append(create)
+            }
+
+            return threads
+        })
+    }
+    
+    func search(query: String) -> AnyPublisher<[TextFile], Error> {
+        CombineUtilities.async(qos: .userInitiated, execute: {
+            let db = try SQLiteConnection(
+                path: databaseUrl.path,
+                qos: .userInitiated
+            ).unwrap()
+            
+            let quoted = SQLiteConnection.quoteQueryFTS5(query)
+
+            let rows = try db.execute(
                 sql: """
                 SELECT path, body, modified, size
                 FROM entry_search
                 WHERE entry_search MATCH ?
-                ORDER BY rank;
+                ORDER BY rank
+                LIMIT 100
                 """,
                 parameters: [
-                    SQLiteConnection.SQLValue.text(query)
+                    SQLiteConnection.SQLValue.text(quoted)
                 ]
             )
-            .map({ row in
+
+            return try rows.map({ row in
                 let path = try row[0].asString().unwrap()
                 let content = try row[1].asString().unwrap()
                 let modified = try row[2].asDate().unwrap()

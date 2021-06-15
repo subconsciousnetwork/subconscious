@@ -76,7 +76,7 @@ struct ContentView: View, Equatable {
                                     .padding(.bottom, 8)
                                 }
                                 Divider()
-                                SuggestionListView(
+                                SuggestionsView(
                                     store: ViewStore(
                                         state: store.state.suggestions,
                                         send: store.send,

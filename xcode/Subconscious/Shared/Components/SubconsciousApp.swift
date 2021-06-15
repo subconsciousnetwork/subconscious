@@ -29,6 +29,10 @@ enum AppAction {
     case saveThread(SubconsciousDocument)
     case warning(_ message: String)
     case info(_ message: String)
+
+    static func searchSuggestions(_ query: String) -> AppAction {
+        .database(.searchSuggestions(query))
+    }
 }
 
 //  MARK: Tagging functions
@@ -46,6 +50,8 @@ func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
                 })
             )
         )
+    case .searchSuggestionsSuccess(let results):
+        return .setSuggestions(results)
     default:
         return .database(action)
     }
@@ -82,7 +88,7 @@ func tagSearchAction(_ action: SearchAction) -> AppAction {
     }
 }
 
-func tagSuggestionListAction(_ action: SuggestionListAction) -> AppAction {
+func tagSuggestionListAction(_ action: SuggestionsAction) -> AppAction {
     switch action {
     case .select(let suggestion):
         return .commitQuery(suggestion.description)
@@ -198,10 +204,8 @@ func updateApp(
             action: .setLiveQuery(query)
         ).map(tagSearchBarAction)
 
-        let suggestionsEffect = environment
-            .fetchSuggestions(query: query)
-            .map(AppAction.setSuggestions)
-
+        let suggestionsEffect = Just(AppAction.searchSuggestions(query))
+        
         return Publishers.Merge(
             searchBarEffect,
             suggestionsEffect

@@ -8,7 +8,7 @@
 import SwiftUI
 import Combine
 
-enum SuggestionListAction {
+enum SuggestionsAction {
     case select(_ suggestion: Suggestion)
 }
 
@@ -21,8 +21,8 @@ enum SuggestionListAction {
 ///
 /// Deliberately does not handle scrolling. This is meant to be placed within a ScrollView along with other
 /// types of search results.
-struct SuggestionListView: View, Equatable {
-    let store: ViewStore<[Suggestion], SuggestionListAction>
+struct SuggestionsView: View, Equatable {
+    let store: ViewStore<[Suggestion], SuggestionsAction>
     
     var body: some View {
         VStack(spacing: 0) {
@@ -45,9 +45,9 @@ struct SuggestionListView: View, Equatable {
     }
 }
 
-struct SuggestionListView_Previews: PreviewProvider {
+struct Suggestions_Previews: PreviewProvider {
     static var previews: some View {
-        SuggestionListView(
+        SuggestionsView(
             store: ViewStore(
                 state: [
                     Suggestion.thread(

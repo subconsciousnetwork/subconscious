@@ -55,7 +55,7 @@ func tagEditorTitleField(_ action: TextFieldWithToggleAction) -> EditorAction {
     }
 }
 
-func tagTitleSuggestionList(_ action: SuggestionListAction) -> EditorAction {
+func tagTitleSuggestionList(_ action: SuggestionsAction) -> EditorAction {
     switch action {
     case .select(let suggestion):
         return .selectTitle(suggestion.description)
@@ -220,7 +220,7 @@ struct EditorView: View, Equatable {
             Group {
                 if store.state.titleField.isToggleActive {
                     ScrollView {
-                        SuggestionListView(
+                        SuggestionsView(
                             store: ViewStore(
                                 state: store.state.titleSuggestions,
                                 send: store.send,
