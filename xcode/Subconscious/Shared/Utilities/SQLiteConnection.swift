@@ -353,6 +353,25 @@ final class SQLiteConnection {
     }
 }
 
+//  MARK: SQLiteConnection helpers
+extension SQLiteConnection {
+    /// Quotes a query string to make it compatible with FTS5 query syntax.
+    /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
+    /// See https://sqlite.org/fts5.html#full_text_query_syntax
+    static func quoteQueryFTS5(_ query: String) -> String {
+        let stripped = query.replacingOccurrences(of: "\"", with: "")
+        return "\"\(stripped)\""
+    }
+
+    /// Quotes a query string, making it a valid FTS5 prefix query string.
+    /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
+    /// See https://sqlite.org/fts5.html#full_text_query_syntax
+    static func quotePrefixQueryFTS5(_ query: String) -> String {
+        let stripped = query.replacingOccurrences(of: "\"", with: "")
+        return "\"\(stripped)\"*"
+    }
+}
+
 //  MARK: SQLiteConnection async extensions
 extension SQLiteConnection {
     /// Executes multiple SQL statements in one go.
