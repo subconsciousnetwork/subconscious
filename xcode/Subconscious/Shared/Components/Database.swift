@@ -4,6 +4,7 @@
 //
 //  Created by Gordon Brander on 5/20/21.
 //
+//  Handles reading, writing, building, and syncing files and database.
 
 import Foundation
 import Combine
@@ -27,11 +28,16 @@ enum DatabaseAction {
     case sync
     /// Perform a search with query string
     case search(_ query: String)
-    case searchSuccess([TextFile])
+    case searchSuccess([TextDocument])
     /// Perform a search over suggestions with query string
     case searchSuggestions(_ query: String)
     /// Search suggestion success with array of results
     case searchSuggestionsSuccess(_ results: [Suggestion])
+    /// Write to the file system and database.
+    /// This acts like an upsert. If file exists, it will be overwritten, and DB updated.
+    /// If file does not exist, it will be created.
+    case writeDocument(url: URL, content: String)
+    case deleteDocument(url: URL)
 }
 
 //  MARK: Tagging functions
@@ -92,9 +98,24 @@ func updateDatabase(
             )
             .eraseToAnyPublisher()
     case .sync:
+        environment.logger.log("File sync started")
         return environment.syncDatabaseAsync()
             .map({ _ in .log(.info("File sync done")) })
             .replaceError(with: .log(.error("File sync failed")))
+            .eraseToAnyPublisher()
+    case .writeDocument(let url, let content):
+        return environment.writeDocumentAsync(url: url, content: content)
+            .map({ _ in .log(.info("Wrote document: \(url)")) })
+            .replaceError(
+                with: .log(.warning("Write failed for document: \(url)"))
+            )
+            .eraseToAnyPublisher()
+    case .deleteDocument(let url):
+        return environment.deleteDocumentAsync(url)
+            .map({ _ in .log(.info("Deleted document: \(url)")) })
+            .replaceError(
+                with: .log(.warning("Delete failed for document: \(url)"))
+            )
             .eraseToAnyPublisher()
     case .search(let query):
         return environment.search(query: query)
@@ -265,7 +286,7 @@ struct DatabaseEnvironment {
             let right = try db.execute(
                 sql: "SELECT path, modified, size FROM entry"
             ).map({ row  in
-                FileSync.FileFingerprint(
+                FileFingerprint(
                     url: URL(
                         fileURLWithPath: try row[0]
                             .asString()
@@ -291,12 +312,12 @@ struct DatabaseEnvironment {
                 // .conflict. Leader wins.
                 case .leftOnly, .leftNewer, .rightNewer, .conflict:
                     if let left = change.left {
-                        try writeEntry(left.url)
+                        try writeDocumentToDatabase(left.url)
                     }
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly:
                     if let right = change.right {
-                        try removeEntry(right.url)
+                        try deleteDocumentFromDatabase(right.url)
                     }
                 // .same = no change. Do nothing.
                 case .same:
@@ -305,9 +326,14 @@ struct DatabaseEnvironment {
             }
         }
     }
-    
-    func writeEntry(_ url: URL) throws {
-        let textFile = try TextFile(url: url).unwrap()
+
+    /// Write document syncronously
+    private func writeDocumentToDatabase(
+        url: URL,
+        content: String,
+        modified: Date,
+        size: Int
+    ) throws {
         try SQLiteConnection(path: databaseUrl.path).unwrap().execute(
             sql: """
             INSERT INTO entry (path, title, body, modified, size)
@@ -318,20 +344,45 @@ struct DatabaseEnvironment {
                 // can change during testing.
                 .text(url.lastPathComponent),
                 .text(url.stem),
-                .text(textFile.content),
-                .date(textFile.attributes.modified),
-                .integer(textFile.attributes.size)
+                .text(content),
+                .date(modified),
+                .integer(size)
             ]
         )
     }
     
-    func writeEntryAsync(_ url: URL) -> AnyPublisher<Void, Error> {
+    /// Write document syncronously by reading it off of file system
+    private func writeDocumentToDatabase(_ url: URL) throws {
+        let content = try String(contentsOf: url, encoding: .utf8)
+        let attributes = try FileFingerprint.Attributes.init(url: url).unwrap()
+        try writeDocumentToDatabase(
+            url: url,
+            content: content,
+            modified: attributes.modified,
+            size: attributes.size
+        )
+    }
+    
+    /// Write a document to the file system, and to the database
+    func writeDocumentAsync(
+        url: URL,
+        content: String
+    ) -> AnyPublisher<Void, Error> {
         CombineUtilities.async {
-            try writeEntry(url)
+            try content.write(to: url, atomically: true, encoding: .utf8)
+            // Re-read size and file modified from file system to make sure
+            // what we store is exactly equal to file system.
+            let attributes = try FileFingerprint.Attributes(url: url).unwrap()
+            try writeDocumentToDatabase(
+                url: url,
+                content: content,
+                modified: attributes.modified,
+                size: attributes.size
+            )
         }
     }
     
-    func removeEntry(_ url: URL) throws {
+    private func deleteDocumentFromDatabase(_ url: URL) throws {
         try SQLiteConnection(path: databaseUrl.path)
             .unwrap()
             .execute(
@@ -344,9 +395,11 @@ struct DatabaseEnvironment {
             )
     }
 
-    func removeEntryAsync(_ url: URL) -> AnyPublisher<Void, Error> {
+    /// Remove document from file system and database
+    func deleteDocumentAsync(_ url: URL) -> AnyPublisher<Void, Error> {
         CombineUtilities.async {
-            try removeEntry(url)
+            try fileManager.removeItem(at: url)
+            try deleteDocumentFromDatabase(url)
         }
     }
 
@@ -386,7 +439,7 @@ struct DatabaseEnvironment {
         })
     }
     
-    func search(query: String) -> AnyPublisher<[TextFile], Error> {
+    func search(query: String) -> AnyPublisher<[TextDocument], Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
             let db = try SQLiteConnection(
                 path: databaseUrl.path,
@@ -397,7 +450,7 @@ struct DatabaseEnvironment {
 
             let rows = try db.execute(
                 sql: """
-                SELECT path, body, modified, size
+                SELECT path, body
                 FROM entry_search
                 WHERE entry_search MATCH ?
                 ORDER BY rank
@@ -411,13 +464,9 @@ struct DatabaseEnvironment {
             return try rows.map({ row in
                 let path = try row[0].asString().unwrap()
                 let content = try row[1].asString().unwrap()
-                let modified = try row[2].asDate().unwrap()
-                let size = try row[3].asInt().unwrap()
-                return TextFile(
+                return TextDocument(
                     url: documentsUrl.appendingPathComponent(path),
-                    content: content,
-                    modified: modified,
-                    size: size
+                    content: content
                 )
             })
         })
