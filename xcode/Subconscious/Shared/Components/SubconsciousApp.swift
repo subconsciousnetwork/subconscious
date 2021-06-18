@@ -15,23 +15,38 @@ typealias AppStore = Store<AppModel, AppAction, AppEnvironment>
 //  MARK: App Actions
 /// Actions that may be taken on the Store
 enum AppAction {
+    /// Database actions
     case database(_ action: DatabaseAction)
+    /// Editor actions
     case editor(_ action: EditorAction)
+    /// Search Bar actions
     case searchBar(_ action: SubSearchBarAction)
+    /// Search results actions
     case search(_ action: SearchAction)
     case suggestionTokens(_ action: TextTokenBarAction)
+    /// On view appear
     case appear
     case edit(_ document: SubconsciousDocument)
     case commitQuery(_ query: String)
     case setLiveQuery(_ query: String)
     case setEditorPresented(_ isPresented: Bool)
     case setSuggestions(_ suggestions: [Suggestion])
-    case saveThread(SubconsciousDocument)
     case warning(_ message: String)
     case info(_ message: String)
 
     static func searchSuggestions(_ query: String) -> AppAction {
         .database(.searchSuggestions(query))
+    }
+
+    static func writeDocumentByTitle(
+        title: String,
+        content: String
+    ) -> AppAction {
+        .database(.writeDocumentByTitle(title: title, content: content))
+    }
+
+    static func deleteDocument(url: URL) -> AppAction {
+        .database(.deleteDocument(url: url))
     }
 }
 
@@ -61,8 +76,11 @@ func tagEditorAction(_ action: EditorAction) -> AppAction {
     switch action {
     case .requestEditorUnpresent:
         return .setEditorPresented(false)
-    case .requestSave(let thread):
-        return .saveThread(thread)
+    case .requestSave(let title, let content):
+        return .writeDocumentByTitle(
+            title: title,
+            content: content
+        )
     default:
         return .editor(action)
     }
@@ -178,7 +196,14 @@ func updateApp(
         ).eraseToAnyPublisher()
     case .edit(let document):
         state.isEditorPresented = true
-        return Just(.editor(.edit(document))).eraseToAnyPublisher()
+        return Just(
+            .editor(
+                .edit(
+                    title: document.title,
+                    content: document.content.description
+                )
+            )
+        ).eraseToAnyPublisher()
     case .setEditorPresented(let isPresented):
         state.isEditorPresented = isPresented
     case .commitQuery(let query):
@@ -212,10 +237,6 @@ func updateApp(
         ).eraseToAnyPublisher()
     case .setSuggestions(let suggestions):
         state.suggestions = suggestions
-    case .saveThread(let thread):
-        return environment.documentService.write(thread)
-            .map({ AppAction.info("Saved thread") })
-            .eraseToAnyPublisher()
     case .warning(let message):
         environment.logger.warning("\(message)")
     case .info(let message):

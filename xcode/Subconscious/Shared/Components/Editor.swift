@@ -15,12 +15,12 @@ enum EditorAction {
     case body(_ action: TextareaAction)
     case titleField(_ action: TextFieldWithToggleAction)
     case appear
-    case edit(SubconsciousDocument)
-    case save(SubconsciousDocument)
+    case edit(title: String, content: String)
+    case save(title: String, content: String)
     case cancel
     case clear
     case selectTitle(_ text: String)
-    case requestSave(SubconsciousDocument)
+    case requestSave(title: String, content: String)
     case queryTitleSuggestions(_ query: String)
     case requestTitleMatch(_ title: String)
     case requestEditorUnpresent
@@ -93,17 +93,24 @@ func updateEditor(
         ).eraseToAnyPublisher()
     case .setTitleSuggestions(let suggestions):
         state.titleSuggestions = suggestions
-    case .edit(let document):
+    case .edit(let title, let content):
         let setTitle = Just(
-            EditorAction.setTitle(document.title)
+            EditorAction.setTitle(title)
         )
         let setBody = Just(
-            EditorAction.body(.set(document.content.description))
+            EditorAction.body(.set(content))
         )
-        return Publishers.Merge(setTitle, setBody)
-            .eraseToAnyPublisher()
-    case .save(let document):
-        let save = Just(EditorAction.requestSave(document))
+        return Publishers.Merge(
+            setTitle,
+            setBody
+        ).eraseToAnyPublisher()
+    case .save(let title, let content):
+        let save = Just(
+            EditorAction.requestSave(
+                title: title,
+                content: content
+            )
+        )
         let unpresent = Just(EditorAction.requestEditorUnpresent)
         let clear = Just(EditorAction.clear).delay(
             for: .milliseconds(500),
@@ -191,10 +198,8 @@ struct EditorView: View, Equatable {
                 Spacer()
                 Button(action: {
                     store.send(.save(
-                        SubconsciousDocument(
-                            title: store.state.titleField.text,
-                            markup: store.state.body.text
-                        )
+                        title: store.state.titleField.text,
+                        content: store.state.body.text
                     ))
                 }) {
                     Text(save)

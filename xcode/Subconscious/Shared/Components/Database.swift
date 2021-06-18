@@ -37,6 +37,8 @@ enum DatabaseAction {
     /// This acts like an upsert. If file exists, it will be overwritten, and DB updated.
     /// If file does not exist, it will be created.
     case writeDocument(url: URL, content: String)
+    /// Write to the file system and database by using a name rather than URL.
+    case writeDocumentByTitle(title: String, content: String)
     case deleteDocument(url: URL)
 }
 
@@ -110,6 +112,16 @@ func updateDatabase(
                 with: .log(.warning("Write failed for document: \(url)"))
             )
             .eraseToAnyPublisher()
+    case .writeDocumentByTitle(let title, let content):
+        return Just(
+            DatabaseAction.writeDocument(
+                // TODO: we should have some more methodical way of converting
+                // from URL to title and back.
+                url: environment.documentsUrl
+                    .appendingFilename(name: title, ext: "subtext"),
+                content: content
+            )
+        ).eraseToAnyPublisher()
     case .deleteDocument(let url):
         return environment.deleteDocumentAsync(url)
             .map({ _ in .log(.info("Deleted document: \(url)")) })
@@ -232,7 +244,7 @@ struct DatabaseEnvironment {
             )!
         ])!
     }
-
+    
     let logger = Logger(
         subsystem: "com.subconscious.Subconscious",
         category: "database"
