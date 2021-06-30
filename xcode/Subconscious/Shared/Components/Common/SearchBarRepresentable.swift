@@ -7,13 +7,55 @@
 
 import SwiftUI
 
-struct SearchBarRepresentable: UIViewRepresentable {
+extension UIApplication {
+    func endEditing() {
+        sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
+    }
+}
+
+struct SearchBarRepresentable: UIViewRepresentable {    
+    class Coordinator: NSObject, UISearchBarDelegate {
+        var representable: SearchBarRepresentable
+
+        init(_ representable: SearchBarRepresentable) {
+            self.representable = representable
+        }
+
+        func searchBar(
+            _ searchBar: UISearchBar,
+            textDidChange searchText: String
+        ) {
+            representable.text = searchText
+            representable.onCommit(searchText)
+        }
+
+        func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+            representable.onCancel()
+        }
+
+        func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+            representable.onSubmit(searchBar.text ?? "")
+            UIApplication.shared.endEditing()
+        }
+    }
+
     @Binding var text: String
+    var placeholder: String
+    var showsCancelButton: Bool
+    var onCommit: (String) -> Void
+    var onSubmit: (String) -> Void
+    var onCancel: () -> Void
 
     func makeUIView(context: Context) -> UISearchBar {
         let searchBar = UISearchBar()
+        searchBar.placeholder = placeholder
+        searchBar.showsCancelButton = showsCancelButton
         searchBar.delegate = context.coordinator
-
         return searchBar
     }
 
@@ -22,18 +64,19 @@ struct SearchBarRepresentable: UIViewRepresentable {
     }
 
     func makeCoordinator() -> SearchBarRepresentable.Coordinator {
-        Coordinator(text: $text)
+        Coordinator(self)
     }
+}
 
-    class Coordinator: NSObject, UISearchBarDelegate {
-        @Binding var text: String
-
-        init(text: Binding<String>) {
-            _text = text
-        }
-
-        func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-            text = searchText
-        }
+struct SearchBarRepresentablePreview: PreviewProvider {
+    static var previews: some View {
+        SearchBarRepresentable(
+            text: .constant("Text"),
+            placeholder: "Placeholder",
+            showsCancelButton: false,
+            onCommit: { text in },
+            onSubmit: { text in },
+            onCancel: {}
+        )
     }
 }

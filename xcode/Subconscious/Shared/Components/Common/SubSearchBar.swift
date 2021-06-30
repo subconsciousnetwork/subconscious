@@ -65,9 +65,9 @@ struct SubSearchBarView: View, Equatable {
                 )
                 .foregroundColor(.Subconscious.text)
                 .transition(.move(edge: .trailing))
-                    .onTapGesture {
-                        store.send(.setOpen(true))
-                    }
+                .onTapGesture(perform: {
+                    store.send(.setOpen(true))
+                })
 
                 if store.state.isOpen && !store.state.liveQuery.isEmpty {
                     Button(action: {

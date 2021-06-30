@@ -29,14 +29,22 @@ struct ContentView: View, Equatable {
                         }
                     )
                 }
-                SubSearchBarView(
-                    store: ViewStore(
-                        state: store.state.searchBar,
-                        send: store.send,
-                        tag: tagSearchBarAction
-                    )
-                ).equatable()
-            }.padding(8)
+//                SubSearchBarView(
+//                    store: ViewStore(
+//                        state: store.state.searchBar,
+//                        send: store.send,
+//                        tag: tagSearchBarAction
+//                    )
+//                ).equatable()
+                SearchBarRepresentable(
+                    text: .constant(""),
+                    placeholder: "Search",
+                    showsCancelButton: true,
+                    onCommit: { text in print("onCommit: \(text)") },
+                    onSubmit: { text in print("onSubmit: \(text)") },
+                    onCancel: { print("onCancel") }
+                )
+            }
 
             ZStack {
                 if store.state.searchBar.comittedQuery.isEmpty {
