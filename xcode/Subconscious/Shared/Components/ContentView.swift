@@ -17,8 +17,8 @@ struct ContentView: View, Equatable {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 if (
-                    !store.state.searchBar.isOpen &&
-                    !store.state.searchBar.comittedQuery.isEmpty
+                    !store.state.searchBar.isFocused &&
+                    !store.state.searchBar.comitted.isEmpty
                 ) {
                     Button(
                         action: {
@@ -27,27 +27,19 @@ struct ContentView: View, Equatable {
                         label: {
                             Icon(image: Image(systemName: "chevron.left"))
                         }
-                    )
+                    ).padding(.leading, 8)
                 }
-//                SubSearchBarView(
-//                    store: ViewStore(
-//                        state: store.state.searchBar,
-//                        send: store.send,
-//                        tag: tagSearchBarAction
-//                    )
-//                ).equatable()
-                SearchBarRepresentable(
-                    text: .constant(""),
-                    placeholder: "Search",
-                    showsCancelButton: true,
-                    onCommit: { text in print("onCommit: \(text)") },
-                    onSubmit: { text in print("onSubmit: \(text)") },
-                    onCancel: { print("onCancel") }
-                )
+                SubSearchBarView(
+                    store: ViewStore(
+                        state: store.state.searchBar,
+                        send: store.send,
+                        tag: tagSearchBarAction
+                    )
+                ).equatable()
             }
 
             ZStack {
-                if store.state.searchBar.comittedQuery.isEmpty {
+                if store.state.searchBar.comitted.isEmpty {
                     StreamView().equatable()
                 } else {
                     SearchView(
@@ -67,34 +59,32 @@ struct ContentView: View, Equatable {
                     }
                 }
 
-                Group {
-                    if store.state.searchBar.isOpen {
-                        ScrollView {
-                            VStack(spacing: 0) {
-                                if (store.state.searchBar.liveQuery.isEmpty) {
-                                    TextTokenBarView(
-                                        store: ViewStore(
-                                            state: store.state.suggestionTokens,
-                                            send: store.send,
-                                            tag: tagSuggestionTokensAction
-                                        )
-                                    )
-                                    .equatable()
-                                    .padding(.top, 0)
-                                    .padding(.bottom, 8)
-                                }
-                                Divider()
-                                SuggestionsView(
+                if store.state.searchBar.isFocused {
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            if (store.state.searchBar.text.isEmpty) {
+                                TextTokenBarView(
                                     store: ViewStore(
-                                        state: store.state.suggestions,
+                                        state: store.state.suggestionTokens,
                                         send: store.send,
-                                        tag: tagSuggestionListAction
+                                        tag: tagSuggestionTokensAction
                                     )
-                                ).equatable()
+                                )
+                                .equatable()
+                                .padding(.top, 0)
+                                .padding(.bottom, 8)
                             }
+                            Divider()
+                            SuggestionsView(
+                                store: ViewStore(
+                                    state: store.state.suggestions,
+                                    send: store.send,
+                                    tag: tagSuggestionListAction
+                                )
+                            ).equatable()
                         }
-                        .background(Color.Subconscious.background)
                     }
+                    .background(Color.Subconscious.background)
                 }
             }
         }

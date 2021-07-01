@@ -28,7 +28,7 @@ enum AppAction {
     case appear
     case edit(_ document: SubconsciousDocument)
     case commitQuery(_ query: String)
-    case setLiveQuery(_ query: String)
+    case setQuery(_ text: String)
     case setEditorPresented(_ isPresented: Bool)
     case setSuggestions(_ suggestions: [Suggestion])
     case warning(_ message: String)
@@ -88,10 +88,10 @@ func tagEditorAction(_ action: EditorAction) -> AppAction {
 
 func tagSearchBarAction(_ action: SubSearchBarAction) -> AppAction {
     switch action {
-    case .commitQuery(let query):
-        return .commitQuery(query)
-    case .setLiveQuery(let query):
-        return .setLiveQuery(query)
+    case .commit(let text):
+        return .commitQuery(text)
+    case .setText(let text):
+        return .setQuery(text)
     default:
         return .searchBar(action)
     }
@@ -209,7 +209,7 @@ func updateApp(
     case .commitQuery(let query):
         let searchBarEffect = updateSubSearchBar(
             state: &state.searchBar,
-            action: .commitQuery(query)
+            action: .commit(query)
         ).map(tagSearchBarAction)
 
         let suggestionsEffect = environment
@@ -223,14 +223,14 @@ func updateApp(
             suggestionsEffect,
             databaseSearchEffect
         ).eraseToAnyPublisher()
-    case .setLiveQuery(let query):
+    case .setQuery(let text):
         let searchBarEffect = updateSubSearchBar(
             state: &state.searchBar,
-            action: .setLiveQuery(query)
+            action: .setText(text)
         ).map(tagSearchBarAction)
 
-        let suggestionsEffect = Just(AppAction.searchSuggestions(query))
-        
+        let suggestionsEffect = Just(AppAction.searchSuggestions(text))
+
         return Publishers.Merge(
             searchBarEffect,
             suggestionsEffect

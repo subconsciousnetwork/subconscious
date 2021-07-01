@@ -7,17 +7,6 @@
 
 import SwiftUI
 
-extension UIApplication {
-    func endEditing() {
-        sendAction(
-            #selector(UIResponder.resignFirstResponder),
-            to: nil,
-            from: nil,
-            for: nil
-        )
-    }
-}
-
 struct SearchBarRepresentable: UIViewRepresentable {    
     class Coordinator: NSObject, UISearchBarDelegate {
         var representable: SearchBarRepresentable
@@ -31,55 +20,43 @@ struct SearchBarRepresentable: UIViewRepresentable {
             textDidChange searchText: String
         ) {
             representable.text = searchText
-            representable.onCommit(searchText)
         }
         
         func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-            searchBar.setShowsCancelButton(true, animated: true)
-            representable.isFocused = true
             representable.onFocus()
         }
         
         func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-            searchBar.resignFirstResponder()
-            searchBar.setShowsCancelButton(false, animated: true)
-            searchBar.text = representable.initial
-            representable.isFocused = false
             representable.onCancel()
         }
 
         func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-            searchBar.resignFirstResponder()
-            searchBar.setShowsCancelButton(false, animated: true)
-            representable.isFocused = false
-            representable.onSubmit(searchBar.text ?? "")
+            representable.onCommit(searchBar.text ?? "")
         }
     }
 
     private var isFocused = false
-    var text: String
-    var initial: String
+    private var showsCancelButton = false
+    // TODO a LocalizedStringKey would be preferrable here.
+    // Figure out how to get LocalizeStringKey to place nicely with
+    // UIViewRepresentable-wrapped UIKit views.
     var placeholder: String
-    var onCommit: (String) -> Void
-    var onSubmit: (String) -> Void
+    @Binding var text: String
     var onFocus: () -> Void
+    var onCommit: (String) -> Void
     var onCancel: () -> Void
 
     init(
-        text: String,
-        initial: String,
         placeholder: String,
+        text: Binding<String>,
         onFocus: @escaping () -> Void,
         onCommit: @escaping (String) -> Void,
-        onSubmit: @escaping (String) -> Void,
         onCancel: @escaping () -> Void
     ) {
-        self.text = text
-        self.initial = initial
+        self._text = text
         self.placeholder = placeholder
         self.onFocus = onFocus
         self.onCommit = onCommit
-        self.onSubmit = onSubmit
         self.onCancel = onCancel
     }
     
@@ -87,8 +64,14 @@ struct SearchBarRepresentable: UIViewRepresentable {
         let searchBar = UISearchBar()
         searchBar.searchTextField.clearButtonMode = .whileEditing
         searchBar.placeholder = placeholder
-        searchBar.showsCancelButton = false
+        searchBar.searchBarStyle = .minimal
         searchBar.delegate = context.coordinator
+        if isFocused {
+            searchBar.becomeFirstResponder()
+        } else {
+            searchBar.resignFirstResponder()
+        }
+        searchBar.setShowsCancelButton(showsCancelButton, animated: false)
         return searchBar
     }
 
@@ -100,15 +83,22 @@ struct SearchBarRepresentable: UIViewRepresentable {
         } else {
             searchBar.resignFirstResponder()
         }
+        searchBar.setShowsCancelButton(showsCancelButton, animated: true)
     }
 
     func makeCoordinator() -> SearchBarRepresentable.Coordinator {
         Coordinator(self)
     }
 
-    func focused(_ isFocused: Bool) -> some View {
+    func focused(_ isFocused: Bool) -> Self {
         var view = self
         view.isFocused = isFocused
+        return view
+    }
+
+    func showCancel(_ showsCancelButton: Bool) -> Self {
+        var view = self
+        view.showsCancelButton = showsCancelButton
         return view
     }
 }
@@ -116,12 +106,10 @@ struct SearchBarRepresentable: UIViewRepresentable {
 struct SearchBarRepresentablePreview: PreviewProvider {
     static var previews: some View {
         SearchBarRepresentable(
-            text: "Text",
-            initial: "",
             placeholder: "Placeholder",
+            text: .constant("Text"),
             onFocus: {},
             onCommit: { text in },
-            onSubmit: { text in },
             onCancel: {}
         )
     }
