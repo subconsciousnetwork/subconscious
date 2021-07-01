@@ -85,6 +85,7 @@ struct SearchBarRepresentable: UIViewRepresentable {
     
     func makeUIView(context: Context) -> UISearchBar {
         let searchBar = UISearchBar()
+        searchBar.searchTextField.clearButtonMode = .whileEditing
         searchBar.placeholder = placeholder
         searchBar.showsCancelButton = false
         searchBar.delegate = context.coordinator
