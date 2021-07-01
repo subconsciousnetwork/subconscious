@@ -15,7 +15,7 @@ struct ContentView: View, Equatable {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
+            HStack(spacing: 0) {
                 if (
                     !store.state.searchBar.isFocused &&
                     !store.state.searchBar.comitted.isEmpty
@@ -27,7 +27,10 @@ struct ContentView: View, Equatable {
                         label: {
                             Icon(image: Image(systemName: "chevron.left"))
                         }
-                    ).padding(.leading, 8)
+                    )
+                    // We pad 8pt .leading to match UISearchView's
+                    // 8pt .leading padding.
+                    .padding(.leading, 8)
                 }
                 SubSearchBarView(
                     store: ViewStore(
@@ -72,7 +75,9 @@ struct ContentView: View, Equatable {
                                 )
                                 .equatable()
                                 .padding(.top, 0)
-                                .padding(.bottom, 8)
+                                // We pad by 10pt to match UISearchBar's
+                                // 10pt padding
+                                .padding(.bottom, 10)
                             }
                             Divider()
                             SuggestionsView(
