@@ -13,6 +13,45 @@ final class SQLiteConnection {
     public static let DEFAULT_USER_VERSION = 0;
     public static let dispatchQueueLabel = "SQLite3Connection"
 
+    /// Quotes a query string to make it compatible with FTS5 query syntax.
+    /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
+    /// See https://sqlite.org/fts5.html#full_text_query_syntax
+    static func escapeQueryFTS5(_ query: String) -> String {
+        let stripped = query.replacingOccurrences(of: "\"", with: "")
+        return "\"\(stripped)\""
+    }
+
+    /// Quotes a query string, making it a valid FTS5 prefix query string.
+    /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
+    /// See https://sqlite.org/fts5.html#full_text_query_syntax
+    static func escapePrefixQueryFTS5(_ query: String) -> String {
+        let stripped = query.replacingOccurrences(of: "\"", with: "")
+        return "\"\(stripped)\"*"
+    }
+
+    /// Cleans string for use as LIKE query string.
+    /// - Removes wildcard characters
+    /// - Trims whitespace
+    /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
+    /// See https://sqlite.org/lang_expr.html#the_like_glob_regexp_and_match_operators
+    static func escapeQueryLike(_ query: String) -> String {
+        query
+            .replacingOccurrences(of: "%", with: "")
+            .replacingOccurrences(of: "_", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Cleans string for use as LIKE prefix query string.
+    /// - Removes wildcard characters
+    /// - Trims whitespace
+    /// - Adds wildcard to end
+    /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
+    /// See https://sqlite.org/lang_expr.html#the_like_glob_regexp_and_match_operators
+    static func escapePrefixQueryLike(_ query: String) -> String {
+        let clean = escapeQueryLike(query)
+        return "\(clean)%"
+    }
+
     /// Column data types for SQLite
     enum SQLValue {
         case null
@@ -32,9 +71,39 @@ final class SQLiteConnection {
             return formatter
         }
         
-        static func date(_ date: Date) -> SQLValue {
+        static func date(_ date: Date) -> Self {
             let formatter = iso8601Formatter()
             return self.text(formatter.string(from: date))
+        }
+
+        /// Quotes a query string to make it compatible with FTS5 query syntax.
+        /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
+        /// See https://sqlite.org/fts5.html#full_text_query_syntax
+        static func queryFTS5(_ query: String) -> Self {
+            text(escapeQueryFTS5(query))
+        }
+
+        /// Quotes a query string, making it a valid FTS5 prefix query string.
+        /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
+        /// See https://sqlite.org/fts5.html#full_text_query_syntax
+        static func prefixQueryFTS5(_ query: String) -> Self {
+            text(escapePrefixQueryFTS5(query))
+        }
+
+        /// Removes wildcard characters and trims whitespace from a query string intended to be used
+        /// with LIKE matching syntax.
+        /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
+        /// See https://sqlite.org/lang_expr.html#the_like_glob_regexp_and_match_operators
+        static func queryLike(_ query: String) -> Self {
+            text(escapeQueryLike(query))
+        }
+
+        /// Removes wildcard characters and trims whitespace from a query string intended to be used
+        /// with LIKE matching syntax.
+        /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
+        /// See https://sqlite.org/lang_expr.html#the_like_glob_regexp_and_match_operators
+        static func prefixQueryLike(_ query: String) -> Self {
+            text(escapePrefixQueryLike(query))
         }
 
         func map<T>(_ read: (SQLValue) -> T?) -> T? {
@@ -350,25 +419,6 @@ final class SQLiteConnection {
         default:
             return .null
         }
-    }
-}
-
-//  MARK: SQLiteConnection helpers
-extension SQLiteConnection {
-    /// Quotes a query string to make it compatible with FTS5 query syntax.
-    /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
-    /// See https://sqlite.org/fts5.html#full_text_query_syntax
-    static func quoteQueryFTS5(_ query: String) -> String {
-        let stripped = query.replacingOccurrences(of: "\"", with: "")
-        return "\"\(stripped)\""
-    }
-
-    /// Quotes a query string, making it a valid FTS5 prefix query string.
-    /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
-    /// See https://sqlite.org/fts5.html#full_text_query_syntax
-    static func quotePrefixQueryFTS5(_ query: String) -> String {
-        let stripped = query.replacingOccurrences(of: "\"", with: "")
-        return "\"\(stripped)\"*"
     }
 }
 
