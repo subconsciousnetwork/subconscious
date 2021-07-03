@@ -61,6 +61,7 @@ struct ContentView: View, Equatable {
                         ActionButton()
                     }
                 }
+                .padding(16)
 
                 if store.state.searchBar.isFocused {
                     ScrollView {
