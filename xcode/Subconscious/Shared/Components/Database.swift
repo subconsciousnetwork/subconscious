@@ -423,8 +423,6 @@ struct DatabaseEnvironment {
                 qos: .userInitiated
             ).unwrap()
             
-            let quoted = SQLiteConnection.quotePrefixQueryFTS5(query)
-            
             let threads = try db.execute(
                 sql: """
                 SELECT title
@@ -434,7 +432,7 @@ struct DatabaseEnvironment {
                 LIMIT 8
                 """,
                 parameters: [
-                    SQLiteConnection.SQLValue.text(quoted)
+                    SQLiteConnection.SQLValue.prefixQueryFTS5(query)
                 ]
             ).compactMap({ row in
                 try Suggestion.thread(row[0].asString().unwrap())
@@ -442,12 +440,15 @@ struct DatabaseEnvironment {
 
             let searches = try db.execute(
                 sql: """
-                SELECT query
+                SELECT DISTINCT query
                 FROM search
                 WHERE search.query LIKE ?
                 ORDER BY created DESC
                 LIMIT 8
-                """
+                """,
+                parameters: [
+                    SQLiteConnection.SQLValue.prefixQueryLike(query)
+                ]
             ).compactMap({ row in
                 try Suggestion.query(row[0].asString().unwrap())
             })
@@ -462,6 +463,10 @@ struct DatabaseEnvironment {
     
     func search(query: String) -> AnyPublisher<[TextDocument], Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
+            guard !query.isWhitespace else {
+                return []
+            }
+
             let db = try SQLiteConnection(
                 path: databaseUrl.path,
                 qos: .userInitiated
@@ -479,7 +484,6 @@ struct DatabaseEnvironment {
                 ]
             )
 
-            let quotedQuery = SQLiteConnection.quoteQueryFTS5(query)
             let rows = try db.execute(
                 sql: """
                 SELECT path, body
@@ -489,7 +493,7 @@ struct DatabaseEnvironment {
                 LIMIT 100
                 """,
                 parameters: [
-                    SQLiteConnection.SQLValue.text(quotedQuery)
+                    SQLiteConnection.SQLValue.queryFTS5(query)
                 ]
             )
 
