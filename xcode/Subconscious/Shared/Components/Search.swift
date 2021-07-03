@@ -37,16 +37,19 @@ func updateSearch(
 ) -> AnyPublisher<SearchAction, Never> {
     switch action {
     case .item(let action):
-        if var thread = state.threads.first(
+        // Am I getting a copy, rather than a reference?
+        // Is that why it never changes?
+        if let i = state.threads.firstIndex(
             where: { thread in thread.id ==  action.key }
         ) {
+            let id = state.threads[i].id
             return updateThread(
-                state: &thread,
+                state: &state.threads[i],
                 action: action.action,
                 environment: environment
             ).map({ action in
                 tagSearchItem(
-                    key: thread.id,
+                    key: id,
                     action: action
                 )
             }).eraseToAnyPublisher()
@@ -55,6 +58,7 @@ func updateSearch(
                 """
                 SearchAction.item
                 Passed non-existant item key: \(action.key).
+
                 This can happen if an effect is issued from an item,
                 and then the item is removed before the effect generates
                 a response action.

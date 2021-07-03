@@ -15,11 +15,11 @@ enum ThreadAction {
 }
 
 struct ThreadModel: Identifiable, Equatable {
-    var document: SubconsciousDocument
-    var isFolded: Bool = true
     var id: Int {
         document.id
     }
+    var document: SubconsciousDocument
+    var isFolded: Bool = true
 }
 
 func updateThread(
@@ -44,8 +44,18 @@ func updateThread(
 /// A foldable thread
 struct ThreadView: View, Equatable {
     let store: ViewStore<ThreadModel, ThreadAction>
-    let maxBlocksWhenFolded = 2
+    let maxBlocksWhenFolded = 3
 
+    var visibleBlocks: [Subtext.Block] {
+        let limit = max(1, maxBlocksWhenFolded)
+        let blocks = (
+            store.state.isFolded ?
+            Array(store.state.document.content.blocks[0..<limit]) :
+            store.state.document.content.blocks
+        )
+        return blocks
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             if !store.state.document.title.isEmpty {
@@ -62,16 +72,23 @@ struct ThreadView: View, Equatable {
                     )
             }
 
-            if (
-                store.state.document.content.blocks.count >
-                maxBlocksWhenFolded && store.state.isFolded
-            ) {
-                ForEach(store.state.document.content.blocks[
-                    0..<max(1, maxBlocksWhenFolded)
-                ]) { block in
-                    BlockView(block: block)
+            Group {
+                ForEach(visibleBlocks) { block in
+                    BlockView(block: block).equatable()
                 }
-
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                store.send(.requestEdit(store.state.document))
+            }
+            
+            if (
+                store.state.isFolded &&
+                (
+                    store.state.document.content.blocks.count >
+                    maxBlocksWhenFolded
+                )
+            ) {
                 HStack {
                     Button(action: {
                         store.send(.setFolded(false))
@@ -90,15 +107,7 @@ struct ThreadView: View, Equatable {
                 .padding(.top, 8)
                 .padding(.leading, 16)
                 .padding(.trailing, 16)
-            } else {
-                ForEach(store.state.document.content.blocks) { block in
-                    BlockView(block: block)
-                }
             }
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            store.send(.requestEdit(store.state.document))
         }
     }
 }
