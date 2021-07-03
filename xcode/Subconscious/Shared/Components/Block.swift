@@ -37,8 +37,6 @@ struct TextBlockView: View {
     var body: some View {
         Text(block.value)
             .font(.body)
-            .padding(.bottom, 8)
-            .padding(.top, 8)
             .padding(.leading, 16)
             .padding(.trailing, 16)
             .frame(
@@ -54,8 +52,6 @@ struct ListBlockView: View {
     var body: some View {
         Text(block.value)
             .font(.body)
-            .padding(.bottom, 8)
-            .padding(.top, 8)
             .padding(.leading, 24)
             .padding(.trailing, 16)
             .frame(
@@ -71,8 +67,6 @@ struct LinkBlockView: View {
     var body: some View {
         Text(block.value)
             .font(.body)
-            .padding(.bottom, 8)
-            .padding(.top, 8)
             .padding(.leading, 24)
             .padding(.trailing, 16)
             .frame(
@@ -89,8 +83,6 @@ struct HeadingBlockView: View {
         Text(block.value)
             .font(.body)
             .bold()
-            .padding(.bottom, 8)
-            .padding(.top, 8)
             .padding(.leading, 16)
             .padding(.trailing, 16)
             .frame(
@@ -106,8 +98,6 @@ struct QuoteBlockView: View {
     var body: some View {
         Text(block.value)
             .font(.body)
-            .padding(.bottom, 8)
-            .padding(.top, 8)
             .padding(.leading, 16)
             .padding(.trailing, 16)
             .foregroundColor(Color.Subconscious.quotedText)
@@ -120,6 +110,6 @@ struct QuoteBlockView: View {
 
 struct BlankBlockView: View {
     var body: some View {
-        Spacer().frame(height: 16)
+        Spacer().frame(height: 24)
     }
 }
