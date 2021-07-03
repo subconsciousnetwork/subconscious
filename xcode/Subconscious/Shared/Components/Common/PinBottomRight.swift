@@ -18,7 +18,6 @@ struct PinBottomRight<InnerView: View>: View {
                 HStack {
                     view()
                 }
-                .padding(16)
             }
         }
     }
@@ -29,5 +28,6 @@ struct PinBottomRight_Previews: PreviewProvider {
         PinBottomRight {
             ActionButton()
         }
+        .padding(16)
     }
 }
