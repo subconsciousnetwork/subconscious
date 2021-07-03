@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Provides a single concrete view for all kinds of block
-struct BlockView: View {
+struct BlockView: View, Equatable {
     var block: Subtext.Block
     
     var body: some View {
