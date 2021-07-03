@@ -156,12 +156,12 @@ struct DatabaseEnvironment {
     static func getMigrations() -> SQLiteMigrations {
         return SQLiteMigrations([
             SQLiteMigrations.Migration(
-                date: "2021-06-14T16:22:00",
+                date: "2021-07-01T15:43:00",
                 sql: """
                 CREATE TABLE search (
                     id TEXT PRIMARY KEY,
                     query TEXT NOT NULL,
-                    created TEXT NOT NULL
+                    created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 );
 
                 CREATE TABLE entry (
@@ -425,7 +425,7 @@ struct DatabaseEnvironment {
             
             let quoted = SQLiteConnection.quotePrefixQueryFTS5(query)
             
-            let rows = try db.execute(
+            let threads = try db.execute(
                 sql: """
                 SELECT title
                 FROM entry_search
@@ -436,18 +436,27 @@ struct DatabaseEnvironment {
                 parameters: [
                     SQLiteConnection.SQLValue.text(quoted)
                 ]
-            )
-
-            var threads = try rows.compactMap({ row in
+            ).compactMap({ row in
                 try Suggestion.thread(row[0].asString().unwrap())
             })
 
-            if !query.isWhitespace {
-                let create = Suggestion.create(query)
-                threads.append(create)
-            }
+            let searches = try db.execute(
+                sql: """
+                SELECT query
+                FROM search
+                WHERE search.query LIKE ?
+                ORDER BY created DESC
+                LIMIT 8
+                """
+            ).compactMap({ row in
+                try Suggestion.query(row[0].asString().unwrap())
+            })
+            
+            let create = !query.isWhitespace ? [Suggestion.create(query)] : []
 
-            return threads
+            let suggestions = threads + searches + create
+            
+            return suggestions
         })
     }
     
@@ -457,9 +466,20 @@ struct DatabaseEnvironment {
                 path: databaseUrl.path,
                 qos: .userInitiated
             ).unwrap()
-            
-            let quoted = SQLiteConnection.quoteQueryFTS5(query)
 
+            // Log search in database
+            try db.execute(
+                sql: """
+                INSERT INTO search (id, query)
+                VALUES (?, ?)
+                """,
+                parameters: [
+                    .text(UUID().uuidString),
+                    .text(query)
+                ]
+            )
+
+            let quotedQuery = SQLiteConnection.quoteQueryFTS5(query)
             let rows = try db.execute(
                 sql: """
                 SELECT path, body
@@ -469,7 +489,7 @@ struct DatabaseEnvironment {
                 LIMIT 100
                 """,
                 parameters: [
-                    SQLiteConnection.SQLValue.text(quoted)
+                    SQLiteConnection.SQLValue.text(quotedQuery)
                 ]
             )
 
