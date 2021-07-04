@@ -10,15 +10,14 @@ import Combine
 
 /// Holds cancellables returned by Publisher until the publisher completes.
 ///
-/// Combine Publishers return a Cancellable that will automatically cancel the Publisher if the Cancellable
-/// is dereferenced. Since Publishers can take some time to complete, you want to hold on to the
-/// Cancellable reference until the publisher has completed.
+/// Combine Publishers return a Cancellable that will automatically cancel the Publisher if the
+/// Cancellable falls out of scope. Since Publishers can take some time to complete, you often
+/// want to hold on to the Cancellable reference until the publisher has completed.
 ///
-/// PublisherManager takes care of the boilerplate of holding on to Cancellables over time, and helps
+/// PublisherManager takes care of the boilerplate of holding on to Cancellables, and helps
 /// you avoid the memory leak footgun of accidentally strong-referencing self in the completion handler.
 ///
-/// The intent is to instantiate a long-lived instance of PublisherManager to manage multiple Publishers
-/// over time.
+/// The intent is to instantiate a long-lived instance of PublisherManager to manage multiple Publishers.
 ///
 /// Publisher Cancellables are stored in a map by UUID.
 /// The UUID is returned by `PublisherManager.sink`
