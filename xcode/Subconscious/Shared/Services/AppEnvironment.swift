@@ -36,27 +36,6 @@ struct AppEnvironment {
         )
     }
     
-    //  FIXME: this just serves up static suggestions
-    func fetchSuggestions(query: String) -> Future<[Suggestion], Never> {
-        Future({ promise in
-            var suggestions = [
-                Suggestion.thread(
-                    "If you have 70 notecards, you have a movie"
-                ),
-                Suggestion.thread(
-                    "Tenuki"
-                ),
-                Suggestion.query(
-                    "Notecard"
-                ),
-            ]
-            if !query.isEmpty {
-                suggestions.append(.create(query))
-            }
-            promise(.success(suggestions))
-        })
-    }
-    
     //  FIXME: serves up static suggestions
     func fetchSuggestionTokens() -> Future<[String], Never> {
         Future({ promise in

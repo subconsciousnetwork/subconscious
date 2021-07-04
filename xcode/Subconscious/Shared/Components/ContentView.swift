@@ -85,7 +85,7 @@ struct ContentView: View, Equatable {
                                 store: ViewStore(
                                     state: store.state.suggestions,
                                     send: store.send,
-                                    tag: tagSuggestionListAction
+                                    tag: tagSuggestionsAction
                                 )
                             ).equatable()
                         }

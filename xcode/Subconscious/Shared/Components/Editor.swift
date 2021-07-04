@@ -21,7 +21,7 @@ enum EditorAction {
     case clear
     case selectTitle(_ text: String)
     case requestSave(title: String, content: String)
-    case queryTitleSuggestions(_ query: String)
+    case requestTitleSuggestions(_ query: String)
     case requestTitleMatch(_ title: String)
     case requestEditorUnpresent
     case setTitle(_ title: String)
@@ -81,16 +81,23 @@ func updateEditor(
             action: action
         ).map(tagEditorTitleField).eraseToAnyPublisher()
     case .appear:
-        let querySuggestions = EditorAction.queryTitleSuggestions("")
-        return Just(querySuggestions)
-            .eraseToAnyPublisher()
+        return Just(EditorAction.requestTitleSuggestions("")).eraseToAnyPublisher()
     case .setTitle(let title):
-        let setTitle = EditorAction.titleField(.setText(title))
-        let querySuggestions = EditorAction.queryTitleSuggestions(title)
+        let setTitle = Just(EditorAction.titleField(.setText(title)))
+        let suggestTitles = Just(EditorAction.requestTitleSuggestions(title))
         return Publishers.Merge(
-            Just(setTitle),
-            Just(querySuggestions)
+            setTitle,
+            suggestTitles
         ).eraseToAnyPublisher()
+    /// Request title suggestions (from parent)
+    case .requestTitleSuggestions:
+        environment.logger.warning(
+            """
+            EditorAction.requestSave
+            should be handled by the parent view.
+            """
+        )
+    /// Set title suggestions (received from parent)
     case .setTitleSuggestions(let suggestions):
         state.titleSuggestions = suggestions
     case .edit(let title, let content):
@@ -148,10 +155,6 @@ func updateEditor(
             Just(requestMatch),
             Just(closeSuggestions)
         ).eraseToAnyPublisher()
-    case .queryTitleSuggestions(let query):
-        return environment.fetchSuggestions(query: query)
-            .map({ suggestions in .setTitleSuggestions(suggestions) })
-            .eraseToAnyPublisher()
     case .requestSave:
         environment.logger.warning(
             """

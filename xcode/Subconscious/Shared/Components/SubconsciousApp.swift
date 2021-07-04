@@ -38,6 +38,18 @@ enum AppAction {
         .database(.searchSuggestions(query))
     }
 
+    static func searchTitleSuggestions(_ query: String) -> AppAction {
+        .database(.searchTitleSuggestions(query))
+    }
+
+    static func setTitleSuggestions(_ suggestions: [Suggestion]) -> AppAction {
+        .editor(.setTitleSuggestions(suggestions))
+    }
+
+    static func search(_ query: String) -> AppAction {
+        .database(.search(query))
+    }
+    
     static func writeDocumentByTitle(
         title: String,
         content: String
@@ -67,6 +79,8 @@ func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
         )
     case .searchSuggestionsSuccess(let results):
         return .setSuggestions(results)
+    case .searchTitleSuggestionsSuccess(let results):
+        return .setTitleSuggestions(results)
     default:
         return .database(action)
     }
@@ -81,6 +95,8 @@ func tagEditorAction(_ action: EditorAction) -> AppAction {
             title: title,
             content: content
         )
+    case .requestTitleSuggestions(let query):
+        return .searchTitleSuggestions(query)
     default:
         return .editor(action)
     }
@@ -106,7 +122,7 @@ func tagSearchAction(_ action: SearchAction) -> AppAction {
     }
 }
 
-func tagSuggestionListAction(_ action: SuggestionsAction) -> AppAction {
+func tagSuggestionsAction(_ action: SuggestionsAction) -> AppAction {
     switch action {
     case .select(let suggestion):
         return .commitQuery(suggestion.description)
@@ -212,11 +228,8 @@ func updateApp(
             action: .commit(query)
         ).map(tagSearchBarAction)
 
-        let suggestionsEffect = environment
-            .fetchSuggestions(query: query)
-            .map(AppAction.setSuggestions)
-
-        let databaseSearchEffect = Just(AppAction.database(.search(query)))
+        let suggestionsEffect = Just(AppAction.searchSuggestions(query))
+        let databaseSearchEffect = Just(AppAction.search(query))
         
         return Publishers.Merge3(
             searchBarEffect,

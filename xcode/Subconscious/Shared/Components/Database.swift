@@ -10,6 +10,12 @@ import Foundation
 import Combine
 import os
 
+//  TODO: consider moving search results and suggestions into database model
+//  or else merge database model into App root.
+//  We want database to be a component, so it can manage the complex lifecycle
+//  aspects of migration as a component state machine. Yet most of the query
+//  results themselves are stored elsewhere. This is ok, but feels awkward.
+
 //  MARK: Actions
 enum DatabaseAction {
     case log(_ action: LoggerAction)
@@ -33,6 +39,10 @@ enum DatabaseAction {
     case searchSuggestions(_ query: String)
     /// Search suggestion success with array of results
     case searchSuggestionsSuccess(_ results: [Suggestion])
+    /// Suggest titles for entry
+    case searchTitleSuggestions(_ query: String)
+    /// Title suggestion success with array of results
+    case searchTitleSuggestionsSuccess(_ results: [Suggestion])
     /// Write to the file system and database.
     /// This acts like an upsert. If file exists, it will be overwritten, and DB updated.
     /// If file does not exist, it will be created.
@@ -139,13 +149,28 @@ func updateDatabase(
             "DatabaseAction.searchSuccess should be handled by parent component"
         )
     case .searchSuggestions(let query):
-        return environment.searchSuggestions(query: query)
+        return environment.searchSuggestions(query)
             .map({ results in .searchSuggestionsSuccess(results) })
-            .replaceError(with: .log(.error("Query search failed")))
-            .eraseToAnyPublisher()
+            .replaceError(
+                with: .log(.error("DatabaseAction.searchSuggestions failed"))
+            ).eraseToAnyPublisher()
     case .searchSuggestionsSuccess:
         environment.logger.warning(
-            "DatabaseAction.searchQueriesSuccess should be handled by parent component"
+            "DatabaseAction.searchSuggestionsSuccess should be handled by parent component"
+        )
+    case .searchTitleSuggestions(let query):
+        return environment.searchTitleSuggestions(query)
+            .map({ results in .searchTitleSuggestionsSuccess(results) })
+            .replaceError(
+                with: .log(
+                    .error(
+                        "DatabaseAction.searchTitleSuggestions failed"
+                    )
+                )
+            ).eraseToAnyPublisher()
+    case .searchTitleSuggestionsSuccess:
+        environment.logger.warning(
+            "DatabaseAction.suggestTitlesSuccess should be handled by parent component"
         )
     }
     return Empty().eraseToAnyPublisher()
@@ -415,8 +440,44 @@ struct DatabaseEnvironment {
         }
     }
 
-    /// Search through query strings
-    func searchSuggestions(query: String) -> AnyPublisher<[Suggestion], Error> {
+    func searchSuggestionsForZeroQuery() -> AnyPublisher<[Suggestion], Error> {
+        CombineUtilities.async(qos: .userInitiated, execute: {
+            let db = try SQLiteConnection(
+                path: databaseUrl.path,
+                qos: .userInitiated
+            ).unwrap()
+
+            let threads = try db.execute(
+                sql: """
+                SELECT title
+                FROM entry_search
+                ORDER BY modified DESC
+                LIMIT 4
+                """
+            ).compactMap({ row in
+                try Suggestion.thread(row[0].asString().unwrap())
+            })
+
+            let searches = try db.execute(
+                sql: """
+                SELECT DISTINCT query
+                FROM search
+                ORDER BY created DESC
+                LIMIT 4
+                """
+            ).compactMap({ row in
+                try Suggestion.query(row[0].asString().unwrap())
+            })
+            
+            let suggestions = threads + searches
+            
+            return suggestions
+        })
+    }
+
+    func searchSuggestionsForQuery(
+        _ query: String
+    ) -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
             let db = try SQLiteConnection(
                 path: databaseUrl.path,
@@ -438,7 +499,7 @@ struct DatabaseEnvironment {
                 try Suggestion.thread(row[0].asString().unwrap())
             })
 
-            let searches = try db.execute(
+            let recentMatchingSearches = try db.execute(
                 sql: """
                 SELECT DISTINCT query
                 FROM search
@@ -455,12 +516,33 @@ struct DatabaseEnvironment {
             
             let create = !query.isWhitespace ? [Suggestion.create(query)] : []
 
-            let suggestions = threads + searches + create
+            let suggestions = threads + recentMatchingSearches + create
             
             return suggestions
         })
     }
     
+    /// Fetch search suggestions
+    /// A whitespace query string will fetch zero-query suggestions.
+    func searchSuggestions(
+        _ query: String
+    ) -> AnyPublisher<[Suggestion], Error> {
+        if query.isWhitespace {
+            return searchSuggestionsForZeroQuery()
+        } else {
+            return searchSuggestionsForQuery(query)
+        }
+    }
+
+    /// Fetch title suggestions
+    /// Currently, this does the same thing as `suggest`, but in future we may differentiate their
+    /// behavior.
+    func searchTitleSuggestions(
+        _ query: String
+    ) -> AnyPublisher<[Suggestion], Error> {
+        return searchSuggestions(query)
+    }
+
     func search(query: String) -> AnyPublisher<[TextDocument], Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
             guard !query.isWhitespace else {
