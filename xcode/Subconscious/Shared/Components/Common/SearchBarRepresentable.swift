@@ -16,22 +16,22 @@ struct SearchBarRepresentable: UIViewRepresentable {
         }
         
         func searchBar(
-            _ searchBar: UISearchBar,
-            textDidChange searchText: String
+            _ view: UISearchBar,
+            textDidChange text: String
         ) {
-            representable.text = searchText
+            representable.text = text
         }
         
-        func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        func searchBarTextDidBeginEditing(_ view: UISearchBar) {
             representable.onFocus()
         }
         
-        func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        func searchBarCancelButtonClicked(_ view: UISearchBar) {
             representable.onCancel()
         }
 
-        func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-            representable.onCommit(searchBar.text ?? "")
+        func searchBarSearchButtonClicked(_ view: UISearchBar) {
+            representable.onCommit(view.text ?? "")
         }
     }
 
@@ -61,29 +61,29 @@ struct SearchBarRepresentable: UIViewRepresentable {
     }
     
     func makeUIView(context: Context) -> UISearchBar {
-        let searchBar = UISearchBar()
-        searchBar.searchTextField.clearButtonMode = .whileEditing
-        searchBar.placeholder = placeholder
-        searchBar.searchBarStyle = .minimal
-        searchBar.delegate = context.coordinator
+        let view = UISearchBar(frame: .zero)
+        view.searchTextField.clearButtonMode = .whileEditing
+        view.placeholder = placeholder
+        view.searchBarStyle = .minimal
+        view.delegate = context.coordinator
         if isFocused {
-            searchBar.becomeFirstResponder()
+            view.becomeFirstResponder()
         } else {
-            searchBar.resignFirstResponder()
+            view.resignFirstResponder()
         }
-        searchBar.setShowsCancelButton(showsCancelButton, animated: false)
-        return searchBar
+        view.setShowsCancelButton(showsCancelButton, animated: false)
+        return view
     }
 
-    func updateUIView(_ searchBar: UISearchBar, context: Context) {
-        searchBar.text = text
-        searchBar.placeholder = placeholder
+    func updateUIView(_ view: UISearchBar, context: Context) {
+        view.text = text
+        view.placeholder = placeholder
         if isFocused {
-            searchBar.becomeFirstResponder()
+            view.becomeFirstResponder()
         } else {
-            searchBar.resignFirstResponder()
+            view.resignFirstResponder()
         }
-        searchBar.setShowsCancelButton(showsCancelButton, animated: true)
+        view.setShowsCancelButton(showsCancelButton, animated: true)
     }
 
     func makeCoordinator() -> SearchBarRepresentable.Coordinator {
