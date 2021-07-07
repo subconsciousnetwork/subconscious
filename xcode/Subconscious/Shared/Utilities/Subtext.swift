@@ -96,7 +96,7 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
         }
 
         private static func trimSigil(from value: String, sigil: String) -> String {
-            ltrim(prefix: LinkBlock.sigil + " ", value: value)
+            StringUtilities.ltrim(prefix: LinkBlock.sigil + " ", value: value)
         }
         
         static func fromLine(_ line: String) -> Block {

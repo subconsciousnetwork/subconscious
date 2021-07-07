@@ -6,13 +6,15 @@
 //
 import Foundation
 
-/// Remove leading `prefix` from `value` if it exists.
-/// - Returns: modified string
-func ltrim(prefix: String, value: String) -> String {
-    if value.hasPrefix(prefix) {
-        return String(value.dropFirst(prefix.count))
-    } else {
-        return value
+struct StringUtilities {
+    /// Remove leading `prefix` from `value` if it exists.
+    /// - Returns: modified string
+    static func ltrim(prefix: String, value: String) -> String {
+        if value.hasPrefix(prefix) {
+            return String(value.dropFirst(prefix.count))
+        } else {
+            return value
+        }
     }
 }
 
