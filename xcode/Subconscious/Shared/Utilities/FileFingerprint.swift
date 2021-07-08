@@ -42,7 +42,7 @@ struct FileFingerprint: Hashable, Equatable, Identifiable {
     let attributes: Attributes
 
     init(url: URL, attributes: Attributes) {
-        self.url = url.absoluteURL
+        self.url = url.standardized.absoluteURL
         self.attributes = attributes
     }
 
