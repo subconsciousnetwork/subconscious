@@ -6,14 +6,14 @@
 //
 import Foundation
 
-struct StringUtilities {
+extension String {
     /// Remove leading `prefix` from `value` if it exists.
-    /// - Returns: modified string
-    static func ltrim(prefix: String, value: String) -> String {
-        if value.hasPrefix(prefix) {
-            return String(value.dropFirst(prefix.count))
+    /// - Returns: new  string without prefix
+    func ltrim(prefix: String) -> String {
+        if self.hasPrefix(prefix) {
+            return String(self.dropFirst(prefix.count))
         } else {
-            return value
+            return self
         }
     }
 }
