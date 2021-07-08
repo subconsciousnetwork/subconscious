@@ -8,7 +8,8 @@
 import Foundation
 
 /// An in-memory representation of a text file.
-struct TextDocument: CustomStringConvertible, Identifiable, Hashable, Equatable {
+struct TextDocument:
+    CustomStringConvertible, Identifiable, Hashable, Equatable {
     var description: String { content }
     var id: URL { url }
 
