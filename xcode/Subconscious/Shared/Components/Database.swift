@@ -460,13 +460,19 @@ struct DatabaseEnvironment {
 
             let threads = try db.execute(
                 sql: """
-                SELECT title
+                SELECT path, title
                 FROM entry_search
                 ORDER BY modified DESC
                 LIMIT 4
                 """
             ).compactMap({ row in
-                try Suggestion.entry(row[0].asString().unwrap())
+                try Suggestion.entry(
+                    url: URL(
+                        fileURLWithPath: row[0].asString().unwrap(),
+                        relativeTo: documentsUrl
+                    ),
+                    title: row[1].asString().unwrap()
+                )
             })
 
             let searches = try db.execute(
@@ -498,7 +504,7 @@ struct DatabaseEnvironment {
             
             let threads = try db.execute(
                 sql: """
-                SELECT title
+                SELECT path, title
                 FROM entry_search
                 WHERE entry_search.title MATCH ?
                 ORDER BY rank
@@ -508,7 +514,13 @@ struct DatabaseEnvironment {
                     SQLiteConnection.SQLValue.prefixQueryFTS5(query)
                 ]
             ).compactMap({ row in
-                try Suggestion.entry(row[0].asString().unwrap())
+                try Suggestion.entry(
+                    url: URL(
+                        fileURLWithPath: row[0].asString().unwrap(),
+                        relativeTo: documentsUrl
+                    ),
+                    title: row[1].asString().unwrap()
+                )
             })
 
             let recentMatchingSearches = try db.execute(

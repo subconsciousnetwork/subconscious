@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum Suggestion: Equatable {
-    case entry(_ text: String)
+    case entry(url: URL, title: String)
     case query(_ text: String)
     case create(_ text: String)
 }
@@ -16,8 +16,8 @@ enum Suggestion: Equatable {
 extension Suggestion: Identifiable {
     var id: String {
         switch self {
-        case .entry(let text):
-            return "entry/\(text.hash)"
+        case .entry(_, let title):
+            return "entry/\(title.hash)"
         case .query(let text):
             return "query/\(text.hash)"
         case .create(let text):
@@ -29,8 +29,8 @@ extension Suggestion: Identifiable {
 extension Suggestion: CustomStringConvertible {
     var description: String {
         switch self {
-        case .entry(let text):
-            return text
+        case .entry(_, let title):
+            return title
         case .query(let text):
             return text
         case .create(let text):
@@ -47,9 +47,9 @@ struct SuggestionRowView: View, Equatable {
         VStack(spacing: 0) {
             Group {
                 switch suggestion {
-                case .entry(let text):
+                case .entry(_, let title):
                     HStack(spacing: 0) {
-                        Label(text, systemImage: "doc.text")
+                        Label(title, systemImage: "doc.text")
                             .lineLimit(1)
                         Text(" – Edit")
                             .foregroundColor(
@@ -95,7 +95,10 @@ struct SuggestionRow_Previews: PreviewProvider {
                 suggestion: Suggestion.query("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua")
             )
             SuggestionRowView(
-                suggestion: Suggestion.entry("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua")
+                suggestion: Suggestion.entry(
+                    url: URL(fileURLWithPath: "example.subtext"),
+                    title: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"
+                )
             )
             SuggestionRowView(
                 suggestion: Suggestion.create("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua")
