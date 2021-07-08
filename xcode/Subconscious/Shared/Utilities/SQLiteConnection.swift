@@ -168,14 +168,34 @@ final class SQLiteConnection {
         case value(_ message: String)
     }
 
+    /// Enum representing the most common flag combinations for `sqlite3_open_v2`.
+    /// See <https://www.sqlite.org/c3ref/open.html>
+    enum SQLiteOpenMode {
+        case readonly
+        case readwrite
+
+        var flags: Int32 {
+            switch self {
+            case .readonly:
+                return SQLITE_OPEN_READONLY
+            case .readwrite:
+                return SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
+            }
+        }
+    }
+
     /// Internal handle to the currently open SQLite DB instance
     private var db: OpaquePointer?
 
     /// The internal GCD queue
     /// We use this queue to make database connections  threadsafe
     private var queue: DispatchQueue
-    
-    init?(path: String, qos: DispatchQoS = .default) {
+
+    init?(
+        path: String,
+        mode: SQLiteOpenMode = .readwrite,
+        qos: DispatchQoS = .default
+    ) {
         // Create GCD dispatch queue for running database queries.
         // SQLite3Connection objects are threadsafe.
         // The queue is *always* serial, ensuring that SQL queries to this
@@ -185,10 +205,10 @@ final class SQLiteConnection {
             qos: qos,
             attributes: []
         )
-        
+
         // Open database
         let pathCString = path.cString(using: String.Encoding.utf8)
-        let result = sqlite3_open(pathCString!, &db)
+        let result = sqlite3_open_v2(pathCString!, &db, mode.flags, nil)
         if result != SQLITE_OK {
             sqlite3_close(db)
             return nil
