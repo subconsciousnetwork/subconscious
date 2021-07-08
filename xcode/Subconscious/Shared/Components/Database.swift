@@ -326,11 +326,11 @@ struct DatabaseEnvironment {
             ).map({ row  in
                 FileFingerprint(
                     url: URL(
-                        fileURLWithPath: try row[0].asString().unwrap(),
+                        fileURLWithPath: try row.get(0).unwrap(),
                         relativeTo: documentsUrl
                     ),
-                    modified: try row[1].asDate().unwrap(),
-                    size: try row[2].asInt().unwrap()
+                    modified: try row.get(1).unwrap(),
+                    size: try row.get(2).unwrap()
                 )
             })
             
@@ -468,10 +468,10 @@ struct DatabaseEnvironment {
             ).compactMap({ row in
                 try Suggestion.entry(
                     url: URL(
-                        fileURLWithPath: row[0].asString().unwrap(),
+                        fileURLWithPath: row.get(0).unwrap(),
                         relativeTo: documentsUrl
                     ),
-                    title: row[1].asString().unwrap()
+                    title: row.get(1).unwrap()
                 )
             })
 
@@ -483,7 +483,7 @@ struct DatabaseEnvironment {
                 LIMIT 4
                 """
             ).compactMap({ row in
-                try Suggestion.query(row[0].asString().unwrap())
+                try Suggestion.query(row.get(0).unwrap())
             })
             
             let suggestions = threads + searches
@@ -511,15 +511,15 @@ struct DatabaseEnvironment {
                 LIMIT 8
                 """,
                 parameters: [
-                    SQLiteConnection.SQLValue.prefixQueryFTS5(query)
+                    SQLiteConnection.Value.prefixQueryFTS5(query)
                 ]
             ).compactMap({ row in
                 try Suggestion.entry(
                     url: URL(
-                        fileURLWithPath: row[0].asString().unwrap(),
+                        fileURLWithPath: row.get(0).unwrap(),
                         relativeTo: documentsUrl
                     ),
-                    title: row[1].asString().unwrap()
+                    title: row.get(1).unwrap()
                 )
             })
 
@@ -532,10 +532,10 @@ struct DatabaseEnvironment {
                 LIMIT 8
                 """,
                 parameters: [
-                    SQLiteConnection.SQLValue.prefixQueryLike(query)
+                    SQLiteConnection.Value.prefixQueryLike(query)
                 ]
             ).compactMap({ row in
-                try Suggestion.query(row[0].asString().unwrap())
+                try Suggestion.query(row.get(0).unwrap())
             })
             
             let create = !query.isWhitespace ? [Suggestion.create(query)] : []
@@ -599,13 +599,13 @@ struct DatabaseEnvironment {
                 LIMIT 25
                 """,
                 parameters: [
-                    SQLiteConnection.SQLValue.queryFTS5(query)
+                    SQLiteConnection.Value.queryFTS5(query)
                 ]
             )
 
             return try rows.map({ row in
-                let path = try row[0].asString().unwrap()
-                let content = try row[1].asString().unwrap()
+                let path: String = try row.get(0).unwrap()
+                let content: String = try row.get(1).unwrap()
                 let url = documentsUrl.appendingPathComponent(path)
                 return TextDocument(
                     url: url,

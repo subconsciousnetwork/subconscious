@@ -52,8 +52,38 @@ final class SQLiteConnection {
         return "\(clean)%"
     }
 
+    /// A struct representing a single SQL results row
+    struct Row {
+        var columns: [Value] = []
+
+        func get(_ i: Int) -> String? {
+            let column = columns[i]
+            return column.get()
+        }
+
+        func get(_ i: Int) -> Date? {
+            let column = columns[i]
+            return column.get()
+        }
+
+        func get(_ i: Int) -> Int? {
+            let column = columns[i]
+            return column.get()
+        }
+
+        func get(_ i: Int) -> Double? {
+            let column = columns[i]
+            return column.get()
+        }
+
+        func get(_ i: Int) -> Data? {
+            let column = columns[i]
+            return column.get()
+        }
+    }
+    
     /// Column data types for SQLite
-    enum SQLValue {
+    enum Value {
         case null
         case text(String)
         case integer(Int)
@@ -106,15 +136,15 @@ final class SQLiteConnection {
             text(escapePrefixQueryLike(query))
         }
 
-        func map<T>(_ read: (SQLValue) -> T?) -> T? {
+        func map<T>(_ read: (Value) -> T?) -> T? {
             read(self)
         }
 
-        func map<T>(_ read: (SQLValue) throws -> T) throws -> T {
+        func map<T>(_ read: (Value) throws -> T) throws -> T {
             try read(self)
         }
 
-        func asString() -> String? {
+        func get() -> String? {
             switch self {
             case .text(let value):
                 return value
@@ -123,17 +153,17 @@ final class SQLiteConnection {
             }
         }
 
-        func asDate() -> Date? {
+        func get() -> Date? {
             switch self {
             case .text(let value):
-                let formatter = SQLValue.iso8601Formatter()
+                let formatter = Value.iso8601Formatter()
                 return formatter.date(from: value)
             default:
                 return nil
             }
         }
 
-        func asInt() -> Int? {
+        func get() -> Int? {
             switch self {
             case .integer(let value):
                 return value
@@ -142,7 +172,7 @@ final class SQLiteConnection {
             }
         }
 
-        func asDouble() -> Double? {
+        func get() -> Double? {
             switch self {
             case .real(let value):
                 return value
@@ -151,7 +181,7 @@ final class SQLiteConnection {
             }
         }
 
-        func asData() -> Data? {
+        func get() -> Data? {
             switch self {
             case .blob(let value):
                 return value
@@ -170,7 +200,7 @@ final class SQLiteConnection {
 
     /// Enum representing the most common flag combinations for `sqlite3_open_v2`.
     /// See <https://www.sqlite.org/c3ref/open.html>
-    enum SQLiteOpenMode {
+    enum OpenMode {
         case readonly
         case readwrite
 
@@ -193,7 +223,7 @@ final class SQLiteConnection {
 
     init?(
         path: String,
-        mode: SQLiteOpenMode = .readwrite,
+        mode: OpenMode = .readwrite,
         qos: DispatchQoS = .default
     ) {
         // Create GCD dispatch queue for running database queries.
@@ -260,24 +290,24 @@ final class SQLiteConnection {
     /// - Returns: SQL rows
     @discardableResult func execute(
         sql: String,
-        parameters: [SQLValue] = []
-    ) throws -> [[SQLValue]] {
-        var rows: [[SQLValue]] = []
+        parameters: [Value] = []
+    ) throws -> [Row] {
+        var rows: [Row] = []
         try queue.sync {
             let statement = try self.prepare(sql: sql, parameters: parameters)
             if let statement = statement {
                 let columnCount = sqlite3_column_count(statement)
                 while sqlite3_step(statement) == SQLITE_ROW {
                     // Get row data for each column
-                    var row: [SQLValue] = []
+                    var columns: [Value] = []
                     for index in 0..<columnCount {
                         let sqlData = SQLiteConnection.getDataForRow(
                             statement: statement,
                             index: index
                         )
-                        row.append(sqlData)
+                        columns.append(sqlData)
                     }
-                    rows.append(row)
+                    rows.append(Row(columns: columns))
                 }
                 sqlite3_finalize(statement)
             }
@@ -288,17 +318,11 @@ final class SQLiteConnection {
     /// Get user_version as integer
     func getUserVersion() throws -> Int {
         let rows = try execute(sql: "PRAGMA user_version")
-        if let value = rows.first?.first {
-            return try value.asInt().unwrap(
-                or: SQLiteConnectionError.value(
-                    "Could not read user_version"
-                )
-            )
-        } else {
-            throw SQLiteConnectionError.value(
-                "Could not read user_version"
-            )
-        }
+        let error = SQLiteConnectionError.value(
+            "Could not read user_version"
+        )
+        let first = try rows.first.unwrap(or: error)
+        return try first.get(0).unwrap(or: error)
     }
     
     /// Private method to prepare an SQL statement before executing it.
@@ -309,7 +333,7 @@ final class SQLiteConnection {
     /// - Returns: A pointer to a finalized SQLite statement that can be used to execute the query later
     private func prepare(
         sql: String,
-        parameters: [SQLValue] = []
+        parameters: [Value] = []
     ) throws -> OpaquePointer? {
         // Prepare SQL
         var statement: OpaquePointer?
@@ -416,7 +440,7 @@ final class SQLiteConnection {
     private static func getDataForRow(
         statement: OpaquePointer,
         index: CInt
-    ) -> SQLValue {
+    ) -> Value {
         switch sqlite3_column_type(statement, index) {
         case SQLITE_BLOB:
             let data: Data
@@ -473,9 +497,9 @@ extension SQLiteConnection {
     /// - Returns: SQL rows
     func executeAsync(
         sql: String,
-        parameters: [SQLValue] = [],
+        parameters: [Value] = [],
         qos: DispatchQoS.QoSClass
-    ) throws -> Future<[[SQLValue]], Error> {
+    ) throws -> Future<[Row], Error> {
         Future({ promise in
             DispatchQueue.global(qos: qos).async {
                 do {
