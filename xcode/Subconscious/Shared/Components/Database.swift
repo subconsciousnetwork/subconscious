@@ -184,6 +184,8 @@ struct DatabaseEnvironment {
             SQLiteMigrations.Migration(
                 date: "2021-07-01T15:43:00",
                 sql: """
+                PRAGMA journal_mode=WAL;
+
                 CREATE TABLE search (
                     id TEXT PRIMARY KEY,
                     query TEXT NOT NULL,
@@ -310,13 +312,11 @@ struct DatabaseEnvironment {
             ).withPathExtension("subtext")
 
             // Left = Leader (files)
-            let left = try FileSync.readFileFingerprints(
-                urls: fileUrls,
-                with: fileManager
-            )
+            let left = try FileSync.readFileFingerprints(urls: fileUrls)
 
             let db = try SQLiteConnection(
                 path: databaseUrl.path,
+                mode: .readonly,
                 qos: .utility
             ).unwrap()
 
@@ -325,7 +325,10 @@ struct DatabaseEnvironment {
                 sql: "SELECT path, modified, size FROM entry"
             ).map({ row  in
                 FileFingerprint(
-                    url: URL(fileURLWithPath: try row[0].asString().unwrap()),
+                    url: URL(
+                        fileURLWithPath: try row[0].asString().unwrap(),
+                        relativeTo: documentsUrl
+                    ),
                     modified: try row[1].asDate().unwrap(),
                     size: try row[2].asInt().unwrap()
                 )
@@ -451,6 +454,7 @@ struct DatabaseEnvironment {
         CombineUtilities.async(qos: .userInitiated, execute: {
             let db = try SQLiteConnection(
                 path: databaseUrl.path,
+                mode: .readonly,
                 qos: .userInitiated
             ).unwrap()
 
@@ -488,6 +492,7 @@ struct DatabaseEnvironment {
         CombineUtilities.async(qos: .userInitiated, execute: {
             let db = try SQLiteConnection(
                 path: databaseUrl.path,
+                mode: .readonly,
                 qos: .userInitiated
             ).unwrap()
             
