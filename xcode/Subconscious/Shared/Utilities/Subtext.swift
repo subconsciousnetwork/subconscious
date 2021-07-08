@@ -8,48 +8,52 @@
 import Foundation
 
 struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
+    static func getTitle(markup: String) -> String {
+        Subtext(markup: markup).title
+    }
+
     struct BlankBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
-        let id = UUID()
         var description: String { "" }
+        let id = UUID()
     }
 
     struct TextBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
-        let id = UUID()
         var description: String { self.value }
+        let id = UUID()
         let value: String
     }
     
     struct LinkBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
         static let sigil = "&"
-        let id = UUID()
         var description: String { "& " + self.value }
+        let id = UUID()
         let value: String
     }
 
     struct ListBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
         static let sigil = "-"
-        let id = UUID()
         var description: String { "- " + self.value }
+        let id = UUID()
         let value: String
     }
 
     struct HeadingBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
         static let sigil = "#"
-        let id = UUID()
         var description: String { "# " + self.value }
+        let id = UUID()
         let value: String
     }
 
     struct QuoteBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
         static let sigil = ">"
-        let id = UUID()
         var description: String { "> " + self.value }
+        let id = UUID()
         let value: String
     }
     
@@ -78,7 +82,7 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
             }
         }
 
-        var description: String {
+        var markup: String {
             switch self {
             case .blank(let block):
                 return block.description
@@ -94,9 +98,47 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
                 return block.description
             }
         }
+        
+        var description: String {
+            markup
+        }
 
-        private static func trimSigil(from value: String, sigil: String) -> String {
-            StringUtilities.ltrim(prefix: LinkBlock.sigil + " ", value: value)
+        var isTitle: Bool {
+            switch self {
+            case .text:
+                return true
+            case .heading:
+                return true
+            default:
+                return false
+            }
+        }
+
+        var value: String {
+            switch self {
+            case .text(let block):
+                return block.value
+            case .heading(let block):
+                return block.value
+            case .quote(let block):
+                return block.value
+            case .list(let block):
+                return block.value
+            default:
+                return ""
+            }
+        }
+        
+        private static func trimSigil(
+            from value: String,
+            sigil: String
+        ) -> String {
+            value.replacingOccurrences(
+                of: #"^\#(sigil)\s+"#,
+                with: "",
+                options: .regularExpression,
+                range: nil
+            )
         }
         
         static func fromLine(_ line: String) -> Block {
@@ -147,28 +189,37 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
     }
     
     let blocks: [Block]
+    let markup: String
 
     var id: Int {
         self.hashValue
     }
 
-    var description: String {
-        blocks.map({ block in block.description }).joined(separator: "\n")
-    }
-        
-    init(blocks: [Block]) {
-        self.blocks = blocks
+    var title: String {
+        blocks
+            .first(where: { block in block.isTitle })
+            .map({ block in block.value }) ?? ""
     }
 
-    init(_ markup: String) {
-        self.init(
-            blocks: markup
-                .split(
-                    maxSplits: Int.max,
-                    omittingEmptySubsequences: false,
-                    whereSeparator: \.isNewline
-                )
-                .map({ sub in Block.fromLine(String(sub)) })
-        )
+    var description: String {
+        markup
+    }
+
+    init(blocks: [Block]) {
+        self.blocks = blocks
+        self.markup = blocks
+            .map({ block in block.description })
+            .joined(separator: "\n")
+    }
+
+    init(markup: String) {
+        self.blocks = markup
+            .split(
+                maxSplits: Int.max,
+                omittingEmptySubsequences: false,
+                whereSeparator: \.isNewline
+            )
+            .map({ sub in Block.fromLine(String(sub)) })
+        self.markup = markup
     }
 }
