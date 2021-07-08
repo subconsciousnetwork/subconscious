@@ -43,7 +43,7 @@ func updateSubSearchBar(
 
 struct SubSearchBarView: View, Equatable {
     let store: ViewStore<SubSearchBarModel, SubSearchBarAction>
-    let placeholder: String = "Search"
+    let placeholder: String = "Search or create"
 
     var body: some View {
         SearchBarRepresentable(

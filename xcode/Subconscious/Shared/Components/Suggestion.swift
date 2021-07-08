@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum Suggestion: Equatable {
-    case thread(_ text: String)
+    case entry(_ text: String)
     case query(_ text: String)
     case create(_ text: String)
 }
@@ -16,8 +16,8 @@ enum Suggestion: Equatable {
 extension Suggestion: Identifiable {
     var id: String {
         switch self {
-        case .thread(let text):
-            return "thread/\(text.hash)"
+        case .entry(let text):
+            return "entry/\(text.hash)"
         case .query(let text):
             return "query/\(text.hash)"
         case .create(let text):
@@ -29,7 +29,7 @@ extension Suggestion: Identifiable {
 extension Suggestion: CustomStringConvertible {
     var description: String {
         switch self {
-        case .thread(let text):
+        case .entry(let text):
             return text
         case .query(let text):
             return text
@@ -47,15 +47,33 @@ struct SuggestionRowView: View, Equatable {
         VStack(spacing: 0) {
             Group {
                 switch suggestion {
-                case .thread(let text):
-                    Label(text, systemImage: "doc.text")
-                        .lineLimit(1)
+                case .entry(let text):
+                    HStack(spacing: 0) {
+                        Label(text, systemImage: "doc.text")
+                            .lineLimit(1)
+                        Text(" – Edit")
+                            .foregroundColor(
+                                Color.Subconscious.secondaryText
+                            )
+                    }
                 case .query(let text):
-                    Label(text, systemImage: "magnifyingglass")
-                        .lineLimit(1)
+                    HStack(spacing: 0) {
+                        Label(text, systemImage: "magnifyingglass")
+                            .lineLimit(1)
+                        Text(" – Search")
+                            .foregroundColor(
+                                Color.Subconscious.secondaryText
+                            )
+                    }
                 case .create(let text):
-                    Label(text, systemImage: "plus.circle")
-                        .lineLimit(1)
+                    HStack(spacing: 0) {
+                        Label(text, systemImage: "plus.circle")
+                            .lineLimit(1)
+                        Text(" – Create")
+                            .foregroundColor(
+                                Color.Subconscious.secondaryText
+                            )
+                    }
                 }
             }
             .contentShape(Rectangle())
@@ -69,8 +87,19 @@ struct SuggestionRowView: View, Equatable {
 
 struct SuggestionRow_Previews: PreviewProvider {
     static var previews: some View {
-        SuggestionRowView(
-            suggestion: Suggestion.query("Search term")
-        )
+        VStack {
+            SuggestionRowView(
+                suggestion: Suggestion.query("Search term")
+            )
+            SuggestionRowView(
+                suggestion: Suggestion.query("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua")
+            )
+            SuggestionRowView(
+                suggestion: Suggestion.entry("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua")
+            )
+            SuggestionRowView(
+                suggestion: Suggestion.create("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua")
+            )
+        }
     }
 }

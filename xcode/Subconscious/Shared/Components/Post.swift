@@ -87,36 +87,36 @@ struct PostView_Previews: PreviewProvider {
                     name: "Concept Collider"
                 ),
                 thread: ThreadModel(
-                    document: SubconsciousDocument(
-                        title: "",
+                    url: URL(fileURLWithPath: "example.subtext"),
+                    dom: Subtext(
                         markup:
-                            """
-                            # Overview
+                        """
+                        # Overview
 
-                            Evolution is a behavior that emerges in any system with:
+                        Evolution is a behavior that emerges in any system with:
 
-                            - Mutation
-                            - Heredity
-                            - Selection
+                        - Mutation
+                        - Heredity
+                        - Selection
 
-                            Evolutionary systems often generate unexpected solutions. Nature selects for good enough.
+                        Evolutionary systems often generate unexpected solutions. Nature selects for good enough.
 
-                            > There is no such thing as advantageous in a general sense. There is only advantageous for the circumstances you’re living in. (Olivia Judson, Santa Fe Institute)
+                        > There is no such thing as advantageous in a general sense. There is only advantageous for the circumstances you’re living in. (Olivia Judson, Santa Fe Institute)
 
-                            Evolving systems exist in punctuated equilibrium.
+                        Evolving systems exist in punctuated equilibrium.
 
-                            & punctuated-equilibrium.st
+                        & punctuated-equilibrium.st
 
-                            # Questions
+                        # Questions
 
-                            - What systems (beside biology) exhibit evolutionary behavior? Remember, evolution happens in any system with mutation, heredity, selection.
-                            - What happens to an evolutionary system when you remove mutation? Heredity? Selection?
-                            - Do you see a system with one of these properties? How can you introduce the other two?
+                        - What systems (beside biology) exhibit evolutionary behavior? Remember, evolution happens in any system with mutation, heredity, selection.
+                        - What happens to an evolutionary system when you remove mutation? Heredity? Selection?
+                        - Do you see a system with one of these properties? How can you introduce the other two?
 
-                            # See also
+                        # See also
 
-                            & https://en.wikipedia.org/wiki/Evolutionary_systems
-                            """
+                        & https://en.wikipedia.org/wiki/Evolutionary_systems
+                        """
                     )
                 )
             ),

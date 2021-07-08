@@ -24,7 +24,7 @@ class Tests_SQLiteConnection: XCTestCase {
     }
 
     func testInMemoryConstruction() throws {
-        let db = try SQLiteConnection()
+        let db = SQLiteConnection()
         print(db)
     }
 }

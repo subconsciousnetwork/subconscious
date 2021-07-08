@@ -50,10 +50,10 @@ struct Suggestions_Previews: PreviewProvider {
         SuggestionsView(
             store: ViewStore(
                 state: [
-                    Suggestion.thread(
+                    Suggestion.entry(
                         "If you have 70 notecards, you have a movie"
                     ),
-                    Suggestion.thread(
+                    Suggestion.entry(
                         "Tenuki"
                     ),
                     Suggestion.query(

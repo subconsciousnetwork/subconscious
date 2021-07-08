@@ -26,7 +26,7 @@ enum AppAction {
     case suggestionTokens(_ action: TextTokenBarAction)
     /// On view appear
     case appear
-    case edit(_ document: SubconsciousDocument)
+    case edit(url: URL, content: String)
     case commitQuery(_ query: String)
     case setQuery(_ text: String)
     case setEditorPresented(_ isPresented: Bool)
@@ -38,23 +38,15 @@ enum AppAction {
         .database(.searchSuggestions(query))
     }
 
-    static func searchTitleSuggestions(_ query: String) -> AppAction {
-        .database(.searchTitleSuggestions(query))
-    }
-
-    static func setTitleSuggestions(_ suggestions: [Suggestion]) -> AppAction {
-        .editor(.setTitleSuggestions(suggestions))
-    }
-
     static func search(_ query: String) -> AppAction {
         .database(.search(query))
     }
     
-    static func writeDocumentByTitle(
-        title: String,
+    static func writeDocument(
+        url: URL?,
         content: String
     ) -> AppAction {
-        .database(.writeDocumentByTitle(title: title, content: content))
+        .database(.writeDocument(url: url, content: content))
     }
 
     static func deleteDocument(url: URL) -> AppAction {
@@ -67,20 +59,9 @@ enum AppAction {
 func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
     switch action {
     case .searchSuccess(let results):
-        return .search(
-            .setItems(
-                results.map({ textFile in
-                    SubconsciousDocument(
-                        title: textFile.url.stem,
-                        markup: textFile.content
-                    )
-                })
-            )
-        )
+        return .search(.setItems(results))
     case .searchSuggestionsSuccess(let results):
         return .setSuggestions(results)
-    case .searchTitleSuggestionsSuccess(let results):
-        return .setTitleSuggestions(results)
     default:
         return .database(action)
     }
@@ -90,13 +71,11 @@ func tagEditorAction(_ action: EditorAction) -> AppAction {
     switch action {
     case .requestEditorUnpresent:
         return .setEditorPresented(false)
-    case .requestSave(let title, let content):
-        return .writeDocumentByTitle(
-            title: title,
+    case .requestSave(let url, let content):
+        return .writeDocument(
+            url: url,
             content: content
         )
-    case .requestTitleSuggestions(let query):
-        return .searchTitleSuggestions(query)
     default:
         return .editor(action)
     }
@@ -115,8 +94,11 @@ func tagSearchBarAction(_ action: SubSearchBarAction) -> AppAction {
 
 func tagSearchAction(_ action: SearchAction) -> AppAction {
     switch action {
-    case .requestEdit(let document):
-        return .edit(document)
+    case .requestEdit(let url, let content):
+        return .edit(
+            url: url,
+            content: content
+        )
     default:
         return .search(action)
     }
@@ -172,7 +154,7 @@ func updateApp(
         return updateEditor(
             state: &state.editor,
             action: action,
-            environment: environment
+            environment: environment.logger
         ).map(tagEditorAction).eraseToAnyPublisher()
     case .searchBar(let action):
         return updateSubSearchBar(
@@ -210,15 +192,10 @@ func updateApp(
             suggestionTokensEffect,
             setupDatabaseEffect
         ).eraseToAnyPublisher()
-    case .edit(let document):
+    case .edit(let url, let content):
         state.isEditorPresented = true
         return Just(
-            .editor(
-                .edit(
-                    title: document.title,
-                    content: document.content.description
-                )
-            )
+            .editor(.edit(url: url, content: content))
         ).eraseToAnyPublisher()
     case .setEditorPresented(let isPresented):
         state.isEditorPresented = isPresented

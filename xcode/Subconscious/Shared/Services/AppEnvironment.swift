@@ -17,7 +17,6 @@ struct AppEnvironment {
     let databaseUrl: URL
     let logger = Constants.logger
     let database: DatabaseEnvironment
-    let documentService = DocumentService()
     
     init() {
         self.databaseUrl = try! fileManager.url(

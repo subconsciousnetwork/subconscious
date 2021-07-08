@@ -46,9 +46,7 @@ enum DatabaseAction {
     /// Write to the file system and database.
     /// This acts like an upsert. If file exists, it will be overwritten, and DB updated.
     /// If file does not exist, it will be created.
-    case writeDocument(url: URL, content: String)
-    /// Write to the file system and database by using a name rather than URL.
-    case writeDocumentByTitle(title: String, content: String)
+    case writeDocument(url: URL?, content: String)
     case deleteDocument(url: URL)
 }
 
@@ -116,22 +114,25 @@ func updateDatabase(
             .replaceError(with: .log(.error("File sync failed")))
             .eraseToAnyPublisher()
     case .writeDocument(let url, let content):
-        return environment.writeDocumentAsync(url: url, content: content)
-            .map({ _ in .log(.info("Wrote document: \(url)")) })
-            .replaceError(
-                with: .log(.warning("Write failed for document: \(url)"))
-            )
-            .eraseToAnyPublisher()
-    case .writeDocumentByTitle(let title, let content):
-        return Just(
-            DatabaseAction.writeDocument(
-                // TODO: we should have some more methodical way of converting
-                // from URL to title and back.
-                url: environment.documentsUrl
-                    .appendingFilename(name: title, ext: "subtext"),
-                content: content
-            )
-        ).eraseToAnyPublisher()
+        let title = Truncate.getFirstPseudoSentence(
+            Subtext.getTitle(markup: content)
+        )
+        
+        let concreteURL = url ?? environment.documentsUrl.appendingFilename(
+            name: Slug.toSlugWithDate(title),
+            ext: "subtext"
+        )
+
+        return environment.writeDocumentAsync(
+            url: concreteURL,
+            title: title,
+            content: content
+        )
+        .map({ _ in .log(.info("Wrote document: \(concreteURL)")) })
+        .replaceError(
+            with: .log(.warning("Write failed for document: \(concreteURL)"))
+        )
+        .eraseToAnyPublisher()
     case .deleteDocument(let url):
         return environment.deleteDocumentAsync(url)
             .map({ _ in .log(.info("Deleted document: \(url)")) })
@@ -324,12 +325,7 @@ struct DatabaseEnvironment {
                 sql: "SELECT path, modified, size FROM entry"
             ).map({ row  in
                 FileFingerprint(
-                    url: URL(
-                        fileURLWithPath: try row[0]
-                            .asString()
-                            .unwrap(),
-                        relativeTo: documentsUrl
-                    ),
+                    url: URL(fileURLWithPath: try row[0].asString().unwrap()),
                     modified: try row[1].asDate().unwrap(),
                     size: try row[2].asInt().unwrap()
                 )
@@ -367,20 +363,27 @@ struct DatabaseEnvironment {
     /// Write document syncronously
     private func writeDocumentToDatabase(
         url: URL,
+        title: String,
         content: String,
         modified: Date,
         size: Int
     ) throws {
+        // Must store relative path, since absolute path of user documents
+        // directory can be changed by system.
+        let path = try url.relativizingPath(relativeTo: documentsUrl).unwrap()
         try SQLiteConnection(path: databaseUrl.path).unwrap().execute(
             sql: """
             INSERT INTO entry (path, title, body, modified, size)
             VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(path) DO UPDATE SET
+                title=excluded.title,
+                body=excluded.body,
+                modified=excluded.modified,
+                size=excluded.size
             """,
             parameters: [
-                // Must store relative path, since absolute path
-                // can change during testing.
-                .text(url.lastPathComponent),
-                .text(url.stem),
+                .text(path),
+                .text(title),
                 .text(content),
                 .date(modified),
                 .integer(size)
@@ -391,9 +394,11 @@ struct DatabaseEnvironment {
     /// Write document syncronously by reading it off of file system
     private func writeDocumentToDatabase(_ url: URL) throws {
         let content = try String(contentsOf: url, encoding: .utf8)
+        let title = Subtext.getTitle(markup: content)
         let attributes = try FileFingerprint.Attributes.init(url: url).unwrap()
         try writeDocumentToDatabase(
             url: url,
+            title: title,
             content: content,
             modified: attributes.modified,
             size: attributes.size
@@ -403,6 +408,7 @@ struct DatabaseEnvironment {
     /// Write a document to the file system, and to the database
     func writeDocumentAsync(
         url: URL,
+        title: String,
         content: String
     ) -> AnyPublisher<Void, Error> {
         CombineUtilities.async {
@@ -412,6 +418,7 @@ struct DatabaseEnvironment {
             let attributes = try FileFingerprint.Attributes(url: url).unwrap()
             try writeDocumentToDatabase(
                 url: url,
+                title: title,
                 content: content,
                 modified: attributes.modified,
                 size: attributes.size
@@ -455,7 +462,7 @@ struct DatabaseEnvironment {
                 LIMIT 4
                 """
             ).compactMap({ row in
-                try Suggestion.thread(row[0].asString().unwrap())
+                try Suggestion.entry(row[0].asString().unwrap())
             })
 
             let searches = try db.execute(
@@ -496,7 +503,7 @@ struct DatabaseEnvironment {
                     SQLiteConnection.SQLValue.prefixQueryFTS5(query)
                 ]
             ).compactMap({ row in
-                try Suggestion.thread(row[0].asString().unwrap())
+                try Suggestion.entry(row[0].asString().unwrap())
             })
 
             let recentMatchingSearches = try db.execute(
@@ -572,7 +579,7 @@ struct DatabaseEnvironment {
                 FROM entry_search
                 WHERE entry_search MATCH ?
                 ORDER BY rank
-                LIMIT 100
+                LIMIT 25
                 """,
                 parameters: [
                     SQLiteConnection.SQLValue.queryFTS5(query)
@@ -582,8 +589,9 @@ struct DatabaseEnvironment {
             return try rows.map({ row in
                 let path = try row[0].asString().unwrap()
                 let content = try row[1].asString().unwrap()
+                let url = documentsUrl.appendingPathComponent(path)
                 return TextDocument(
-                    url: documentsUrl.appendingPathComponent(path),
+                    url: url,
                     content: content
                 )
             })

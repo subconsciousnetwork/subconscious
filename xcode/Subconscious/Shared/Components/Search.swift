@@ -10,20 +10,21 @@ import Combine
 import os
 
 enum SearchAction {
-    case item(_ item: ItemAction<Int, ThreadAction>)
-    case setItems(_ documents: [SubconsciousDocument])
-    case requestEdit(_ document: SubconsciousDocument)
+    case item(_ item: ItemAction<URL, ThreadAction>)
+    case setItems(_ documents: [TextDocument])
+    case requestEdit(url: URL, content: String)
 }
 
 struct SearchModel: Equatable {
     var threads: [ThreadModel]
     
-    init(documents: [SubconsciousDocument]) {
+    init(documents: [TextDocument]) {
         self.threads = documents
             .enumerated()
             .map({ (i, document) in
                 ThreadModel(
-                    document: document,
+                    url: document.url,
+                    dom: Subtext(markup: document.content),
                     isFolded: i > 0
                 )
             })
@@ -68,7 +69,13 @@ func updateSearch(
     case .setItems(let documents):
         state.threads = documents
             .enumerated()
-            .map({ (i, doc) in ThreadModel(document: doc, isFolded: i > 0) })
+            .map({ (i, doc) in
+                ThreadModel(
+                    url: doc.url,
+                    dom: Subtext(markup: doc.content),
+                    isFolded: i > 0
+                )
+            })
     case .requestEdit:
         environment.warning(
             """
@@ -80,10 +87,10 @@ func updateSearch(
     return Empty().eraseToAnyPublisher()
 }
 
-func tagSearchItem(key: Int, action: ThreadAction) -> SearchAction {
+func tagSearchItem(key: URL, action: ThreadAction) -> SearchAction {
     switch action {
-    case .requestEdit(let document):
-        return .requestEdit(document)
+    case .requestEdit(let url, let content):
+        return .requestEdit(url: url, content: content)
     default:
         return .item(ItemAction(
             key: key,
