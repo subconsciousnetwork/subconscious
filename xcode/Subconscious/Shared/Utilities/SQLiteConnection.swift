@@ -113,7 +113,7 @@ final class SQLiteConnection {
         func map<T>(_ read: (SQLValue) throws -> T) throws -> T {
             try read(self)
         }
-        
+
         func asString() -> String? {
             switch self {
             case .text(let value):
@@ -132,7 +132,7 @@ final class SQLiteConnection {
                 return nil
             }
         }
-        
+
         func asInt() -> Int? {
             switch self {
             case .integer(let value):
@@ -141,7 +141,7 @@ final class SQLiteConnection {
                 return nil
             }
         }
-        
+
         func asDouble() -> Double? {
             switch self {
             case .real(let value):
