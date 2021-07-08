@@ -21,6 +21,19 @@ extension URL {
         url.appendPathExtension(ext)
         return url
     }
+
+    /// Return path relative to some base
+    /// If URL does not start with base, returns nil.
+    func relativizingPath(relativeTo base: URL) -> String? {
+        // Standardize and absolutize paths to normalize them
+        let path = self.standardized.absoluteString
+        let basePath = base.standardized.absoluteString
+        if path.hasPrefix(basePath) {
+            // Return path without standardized percent encoding.
+            return path.ltrim(prefix: basePath).removingPercentEncoding
+        }
+        return nil
+    }
 }
 
 extension Sequence where Iterator.Element == URL {
