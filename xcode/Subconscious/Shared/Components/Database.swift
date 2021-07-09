@@ -26,7 +26,7 @@ enum DatabaseAction {
     /// However it's a good idea to run this action when the app starts so that you get the expensive
     /// stuff out of the way early.
     case setup
-    case setupSuccess(_ success: SQLiteMigrations.MigrationSuccess)
+    case setupSuccess(_ success: SQLite3Migrations.MigrationSuccess)
     /// Rebuild database if it is somehow impossible to migrate.
     /// This should not happen, but it allows us to recover if it does.
     case rebuild
@@ -179,14 +179,12 @@ func updateDatabase(
 
 //  MARK: Environment
 struct DatabaseEnvironment {
-    static func getMigrations() -> SQLiteMigrations {
-        return SQLiteMigrations([
-            SQLiteMigrations.Migration(
+    static func getMigrations() -> SQLite3Migrations {
+        return SQLite3Migrations([
+            SQLite3Migrations.Migration(
                 date: "2021-07-01T15:43:00",
                 sql: """
-                PRAGMA journal_mode=WAL;
-
-                CREATE TABLE search (
+                CREATE TABLE search_history (
                     id TEXT PRIMARY KEY,
                     query TEXT NOT NULL,
                     created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -272,6 +270,8 @@ struct DatabaseEnvironment {
             )!
         ])!
     }
+
+    private let db: SQLite3Connection
     
     let logger = Logger(
         subsystem: "com.subconscious.Subconscious",
@@ -280,20 +280,32 @@ struct DatabaseEnvironment {
     let fileManager = FileManager.default
     let databaseUrl: URL
     let documentsUrl: URL
-    let migrations: SQLiteMigrations
+    let migrations: SQLite3Migrations
 
-    func migrateDatabaseAsync() ->
-        AnyPublisher<SQLiteMigrations.MigrationSuccess, Error> {
-        migrations.migrateAsync(
-            path: databaseUrl.path,
-            qos: .utility
+    init(
+        databaseUrl: URL,
+        documentsUrl: URL,
+        migrations: SQLite3Migrations
+    ) throws {
+        self.db = try SQLite3Connection(
+            path: databaseUrl.absoluteString,
+            mode: .readwrite
         )
+        self.databaseUrl = databaseUrl
+        self.documentsUrl = documentsUrl
+        self.migrations = migrations
+    }
+    
+    func migrateDatabaseAsync() ->
+        AnyPublisher<SQLite3Migrations.MigrationSuccess, Error> {
+        migrations.migrateAsync(database: self.db)
     }
 
     func deleteDatabaseAsync() -> AnyPublisher<Void, Error> {
         CombineUtilities.async(execute: {
             logger.notice("Deleting database")
             do {
+                self.db.close()
                 try fileManager.removeItem(at: databaseUrl)
                 logger.notice("Deleted database")
             } catch {
@@ -313,12 +325,6 @@ struct DatabaseEnvironment {
 
             // Left = Leader (files)
             let left = try FileSync.readFileFingerprints(urls: fileUrls)
-
-            let db = try SQLiteConnection(
-                path: databaseUrl.path,
-                mode: .readonly,
-                qos: .utility
-            ).unwrap()
 
             // Right = Follower (search index)
             let right = try db.execute(
@@ -374,7 +380,7 @@ struct DatabaseEnvironment {
         // Must store relative path, since absolute path of user documents
         // directory can be changed by system.
         let path = try url.relativizingPath(relativeTo: documentsUrl).unwrap()
-        try SQLiteConnection(path: databaseUrl.path).unwrap().execute(
+        try db.execute(
             sql: """
             INSERT INTO entry (path, title, body, modified, size)
             VALUES (?, ?, ?, ?, ?)
@@ -430,16 +436,14 @@ struct DatabaseEnvironment {
     }
     
     private func deleteDocumentFromDatabase(_ url: URL) throws {
-        try SQLiteConnection(path: databaseUrl.path)
-            .unwrap()
-            .execute(
-                sql: """
-                DELETE FROM entry WHERE path = ?
-                """,
-                parameters: [
-                    .text(url.lastPathComponent)
-                ]
-            )
+        try db.execute(
+            sql: """
+            DELETE FROM entry WHERE path = ?
+            """,
+            parameters: [
+                .text(url.lastPathComponent)
+            ]
+        )
     }
 
     /// Remove document from file system and database
@@ -452,12 +456,6 @@ struct DatabaseEnvironment {
 
     func searchSuggestionsForZeroQuery() -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
-            let db = try SQLiteConnection(
-                path: databaseUrl.path,
-                mode: .readonly,
-                qos: .userInitiated
-            ).unwrap()
-
             let threads = try db.execute(
                 sql: """
                 SELECT path, title
@@ -475,18 +473,19 @@ struct DatabaseEnvironment {
                 )
             })
 
-            let searches = try db.execute(
+            let topSearches = try db.execute(
                 sql: """
-                SELECT DISTINCT query
-                FROM search
-                ORDER BY created DESC
+                SELECT query, count(query) AS hits
+                FROM search_history
+                GROUP BY query
+                ORDER BY hits DESC
                 LIMIT 4
                 """
             ).compactMap({ row in
                 try Suggestion.query(row.get(0).unwrap())
             })
             
-            let suggestions = threads + searches
+            let suggestions = topSearches + threads
             
             return suggestions
         })
@@ -496,11 +495,9 @@ struct DatabaseEnvironment {
         _ query: String
     ) -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
-            let db = try SQLiteConnection(
-                path: databaseUrl.path,
-                mode: .readonly,
-                qos: .userInitiated
-            ).unwrap()
+            guard !query.isWhitespace else {
+                return []
+            }
             
             let threads = try db.execute(
                 sql: """
@@ -508,10 +505,10 @@ struct DatabaseEnvironment {
                 FROM entry_search
                 WHERE entry_search.title MATCH ?
                 ORDER BY rank
-                LIMIT 8
+                LIMIT 3
                 """,
                 parameters: [
-                    SQLiteConnection.Value.prefixQueryFTS5(query)
+                    SQLite3Connection.Value.prefixQueryFTS5(query)
                 ]
             ).compactMap({ row in
                 try Suggestion.entry(
@@ -526,23 +523,27 @@ struct DatabaseEnvironment {
             let recentMatchingSearches = try db.execute(
                 sql: """
                 SELECT DISTINCT query
-                FROM search
-                WHERE search.query LIKE ?
+                FROM search_history
+                WHERE query LIKE ?
                 ORDER BY created DESC
-                LIMIT 8
+                LIMIT 3
                 """,
                 parameters: [
-                    SQLiteConnection.Value.prefixQueryLike(query)
+                    SQLite3Connection.Value.prefixQueryLike(query)
                 ]
             ).compactMap({ row in
                 try Suggestion.query(row.get(0).unwrap())
             })
             
-            let create = !query.isWhitespace ? [Suggestion.create(query)] : []
+            let verbatimQuerySuggestion = Suggestion.query(query)
+            let verbatimCreateSuggestion = Suggestion.create(query)
 
-            let suggestions = threads + recentMatchingSearches + create
-            
-            return suggestions
+            return (
+                [verbatimQuerySuggestion] +
+                recentMatchingSearches +
+                threads +
+                [verbatimCreateSuggestion]
+            )
         })
     }
     
@@ -573,24 +574,24 @@ struct DatabaseEnvironment {
                 return []
             }
 
-            let db = try SQLiteConnection(
-                path: databaseUrl.path,
-                qos: .userInitiated
-            ).unwrap()
-
             // Log search in database
+            // TODO if I execute this before the query, it never commits to db.
+            // Why? Need to investigate.
+            // Wrapping the whole thing in a commit solves the issue.
+            // We should figure out how to do what Python does
+            // (implicit transaction)
             try db.execute(
                 sql: """
-                INSERT INTO search (id, query)
-                VALUES (?, ?)
+                INSERT INTO search_history (id, query)
+                VALUES (?, ?);
                 """,
                 parameters: [
                     .text(UUID().uuidString),
-                    .text(query)
+                    .text(query),
                 ]
             )
 
-            let rows = try db.execute(
+            let docs: [TextDocument] = try db.execute(
                 sql: """
                 SELECT path, body
                 FROM entry_search
@@ -599,11 +600,9 @@ struct DatabaseEnvironment {
                 LIMIT 25
                 """,
                 parameters: [
-                    SQLiteConnection.Value.queryFTS5(query)
+                    .queryFTS5(query)
                 ]
-            )
-
-            return try rows.map({ row in
+            ).map({ row in
                 let path: String = try row.get(0).unwrap()
                 let content: String = try row.get(1).unwrap()
                 let url = documentsUrl.appendingPathComponent(path)
@@ -612,6 +611,8 @@ struct DatabaseEnvironment {
                     content: content
                 )
             })
+            
+            return docs
         })
     }
 }

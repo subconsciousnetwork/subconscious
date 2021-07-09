@@ -192,6 +192,7 @@ final class SQLite3Connection {
     }
 
     enum SQLite3ConnectionError: Error {
+        case open(code: Int32, message: String)
         case execution(code: Int32, message: String)
         case prepare(_ message: String)
         case parameter(_ message: String)
@@ -207,9 +208,9 @@ final class SQLite3Connection {
         var flags: Int32 {
             switch self {
             case .readonly:
-                return SQLITE_OPEN_READONLY
+                return SQLITE_OPEN_READONLY | SQLITE_OPEN_URI
             case .readwrite:
-                return SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
+                return SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI
             }
         }
     }
@@ -221,10 +222,14 @@ final class SQLite3Connection {
     /// We use this queue to make database connections  threadsafe
     private var queue: DispatchQueue
 
-    init?(
+    /// Path to the database file
+    let path: String
+    
+    init(
         path: String,
         mode: OpenMode = .readwrite
-    ) {
+    ) throws {
+        self.path = path
         // Create GCD dispatch queue for running database queries.
         // SQLite3Connection objects are threadsafe.
         // The queue is *always* serial, ensuring that SQL queries to this
@@ -235,34 +240,37 @@ final class SQLite3Connection {
             attributes: []
         )
 
-        // Open database
         let pathCString = path.cString(using: String.Encoding.utf8)
+        // Open database
         let result = sqlite3_open_v2(pathCString!, &db, mode.flags, nil)
+        // If it didn't open, throw an error
         if result != SQLITE_OK {
-            sqlite3_close(db)
-            return nil
+            let errcode = sqlite3_extended_errcode(db)
+            let errmsg = String(
+                validatingUTF8: sqlite3_errmsg(db)
+            ) ?? "Unknown error"
+            sqlite3_close_v2(db)
+            throw SQLite3ConnectionError.open(code: errcode, message: errmsg)
         }
     }
 
-    /// Initialize an in-memory database
-    convenience init?() {
-        self.init(path: ":memory:")
-    }
-
-    deinit {
+    /// Close connection manually
+    func close() {
         // We use sqlite3_close_v2 because it knows how to clean up
         // after itself if there are any unfinalized prepared statements.
         //
         // Note that calling sqlite3_close_v2 with a nil (NULL) pointer
-        // is a harmless no-op.
-        //
-        // However if we introduce a manual close, we will have to set
-        // db to nil, because closing the same sqlite pointer twice is
-        // not allowed.
+        // is a harmless no-op. However, we must also set db to nil, because
+        // closing the same sqlite pointer twice is not allowed.
         //
         // https://www.sqlite.org/c3ref/close.html
         sqlite3_close_v2(db)
         db = nil
+    }
+
+    /// Close connection on deinit
+    deinit {
+        close()
     }
     
     /// Executes multiple SQL statements in one go.
@@ -545,6 +553,12 @@ extension SQLite3Connection {
 extension SQLite3Connection.SQLite3ConnectionError: LocalizedError {
     public var errorDescription: String? {
         switch self {
+        case .open(code: let code, let message):
+            return """
+            Open error (SQLite3Connection.SQLite3ConnectionError.open)
+            
+            Error \(code): \(message)
+            """
         case .execution(let code, let message):
             return """
             Execution error (SQLite3Connection.SQLite3ConnectionError.execution)

@@ -179,7 +179,7 @@ struct SQLite3Migrations {
 extension SQLite3Migrations {
     func migrateAsync(
         database: SQLite3Connection,
-        qos: DispatchQoS.QoSClass
+        qos: DispatchQoS.QoSClass = .background
     ) -> AnyPublisher<MigrationSuccess, Error> {
         Future({ promise in
             DispatchQueue.global(qos: qos).async {
@@ -191,18 +191,6 @@ extension SQLite3Migrations {
                 }
             }
         }).eraseToAnyPublisher()
-    }
-
-    func migrateAsync(
-        path: String,
-        qos: DispatchQoS.QoSClass = .default
-    ) -> AnyPublisher<MigrationSuccess, Error> {
-        SQLite3Connection(path: path)
-            .publisher
-            .flatMap({ db in
-                self.migrateAsync(database: db, qos: qos)
-            })
-            .eraseToAnyPublisher()
     }
 }
 

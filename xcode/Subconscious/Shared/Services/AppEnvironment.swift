@@ -28,7 +28,7 @@ struct AppEnvironment {
 
         self.documentsUrl = fileManager.documentDirectoryUrl!
         
-        self.database = DatabaseEnvironment(
+        self.database = try! DatabaseEnvironment(
             databaseUrl: databaseUrl,
             documentsUrl: documentsUrl,
             migrations: DatabaseEnvironment.getMigrations()

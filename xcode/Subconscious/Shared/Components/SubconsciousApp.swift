@@ -107,7 +107,14 @@ func tagSearchAction(_ action: SearchAction) -> AppAction {
 func tagSuggestionsAction(_ action: SuggestionsAction) -> AppAction {
     switch action {
     case .select(let suggestion):
-        return .commitQuery(suggestion.description)
+        switch suggestion {
+        case .query(let text):
+            return .commitQuery(text)
+        case .entry(let url, let content):
+            return .edit(url: url, content: content)
+        case .create(let text):
+            return .commitQuery(text)
+        }
     }
 }
 
