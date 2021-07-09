@@ -1,5 +1,5 @@
 //
-//  SQLiteMigrations.swift
+//  SQLite3Migrations.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 6/11/21.
@@ -8,8 +8,8 @@
 import Foundation
 import Combine
 
-//  MARK: SQLiteMigrations
-struct SQLiteMigrations {
+//  MARK: SQLite3Migrations
+struct SQLite3Migrations {
     enum SQLiteMigrationsError: Error {
         case invalidVersion(message: String)
         case migration(message: String)
@@ -81,7 +81,7 @@ struct SQLiteMigrations {
     /// It must either be one of the versions in the migrations list, or the `DEFAULT_USER_VERSION`.
     func isValidVersion(version: Int) -> Bool {
         return (
-            version == SQLiteConnection.DEFAULT_USER_VERSION ||
+            version == SQLite3Connection.DEFAULT_USER_VERSION ||
             self.versions.contains(version)
         )
     }
@@ -109,7 +109,7 @@ struct SQLiteMigrations {
     ///
     /// - Returns: `(from: Int, to: Int)`, a tuple representing version
     @discardableResult func migrate(
-        database: SQLiteConnection
+        database: SQLite3Connection
     ) throws -> MigrationSuccess {
         let databaseVersion = try database.getUserVersion()
 
@@ -175,10 +175,10 @@ struct SQLiteMigrations {
     }
 }
 
-//  MARK: SQLiteMigrations async extensions
-extension SQLiteMigrations {
+//  MARK: SQLite3Migrations async extensions
+extension SQLite3Migrations {
     func migrateAsync(
-        database: SQLiteConnection,
+        database: SQLite3Connection,
         qos: DispatchQoS.QoSClass
     ) -> AnyPublisher<MigrationSuccess, Error> {
         Future({ promise in
@@ -197,7 +197,7 @@ extension SQLiteMigrations {
         path: String,
         qos: DispatchQoS.QoSClass = .default
     ) -> AnyPublisher<MigrationSuccess, Error> {
-        SQLiteConnection(path: path)
+        SQLite3Connection(path: path)
             .publisher
             .flatMap({ db in
                 self.migrateAsync(database: db, qos: qos)
@@ -207,18 +207,18 @@ extension SQLiteMigrations {
 }
 
 //  MARK: SQLiteMigrationsError extensions
-extension SQLiteMigrations.SQLiteMigrationsError: LocalizedError {
+extension SQLite3Migrations.SQLiteMigrationsError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .invalidVersion(let message):
             return """
-            Invalid database version (SQLiteMigrations.SQLiteMigrationsError.invalidVersion)
+            Invalid database version (SQLite3Migrations.SQLiteMigrationsError.invalidVersion)
 
             \(message)
             """
         case .migration(let message):
             return """
-            Migration error (SQLiteMigrations.SQLiteMigrationsError.migration)
+            Migration error (SQLite3Migrations.SQLiteMigrationsError.migration)
 
             \(message)
             """

@@ -7,7 +7,7 @@ import Combine
 /// Connection lifetime is object lifetime.
 /// Initializing opens a connection to the database.
 /// Deinitializing closes the connection.
-final class SQLiteConnection {
+final class SQLite3Connection {
     /// The default value of the user_version pragma.
     /// This constant is for code readability purposes.
     public static let DEFAULT_USER_VERSION = 0;
@@ -231,7 +231,7 @@ final class SQLiteConnection {
         // The queue is *always* serial, ensuring that SQL queries to this
         // database are run in-order, whether called sync or async.
         self.queue = DispatchQueue(
-            label: SQLiteConnection.dispatchQueueLabel,
+            label: SQLite3Connection.dispatchQueueLabel,
             qos: qos,
             attributes: []
         )
@@ -301,7 +301,7 @@ final class SQLiteConnection {
                     // Get row data for each column
                     var columns: [Value] = []
                     for index in 0..<columnCount {
-                        let sqlData = SQLiteConnection.getDataForRow(
+                        let sqlData = SQLite3Connection.getDataForRow(
                             statement: statement,
                             index: index
                         )
@@ -467,7 +467,7 @@ final class SQLiteConnection {
 }
 
 //  MARK: SQLiteConnection async extensions
-extension SQLiteConnection {
+extension SQLite3Connection {
     /// Executes multiple SQL statements in one go.
     /// Useful for setting up a database.
     /// This form does not allow for parameter binding.
@@ -514,30 +514,30 @@ extension SQLiteConnection {
 }
 
 //  MARK: SQLiteConnectionError extensions
-extension SQLiteConnection.SQLiteConnectionError: LocalizedError {
+extension SQLite3Connection.SQLiteConnectionError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .execution(let message):
             return """
-            Execution error (SQLiteConnection.SQLiteConnectionError.execution)
+            Execution error (SQLite3Connection.SQLiteConnectionError.execution)
             
             \(message)
             """
         case .parameter(let message):
             return """
-            Parameter error (SQLiteConnection.SQLiteConnectionError.parameter)
+            Parameter error (SQLite3Connection.SQLiteConnectionError.parameter)
             
             \(message)
             """
         case .prepare(let message):
             return """
-            Could not prepare SQL (SQLiteConnection.SQLiteConnectionError.prepare)
+            Could not prepare SQL (SQLite3Connection.SQLiteConnectionError.prepare)
             
             \(message)
             """
         case .value(let message):
             return """
-            Value error (SQLiteConnection.SQLiteConnectionError.value)
+            Value error (SQLite3Connection.SQLiteConnectionError.value)
             
             \(message)
             """
