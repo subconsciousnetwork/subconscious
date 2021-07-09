@@ -2,7 +2,7 @@ import SQLite3
 import Foundation
 import Combine
 
-//  MARK: SQLiteConnection
+//  MARK: SQLite3Connection
 /// SQLite connection manager designed along RAII lines.
 /// Connection lifetime is object lifetime.
 /// Initializing opens a connection to the database.
@@ -191,8 +191,8 @@ final class SQLite3Connection {
         }
     }
 
-    enum SQLiteConnectionError: Error {
-        case execution(_ message: String)
+    enum SQLite3ConnectionError: Error {
+        case execution(code: Int32, message: String)
         case prepare(_ message: String)
         case parameter(_ message: String)
         case value(_ message: String)
@@ -223,8 +223,7 @@ final class SQLite3Connection {
 
     init?(
         path: String,
-        mode: OpenMode = .readwrite,
-        qos: DispatchQoS = .default
+        mode: OpenMode = .readwrite
     ) {
         // Create GCD dispatch queue for running database queries.
         // SQLite3Connection objects are threadsafe.
@@ -232,7 +231,7 @@ final class SQLite3Connection {
         // database are run in-order, whether called sync or async.
         self.queue = DispatchQueue(
             label: SQLite3Connection.dispatchQueueLabel,
-            qos: qos,
+            qos: .default,
             attributes: []
         )
 
@@ -246,8 +245,8 @@ final class SQLite3Connection {
     }
 
     /// Initialize an in-memory database
-    convenience init?(qos: DispatchQoS = .default) {
-        self.init(path: ":memory:", qos: qos)
+    convenience init?() {
+        self.init(path: ":memory:")
     }
 
     deinit {
@@ -273,14 +272,19 @@ final class SQLite3Connection {
         try queue.sync {
             let result = sqlite3_exec(db, sql, nil, nil, nil)
             if result != SQLITE_OK {
-                throw SQLiteConnectionError.execution(
-                    String(validatingUTF8: sqlite3_errmsg(self.db)) ??
-                    "Unknown error"
+                let errcode = sqlite3_extended_errcode(self.db)
+                let errmsg = String(
+                    validatingUTF8: sqlite3_errmsg(self.db)
+                ) ?? "Unknown error"
+
+                throw SQLite3ConnectionError.execution(
+                    code: errcode,
+                    message: errmsg
                 )
             }
         }
     }
-    
+
     /// Execute a single SQL statement
     ///
     /// - Parameters:
@@ -292,13 +296,17 @@ final class SQLite3Connection {
         sql: String,
         parameters: [Value] = []
     ) throws -> [Row] {
-        var rows: [Row] = []
-        try queue.sync {
+        return try queue.sync {
+            var rows: [Row] = []
             let statement = try self.prepare(sql: sql, parameters: parameters)
             if let statement = statement {
                 let columnCount = sqlite3_column_count(statement)
-                while sqlite3_step(statement) == SQLITE_ROW {
-                    // Get row data for each column
+
+                // Loop step until we run out of rows.
+                // Start step once to assign initial value, then start loop.
+                var step = sqlite3_step(statement)
+                while step == SQLITE_ROW {
+                    // Get row data for each column.
                     var columns: [Value] = []
                     for index in 0..<columnCount {
                         let sqlData = SQLite3Connection.getDataForRow(
@@ -308,17 +316,37 @@ final class SQLite3Connection {
                         columns.append(sqlData)
                     }
                     rows.append(Row(columns: columns))
+
+                    // Advance to next step.
+                    step = sqlite3_step(statement)
                 }
-                sqlite3_finalize(statement)
+
+                // Check for errors and throw if any are found.
+                // When we have finished stepping through rows,
+                // SQLite will return SQLITE_DONE if the query completed
+                // successfully. Any other value is an error.
+                if step != SQLITE_DONE {
+                    let errcode = sqlite3_extended_errcode(self.db)
+                    let errmsg = String(
+                        validatingUTF8: sqlite3_errmsg(self.db)
+                    ) ?? "Unknown error"
+                    // Finalize statement before throwing
+                    sqlite3_finalize(statement)
+                    throw SQLite3ConnectionError.execution(
+                        code: errcode,
+                        message: errmsg
+                    )
+                }
             }
+            sqlite3_finalize(statement)
+            return rows
         }
-        return rows
     }
-    
+
     /// Get user_version as integer
     func getUserVersion() throws -> Int {
         let rows = try execute(sql: "PRAGMA user_version")
-        let error = SQLiteConnectionError.value(
+        let error = SQLite3ConnectionError.value(
             "Could not read user_version"
         )
         let first = try rows.first.unwrap(or: error)
@@ -354,7 +382,7 @@ final class SQLite3Connection {
                 String(validatingUTF8: sqlite3_errmsg(self.db)) ??
                 "Unknown error"
             )
-            throw SQLiteConnectionError.prepare(error)
+            throw SQLite3ConnectionError.prepare(error)
         }
 
         // Bind parameters, if any
@@ -363,7 +391,7 @@ final class SQLite3Connection {
             let sqlParameterCount = sqlite3_bind_parameter_count(statement)
             // Make sure parameter count matches template parameter count
             if sqlParameterCount != CInt(parameters.count) {
-                throw SQLiteConnectionError.parameter(
+                throw SQLite3ConnectionError.parameter(
                     "SQL parameter counts do not match."
                 )
             }
@@ -428,7 +456,7 @@ final class SQLite3Connection {
                         String(validatingUTF8: sqlite3_errmsg(self.db)) ??
                         "Unknown error"
                     )
-                    throw SQLiteConnectionError.parameter(error)
+                    throw SQLite3ConnectionError.parameter(error)
                 }
             }
         }
@@ -466,7 +494,7 @@ final class SQLite3Connection {
     }
 }
 
-//  MARK: SQLiteConnection async extensions
+//  MARK: SQLite3Connection async extensions
 extension SQLite3Connection {
     /// Executes multiple SQL statements in one go.
     /// Useful for setting up a database.
@@ -513,31 +541,31 @@ extension SQLite3Connection {
     }
 }
 
-//  MARK: SQLiteConnectionError extensions
-extension SQLite3Connection.SQLiteConnectionError: LocalizedError {
+//  MARK: SQLite3ConnectionError extensions
+extension SQLite3Connection.SQLite3ConnectionError: LocalizedError {
     public var errorDescription: String? {
         switch self {
-        case .execution(let message):
+        case .execution(let code, let message):
             return """
-            Execution error (SQLite3Connection.SQLiteConnectionError.execution)
+            Execution error (SQLite3Connection.SQLite3ConnectionError.execution)
             
-            \(message)
+            Error \(code): \(message)
             """
         case .parameter(let message):
             return """
-            Parameter error (SQLite3Connection.SQLiteConnectionError.parameter)
+            Parameter error (SQLite3Connection.SQLite3ConnectionError.parameter)
             
             \(message)
             """
         case .prepare(let message):
             return """
-            Could not prepare SQL (SQLite3Connection.SQLiteConnectionError.prepare)
+            Could not prepare SQL (SQLite3Connection.SQLite3ConnectionError.prepare)
             
             \(message)
             """
         case .value(let message):
             return """
-            Value error (SQLite3Connection.SQLiteConnectionError.value)
+            Value error (SQLite3Connection.SQLite3ConnectionError.value)
             
             \(message)
             """
