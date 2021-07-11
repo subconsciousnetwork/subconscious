@@ -271,14 +271,13 @@ struct DatabaseEnvironment {
         ])!
     }
 
-    private let db: SQLite3Connection
+    private let db: SQLite3ConnectionManager
     
     let logger = Logger(
         subsystem: "com.subconscious.Subconscious",
         category: "database"
     )
     let fileManager = FileManager.default
-    let databaseUrl: URL
     let documentsUrl: URL
     let migrations: SQLite3Migrations
 
@@ -286,27 +285,36 @@ struct DatabaseEnvironment {
         databaseUrl: URL,
         documentsUrl: URL,
         migrations: SQLite3Migrations
-    ) throws {
-        self.db = try SQLite3Connection(
-            path: databaseUrl.absoluteString,
+    ) {
+        self.db = SQLite3ConnectionManager(
+            url: databaseUrl,
             mode: .readwrite
         )
-        self.databaseUrl = databaseUrl
         self.documentsUrl = documentsUrl
         self.migrations = migrations
     }
     
     func migrateDatabaseAsync() ->
-        AnyPublisher<SQLite3Migrations.MigrationSuccess, Error> {
-        migrations.migrateAsync(database: self.db)
+        Future<SQLite3Migrations.MigrationSuccess, Error> {
+        Future({ promise in
+            DispatchQueue.global(qos: .background).async {
+                do {
+                    let database = try self.db.connection()
+                    let success = try migrations.migrate(database: database)
+                    promise(.success(success))
+                } catch {
+                    promise(.failure(error))
+                }
+            }
+        })
     }
 
     func deleteDatabaseAsync() -> AnyPublisher<Void, Error> {
         CombineUtilities.async(execute: {
             logger.notice("Deleting database")
             do {
-                self.db.close()
-                try fileManager.removeItem(at: databaseUrl)
+                db.close()
+                try fileManager.removeItem(at: db.url)
                 logger.notice("Deleted database")
             } catch {
                 logger.warning("Failed to delete database: \(error.localizedDescription)")
@@ -327,7 +335,7 @@ struct DatabaseEnvironment {
             let left = try FileSync.readFileFingerprints(urls: fileUrls)
 
             // Right = Follower (search index)
-            let right = try db.execute(
+            let right = try db.connection().execute(
                 sql: "SELECT path, modified, size FROM entry"
             ).map({ row  in
                 FileFingerprint(
@@ -380,7 +388,7 @@ struct DatabaseEnvironment {
         // Must store relative path, since absolute path of user documents
         // directory can be changed by system.
         let path = try url.relativizingPath(relativeTo: documentsUrl).unwrap()
-        try db.execute(
+        try db.connection().execute(
             sql: """
             INSERT INTO entry (path, title, body, modified, size)
             VALUES (?, ?, ?, ?, ?)
@@ -436,7 +444,7 @@ struct DatabaseEnvironment {
     }
     
     private func deleteDocumentFromDatabase(_ url: URL) throws {
-        try db.execute(
+        try db.connection().execute(
             sql: """
             DELETE FROM entry WHERE path = ?
             """,
@@ -456,7 +464,7 @@ struct DatabaseEnvironment {
 
     func searchSuggestionsForZeroQuery() -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
-            let threads = try db.execute(
+            let threads = try db.connection().execute(
                 sql: """
                 SELECT path, title
                 FROM entry_search
@@ -473,7 +481,7 @@ struct DatabaseEnvironment {
                 )
             })
 
-            let topSearches = try db.execute(
+            let topSearches = try db.connection().execute(
                 sql: """
                 SELECT query, count(query) AS hits
                 FROM search_history
@@ -499,7 +507,7 @@ struct DatabaseEnvironment {
                 return []
             }
             
-            let threads = try db.execute(
+            let threads = try db.connection().execute(
                 sql: """
                 SELECT path, title
                 FROM entry_search
@@ -520,7 +528,7 @@ struct DatabaseEnvironment {
                 )
             })
 
-            let recentMatchingSearches = try db.execute(
+            let recentMatchingSearches = try db.connection().execute(
                 sql: """
                 SELECT DISTINCT query
                 FROM search_history
@@ -580,7 +588,7 @@ struct DatabaseEnvironment {
             // Wrapping the whole thing in a commit solves the issue.
             // We should figure out how to do what Python does
             // (implicit transaction)
-            try db.execute(
+            try db.connection().execute(
                 sql: """
                 INSERT INTO search_history (id, query)
                 VALUES (?, ?);
@@ -591,7 +599,7 @@ struct DatabaseEnvironment {
                 ]
             )
 
-            let docs: [TextDocument] = try db.execute(
+            let docs: [TextDocument] = try db.connection().execute(
                 sql: """
                 SELECT path, body
                 FROM entry_search
