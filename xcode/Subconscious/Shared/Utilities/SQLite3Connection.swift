@@ -192,9 +192,7 @@ final class SQLite3Connection {
     }
 
     enum SQLite3ConnectionError: Error {
-        case open(code: Int32, message: String)
-        case execution(code: Int32, message: String)
-        case prepare(_ message: String)
+        case database(code: Int32, message: String)
         case parameter(_ message: String)
         case value(_ message: String)
     }
@@ -224,12 +222,16 @@ final class SQLite3Connection {
 
     /// Path to the database file
     let path: String
-    
+
+    /// Connection open mode (e.g. readwrite or readonly)
+    let mode: OpenMode
+
     init(
         path: String,
         mode: OpenMode = .readwrite
     ) throws {
         self.path = path
+        self.mode = mode
         // Create GCD dispatch queue for running database queries.
         // SQLite3Connection objects are threadsafe.
         // The queue is *always* serial, ensuring that SQL queries to this
@@ -250,12 +252,15 @@ final class SQLite3Connection {
                 validatingUTF8: sqlite3_errmsg(db)
             ) ?? "Unknown error"
             sqlite3_close_v2(db)
-            throw SQLite3ConnectionError.open(code: errcode, message: errmsg)
+            throw SQLite3ConnectionError.database(
+                code: errcode,
+                message: errmsg
+            )
         }
     }
 
-    /// Close connection manually
-    func close() {
+    /// Close connection on deinit
+    deinit {
         // We use sqlite3_close_v2 because it knows how to clean up
         // after itself if there are any unfinalized prepared statements.
         //
@@ -268,11 +273,6 @@ final class SQLite3Connection {
         db = nil
     }
 
-    /// Close connection on deinit
-    deinit {
-        close()
-    }
-    
     /// Executes multiple SQL statements in one go.
     /// Useful for setting up a database.
     /// This form does not allow for parameter binding.
@@ -285,7 +285,7 @@ final class SQLite3Connection {
                     validatingUTF8: sqlite3_errmsg(self.db)
                 ) ?? "Unknown error"
 
-                throw SQLite3ConnectionError.execution(
+                throw SQLite3ConnectionError.database(
                     code: errcode,
                     message: errmsg
                 )
@@ -340,7 +340,7 @@ final class SQLite3Connection {
                     ) ?? "Unknown error"
                     // Finalize statement before throwing
                     sqlite3_finalize(statement)
-                    throw SQLite3ConnectionError.execution(
+                    throw SQLite3ConnectionError.database(
                         code: errcode,
                         message: errmsg
                     )
@@ -386,11 +386,15 @@ final class SQLite3Connection {
         if result != SQLITE_OK {
             sqlite3_finalize(statement)
             // Get error message, if any.
-            let error = (
+            let errcode = sqlite3_extended_errcode(self.db)
+            let errmsg = (
                 String(validatingUTF8: sqlite3_errmsg(self.db)) ??
                 "Unknown error"
             )
-            throw SQLite3ConnectionError.prepare(error)
+            throw SQLite3ConnectionError.database(
+                code: errcode,
+                message: errmsg
+            )
         }
 
         // Bind parameters, if any
@@ -553,27 +557,15 @@ extension SQLite3Connection {
 extension SQLite3Connection.SQLite3ConnectionError: LocalizedError {
     public var errorDescription: String? {
         switch self {
-        case .open(code: let code, let message):
+        case .database(let code, let message):
             return """
-            Open error (SQLite3Connection.SQLite3ConnectionError.open)
-            
-            Error \(code): \(message)
-            """
-        case .execution(let code, let message):
-            return """
-            Execution error (SQLite3Connection.SQLite3ConnectionError.execution)
+            Database error (SQLite3Connection.SQLite3ConnectionError.database)
             
             Error \(code): \(message)
             """
         case .parameter(let message):
             return """
             Parameter error (SQLite3Connection.SQLite3ConnectionError.parameter)
-            
-            \(message)
-            """
-        case .prepare(let message):
-            return """
-            Could not prepare SQL (SQLite3Connection.SQLite3ConnectionError.prepare)
             
             \(message)
             """
