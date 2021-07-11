@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Manages the lifecycle of a single SQLite3Connection, which may be closed and reopened.
 final class SQLite3ConnectionManager {
     let url: URL
     let mode: SQLite3Connection.OpenMode
