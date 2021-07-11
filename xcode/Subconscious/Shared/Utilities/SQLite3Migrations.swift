@@ -175,25 +175,6 @@ struct SQLite3Migrations {
     }
 }
 
-//  MARK: SQLite3Migrations async extensions
-extension SQLite3Migrations {
-    func migrateAsync(
-        database: SQLite3Connection,
-        qos: DispatchQoS.QoSClass = .background
-    ) -> AnyPublisher<MigrationSuccess, Error> {
-        Future({ promise in
-            DispatchQueue.global(qos: qos).async {
-                do {
-                    let success = try self.migrate(database: database)
-                    promise(.success(success))
-                } catch {
-                    promise(.failure(error))
-                }
-            }
-        }).eraseToAnyPublisher()
-    }
-}
-
 //  MARK: SQLiteMigrationsError extensions
 extension SQLite3Migrations.SQLiteMigrationsError: LocalizedError {
     public var errorDescription: String? {
