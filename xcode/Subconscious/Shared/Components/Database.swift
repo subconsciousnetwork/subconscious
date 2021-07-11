@@ -187,6 +187,7 @@ struct DatabaseEnvironment {
                 CREATE TABLE search_history (
                     id TEXT PRIMARY KEY,
                     query TEXT NOT NULL,
+                    hits INTEGER NOT NULL,
                     created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 );
 
@@ -483,10 +484,11 @@ struct DatabaseEnvironment {
 
             let topSearches = try db.connection().execute(
                 sql: """
-                SELECT query, count(query) AS hits
+                SELECT query, hits, count(query) AS queries
                 FROM search_history
+                WHERE hits > 0
                 GROUP BY query
-                ORDER BY hits DESC
+                ORDER BY queries DESC, hits DESC
                 LIMIT 4
                 """
             ).compactMap({ row in
@@ -532,7 +534,7 @@ struct DatabaseEnvironment {
                 sql: """
                 SELECT DISTINCT query
                 FROM search_history
-                WHERE query LIKE ?
+                WHERE hits > 0 AND query LIKE ?
                 ORDER BY created DESC
                 LIMIT 3
                 """,
@@ -582,20 +584,20 @@ struct DatabaseEnvironment {
                 return []
             }
 
-            // Log search in database
-            // TODO if I execute this before the query, it never commits to db.
-            // Why? Need to investigate.
-            // Wrapping the whole thing in a commit solves the issue.
-            // We should figure out how to do what Python does
-            // (implicit transaction)
+            // Log search in database, along with number of hits
             try db.connection().execute(
                 sql: """
-                INSERT INTO search_history (id, query)
-                VALUES (?, ?);
+                INSERT INTO search_history (id, query, hits)
+                VALUES (?, ?, (
+                    SELECT count(path)
+                    FROM entry_search
+                    WHERE entry_search MATCH ?
+                ));
                 """,
                 parameters: [
                     .text(UUID().uuidString),
                     .text(query),
+                    .queryFTS5(query),
                 ]
             )
 
