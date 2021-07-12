@@ -57,6 +57,7 @@
 		B8E628222672E9B2005B86CE /* PublisherManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E628212672E9B2005B86CE /* PublisherManager.swift */; };
 		B8E628242673B54B005B86CE /* SQLite3Migrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E628232673B54B005B86CE /* SQLite3Migrations.swift */; };
 		B8E84270269A663C00B74172 /* SQLite3ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E8426F269A663C00B74172 /* SQLite3ConnectionManager.swift */; };
+		B8E84272269CAE3200B74172 /* SubMigrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E84271269CAE3200B74172 /* SubMigrations.swift */; };
 		B8EB2ACC265EBE52008F4D91 /* Tests_SQLiteConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EB2ACB265EBE52008F4D91 /* Tests_SQLiteConnection.swift */; };
 		B8EB2ACE265ECB2B008F4D91 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B8EB2ACD265ECB2B008F4D91 /* libsqlite3.tbd */; };
 		B8EB2ACF265ECB37008F4D91 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B8EB2ACD265ECB2B008F4D91 /* libsqlite3.tbd */; };
@@ -139,6 +140,7 @@
 		B8E628212672E9B2005B86CE /* PublisherManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherManager.swift; sourceTree = "<group>"; };
 		B8E628232673B54B005B86CE /* SQLite3Migrations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Migrations.swift; sourceTree = "<group>"; };
 		B8E8426F269A663C00B74172 /* SQLite3ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3ConnectionManager.swift; sourceTree = "<group>"; };
+		B8E84271269CAE3200B74172 /* SubMigrations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubMigrations.swift; sourceTree = "<group>"; };
 		B8EB2ACB265EBE52008F4D91 /* Tests_SQLiteConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_SQLiteConnection.swift; sourceTree = "<group>"; };
 		B8EB2ACD265ECB2B008F4D91 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		B8EC23D626694A33009E4474 /* OptionalUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionalUtilities.swift; sourceTree = "<group>"; };
@@ -200,6 +202,7 @@
 				B81BD763263885DE00BAEC67 /* Editor.swift */,
 				B8E152EF2656F2A30032F5A7 /* Common */,
 				B862343D267805240099CD87 /* Logger.swift */,
+				B8E84271269CAE3200B74172 /* SubMigrations.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -502,6 +505,7 @@
 				B8FDE3372678474D00BA307D /* TextDocument.swift in Sources */,
 				B8E152F226570B890032F5A7 /* Database.swift in Sources */,
 				B83B5296261E58260031988E /* Search.swift in Sources */,
+				B8E84272269CAE3200B74172 /* SubMigrations.swift in Sources */,
 				B81BD764263885DE00BAEC67 /* Editor.swift in Sources */,
 				B8E152F426570C010032F5A7 /* FileManagerUtilities.swift in Sources */,
 				B82211F526375A9C005CFBBE /* URLUtilities.swift in Sources */,

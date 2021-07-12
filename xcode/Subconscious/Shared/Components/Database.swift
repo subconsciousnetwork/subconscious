@@ -43,10 +43,14 @@ enum DatabaseAction {
     case searchTitleSuggestions(_ query: String)
     /// Title suggestion success with array of results
     case searchTitleSuggestionsSuccess(_ results: [Suggestion])
-    /// Write to the file system and database.
-    /// This acts like an upsert. If file exists, it will be overwritten, and DB updated.
-    /// If file does not exist, it will be created.
-    case writeDocument(url: URL?, content: String)
+    /// Create new document on file system, and log in database
+    case createDocument(content: String)
+    /// Read document contents by URL
+    case readDocument(url: URL)
+    case readDocumentSuccess(document: TextDocument)
+    /// Update document in file system and database.
+    case updateDocument(url: URL?, content: String)
+    /// Remove document from file system and database
     case deleteDocument(url: URL)
 }
 
@@ -113,7 +117,43 @@ func updateDatabase(
             .map({ _ in .log(.info("File sync done")) })
             .replaceError(with: .log(.error("File sync failed")))
             .eraseToAnyPublisher()
-    case .writeDocument(let url, let content):
+    case .createDocument(let content):
+        let title = Truncate.getFirstPseudoSentence(
+            Subtext.getTitle(markup: content)
+        )
+
+        let url = environment.documentsUrl.appendingFilename(
+            name: Slug.toSlugWithDate(title),
+            ext: "subtext"
+        )
+
+        return environment.writeDocumentAsync(
+            url: url,
+            title: title,
+            content: content
+        )
+        .map({ _ in .log(.info("Created document: \(url)")) })
+        .replaceError(
+            with: .log(.warning("Create failed for document: \(url)"))
+        )
+        .eraseToAnyPublisher()
+    case .readDocument(let url):
+        return environment.readDocument(url: url)
+            .map({ document in
+                .readDocumentSuccess(document: document)
+            })
+            .replaceError(
+                with: .log(.error("readDocument failed for \(url)"))
+            )
+            .eraseToAnyPublisher()
+    case .readDocumentSuccess:
+        environment.logger.warning(
+            """
+            DatabaseAction.readDocumentSuccess
+            Should be handled by parent component.
+            """
+        )
+    case .updateDocument(let url, let content):
         let title = Truncate.getFirstPseudoSentence(
             Subtext.getTitle(markup: content)
         )
@@ -179,99 +219,6 @@ func updateDatabase(
 
 //  MARK: Environment
 struct DatabaseEnvironment {
-    static func getMigrations() -> SQLite3Migrations {
-        return SQLite3Migrations([
-            SQLite3Migrations.Migration(
-                date: "2021-07-01T15:43:00",
-                sql: """
-                CREATE TABLE search_history (
-                    id TEXT PRIMARY KEY,
-                    query TEXT NOT NULL,
-                    hits INTEGER NOT NULL,
-                    created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-                );
-
-                CREATE TABLE entry (
-                  path TEXT PRIMARY KEY,
-                  title TEXT NOT NULL,
-                  body TEXT NOT NULL,
-                  modified TEXT NOT NULL,
-                  size INTEGER NOT NULL
-                );
-
-                CREATE VIRTUAL TABLE entry_search USING fts5(
-                  path UNINDEXED,
-                  title,
-                  body,
-                  modified UNINDEXED,
-                  size UNINDEXED,
-                  content="entry",
-                  tokenize="porter"
-                );
-
-                /*
-                Create triggers to keep fts5 virtual table in sync with content table.
-
-                Note: SQLite documentation notes that you want to modify the fts table *before*
-                the external content table, hence the BEFORE commands.
-
-                These triggers are adapted from examples in the docs:
-                https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
-                */
-                CREATE TRIGGER entry_search_before_update BEFORE UPDATE ON entry BEGIN
-                  DELETE FROM entry_search WHERE rowid=old.rowid;
-                END;
-
-                CREATE TRIGGER entry_search_before_delete BEFORE DELETE ON entry BEGIN
-                  DELETE FROM entry_search WHERE rowid=old.rowid;
-                END;
-
-                CREATE TRIGGER entry_search_after_update AFTER UPDATE ON entry BEGIN
-                  INSERT INTO entry_search
-                    (
-                      rowid,
-                      path,
-                      title,
-                      body,
-                      modified,
-                      size
-                    )
-                  VALUES
-                    (
-                      new.rowid,
-                      new.path,
-                      new.title,
-                      new.body,
-                      new.modified,
-                      new.size
-                    );
-                END;
-
-                CREATE TRIGGER entry_search_after_insert AFTER INSERT ON entry BEGIN
-                  INSERT INTO entry_search
-                    (
-                      rowid,
-                      path,
-                      title,
-                      body,
-                      modified,
-                      size
-                    )
-                  VALUES
-                    (
-                      new.rowid,
-                      new.path,
-                      new.title,
-                      new.body,
-                      new.modified,
-                      new.size
-                    );
-                END;
-                """
-            )!
-        ])!
-    }
-
     private let db: SQLite3ConnectionManager
     
     let logger = Logger(
@@ -378,6 +325,19 @@ struct DatabaseEnvironment {
         }
     }
 
+    func readDocument(url: URL) throws -> TextDocument {
+        TextDocument(
+            url: url,
+            content: try String(contentsOf: url, encoding: .utf8)
+        )
+    }
+
+    func readDocument(url: URL) -> AnyPublisher<TextDocument, Error> {
+        Result(catching: {
+            try readDocument(url: url)
+        }).publisher.eraseToAnyPublisher()
+    }
+    
     /// Write document syncronously
     private func writeDocumentToDatabase(
         url: URL,

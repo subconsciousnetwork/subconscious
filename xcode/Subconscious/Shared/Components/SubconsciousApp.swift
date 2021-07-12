@@ -26,7 +26,8 @@ enum AppAction {
     case suggestionTokens(_ action: TextTokenBarAction)
     /// On view appear
     case appear
-    case edit(url: URL, content: String)
+    /// Invoke editor with optional URL and content
+    case invokeEditor(url: URL?, content: String)
     case commitQuery(_ query: String)
     case setQuery(_ text: String)
     case setEditorPresented(_ isPresented: Bool)
@@ -41,12 +42,16 @@ enum AppAction {
     static func search(_ query: String) -> AppAction {
         .database(.search(query))
     }
+
+    static func editDocument(url: URL) -> AppAction {
+        .database(.readDocument(url: url))
+    }
     
-    static func writeDocument(
+    static func updateDocument(
         url: URL?,
         content: String
     ) -> AppAction {
-        .database(.writeDocument(url: url, content: content))
+        .database(.updateDocument(url: url, content: content))
     }
 
     static func deleteDocument(url: URL) -> AppAction {
@@ -62,6 +67,16 @@ func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
         return .search(.setItems(results))
     case .searchSuggestionsSuccess(let results):
         return .setSuggestions(results)
+    /// 2021-07-12 Gordon Brander
+    /// All document reads are currenlty for the purpose of invoking edit.
+    /// In future, we may want to disambiguate different kinds of document reads.
+    /// This might mean refactoring database component into app component.
+    /// and using database service directly, rather than through actions.
+    case .readDocumentSuccess(let document):
+        return .invokeEditor(
+            url: document.url,
+            content: document.content
+        )
     default:
         return .database(action)
     }
@@ -72,7 +87,7 @@ func tagEditorAction(_ action: EditorAction) -> AppAction {
     case .requestEditorUnpresent:
         return .setEditorPresented(false)
     case .requestSave(let url, let content):
-        return .writeDocument(
+        return .updateDocument(
             url: url,
             content: content
         )
@@ -94,11 +109,8 @@ func tagSearchBarAction(_ action: SubSearchBarAction) -> AppAction {
 
 func tagSearchAction(_ action: SearchAction) -> AppAction {
     switch action {
-    case .requestEdit(let url, let content):
-        return .edit(
-            url: url,
-            content: content
-        )
+    case .requestEdit(let url):
+        return .editDocument(url: url)
     default:
         return .search(action)
     }
@@ -110,8 +122,8 @@ func tagSuggestionsAction(_ action: SuggestionsAction) -> AppAction {
         switch suggestion {
         case .query(let text):
             return .commitQuery(text)
-        case .entry(let url, let content):
-            return .edit(url: url, content: content)
+        case .entry(let url, _):
+            return .editDocument(url: url)
         case .create(let text):
             return .commitQuery(text)
         }
@@ -199,10 +211,14 @@ func updateApp(
             suggestionTokensEffect,
             setupDatabaseEffect
         ).eraseToAnyPublisher()
-    case .edit(let url, let content):
-        state.isEditorPresented = true
-        return Just(
-            .editor(.edit(url: url, content: content))
+    case .invokeEditor(let url, let content):
+        let edit = Just(
+            AppAction.editor(.edit(url: url, content: content))
+        )
+        let presentEditor = Just(AppAction.setEditorPresented(true))
+        return Publishers.Merge(
+            edit,
+            presentEditor
         ).eraseToAnyPublisher()
     case .setEditorPresented(let isPresented):
         state.isEditorPresented = isPresented

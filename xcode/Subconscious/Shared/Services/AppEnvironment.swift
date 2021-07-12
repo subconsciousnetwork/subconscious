@@ -31,7 +31,7 @@ struct AppEnvironment {
         self.database = DatabaseEnvironment(
             databaseUrl: databaseUrl,
             documentsUrl: documentsUrl,
-            migrations: DatabaseEnvironment.getMigrations()
+            migrations: SUB_MIGRATIONS
         )
     }
     

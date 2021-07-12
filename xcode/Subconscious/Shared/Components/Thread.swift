@@ -11,7 +11,7 @@ import os
 
 enum ThreadAction {
     case setFolded(_ isFolded: Bool)
-    case requestEdit(url: URL, content: String)
+    case requestEdit(url: URL)
 }
 
 struct ThreadModel: Identifiable, Equatable {
@@ -66,12 +66,7 @@ struct ThreadView: View, Equatable {
             }
             .contentShape(Rectangle())
             .onTapGesture {
-                store.send(
-                    .requestEdit(
-                        url: store.state.url,
-                        content: store.state.dom.markup
-                    )
-                )
+                store.send(.requestEdit(url: store.state.url))
             }
             
             if (
