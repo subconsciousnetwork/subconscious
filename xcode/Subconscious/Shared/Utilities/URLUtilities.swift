@@ -26,8 +26,8 @@ extension URL {
     /// If URL does not start with base, returns nil.
     func relativizingPath(relativeTo base: URL) -> String? {
         // Standardize and absolutize paths to normalize them
-        let path = self.standardized.absoluteString
-        let basePath = base.standardized.absoluteString
+        let path = self.standardizedFileURL.absoluteString
+        let basePath = base.standardizedFileURL.absoluteString
         if path.hasPrefix(basePath) {
             // Return path without standardized percent encoding.
             return path.ltrim(prefix: basePath).removingPercentEncoding
