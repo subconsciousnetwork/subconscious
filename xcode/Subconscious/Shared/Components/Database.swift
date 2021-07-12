@@ -115,7 +115,17 @@ func updateDatabase(
         environment.logger.log("File sync started")
         return environment.syncDatabaseAsync()
             .map({ _ in .log(.info("File sync done")) })
-            .replaceError(with: .log(.error("File sync failed")))
+            .catch({ error in
+                Just(
+                    DatabaseAction.log(
+                        .error(
+                            """
+                            File sync failed with error: \(error)
+                            """
+                        )
+                    )
+                )
+            })
             .eraseToAnyPublisher()
     case .createDocument(let content):
         let title = Truncate.getFirstPseudoSentence(
