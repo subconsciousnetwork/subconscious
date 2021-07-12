@@ -33,48 +33,27 @@ struct TextViewRepresentable: UIViewRepresentable {
     
     func makeUIView(context: Context) -> UITextView {
         let view = UITextView()
-        view.text = text
-        view.font = font
-        // Set inner padding
-        view.textContainerInset = textContainerInset
-        // Remove that last bit of inner padding.
+        view.delegate = context.coordinator
+        // Remove that extra bit of inner padding.
         // Text in view should now be flush with view edge.
         // This puts you in full control of view padding.
         view.textContainer.lineFragmentPadding = 0
         view.backgroundColor = .clear
-        
-        if isFocused {
-            view.becomeFirstResponder()
-        } else {
-            view.resignFirstResponder()
-        }
+
         return view
     }
 
     func updateUIView(_ view: UITextView, context: Context) {
-        if view.text != text {
-            view.text = text
-        }
-
-        if view.font != font {
-            view.font = font
-        }
-
-        if view.textContainerInset != textContainerInset {
-            view.textContainerInset = textContainerInset
-        }
-
-        if isFocused {
-            view.becomeFirstResponder()
-        } else {
-            view.resignFirstResponder()
-        }
+        view.text = text
+        view.font = font
+        // Set inner padding
+        view.textContainerInset = textContainerInset
     }
 
     func makeCoordinator() -> TextViewRepresentable.Coordinator {
         Coordinator(self)
     }
-    
+
     func font(_ font: UIFont) -> Self {
         var view = self
         view.font = font
@@ -89,13 +68,6 @@ struct TextViewRepresentable: UIViewRepresentable {
             bottom: inset.bottom,
             right: inset.trailing
         )
-        return view
-    }
-    
-    /// Focus view
-    func focused(_ isFocused: Bool) -> Self {
-        var view = self
-        view.isFocused = isFocused
         return view
     }
 }
