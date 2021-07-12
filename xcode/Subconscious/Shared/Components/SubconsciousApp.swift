@@ -43,7 +43,19 @@ enum AppAction {
         .database(.search(query))
     }
 
+    /// Invoke editor in create mode
+    /// Currently, this just requires a nil URL. We're differentiating the actions here to make refactoring
+    /// easier later, if we end up wanting to further differentiate create vs edit.
+    static func invokeEditorCreate(content: String) -> AppAction {
+        .invokeEditor(url: nil, content: content)
+    }
+
     static func editDocument(url: URL) -> AppAction {
+        //  2021-07-12 Gordon Brander
+        //  All document reads are currenlty for the purpose of invoking edit.
+        //  In future, we may want to disambiguate different kinds of document reads.
+        //  This might mean refactoring database component into app component.
+        //  and using database service directly, rather than through actions.
         .database(.readDocument(url: url))
     }
     
@@ -67,11 +79,6 @@ func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
         return .search(.setItems(results))
     case .searchSuggestionsSuccess(let results):
         return .setSuggestions(results)
-    /// 2021-07-12 Gordon Brander
-    /// All document reads are currenlty for the purpose of invoking edit.
-    /// In future, we may want to disambiguate different kinds of document reads.
-    /// This might mean refactoring database component into app component.
-    /// and using database service directly, rather than through actions.
     case .readDocumentSuccess(let document):
         return .invokeEditor(
             url: document.url,
@@ -125,7 +132,7 @@ func tagSuggestionsAction(_ action: SuggestionsAction) -> AppAction {
         case .entry(let url, _):
             return .editDocument(url: url)
         case .create(let text):
-            return .commitQuery(text)
+            return .invokeEditorCreate(content: text)
         }
     }
 }
