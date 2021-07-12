@@ -33,6 +33,7 @@ struct SuggestionsView: View, Equatable {
                     SuggestionRowView(
                         suggestion: suggestion
                     )
+                    .equatable()
                     .foregroundColor(Color.Subconscious.text)
                 }
                 .padding(.trailing, 16)
