@@ -12,33 +12,25 @@ import os
 
 //  MARK: Actions
 enum EditorAction {
-    case body(_ action: TextareaAction)
-    case setPath(_ url: URL?)
+    /// Set URL property
+    case setURL(_ url: URL?)
+    /// Set TextViewRepresentable
+    case setBody(_ text: String)
+    /// Edit content
     case edit(url: URL?, content: String)
     case save(url: URL?, content: String)
     case cancel
     case requestSave(url: URL?, content: String)
     case requestEditorUnpresent
-
-    static let clear = setBody("")
     
-    static func setBody(_ text: String) -> Self {
-        .body(.set(text))
-    }
+    static let clear = setBody("")
 }
 
 
 //  MARK: State
 struct EditorModel: Equatable {
     var url: URL?
-    var body = TextareaModel()
-}
-
-func tagEditorBody(_ action: TextareaAction) -> EditorAction {
-    switch action {
-    default:
-        return EditorAction.body(action)
-    }
+    var body = ""
 }
 
 
@@ -49,18 +41,15 @@ func updateEditor(
     environment: Logger
 ) -> AnyPublisher<EditorAction, Never> {
     switch action {
-    case .body(let action):
-        return updateTextarea(
-            state: &state.body,
-            action: action
-        ).map(tagEditorBody).eraseToAnyPublisher()
-    case .edit(let path, let content):
+    case .edit(let url, let content):
         return Publishers.Merge(
-            Just(EditorAction.setPath(path)),
+            Just(EditorAction.setURL(url)),
             Just(EditorAction.setBody(content))
         ).eraseToAnyPublisher()
-    case .setPath(let url):
+    case .setURL(let url):
         state.url = url
+    case .setBody(let text):
+        state.body = text
     case .save(let url, let content):
         let save = Just(
             EditorAction.requestSave(url: url, content: content)
@@ -122,7 +111,7 @@ struct EditorView: View, Equatable {
                     store.send(
                         .save(
                             url: store.state.url,
-                            content: store.state.body.text
+                            content: store.state.body
                         )
                     )
                 }) {
@@ -130,19 +119,20 @@ struct EditorView: View, Equatable {
                 }
             }
             .padding(16)
-
-            TextareaView(
-                store: ViewStore(
-                    state: store.state.body,
-                    send: store.send,
-                    tag: tagEditorBody
+            TextViewRepresentable(
+                text: Binding(
+                    get: { store.state.body },
+                    set: { text in store.send(.setBody(text)) }
                 )
             )
-            .equatable()
-            // Note that TextEditor has some internal padding
-            // about 4px, eyeballing it with a straightedge.
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
+            .insets(
+                EdgeInsets(
+                    top: 8,
+                    leading: 16,
+                    bottom: 8,
+                    trailing: 16
+                )
+            )
         }
     }
 }
