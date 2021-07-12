@@ -9,12 +9,14 @@ import SwiftUI
 import Combine
 import os
 
+// MARK:  Action
 enum SearchAction {
     case item(_ item: ItemAction<URL, ThreadAction>)
     case setItems(_ documents: [TextDocument])
     case requestEdit(url: URL)
 }
 
+//  MARK: Model
 struct SearchModel: Equatable {
     var threads: [ThreadModel]
     
@@ -31,6 +33,8 @@ struct SearchModel: Equatable {
     }
 }
 
+
+//  MARK: Update
 func updateSearch(
     state: inout SearchModel,
     action: SearchAction,
@@ -87,6 +91,7 @@ func updateSearch(
     return Empty().eraseToAnyPublisher()
 }
 
+//  MARK: Tagging
 func tagSearchItem(key: URL, action: ThreadAction) -> SearchAction {
     switch action {
     case .requestEdit(let url):
@@ -99,6 +104,7 @@ func tagSearchItem(key: URL, action: ThreadAction) -> SearchAction {
     }
 }
 
+//  MARK: View
 struct SearchView: View, Equatable {
     let store: ViewStore<SearchModel, SearchAction>
 

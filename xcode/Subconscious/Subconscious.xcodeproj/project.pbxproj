@@ -52,11 +52,12 @@
 		B8E152F02656F2D20032F5A7 /* SubconsciousApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */; };
 		B8E152F226570B890032F5A7 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E152F126570B890032F5A7 /* Database.swift */; };
 		B8E152F426570C010032F5A7 /* FileManagerUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */; };
-		B8E6281E2672BA68005B86CE /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E6281D2672BA68005B86CE /* Constants.swift */; };
+		B8E6281E2672BA68005B86CE /* SubConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E6281D2672BA68005B86CE /* SubConstants.swift */; };
 		B8E628222672E9B2005B86CE /* PublisherManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E628212672E9B2005B86CE /* PublisherManager.swift */; };
 		B8E628242673B54B005B86CE /* SQLite3Migrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E628232673B54B005B86CE /* SQLite3Migrations.swift */; };
 		B8E84270269A663C00B74172 /* SQLite3ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E8426F269A663C00B74172 /* SQLite3ConnectionManager.swift */; };
 		B8E84272269CAE3200B74172 /* SubMigrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E84271269CAE3200B74172 /* SubMigrations.swift */; };
+		B8E84275269D06C100B74172 /* SubConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E6281D2672BA68005B86CE /* SubConstants.swift */; };
 		B8EB2ACC265EBE52008F4D91 /* Tests_SQLiteConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EB2ACB265EBE52008F4D91 /* Tests_SQLiteConnection.swift */; };
 		B8EB2ACE265ECB2B008F4D91 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B8EB2ACD265ECB2B008F4D91 /* libsqlite3.tbd */; };
 		B8EB2ACF265ECB37008F4D91 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B8EB2ACD265ECB2B008F4D91 /* libsqlite3.tbd */; };
@@ -134,7 +135,7 @@
 		B8DF24AD267A5764000987C5 /* FileFingerprint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileFingerprint.swift; sourceTree = "<group>"; };
 		B8E152F126570B890032F5A7 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
 		B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManagerUtilities.swift; sourceTree = "<group>"; };
-		B8E6281D2672BA68005B86CE /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		B8E6281D2672BA68005B86CE /* SubConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SubConstants.swift; path = Utilities/SubConstants.swift; sourceTree = "<group>"; };
 		B8E628212672E9B2005B86CE /* PublisherManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherManager.swift; sourceTree = "<group>"; };
 		B8E628232673B54B005B86CE /* SQLite3Migrations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Migrations.swift; sourceTree = "<group>"; };
 		B8E8426F269A663C00B74172 /* SQLite3ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3ConnectionManager.swift; sourceTree = "<group>"; };
@@ -221,7 +222,6 @@
 				B8DF24AD267A5764000987C5 /* FileFingerprint.swift */,
 				B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */,
 				B8EC23D626694A33009E4474 /* OptionalUtilities.swift */,
-				B8E6281D2672BA68005B86CE /* Constants.swift */,
 				B862343B2677FF960099CD87 /* CombineUtilities.swift */,
 				B8FDE3362678474D00BA307D /* TextDocument.swift */,
 				B81268F32696259C007AC708 /* Slug.swift */,
@@ -255,6 +255,7 @@
 		B86F3399261AB2C6009D3D48 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				B8E6281D2672BA68005B86CE /* SubConstants.swift */,
 				B853EB2326326F9F001BB584 /* Utilities */,
 				B804C09D2620FFDD00D59CC6 /* Components */,
 				B86F339D261AB2C7009D3D48 /* Assets.xcassets */,
@@ -495,7 +496,7 @@
 			files = (
 				B8E628242673B54B005B86CE /* SQLite3Migrations.swift in Sources */,
 				B8E84270269A663C00B74172 /* SQLite3ConnectionManager.swift in Sources */,
-				B8E6281E2672BA68005B86CE /* Constants.swift in Sources */,
+				B8E6281E2672BA68005B86CE /* SubConstants.swift in Sources */,
 				B8B2C18B26474326008AA3EC /* Colors.swift in Sources */,
 				B87C7D7C261E0E6C003EFC6F /* Block.swift in Sources */,
 				B874D7AD26540A7800351C8E /* SubSearchBar.swift in Sources */,
@@ -547,6 +548,7 @@
 				B87C7D7D261E0E6C003EFC6F /* Block.swift in Sources */,
 				B8E152F02656F2D20032F5A7 /* SubconsciousApp.swift in Sources */,
 				B811E610261D0FBF00484E45 /* Thread.swift in Sources */,
+				B8E84275269D06C100B74172 /* SubConstants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

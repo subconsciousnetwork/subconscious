@@ -15,7 +15,7 @@ struct AppEnvironment {
     let fileManager = FileManager.default
     let documentsUrl: URL
     let databaseUrl: URL
-    let logger = Constants.logger
+    let logger = SubConstants.logger
     let database: DatabaseEnvironment
     
     init() {
