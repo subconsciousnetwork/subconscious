@@ -41,7 +41,7 @@ struct ContentView: View, Equatable {
                 ).equatable()
             }
 
-            if store.state.searchBar.isFocused {
+            ZStack {
                 ScrollView {
                     VStack(spacing: 0) {
                         if (store.state.searchBar.text.isEmpty) {
@@ -65,11 +65,17 @@ struct ContentView: View, Equatable {
                                 send: store.send,
                                 tag: tagSuggestionsAction
                             )
-                        ).equatable()
+                        )
+                        .equatable()
                     }
+                    .animation(.none)
                 }
+                .opacity(store.state.searchBar.isFocused ? 1 : 0)
+                .transition(.opacity)
+                .animation(.easeOut(duration: 0.2))
+                .edgesIgnoringSafeArea(.bottom)
                 .background(Color.Subconscious.background)
-            } else {
+
                 VStack {
                     if store.state.searchBar.comitted.isEmpty {
                         StreamView().equatable()
