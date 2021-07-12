@@ -7,7 +7,7 @@
 
 let SUB_MIGRATIONS = SQLite3Migrations([
     SQLite3Migrations.Migration(
-        date: "2021-07-01T15:43:00",
+        date: "2021-07-12T15:48:00",
         sql: """
         CREATE TABLE search_history (
             id TEXT PRIMARY KEY,
