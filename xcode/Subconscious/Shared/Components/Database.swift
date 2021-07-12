@@ -469,7 +469,7 @@ struct DatabaseEnvironment {
                 return []
             }
             
-            let threads = try db.connection().execute(
+            let edit = try db.connection().execute(
                 sql: """
                 SELECT path, title
                 FROM entry_search
@@ -511,7 +511,7 @@ struct DatabaseEnvironment {
             return (
                 [verbatimQuerySuggestion] +
                 recentMatchingSearches +
-                threads +
+                edit +
                 [verbatimCreateSuggestion]
             )
         })
