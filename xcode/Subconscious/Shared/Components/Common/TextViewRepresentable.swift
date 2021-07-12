@@ -16,7 +16,9 @@ struct TextViewRepresentable: UIViewRepresentable {
         }
         
         func textViewDidChange(_ view: UITextView) {
-            representable.text = view.text
+            if representable.text != view.text {
+                representable.text = view.text
+            }
         }
     }
     
@@ -44,10 +46,18 @@ struct TextViewRepresentable: UIViewRepresentable {
     }
 
     func updateUIView(_ view: UITextView, context: Context) {
-        view.text = text
-        view.font = font
-        // Set inner padding
-        view.textContainerInset = textContainerInset
+        if view.text != text {
+            view.text = text
+        }
+
+        if view.font != font {
+            view.font = font
+        }
+
+        if view.textContainerInset != textContainerInset {
+            // Set inner padding
+            view.textContainerInset = textContainerInset
+        }
     }
 
     func makeCoordinator() -> TextViewRepresentable.Coordinator {
