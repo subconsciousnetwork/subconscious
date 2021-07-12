@@ -90,16 +90,12 @@ func updateEditor(
 
 //  MARK: View
 struct EditorView: View, Equatable {
-    static func == (lhs: EditorView, rhs: EditorView) -> Bool {
-        lhs.store == rhs.store
-    }
-    
     let store: ViewStore<EditorModel, EditorAction>
     let save: LocalizedStringKey = "Save"
     let cancel: LocalizedStringKey = "Cancel"
     let edit: LocalizedStringKey = "Edit"
     let titlePlaceholder: LocalizedStringKey = "Title:"
-        
+
     var body: some View {
         VStack(spacing: 0) {
             HStack {
