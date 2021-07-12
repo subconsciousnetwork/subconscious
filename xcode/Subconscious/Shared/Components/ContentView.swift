@@ -41,56 +41,48 @@ struct ContentView: View, Equatable {
                 ).equatable()
             }
 
-            ZStack {
-                if store.state.searchBar.comitted.isEmpty {
-                    StreamView().equatable()
-                } else {
-                    SearchView(
-                        store: ViewStore(
-                            state: store.state.search,
-                            send: store.send,
-                            tag: tagSearchAction
-                        )
-                    ).equatable()
-                }
-
-                PinBottomRight {
-                    Button(action: {
-                        store.send(.setEditorPresented(true))
-                    }) {
-                        ActionButton()
-                    }
-                }
-                .padding(16)
-
-                if store.state.searchBar.isFocused {
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            if (store.state.searchBar.text.isEmpty) {
-                                TextTokenBarView(
-                                    store: ViewStore(
-                                        state: store.state.suggestionTokens,
-                                        send: store.send,
-                                        tag: tagSuggestionTokensAction
-                                    )
-                                )
-                                .equatable()
-                                .padding(.top, 0)
-                                // We pad by 10pt to match UISearchBar's
-                                // 10pt padding
-                                .padding(.bottom, 10)
-                            }
-                            Divider()
-                            SuggestionsView(
+            if store.state.searchBar.isFocused {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        if (store.state.searchBar.text.isEmpty) {
+                            TextTokenBarView(
                                 store: ViewStore(
-                                    state: store.state.suggestions,
+                                    state: store.state.suggestionTokens,
                                     send: store.send,
-                                    tag: tagSuggestionsAction
+                                    tag: tagSuggestionTokensAction
                                 )
-                            ).equatable()
+                            )
+                            .equatable()
+                            .padding(.top, 0)
+                            // We pad by 10pt to match UISearchBar's
+                            // 10pt padding
+                            .padding(.bottom, 10)
                         }
+                        Divider()
+                        SuggestionsView(
+                            store: ViewStore(
+                                state: store.state.suggestions,
+                                send: store.send,
+                                tag: tagSuggestionsAction
+                            )
+                        ).equatable()
                     }
-                    .background(Color.Subconscious.background)
+                }
+                .background(Color.Subconscious.background)
+            } else {
+                VStack {
+                    if store.state.searchBar.comitted.isEmpty {
+                        StreamView().equatable()
+                    } else {
+                        SearchView(
+                            store: ViewStore(
+                                state: store.state.search,
+                                send: store.send,
+                                tag: tagSearchAction
+                            )
+                        ).equatable()
+                    }
+                    Spacer()
                 }
             }
         }
