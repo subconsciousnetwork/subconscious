@@ -354,13 +354,15 @@ final class SQLite3Connection {
     /// Get user_version as integer
     func getUserVersion() throws -> Int {
         let rows = try execute(sql: "PRAGMA user_version")
-        let error = SQLite3ConnectionError.value(
-            "Could not read user_version"
-        )
-        let first = try rows.first.unwrap(or: error)
-        return try first.get(0).unwrap(or: error)
+        if let version: Int = rows.first?.get(0) {
+            return version
+        } else {
+            throw SQLite3ConnectionError.value(
+                "Could not read user_version"
+            )
+        }
     }
-    
+
     /// Private method to prepare an SQL statement before executing it.
     ///
     /// - Parameters:
