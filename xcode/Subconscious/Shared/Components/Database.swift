@@ -202,9 +202,15 @@ func updateDatabase(
     case .searchSuggestions(let query):
         return environment.searchSuggestions(query)
             .map({ results in .searchSuggestionsSuccess(results) })
-            .replaceError(
-                with: .log(.error("DatabaseAction.searchSuggestions failed"))
-            ).eraseToAnyPublisher()
+            .catch({ error in
+                Just(
+                    .log(
+                        .error(
+                            "DatabaseAction.searchSuggestions failed with error: \(error)"
+                        )
+                    )
+                )
+            }).eraseToAnyPublisher()
     case .searchSuggestionsSuccess:
         environment.logger.warning(
             "DatabaseAction.searchSuggestionsSuccess should be handled by parent component"
@@ -435,37 +441,27 @@ struct DatabaseEnvironment {
 
     func searchSuggestionsForZeroQuery() -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
-            let threads = try db.connection().execute(
+            let suggestions = try db.connection().execute(
                 sql: """
-                SELECT path, title
-                FROM entry_search
-                ORDER BY modified DESC
-                LIMIT 4
-                """
-            ).compactMap({ row in
-                try Suggestion.entry(
-                    url: URL(
-                        fileURLWithPath: row.get(0).unwrap(),
-                        relativeTo: documentsUrl
-                    ),
-                    title: row.get(1).unwrap()
+                SELECT query FROM (
+                    SELECT title AS query
+                    FROM entry_search
+                    ORDER BY modified DESC
+                    LIMIT 4
                 )
-            })
-
-            let topSearches = try db.connection().execute(
-                sql: """
-                SELECT query, hits, count(query) AS queries
-                FROM search_history
-                WHERE hits > 0
-                GROUP BY query
-                ORDER BY queries DESC, hits DESC
-                LIMIT 4
+                UNION
+                SELECT query FROM (
+                    SELECT query, count(query) AS queries
+                    FROM search_history
+                    WHERE hits > 0
+                    GROUP BY query
+                    ORDER BY queries DESC, hits DESC
+                    LIMIT 12
+                )
                 """
             ).compactMap({ row in
                 try Suggestion.query(row.get(0).unwrap())
             })
-            
-            let suggestions = topSearches + threads
             
             return suggestions
         })
