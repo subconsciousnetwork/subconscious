@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum Suggestion: Equatable {
+enum Suggestion: Equatable, Hashable {
     case entry(url: URL, title: String)
     case query(_ text: String)
     case create(_ text: String)
