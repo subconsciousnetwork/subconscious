@@ -10,7 +10,13 @@ import Foundation
 struct Truncate {
     /// Determine if a character is a pseudo-sentence break character.
     static func isPseudoSentenceBreak(_ character: Character) -> Bool {
-        return character.isNewline || character == "." || character == ";"
+        return (
+            character.isNewline ||
+            character == "." ||
+            character == "!" ||
+            character == "?" ||
+            character == ";"
+        )
     }
 
     /// Extracts the first "pseudo-sentence" from some text.
