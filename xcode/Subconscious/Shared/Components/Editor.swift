@@ -111,10 +111,11 @@ struct EditorView: View, Equatable {
                         )
                     )
                 }) {
-                    Text(save)
+                    Text(save).bold()
                 }
             }
             .padding(16)
+            Divider()
             TextViewRepresentable(
                 text: Binding(
                     get: { store.state.body },
@@ -123,9 +124,9 @@ struct EditorView: View, Equatable {
             )
             .insets(
                 EdgeInsets(
-                    top: 8,
+                    top: 24,
                     leading: 16,
-                    bottom: 8,
+                    bottom: 24,
                     trailing: 16
                 )
             )

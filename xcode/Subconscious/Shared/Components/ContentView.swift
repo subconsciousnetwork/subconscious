@@ -22,7 +22,7 @@ struct ContentView: View, Equatable {
                     tag: tagSearchBarAction
                 )
             ).equatable()
-
+            Divider()
             ZStack {
                 VStack(spacing: 0) {
                     if store.state.searchBar.comitted.isEmpty {
@@ -36,8 +36,8 @@ struct ContentView: View, Equatable {
                             )
                         ).equatable()
                     }
-                    Spacer()
-                    HStack {
+                    Divider()
+                    HStack(spacing: 16) {
                         Button(
                             action: {
                                 store.send(.commitQuery(""))
@@ -47,11 +47,10 @@ struct ContentView: View, Equatable {
                             }
                         )
                         .disabled(store.state.searchBar.comitted.isEmpty)
-                        // We pad 8pt .leading to match UISearchView's
-                        // 8pt .leading padding.
-                        .padding(.leading, 8)
                         Spacer()
                     }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 8)
                 }
 
                 Group {

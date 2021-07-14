@@ -63,7 +63,7 @@ struct SubSearchBarView: View, Equatable {
 
 struct SubSearchBarView_Previews: PreviewProvider {
     static var previews: some View {
-        VStack {
+        VStack(spacing: 0) {
             SubSearchBarView(
                 store: ViewStore(
                     state: SubSearchBarModel(),

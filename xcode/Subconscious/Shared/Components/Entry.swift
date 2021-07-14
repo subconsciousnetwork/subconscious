@@ -97,8 +97,6 @@ struct EntryView: View, Equatable {
         .contentShape(Rectangle())
         .padding(.vertical, 24)
         .background(Color.Sub.background)
-        .cornerRadius(CGFloat(SubConstants.Theme.cornerRadius))
-        .shadow(shadow: SubConstants.Theme.lightShadow)
     }
 }
 

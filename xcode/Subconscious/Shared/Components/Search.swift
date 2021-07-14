@@ -130,7 +130,7 @@ struct SearchView: View, Equatable {
                     .equatable()
                 }
             }
-            .padding(.vertical, 8)
+            Spacer()
         }
         .padding(0)
         .background(Color.Sub.secondaryBackground)
