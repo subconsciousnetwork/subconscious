@@ -15,3 +15,11 @@ extension Sequence where Iterator.Element: Hashable {
         return filter({ item in seen.insert(item).inserted })
     }
 }
+
+extension Array {
+    /// Append two arrays, returning a new array.
+    /// Chainable method version of "+" operator.
+    func appending(contentsOf array: [Element]) -> [Element] {
+        return self + array
+    }
+}

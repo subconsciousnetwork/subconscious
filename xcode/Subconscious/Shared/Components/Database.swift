@@ -510,43 +510,85 @@ struct DatabaseEnvironment {
                 return SuggestionsModel()
             }
 
-            var searches = try db.connection().execute(
+            let entries = try db.connection().execute(
                 sql: """
-                SELECT query FROM (
-                    SELECT DISTINCT title AS query
-                    FROM entry_search
-                    WHERE entry_search.title MATCH ?
-                    ORDER BY rank
-                    LIMIT 3
-                )
-                UNION
-                SELECT query FROM (
-                    SELECT DISTINCT query
-                    FROM search_history
-                    WHERE hits > 0 AND query LIKE ?
-                    ORDER BY created DESC
-                    LIMIT 3
-                )
+                SELECT DISTINCT path, title AS query
+                FROM entry_search
+                WHERE entry_search.title MATCH ?
+                ORDER BY rank
+                LIMIT 5
                 """,
                 parameters: [
-                    SQLite3Connection.Value.prefixQueryFTS5(query),
-                    SQLite3Connection.Value.prefixQueryLike(query)
+                    SQLite3Connection.Value.text(query),
                 ]
-            ).compactMap({ row in
-                try SearchSuggestion(query: row.get(0).unwrap())
-            })
-
-            searches.insert(
-                SearchSuggestion(query: query),
-                at: 0
             )
 
-            let actions = [
+            let history = try db.connection().execute(
+                sql: """
+                SELECT DISTINCT query
+                FROM search_history
+                WHERE query LIKE ?
+                ORDER BY created DESC
+                LIMIT 5
+                """,
+                parameters: [
+                    SQLite3Connection.Value.prefixQueryLike(query)
+                ]
+            )
+
+            let literalSearches = [SearchSuggestion(query: query)]
+
+            let titleSearches: [SearchSuggestion] = entries.compactMap({ row in
+                if let text: String = row.get(1) {
+                    return SearchSuggestion(query: text)
+                }
+                return nil
+            })
+
+            let historySearches: [SearchSuggestion] = history.compactMap({ row in
+                if let text: String = row.get(0) {
+                    return SearchSuggestion(query: text)
+                }
+                return nil
+            })
+
+            let searches = Array(
+                literalSearches
+                    .appending(contentsOf: titleSearches)
+                    .appending(contentsOf: historySearches)
+                    .unique()
+                    .prefix(6)
+            )
+
+            let editActions: [ActionSuggestion] = entries
+                .prefix(3)
+                .compactMap({ row in
+                    if
+                        let path: String = row.get(0),
+                        let text: String = row.get(1)
+                    {
+                        return ActionSuggestion.edit(
+                            url: URL(
+                                fileURLWithPath: path, relativeTo: documentsUrl
+                            ),
+                            title: text
+                        )
+                    }
+                    return nil
+                })
+
+            let createActions = [
                 ActionSuggestion.create(query)
             ]
-            
+
+            let actions = Array(
+                editActions
+                    .appending(contentsOf: createActions)
+                    .unique()
+            )
+
             return SuggestionsModel(
-                searches: searches.unique(),
+                searches: searches,
                 actions: actions
             )
         })
@@ -603,7 +645,7 @@ struct DatabaseEnvironment {
                 WHERE entry_search MATCH ?
                 AND rank = 'bm25(0.0, 10.0, 1.0, 0.0, 0.0)'
                 ORDER BY rank
-                LIMIT 100
+                LIMIT 25
                 """,
                 parameters: [
                     .queryFTS5(query)
