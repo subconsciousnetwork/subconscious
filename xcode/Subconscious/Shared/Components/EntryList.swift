@@ -1,5 +1,5 @@
 //
-//  SearchView.swift
+//  EntryList.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 4/7/21.
@@ -10,14 +10,14 @@ import Combine
 import os
 
 // MARK:  Action
-enum SearchAction {
+enum EntryListAction {
     case item(_ item: ItemAction<URL, EntryAction>)
     case setItems(_ documents: [TextDocument])
     case requestEdit(url: URL)
 }
 
 //  MARK: Model
-struct SearchModel: Equatable {
+struct EntryListModel: Equatable {
     var entries: [EntryModel]
     
     init(documents: [TextDocument]) {
@@ -35,11 +35,11 @@ struct SearchModel: Equatable {
 
 
 //  MARK: Update
-func updateSearch(
-    state: inout SearchModel,
-    action: SearchAction,
+func updateEntryList(
+    state: inout EntryListModel,
+    action: EntryListAction,
     environment: Logger
-) -> AnyPublisher<SearchAction, Never> {
+) -> AnyPublisher<EntryListAction, Never> {
     switch action {
     case .item(let action):
         // Am I getting a copy, rather than a reference?
@@ -53,7 +53,7 @@ func updateSearch(
                 action: action.action,
                 environment: environment
             ).map({ action in
-                tagSearchItem(
+                tagEntryListItem(
                     key: id,
                     action: action
                 )
@@ -61,7 +61,7 @@ func updateSearch(
         } else {
             environment.info(
                 """
-                SearchAction.item
+                EntryListAction.item
                 Passed non-existant item key: \(action.key).
 
                 This can happen if an effect is issued from an item,
@@ -83,7 +83,7 @@ func updateSearch(
     case .requestEdit:
         environment.warning(
             """
-            SearchAction.requestEdit
+            EntryListAction.requestEdit
             This action should have been handled by parent view.
             """
         )
@@ -92,7 +92,7 @@ func updateSearch(
 }
 
 //  MARK: Tagging
-func tagSearchItem(key: URL, action: EntryAction) -> SearchAction {
+func tagEntryListItem(key: URL, action: EntryAction) -> EntryListAction {
     switch action {
     case .requestEdit(let url):
         return .requestEdit(url: url)
@@ -105,8 +105,8 @@ func tagSearchItem(key: URL, action: EntryAction) -> SearchAction {
 }
 
 //  MARK: View
-struct SearchView: View, Equatable {
-    let store: ViewStore<SearchModel, SearchAction>
+struct EntryListView: View, Equatable {
+    let store: ViewStore<EntryListModel, EntryListAction>
 
     var body: some View {
         ScrollView {
@@ -120,7 +120,7 @@ struct SearchView: View, Equatable {
                             state: entry,
                             send: store.send,
                             tag: { action in
-                                tagSearchItem(
+                                tagEntryListItem(
                                     key: entry.id,
                                     action: action
                                 )
@@ -137,11 +137,11 @@ struct SearchView: View, Equatable {
     }
 }
 
-struct SearchView_Previews: PreviewProvider {
+struct EntryListView_Previews: PreviewProvider {
     static var previews: some View {
-        SearchView(
+        EntryListView(
             store: ViewStore(
-                state: SearchModel(
+                state: EntryListModel(
                     documents: []
                 ),
                 send: { action in }

@@ -22,7 +22,7 @@ enum AppAction {
     /// Search Bar actions
     case searchBar(_ action: SubSearchBarAction)
     /// Search results actions
-    case search(_ action: SearchAction)
+    case search(_ action: EntryListAction)
     case suggestionTokens(_ action: TextTokenBarAction)
     /// On view appear
     case appear
@@ -114,7 +114,7 @@ func tagSearchBarAction(_ action: SubSearchBarAction) -> AppAction {
     }
 }
 
-func tagSearchAction(_ action: SearchAction) -> AppAction {
+func tagSearchAction(_ action: EntryListAction) -> AppAction {
     switch action {
     case .requestEdit(let url):
         return .editDocument(url: url)
@@ -151,7 +151,7 @@ func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> AppAction {
 struct AppModel: Equatable {
     var database = DatabaseModel()
     var searchBar = SubSearchBarModel()
-    var search = SearchModel(documents: [])
+    var search = EntryListModel(documents: [])
     /// Semi-permanent suggestions that show up as tokens in the search view.
     /// We don't differentiate between types of token, so these are all just strings.
     var suggestionTokens = TextTokenBarModel()
@@ -188,7 +188,7 @@ func updateApp(
             action: action
         ).map(tagSearchBarAction).eraseToAnyPublisher()
     case .search(let action):
-        return updateSearch(
+        return updateEntryList(
             state: &state.search,
             action: action,
             environment: environment.logger

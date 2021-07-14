@@ -28,7 +28,7 @@ struct ContentView: View, Equatable {
                     if store.state.searchBar.comitted.isEmpty {
                         StreamView().equatable()
                     } else {
-                        SearchView(
+                        EntryListView(
                             store: ViewStore(
                                 state: store.state.search,
                                 send: store.send,
