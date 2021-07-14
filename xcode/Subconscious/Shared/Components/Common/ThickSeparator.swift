@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ThickSeparator: View {
-    var color: Color = .Subconscious.thickSeparator
+    var color: Color = .Sub.secondaryBackground
 
     var body: some View {
         Rectangle()

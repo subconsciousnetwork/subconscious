@@ -45,7 +45,7 @@ struct PostHeaderView: View {
                     .fontWeight(.semibold)
                 Spacer()
                 Icon(image: Image(systemName: "chevron.down"))
-                    .foregroundColor(Color.Subconscious.secondaryIcon)
+                    .foregroundColor(Color.Sub.secondaryIcon)
             }
             .frame(width: .infinity, height: 40, alignment: .leading)
             .padding(.horizontal, 16)

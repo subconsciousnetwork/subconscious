@@ -1,4 +1,3 @@
-//
 //  SubConstants.swift
 //  Subconscious (iOS)
 //

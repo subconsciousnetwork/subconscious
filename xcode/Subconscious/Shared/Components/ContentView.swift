@@ -15,34 +15,16 @@ struct ContentView: View, Equatable {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                if (
-                    !store.state.searchBar.isFocused &&
-                    !store.state.searchBar.comitted.isEmpty
-                ) {
-                    Button(
-                        action: {
-                            store.send(.commitQuery(""))
-                        },
-                        label: {
-                            Icon(image: Image(systemName: "chevron.left"))
-                        }
-                    )
-                    // We pad 8pt .leading to match UISearchView's
-                    // 8pt .leading padding.
-                    .padding(.leading, 8)
-                }
-                SubSearchBarView(
-                    store: ViewStore(
-                        state: store.state.searchBar,
-                        send: store.send,
-                        tag: tagSearchBarAction
-                    )
-                ).equatable()
-            }
+            SubSearchBarView(
+                store: ViewStore(
+                    state: store.state.searchBar,
+                    send: store.send,
+                    tag: tagSearchBarAction
+                )
+            ).equatable()
 
             ZStack {
-                VStack {
+                VStack(spacing: 0) {
                     if store.state.searchBar.comitted.isEmpty {
                         StreamView().equatable()
                     } else {
@@ -55,40 +37,38 @@ struct ContentView: View, Equatable {
                         ).equatable()
                     }
                     Spacer()
+                    HStack {
+                        Button(
+                            action: {
+                                store.send(.commitQuery(""))
+                            },
+                            label: {
+                                Icon(image: Image(systemName: "chevron.left"))
+                            }
+                        )
+                        .disabled(store.state.searchBar.comitted.isEmpty)
+                        // We pad 8pt .leading to match UISearchView's
+                        // 8pt .leading padding.
+                        .padding(.leading, 8)
+                        Spacer()
+                    }
                 }
 
-                ScrollView {
-                    VStack(spacing: 0) {
-                        if (store.state.searchBar.text.isEmpty) {
-                            TextTokenBarView(
-                                store: ViewStore(
-                                    state: store.state.suggestionTokens,
-                                    send: store.send,
-                                    tag: tagSuggestionTokensAction
-                                )
-                            )
-                            .equatable()
-                            .padding(.top, 0)
-                            // We pad by 10pt to match UISearchBar's
-                            // 10pt padding
-                            .padding(.bottom, 10)
-                        }
-                        Divider()
-                        SuggestionsView(
-                            store: ViewStore(
-                                state: store.state.suggestions,
-                                send: store.send,
-                                tag: tagSuggestionsAction
-                            )
-                        ).equatable()
-                    }
+                Group {
+                    SuggestionsView(
+                        store: ViewStore(
+                            state: store.state.suggestions,
+                            send: store.send,
+                            tag: tagSuggestionsAction
+                        )
+                    )
+                    .equatable()
                     .animation(.none)
                 }
-                .background(Color.Subconscious.background)
+                .background(Color.Sub.background)
                 .opacity(store.state.searchBar.isFocused ? 1 : 0)
                 .transition(.opacity)
                 .animation(.easeOut(duration: SubConstants.Duration.fast))
-                .edgesIgnoringSafeArea(.bottom)
             }
         }
         .onAppear {

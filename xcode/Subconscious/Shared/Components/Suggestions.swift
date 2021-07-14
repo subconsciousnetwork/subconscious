@@ -9,7 +9,13 @@ import SwiftUI
 import Combine
 
 enum SuggestionsAction {
-    case select(_ suggestion: Suggestion)
+    case selectSearch(_ query: String)
+    case selectAction(_ suggestion: ActionSuggestion)
+}
+
+struct SuggestionsModel: Equatable {
+    var searches: [SearchSuggestion] = []
+    var actions: [ActionSuggestion] = []
 }
 
 //  MARK: Suggestions list view
@@ -22,50 +28,69 @@ enum SuggestionsAction {
 /// Deliberately does not handle scrolling. This is meant to be placed within a ScrollView along with other
 /// types of search results.
 struct SuggestionsView: View, Equatable {
-    let store: ViewStore<[Suggestion], SuggestionsAction>
-    
+    let store: ViewStore<SuggestionsModel, SuggestionsAction>
+
     var body: some View {
-        VStack(spacing: 0) {
-            ForEach(store.state) { suggestion in
-                Button(action: {
-                    store.send(.select(suggestion))
-                }) {
-                    SuggestionRowView(
-                        suggestion: suggestion
-                    )
-                    .equatable()
-                    .foregroundColor(Color.Subconscious.text)
+        List {
+            Section(
+                header: Text("Search")
+            ) {
+                ForEach(store.state.searches) { suggestion in
+                    Button(action: {
+                        store.send(.selectSearch(suggestion.query))
+                    }) {
+                        SearchSuggestionView(
+                            suggestion: suggestion
+                        )
+                        .equatable()
+                    }
+                    .id("search/\(suggestion.id)")
                 }
-                .padding(.trailing, 16)
-                .padding(.leading, 0)
-                .padding(.vertical, 12)
-                Divider()
+            }.textCase(nil)
+
+            if (store.state.actions.count > 0) {
+                Section(
+                    header: Text("Actions")
+                ) {
+                    ForEach(store.state.actions) { suggestion in
+                        Button(action: {
+                            store.send(.selectAction(suggestion))
+                        }) {
+                            SuggestionRowView(
+                                suggestion: suggestion
+                            )
+                            .equatable()
+                        }
+                        .id("action/\(suggestion.id)")
+                    }
+                }.textCase(nil)
             }
         }
-        .padding(.leading, 16)
     }
 }
 
 struct Suggestions_Previews: PreviewProvider {
     static var previews: some View {
-        SuggestionsView(
-            store: ViewStore(
-                state: [
-                    Suggestion.query(
-                        "If you have 70 notecards, you have a movie"
+        ScrollView {
+            SuggestionsView(
+                store: ViewStore(
+                    state: SuggestionsModel(
+                        searches: [
+                            SearchSuggestion(
+                                query: "If you have 70 notecards, you have a movie"
+                            ),
+                            SearchSuggestion(
+                                query: "Tenuki"
+                            ),
+                            SearchSuggestion(
+                                query: "Notecard"
+                            ),
+                        ],
+                        actions: []
                     ),
-                    Suggestion.query(
-                        "Tenuki"
-                    ),
-                    Suggestion.query(
-                        "Notecard"
-                    ),
-                    Suggestion.create(
-                        "Notecard"
-                    ),
-                ],
-                send:  { query in }
+                    send:  { query in }
+                )
             )
-        )
+        }
     }
 }

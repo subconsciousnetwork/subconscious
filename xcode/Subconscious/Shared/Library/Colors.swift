@@ -7,12 +7,13 @@
 import SwiftUI
 
 extension Color {
-    struct Subconscious {
+    struct Sub {
+        static let accent = Color.accentColor
         static let background = Color(.systemBackground)
+        static let secondaryBackground = Color(.secondarySystemBackground)
         static let inputBackground = Color(.secondarySystemBackground)
         static let buttonBackground = Color(.secondarySystemBackground)
-        static let border = Color(.separator)
-        static let thickSeparator = Color(.secondarySystemBackground)
+        static let pressedBackground = Color.black.opacity(0.1)
         static let separator = Color(.separator)
         static let icon = Color(.label)
         static let secondaryIcon = Color(.secondaryLabel)
@@ -21,8 +22,5 @@ extension Color {
         static let placeholderText = Color(.placeholderText)
         static let quotedText = Color(.systemPurple)
         static let link = Color(.link)
-        static let accent = Color.accentColor
-        static let fabBackground = Color.black
-        static let fabForeground = Color.white
     }
 }

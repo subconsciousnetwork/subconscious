@@ -31,7 +31,7 @@ enum AppAction {
     case commitQuery(_ query: String)
     case setQuery(_ text: String)
     case setEditorPresented(_ isPresented: Bool)
-    case setSuggestions(_ suggestions: [Suggestion])
+    case setSuggestions(_ suggestions: SuggestionsModel)
     case warning(_ message: String)
     case info(_ message: String)
 
@@ -125,11 +125,11 @@ func tagSearchAction(_ action: SearchAction) -> AppAction {
 
 func tagSuggestionsAction(_ action: SuggestionsAction) -> AppAction {
     switch action {
-    case .select(let suggestion):
+    case .selectSearch(let query):
+        return .commitQuery(query)
+    case .selectAction(let suggestion):
         switch suggestion {
-        case .query(let text):
-            return .commitQuery(text)
-        case .entry(let url, _):
+        case .edit(let url, _):
             return .editDocument(url: url)
         case .create(let text):
             return .invokeEditorCreate(content: text)
@@ -156,7 +156,7 @@ struct AppModel: Equatable {
     /// We don't differentiate between types of token, so these are all just strings.
     var suggestionTokens = TextTokenBarModel()
     /// Live-as-you-type suggestions
-    var suggestions: [Suggestion] = []
+    var suggestions = SuggestionsModel()
     var editor = EditorModel()
     var isEditorPresented = false
 }

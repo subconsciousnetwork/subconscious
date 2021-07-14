@@ -15,7 +15,7 @@ struct FakeTextField: View {
             Text(text)
             Spacer()
         }
-        .foregroundColor(Color.Subconscious.secondaryText)
+        .foregroundColor(Color.Sub.secondaryText)
         .frame(
             width: .infinity,
             height: 36,
@@ -24,7 +24,7 @@ struct FakeTextField: View {
         .padding(.horizontal, 12)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.Subconscious.border, lineWidth: 1)
+                .stroke(Color.Sub.separator, lineWidth: 1)
         )
     }
 }

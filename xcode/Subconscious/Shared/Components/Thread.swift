@@ -81,10 +81,10 @@ struct ThreadView: View, Equatable {
                         store.send(.setFolded(false))
                     }) {
                         Image(systemName: "ellipsis")
-                            .foregroundColor(Color.Subconscious.secondaryIcon)
+                            .foregroundColor(Color.Sub.secondaryIcon)
                             .padding(8)
                     }
-                    .background(Color.Subconscious.buttonBackground)
+                    .background(Color.Sub.buttonBackground)
                     .cornerRadius(8)
                     .padding(.vertical, 4)
 

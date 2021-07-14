@@ -63,7 +63,7 @@ struct TextFieldWithToggleView: View, Equatable {
                         action: { store.send(.setText("")) },
                         label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.Subconscious.secondaryIcon)
+                                .foregroundColor(.Sub.secondaryIcon)
                         }
                     )
                 } else if store.state.isToggleActive {
@@ -73,7 +73,7 @@ struct TextFieldWithToggleView: View, Equatable {
                         },
                         label: {
                             Image(systemName: "chevron.up.circle")
-                                .foregroundColor(.Subconscious.secondaryIcon)
+                                .foregroundColor(.Sub.secondaryIcon)
                         }
                     )
                 } else {
@@ -83,7 +83,7 @@ struct TextFieldWithToggleView: View, Equatable {
                         },
                         label: {
                             Image(systemName: "chevron.down.circle")
-                                .foregroundColor(.Subconscious.secondaryIcon)
+                                .foregroundColor(.Sub.secondaryIcon)
                         }
                     )
                 }

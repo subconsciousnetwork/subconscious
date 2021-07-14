@@ -38,11 +38,11 @@ enum DatabaseAction {
     /// Perform a search over suggestions with query string
     case searchSuggestions(_ query: String)
     /// Search suggestion success with array of results
-    case searchSuggestionsSuccess(_ results: [Suggestion])
+    case searchSuggestionsSuccess(_ results: SuggestionsModel)
     /// Suggest titles for entry
     case searchTitleSuggestions(_ query: String)
     /// Title suggestion success with array of results
-    case searchTitleSuggestionsSuccess(_ results: [Suggestion])
+    case searchTitleSuggestionsSuccess(_ results: SuggestionsModel)
     /// Create new document on file system, and log in database
     case createDocument(content: String)
     /// Read document contents by URL
@@ -439,9 +439,9 @@ struct DatabaseEnvironment {
         }
     }
 
-    func searchSuggestionsForZeroQuery() -> AnyPublisher<[Suggestion], Error> {
+    func searchSuggestionsForZeroQuery() -> AnyPublisher<SuggestionsModel, Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
-            let suggestions = try db.connection().execute(
+            let searches = try db.connection().execute(
                 sql: """
                 SELECT query FROM (
                     SELECT title AS query
@@ -455,39 +455,23 @@ struct DatabaseEnvironment {
                     FROM search_history
                     WHERE hits > 0
                     GROUP BY query
-                    ORDER BY queries DESC, hits DESC
-                    LIMIT 12
+                    ORDER BY queries DESC
+                    LIMIT 4
                 )
                 """
             ).compactMap({ row in
-                try Suggestion.query(row.get(0).unwrap())
+                try SearchSuggestion(query: row.get(0).unwrap())
             })
-            
-            return suggestions
-        })
-    }
 
-    func searchSuggestionsForQuery(
-        _ query: String
-    ) -> AnyPublisher<[Suggestion], Error> {
-        CombineUtilities.async(qos: .userInitiated, execute: {
-            guard !query.isWhitespace else {
-                return []
-            }
-            
-            let edit = try db.connection().execute(
+            let recent = try db.connection().execute(
                 sql: """
                 SELECT path, title
                 FROM entry_search
-                WHERE entry_search.title MATCH ?
-                ORDER BY rank
+                ORDER BY modified DESC
                 LIMIT 3
-                """,
-                parameters: [
-                    SQLite3Connection.Value.prefixQueryFTS5(query)
-                ]
+                """
             ).compactMap({ row in
-                try Suggestion.entry(
+                try ActionSuggestion.edit(
                     url: URL(
                         fileURLWithPath: row.get(0).unwrap(),
                         relativeTo: documentsUrl
@@ -496,29 +480,74 @@ struct DatabaseEnvironment {
                 )
             })
 
-            let recentMatchingSearches = try db.connection().execute(
+            let entriesThatShouldExist = try db.connection().execute(
                 sql: """
-                SELECT DISTINCT query
+                SELECT query, count(query) AS queries
                 FROM search_history
-                WHERE hits > 0 AND query LIKE ?
-                ORDER BY created DESC
+                WHERE hits < 1
+                GROUP BY query
+                ORDER BY queries DESC
                 LIMIT 3
+                """
+            ).compactMap({ row in
+                try ActionSuggestion.create(row.get(0).unwrap())
+            })
+
+            let actions = recent + entriesThatShouldExist
+            
+            return SuggestionsModel(
+                searches: searches,
+                actions: actions
+            )
+        })
+    }
+
+    func searchSuggestionsForQuery(
+        _ query: String
+    ) -> AnyPublisher<SuggestionsModel, Error> {
+        CombineUtilities.async(qos: .userInitiated, execute: {
+            guard !query.isWhitespace else {
+                return SuggestionsModel()
+            }
+
+            var searches = try db.connection().execute(
+                sql: """
+                SELECT query FROM (
+                    SELECT DISTINCT title AS query
+                    FROM entry_search
+                    WHERE entry_search.title MATCH ?
+                    ORDER BY rank
+                    LIMIT 3
+                )
+                UNION
+                SELECT query FROM (
+                    SELECT DISTINCT query
+                    FROM search_history
+                    WHERE hits > 0 AND query LIKE ?
+                    ORDER BY created DESC
+                    LIMIT 3
+                )
                 """,
                 parameters: [
+                    SQLite3Connection.Value.prefixQueryFTS5(query),
                     SQLite3Connection.Value.prefixQueryLike(query)
                 ]
             ).compactMap({ row in
-                try Suggestion.query(row.get(0).unwrap())
+                try SearchSuggestion(query: row.get(0).unwrap())
             })
-            
-            let verbatimQuerySuggestion = Suggestion.query(query)
-            let verbatimCreateSuggestion = Suggestion.create(query)
 
-            return (
-                [verbatimQuerySuggestion] +
-                recentMatchingSearches +
-                edit +
-                [verbatimCreateSuggestion]
+            searches.insert(
+                SearchSuggestion(query: query),
+                at: 0
+            )
+
+            let actions = [
+                ActionSuggestion.create(query)
+            ]
+            
+            return SuggestionsModel(
+                searches: searches.unique(),
+                actions: actions
             )
         })
     }
@@ -527,7 +556,7 @@ struct DatabaseEnvironment {
     /// A whitespace query string will fetch zero-query suggestions.
     func searchSuggestions(
         _ query: String
-    ) -> AnyPublisher<[Suggestion], Error> {
+    ) -> AnyPublisher<SuggestionsModel, Error> {
         if query.isWhitespace {
             return searchSuggestionsForZeroQuery()
         } else {
@@ -540,7 +569,7 @@ struct DatabaseEnvironment {
     /// behavior.
     func searchTitleSuggestions(
         _ query: String
-    ) -> AnyPublisher<[Suggestion], Error> {
+    ) -> AnyPublisher<SuggestionsModel, Error> {
         return searchSuggestions(query)
     }
 
@@ -572,8 +601,9 @@ struct DatabaseEnvironment {
                 SELECT path, body
                 FROM entry_search
                 WHERE entry_search MATCH ?
+                AND rank = 'bm25(0.0, 10.0, 1.0, 0.0, 0.0)'
                 ORDER BY rank
-                LIMIT 25
+                LIMIT 100
                 """,
                 parameters: [
                     .queryFTS5(query)

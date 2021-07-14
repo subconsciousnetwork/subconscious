@@ -53,7 +53,7 @@ struct TextTokenBarView: View, Equatable {
                             TextTokenView(text: text)
                         }
                     )
-                    .foregroundColor(.Subconscious.text)
+                    .foregroundColor(.Sub.text)
                 }
             }
             .padding(.horizontal, 8)

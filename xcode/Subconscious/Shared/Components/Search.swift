@@ -109,29 +109,34 @@ struct SearchView: View, Equatable {
     let store: ViewStore<SearchModel, SearchAction>
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(spacing: 8) {
-                    ForEach(store.state.threads) { thread in
-                        ThreadView(
-                            store: ViewStore(
-                                state: thread,
-                                send: store.send,
-                                tag: { action in
-                                    tagSearchItem(
-                                        key: thread.id,
-                                        action: action
-                                    )
-                                }
-                            )
-                        ).equatable()
-                        ThickSeparator().padding(.vertical, 4)
-                    }
+        ScrollView {
+            // LazyVStack creates items only when they need to be rendered
+            // onscreen.
+            // <https://developer.apple.com/documentation/swiftui/lazyvstack>
+            LazyVStack(alignment: .leading, spacing: 8) {
+                ForEach(store.state.threads) { thread in
+                    ThickSeparator()
+                    ThreadView(
+                        store: ViewStore(
+                            state: thread,
+                            send: store.send,
+                            tag: { action in
+                                tagSearchItem(
+                                    key: thread.id,
+                                    action: action
+                                )
+                            }
+                        )
+                    )
+                    .equatable()
+                    .padding(.vertical, 8)
                 }
-                .padding(.vertical, 8)
+                ThickSeparator()
             }
-            .padding(.top, 4)
+            .background(Color.Sub.background)
         }
+        .padding(0)
+        .background(Color.Sub.secondaryBackground)
     }
 }
 

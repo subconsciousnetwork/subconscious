@@ -14,18 +14,18 @@ struct SearchBarRepresentable: UIViewRepresentable {
         init(_ representable: SearchBarRepresentable) {
             self.representable = representable
         }
-        
+
         func searchBar(
             _ view: UISearchBar,
             textDidChange text: String
         ) {
             representable.text = text
         }
-        
+
         func searchBarTextDidBeginEditing(_ view: UISearchBar) {
             representable.onFocus()
         }
-        
+
         func searchBarCancelButtonClicked(_ view: UISearchBar) {
             representable.onCancel()
         }
