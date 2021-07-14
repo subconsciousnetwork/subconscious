@@ -1,5 +1,5 @@
 //
-//  TextFile.swift
+//  TextDocument.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 6/14/21.
