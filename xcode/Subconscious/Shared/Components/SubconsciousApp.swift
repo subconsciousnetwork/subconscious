@@ -266,7 +266,7 @@ func updateApp(
 }
 
 
-//  MARK: App main View
+//  MARK: App root view
 @main
 struct SubconsciousApp: App {
     @StateObject private var store: AppStore = AppStore(
@@ -284,5 +284,50 @@ struct SubconsciousApp: App {
                 )
             ).equatable()
         }
+    }
+}
+
+
+//  MARK: App Environment
+/// Access to external network services and other supporting services
+struct AppEnvironment {
+    let fileManager = FileManager.default
+    let documentsUrl: URL
+    let databaseUrl: URL
+    let logger = SubConstants.logger
+    let database: DatabaseEnvironment
+
+    init() {
+        self.databaseUrl = try! fileManager.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        ).appendingPathComponent("database.sqlite")
+
+        self.documentsUrl = fileManager.documentDirectoryUrl!
+
+        self.database = DatabaseEnvironment(
+            databaseUrl: databaseUrl,
+            documentsUrl: documentsUrl,
+            migrations: SubConstants.migrations
+        )
+    }
+
+    //  FIXME: serves up static suggestions
+    func fetchSuggestionTokens() -> Future<[String], Never> {
+        Future({ promise in
+            let suggestions = [
+                "#log",
+                "#idea",
+                "#pattern",
+                "#project",
+                "#decision",
+                "#quote",
+                "#book",
+                "#person"
+            ]
+            promise(.success(suggestions))
+        })
     }
 }

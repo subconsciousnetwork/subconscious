@@ -46,7 +46,6 @@
 		B8929E262695101B00131928 /* TextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8929E252695101B00131928 /* TextViewRepresentable.swift */; };
 		B8B00047262622280068F688 /* ActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B00046262622280068F688 /* ActionButton.swift */; };
 		B8B24FA52655CDF500EE6CB9 /* FileSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B24FA42655CDF500EE6CB9 /* FileSync.swift */; };
-		B8B2C1832645E8C0008AA3EC /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */; };
 		B8B2C18526470EC0008AA3EC /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18426470EC0008AA3EC /* Post.swift */; };
 		B8B2C1872647172A008AA3EC /* PostHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C1862647172A008AA3EC /* PostHeader.swift */; };
 		B8B2C18926471E6B008AA3EC /* FakeTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18826471E6B008AA3EC /* FakeTextField.swift */; };
@@ -131,7 +130,6 @@
 		B8929E252695101B00131928 /* TextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8B00046262622280068F688 /* ActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButton.swift; sourceTree = "<group>"; };
 		B8B24FA42655CDF500EE6CB9 /* FileSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSync.swift; sourceTree = "<group>"; };
-		B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		B8B2C18426470EC0008AA3EC /* Post.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Post.swift; sourceTree = "<group>"; };
 		B8B2C1862647172A008AA3EC /* PostHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostHeader.swift; sourceTree = "<group>"; };
 		B8B2C18826471E6B008AA3EC /* FakeTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeTextField.swift; sourceTree = "<group>"; };
@@ -189,8 +187,8 @@
 		B804C09D2620FFDD00D59CC6 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				B8E152F126570B890032F5A7 /* Database.swift */,
 				B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */,
+				B8E152F126570B890032F5A7 /* Database.swift */,
 				B83B5295261E58260031988E /* EntryList.swift */,
 				B87DA9182624DDEA00BA5232 /* Stream.swift */,
 				B87C7D7B261E0E6C003EFC6F /* Block.swift */,
@@ -265,7 +263,6 @@
 				B853EB2326326F9F001BB584 /* Library */,
 				B804C09D2620FFDD00D59CC6 /* Components */,
 				B86F339D261AB2C7009D3D48 /* Assets.xcassets */,
-				B8FD070126321A8D00128FDC /* Services */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -332,14 +329,6 @@
 				B85AD0EA269F92A10089ADFD /* IconLabelRow.swift */,
 			);
 			path = Common;
-			sourceTree = "<group>";
-		};
-		B8FD070126321A8D00128FDC /* Services */ = {
-			isa = PBXGroup;
-			children = (
-				B8B2C1822645E8C0008AA3EC /* AppEnvironment.swift */,
-			);
-			path = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -537,7 +526,6 @@
 				B8B24FA52655CDF500EE6CB9 /* FileSync.swift in Sources */,
 				B8E628222672E9B2005B86CE /* PublisherManager.swift in Sources */,
 				B86F33C8261AB2C7009D3D48 /* ContentView.swift in Sources */,
-				B8B2C1832645E8C0008AA3EC /* AppEnvironment.swift in Sources */,
 				B88715132642F2D0009BEE1E /* ActionSuggestion.swift in Sources */,
 				B8B2C18526470EC0008AA3EC /* Post.swift in Sources */,
 				B8796F5B269E3D3A001AC8C1 /* ListHeader.swift in Sources */,
