@@ -14,10 +14,9 @@ struct Icon: View {
     var height: CGFloat = 24
 
     var body: some View {
-        HStack {
-            image
-        }
-        .frame(width: width, height: height)
+        image
+            .frame(width: width, height: height)
+            .scaledToFit()
     }
 }
 

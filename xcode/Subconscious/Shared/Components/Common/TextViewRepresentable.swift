@@ -24,6 +24,7 @@ struct TextViewRepresentable: UIViewRepresentable {
     
     private var isFocused = false
     private var font: UIFont = UIFont.preferredFont(forTextStyle: .body)
+    private var textColor: UIColor = UIColor(.primary)
     private var textContainerInset: UIEdgeInsets = .zero
     @Binding var text: String
 
@@ -41,6 +42,7 @@ struct TextViewRepresentable: UIViewRepresentable {
         // This puts you in full control of view padding.
         view.textContainer.lineFragmentPadding = 0
         view.backgroundColor = .clear
+        view.textColor = textColor
 
         return view
     }

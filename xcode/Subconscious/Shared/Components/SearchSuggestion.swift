@@ -18,9 +18,10 @@ struct SearchSuggestionView: View, Equatable {
     var suggestion: SearchSuggestion
 
     var body: some View {
-        Label(
-            suggestion.query,
-            systemImage: "magnifyingglass"
+        
+        IconLabelRow(
+            title: suggestion.query,
+            image: Image(systemName: "magnifyingglass")
         )
         .foregroundColor(.Sub.text)
         .lineLimit(1)

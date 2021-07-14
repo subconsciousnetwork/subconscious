@@ -56,7 +56,7 @@ struct SuggestionsView: View, Equatable {
                         Button(action: {
                             store.send(.selectAction(suggestion))
                         }) {
-                            SuggestionRowView(
+                            ActionSuggestionView(
                                 suggestion: suggestion
                             )
                             .equatable()

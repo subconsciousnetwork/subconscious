@@ -35,7 +35,7 @@ extension ActionSuggestion: CustomStringConvertible {
 }
 
 //  MARK: Row View
-struct SuggestionRowView: View, Equatable {
+struct ActionSuggestionView: View, Equatable {
     var suggestion: ActionSuggestion
 
     var body: some View {
@@ -43,29 +43,21 @@ struct SuggestionRowView: View, Equatable {
             switch suggestion {
             case .edit(_, let title):
                 HStack(spacing: 0) {
-                    Label(
-                        title,
-                        systemImage: "doc.text"
+                    IconLabelRow(
+                        title: title,
+                        image: Image(systemName: "doc.text")
                     )
-                    .lineLimit(1)
-                    .foregroundColor(.Sub.text)
 
-                    Text(" – Edit").foregroundColor(
-                        Color.Sub.secondaryText
-                    )
+                    Text(" – Edit").foregroundColor(Color.Sub.secondaryText)
                 }
-            case .create(let text):
+            case .create(let title):
                 HStack(spacing: 0) {
-                    Label(
-                        text,
-                        systemImage: "doc.badge.plus"
+                    IconLabelRow(
+                        title: title,
+                        image: Image(systemName: "doc.badge.plus")
                     )
-                    .foregroundColor(.Sub.text)
-                    .lineLimit(1)
 
-                    Text(" – Create").foregroundColor(
-                        Color.Sub.secondaryText
-                    )
+                    Text(" – Create").foregroundColor(Color.Sub.secondaryText)
                 }
             }
         }
@@ -80,19 +72,19 @@ struct SuggestionRowView: View, Equatable {
 struct SuggestionRow_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            SuggestionRowView(
+            ActionSuggestionView(
                 suggestion: ActionSuggestion.create("Search term")
             )
-            SuggestionRowView(
+            ActionSuggestionView(
                 suggestion: ActionSuggestion.create("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua")
             )
-            SuggestionRowView(
+            ActionSuggestionView(
                 suggestion: ActionSuggestion.edit(
                     url: URL(fileURLWithPath: "example.subtext"),
                     title: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"
                 )
             )
-            SuggestionRowView(
+            ActionSuggestionView(
                 suggestion: ActionSuggestion.create("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua")
             )
         }

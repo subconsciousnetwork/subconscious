@@ -11,15 +11,15 @@ extension Color {
         static let accent = Color.accentColor
         static let background = Color(.systemBackground)
         static let secondaryBackground = Color(.secondarySystemBackground)
-        static let inputBackground = Color(.secondarySystemBackground)
-        static let buttonBackground = Color(.secondarySystemBackground)
-        static let separator = Color(.separator)
-        static let icon = Color(.label)
-        static let secondaryIcon = Color(.secondaryLabel)
-        static let text = Color(.label)
-        static let secondaryText = Color(.secondaryLabel)
+        static let text = Color.primary
+        static let secondaryText = Color.secondary
         static let placeholderText = Color(.placeholderText)
-        static let quotedText = Color(.systemPurple)
-        static let link = Color(.link)
+        static let linkText = Color(.link)
+        static let inputBackground = secondaryBackground
+        static let buttonBackground = secondaryBackground
+        static let separator = Color(.separator)
+        static let icon = text
+        static let secondaryIcon = secondaryText
+        static let quotedText = accent
     }
 }
