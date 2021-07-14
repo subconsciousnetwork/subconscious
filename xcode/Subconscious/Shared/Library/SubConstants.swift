@@ -3,6 +3,7 @@
 //
 //  Created by Gordon Brander on 6/10/21.
 //
+import SwiftUI
 import os
 
 struct SubConstants {
@@ -12,6 +13,16 @@ struct SubConstants {
         subsystem: rdns,
         category: "main"
     )
+
+    struct Theme {
+        static let cornerRadius: Double = 12
+        static let lightShadow = Shadow(
+            color: Color.black.opacity(0.05),
+            radius: 2,
+            x: 0,
+            y: 0
+        )
+    }
 
     struct Duration {
         static let fast: Double = 0.128

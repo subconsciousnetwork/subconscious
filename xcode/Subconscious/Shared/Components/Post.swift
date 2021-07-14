@@ -9,84 +9,86 @@ import SwiftUI
 import Combine
 import os
 
-struct PostModel {
-    var header: PostHeaderModel
-    var thread: ThreadModel
-}
-
-enum PostAction {
-    case thread(_ action: ThreadAction)
-    case header(_ action: PostHeaderAction)
-}
-
-func updatePost(
-    state: inout PostModel,
-    action: PostAction,
-    environment: Logger
-) -> AnyPublisher<PostAction, Never> {
-    switch action {
-    case .header(let action):
-        return updatePostHeader(
-            state: &state.header,
-            action: action,
-            environment: environment
-        ).map(tagPostHeader).eraseToAnyPublisher()
-    case .thread(let action):
-        return updateThread(
-            state: &state.thread,
-            action: action,
-            environment: environment
-        ).map(tagPostThread).eraseToAnyPublisher()
+struct Post {
+    enum Action {
+        case thread(_ action: EntryAction)
+        case header(_ action: PostHeaderAction)
     }
-}
 
-func tagPostHeader(_ action: PostHeaderAction) -> PostAction {
-    switch action {
-    default:
-        return .header(action)
+    struct Model {
+        var header: PostHeaderModel
+        var entry: EntryModel
     }
-}
 
-func tagPostThread(_ action: ThreadAction) -> PostAction {
-    switch action {
-    default:
-        return .thread(action)
+    static func update(
+        state: inout Model,
+        action: Action,
+        environment: Logger
+    ) -> AnyPublisher<Action, Never> {
+        switch action {
+        case .header(let action):
+            return updatePostHeader(
+                state: &state.header,
+                action: action,
+                environment: environment
+            ).map(tagPostHeader).eraseToAnyPublisher()
+        case .thread(let action):
+            return updateEntry(
+                state: &state.entry,
+                action: action,
+                environment: environment
+            ).map(tagEntry).eraseToAnyPublisher()
+        }
     }
-}
 
-/// PostViews are threads wrapped in information about who/where the thread is from.
-struct PostView: View {
-    var state: PostModel
-    var send: (PostAction) -> Void
+    static func tagPostHeader(_ action: PostHeaderAction) -> Action {
+        switch action {
+        default:
+            return .header(action)
+        }
+    }
+
+    static func tagEntry(_ action: EntryAction) -> Action {
+        switch action {
+        default:
+            return .thread(action)
+        }
+    }
     
-    var body: some View {
-        VStack(spacing: 8) {
-            PostHeaderView(
-                state: state.header,
-                send: address(
-                    send: send,
-                    tag: tagPostHeader
+    /// PostViews are entries wrapped in information about who/where the thread is from.
+    struct View: SwiftUI.View {
+        var state: Model
+        var send: (Action) -> Void
+        
+        var body: some SwiftUI.View {
+            VStack(spacing: 8) {
+                PostHeaderView(
+                    state: state.header,
+                    send: address(
+                        send: send,
+                        tag: tagPostHeader
+                    )
                 )
-            )
-            ThreadView(
-                store: ViewStore(
-                    state: state.thread,
-                    send: send,
-                    tag: tagPostThread
-                )
-            ).equatable()
+                EntryView(
+                    store: ViewStore(
+                        state: state.entry,
+                        send: send,
+                        tag: tagEntry
+                    )
+                ).equatable()
+            }
         }
     }
 }
 
 struct PostView_Previews: PreviewProvider {
     static var previews: some View {
-        PostView(
-            state: PostModel(
+        Post.View(
+            state: Post.Model(
                 header: PostHeaderModel(
                     name: "Concept Collider"
                 ),
-                thread: ThreadModel(
+                entry: EntryModel(
                     url: URL(fileURLWithPath: "example.subtext"),
                     dom: Subtext(
                         markup:

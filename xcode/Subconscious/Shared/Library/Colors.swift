@@ -13,7 +13,6 @@ extension Color {
         static let secondaryBackground = Color(.secondarySystemBackground)
         static let inputBackground = Color(.secondarySystemBackground)
         static let buttonBackground = Color(.secondarySystemBackground)
-        static let pressedBackground = Color.black.opacity(0.1)
         static let separator = Color(.separator)
         static let icon = Color(.label)
         static let secondaryIcon = Color(.secondaryLabel)

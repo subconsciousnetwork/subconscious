@@ -11,20 +11,20 @@ import os
 
 // MARK:  Action
 enum SearchAction {
-    case item(_ item: ItemAction<URL, ThreadAction>)
+    case item(_ item: ItemAction<URL, EntryAction>)
     case setItems(_ documents: [TextDocument])
     case requestEdit(url: URL)
 }
 
 //  MARK: Model
 struct SearchModel: Equatable {
-    var threads: [ThreadModel]
+    var entries: [EntryModel]
     
     init(documents: [TextDocument]) {
-        self.threads = documents
+        self.entries = documents
             .enumerated()
             .map({ (i, document) in
-                ThreadModel(
+                EntryModel(
                     url: document.url,
                     dom: Subtext(markup: document.content),
                     isFolded: i > 0
@@ -44,12 +44,12 @@ func updateSearch(
     case .item(let action):
         // Am I getting a copy, rather than a reference?
         // Is that why it never changes?
-        if let i = state.threads.firstIndex(
-            where: { thread in thread.id ==  action.key }
+        if let i = state.entries.firstIndex(
+            where: { entry in entry.id ==  action.key }
         ) {
-            let id = state.threads[i].id
-            return updateThread(
-                state: &state.threads[i],
+            let id = state.entries[i].id
+            return updateEntry(
+                state: &state.entries[i],
                 action: action.action,
                 environment: environment
             ).map({ action in
@@ -71,10 +71,10 @@ func updateSearch(
             )
         }
     case .setItems(let documents):
-        state.threads = documents
+        state.entries = documents
             .enumerated()
             .map({ (i, doc) in
-                ThreadModel(
+                EntryModel(
                     url: doc.url,
                     dom: Subtext(markup: doc.content),
                     isFolded: i > 0
@@ -92,7 +92,7 @@ func updateSearch(
 }
 
 //  MARK: Tagging
-func tagSearchItem(key: URL, action: ThreadAction) -> SearchAction {
+func tagSearchItem(key: URL, action: EntryAction) -> SearchAction {
     switch action {
     case .requestEdit(let url):
         return .requestEdit(url: url)
@@ -114,26 +114,23 @@ struct SearchView: View, Equatable {
             // onscreen.
             // <https://developer.apple.com/documentation/swiftui/lazyvstack>
             LazyVStack(alignment: .leading, spacing: 8) {
-                ForEach(store.state.threads) { thread in
-                    ThickSeparator()
-                    ThreadView(
+                ForEach(store.state.entries) { entry in
+                    EntryView(
                         store: ViewStore(
-                            state: thread,
+                            state: entry,
                             send: store.send,
                             tag: { action in
                                 tagSearchItem(
-                                    key: thread.id,
+                                    key: entry.id,
                                     action: action
                                 )
                             }
                         )
                     )
                     .equatable()
-                    .padding(.vertical, 8)
                 }
-                ThickSeparator()
             }
-            .background(Color.Sub.background)
+            .padding(.vertical, 8)
         }
         .padding(0)
         .background(Color.Sub.secondaryBackground)
