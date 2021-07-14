@@ -10,12 +10,14 @@ import SwiftUI
 struct IconLabelRow: View {
     var title: String
     var image: Image
+    var titleColor: Color = .Sub.text
+    var iconColor: Color = .Sub.accent
 
     var body: some View {
         Label {
-            Text(title).foregroundColor(.Sub.text)
+            Text(title).foregroundColor(titleColor)
         } icon: {
-            Icon(image: image).foregroundColor(.accentColor)
+            Icon(image: image).foregroundColor(iconColor)
         }
         .lineLimit(1)
     }
