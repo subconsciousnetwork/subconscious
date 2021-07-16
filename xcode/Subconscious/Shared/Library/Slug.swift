@@ -10,9 +10,34 @@ import Foundation
 /// A suite of tools for generating slugs.
 struct Slug {
     /// Truncate to avoid file name length limit issues.
-    /// Windows systems can handle up to 255, but 140 is a nice Tweet-sized number.
+    /// Windows systems can handle up to 255, but we truncate at 200 to leave a bit of room
+    /// for things like version numbers.
     static func truncatingSafeFileNameLength(_ text: String) -> String {
-        String(text.prefix(140))
+        String(text.prefix(200))
+    }
+
+    /// Make filename compatible with Mac and FAT file systems by removing forbidden characters.
+    static func sanitizingFilename(_ text: String) -> String {
+        // Replace slashes and pluses with dashes
+        text
+            .replacingOccurrences(
+                of: #"[\:\/\\\+]"#,
+                with: "-",
+                options: .regularExpression,
+                range: nil
+            )
+            // Remove other stuff
+            .replacingOccurrences(
+                of: #"[\*\<\>\?\|\,\.\;\=\[\]]"#,
+                with: "",
+                options: .regularExpression,
+                range: nil
+            )
+    }
+
+    /// Sanitize and truncate text so that it is suitible as a Mac/FAT filename.
+    static func toFilename(_ text: String) -> String {
+        truncatingSafeFileNameLength(sanitizingFilename(text))
     }
 
     /// Replace all runs of one or more whitespace characters
@@ -26,9 +51,9 @@ struct Slug {
         )
     }
 
-    /// Remove any character that is "strange".
-    /// Basically anything not `[A–Za–z0–9._-]` or a space character.
-    static func removingStrangeCharacters(_ text: String) -> String {
+    /// Remove any character that is not POSIX fully-portable filename.
+    /// Basically anything not `[A–Za–z0–9._-]`.
+    static func removingNonPosixCharacters(_ text: String) -> String {
         text.replacingOccurrences(
             of: #"[^a-zA-Z0-9\._\-\s]"#,
             with: "",
@@ -37,27 +62,17 @@ struct Slug {
         )
     }
 
-    /// Given a string, returns a new string that is safe to use as a filename in modern file systems.
-    /// - Whitespace is trimmed from ends.
-    /// - Strange characters that are invalid in some file systems are removed.
-    /// - Text is truncated to stay under file name length limits in some file systems.
-    /// Note it is possible for this method to return an empty string, so you should handle that case.
-    static func toFilename(_ text: String) -> String {
-        let portable = removingStrangeCharacters(text)
-        let truncated = truncatingSafeFileNameLength(portable)
-        let trimmed = truncated.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed
-    }
-    
     /// Given a string, returns a slug suitable for using as a file name.
     /// Slug conforms to POSIX Fully Portable Filename format.
     static func toSlug(_ text: String) -> String {
-        let filename = toFilename(text)
-        let lower = filename.lowercased()
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lower = trimmed.lowercased()
         let dashed = replacingSpacesWithDash(lower)
-        return dashed
+        let portable = removingNonPosixCharacters(dashed)
+        let truncated = truncatingSafeFileNameLength(portable)
+        return truncated
     }
-    
+
     /// Given a string, returns a slug prefixed with ISO8601 date.
     /// Slug conforms to POSIX Fully Portable Filename format.
     static func toSlugWithDate(_ text: String, date: Date = Date()) -> String {
@@ -73,12 +88,5 @@ struct Slug {
         } else {
             return isodate
         }
-    }
-    
-    static func appendingExtension(
-        path: String,
-        extension ext: String
-    ) -> String {
-        [path, ext].joined(separator: ".")
     }
 }
