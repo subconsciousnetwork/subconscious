@@ -22,6 +22,24 @@ extension URL {
         return url
     }
 
+    /// Add file name component to URL with version and extension.
+    /// Useful for uniqueing file names.
+    /// - Returns: new URL
+    func appendingVersionedFilename(
+        name: String,
+        ext: String,
+        version: Int = 1
+    ) -> URL {
+        var url = self
+        // Only version numbers one and above, please.
+        let version = max(version, 1)
+        // Only append version number if > 0.
+        let versionedName = version == 1 ? name : "\(name) \(version)"
+        url.appendPathComponent(versionedName)
+        url.appendPathExtension(ext)
+        return url
+    }
+
     /// Return path relative to some base
     /// If URL does not start with base, returns nil.
     func relativizingPath(relativeTo base: URL) -> String? {
