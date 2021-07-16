@@ -17,7 +17,7 @@ struct IconLabelRow: View {
         Label {
             Text(title).foregroundColor(titleColor)
         } icon: {
-            Icon(image: image).foregroundColor(iconColor)
+            IconView(image: image).foregroundColor(iconColor)
         }
         .lineLimit(1)
     }
