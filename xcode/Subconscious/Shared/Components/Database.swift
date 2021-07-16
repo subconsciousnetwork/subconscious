@@ -49,7 +49,7 @@ enum DatabaseAction {
     case readDocument(url: URL)
     case readDocumentSuccess(document: TextDocument)
     /// Update document in file system and database.
-    case updateDocument(url: URL?, content: String)
+    case updateDocument(url: URL, content: String)
     /// Remove document from file system and database
     case deleteDocument(url: URL)
 }
@@ -128,24 +128,25 @@ func updateDatabase(
             })
             .eraseToAnyPublisher()
     case .createDocument(let content):
-        let title = Truncate.getFirstPseudoSentence(
-            Subtext.getTitle(markup: content)
-        )
-
-        let url = environment.documentsUrl.appendingFilename(
-            name: Slug.toSlugWithDate(title),
-            ext: "subtext"
-        )
-
-        return environment.writeDocumentAsync(
-            url: url,
-            title: title,
+        return environment.createDocumentAsync(
             content: content
         )
-        .map({ _ in .log(.info("Created document: \(url)")) })
-        .replaceError(
-            with: .log(.warning("Create failed for document: \(url)"))
-        )
+        .map({ fingerprint in
+            .log(.info("Created document: \(fingerprint.url)"))
+        })
+        .catch({ error in
+            Just(
+                .log(
+                    .warning(
+                        """
+                        Create failed for document.
+                        Error:
+                        \(error)
+                        """
+                    )
+                )
+            )
+        })
         .eraseToAnyPublisher()
     case .readDocument(let url):
         return environment.readDocument(url: url)
@@ -164,23 +165,13 @@ func updateDatabase(
             """
         )
     case .updateDocument(let url, let content):
-        let title = Truncate.getFirstPseudoSentence(
-            Subtext.getTitle(markup: content)
-        )
-        
-        let concreteURL = url ?? environment.documentsUrl.appendingFilename(
-            name: Slug.toSlugWithDate(title),
-            ext: "subtext"
-        )
-
         return environment.writeDocumentAsync(
-            url: concreteURL,
-            title: title,
+            url: url,
             content: content
         )
-        .map({ _ in .log(.info("Wrote document: \(concreteURL)")) })
+        .map({ _ in .log(.info("Wrote document: \(url)")) })
         .replaceError(
-            with: .log(.warning("Write failed for document: \(concreteURL)"))
+            with: .log(.warning("Write failed for document: \(url)"))
         )
         .eraseToAnyPublisher()
     case .deleteDocument(let url):
@@ -398,14 +389,48 @@ struct DatabaseEnvironment {
             size: attributes.size
         )
     }
-    
+
+    /// Create a new document on the file system, and write to the database
+    func createDocumentAsync(
+        content: String
+    ) -> AnyPublisher<FileFingerprint, Error> {
+        CombineUtilities.async {
+            let title = Truncate.getFirstPseudoSentence(
+                Subtext.getTitle(markup: content)
+            )
+            let name = Slug.toFilename(title)
+            let url = try FileManager.default.findUniqueFilename(
+                at: documentsUrl,
+                name: name,
+                ext: "subtext"
+            ).unwrap()
+            try content.write(to: url, atomically: true, encoding: .utf8)
+            // Re-read size and file modified from file system to make sure
+            // what we store is exactly equal to file system.
+            let attributes = try FileFingerprint.Attributes(url: url).unwrap()
+            try writeDocumentToDatabase(
+                url: url,
+                title: title,
+                content: content,
+                modified: attributes.modified,
+                size: attributes.size
+            )
+            return FileFingerprint(
+                url: url,
+                attributes: attributes
+            )
+        }
+    }
+
     /// Write a document to the file system, and to the database
     func writeDocumentAsync(
         url: URL,
-        title: String,
         content: String
     ) -> AnyPublisher<Void, Error> {
         CombineUtilities.async {
+            let title = Truncate.getFirstPseudoSentence(
+                Subtext.getTitle(markup: content)
+            )
             try content.write(to: url, atomically: true, encoding: .utf8)
             // Re-read size and file modified from file system to make sure
             // what we store is exactly equal to file system.
@@ -519,7 +544,7 @@ struct DatabaseEnvironment {
                 LIMIT 5
                 """,
                 parameters: [
-                    SQLite3Connection.Value.text(query),
+                    SQLite3Connection.Value.queryFTS5(query)
                 ]
             )
 

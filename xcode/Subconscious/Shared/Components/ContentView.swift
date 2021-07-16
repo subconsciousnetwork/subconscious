@@ -43,14 +43,14 @@ struct ContentView: View, Equatable {
                                 store.send(.commitQuery(""))
                             },
                             label: {
-                                Icon(image: Image(systemName: "chevron.left"))
+                                IconView(image: Image(systemName: "chevron.left"))
                             }
                         )
                         .disabled(store.state.searchBar.comitted.isEmpty)
                         Spacer()
                     }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 8)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 12)
                 }
 
                 Group {

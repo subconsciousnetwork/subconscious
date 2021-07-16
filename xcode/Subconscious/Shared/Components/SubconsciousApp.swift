@@ -58,9 +58,15 @@ enum AppAction {
         //  and using database service directly, rather than through actions.
         .database(.readDocument(url: url))
     }
+
+    static func createDocument(
+        content: String
+    ) -> AppAction {
+        .database(.createDocument(content: content))
+    }
     
     static func updateDocument(
-        url: URL?,
+        url: URL,
         content: String
     ) -> AppAction {
         .database(.updateDocument(url: url, content: content))
@@ -94,10 +100,14 @@ func tagEditorAction(_ action: EditorAction) -> AppAction {
     case .requestEditorUnpresent:
         return .setEditorPresented(false)
     case .requestSave(let url, let content):
-        return .updateDocument(
-            url: url,
-            content: content
-        )
+        if let url = url {
+            return .updateDocument(
+                url: url,
+                content: content
+            )
+        } else {
+            return .createDocument(content: content)
+        }
     default:
         return .editor(action)
     }
