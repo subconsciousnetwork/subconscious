@@ -12,7 +12,7 @@ import os
 // MARK:  Action
 enum EntryListAction {
     case item(_ item: ItemAction<URL, EntryAction>)
-    case setItems(_ documents: [TextDocument])
+    case setItems(_ entries: [TextEntry])
     case requestEdit(url: URL)
 }
 
@@ -20,8 +20,8 @@ enum EntryListAction {
 struct EntryListModel: Equatable {
     var entries: [EntryModel]
     
-    init(documents: [TextDocument]) {
-        self.entries = documents
+    init(entries: [TextEntry]) {
+        self.entries = entries
             .enumerated()
             .map({ (i, document) in
                 EntryModel(
@@ -70,8 +70,8 @@ func updateEntryList(
                 """
             )
         }
-    case .setItems(let documents):
-        state.entries = documents
+    case .setItems(let entries):
+        state.entries = entries
             .enumerated()
             .map({ (i, doc) in
                 EntryModel(
@@ -142,7 +142,7 @@ struct EntryListView_Previews: PreviewProvider {
         EntryListView(
             store: ViewStore(
                 state: EntryListModel(
-                    documents: []
+                    entries: []
                 ),
                 send: { action in }
             )

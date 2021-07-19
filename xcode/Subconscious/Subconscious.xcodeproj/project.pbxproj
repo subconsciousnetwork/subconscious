@@ -64,7 +64,7 @@
 		B8EB2AD0265ECB41008F4D91 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B8EB2ACD265ECB2B008F4D91 /* libsqlite3.tbd */; };
 		B8EC23D726694A33009E4474 /* OptionalUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC23D626694A33009E4474 /* OptionalUtilities.swift */; };
 		B8F41F08262F8FD500D134F8 /* Icon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F41F07262F8FD500D134F8 /* Icon.swift */; };
-		B8FDE3372678474D00BA307D /* TextDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FDE3362678474D00BA307D /* TextDocument.swift */; };
+		B8FDE3372678474D00BA307D /* TextEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FDE3362678474D00BA307D /* TextEntry.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -145,7 +145,7 @@
 		B8EB2ACD265ECB2B008F4D91 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		B8EC23D626694A33009E4474 /* OptionalUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionalUtilities.swift; sourceTree = "<group>"; };
 		B8F41F07262F8FD500D134F8 /* Icon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icon.swift; sourceTree = "<group>"; };
-		B8FDE3362678474D00BA307D /* TextDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextDocument.swift; sourceTree = "<group>"; };
+		B8FDE3362678474D00BA307D /* TextEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextEntry.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -225,7 +225,7 @@
 				B8EC23D626694A33009E4474 /* OptionalUtilities.swift */,
 				B862343B2677FF960099CD87 /* CombineUtilities.swift */,
 				B8E84271269CAE3200B74172 /* SubMigrations.swift */,
-				B8FDE3362678474D00BA307D /* TextDocument.swift */,
+				B8FDE3362678474D00BA307D /* TextEntry.swift */,
 				B81268F32696259C007AC708 /* Slug.swift */,
 				B8158D1D269796BB00F927EF /* Truncate.swift */,
 				B85EBCA9269DFD4400A8D4FF /* ArrayUtilities.swift */,
@@ -494,7 +494,7 @@
 				B81BD104269E604C00E2E991 /* SearchSuggestion.swift in Sources */,
 				B87C7D7C261E0E6C003EFC6F /* Block.swift in Sources */,
 				B874D7AD26540A7800351C8E /* SubSearchBar.swift in Sources */,
-				B8FDE3372678474D00BA307D /* TextDocument.swift in Sources */,
+				B8FDE3372678474D00BA307D /* TextEntry.swift in Sources */,
 				B8E152F226570B890032F5A7 /* Database.swift in Sources */,
 				B83B5296261E58260031988E /* EntryList.swift in Sources */,
 				B85EBCAA269DFD4400A8D4FF /* ArrayUtilities.swift in Sources */,

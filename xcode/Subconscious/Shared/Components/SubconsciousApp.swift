@@ -7,6 +7,8 @@
 
 import SwiftUI
 import Combine
+import os
+
 
 //  MARK: AppStore typealias
 typealias AppStore = Store<AppModel, AppAction, AppEnvironment>
@@ -28,17 +30,33 @@ enum AppAction {
     case appear
     /// Invoke editor with optional URL and content
     case invokeEditor(url: URL?, content: String)
+    /// Issue and log search
     case commitQuery(_ query: String)
+    /// Set live query
     case setQuery(_ text: String)
+    /// Re-issue search in order to refresh results
+    case refreshQuery
     case setEditorPresented(_ isPresented: Bool)
     case setSuggestions(_ suggestions: SuggestionsModel)
+    /// Catch update entry success and react to it in other parts of UI
+    case updateEntrySuccess(_ entry: TextEntry)
     case warning(_ message: String)
     case info(_ message: String)
+
+    static func updateEntry(_ entry: TextEntry) -> AppAction {
+        .database(.updateEntry(entry))
+    }
 
     static func searchSuggestions(_ query: String) -> AppAction {
         .database(.searchSuggestions(query))
     }
 
+    /// Issue search and log search history
+    static func searchAndInsertHistory(_ query: String) -> AppAction {
+        .database(.searchAndInsertHistory(query))
+    }
+
+    /// Issue search without logging search history
     static func search(_ query: String) -> AppAction {
         .database(.search(query))
     }
@@ -50,30 +68,23 @@ enum AppAction {
         .invokeEditor(url: nil, content: content)
     }
 
-    static func editDocument(url: URL) -> AppAction {
+    static func invokeEditorForEntry(url: URL) -> AppAction {
         //  2021-07-12 Gordon Brander
-        //  All document reads are currenlty for the purpose of invoking edit.
-        //  In future, we may want to disambiguate different kinds of document reads.
+        //  All single entry reads are currently for the purpose of invoking edit.
+        //  In future, we may want to disambiguate different kinds of entry reads.
         //  This might mean refactoring database component into app component.
         //  and using database service directly, rather than through actions.
-        .database(.readDocument(url: url))
+        .database(.readEntry(url: url))
     }
 
-    static func createDocument(
+    static func createEntry(
         content: String
     ) -> AppAction {
-        .database(.createDocument(content: content))
-    }
-    
-    static func updateDocument(
-        url: URL,
-        content: String
-    ) -> AppAction {
-        .database(.updateDocument(url: url, content: content))
+        .database(.createEntry(content: content))
     }
 
-    static func deleteDocument(url: URL) -> AppAction {
-        .database(.deleteDocument(url: url))
+    static func deleteEntry(url: URL) -> AppAction {
+        .database(.deleteEntry(url: url))
     }
 }
 
@@ -85,10 +96,12 @@ func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
         return .search(.setItems(results))
     case .searchSuggestionsSuccess(let results):
         return .setSuggestions(results)
-    case .readDocumentSuccess(let document):
+    case .updateEntrySuccess(let entry):
+        return .updateEntrySuccess(entry)
+    case .readEntrySuccess(let entry):
         return .invokeEditor(
-            url: document.url,
-            content: document.content
+            url: entry.url,
+            content: entry.content
         )
     default:
         return .database(action)
@@ -101,12 +114,11 @@ func tagEditorAction(_ action: EditorAction) -> AppAction {
         return .setEditorPresented(false)
     case .requestSave(let url, let content):
         if let url = url {
-            return .updateDocument(
-                url: url,
-                content: content
+            return .updateEntry(
+                TextEntry(url: url, content: content)
             )
         } else {
-            return .createDocument(content: content)
+            return .createEntry(content: content)
         }
     default:
         return .editor(action)
@@ -127,7 +139,7 @@ func tagSearchBarAction(_ action: SubSearchBarAction) -> AppAction {
 func tagSearchAction(_ action: EntryListAction) -> AppAction {
     switch action {
     case .requestEdit(let url):
-        return .editDocument(url: url)
+        return .invokeEditorForEntry(url: url)
     default:
         return .search(action)
     }
@@ -140,7 +152,7 @@ func tagSuggestionsAction(_ action: SuggestionsAction) -> AppAction {
     case .selectAction(let suggestion):
         switch suggestion {
         case .edit(let url, _):
-            return .editDocument(url: url)
+            return .invokeEditorForEntry(url: url)
         case .create(let text):
             return .invokeEditorCreate(content: text)
         }
@@ -161,7 +173,7 @@ func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> AppAction {
 struct AppModel: Equatable {
     var database = DatabaseModel()
     var searchBar = SubSearchBarModel()
-    var search = EntryListModel(documents: [])
+    var search = EntryListModel(entries: [])
     /// Semi-permanent suggestions that show up as tokens in the search view.
     /// We don't differentiate between types of token, so these are all just strings.
     var suggestionTokens = TextTokenBarModel()
@@ -246,12 +258,17 @@ func updateApp(
         ).map(tagSearchBarAction)
 
         let suggestionsEffect = Just(AppAction.searchSuggestions(query))
-        let databaseSearchEffect = Just(AppAction.search(query))
+        let databaseSearchEffect = Just(AppAction.searchAndInsertHistory(query))
         
         return Publishers.Merge3(
             searchBarEffect,
             suggestionsEffect,
             databaseSearchEffect
+        ).eraseToAnyPublisher()
+    case .refreshQuery:
+        /// Reissue search without logging it again
+        return Just(
+            AppAction.search(state.searchBar.comitted)
         ).eraseToAnyPublisher()
     case .setQuery(let text):
         let searchBarEffect = updateSubSearchBar(
@@ -264,6 +281,13 @@ func updateApp(
         return Publishers.Merge(
             searchBarEffect,
             suggestionsEffect
+        ).eraseToAnyPublisher()
+    case .updateEntrySuccess(let entry):
+        let success = Just(AppAction.database(.updateEntrySuccess(entry)))
+        let refresh = Just(AppAction.refreshQuery)
+        return Publishers.Merge(
+            success,
+            refresh
         ).eraseToAnyPublisher()
     case .setSuggestions(let suggestions):
         state.suggestions = suggestions

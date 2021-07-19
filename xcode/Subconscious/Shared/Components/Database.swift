@@ -18,6 +18,9 @@ import os
 
 //  MARK: Actions
 enum DatabaseAction {
+    /// An action that results in no operation
+    /// Useful for swallowing success conditions that are the result of an effect
+    case noop
     case log(_ action: LoggerAction)
     /// Trigger a database migration.
     /// Does an early exit if version is up-to-date.
@@ -34,7 +37,13 @@ enum DatabaseAction {
     case sync
     /// Perform a search with query string
     case search(_ query: String)
-    case searchSuccess([TextDocument])
+    case searchSuccess([TextEntry])
+    case searchFailure(message: String, query: String)
+    /// Log search query in search_history
+    case insertSearchHistory(_ query: String)
+    case insertSearchHistorySuccess(_ query: String)
+    case insertSearchHistoryFailure(message: String, query: String)
+    case searchAndInsertHistory(_ query: String)
     /// Perform a search over suggestions with query string
     case searchSuggestions(_ query: String)
     /// Search suggestion success with array of results
@@ -43,15 +52,22 @@ enum DatabaseAction {
     case searchTitleSuggestions(_ query: String)
     /// Title suggestion success with array of results
     case searchTitleSuggestionsSuccess(_ results: SuggestionsModel)
-    /// Create new document on file system, and log in database
-    case createDocument(content: String)
-    /// Read document contents by URL
-    case readDocument(url: URL)
-    case readDocumentSuccess(document: TextDocument)
-    /// Update document in file system and database.
-    case updateDocument(url: URL, content: String)
-    /// Remove document from file system and database
-    case deleteDocument(url: URL)
+    /// Create new entry on file system, and log in database
+    case createEntry(content: String)
+    case createEntrySuccess(TextEntry)
+    case createEntryFailure(_ message: String)
+    /// Read entry contents by URL
+    case readEntry(url: URL)
+    case readEntrySuccess(_ entry: TextEntry)
+    case readEntryFailure(String)
+    /// Update entry in file system and database.
+    case updateEntry(_ entry: TextEntry)
+    case updateEntrySuccess(_ entry: TextEntry)
+    case updateEntryFailure(message: String, entry: TextEntry)
+    /// Remove entry from file system and database
+    case deleteEntry(url: URL)
+    case deleteEntrySuccess(url: URL)
+    case deleteEntryFailure(message: String, url: URL)
 }
 
 //  MARK: Tagging functions
@@ -78,6 +94,8 @@ func updateDatabase(
     environment: DatabaseEnvironment
 ) -> AnyPublisher<DatabaseAction, Never> {
     switch action {
+    case .noop:
+        return Empty().eraseToAnyPublisher()
     case .log(let action):
         LoggerAction.log(
             action: action,
@@ -85,7 +103,7 @@ func updateDatabase(
         )
     case .setup:
         state.state = .setup
-        return environment.migrateDatabaseAsync()
+        return environment.migrateDatabase()
             .map({ success in DatabaseAction.setupSuccess(success) })
             .replaceError(with: DatabaseAction.rebuild)
             .eraseToAnyPublisher()
@@ -104,8 +122,8 @@ func updateDatabase(
         environment.logger.warning(
             "Database is broken or has wrong schema. Attempting to rebuild."
         )
-        return environment.deleteDatabaseAsync()
-            .flatMap(environment.migrateDatabaseAsync)
+        return environment.deleteDatabase()
+            .flatMap(environment.migrateDatabase)
             .map({ success in DatabaseAction.setupSuccess(success) })
             .replaceError(
                 with: .log(.critical("Failed to rebuild database"))
@@ -113,7 +131,7 @@ func updateDatabase(
             .eraseToAnyPublisher()
     case .sync:
         environment.logger.log("File sync started")
-        return environment.syncDatabaseAsync()
+        return environment.syncDatabase()
             .map({ _ in .log(.info("File sync done")) })
             .catch({ error in
                 Just(
@@ -127,69 +145,185 @@ func updateDatabase(
                 )
             })
             .eraseToAnyPublisher()
-    case .createDocument(let content):
-        return environment.createDocumentAsync(
+    case .createEntry(let content):
+        return environment.createEntry(
             content: content
         )
-        .map({ fingerprint in
-            .log(.info("Created document: \(fingerprint.url)"))
+        .map({ entry in
+            .createEntrySuccess(entry)
         })
         .catch({ error in
             Just(
-                .log(
-                    .warning(
-                        """
-                        Create failed for document.
-                        Error:
-                        \(error)
-                        """
-                    )
+                .createEntryFailure(
+                    """
+                    Create failed for entry.
+                    Error:
+                    \(error)
+                    """
                 )
             )
         })
         .eraseToAnyPublisher()
-    case .readDocument(let url):
-        return environment.readDocument(url: url)
-            .map({ document in
-                .readDocumentSuccess(document: document)
+    case .createEntrySuccess(let entry):
+        environment.logger.log("Created entry \(entry.url)")
+    case .createEntryFailure(let message):
+        environment.logger.warning("\(message)")
+    case .readEntry(let url):
+        return environment.readEntry(url: url)
+            .map({ entry in
+                .readEntrySuccess(entry)
             })
-            .replaceError(
-                with: .log(.error("readDocument failed for \(url)"))
-            )
+            .catch({ error in
+                Just(
+                    .readEntryFailure(
+                        """
+                        Failed to read entry: \(url)
+                        
+                        Error:
+                        \(error.localizedDescription)
+                        """
+                    )
+                )
+            })
             .eraseToAnyPublisher()
-    case .readDocumentSuccess:
+    case .readEntrySuccess:
         environment.logger.warning(
             """
-            DatabaseAction.readDocumentSuccess
+            DatabaseAction.readEntrySuccess
             Should be handled by parent component.
             """
         )
-    case .updateDocument(let url, let content):
-        return environment.writeDocumentAsync(
-            url: url,
-            content: content
+    case .readEntryFailure(let message):
+        environment.logger.warning(
+            """
+            Failed to read entry:
+            
+            Error:
+            \(message)
+            """
         )
-        .map({ _ in .log(.info("Wrote document: \(url)")) })
-        .replaceError(
-            with: .log(.warning("Write failed for document: \(url)"))
-        )
-        .eraseToAnyPublisher()
-    case .deleteDocument(let url):
-        return environment.deleteDocumentAsync(url)
-            .map({ _ in .log(.info("Deleted document: \(url)")) })
-            .replaceError(
-                with: .log(.warning("Delete failed for document: \(url)"))
-            )
+    case .updateEntry(let entry):
+        return environment.writeEntry(entry)
+            .map({ entry in
+                .updateEntrySuccess(entry)
+            })
+            .catch({ error in
+                Just(
+                    .updateEntryFailure(
+                        message: error.localizedDescription,
+                        entry: entry
+                    )
+                )
+            })
             .eraseToAnyPublisher()
+    case .updateEntrySuccess(let entry):
+        environment.logger.log(
+            """
+            Wrote entry: \(entry.url)
+            """
+        )
+    case .updateEntryFailure(let message, let entry):
+        environment.logger.warning(
+            """
+            Failed to write entry: \(entry.url)
+            
+            Error:
+            \(message)
+            """
+        )
+    case .deleteEntry(let url):
+        return environment.deleteEntry(url)
+            .map({ url in
+                .deleteEntrySuccess(url: url)
+            })
+            .catch({ error in
+                Just(
+                    .deleteEntryFailure(
+                        message: error.localizedDescription,
+                        url: url
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+    case .deleteEntrySuccess(let url):
+        environment.logger.log(
+            """
+            Deleted entry: \(url)
+            """
+        )
+    case .deleteEntryFailure(let message, let url):
+        environment.logger.warning(
+            """
+            Failed to delete entry: \(url)
+            
+            Error:
+            \(message)
+            """
+        )
     case .search(let query):
         return environment.search(query: query)
-            .map({ results in .searchSuccess(results) })
-            .replaceError(with: .log(.error("Search failed")))
-            .eraseToAnyPublisher()
+            .map({ results in DatabaseAction.searchSuccess(results) })
+            .catch({ error in
+                Just(
+                    .searchFailure(
+                        message: error.localizedDescription,
+                        query: query
+                    )
+                )
+            }).eraseToAnyPublisher()
     case .searchSuccess:
         environment.logger.warning(
             "DatabaseAction.searchSuccess should be handled by parent component"
         )
+    case .searchFailure(let message, let query):
+        environment.logger.warning(
+            """
+            Search failed for: \(query)
+            
+            Error:
+            \(message)
+            """
+        )
+    case .insertSearchHistory(let query):
+        return environment.insertSearchHistory(query: query)
+            .map({ query in
+                .insertSearchHistorySuccess(query)
+            })
+            .catch({ error in
+                Just(
+                    .insertSearchHistoryFailure(
+                        message: error.localizedDescription,
+                        query: query
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+    case .insertSearchHistorySuccess(let query):
+        environment.logger.log(
+            """
+            Inserted search history: \(query)
+            """
+        )
+    case .insertSearchHistoryFailure(let message, let query):
+        environment.logger.warning(
+            """
+            Failed to insert into search history: \(query)
+            
+            Error:
+            \(message)
+            """
+        )
+    case .searchAndInsertHistory(let query):
+        let insertSearchHistory = Just(
+            DatabaseAction.insertSearchHistory(query)
+        )
+        let search = Just(
+            DatabaseAction.search(query)
+        )
+        return Publishers.Merge(
+            insertSearchHistory,
+            search
+        ).eraseToAnyPublisher()
     case .searchSuggestions(let query):
         return environment.searchSuggestions(query)
             .map({ results in .searchSuggestionsSuccess(results) })
@@ -249,7 +383,7 @@ struct DatabaseEnvironment {
         self.migrations = migrations
     }
     
-    func migrateDatabaseAsync() ->
+    func migrateDatabase() ->
         Future<SQLite3Migrations.MigrationSuccess, Error> {
         Future({ promise in
             DispatchQueue.global(qos: .background).async {
@@ -264,7 +398,7 @@ struct DatabaseEnvironment {
         })
     }
 
-    func deleteDatabaseAsync() -> AnyPublisher<Void, Error> {
+    func deleteDatabase() -> AnyPublisher<Void, Error> {
         CombineUtilities.async(execute: {
             logger.notice("Deleting database")
             do {
@@ -278,7 +412,7 @@ struct DatabaseEnvironment {
         })
     }
 
-    func syncDatabaseAsync() -> AnyPublisher<Void, Error> {
+    func syncDatabase() -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
             let fileUrls = try fileManager.contentsOfDirectory(
                 at: documentsUrl,
@@ -317,12 +451,12 @@ struct DatabaseEnvironment {
                 // .conflict. Leader wins.
                 case .leftOnly, .leftNewer, .rightNewer, .conflict:
                     if let left = change.left {
-                        try writeDocumentToDatabase(left.url)
+                        try writeEntryToDatabase(left.url)
                     }
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly:
                     if let right = change.right {
-                        try deleteDocumentFromDatabase(right.url)
+                        try deleteEntryFromDatabase(right.url)
                     }
                 // .same = no change. Do nothing.
                 case .same:
@@ -332,21 +466,21 @@ struct DatabaseEnvironment {
         }
     }
 
-    func readDocument(url: URL) throws -> TextDocument {
-        TextDocument(
+    func readEntry(url: URL) throws -> TextEntry {
+        TextEntry(
             url: url,
             content: try String(contentsOf: url, encoding: .utf8)
         )
     }
 
-    func readDocument(url: URL) -> AnyPublisher<TextDocument, Error> {
+    func readEntry(url: URL) -> AnyPublisher<TextEntry, Error> {
         Result(catching: {
-            try readDocument(url: url)
+            try readEntry(url: url)
         }).publisher.eraseToAnyPublisher()
     }
     
-    /// Write document syncronously
-    private func writeDocumentToDatabase(
+    /// Write entry syncronously
+    private func writeEntryToDatabase(
         url: URL,
         title: String,
         content: String,
@@ -376,12 +510,12 @@ struct DatabaseEnvironment {
         )
     }
     
-    /// Write document syncronously by reading it off of file system
-    private func writeDocumentToDatabase(_ url: URL) throws {
+    /// Write entry syncronously by reading it off of file system
+    private func writeEntryToDatabase(_ url: URL) throws {
         let content = try String(contentsOf: url, encoding: .utf8)
         let title = Subtext.getTitle(markup: content)
         let attributes = try FileFingerprint.Attributes.init(url: url).unwrap()
-        try writeDocumentToDatabase(
+        try writeEntryToDatabase(
             url: url,
             title: title,
             content: content,
@@ -390,10 +524,10 @@ struct DatabaseEnvironment {
         )
     }
 
-    /// Create a new document on the file system, and write to the database
-    func createDocumentAsync(
+    /// Create a new entry on the file system, and write to the database
+    func createEntry(
         content: String
-    ) -> AnyPublisher<FileFingerprint, Error> {
+    ) -> AnyPublisher<TextEntry, Error> {
         CombineUtilities.async {
             let title = Truncate.getFirstPseudoSentence(
                 Subtext.getTitle(markup: content)
@@ -408,26 +542,24 @@ struct DatabaseEnvironment {
             // Re-read size and file modified from file system to make sure
             // what we store is exactly equal to file system.
             let attributes = try FileFingerprint.Attributes(url: url).unwrap()
-            try writeDocumentToDatabase(
+            try writeEntryToDatabase(
                 url: url,
                 title: title,
                 content: content,
                 modified: attributes.modified,
                 size: attributes.size
             )
-            return FileFingerprint(
-                url: url,
-                attributes: attributes
-            )
+            return TextEntry(url: url, content: content)
         }
     }
 
-    /// Write a document to the file system, and to the database
-    func writeDocumentAsync(
-        url: URL,
-        content: String
-    ) -> AnyPublisher<Void, Error> {
+    /// Write an entry to the file system, and to the database
+    func writeEntry(
+        _ entry: TextEntry
+    ) -> AnyPublisher<TextEntry, Error> {
         CombineUtilities.async {
+            let url = entry.url
+            let content = entry.content
             let title = Truncate.getFirstPseudoSentence(
                 Subtext.getTitle(markup: content)
             )
@@ -435,17 +567,18 @@ struct DatabaseEnvironment {
             // Re-read size and file modified from file system to make sure
             // what we store is exactly equal to file system.
             let attributes = try FileFingerprint.Attributes(url: url).unwrap()
-            try writeDocumentToDatabase(
+            try writeEntryToDatabase(
                 url: url,
                 title: title,
                 content: content,
                 modified: attributes.modified,
                 size: attributes.size
             )
+            return entry
         }
     }
     
-    private func deleteDocumentFromDatabase(_ url: URL) throws {
+    private func deleteEntryFromDatabase(_ url: URL) throws {
         try db.connection().execute(
             sql: """
             DELETE FROM entry WHERE path = ?
@@ -456,11 +589,12 @@ struct DatabaseEnvironment {
         )
     }
 
-    /// Remove document from file system and database
-    func deleteDocumentAsync(_ url: URL) -> AnyPublisher<Void, Error> {
+    /// Remove entry from file system and database
+    func deleteEntry(_ url: URL) -> AnyPublisher<URL, Error> {
         CombineUtilities.async {
             try fileManager.removeItem(at: url)
-            try deleteDocumentFromDatabase(url)
+            try deleteEntryFromDatabase(url)
+            return url
         }
     }
 
@@ -618,7 +752,7 @@ struct DatabaseEnvironment {
             )
         })
     }
-    
+
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchSuggestions(
@@ -640,10 +774,11 @@ struct DatabaseEnvironment {
         return searchSuggestions(query)
     }
 
-    func search(query: String) -> AnyPublisher<[TextDocument], Error> {
-        CombineUtilities.async(qos: .userInitiated, execute: {
+    /// Log a search query in search history db
+    func insertSearchHistory(query: String) -> AnyPublisher<String, Error> {
+        CombineUtilities.async(qos: .background, execute: {
             guard !query.isWhitespace else {
-                return []
+                return query
             }
 
             // Log search in database, along with number of hits
@@ -663,7 +798,17 @@ struct DatabaseEnvironment {
                 ]
             )
 
-            let docs: [TextDocument] = try db.connection().execute(
+            return query
+        })
+    }
+
+    func search(query: String) -> AnyPublisher<[TextEntry], Error> {
+        CombineUtilities.async(qos: .userInitiated, execute: {
+            guard !query.isWhitespace else {
+                return []
+            }
+
+            let docs: [TextEntry] = try db.connection().execute(
                 sql: """
                 SELECT path, body
                 FROM entry_search
@@ -679,7 +824,7 @@ struct DatabaseEnvironment {
                 let path: String = try row.get(0).unwrap()
                 let content: String = try row.get(1).unwrap()
                 let url = documentsUrl.appendingPathComponent(path)
-                return TextDocument(
+                return TextEntry(
                     url: url,
                     content: content
                 )

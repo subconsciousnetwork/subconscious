@@ -1,5 +1,5 @@
 //
-//  TextDocument.swift
+//  TextEntry.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 6/14/21.
@@ -8,7 +8,7 @@
 import Foundation
 
 /// An in-memory representation of a text file.
-struct TextDocument:
+struct TextEntry:
     CustomStringConvertible, Identifiable, Hashable, Equatable {
     var description: String { content }
     var id: URL { url }
