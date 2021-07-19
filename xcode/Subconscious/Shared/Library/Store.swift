@@ -30,27 +30,39 @@ final class Store<State, Action, Environment>: ObservableObject, Equatable
     
     @Published private(set) var state: State
 
+    private let logger: Logger?
     /// Holds references to things like services
     private let environment: Environment
     /// Mutates state in response to an action, returning an effect stream
     private let reducer: Reducer<State, Action, Environment>
-    private var effects = PublisherManager()
+    private let effects = PublisherManager()
 
     init(
         state: State,
         reducer: @escaping Reducer<State, Action, Environment>,
-        environment: Environment
+        environment: Environment,
+        logger: Logger? = nil
     ) {
         self.state = state
         self.reducer = reducer
         self.environment = environment
+        self.logger = logger
     }
     
     func send(_ action: Action) {
+        if let logger = self.logger {
+            let debug = String(reflecting: action)
+            logger.debug(
+                """
+                Action: \(debug)
+                """
+            )
+        }
+
         guard let effect = reducer(&state, action, environment) else {
             return
         }
-        
+
         effects.sink(
             publisher: effect
                 /// Specifies the schedular used to pull events
