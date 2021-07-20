@@ -9,6 +9,8 @@ import SwiftUI
 import Foundation
 import Combine
 import os
+import Elmo
+
 
 struct ContentView: View, Equatable {
     var store: ViewStore<AppModel, AppAction>

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -35,7 +35,6 @@
 		B86F33CA261AB2C7009D3D48 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B86F339D261AB2C7009D3D48 /* Assets.xcassets */; };
 		B86F33CB261AB2C7009D3D48 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B86F339D261AB2C7009D3D48 /* Assets.xcassets */; };
 		B874D7AD26540A7800351C8E /* SubSearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B874D7AC26540A7800351C8E /* SubSearchBar.swift */; };
-		B87651242630A07A00AD029A /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87651232630A07A00AD029A /* Store.swift */; };
 		B8796F55269E223F001AC8C1 /* SubConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8796F54269E223F001AC8C1 /* SubConstants.swift */; };
 		B8796F5B269E3D3A001AC8C1 /* ListHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8796F5A269E3D3A001AC8C1 /* ListHeader.swift */; };
 		B87C7D7C261E0E6C003EFC6F /* Block.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87C7D7B261E0E6C003EFC6F /* Block.swift */; };
@@ -50,6 +49,7 @@
 		B8B2C1872647172A008AA3EC /* PostHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C1862647172A008AA3EC /* PostHeader.swift */; };
 		B8B2C18926471E6B008AA3EC /* FakeTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18826471E6B008AA3EC /* FakeTextField.swift */; };
 		B8B2C18B26474326008AA3EC /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18A26474326008AA3EC /* Colors.swift */; };
+		B8CCBF5A26A74CFB00218458 /* Elmo in Frameworks */ = {isa = PBXBuildFile; productRef = B8CCBF5926A74CFB00218458 /* Elmo */; };
 		B8DF24AE267A5764000987C5 /* FileFingerprint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DF24AD267A5764000987C5 /* FileFingerprint.swift */; };
 		B8E152F02656F2D20032F5A7 /* SubconsciousApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */; };
 		B8E152F226570B890032F5A7 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E152F126570B890032F5A7 /* Database.swift */; };
@@ -120,7 +120,6 @@
 		B86F33C1261AB2C7009D3D48 /* Tests_macOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_macOS.swift; sourceTree = "<group>"; };
 		B86F33C3261AB2C7009D3D48 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B874D7AC26540A7800351C8E /* SubSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubSearchBar.swift; sourceTree = "<group>"; };
-		B87651232630A07A00AD029A /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		B8796F54269E223F001AC8C1 /* SubConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubConstants.swift; sourceTree = "<group>"; };
 		B8796F5A269E3D3A001AC8C1 /* ListHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListHeader.swift; sourceTree = "<group>"; };
 		B87C7D7B261E0E6C003EFC6F /* Block.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Block.swift; sourceTree = "<group>"; };
@@ -134,6 +133,7 @@
 		B8B2C1862647172A008AA3EC /* PostHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostHeader.swift; sourceTree = "<group>"; };
 		B8B2C18826471E6B008AA3EC /* FakeTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeTextField.swift; sourceTree = "<group>"; };
 		B8B2C18A26474326008AA3EC /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		B8CCBF5826A7492B00218458 /* Elmo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Elmo; path = ../Elmo; sourceTree = "<group>"; };
 		B8DF24AD267A5764000987C5 /* FileFingerprint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileFingerprint.swift; sourceTree = "<group>"; };
 		B8E152F126570B890032F5A7 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
 		B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileManagerUtilities.swift; sourceTree = "<group>"; };
@@ -154,6 +154,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B85CABF3265C511100BE1BE6 /* libsqlite3.tbd in Frameworks */,
+				B8CCBF5A26A74CFB00218458 /* Elmo in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -187,22 +188,22 @@
 		B804C09D2620FFDD00D59CC6 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */,
-				B8E152F126570B890032F5A7 /* Database.swift */,
-				B83B5295261E58260031988E /* EntryList.swift */,
-				B87DA9182624DDEA00BA5232 /* Stream.swift */,
-				B87C7D7B261E0E6C003EFC6F /* Block.swift */,
-				B811E60E261D0FBF00484E45 /* Entry.swift */,
-				B838FF35261FB7B40055C5CF /* Suggestions.swift */,
 				B88715122642F2D0009BEE1E /* ActionSuggestion.swift */,
-				B81BD103269E604C00E2E991 /* SearchSuggestion.swift */,
-				B86F339C261AB2C6009D3D48 /* ContentView.swift */,
-				B8B2C18426470EC0008AA3EC /* Post.swift */,
-				B874D7AC26540A7800351C8E /* SubSearchBar.swift */,
-				B8B2C1862647172A008AA3EC /* PostHeader.swift */,
-				B81BD763263885DE00BAEC67 /* Editor.swift */,
+				B87C7D7B261E0E6C003EFC6F /* Block.swift */,
 				B8E152EF2656F2A30032F5A7 /* Common */,
+				B86F339C261AB2C6009D3D48 /* ContentView.swift */,
+				B8E152F126570B890032F5A7 /* Database.swift */,
+				B81BD763263885DE00BAEC67 /* Editor.swift */,
+				B811E60E261D0FBF00484E45 /* Entry.swift */,
+				B83B5295261E58260031988E /* EntryList.swift */,
 				B862343D267805240099CD87 /* Logger.swift */,
+				B8B2C18426470EC0008AA3EC /* Post.swift */,
+				B8B2C1862647172A008AA3EC /* PostHeader.swift */,
+				B81BD103269E604C00E2E991 /* SearchSuggestion.swift */,
+				B87DA9182624DDEA00BA5232 /* Stream.swift */,
+				B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */,
+				B874D7AC26540A7800351C8E /* SubSearchBar.swift */,
+				B838FF35261FB7B40055C5CF /* Suggestions.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -210,27 +211,26 @@
 		B853EB2326326F9F001BB584 /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				B85EBCA9269DFD4400A8D4FF /* ArrayUtilities.swift */,
+				B8B2C18A26474326008AA3EC /* Colors.swift */,
+				B862343B2677FF960099CD87 /* CombineUtilities.swift */,
+				B8DF24AD267A5764000987C5 /* FileFingerprint.swift */,
+				B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */,
+				B8B24FA42655CDF500EE6CB9 /* FileSync.swift */,
+				B8EC23D626694A33009E4474 /* OptionalUtilities.swift */,
+				B8E628212672E9B2005B86CE /* PublisherManager.swift */,
+				B85AD0E8269F62220089ADFD /* Shadow.swift */,
+				B81268F32696259C007AC708 /* Slug.swift */,
 				B85CABF7265C68AF00BE1BE6 /* SQLite3Connection.swift */,
 				B8E8426F269A663C00B74172 /* SQLite3ConnectionManager.swift */,
 				B8E628232673B54B005B86CE /* SQLite3Migrations.swift */,
-				B87651232630A07A00AD029A /* Store.swift */,
-				B8E628212672E9B2005B86CE /* PublisherManager.swift */,
-				B853EB36263274DD001BB584 /* Subtext.swift */,
 				B853EB402633959E001BB584 /* StringUtilities.swift */,
-				B82211F426375A9C005CFBBE /* URLUtilities.swift */,
-				B8B2C18A26474326008AA3EC /* Colors.swift */,
-				B8B24FA42655CDF500EE6CB9 /* FileSync.swift */,
-				B8DF24AD267A5764000987C5 /* FileFingerprint.swift */,
-				B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */,
-				B8EC23D626694A33009E4474 /* OptionalUtilities.swift */,
-				B862343B2677FF960099CD87 /* CombineUtilities.swift */,
-				B8E84271269CAE3200B74172 /* SubMigrations.swift */,
-				B8FDE3362678474D00BA307D /* TextEntry.swift */,
-				B81268F32696259C007AC708 /* Slug.swift */,
-				B8158D1D269796BB00F927EF /* Truncate.swift */,
-				B85EBCA9269DFD4400A8D4FF /* ArrayUtilities.swift */,
 				B8796F54269E223F001AC8C1 /* SubConstants.swift */,
-				B85AD0E8269F62220089ADFD /* Shadow.swift */,
+				B8E84271269CAE3200B74172 /* SubMigrations.swift */,
+				B853EB36263274DD001BB584 /* Subtext.swift */,
+				B8FDE3362678474D00BA307D /* TextEntry.swift */,
+				B8158D1D269796BB00F927EF /* Truncate.swift */,
+				B82211F426375A9C005CFBBE /* URLUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -247,6 +247,7 @@
 		B86F3394261AB2C6009D3D48 = {
 			isa = PBXGroup;
 			children = (
+				B8CCBF5826A7492B00218458 /* Elmo */,
 				B86F3399261AB2C6009D3D48 /* Shared */,
 				B86F33A4261AB2C7009D3D48 /* iOS */,
 				B86F33AB261AB2C7009D3D48 /* macOS */,
@@ -347,6 +348,9 @@
 			dependencies = (
 			);
 			name = "Subconscious (iOS)";
+			packageProductDependencies = (
+				B8CCBF5926A74CFB00218458 /* Elmo */,
+			);
 			productName = "Subconscious (iOS)";
 			productReference = B86F33A2261AB2C7009D3D48 /* Subconscious.app */;
 			productType = "com.apple.product-type.application";
@@ -411,7 +415,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1250;
-				LastUpgradeCheck = 1240;
+				LastUpgradeCheck = 1250;
 				TargetAttributes = {
 					B86F33A1261AB2C7009D3D48 = {
 						CreatedOnToolsVersion = 12.4;
@@ -502,7 +506,6 @@
 				B81BD764263885DE00BAEC67 /* Editor.swift in Sources */,
 				B8E152F426570C010032F5A7 /* FileManagerUtilities.swift in Sources */,
 				B82211F526375A9C005CFBBE /* URLUtilities.swift in Sources */,
-				B87651242630A07A00AD029A /* Store.swift in Sources */,
 				B8F41F08262F8FD500D134F8 /* Icon.swift in Sources */,
 				B805AAF626447BF30051F205 /* TextToken.swift in Sources */,
 				B8796F55269E223F001AC8C1 /* SubConstants.swift in Sources */,
@@ -742,6 +745,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_PREVIEWS = YES;
@@ -764,6 +768,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_PREVIEWS = YES;
@@ -914,6 +919,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B8CCBF5926A74CFB00218458 /* Elmo */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Elmo;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B86F3395261AB2C6009D3D48 /* Project object */;
 }

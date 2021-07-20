@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import Elmo
 
 enum SuggestionsAction {
     case selectSearch(_ query: String)

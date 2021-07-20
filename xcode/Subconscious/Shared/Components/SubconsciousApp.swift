@@ -8,10 +8,10 @@
 import SwiftUI
 import Combine
 import os
-
+import Elmo
 
 //  MARK: AppStore typealias
-typealias AppStore = Store<AppModel, AppAction, AppEnvironment>
+typealias AppStore = Elmo.Store<AppModel, AppAction, AppEnvironment>
 
 
 //  MARK: App Actions
@@ -298,7 +298,11 @@ struct SubconsciousApp: App {
     @StateObject private var store: AppStore = AppStore(
         state: .init(),
         reducer: updateApp,
-        environment: .init()
+        environment: .init(),
+        logger: Logger(
+            subsystem: "com.subsconcious.Subconscious",
+            category: "store"
+        )
     )
 
     var body: some Scene {

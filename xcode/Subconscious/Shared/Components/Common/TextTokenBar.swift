@@ -8,6 +8,7 @@
 import SwiftUI
 import Combine
 import os
+import Elmo
 
 enum TextTokenBarAction {
     case select(text: String)
