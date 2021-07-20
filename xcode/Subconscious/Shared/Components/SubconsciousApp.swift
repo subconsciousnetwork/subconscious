@@ -11,7 +11,7 @@ import os
 import Elmo
 
 //  MARK: AppStore typealias
-typealias AppStore = Elmo.Store<AppModel, AppAction, AppEnvironment>
+typealias SubconsciousStore = Elmo.Store<AppModel, AppAction, AppEnvironment>
 
 
 //  MARK: App Actions
@@ -295,7 +295,7 @@ func updateApp(
 //  MARK: App root view
 @main
 struct SubconsciousApp: App {
-    @StateObject private var store: AppStore = AppStore(
+    @StateObject private var store = SubconsciousStore(
         state: .init(),
         reducer: updateApp,
         environment: .init(),

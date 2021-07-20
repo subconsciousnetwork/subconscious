@@ -96,7 +96,7 @@ struct ContentView: View, Equatable {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        let store = AppStore(
+        let store = SubconsciousStore(
             state: .init(),
             reducer: updateApp,
             environment: .init()
