@@ -21,7 +21,6 @@ enum DatabaseAction {
     /// An action that results in no operation
     /// Useful for swallowing success conditions that are the result of an effect
     case noop
-    case log(_ action: LoggerAction)
     /// Trigger a database migration.
     /// Does an early exit if version is up-to-date.
     /// All calls to the query interface in the environment perform these steps to ensure the
@@ -33,8 +32,11 @@ enum DatabaseAction {
     /// Rebuild database if it is somehow impossible to migrate.
     /// This should not happen, but it allows us to recover if it does.
     case rebuild
+    case rebuildFailure(message: String)
     /// Sync files with database
     case sync
+    case syncSuccess(_ changes: [FileSync.Change])
+    case syncFailure(message: String)
     /// Perform a search with query string
     case search(_ query: String)
     case searchSuccess([TextEntry])
@@ -48,10 +50,12 @@ enum DatabaseAction {
     case searchSuggestions(_ query: String)
     /// Search suggestion success with array of results
     case searchSuggestionsSuccess(_ results: SuggestionsModel)
+    case searchSuggestionsFailure(message: String)
     /// Suggest titles for entry
     case searchTitleSuggestions(_ query: String)
     /// Title suggestion success with array of results
     case searchTitleSuggestionsSuccess(_ results: SuggestionsModel)
+    case searchTitleSuggestionsFailure(message: String)
     /// Create new entry on file system, and log in database
     case createEntry(content: String)
     case createEntrySuccess(TextEntry)
@@ -68,11 +72,6 @@ enum DatabaseAction {
     case deleteEntry(url: URL)
     case deleteEntrySuccess(url: URL)
     case deleteEntryFailure(message: String, url: URL)
-}
-
-//  MARK: Tagging functions
-func tagDatabaseLoggerAction(_ action: LoggerAction) -> DatabaseAction {
-    .log(action)
 }
 
 //  MARK: Model
@@ -96,11 +95,6 @@ func updateDatabase(
     switch action {
     case .noop:
         return Empty().eraseToAnyPublisher()
-    case .log(let action):
-        LoggerAction.log(
-            action: action,
-            environment: environment.logger
-        )
     case .setup:
         state.state = .setup
         return environment.migrateDatabase()
@@ -125,26 +119,45 @@ func updateDatabase(
         return environment.deleteDatabase()
             .flatMap(environment.migrateDatabase)
             .map({ success in DatabaseAction.setupSuccess(success) })
-            .replaceError(
-                with: .log(.critical("Failed to rebuild database"))
-            )
+            .catch({ error in
+                Just(.rebuildFailure(message: error.localizedDescription))
+            })
             .eraseToAnyPublisher()
+    case .rebuildFailure(let message):
+        environment.logger.critical(
+            """
+            Failed to rebuild database.
+            
+            Error:
+            \(message)
+            """
+        )
     case .sync:
         environment.logger.log("File sync started")
         return environment.syncDatabase()
-            .map({ _ in .log(.info("File sync done")) })
+            .map({ changes in .syncSuccess(changes) })
             .catch({ error in
-                Just(
-                    DatabaseAction.log(
-                        .error(
-                            """
-                            File sync failed with error: \(error)
-                            """
-                        )
-                    )
-                )
+                Just(.syncFailure(message: error.localizedDescription))
             })
             .eraseToAnyPublisher()
+    case .syncSuccess(let changes):
+        environment.logger.log(
+            """
+            File sync finished
+            
+            Changes:
+            \(changes)
+            """
+        )
+    case .syncFailure(let message):
+        environment.logger.warning(
+            """
+            File sync failed.
+            
+            Error:
+            \(message)
+            """
+        )
     case .createEntry(let content):
         return environment.createEntry(
             content: content
@@ -187,7 +200,7 @@ func updateDatabase(
             })
             .eraseToAnyPublisher()
     case .readEntrySuccess:
-        environment.logger.warning(
+        environment.logger.debug(
             """
             DatabaseAction.readEntrySuccess
             Should be handled by parent component.
@@ -272,7 +285,7 @@ func updateDatabase(
                 )
             }).eraseToAnyPublisher()
     case .searchSuccess:
-        environment.logger.warning(
+        environment.logger.debug(
             "DatabaseAction.searchSuccess should be handled by parent component"
         )
     case .searchFailure(let message, let query):
@@ -329,30 +342,47 @@ func updateDatabase(
             .map({ results in .searchSuggestionsSuccess(results) })
             .catch({ error in
                 Just(
-                    .log(
-                        .error(
-                            "DatabaseAction.searchSuggestions failed with error: \(error)"
-                        )
+                    .searchSuggestionsFailure(
+                        message: error.localizedDescription
                     )
                 )
             }).eraseToAnyPublisher()
     case .searchSuggestionsSuccess:
-        environment.logger.warning(
+        environment.logger.debug(
             "DatabaseAction.searchSuggestionsSuccess should be handled by parent component"
+        )
+    case .searchSuggestionsFailure(let message):
+        environment.logger.warning(
+            """
+            Search suggestions failed.
+            
+            Error:
+            \(message)
+            """
         )
     case .searchTitleSuggestions(let query):
         return environment.searchTitleSuggestions(query)
             .map({ results in .searchTitleSuggestionsSuccess(results) })
-            .replaceError(
-                with: .log(
-                    .error(
-                        "DatabaseAction.searchTitleSuggestions failed"
+            .catch({ error in
+                Just(
+                    .searchTitleSuggestionsFailure(
+                        message: error.localizedDescription
                     )
                 )
-            ).eraseToAnyPublisher()
+            })
+            .eraseToAnyPublisher()
     case .searchTitleSuggestionsSuccess:
-        environment.logger.warning(
+        environment.logger.debug(
             "DatabaseAction.suggestTitlesSuccess should be handled by parent component"
+        )
+    case .searchTitleSuggestionsFailure(let message):
+        environment.logger.warning(
+            """
+            Title suggestions failed
+            
+            Error:
+            \(message)
+            """
         )
     }
     return Empty().eraseToAnyPublisher()
@@ -412,7 +442,7 @@ struct DatabaseEnvironment {
         })
     }
 
-    func syncDatabase() -> AnyPublisher<Void, Error> {
+    func syncDatabase() -> AnyPublisher<[FileSync.Change], Error> {
         CombineUtilities.async(qos: .utility) {
             let fileUrls = try fileManager.contentsOfDirectory(
                 at: documentsUrl,
@@ -440,8 +470,8 @@ struct DatabaseEnvironment {
             let changes = FileSync.calcChanges(
                 left: left,
                 right: right
-            )
-
+            ).filter({ change in change.status != .same })
+            
             for change in changes {
                 switch change.status {
                 // .leftOnly = create.
@@ -463,6 +493,7 @@ struct DatabaseEnvironment {
                     break
                 }
             }
+            return changes
         }
     }
 
@@ -533,7 +564,7 @@ struct DatabaseEnvironment {
                 Subtext.getTitle(markup: content)
             )
             let name = Slug.toFilename(title)
-            let url = try FileManager.default.findUniqueFilename(
+            let url = try fileManager.findUniqueFilename(
                 at: documentsUrl,
                 name: name,
                 ext: "subtext"
