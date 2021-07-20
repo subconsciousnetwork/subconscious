@@ -252,18 +252,15 @@ func updateApp(
     case .setEditorPresented(let isPresented):
         state.isEditorPresented = isPresented
     case .commitQuery(let query):
-        let searchBarEffect = updateSubSearchBar(
-            state: &state.searchBar,
-            action: .commit(query)
-        ).map(tagSearchBarAction)
-
-        let suggestionsEffect = Just(AppAction.searchSuggestions(query))
-        let databaseSearchEffect = Just(AppAction.searchAndInsertHistory(query))
-        
+        let commitSearchBar = Just(AppAction.searchBar(.commit(query)))
+        let searchSuggestions = Just(AppAction.searchSuggestions(query))
+        let searchAndInsertHistory = Just(
+            AppAction.searchAndInsertHistory(query)
+        )
         return Publishers.Merge3(
-            searchBarEffect,
-            suggestionsEffect,
-            databaseSearchEffect
+            commitSearchBar,
+            searchSuggestions,
+            searchAndInsertHistory
         ).eraseToAnyPublisher()
     case .refreshQuery:
         /// Reissue search without logging it again
@@ -271,16 +268,11 @@ func updateApp(
             AppAction.search(state.searchBar.comitted)
         ).eraseToAnyPublisher()
     case .setQuery(let text):
-        let searchBarEffect = updateSubSearchBar(
-            state: &state.searchBar,
-            action: .setText(text)
-        ).map(tagSearchBarAction)
-
-        let suggestionsEffect = Just(AppAction.searchSuggestions(text))
-
+        let setText = Just(AppAction.searchBar(.setText(text)))
+        let searchSuggestions = Just(AppAction.searchSuggestions(text))
         return Publishers.Merge(
-            searchBarEffect,
-            suggestionsEffect
+            setText,
+            searchSuggestions
         ).eraseToAnyPublisher()
     case .updateEntrySuccess(let entry):
         let success = Just(AppAction.database(.updateEntrySuccess(entry)))
