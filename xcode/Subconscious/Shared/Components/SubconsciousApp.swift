@@ -311,11 +311,7 @@ struct SubconsciousApp: App {
     @StateObject private var store = SubconsciousStore(
         state: .init(),
         reducer: updateApp,
-        environment: .init(),
-        logger: Logger(
-            subsystem: "com.subsconcious.Subconscious",
-            category: "store"
-        )
+        environment: .init()
     )
 
     var body: some Scene {
