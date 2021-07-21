@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// A custom list header, roughly in the style of the list header style used for `List`
-struct ListHeader<Subview: View>: View {
+struct ListHeaderView<Subview: View>: View {
     let title: Subview
     
     var body: some View {
@@ -25,7 +25,7 @@ struct ListHeader<Subview: View>: View {
 
 struct ListHeader_Previews: PreviewProvider {
     static var previews: some View {
-        ListHeader(
+        ListHeaderView(
             title: Text("Title")
         )
     }

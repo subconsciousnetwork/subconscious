@@ -43,7 +43,7 @@ struct ActionSuggestionView: View, Equatable {
             switch suggestion {
             case .edit(_, let title):
                 HStack(spacing: 0) {
-                    IconLabelRow(
+                    IconLabelRowView(
                         title: title,
                         image: Image(systemName: "doc.text")
                     )
@@ -52,7 +52,7 @@ struct ActionSuggestionView: View, Equatable {
                 }
             case .create(let title):
                 HStack(spacing: 0) {
-                    IconLabelRow(
+                    IconLabelRowView(
                         title: title,
                         image: Image(systemName: "doc.badge.plus")
                     )

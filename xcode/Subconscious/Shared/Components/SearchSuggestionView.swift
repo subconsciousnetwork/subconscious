@@ -19,7 +19,7 @@ struct SearchSuggestionView: View, Equatable {
 
     var body: some View {
         
-        IconLabelRow(
+        IconLabelRowView(
             title: suggestion.query,
             image: Image(systemName: "magnifyingglass")
         )

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FakeTextField: View {
+struct FakeTextFieldView: View {
     var text: String
     
     var body: some View {
@@ -31,7 +31,7 @@ struct FakeTextField: View {
 
 struct FakeTextField_Previews: PreviewProvider {
     static var previews: some View {
-        FakeTextField(
+        FakeTextFieldView(
             text: "Reply"
         )
     }

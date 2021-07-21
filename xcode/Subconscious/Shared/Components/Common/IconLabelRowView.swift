@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct IconLabelRow: View {
+struct IconLabelRowView: View {
     var title: String
     var image: Image
     var titleColor: Color = .Sub.text
@@ -25,7 +25,7 @@ struct IconLabelRow: View {
 
 struct IconLabelRow_Previews: PreviewProvider {
     static var previews: some View {
-        IconLabelRow(
+        IconLabelRowView(
             title: "Some title",
             image: Image(systemName: "folder")
         )
