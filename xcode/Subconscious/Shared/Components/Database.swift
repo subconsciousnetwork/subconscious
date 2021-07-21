@@ -640,24 +640,9 @@ struct DatabaseEnvironment {
                 )
             })
 
-            let entriesThatShouldExist = try db.connection().execute(
-                sql: """
-                SELECT query, count(query) AS queries
-                FROM search_history
-                WHERE hits < 1
-                GROUP BY query
-                ORDER BY queries DESC
-                LIMIT 3
-                """
-            ).compactMap({ row in
-                try ActionSuggestion.create(row.get(0).unwrap())
-            })
-
-            let actions = recent + entriesThatShouldExist
-            
             return SuggestionsModel(
                 searches: searches,
-                actions: actions
+                actions: recent
             )
         })
     }
