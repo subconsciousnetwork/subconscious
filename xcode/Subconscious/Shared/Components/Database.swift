@@ -39,7 +39,7 @@ enum DatabaseAction {
     case syncFailure(message: String)
     /// Perform a search with query string
     case search(_ query: String)
-    case searchSuccess([TextEntry])
+    case searchSuccess([EntryFile])
     case searchFailure(message: String, query: String)
     /// Log search query in search_history
     case insertSearchHistory(_ query: String)
@@ -57,17 +57,17 @@ enum DatabaseAction {
     case searchTitleSuggestionsSuccess(_ results: SuggestionsModel)
     case searchTitleSuggestionsFailure(message: String)
     /// Create new entry on file system, and log in database
-    case createEntry(content: String)
-    case createEntrySuccess(TextEntry)
+    case createEntry(Entry)
+    case createEntrySuccess(EntryFile)
     case createEntryFailure(_ message: String)
     /// Read entry contents by URL
     case readEntry(url: URL)
-    case readEntrySuccess(_ entry: TextEntry)
+    case readEntrySuccess(EntryFile)
     case readEntryFailure(String)
     /// Update entry in file system and database.
-    case updateEntry(_ entry: TextEntry)
-    case updateEntrySuccess(_ entry: TextEntry)
-    case updateEntryFailure(message: String, entry: TextEntry)
+    case updateEntry(EntryFile)
+    case updateEntrySuccess(EntryFile)
+    case updateEntryFailure(message: String, entry: EntryFile)
     /// Remove entry from file system and database
     case deleteEntry(url: URL)
     case deleteEntrySuccess(url: URL)
@@ -158,10 +158,8 @@ func updateDatabase(
             \(message)
             """
         )
-    case .createEntry(let content):
-        return environment.createEntry(
-            content: content
-        )
+    case .createEntry(let entry):
+        return environment.createEntry(entry)
         .map({ entry in
             .createEntrySuccess(entry)
         })
@@ -497,14 +495,11 @@ struct DatabaseEnvironment {
         }
     }
 
-    func readEntry(url: URL) throws -> TextEntry {
-        TextEntry(
-            url: url,
-            content: try String(contentsOf: url, encoding: .utf8)
-        )
+    func readEntry(url: URL) throws -> EntryFile {
+        try EntryFile(url: url)
     }
 
-    func readEntry(url: URL) -> AnyPublisher<TextEntry, Error> {
+    func readEntry(url: URL) -> AnyPublisher<EntryFile, Error> {
         Result(catching: {
             try readEntry(url: url)
         }).publisher.eraseToAnyPublisher()
@@ -512,15 +507,15 @@ struct DatabaseEnvironment {
     
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        url: URL,
-        title: String,
-        content: String,
-        modified: Date,
-        size: Int
+        fileWrapper: EntryFile,
+        attributes: FileFingerprint.Attributes
     ) throws {
         // Must store relative path, since absolute path of user documents
         // directory can be changed by system.
-        let path = try url.relativizingPath(relativeTo: documentsUrl).unwrap()
+        let path = try fileWrapper.url.relativizingPath(
+            relativeTo: documentsUrl
+        ).unwrap()
+
         try db.connection().execute(
             sql: """
             INSERT INTO entry (path, title, body, modified, size)
@@ -533,79 +528,54 @@ struct DatabaseEnvironment {
             """,
             parameters: [
                 .text(path),
-                .text(title),
-                .text(content),
-                .date(modified),
-                .integer(size)
+                .text(fileWrapper.entry.title),
+                .text(fileWrapper.entry.content),
+                .date(attributes.modified),
+                .integer(attributes.size)
             ]
         )
     }
     
     /// Write entry syncronously by reading it off of file system
     private func writeEntryToDatabase(_ url: URL) throws {
-        let content = try String(contentsOf: url, encoding: .utf8)
-        let title = Subtext.getTitle(markup: content)
+        let wrapper = try EntryFile(url: url)
         let attributes = try FileFingerprint.Attributes.init(url: url).unwrap()
         try writeEntryToDatabase(
-            url: url,
-            title: title,
-            content: content,
-            modified: attributes.modified,
-            size: attributes.size
+            fileWrapper: wrapper,
+            attributes: attributes
         )
     }
 
     /// Create a new entry on the file system, and write to the database
-    func createEntry(
-        content: String
-    ) -> AnyPublisher<TextEntry, Error> {
+    func createEntry(_ entry: Entry) -> AnyPublisher<EntryFile, Error> {
         CombineUtilities.async {
-            let title = Truncate.getFirstPseudoSentence(
-                Subtext.getTitle(markup: content)
-            )
-            let name = Slug.toFilename(title)
-            let url = try fileManager.findUniqueFilename(
-                at: documentsUrl,
-                name: name,
-                ext: "subtext"
-            ).unwrap()
-            try content.write(to: url, atomically: true, encoding: .utf8)
-            // Re-read size and file modified from file system to make sure
-            // what we store is exactly equal to file system.
-            let attributes = try FileFingerprint.Attributes(url: url).unwrap()
-            try writeEntryToDatabase(
-                url: url,
-                title: title,
-                content: content,
-                modified: attributes.modified,
-                size: attributes.size
-            )
-            return TextEntry(url: url, content: content)
+            let fileWrapper = try EntryFile(entry: entry).unwrap()
+            return try writeEntry(fileWrapper)
         }
     }
 
+    func writeEntry(
+        _ fileWrapper: EntryFile
+    ) throws -> EntryFile {
+        try fileWrapper.write()
+        // Re-read size and file modified from file system to make sure
+        // what we store is exactly equal to file system.
+        let attributes = try FileFingerprint.Attributes(
+            url: fileWrapper.url
+        ).unwrap()
+        try writeEntryToDatabase(
+            fileWrapper: fileWrapper,
+            attributes: attributes
+        )
+        return fileWrapper
+    }
+    
     /// Write an entry to the file system, and to the database
     func writeEntry(
-        _ entry: TextEntry
-    ) -> AnyPublisher<TextEntry, Error> {
+        _ fileWrapper: EntryFile
+    ) -> AnyPublisher<EntryFile, Error> {
         CombineUtilities.async {
-            let url = entry.url
-            let content = entry.content
-            let title = Truncate.getFirstPseudoSentence(
-                Subtext.getTitle(markup: content)
-            )
-            try content.write(to: url, atomically: true, encoding: .utf8)
-            // Re-read size and file modified from file system to make sure
-            // what we store is exactly equal to file system.
-            let attributes = try FileFingerprint.Attributes(url: url).unwrap()
-            try writeEntryToDatabase(
-                url: url,
-                title: title,
-                content: content,
-                modified: attributes.modified,
-                size: attributes.size
-            )
-            return entry
+            try writeEntry(fileWrapper)
         }
     }
     
@@ -833,13 +803,13 @@ struct DatabaseEnvironment {
         })
     }
 
-    func search(query: String) -> AnyPublisher<[TextEntry], Error> {
+    func search(query: String) -> AnyPublisher<[EntryFile], Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
             guard !query.isWhitespace else {
                 return []
             }
 
-            let docs: [TextEntry] = try db.connection().execute(
+            let docs: [EntryFile] = try db.connection().execute(
                 sql: """
                 SELECT path, body
                 FROM entry_search
@@ -855,7 +825,7 @@ struct DatabaseEnvironment {
                 let path: String = try row.get(0).unwrap()
                 let content: String = try row.get(1).unwrap()
                 let url = documentsUrl.appendingPathComponent(path)
-                return TextEntry(
+                return EntryFile(
                     url: url,
                     content: content
                 )

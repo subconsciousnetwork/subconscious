@@ -20,10 +20,10 @@ enum EditorAction {
     /// Edit content
     case edit(url: URL?, content: String)
     case save(url: URL?, content: String)
-    case cancel
     case requestSave(url: URL?, content: String)
-    case requestEditorUnpresent
-    
+    case cancel
+    case requestCancel
+
     static let clear = setBody("")
 }
 
@@ -55,33 +55,38 @@ func updateEditor(
         let save = Just(
             EditorAction.requestSave(url: url, content: content)
         )
-        let unpresent = Just(EditorAction.requestEditorUnpresent)
         let clear = Just(EditorAction.clear).delay(
             for: .milliseconds(500),
             scheduler: RunLoop.main
         )
-        return Publishers.Merge3(save, unpresent, clear).eraseToAnyPublisher()
+        return Publishers.Merge(
+            save,
+            clear
+        ).eraseToAnyPublisher()
     case .cancel:
-        let unpresent = Just(EditorAction.requestEditorUnpresent)
+        let cancel = Just(EditorAction.requestCancel)
         // Delay for a bit. Should clear just after sheet animation completes.
         // Note that SwiftUI animations don't yet have reasonable
         // onComplete handlers, so we're making do.
-        let clear = Just(EditorAction.setBody("")).delay(
+        let clear = Just(EditorAction.clear).delay(
             for: .milliseconds(500),
             scheduler: RunLoop.main
         )
-        return Publishers.Merge(unpresent, clear).eraseToAnyPublisher()
+        return Publishers.Merge(
+            cancel,
+            clear
+        ).eraseToAnyPublisher()
     case .requestSave:
-        environment.warning(
+        environment.debug(
             """
             EditorAction.requestSave
             should be handled by the parent view.
             """
         )
-    case .requestEditorUnpresent:
-        environment.warning(
+    case .requestCancel:
+        environment.debug(
             """
-            EditorAction.requestEditorUnpresent
+            EditorAction.requestCancel
             should be handled by the parent view.
             """
         )

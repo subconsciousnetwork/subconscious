@@ -8,8 +8,8 @@
 import Foundation
 
 struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
-    static func getTitle(markup: String) -> String {
-        Subtext(markup: markup).title
+    static func excerpt(markup: String) -> String {
+        Subtext(markup: markup).excerpt
     }
 
     struct BlankBlock:
@@ -103,17 +103,6 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
             markup
         }
 
-        var isTitle: Bool {
-            switch self {
-            case .text:
-                return true
-            case .heading:
-                return true
-            default:
-                return false
-            }
-        }
-
         var value: String {
             switch self {
             case .text(let block):
@@ -195,9 +184,22 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
         self.hashValue
     }
 
-    var title: String {
+    var excerpt: String {
         blocks
-            .first(where: { block in block.isTitle })
+            .first(where: { block in
+                switch block {
+                case .text:
+                    return true
+                case .heading:
+                    return true
+                case .quote:
+                    return true
+                case .list:
+                    return true
+                default:
+                    return false
+                }
+            })
             .map({ block in block.value }) ?? ""
     }
 

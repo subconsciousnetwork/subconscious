@@ -37,15 +37,15 @@ enum AppAction {
     /// Re-issue search in order to refresh results
     case refreshQuery
     case setEditorPresented(_ isPresented: Bool)
+    case editorUpdateEntry(EntryFile)
+    case editorCreateEntry(Entry)
     case setSuggestions(_ suggestions: SuggestionsModel)
+    /// Catch create entry success and react to it in other parts of UI
+    case createEntrySuccess(EntryFile)
     /// Catch update entry success and react to it in other parts of UI
-    case updateEntrySuccess(_ entry: TextEntry)
+    case updateEntrySuccess(EntryFile)
     case warning(_ message: String)
     case info(_ message: String)
-
-    static func updateEntry(_ entry: TextEntry) -> AppAction {
-        .database(.updateEntry(entry))
-    }
 
     static func searchSuggestions(_ query: String) -> AppAction {
         .database(.searchSuggestions(query))
@@ -77,12 +77,6 @@ enum AppAction {
         .database(.readEntry(url: url))
     }
 
-    static func createEntry(
-        content: String
-    ) -> AppAction {
-        .database(.createEntry(content: content))
-    }
-
     static func deleteEntry(url: URL) -> AppAction {
         .database(.deleteEntry(url: url))
     }
@@ -96,12 +90,14 @@ func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
         return .search(.setItems(results))
     case .searchSuggestionsSuccess(let results):
         return .setSuggestions(results)
+    case .createEntrySuccess(let entry):
+        return .createEntrySuccess(entry)
     case .updateEntrySuccess(let entry):
         return .updateEntrySuccess(entry)
-    case .readEntrySuccess(let entry):
+    case .readEntrySuccess(let entryFile):
         return .invokeEditor(
-            url: entry.url,
-            content: entry.content
+            url: entryFile.url,
+            content: entryFile.entry.content
         )
     default:
         return .database(action)
@@ -110,15 +106,15 @@ func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
 
 func tagEditorAction(_ action: EditorAction) -> AppAction {
     switch action {
-    case .requestEditorUnpresent:
+    case .requestCancel:
         return .setEditorPresented(false)
     case .requestSave(let url, let content):
         if let url = url {
-            return .updateEntry(
-                TextEntry(url: url, content: content)
+            return .editorUpdateEntry(
+                EntryFile(url: url, content: content)
             )
         } else {
-            return .createEntry(content: content)
+            return .editorCreateEntry(Entry(content: content))
         }
     default:
         return .editor(action)
@@ -173,7 +169,7 @@ func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> AppAction {
 struct AppModel: Equatable {
     var database = DatabaseModel()
     var searchBar = SubSearchBarModel()
-    var search = EntryListModel(entries: [])
+    var search = EntryListModel([])
     /// Semi-permanent suggestions that show up as tokens in the search view.
     /// We don't differentiate between types of token, so these are all just strings.
     var suggestionTokens = TextTokenBarModel()
@@ -251,6 +247,22 @@ func updateApp(
         ).eraseToAnyPublisher()
     case .setEditorPresented(let isPresented):
         state.isEditorPresented = isPresented
+    case .editorUpdateEntry(let entry):
+        let unpresentEditor = Just(AppAction.setEditorPresented(false))
+        let updateEntry = Just(AppAction.database(.updateEntry(entry)))
+        return Publishers.Merge(
+            unpresentEditor,
+            updateEntry
+        ).eraseToAnyPublisher()
+    case .editorCreateEntry(let entry):
+        let unpresentEditor = Just(AppAction.setEditorPresented(false))
+        let createEntry = Just(
+            AppAction.database(.createEntry(entry))
+        )
+        return Publishers.Merge(
+            unpresentEditor,
+            createEntry
+        ).eraseToAnyPublisher()
     case .commitQuery(let query):
         let commitSearchBar = Just(AppAction.searchBar(.commit(query)))
         let searchSuggestions = Just(AppAction.searchSuggestions(query))
@@ -273,6 +285,13 @@ func updateApp(
         return Publishers.Merge(
             setText,
             searchSuggestions
+        ).eraseToAnyPublisher()
+    case .createEntrySuccess(let entry):
+        let success = Just(AppAction.database(.createEntrySuccess(entry)))
+        let commit = Just(AppAction.commitQuery(""))
+        return Publishers.Merge(
+            success,
+            commit
         ).eraseToAnyPublisher()
     case .updateEntrySuccess(let entry):
         let success = Just(AppAction.database(.updateEntrySuccess(entry)))

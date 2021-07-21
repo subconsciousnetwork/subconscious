@@ -13,7 +13,7 @@ import Elmo
 // MARK:  Action
 enum EntryListAction {
     case item(_ item: ItemAction<URL, EntryAction>)
-    case setItems(_ entries: [TextEntry])
+    case setItems(_ entries: [EntryFile])
     case requestEdit(url: URL)
 }
 
@@ -21,13 +21,13 @@ enum EntryListAction {
 struct EntryListModel: Equatable {
     var entries: [EntryModel]
     
-    init(entries: [TextEntry]) {
+    init(_ entries: [EntryFile]) {
         self.entries = entries
             .enumerated()
-            .map({ (i, document) in
+            .map({ (i, wrapper) in
                 EntryModel(
-                    url: document.url,
-                    dom: Subtext(markup: document.content),
+                    url: wrapper.url,
+                    dom: wrapper.entry.dom,
                     isFolded: i > 0
                 )
             })
@@ -74,10 +74,10 @@ func updateEntryList(
     case .setItems(let entries):
         state.entries = entries
             .enumerated()
-            .map({ (i, doc) in
+            .map({ (i, wrapper) in
                 EntryModel(
-                    url: doc.url,
-                    dom: Subtext(markup: doc.content),
+                    url: wrapper.url,
+                    dom: wrapper.entry.dom,
                     isFolded: i > 0
                 )
             })
@@ -142,9 +142,7 @@ struct EntryListView_Previews: PreviewProvider {
     static var previews: some View {
         EntryListView(
             store: ViewStore(
-                state: EntryListModel(
-                    entries: []
-                ),
+                state: EntryListModel([]),
                 send: { action in }
             )
         )
