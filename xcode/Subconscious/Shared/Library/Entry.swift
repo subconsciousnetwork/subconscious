@@ -9,7 +9,9 @@ import Foundation
 
 struct Entry: Identifiable, Hashable, Equatable {
     var title: String {
-        Truncate.getFirstPseudoSentence(Subtext.excerpt(markup: content))
+        Subtext.excerpt(markup: content)
+            .firstPseudoSentence
+            .truncatingByWord(characters: 120)
     }
     var dom: Subtext {
         Subtext(markup: content)
