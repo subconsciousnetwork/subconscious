@@ -34,8 +34,6 @@ enum AppAction {
     case commitQuery(_ query: String)
     /// Set live query
     case setQuery(_ text: String)
-    /// Re-issue search in order to refresh results
-    case refreshQuery
     case setEditorPresented(_ isPresented: Bool)
     case editorUpdateEntry(EntryFile)
     case editorCreateEntry(Entry)
@@ -274,11 +272,6 @@ func updateApp(
             searchSuggestions,
             searchAndInsertHistory
         ).eraseToAnyPublisher()
-    case .refreshQuery:
-        /// Reissue search without logging it again
-        return Just(
-            AppAction.search(state.searchBar.comitted)
-        ).eraseToAnyPublisher()
     case .setQuery(let text):
         let setText = Just(AppAction.searchBar(.setText(text)))
         let searchSuggestions = Just(AppAction.searchSuggestions(text))
@@ -286,19 +279,20 @@ func updateApp(
             setText,
             searchSuggestions
         ).eraseToAnyPublisher()
-    case .createEntrySuccess(let entry):
-        let success = Just(AppAction.database(.createEntrySuccess(entry)))
-        let commit = Just(AppAction.commitQuery(""))
+    case .createEntrySuccess(let entryFile):
+        let success = Just(AppAction.database(.createEntrySuccess(entryFile)))
+        //  When saving, issue query commit for title of entry
+        let commitQuery = Just(AppAction.commitQuery(entryFile.entry.title))
         return Publishers.Merge(
             success,
-            commit
+            commitQuery
         ).eraseToAnyPublisher()
-    case .updateEntrySuccess(let entry):
-        let success = Just(AppAction.database(.updateEntrySuccess(entry)))
-        let refresh = Just(AppAction.refreshQuery)
+    case .updateEntrySuccess(let entryFile):
+        let success = Just(AppAction.database(.updateEntrySuccess(entryFile)))
+        let commitQuery = Just(AppAction.commitQuery(entryFile.entry.title))
         return Publishers.Merge(
             success,
-            refresh
+            commitQuery
         ).eraseToAnyPublisher()
     case .setSuggestions(let suggestions):
         state.suggestions = suggestions

@@ -212,6 +212,7 @@
 				B85EBCA9269DFD4400A8D4FF /* ArrayUtilities.swift */,
 				B8B2C18A26474326008AA3EC /* Colors.swift */,
 				B862343B2677FF960099CD87 /* CombineUtilities.swift */,
+				B8FDE3362678474D00BA307D /* Entry.swift */,
 				B8DF24AD267A5764000987C5 /* FileFingerprint.swift */,
 				B8E152F326570C010032F5A7 /* FileManagerUtilities.swift */,
 				B8B24FA42655CDF500EE6CB9 /* FileSync.swift */,
@@ -226,7 +227,6 @@
 				B8796F54269E223F001AC8C1 /* SubConstants.swift */,
 				B8E84271269CAE3200B74172 /* SubMigrations.swift */,
 				B853EB36263274DD001BB584 /* Subtext.swift */,
-				B8FDE3362678474D00BA307D /* Entry.swift */,
 				B8158D1D269796BB00F927EF /* Truncate.swift */,
 				B82211F426375A9C005CFBBE /* URLUtilities.swift */,
 			);

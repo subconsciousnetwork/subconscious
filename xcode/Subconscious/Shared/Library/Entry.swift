@@ -55,11 +55,11 @@ struct EntryFile: Identifiable, Hashable, Equatable {
                 ext: "subtext"
             )
         {
-            
             self.url = url
             self.entry = entry
+        } else {
+            return nil
         }
-        return nil
     }
 
     func write() throws {
