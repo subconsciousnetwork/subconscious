@@ -35,28 +35,30 @@ extension FileManager {
         ext: String,
         version: Int = 1
     ) -> URL? {
-        guard url.isFileURL && url.hasDirectoryPath else {
+        guard url.isFileURL else {
             return nil
         }
 
         // Only version numbers one and above, please.
         let version = max(version, 1)
 
-        let versionedURL = url.appendingVersionedFilename(
+        if let versionedURL = url.appendingVersionedFilename(
             name: name,
             ext: ext,
             version: version
-        )
-
-        if self.fileExists(atURL: versionedURL) {
-            return findUniqueFilename(
-                at: url,
-                name: name,
-                ext: ext,
-                version: version + 1
-            )
-        } else {
-            return versionedURL
+        ) {
+            if self.fileExists(atURL: versionedURL) {
+                return findUniqueFilename(
+                    at: url,
+                    name: name,
+                    ext: ext,
+                    version: version + 1
+                )
+            } else {
+                return versionedURL
+            }
         }
+
+        return nil
     }
 }
