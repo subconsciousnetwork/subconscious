@@ -89,7 +89,8 @@ struct ContentView: View, Equatable {
                     send: store.send,
                     tag: tagEditorAction
                 )
-            ).equatable()
+            )
+            .equatable()
         }
     }
 }
