@@ -15,7 +15,11 @@ extension URL {
 
     /// Add file name component to URL with extension
     /// - Returns: new URL
-    func appendingFilename(name: String, ext: String) -> URL {
+    func appendingFilename(name: String, ext: String) -> URL? {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else {
+            return nil
+        }
         var url = self
         url.appendPathComponent(name)
         url.appendPathExtension(ext)
@@ -29,13 +33,17 @@ extension URL {
         name: String,
         ext: String,
         version: Int = 1
-    ) -> URL {
+    ) -> URL? {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else {
+            return nil
+        }
         var url = self
         // Only version numbers one and above, please.
         let version = max(version, 1)
         // Only append version number if > 0.
         let versionedName = version == 1 ? name : "\(name) \(version)"
-        url.appendPathComponent(versionedName)
+        url.appendPathComponent(versionedName, isDirectory: false)
         url.appendPathExtension(ext)
         return url
     }
