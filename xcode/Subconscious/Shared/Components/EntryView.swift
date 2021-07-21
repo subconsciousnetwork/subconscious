@@ -98,6 +98,7 @@ struct EntryView: View, Equatable {
         .contentShape(Rectangle())
         .padding(.vertical, 24)
         .background(Color.Sub.background)
+        .shadow(shadow: Shadow.lightShadow)
     }
 }
 
