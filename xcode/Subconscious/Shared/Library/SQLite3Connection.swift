@@ -92,13 +92,24 @@ final class SQLite3Connection {
 
         private static func iso8601Formatter() -> ISO8601DateFormatter {
             let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [
-                .withFullDate,
-                .withTime,
-                .withDashSeparatorInDate,
-                .withColonSeparatorInTime
-            ]
+            formatter.formatOptions = [.withInternetDateTime]
             return formatter
+        }
+
+        static func json(
+            _ object: Any,
+            options: JSONSerialization.WritingOptions = []
+        ) -> Self? {
+            if
+                let data = try? JSONSerialization.data(
+                    withJSONObject: object,
+                    options: options
+                ),
+                let text = String(data: data, encoding: .utf8)
+            {
+                return Self.text(text)
+            }
+            return nil
         }
         
         static func date(_ date: Date) -> Self {
