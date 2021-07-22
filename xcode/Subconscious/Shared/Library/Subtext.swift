@@ -79,6 +79,10 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
         }
 
         var markup: String {
+            description
+        }
+
+        var description: String {
             switch self {
             case .blank(let block):
                 return block.description
@@ -93,10 +97,6 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
             case .quote(let block):
                 return block.description
             }
-        }
-        
-        var description: String {
-            markup
         }
 
         var value: String {
@@ -213,12 +213,25 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
         markup
     }
 
+    var text: String {
+        Self.strip(self.blocks)
+    }
+
+    /// Render blocks as markup
     static func render(_ blocks: [Block]) -> String {
         blocks
             .map({ block in block.description })
             .joined(separator: "\n")
     }
 
+    /// Render blocks as plain text (lossy)
+    static func strip(_ blocks: [Block]) -> String {
+        blocks
+            .map({ block in block.value })
+            .joined(separator: "\n")
+    }
+
+    /// Parse markup to blocks
     static func parse(_ markup: String) -> [Block] {
         markup.split(
             maxSplits: Int.max,
