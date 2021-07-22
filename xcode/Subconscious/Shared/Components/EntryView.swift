@@ -33,7 +33,7 @@ func updateEntry(
     case .setFolded(let isFolded):
         state.isFolded = isFolded
     case .requestEdit:
-        environment.warning(
+        environment.debug(
             """
             EntryAction.requestEdit
             This action should have been handled by the parent view.
@@ -98,7 +98,6 @@ struct EntryView: View, Equatable {
         .contentShape(Rectangle())
         .padding(.vertical, 24)
         .background(Color.Sub.background)
-        .shadow(shadow: Shadow.lightShadow)
     }
 }
 

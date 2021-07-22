@@ -114,7 +114,7 @@ struct EntryListView: View, Equatable {
             // LazyVStack creates items only when they need to be rendered
             // onscreen.
             // <https://developer.apple.com/documentation/swiftui/lazyvstack>
-            LazyVStack(alignment: .leading, spacing: 8) {
+            LazyVStack(alignment: .leading, spacing: 0) {
                 ForEach(store.state.entries) { entry in
                     EntryView(
                         store: ViewStore(
@@ -129,9 +129,9 @@ struct EntryListView: View, Equatable {
                         )
                     )
                     .equatable()
+                    Divider()
                 }
             }
-            Spacer()
         }
         .padding(0)
         .background(Color.Sub.secondaryBackground)
