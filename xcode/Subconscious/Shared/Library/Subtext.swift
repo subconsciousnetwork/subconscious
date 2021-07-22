@@ -8,10 +8,6 @@
 import Foundation
 
 struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
-    static func excerpt(markup: String) -> String {
-        Subtext(markup: markup).excerpt
-    }
-
     struct BlankBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
         var description: String { "" }
@@ -129,6 +125,22 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
                 range: nil
             )
         }
+
+        /// Determine if block is a content block
+        static func isContent(_ block: Block) -> Bool {
+            switch block {
+            case .text:
+                return true
+            case .heading:
+                return true
+            case .quote:
+                return true
+            case .list:
+                return true
+            default:
+                return false
+            }
+        }
         
         static func fromLine(_ line: String) -> Block {
             if line.hasPrefix(LinkBlock.sigil) {
@@ -177,8 +189,7 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
         }
     }
     
-    let blocks: [Block]
-    let markup: String
+    var blocks: [Block]
 
     var id: Int {
         self.hashValue
@@ -186,42 +197,50 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
 
     var excerpt: String {
         blocks
-            .first(where: { block in
-                switch block {
-                case .text:
-                    return true
-                case .heading:
-                    return true
-                case .quote:
-                    return true
-                case .list:
-                    return true
-                default:
-                    return false
-                }
-            })
+            .first(where: Block.isContent)
             .map({ block in block.value }) ?? ""
+    }
+
+    static func excerpt(markup: String) -> String {
+        Subtext(markup: markup).excerpt
+    }
+
+    var markup: String {
+        Self.render(self.blocks)
     }
 
     var description: String {
         markup
     }
 
-    init(blocks: [Block]) {
-        self.blocks = blocks
-        self.markup = blocks
+    static func render(_ blocks: [Block]) -> String {
+        blocks
             .map({ block in block.description })
             .joined(separator: "\n")
     }
 
+    static func parse(_ markup: String) -> [Block] {
+        markup.split(
+            maxSplits: Int.max,
+            omittingEmptySubsequences: false,
+            whereSeparator: \.isNewline
+        )
+        .map({ sub in Block.fromLine(String(sub)) })
+    }
+
+    init(blocks: [Block]) {
+        self.blocks = blocks
+    }
+
     init(markup: String) {
-        self.blocks = markup
-            .split(
-                maxSplits: Int.max,
-                omittingEmptySubsequences: false,
-                whereSeparator: \.isNewline
-            )
-            .map({ sub in Block.fromLine(String(sub)) })
-        self.markup = markup
+        self.blocks = Self.parse(markup)
+    }
+
+    func prefix(_ max: Int) -> Subtext {
+        Subtext(blocks: Array(self.blocks.prefix(max)))
+    }
+
+    func filter(_ predicate: (Block) -> Bool) -> Subtext {
+        Subtext(blocks: self.blocks.filter(predicate))
     }
 }
