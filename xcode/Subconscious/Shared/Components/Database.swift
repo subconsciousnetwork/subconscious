@@ -788,6 +788,28 @@ struct DatabaseEnvironment {
         })
     }
 
+    func findEntriesByTitles(_ titles: [String]) throws -> [EntryFile] {
+        let titlesJSON = try SQLite3Connection.Value.json(titles).unwrap()
+        return try db.connection().execute(
+            sql: """
+            SELECT entry.path, entry.body
+            FROM entry
+            JOIN json_each(?) AS title
+            ON entry.title = title.value
+            """,
+            parameters: [
+                titlesJSON
+            ]
+        ).map({ row in
+            let path: String = try row.get(0).unwrap()
+            let content: String = try row.get(1).unwrap()
+            return EntryFile(
+                url: URL(fileURLWithPath: path, relativeTo: documentsUrl),
+                content: content
+            )
+        })
+    }
+
     func search(query: String) -> AnyPublisher<[EntryFile], Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
             guard !query.isWhitespace else {
@@ -814,6 +836,14 @@ struct DatabaseEnvironment {
                     url: url,
                     content: content
                 )
+            })
+
+            let wikilinks = docs.flatMap({ entryFile in
+                entryFile.entry.content.wikilinks()
+            })
+
+            let related = try findEntriesByTitles(wikilinks).toDictionary(key: { entryFile in
+                entryFile.entry.title
             })
             
             return docs
