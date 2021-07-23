@@ -81,7 +81,7 @@ final class SQLite3Connection {
             return column.get()
         }
     }
-    
+
     /// Column data types for SQLite
     enum Value {
         case null
@@ -90,11 +90,13 @@ final class SQLite3Connection {
         case real(Double)
         case blob(Data)
 
-        private static func iso8601Formatter() -> ISO8601DateFormatter {
+        private static func makeDateFormatter() -> ISO8601DateFormatter {
             let formatter = ISO8601DateFormatter()
             formatter.formatOptions = [.withInternetDateTime]
             return formatter
         }
+
+        private static let dateFormatter = makeDateFormatter()
 
         static func json(
             _ object: Any,
@@ -113,8 +115,7 @@ final class SQLite3Connection {
         }
         
         static func date(_ date: Date) -> Self {
-            let formatter = iso8601Formatter()
-            return self.text(formatter.string(from: date))
+            return self.text(dateFormatter.string(from: date))
         }
 
         /// Quotes a query string to make it compatible with FTS5 query syntax.
@@ -167,8 +168,7 @@ final class SQLite3Connection {
         func get() -> Date? {
             switch self {
             case .text(let value):
-                let formatter = Value.iso8601Formatter()
-                return formatter.date(from: value)
+                return Self.dateFormatter.date(from: value)
             default:
                 return nil
             }
