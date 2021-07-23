@@ -46,23 +46,21 @@ func updateEntry(
 /// A foldable note entry
 struct EntryView: View, Equatable {
     let store: ViewStore<EntryModel, EntryAction>
-    let maxBlocksWhenFolded = 3
+    let showBlocksWhenFolded = 3
 
-    var visibleBlocks: [Subtext.Block] {
-        let blocks = store.state.dom.blocks
-        let limit = min(max(1, maxBlocksWhenFolded), blocks.count)
-        return (
-            store.state.isFolded && blocks.count > maxBlocksWhenFolded ?
-            Array(blocks[0..<limit]) :
-            blocks
-        )
+    var visibleDom: Subtext {
+        store.state.isFolded ?
+            store.state.dom.prefix(showBlocksWhenFolded) :
+            store.state.dom
     }
-    
+
     var body: some View {
-        VStack(spacing: 0) {
-            Group {
-                ForEach(visibleBlocks) { block in
-                    BlockView(block: block).equatable()
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(visibleDom.blocks) { block in
+                    BlockView(block: block)
+                        .equatable()
+                        .padding(.horizontal, 16)
                 }
             }
             .contentShape(Rectangle())
@@ -74,7 +72,7 @@ struct EntryView: View, Equatable {
                 store.state.isFolded &&
                 (
                     store.state.dom.blocks.count >
-                    maxBlocksWhenFolded
+                    showBlocksWhenFolded
                 )
             ) {
                 HStack {
@@ -113,7 +111,7 @@ struct EntryView_Previews: PreviewProvider {
                             """
                             # Overview
 
-                            Evolution is a behavior that emerges in any system with:
+                            Evolution is a behavior that emerges in any [[system]] with:
 
                             - Mutation
                             - Heredity
@@ -123,7 +121,7 @@ struct EntryView_Previews: PreviewProvider {
 
                             > There is no such thing as advantageous in a general sense. There is only advantageous for the circumstances you’re living in. (Olivia Judson, Santa Fe Institute)
 
-                            Evolving systems exist in punctuated equilibrium.
+                            Evolving systems exist in [[punctuated equilibrium]].
 
                             & punctuated-equilibrium.st
 
