@@ -37,12 +37,7 @@ struct TextBlockView: View {
     var body: some View {
         Text(block.value)
             .font(.body)
-            .padding(.leading, 16)
-            .padding(.trailing, 16)
-            .frame(
-                maxWidth: .infinity,
-                alignment: .leading
-            )
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -52,12 +47,7 @@ struct ListBlockView: View {
     var body: some View {
         Text(block.value)
             .font(.body)
-            .padding(.leading, 24)
-            .padding(.trailing, 16)
-            .frame(
-                maxWidth: .infinity,
-                alignment: .leading
-            )
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -67,12 +57,7 @@ struct LinkBlockView: View {
     var body: some View {
         Text(block.value)
             .font(.body)
-            .padding(.leading, 24)
-            .padding(.trailing, 16)
-            .frame(
-                maxWidth: .infinity,
-                alignment: .leading
-            )
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -83,12 +68,7 @@ struct HeadingBlockView: View {
         Text(block.value)
             .font(.body)
             .bold()
-            .padding(.leading, 16)
-            .padding(.trailing, 16)
-            .frame(
-                maxWidth: .infinity,
-                alignment: .leading
-            )
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -98,13 +78,8 @@ struct QuoteBlockView: View {
     var body: some View {
         Text(block.value)
             .font(.body)
-            .padding(.leading, 16)
-            .padding(.trailing, 16)
             .foregroundColor(Color.Sub.quotedText)
-            .frame(
-                maxWidth: .infinity,
-                alignment: .leading
-            )
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
