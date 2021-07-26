@@ -17,13 +17,25 @@ struct ContentView: View, Equatable {
 
     var body: some View {
         VStack(spacing: 0) {
-            SubSearchBarView(
-                store: ViewStore(
-                    state: store.state.searchBar,
-                    send: store.send,
-                    tag: tagSearchBarAction
+            HStack(spacing: 0) {
+                Button(
+                    action: {
+                        store.send(.commitQuery(""))
+                    },
+                    label: {
+                        IconView(image: Image(systemName: "chevron.left"))
+                    }
                 )
-            ).equatable()
+                .padding(.leading, 8)
+                .disabled(store.state.searchBar.comitted.isEmpty)
+                SubSearchBarView(
+                    store: ViewStore(
+                        state: store.state.searchBar,
+                        send: store.send,
+                        tag: tagSearchBarAction
+                    )
+                ).equatable()
+            }
             Divider()
             ZStack {
                 VStack(spacing: 0) {
@@ -38,21 +50,6 @@ struct ContentView: View, Equatable {
                             )
                         ).equatable()
                     }
-                    Divider()
-                    HStack(spacing: 16) {
-                        Button(
-                            action: {
-                                store.send(.commitQuery(""))
-                            },
-                            label: {
-                                IconView(image: Image(systemName: "chevron.left"))
-                            }
-                        )
-                        .disabled(store.state.searchBar.comitted.isEmpty)
-                        Spacer()
-                    }
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 12)
                 }
 
                 Group {
