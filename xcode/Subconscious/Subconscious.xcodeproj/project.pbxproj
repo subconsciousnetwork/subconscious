@@ -52,7 +52,6 @@
 		B8B2C1872647172A008AA3EC /* PostHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C1862647172A008AA3EC /* PostHeaderView.swift */; };
 		B8B2C18926471E6B008AA3EC /* FakeTextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18826471E6B008AA3EC /* FakeTextFieldView.swift */; };
 		B8B2C18B26474326008AA3EC /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18A26474326008AA3EC /* Colors.swift */; };
-		B8C951AF26AF54FA00EEC3AB /* DatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C951AE26AF54FA00EEC3AB /* DatabaseManager.swift */; };
 		B8CA2F9A26AB6B890000BFFB /* DynamicTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA2F9926AB6B890000BFFB /* DynamicTextViewRepresentable.swift */; };
 		B8CA2F9C26AB7E350000BFFB /* EditableEntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA2F9B26AB7E350000BFFB /* EditableEntryListView.swift */; };
 		B8CCBF5A26A74CFB00218458 /* Elmo in Frameworks */ = {isa = PBXBuildFile; productRef = B8CCBF5926A74CFB00218458 /* Elmo */; };
@@ -142,7 +141,6 @@
 		B8B2C1862647172A008AA3EC /* PostHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostHeaderView.swift; sourceTree = "<group>"; };
 		B8B2C18826471E6B008AA3EC /* FakeTextFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeTextFieldView.swift; sourceTree = "<group>"; };
 		B8B2C18A26474326008AA3EC /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
-		B8C951AE26AF54FA00EEC3AB /* DatabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseManager.swift; sourceTree = "<group>"; };
 		B8CA2F9926AB6B890000BFFB /* DynamicTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8CA2F9B26AB7E350000BFFB /* EditableEntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableEntryListView.swift; sourceTree = "<group>"; };
 		B8CCBF5826A7492B00218458 /* Elmo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Elmo; path = ../Elmo; sourceTree = "<group>"; };
@@ -336,7 +334,6 @@
 		B8C951AD26AF54E300EEC3AB /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				B8C951AE26AF54FA00EEC3AB /* DatabaseManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -524,7 +521,6 @@
 				B81BD104269E604C00E2E991 /* SearchSuggestionView.swift in Sources */,
 				B87C7D7C261E0E6C003EFC6F /* BlockView.swift in Sources */,
 				B874D7AD26540A7800351C8E /* SubSearchBarView.swift in Sources */,
-				B8C951AF26AF54FA00EEC3AB /* DatabaseManager.swift in Sources */,
 				B8FDE3372678474D00BA307D /* Entry.swift in Sources */,
 				B82FD94A26A9DC7C0087AE95 /* LabelRepresentable.swift in Sources */,
 				B8E152F226570B890032F5A7 /* Database.swift in Sources */,

@@ -39,10 +39,6 @@ enum AppAction {
     case editorSaveCreateSuccess(EntryFile)
     case editorSaveUpdateSuccess(EntryFile)
     case setSuggestions(_ suggestions: SuggestionsModel)
-    /// Catch create entry success and react to it in other parts of UI
-    case createEntrySuccess(EntryFile)
-    /// Catch update entry success and react to it in other parts of UI
-    case updateEntrySuccess(EntryFile)
     case warning(_ message: String)
     case info(_ message: String)
 
@@ -59,10 +55,6 @@ enum AppAction {
     static func search(_ query: String) -> AppAction {
         .database(.search(query))
     }
-
-    static func deleteEntry(url: URL) -> AppAction {
-        .database(.deleteEntry(url: url))
-    }
 }
 
 //  MARK: Tagging functions
@@ -73,10 +65,6 @@ func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
         return .search(.setItems(results))
     case .searchSuggestionsSuccess(let results):
         return .setSuggestions(results)
-    case .createEntrySuccess(let entry):
-        return .createEntrySuccess(entry)
-    case .updateEntrySuccess(let entry):
-        return .updateEntrySuccess(entry)
     default:
         return .database(action)
     }
@@ -231,25 +219,29 @@ func updateApp(
             open
         ).eraseToAnyPublisher()
     case .editorSaveCreateSuccess(let entryFile):
-        let close = Just(AppAction.setEditorPresented(false))
         let update = Just(AppAction.editor(.saveCreateSuccess(entryFile)))
-        return Publishers.Merge(
+        let close = Just(AppAction.setEditorPresented(false))
+        let search = Just(AppAction.commitQuery(entryFile.entry.title))
+        return Publishers.Merge3(
             update,
-            close
+            close,
+            search
         ).eraseToAnyPublisher()
     case .editorOpenUpdate(let url):
-        let open = Just(AppAction.setEditorPresented(true))
         let update = Just(AppAction.editor(.editUpdate(url: url)))
+        let open = Just(AppAction.setEditorPresented(true))
         return Publishers.Merge(
             update,
             open
         ).eraseToAnyPublisher()
     case .editorSaveUpdateSuccess(let entryFile):
-        let close = Just(AppAction.setEditorPresented(false))
         let update = Just(AppAction.editor(.saveUpdateSuccess(entryFile)))
-        return Publishers.Merge(
+        let close = Just(AppAction.setEditorPresented(false))
+        let search = Just(AppAction.commitQuery(entryFile.entry.title))
+        return Publishers.Merge3(
             update,
-            close
+            close,
+            search
         ).eraseToAnyPublisher()
     case .commitQuery(let query):
         let commitSearchBar = Just(AppAction.searchBar(.commit(query)))
@@ -268,21 +260,6 @@ func updateApp(
         return Publishers.Merge(
             setText,
             searchSuggestions
-        ).eraseToAnyPublisher()
-    case .createEntrySuccess(let entryFile):
-        let success = Just(AppAction.database(.createEntrySuccess(entryFile)))
-        //  When saving, issue query commit for title of entry
-        let commitQuery = Just(AppAction.commitQuery(entryFile.entry.title))
-        return Publishers.Merge(
-            success,
-            commitQuery
-        ).eraseToAnyPublisher()
-    case .updateEntrySuccess(let entryFile):
-        let success = Just(AppAction.database(.updateEntrySuccess(entryFile)))
-        let commitQuery = Just(AppAction.commitQuery(entryFile.entry.title))
-        return Publishers.Merge(
-            success,
-            commitQuery
         ).eraseToAnyPublisher()
     case .setSuggestions(let suggestions):
         state.suggestions = suggestions

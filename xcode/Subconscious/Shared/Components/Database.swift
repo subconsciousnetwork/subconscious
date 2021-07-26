@@ -37,9 +37,6 @@ enum DatabaseAction {
     case sync
     case syncSuccess(_ changes: [FileSync.Change])
     case syncFailure(message: String)
-    case selectRecent
-    case selectRecentSuccess([EntryFile])
-    case selectRecentFailure(message: String)
     /// Perform a search with query string
     case search(_ query: String)
     case searchSuccess([EntryFile])
@@ -54,18 +51,6 @@ enum DatabaseAction {
     /// Search suggestion success with array of results
     case searchSuggestionsSuccess(_ results: SuggestionsModel)
     case searchSuggestionsFailure(message: String)
-    /// Create new entry on file system, and log in database
-    case createEntry(Entry)
-    case createEntrySuccess(EntryFile)
-    case createEntryFailure(_ message: String)
-    /// Update entry in file system and database.
-    case updateEntry(EntryFile)
-    case updateEntrySuccess(EntryFile)
-    case updateEntryFailure(message: String, entry: EntryFile)
-    /// Remove entry from file system and database
-    case deleteEntry(url: URL)
-    case deleteEntrySuccess(url: URL)
-    case deleteEntryFailure(message: String, url: URL)
 }
 
 //  MARK: Model
@@ -148,113 +133,6 @@ func updateDatabase(
             """
             File sync failed.
             
-            Error:
-            \(message)
-            """
-        )
-    case .createEntry(let entry):
-        return environment.createEntry(entry)
-        .map({ entry in
-            .createEntrySuccess(entry)
-        })
-        .catch({ error in
-            Just(
-                .createEntryFailure(
-                    """
-                    Create failed for entry.
-                    Error:
-                    \(error)
-                    """
-                )
-            )
-        })
-        .eraseToAnyPublisher()
-    case .createEntrySuccess(let entry):
-        environment.logger.log("Created entry \(entry.url)")
-    case .createEntryFailure(let message):
-        environment.logger.warning("\(message)")
-    case .updateEntry(let entry):
-        return environment.writeEntry(entry)
-            .map({ entry in
-                .updateEntrySuccess(entry)
-            })
-            .catch({ error in
-                Just(
-                    .updateEntryFailure(
-                        message: error.localizedDescription,
-                        entry: entry
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-    case .updateEntrySuccess(let entry):
-        environment.logger.log(
-            """
-            Wrote entry: \(entry.url)
-            """
-        )
-    case .updateEntryFailure(let message, let entry):
-        environment.logger.warning(
-            """
-            Failed to write entry: \(entry.url)
-            
-            Error:
-            \(message)
-            """
-        )
-    case .deleteEntry(let url):
-        return environment.deleteEntry(url)
-            .map({ url in
-                .deleteEntrySuccess(url: url)
-            })
-            .catch({ error in
-                Just(
-                    .deleteEntryFailure(
-                        message: error.localizedDescription,
-                        url: url
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-    case .deleteEntrySuccess(let url):
-        environment.logger.log(
-            """
-            Deleted entry: \(url)
-            """
-        )
-    case .deleteEntryFailure(let message, let url):
-        environment.logger.warning(
-            """
-            Failed to delete entry: \(url)
-            
-            Error:
-            \(message)
-            """
-        )
-    case .selectRecent:
-        return environment.selectRecent()
-            .map({ results in
-                .selectRecentSuccess(results)
-            })
-            .catch({ error in
-                Just(
-                    .selectRecentFailure(
-                        message: error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-    case .selectRecentSuccess:
-        environment.logger.debug(
-            """
-            .selectRecentSuccess should be handled by parent component
-            """
-        )
-    case .selectRecentFailure(let message):
-        environment.logger.warning(
-            """
-            .selectRecentFailure
-
             Error:
             \(message)
             """
