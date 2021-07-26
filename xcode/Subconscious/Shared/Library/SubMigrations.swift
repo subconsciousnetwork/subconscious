@@ -8,7 +8,7 @@
 extension SubConstants {
     static let migrations = SQLite3Migrations([
         SQLite3Migrations.Migration(
-            date: "2021-07-12T15:48:00",
+            date: "2021-07-26T10:33:00",
             sql: """
             CREATE TABLE search_history (
                 id TEXT PRIMARY KEY,
