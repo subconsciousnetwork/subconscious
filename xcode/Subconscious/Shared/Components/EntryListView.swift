@@ -133,8 +133,6 @@ struct EntryListView: View, Equatable {
                 }
             }
         }
-        .padding(0)
-        .background(Color.Sub.secondaryBackground)
     }
 }
 
