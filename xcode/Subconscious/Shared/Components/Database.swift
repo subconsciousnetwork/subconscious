@@ -530,7 +530,7 @@ struct DatabaseEnvironment {
                 .text(path),
                 .text(fileWrapper.entry.title),
                 .text(fileWrapper.entry.content),
-                .date(attributes.modified),
+                .date(attributes.modifiedDate),
                 .integer(attributes.size)
             ]
         )
@@ -845,7 +845,7 @@ struct DatabaseEnvironment {
             let related = try findEntriesByTitles(wikilinks).toDictionary(key: { entryFile in
                 entryFile.entry.title
             })
-            
+
             return docs
         })
     }
