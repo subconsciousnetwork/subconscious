@@ -13,18 +13,20 @@ import Elmo
 
 //  MARK: Actions
 enum EditorAction {
-    /// Set URL property
-    case setURL(_ url: URL?)
-    /// Set TextViewRepresentable
-    case setBody(_ text: String)
+    /// Set editor properties
+    case set(url: URL?, body: String)
+    case setBody(String)
     /// Edit content
-    case edit(url: URL?, content: String)
-    case save(url: URL?, content: String)
-    case requestSave(url: URL?, content: String)
+    case editCreate(content: String)
+    case editUpdate(url: URL)
+    case save
+    case saveCreate(Entry)
+    case saveCreateSuccess(EntryFile)
+    case saveUpdate(EntryFile)
+    case saveUpdateSuccess(EntryFile)
     case cancel
-    case requestCancel
-
-    static let clear = setBody("")
+    case failure(message: String)
+    static let clear = set(url: nil, body: "")
 }
 
 
@@ -34,62 +36,98 @@ struct EditorModel: Equatable {
     var body = ""
 }
 
+//  MARK: Environment
+struct EditorService {
+    var logger: Logger
+    var database: DatabaseEnvironment
+}
 
 //  MARK: Reducer
 func updateEditor(
     state: inout EditorModel,
     action: EditorAction,
-    environment: Logger
+    environment: EditorService
 ) -> AnyPublisher<EditorAction, Never> {
     switch action {
-    case .edit(let url, let content):
-        return Publishers.Merge(
-            Just(EditorAction.setURL(url)),
-            Just(EditorAction.setBody(content))
-        ).eraseToAnyPublisher()
-    case .setURL(let url):
+    case .failure(let message):
+        //  TODO show user warnings
+        environment.logger.warning("\(message)")
+    case .set(let url, let body):
         state.url = url
-    case .setBody(let text):
-        state.body = text
-    case .save(let url, let content):
-        let save = Just(
-            EditorAction.requestSave(url: url, content: content)
+        state.body = body
+    case .setBody(let body):
+        state.body = body
+    case .editUpdate(let url):
+        return environment.database.readEntry(url: url)
+            .map({ entryFile in
+                .set(
+                    url: entryFile.url,
+                    body: entryFile.entry.content
+                )
+            })
+            .catch({ error in
+                Just(
+                    .failure(message: error.localizedDescription)
+                )
+            })
+            .eraseToAnyPublisher()
+    case .editCreate(let body):
+        return Just(.set(url: nil, body: body)).eraseToAnyPublisher()
+    case .save:
+        if let url = state.url {
+            return Just(
+                .saveUpdate(
+                    EntryFile(
+                        url: url,
+                        content: state.body
+                    )
+                )
+            ).eraseToAnyPublisher()
+        } else {
+            return Just(
+                .saveCreate(
+                    Entry(
+                        content: state.body
+                    )
+                )
+            ).eraseToAnyPublisher()
+        }
+    case .saveCreate(let entry):
+        return environment.database.createEntry(entry)
+            .map({ entryFile in
+                .saveCreateSuccess(entryFile)
+            })
+            .catch({ error in
+                Just(.failure(message: error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+    case .saveCreateSuccess(let entryFile):
+        environment.logger.log(
+            "Created entry \(entryFile.url)"
         )
-        let clear = Just(EditorAction.clear).delay(
-            for: .milliseconds(500),
-            scheduler: RunLoop.main
+        return Just(.clear).eraseToAnyPublisher()
+    case .saveUpdate(let entryFile):
+        return environment.database.writeEntry(entryFile)
+            .map({ entryFile in
+                .saveUpdateSuccess(entryFile)
+            })
+            .catch({ error in
+                Just(.failure(message: error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+    case .saveUpdateSuccess(let entryFile):
+        environment.logger.log(
+            "Updated entry \(entryFile.url)"
         )
-        return Publishers.Merge(
-            save,
-            clear
-        ).eraseToAnyPublisher()
+        return Just(.clear).eraseToAnyPublisher()
     case .cancel:
-        let cancel = Just(EditorAction.requestCancel)
         // Delay for a bit. Should clear just after sheet animation completes.
         // Note that SwiftUI animations don't yet have reasonable
         // onComplete handlers, so we're making do.
-        let clear = Just(EditorAction.clear).delay(
+        return Just(EditorAction.clear).delay(
             for: .milliseconds(500),
             scheduler: RunLoop.main
-        )
-        return Publishers.Merge(
-            cancel,
-            clear
         ).eraseToAnyPublisher()
-    case .requestSave:
-        environment.debug(
-            """
-            EditorAction.requestSave
-            should be handled by the parent view.
-            """
-        )
-    case .requestCancel:
-        environment.debug(
-            """
-            EditorAction.requestCancel
-            should be handled by the parent view.
-            """
-        )
     }
     return Empty().eraseToAnyPublisher()
 }
@@ -110,12 +148,7 @@ struct EditorView: View, Equatable {
                 }
                 Spacer()
                 Button(action: {
-                    store.send(
-                        .save(
-                            url: store.state.url,
-                            content: store.state.body
-                        )
-                    )
+                    store.send(.save)
                 }) {
                     Text(save).bold()
                 }

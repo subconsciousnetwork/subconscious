@@ -37,6 +37,9 @@ enum DatabaseAction {
     case sync
     case syncSuccess(_ changes: [FileSync.Change])
     case syncFailure(message: String)
+    case selectRecent
+    case selectRecentSuccess([EntryFile])
+    case selectRecentFailure(message: String)
     /// Perform a search with query string
     case search(_ query: String)
     case searchSuccess([EntryFile])
@@ -51,19 +54,10 @@ enum DatabaseAction {
     /// Search suggestion success with array of results
     case searchSuggestionsSuccess(_ results: SuggestionsModel)
     case searchSuggestionsFailure(message: String)
-    /// Suggest titles for entry
-    case searchTitleSuggestions(_ query: String)
-    /// Title suggestion success with array of results
-    case searchTitleSuggestionsSuccess(_ results: SuggestionsModel)
-    case searchTitleSuggestionsFailure(message: String)
     /// Create new entry on file system, and log in database
     case createEntry(Entry)
     case createEntrySuccess(EntryFile)
     case createEntryFailure(_ message: String)
-    /// Read entry contents by URL
-    case readEntry(url: URL)
-    case readEntrySuccess(EntryFile)
-    case readEntryFailure(String)
     /// Update entry in file system and database.
     case updateEntry(EntryFile)
     case updateEntrySuccess(EntryFile)
@@ -179,40 +173,6 @@ func updateDatabase(
         environment.logger.log("Created entry \(entry.url)")
     case .createEntryFailure(let message):
         environment.logger.warning("\(message)")
-    case .readEntry(let url):
-        return environment.readEntry(url: url)
-            .map({ entry in
-                .readEntrySuccess(entry)
-            })
-            .catch({ error in
-                Just(
-                    .readEntryFailure(
-                        """
-                        Failed to read entry: \(url)
-                        
-                        Error:
-                        \(error.localizedDescription)
-                        """
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-    case .readEntrySuccess:
-        environment.logger.debug(
-            """
-            DatabaseAction.readEntrySuccess
-            Should be handled by parent component.
-            """
-        )
-    case .readEntryFailure(let message):
-        environment.logger.warning(
-            """
-            Failed to read entry:
-            
-            Error:
-            \(message)
-            """
-        )
     case .updateEntry(let entry):
         return environment.writeEntry(entry)
             .map({ entry in
@@ -271,9 +231,37 @@ func updateDatabase(
             \(message)
             """
         )
+    case .selectRecent:
+        return environment.selectRecent()
+            .map({ results in
+                .selectRecentSuccess(results)
+            })
+            .catch({ error in
+                Just(
+                    .selectRecentFailure(
+                        message: error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+    case .selectRecentSuccess:
+        environment.logger.debug(
+            """
+            .selectRecentSuccess should be handled by parent component
+            """
+        )
+    case .selectRecentFailure(let message):
+        environment.logger.warning(
+            """
+            .selectRecentFailure
+
+            Error:
+            \(message)
+            """
+        )
     case .search(let query):
         return environment.search(query: query)
-            .map({ results in DatabaseAction.searchSuccess(results) })
+            .map({ results in .searchSuccess(results) })
             .catch({ error in
                 Just(
                     .searchFailure(
@@ -281,7 +269,8 @@ func updateDatabase(
                         query: query
                     )
                 )
-            }).eraseToAnyPublisher()
+            })
+            .eraseToAnyPublisher()
     case .searchSuccess:
         environment.logger.debug(
             "DatabaseAction.searchSuccess should be handled by parent component"
@@ -358,30 +347,6 @@ func updateDatabase(
             \(message)
             """
         )
-    case .searchTitleSuggestions(let query):
-        return environment.searchTitleSuggestions(query)
-            .map({ results in .searchTitleSuggestionsSuccess(results) })
-            .catch({ error in
-                Just(
-                    .searchTitleSuggestionsFailure(
-                        message: error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-    case .searchTitleSuggestionsSuccess:
-        environment.logger.debug(
-            "DatabaseAction.suggestTitlesSuccess should be handled by parent component"
-        )
-    case .searchTitleSuggestionsFailure(let message):
-        environment.logger.warning(
-            """
-            Title suggestions failed
-            
-            Error:
-            \(message)
-            """
-        )
     }
     return Empty().eraseToAnyPublisher()
 }
@@ -389,7 +354,7 @@ func updateDatabase(
 //  MARK: Environment
 struct DatabaseEnvironment {
     private let db: SQLite3ConnectionManager
-    
+
     let logger = Logger(
         subsystem: "com.subconscious.Subconscious",
         category: "database"
@@ -410,7 +375,7 @@ struct DatabaseEnvironment {
         self.documentsUrl = documentsUrl
         self.migrations = migrations
     }
-    
+
     func migrateDatabase() ->
         Future<SQLite3Migrations.MigrationSuccess, Error> {
         Future({ promise in
@@ -597,6 +562,29 @@ struct DatabaseEnvironment {
             try deleteEntryFromDatabase(url)
             return url
         }
+    }
+
+    /// List recent entries
+    func selectRecent() throws -> [EntryFile] {
+        try db.connection().execute(
+            sql: """
+            SELECT path, body FROM entry
+            ORDER BY modified DESC
+            LIMIT 25
+            """
+        ).map({ row in
+            EntryFile(
+                url: URL(
+                    fileURLWithPath: try row.get(0).unwrap(),
+                    relativeTo: documentsUrl
+                ),
+                content: try row.get(1).unwrap()
+            )
+        })
+    }
+
+    func selectRecent() -> AnyPublisher<[EntryFile], Error> {
+        CombineUtilities.async(qos: .userInitiated, execute: selectRecent)
     }
 
     func searchSuggestionsForZeroQuery() -> AnyPublisher<SuggestionsModel, Error> {

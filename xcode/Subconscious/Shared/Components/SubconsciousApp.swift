@@ -28,15 +28,16 @@ enum AppAction {
     case suggestionTokens(_ action: TextTokenBarAction)
     /// On view appear
     case appear
-    /// Invoke editor with optional URL and content
-    case invokeEditor(url: URL?, content: String)
     /// Issue and log search
     case commitQuery(_ query: String)
     /// Set live query
     case setQuery(_ text: String)
     case setEditorPresented(_ isPresented: Bool)
-    case editorUpdateEntry(EntryFile)
-    case editorCreateEntry(Entry)
+    case editorOpenCreate(String)
+    case editorOpenUpdate(URL)
+    case editorCancel
+    case editorSaveCreateSuccess(EntryFile)
+    case editorSaveUpdateSuccess(EntryFile)
     case setSuggestions(_ suggestions: SuggestionsModel)
     /// Catch create entry success and react to it in other parts of UI
     case createEntrySuccess(EntryFile)
@@ -59,22 +60,6 @@ enum AppAction {
         .database(.search(query))
     }
 
-    /// Invoke editor in create mode
-    /// Currently, this just requires a nil URL. We're differentiating the actions here to make refactoring
-    /// easier later, if we end up wanting to further differentiate create vs edit.
-    static func invokeEditorCreate(content: String) -> AppAction {
-        .invokeEditor(url: nil, content: content)
-    }
-
-    static func invokeEditorForEntry(url: URL) -> AppAction {
-        //  2021-07-12 Gordon Brander
-        //  All single entry reads are currently for the purpose of invoking edit.
-        //  In future, we may want to disambiguate different kinds of entry reads.
-        //  This might mean refactoring database component into app component.
-        //  and using database service directly, rather than through actions.
-        .database(.readEntry(url: url))
-    }
-
     static func deleteEntry(url: URL) -> AppAction {
         .database(.deleteEntry(url: url))
     }
@@ -92,11 +77,6 @@ func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
         return .createEntrySuccess(entry)
     case .updateEntrySuccess(let entry):
         return .updateEntrySuccess(entry)
-    case .readEntrySuccess(let entryFile):
-        return .invokeEditor(
-            url: entryFile.url,
-            content: entryFile.entry.content
-        )
     default:
         return .database(action)
     }
@@ -104,16 +84,12 @@ func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
 
 func tagEditorAction(_ action: EditorAction) -> AppAction {
     switch action {
-    case .requestCancel:
-        return .setEditorPresented(false)
-    case .requestSave(let url, let content):
-        if let url = url {
-            return .editorUpdateEntry(
-                EntryFile(url: url, content: content)
-            )
-        } else {
-            return .editorCreateEntry(Entry(content: content))
-        }
+    case .cancel:
+        return .editorCancel
+    case .saveCreateSuccess(let entryFile):
+        return .editorSaveCreateSuccess(entryFile)
+    case .saveUpdateSuccess(let entryFile):
+        return .editorSaveUpdateSuccess(entryFile)
     default:
         return .editor(action)
     }
@@ -133,7 +109,7 @@ func tagSearchBarAction(_ action: SubSearchBarAction) -> AppAction {
 func tagSearchAction(_ action: EntryListAction) -> AppAction {
     switch action {
     case .requestEdit(let url):
-        return .invokeEditorForEntry(url: url)
+        return .editorOpenUpdate(url)
     default:
         return .search(action)
     }
@@ -146,9 +122,9 @@ func tagSuggestionsAction(_ action: SuggestionsAction) -> AppAction {
     case .selectAction(let suggestion):
         switch suggestion {
         case .edit(let url, _):
-            return .invokeEditorForEntry(url: url)
+            return .editorOpenUpdate(url)
         case .create(let text):
-            return .invokeEditorCreate(content: text)
+            return .editorOpenCreate(text)
         }
     }
 }
@@ -196,7 +172,7 @@ func updateApp(
         return updateEditor(
             state: &state.editor,
             action: action,
-            environment: environment.logger
+            environment: environment.editor
         ).map(tagEditorAction).eraseToAnyPublisher()
     case .searchBar(let action):
         return updateSubSearchBar(
@@ -234,32 +210,46 @@ func updateApp(
             suggestionTokensEffect,
             setupDatabaseEffect
         ).eraseToAnyPublisher()
-    case .invokeEditor(let url, let content):
-        let edit = Just(
-            AppAction.editor(.edit(url: url, content: content))
-        )
-        let presentEditor = Just(AppAction.setEditorPresented(true))
-        return Publishers.Merge(
-            edit,
-            presentEditor
-        ).eraseToAnyPublisher()
     case .setEditorPresented(let isPresented):
         state.isEditorPresented = isPresented
-    case .editorUpdateEntry(let entry):
-        let unpresentEditor = Just(AppAction.setEditorPresented(false))
-        let updateEntry = Just(AppAction.database(.updateEntry(entry)))
+    case .editorCancel:
+        let clear = Just(AppAction.editor(.cancel))
+            .delay(
+                for: .milliseconds(500),
+                scheduler: RunLoop.main
+            )
+        let close = Just(AppAction.setEditorPresented(false))
         return Publishers.Merge(
-            unpresentEditor,
-            updateEntry
+            close,
+            clear
         ).eraseToAnyPublisher()
-    case .editorCreateEntry(let entry):
-        let unpresentEditor = Just(AppAction.setEditorPresented(false))
-        let createEntry = Just(
-            AppAction.database(.createEntry(entry))
-        )
+    case .editorOpenCreate(let content):
+        let open = Just(AppAction.setEditorPresented(true))
+        let create = Just(AppAction.editor(.editCreate(content: content)))
         return Publishers.Merge(
-            unpresentEditor,
-            createEntry
+            create,
+            open
+        ).eraseToAnyPublisher()
+    case .editorSaveCreateSuccess(let entryFile):
+        let close = Just(AppAction.setEditorPresented(false))
+        let update = Just(AppAction.editor(.saveCreateSuccess(entryFile)))
+        return Publishers.Merge(
+            update,
+            close
+        ).eraseToAnyPublisher()
+    case .editorOpenUpdate(let url):
+        let open = Just(AppAction.setEditorPresented(true))
+        let update = Just(AppAction.editor(.editUpdate(url: url)))
+        return Publishers.Merge(
+            update,
+            open
+        ).eraseToAnyPublisher()
+    case .editorSaveUpdateSuccess(let entryFile):
+        let close = Just(AppAction.setEditorPresented(false))
+        let update = Just(AppAction.editor(.saveUpdateSuccess(entryFile)))
+        return Publishers.Merge(
+            update,
+            close
         ).eraseToAnyPublisher()
     case .commitQuery(let query):
         let commitSearchBar = Just(AppAction.searchBar(.commit(query)))
@@ -330,11 +320,12 @@ struct SubconsciousApp: App {
 //  MARK: App Environment
 /// Access to external network services and other supporting services
 struct AppEnvironment {
-    let fileManager = FileManager.default
-    let documentsUrl: URL
-    let databaseUrl: URL
-    let logger = SubConstants.logger
-    let database: DatabaseEnvironment
+    var fileManager = FileManager.default
+    var documentsUrl: URL
+    var databaseUrl: URL
+    var logger = SubConstants.logger
+    var database: DatabaseEnvironment
+    var editor: EditorService
 
     init() {
         self.databaseUrl = try! fileManager.url(
@@ -350,6 +341,11 @@ struct AppEnvironment {
             databaseUrl: databaseUrl,
             documentsUrl: documentsUrl,
             migrations: SubConstants.migrations
+        )
+
+        self.editor = EditorService(
+            logger: logger,
+            database: database
         )
     }
 
