@@ -17,14 +17,32 @@ import Foundation
 struct FileFingerprint: Hashable, Equatable, Identifiable {
     /// File modified date and size.
     struct Attributes: Hashable, Equatable {
-        let modified: Date
+        /// Modified time on file, stored as Unix Timestamp Integer (rounded to the nearest second)
+        /// We were previously getting what appeared to be rounding precision errors
+        /// when serializing datetimes as ISO strings using .
+        ///
+        /// Additionally, file timestamps precision is limited to:
+        /// 1 second for EXT3
+        /// 1 microsecond for UFS
+        /// 1 nanosecond for EXT4
+        ///
+        /// To-the-nearest-second precision is fine for the purpose of comparing changes, and
+        /// handwaves away these issues.
+        ///
+        /// 2021-07-26 Gordon Brander
+        let modified: Int
         let size: Int
 
+        /// Get modified time as Date instance
+        var modifiedDate: Date {
+            Date(timeIntervalSince1970: Double(modified))
+        }
+
         init(modified: Date, size: Int) {
-            self.modified = modified
+            self.modified = Int(modified.timeIntervalSince1970)
             self.size = size
         }
-        
+
         init?(url: URL, manager: FileManager = .default) {
             guard
                 let attr = try? manager.attributesOfItem(atPath: url.path),
@@ -36,7 +54,7 @@ struct FileFingerprint: Hashable, Equatable, Identifiable {
             self.init(modified: modified, size: size)
         }
     }
-    
+
     var id: String { self.url.path }
     let url: URL
     let attributes: Attributes
