@@ -19,11 +19,11 @@ struct SQLite3Migrations {
         enum MigrationError: Error {
             case date(message: String)
         }
-        
+
         static func < (lhs: Migration, rhs: Migration) -> Bool {
             lhs.version < rhs.version
         }
-        
+
         let version: Int
         let sql: String
 
@@ -31,7 +31,7 @@ struct SQLite3Migrations {
             self.version = version
             self.sql = sql
         }
-        
+
         init?(date: String, sql: String) {
             let formatter = ISO8601DateFormatter()
             formatter.formatOptions = [
@@ -48,7 +48,7 @@ struct SQLite3Migrations {
                 sql: sql
             )
         }
-        
+
         init(date: Date, sql: String) {
             self.init(version: Int(date.timeIntervalSince1970), sql: sql)
         }
@@ -59,7 +59,7 @@ struct SQLite3Migrations {
     var versions: [Int] {
         migrations.map({ migration in migration.version })
     }
-    
+
     var latest: Migration {
         migrations.max()!
     }
@@ -70,7 +70,7 @@ struct SQLite3Migrations {
         }
         self.migrations = migrations
     }
-    
+
     /// Allows for a quick check against latest migration version.
     /// Does not make sure that the version you supply is actually valid.
     func isMigrated(version: Int) -> Bool {
