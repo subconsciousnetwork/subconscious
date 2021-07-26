@@ -39,7 +39,7 @@ struct FileSync {
             case same
             case conflict
         }
-        
+
         var status: Status {
             if let left = self.left, let right = self.right {
                 if left == right {
@@ -58,7 +58,7 @@ struct FileSync {
                 return .rightOnly
             }
         }
-        
+
         let left: FileFingerprint?
         let right: FileFingerprint?
 
@@ -94,5 +94,35 @@ struct FileSync {
         }
 
         return changes
+    }
+}
+
+extension FileSync.Change: CustomStringConvertible {
+    var description: String {
+        let url = (
+            self.left?.url.absoluteString ??
+            self.right?.url.absoluteString ??
+            "nil"
+        )
+        return "Change(url: \(url), status: \(self.status))"
+    }
+}
+
+extension FileSync.Change.Status: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .leftOnly:
+            return "leftOnly"
+        case .leftNewer:
+            return "leftNewer"
+        case .rightOnly:
+            return "rightOnly"
+        case .rightNewer:
+            return "rightNewer"
+        case .conflict:
+            return "conflict"
+        case .same:
+            return "same"
+        }
     }
 }
