@@ -226,6 +226,7 @@
 		B853EB2326326F9F001BB584 /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				B8C951B626AF8DDF00EEC3AB /* IOService.swift */,
 				B85EBCA9269DFD4400A8D4FF /* ArrayUtilities.swift */,
 				B8B2C18A26474326008AA3EC /* Colors.swift */,
 				B862343B2677FF960099CD87 /* CombineUtilities.swift */,
@@ -283,7 +284,6 @@
 				B86F339D261AB2C7009D3D48 /* Assets.xcassets */,
 				B804C09D2620FFDD00D59CC6 /* Components */,
 				B853EB2326326F9F001BB584 /* Library */,
-				B8C951AD26AF54E300EEC3AB /* Services */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -334,14 +334,6 @@
 				B86F33C3261AB2C7009D3D48 /* Info.plist */,
 			);
 			path = "Tests macOS";
-			sourceTree = "<group>";
-		};
-		B8C951AD26AF54E300EEC3AB /* Services */ = {
-			isa = PBXGroup;
-			children = (
-				B8C951B626AF8DDF00EEC3AB /* IOService.swift */,
-			);
-			path = Services;
 			sourceTree = "<group>";
 		};
 		B8E152EF2656F2A30032F5A7 /* Common */ = {
