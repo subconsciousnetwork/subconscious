@@ -152,33 +152,23 @@ struct DatabaseService {
         self.migrations = migrations
     }
 
+    func migrateDatabase() throws -> SQLite3Migrations.MigrationSuccess {
+        let database = try self.db.connection()
+        return try migrations.migrate(database: database)
+    }
+    
     func migrateDatabase() ->
-        Future<SQLite3Migrations.MigrationSuccess, Error> {
-        Future({ promise in
-            DispatchQueue.global(qos: .background).async {
-                do {
-                    let database = try self.db.connection()
-                    let success = try migrations.migrate(database: database)
-                    promise(.success(success))
-                } catch {
-                    promise(.failure(error))
-                }
-            }
-        })
+        AnyPublisher<SQLite3Migrations.MigrationSuccess, Error> {
+        CombineUtilities.async(qos: .background, execute: migrateDatabase)
     }
 
+    func deleteDatabase() throws {
+        db.close()
+        try fileManager.removeItem(at: db.url)
+    }
+    
     func deleteDatabase() -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(execute: {
-            logger.notice("Deleting database")
-            do {
-                db.close()
-                try fileManager.removeItem(at: db.url)
-                logger.notice("Deleted database")
-            } catch {
-                logger.warning("Failed to delete database: \(error.localizedDescription)")
-                throw error
-            }
-        })
+        CombineUtilities.async(execute: deleteDatabase)
     }
 
     func syncDatabase() -> AnyPublisher<[FileSync.Change], Error> {
