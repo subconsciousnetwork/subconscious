@@ -7,53 +7,53 @@
 
 import Foundation
 
-struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
-    struct BlankBlock:
+public struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
+    public struct BlankBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
-        var description: String { "" }
-        let id = UUID()
+        public var description: String { "" }
+        public let id = UUID()
     }
 
-    struct TextBlock:
+    public struct TextBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
-        var description: String { self.value }
-        let id = UUID()
-        let value: String
+        public var description: String { self.value }
+        public let id = UUID()
+        public let value: String
     }
     
-    struct LinkBlock:
+    public struct LinkBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
         static let sigil = "&"
-        var description: String { "& " + self.value }
-        let id = UUID()
-        let value: String
+        public var description: String { "& " + self.value }
+        public let id = UUID()
+        public let value: String
     }
 
-    struct ListBlock:
+    public struct ListBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
-        static let sigil = "-"
-        var description: String { "- " + self.value }
-        let id = UUID()
-        let value: String
+        public static let sigil = "-"
+        public var description: String { "- " + self.value }
+        public let id = UUID()
+        public let value: String
     }
 
-    struct HeadingBlock:
+    public struct HeadingBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
-        static let sigil = "#"
-        var description: String { "# " + self.value }
-        let id = UUID()
-        let value: String
+        public static let sigil = "#"
+        public var description: String { "# " + self.value }
+        public let id = UUID()
+        public let value: String
     }
 
-    struct QuoteBlock:
+    public struct QuoteBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
-        static let sigil = ">"
-        var description: String { "> " + self.value }
-        let id = UUID()
-        let value: String
+        public static let sigil = ">"
+        public var description: String { "> " + self.value }
+        public let id = UUID()
+        public let value: String
     }
     
-    enum Block: CustomStringConvertible, Identifiable, Equatable, Hashable {
+    public enum Block: CustomStringConvertible, Identifiable, Equatable, Hashable {
         case blank(BlankBlock)
         case text(TextBlock)
         case link(LinkBlock)
@@ -61,7 +61,7 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
         case heading(HeadingBlock)
         case quote(QuoteBlock)
 
-        var id: UUID {
+        public var id: UUID {
             switch self {
             case .blank(let block):
                 return block.id
@@ -78,11 +78,11 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
             }
         }
 
-        var markup: String {
+        public var markup: String {
             description
         }
 
-        var description: String {
+        public var description: String {
             switch self {
             case .blank(let block):
                 return block.description
@@ -99,7 +99,7 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
             }
         }
 
-        var value: String {
+        public var value: String {
             switch self {
             case .text(let block):
                 return block.value
@@ -127,7 +127,7 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
         }
 
         /// Determine if block is a content block
-        static func isContent(_ block: Block) -> Bool {
+        public static func isContent(_ block: Block) -> Bool {
             switch block {
             case .text:
                 return true
@@ -142,7 +142,7 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
             }
         }
         
-        static func fromLine(_ line: String) -> Block {
+        public static func fromLine(_ line: String) -> Block {
             if line.hasPrefix(LinkBlock.sigil) {
                 return Block.link(
                     .init(
@@ -189,50 +189,50 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
         }
     }
     
-    var blocks: [Block]
+    public var blocks: [Block]
 
-    var id: Int {
+    public var id: Int {
         self.hashValue
     }
 
-    var excerpt: String {
+    public var excerpt: String {
         blocks
             .first(where: Block.isContent)
             .map({ block in block.value }) ?? ""
     }
 
-    static func excerpt(markup: String) -> String {
+    public static func excerpt(markup: String) -> String {
         Subtext(markup: markup).excerpt
     }
 
-    var markup: String {
+    public var markup: String {
         Self.render(self.blocks)
     }
 
-    var description: String {
+    public var description: String {
         markup
     }
 
-    var text: String {
+    public var text: String {
         Self.strip(self.blocks)
     }
 
     /// Render blocks as markup
-    static func render(_ blocks: [Block]) -> String {
+    public static func render(_ blocks: [Block]) -> String {
         blocks
             .map({ block in block.description })
             .joined(separator: "\n")
     }
 
     /// Render blocks as plain text (lossy)
-    static func strip(_ blocks: [Block]) -> String {
+    public static func strip(_ blocks: [Block]) -> String {
         blocks
             .map({ block in block.value })
             .joined(separator: "\n")
     }
 
     /// Parse markup to blocks
-    static func parse(_ markup: String) -> [Block] {
+    public static func parse(_ markup: String) -> [Block] {
         markup.split(
             maxSplits: Int.max,
             omittingEmptySubsequences: false,
@@ -241,19 +241,19 @@ struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
         .map({ sub in Block.fromLine(String(sub)) })
     }
 
-    init(blocks: [Block]) {
+    public init(blocks: [Block]) {
         self.blocks = blocks
     }
 
-    init(markup: String) {
+    public init(markup: String) {
         self.blocks = Self.parse(markup)
     }
 
-    func prefix(_ max: Int) -> Subtext {
+    public func prefix(_ max: Int) -> Subtext {
         Subtext(blocks: Array(self.blocks.prefix(max)))
     }
 
-    func filter(_ predicate: (Block) -> Bool) -> Subtext {
+    public func filter(_ predicate: (Block) -> Bool) -> Subtext {
         Subtext(blocks: self.blocks.filter(predicate))
     }
 }

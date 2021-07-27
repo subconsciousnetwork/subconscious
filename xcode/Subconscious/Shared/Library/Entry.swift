@@ -7,33 +7,33 @@
 
 import Foundation
 
-struct Entry: Identifiable, Hashable, Equatable {
-    var title: String {
+public struct Entry: Identifiable, Hashable, Equatable {
+    public var title: String {
         Subtext.excerpt(markup: content)
             .firstPseudoSentence
             .truncatingByWord(characters: 120)
     }
-    var dom: Subtext {
+    public var dom: Subtext {
         Subtext(markup: content)
     }
-    var id = UUID()
-    var content: String
+    public var id = UUID()
+    public var content: String
 }
 
 /// Represents an entry on the file system.
 /// Contains an entry, and a URL for the file in which the entry is stored.
-struct EntryFile: Identifiable, Hashable, Equatable {
-    var id: URL { url }
-    var url: URL
-    var entry: Entry
+public struct EntryFile: Identifiable, Hashable, Equatable {
+    public var id: URL { url }
+    public var url: URL
+    public var entry: Entry
 
-    init(url: URL, entry: Entry) {
+    public init(url: URL, entry: Entry) {
         self.url = url
         self.entry = entry
     }
 
     /// Initialize entry file wrapper by reading URL
-    init(url: URL) throws {
+    public init(url: URL) throws {
         self.url = url
         self.entry = try Entry(
             content: String(contentsOf: url, encoding: .utf8)
@@ -41,14 +41,14 @@ struct EntryFile: Identifiable, Hashable, Equatable {
     }
 
     /// Initialize with URL and string
-    init(url: URL, content: String) {
+    public init(url: URL, content: String) {
         self.url = url
         self.entry = Entry(content: content)
     }
 
     /// Initialize with entry, synthesizing URL
-    init?(entry: Entry) {
-        let name = Slug.toFilename(entry.title)
+    public init?(entry: Entry) {
+        let name = entry.title.toFilename()
         if
             let documentsURL = FileManager.default.documentDirectoryUrl,
             let url = FileManager.default.findUniqueFilename(
@@ -64,11 +64,52 @@ struct EntryFile: Identifiable, Hashable, Equatable {
         }
     }
 
-    func write() throws {
+    public func write() throws {
         try entry.content.write(
             to: url,
             atomically: true,
             encoding: .utf8
         )
+    }
+}
+
+public struct EntryResults {
+    /// An index of entries.
+    public struct Index {
+        private(set) var index: [String: EntryFile]
+
+        public init(_ entryFiles: [EntryFile] = []) {
+            self.index = entryFiles.toDictionary(key: { entryFile in
+                entryFile.entry.title.toSlug()
+            })
+        }
+
+        public func like(_ title: String) -> EntryFile? {
+            let slug = title.toSlug()
+            return index[slug]
+        }
+
+        /// Given an array of wiklink strings, returns a set of EntryFiles corresponding to the links.
+        /// Strings are normalized with `toSlug()` making this a kind of 1:1 fuzzy match without ranking.
+        public func pluck(_ titles: [String]) -> Index {
+            Index(titles.compactMap(like))
+        }
+    }
+
+    public struct Result {
+        public var result: EntryFile
+        public var index: Index
+    }
+    
+    public var results: [EntryFile] = []
+    public var index = Index()
+
+    public func list() -> [Result] {
+        results.map({ entryFile in
+            Result(
+                result: entryFile,
+                index: index.pluck(entryFile.entry.content.wikilinks())
+            )
+        })
     }
 }

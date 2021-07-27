@@ -14,12 +14,12 @@ import Elmo
 enum EntryListAction {
     case item(_ item: ItemAction<URL, EntryAction>)
     case search(String)
-    case searchSuccess([EntryFile])
+    case searchSuccess(EntryResults)
     case searchFailure(message: String)
     case selectRecent
-    case selectRecentSuccess([EntryFile])
+    case selectRecentSuccess(EntryResults)
     case selectRecentFailure(message: String)
-    case setItems([EntryFile])
+    case setItems(EntryResults)
     case requestEdit(url: URL)
 
     static func fetch(_ query: String) -> Self {
@@ -50,6 +50,18 @@ struct EntryListModel: Equatable {
                 EntryModel(
                     url: wrapper.url,
                     dom: wrapper.entry.dom,
+                    isFolded: i > 0
+                )
+            })
+    }
+
+    mutating func replace(_ results: EntryResults) {
+        self.entries = results.results
+            .enumerated()
+            .map({ (i, entryFile) in
+                EntryModel(
+                    url: entryFile.url,
+                    dom: entryFile.entry.dom,
                     isFolded: i > 0
                 )
             })
@@ -94,15 +106,7 @@ func updateEntryList(
             )
         }
     case .setItems(let results):
-        state.entries = results
-            .enumerated()
-            .map({ (i, wrapper) in
-                EntryModel(
-                    url: wrapper.url,
-                    dom: wrapper.entry.dom,
-                    isFolded: i > 0
-                )
-            })
+        state.replace(results)
         state.state = .ready
     case .search(let query):
         state.state = .loading

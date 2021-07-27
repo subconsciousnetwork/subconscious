@@ -331,8 +331,8 @@ struct DatabaseService {
     }
 
     /// List recent entries
-    func selectRecent() throws -> [EntryFile] {
-        try db.connection().execute(
+    func selectRecent() throws -> EntryResults {
+        let results = try db.connection().execute(
             sql: """
             SELECT path, body FROM entry
             ORDER BY modified DESC
@@ -347,9 +347,16 @@ struct DatabaseService {
                 content: try row.get(1).unwrap()
             )
         })
+
+        let index = try selectLinked(results)
+
+        return EntryResults(
+            results: results,
+            index: index
+        )
     }
 
-    func selectRecent() -> AnyPublisher<[EntryFile], Error> {
+    func selectRecent() -> AnyPublisher<EntryResults, Error> {
         CombineUtilities.async(qos: .userInitiated, execute: selectRecent)
     }
 
@@ -549,7 +556,7 @@ struct DatabaseService {
             SELECT entry.path, entry.body
             FROM entry
             JOIN json_each(?) AS title
-            ON entry.title = title.value
+            ON like(entry.title, title.value)
             """,
             parameters: [
                 titlesJSON
@@ -564,13 +571,22 @@ struct DatabaseService {
         })
     }
 
-    func search(query: String) -> AnyPublisher<[EntryFile], Error> {
+    /// Given a list of EntryFiles, get all documents linked to with wikilinks within that list of EntryFiles.
+    func selectLinked(_ entryFiles: [EntryFile]) throws -> EntryResults.Index {
+        let wikilinks = entryFiles.flatMap({ entryFile in
+            entryFile.entry.content.wikilinks()
+        })
+        let linked = try findEntriesByTitles(wikilinks)
+        return EntryResults.Index(linked)
+    }
+
+    func search(query: String) -> AnyPublisher<EntryResults, Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
             guard !query.isWhitespace else {
-                return []
+                return EntryResults()
             }
 
-            let docs: [EntryFile] = try db.connection().execute(
+            let results: [EntryFile] = try db.connection().execute(
                 sql: """
                 SELECT path, body
                 FROM entry_search
@@ -592,15 +608,12 @@ struct DatabaseService {
                 )
             })
 
-            let wikilinks = docs.flatMap({ entryFile in
-                entryFile.entry.content.wikilinks()
-            })
+            let index = try selectLinked(results)
 
-            let related = try findEntriesByTitles(wikilinks).toDictionary(key: { entryFile in
-                entryFile.entry.title
-            })
-
-            return docs
+            return EntryResults(
+                results: results,
+                index: index
+            )
         })
     }
 }
