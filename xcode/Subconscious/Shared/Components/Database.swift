@@ -55,7 +55,7 @@ struct DatabaseModel: Equatable {
 func updateDatabase(
     state: inout DatabaseModel,
     action: DatabaseAction,
-    environment: DatabaseEnvironment
+    environment: DatabaseService
 ) -> AnyPublisher<DatabaseAction, Never> {
     switch action {
     case .noop:
@@ -128,7 +128,7 @@ func updateDatabase(
 }
 
 //  MARK: Environment
-struct DatabaseEnvironment {
+struct DatabaseService {
     private let db: SQLite3ConnectionManager
 
     let logger = Logger(

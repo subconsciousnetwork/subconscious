@@ -10,5 +10,5 @@ import os
 
 struct IOService {
     var logger: Logger
-    var database: DatabaseEnvironment
+    var database: DatabaseService
 }
