@@ -1,6 +1,5 @@
 import SQLite3
 import Foundation
-import Combine
 
 //  MARK: SQLite3Connection
 /// SQLite connection manager designed along RAII lines.
@@ -10,13 +9,22 @@ import Combine
 final class SQLite3Connection {
     /// The default value of the user_version pragma.
     /// This constant is for code readability purposes.
-    public static let DEFAULT_USER_VERSION = 0;
+    public static let DEFAULT_USER_VERSION = 0
+    // Flag used for blob and text bindings
+    // NOTE: Text & BLOB values passed to a C-API do not work correctly
+    // if they are not marked as transient.
+    // See https://www.sqlite.org/c3ref/bind_blob.html
+    // and https://www.sqlite.org/c3ref/c_static.html
+    public static let SQLITE_TRANSIENT = unsafeBitCast(
+        -1,
+        to: sqlite3_destructor_type.self
+    )
     public static let dispatchQueueLabel = "SQLite3Connection"
 
     /// Quotes a query string to make it compatible with FTS5 query syntax.
     /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
     /// See https://sqlite.org/fts5.html#full_text_query_syntax
-    static func escapeQueryFTS5(_ query: String) -> String {
+    public static func escapeQueryFTS5(_ query: String) -> String {
         let stripped = query.replacingOccurrences(of: "\"", with: "")
         return "\"\(stripped)\""
     }
@@ -24,7 +32,7 @@ final class SQLite3Connection {
     /// Quotes a query string, making it a valid FTS5 prefix query string.
     /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
     /// See https://sqlite.org/fts5.html#full_text_query_syntax
-    static func escapePrefixQueryFTS5(_ query: String) -> String {
+    public static func escapePrefixQueryFTS5(_ query: String) -> String {
         let stripped = query.replacingOccurrences(of: "\"", with: "")
         return "\"\(stripped)\"*"
     }
@@ -34,7 +42,7 @@ final class SQLite3Connection {
     /// - Trims whitespace
     /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
     /// See https://sqlite.org/lang_expr.html#the_like_glob_regexp_and_match_operators
-    static func escapeQueryLike(_ query: String) -> String {
+    public static func escapeQueryLike(_ query: String) -> String {
         query
             .replacingOccurrences(of: "%", with: "")
             .replacingOccurrences(of: "_", with: "")
@@ -47,43 +55,43 @@ final class SQLite3Connection {
     /// - Adds wildcard to end
     /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
     /// See https://sqlite.org/lang_expr.html#the_like_glob_regexp_and_match_operators
-    static func escapePrefixQueryLike(_ query: String) -> String {
+    public static func escapePrefixQueryLike(_ query: String) -> String {
         let clean = escapeQueryLike(query)
         return "\(clean)%"
     }
 
     /// A struct representing a single SQL results row
-    struct Row {
-        var columns: [Value] = []
+    public struct Row {
+        public var columns: [Value] = []
 
-        func get(_ i: Int) -> String? {
+        public func get(_ i: Int) -> String? {
             let column = columns[i]
-            return column.get()
+            return column.unwrap()
         }
 
-        func get(_ i: Int) -> Date? {
+        public func get(_ i: Int) -> Date? {
             let column = columns[i]
-            return column.get()
+            return column.unwrap()
         }
 
-        func get(_ i: Int) -> Int? {
+        public func get(_ i: Int) -> Int? {
             let column = columns[i]
-            return column.get()
+            return column.unwrap()
         }
 
-        func get(_ i: Int) -> Double? {
+        public func get(_ i: Int) -> Double? {
             let column = columns[i]
-            return column.get()
+            return column.unwrap()
         }
 
-        func get(_ i: Int) -> Data? {
+        public func get(_ i: Int) -> Data? {
             let column = columns[i]
-            return column.get()
+            return column.unwrap()
         }
     }
 
     /// Column data types for SQLite
-    enum Value {
+    public enum Value {
         case null
         case text(String)
         case integer(Int)
@@ -98,7 +106,7 @@ final class SQLite3Connection {
 
         private static let dateFormatter = makeDateFormatter()
 
-        static func json(
+        public static func json(
             _ object: Any,
             options: JSONSerialization.WritingOptions = []
         ) -> Self? {
@@ -114,21 +122,21 @@ final class SQLite3Connection {
             return nil
         }
         
-        static func date(_ date: Date) -> Self {
+        public static func date(_ date: Date) -> Self {
             return self.text(dateFormatter.string(from: date))
         }
 
         /// Quotes a query string to make it compatible with FTS5 query syntax.
         /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
         /// See https://sqlite.org/fts5.html#full_text_query_syntax
-        static func queryFTS5(_ query: String) -> Self {
+        public static func queryFTS5(_ query: String) -> Self {
             text(escapeQueryFTS5(query))
         }
 
         /// Quotes a query string, making it a valid FTS5 prefix query string.
         /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
         /// See https://sqlite.org/fts5.html#full_text_query_syntax
-        static func prefixQueryFTS5(_ query: String) -> Self {
+        public static func prefixQueryFTS5(_ query: String) -> Self {
             text(escapePrefixQueryFTS5(query))
         }
 
@@ -136,7 +144,7 @@ final class SQLite3Connection {
         /// with LIKE matching syntax.
         /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
         /// See https://sqlite.org/lang_expr.html#the_like_glob_regexp_and_match_operators
-        static func queryLike(_ query: String) -> Self {
+        public static func queryLike(_ query: String) -> Self {
             text(escapeQueryLike(query))
         }
 
@@ -144,19 +152,11 @@ final class SQLite3Connection {
         /// with LIKE matching syntax.
         /// The result should still be passed in as a bound SQL parameter, not spliced in via string templating.
         /// See https://sqlite.org/lang_expr.html#the_like_glob_regexp_and_match_operators
-        static func prefixQueryLike(_ query: String) -> Self {
+        public static func prefixQueryLike(_ query: String) -> Self {
             text(escapePrefixQueryLike(query))
         }
 
-        func map<T>(_ read: (Value) -> T?) -> T? {
-            read(self)
-        }
-
-        func map<T>(_ read: (Value) throws -> T) throws -> T {
-            try read(self)
-        }
-
-        func get() -> String? {
+        public func unwrap() -> String? {
             switch self {
             case .text(let value):
                 return value
@@ -165,7 +165,7 @@ final class SQLite3Connection {
             }
         }
 
-        func get() -> Date? {
+        public func unwrap() -> Date? {
             switch self {
             case .text(let value):
                 return Self.dateFormatter.date(from: value)
@@ -174,7 +174,7 @@ final class SQLite3Connection {
             }
         }
 
-        func get() -> Int? {
+        public func unwrap() -> Int? {
             switch self {
             case .integer(let value):
                 return value
@@ -183,7 +183,7 @@ final class SQLite3Connection {
             }
         }
 
-        func get() -> Double? {
+        public func unwrap() -> Double? {
             switch self {
             case .real(let value):
                 return value
@@ -192,7 +192,7 @@ final class SQLite3Connection {
             }
         }
 
-        func get() -> Data? {
+        public func unwrap() -> Data? {
             switch self {
             case .blob(let value):
                 return value
@@ -202,7 +202,7 @@ final class SQLite3Connection {
         }
     }
 
-    enum SQLite3ConnectionError: Error {
+    public enum SQLite3ConnectionError: Error {
         case database(code: Int32, message: String)
         case parameter(_ message: String)
         case value(_ message: String)
@@ -210,7 +210,7 @@ final class SQLite3Connection {
 
     /// Enum representing the most common flag combinations for `sqlite3_open_v2`.
     /// See <https://www.sqlite.org/c3ref/open.html>
-    enum OpenMode {
+    public enum OpenMode {
         case readonly
         case readwrite
 
@@ -232,12 +232,12 @@ final class SQLite3Connection {
     private var queue: DispatchQueue
 
     /// Path to the database file
-    let path: String
+    public let path: String
 
     /// Connection open mode (e.g. readwrite or readonly)
-    let mode: OpenMode
+    public let mode: OpenMode
 
-    init(
+    public init(
         path: String,
         mode: OpenMode = .readwrite
     ) throws {
@@ -287,7 +287,7 @@ final class SQLite3Connection {
     /// Executes multiple SQL statements in one go.
     /// Useful for setting up a database.
     /// This form does not allow for parameter binding.
-    func executescript(sql: String) throws {
+    public func executescript(sql: String) throws {
         try queue.sync {
             let result = sqlite3_exec(db, sql, nil, nil, nil)
             if result != SQLITE_OK {
@@ -304,6 +304,36 @@ final class SQLite3Connection {
         }
     }
 
+    /// Function to get typed data from column for a particular row
+    /// Note that return result of this function depends on current state of `statement`.
+    private static func getValueForColumn(
+        statement: OpaquePointer,
+        index: CInt
+    ) -> Value {
+        switch sqlite3_column_type(statement, index) {
+        case SQLITE_BLOB:
+            let data: Data
+            if let bytes = sqlite3_column_blob(statement, index) {
+                let count = Int(sqlite3_column_bytes(statement, index))
+                data = Data(bytes: bytes, count: count)
+            } else {
+                data = Data()
+            }
+            return .blob(data)
+        case SQLITE_TEXT:
+            let string = String(cString: sqlite3_column_text(statement, index))
+            return .text(string)
+        case SQLITE_INTEGER:
+            let int = Int(sqlite3_column_int(statement, index))
+            return .integer(int)
+        case SQLITE_FLOAT:
+            let double = Double(sqlite3_column_double(statement, index))
+            return .real(double)
+        default:
+            return .null
+        }
+    }
+
     /// Execute a single SQL statement
     ///
     /// - Parameters:
@@ -311,7 +341,7 @@ final class SQLite3Connection {
     ///   - parameters: An array of optional parameters in case the SQL statement includes
     ///     bound parameters - indicated by `?`
     /// - Returns: SQL rows
-    @discardableResult func execute(
+    @discardableResult public func execute(
         sql: String,
         parameters: [Value] = []
     ) throws -> [Row] {
@@ -328,7 +358,7 @@ final class SQLite3Connection {
                     // Get row data for each column.
                     var columns: [Value] = []
                     for index in 0..<columnCount {
-                        let sqlData = SQLite3Connection.getDataForRow(
+                        let sqlData = SQLite3Connection.getValueForColumn(
                             statement: statement,
                             index: index
                         )
@@ -363,7 +393,7 @@ final class SQLite3Connection {
     }
 
     /// Get user_version as integer
-    func getUserVersion() throws -> Int {
+    public func getUserVersion() throws -> Int {
         let rows = try execute(sql: "PRAGMA user_version")
         if let version: Int = rows.first?.get(0) {
             return version
@@ -421,16 +451,6 @@ final class SQLite3Connection {
                 )
             }
 
-            // Flag used for blob and text bindings
-            // NOTE: Text & BLOB values passed to a C-API do not work correctly
-            // if they are not marked as transient.
-            // See https://www.sqlite.org/c3ref/bind_blob.html
-            // and https://www.sqlite.org/c3ref/c_static.html
-            let SQLITE_TRANSIENT = unsafeBitCast(
-                -1,
-                to: sqlite3_destructor_type.self
-            )
-
             for (i, parameter) in parameters.enumerated() {
                 // Per the SQLite3 docs, the leftmost parameter is 1-indexed.
                 // Enumerated indices are 0-indexed.
@@ -446,7 +466,7 @@ final class SQLite3Connection {
                         CInt(parameterIndex),
                         (data as NSData).bytes,
                         CInt(data.count),
-                        SQLITE_TRANSIENT
+                        Self.SQLITE_TRANSIENT
                     )
                 case .text(let string):
                     flag = sqlite3_bind_text(
@@ -454,7 +474,7 @@ final class SQLite3Connection {
                         CInt(parameterIndex),
                         (string as NSString).utf8String,
                         -1,
-                        SQLITE_TRANSIENT
+                        Self.SQLITE_TRANSIENT
                     )
                 case .integer(let int):
                     flag = sqlite3_bind_int(
@@ -488,81 +508,133 @@ final class SQLite3Connection {
         return statement
     }
 
-    /// Function to get typed data from column for a particular row
-    /// Note that return result of this function depends on current state of `statement`.
-    private static func getDataForRow(
-        statement: OpaquePointer,
-        index: CInt
-    ) -> Value {
-        switch sqlite3_column_type(statement, index) {
-        case SQLITE_BLOB:
-            let data: Data
-            if let bytes = sqlite3_column_blob(statement, index) {
-                let count = Int(sqlite3_column_bytes(statement, index))
-                data = Data(bytes: bytes, count: count)
-            } else {
-                data = Data()
+    /// Signature of external functions stored in SQLite
+    private typealias SQLFunction = @convention(block) (
+        OpaquePointer?,
+        Int32,
+        UnsafeMutablePointer<OpaquePointer?>?
+    ) -> Void
+
+    private static func wrapSQLFunction(
+        _ function: @escaping ([Value]) -> Value
+    ) -> SQLFunction {
+        { context, argc, argv in
+            // SQLite functions are given a context, an arg count
+            // and an array of arg values.
+            // We map over these to produce an array of Values we can
+            // pass to our wrapped function.
+            let arguments: [Value] = (0..<Int(argc)).map({ i in
+                let pointer = argv![i]
+                switch sqlite3_value_type(pointer) {
+                case SQLITE_BLOB:
+                    if let bytes = sqlite3_value_blob(pointer) {
+                        let count = Int(sqlite3_value_bytes(pointer))
+                        let data = Data(bytes: bytes, count: count)
+                        return .blob(data)
+                    } else {
+                        return .blob(Data())
+                    }
+                case SQLITE_TEXT:
+                    let string = String(
+                        cString: UnsafePointer(sqlite3_value_text(pointer))
+                    )
+                    return .text(string)
+                case SQLITE_INTEGER:
+                    let int = Int(sqlite3_value_int(pointer))
+                    return .integer(int)
+                case SQLITE_FLOAT:
+                    let double = Double(sqlite3_value_double(pointer))
+                    return .real(double)
+                default:
+                    return .null
+                }
+            })
+            // Execute function with Values
+            let result = function(arguments)
+
+            // Set result on SQLite context
+            // See <https://www.sqlite.org/c3ref/result_blob.html>
+            switch result {
+            case .blob(let data):
+                sqlite3_result_blob(
+                    context,
+                    (data as NSData).bytes,
+                    CInt(data.count),
+                    Self.SQLITE_TRANSIENT
+                )
+            case .text(let string):
+                sqlite3_result_text(
+                    context,
+                    string,
+                    -1,
+                    Self.SQLITE_TRANSIENT
+                )
+            case .integer(let int):
+                sqlite3_result_int(context, CInt(int))
+            case .real(let double):
+                sqlite3_result_double(context, double)
+            case .null:
+                sqlite3_result_null(context)
             }
-            return .blob(data)
-        case SQLITE_TEXT:
-            let string = String(cString: sqlite3_column_text(statement, index))
-            return .text(string)
-        case SQLITE_INTEGER:
-            let int = Int(sqlite3_column_int(statement, index))
-            return .integer(int)
-        case SQLITE_FLOAT:
-            let double = Double(sqlite3_column_double(statement, index))
-            return .real(double)
-        default:
-            return .null
         }
     }
-}
 
-//  MARK: SQLite3Connection async extensions
-extension SQLite3Connection {
-    /// Executes multiple SQL statements in one go.
-    /// Useful for setting up a database.
-    /// This form does not allow for parameter binding.
-    /// This method is asyncronous. It executes asyncronously on a global thread and returns a Future.
-    func executescriptAsync(
-        sql: String, qos: DispatchQoS.QoSClass = .default
-    ) -> Future<Void, Error> {
-        Future({ promise in
-            DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
-                do {
-                    try self.executescript(sql: sql)
-                    promise(.success(Void()))
-                } catch {
-                    promise(.failure(error))
-                }
-            }
-        })
+    /// A registry of user-defined SQL functions.
+    /// We hold on to function references so that they will be retained.
+    /// If we don't do this, then the pointer that SQLite calls will be null.
+    private struct SQLFunctionRegistry {
+        var registry: [String: SQLFunction] = .init()
+
+        mutating func register(
+            name: String,
+            argc: Int32,
+            function: @escaping SQLFunction
+        ) {
+            registry["\(name)/\(argc)"] = function
+        }
     }
 
-    /// Execute a single SQL statement
-    /// This method is asyncronous, and returns a Future.
-    ///
-    /// - Parameters:
-    ///   - sql: The SQL query to be executed
-    ///   - parameters: An array of optional parameters in case the SQL statement includes
-    ///     bound parameters - indicated by `?`
-    /// - Returns: SQL rows
-    func executeAsync(
-        sql: String,
-        parameters: [Value] = [],
-        qos: DispatchQoS.QoSClass
-    ) throws -> Future<[Row], Error> {
-        Future({ promise in
-            DispatchQueue.global(qos: qos).async {
-                do {
-                    let result = try self.execute(sql: sql)
-                    promise(.success(result))
-                } catch {
-                    promise(.failure(error))
-                }
-            }
-        })
+    /// Registry for user-defined SQL functions
+    private var functionRegistry = SQLFunctionRegistry()
+
+    /// Register a user-defined SQL function
+    public func createFunction(
+        name: String,
+        argc: Int32,
+        deterministic: Bool = false,
+        function: @escaping ([Value]) -> Value
+    ) {
+        let wrappedFunction = Self.wrapSQLFunction(function)
+        var flags = SQLITE_UTF8
+        if deterministic {
+            flags |= SQLITE_DETERMINISTIC
+        }
+        sqlite3_create_function_v2(
+            db,
+            name.cString(using: .utf8),
+            argc,
+            flags,
+            // Store function
+            unsafeBitCast(wrappedFunction, to: UnsafeMutableRawPointer.self),
+            // Retrieve function and call
+            // Due to the way Swift bridges with C, this must be a closure
+            // without any dynamic capturing.
+            { context, argc, value in
+                let function = unsafeBitCast(
+                    sqlite3_user_data(context),
+                    to: SQLFunction.self
+                )
+                function(context, argc, value)
+            },
+            nil,
+            nil,
+            nil
+        )
+        functionRegistry.register(
+            name: name,
+            argc: argc,
+            function: wrappedFunction
+        )
     }
 }
 
