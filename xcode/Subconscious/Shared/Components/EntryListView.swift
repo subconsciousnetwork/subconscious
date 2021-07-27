@@ -34,9 +34,16 @@ enum EntryListAction {
 
 //  MARK: Model
 struct EntryListModel: Equatable {
+    enum State {
+        case loading
+        case ready
+    }
+
     var entries: [EntryModel]
-    
+    var state: State
+
     init(_ entries: [EntryFile]) {
+        self.state = .ready
         self.entries = entries
             .enumerated()
             .map({ (i, wrapper) in
@@ -96,7 +103,9 @@ func updateEntryList(
                     isFolded: i > 0
                 )
             })
+        state.state = .ready
     case .search(let query):
+        state.state = .loading
         return environment.database.search(query: query)
             .map({ results in
                 .searchSuccess(results)
@@ -107,8 +116,10 @@ func updateEntryList(
     case .searchSuccess(let results):
         return Just(.setItems(results)).eraseToAnyPublisher()
     case .searchFailure(let message):
+        state.state = .ready
         environment.logger.warning("\(message)")
     case .selectRecent:
+        state.state = .loading
         return environment.database.selectRecent()
             .map({ results in
                 .selectRecentSuccess(results)
@@ -122,6 +133,7 @@ func updateEntryList(
     case .selectRecentSuccess(let results):
         return Just(.setItems(results)).eraseToAnyPublisher()
     case .selectRecentFailure(let message):
+        state.state = .ready
         environment.logger.warning("\(message)")
     case .requestEdit:
         environment.logger.debug(
@@ -152,26 +164,30 @@ struct EntryListView: View, Equatable {
     let store: ViewStore<EntryListModel, EntryListAction>
 
     var body: some View {
-        ScrollView {
-            // LazyVStack creates items only when they need to be rendered
-            // onscreen.
-            // <https://developer.apple.com/documentation/swiftui/lazyvstack>
-            LazyVStack(alignment: .leading, spacing: 0) {
-                ForEach(store.state.entries) { entry in
-                    EntryView(
-                        store: ViewStore(
-                            state: entry,
-                            send: store.send,
-                            tag: { action in
-                                tagEntryListItem(
-                                    key: entry.id,
-                                    action: action
-                                )
-                            }
+        if store.state.state == .loading {
+            ProgressView()
+        } else {
+            ScrollView {
+                // LazyVStack creates items only when they need to be rendered
+                // onscreen.
+                // <https://developer.apple.com/documentation/swiftui/lazyvstack>
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    ForEach(store.state.entries) { entry in
+                        EntryView(
+                            store: ViewStore(
+                                state: entry,
+                                send: store.send,
+                                tag: { action in
+                                    tagEntryListItem(
+                                        key: entry.id,
+                                        action: action
+                                    )
+                                }
+                            )
                         )
-                    )
-                    .equatable()
-                    Divider()
+                        .equatable()
+                        Divider()
+                    }
                 }
             }
         }
