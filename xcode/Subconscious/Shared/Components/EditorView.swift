@@ -36,17 +36,11 @@ struct EditorModel: Equatable {
     var body = ""
 }
 
-//  MARK: Environment
-struct EditorService {
-    var logger: Logger
-    var database: DatabaseEnvironment
-}
-
 //  MARK: Reducer
 func updateEditor(
     state: inout EditorModel,
     action: EditorAction,
-    environment: EditorService
+    environment: IOService
 ) -> AnyPublisher<EditorAction, Never> {
     switch action {
     case .failure(let message):

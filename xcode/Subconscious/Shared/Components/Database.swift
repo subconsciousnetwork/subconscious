@@ -41,11 +41,6 @@ enum DatabaseAction {
     case search(_ query: String)
     case searchSuccess([EntryFile])
     case searchFailure(message: String, query: String)
-    /// Log search query in search_history
-    case insertSearchHistory(_ query: String)
-    case insertSearchHistorySuccess(_ query: String)
-    case insertSearchHistoryFailure(message: String, query: String)
-    case searchAndInsertHistory(_ query: String)
 }
 
 //  MARK: Model
@@ -157,46 +152,6 @@ func updateDatabase(
             \(message)
             """
         )
-    case .insertSearchHistory(let query):
-        return environment.insertSearchHistory(query: query)
-            .map({ query in
-                .insertSearchHistorySuccess(query)
-            })
-            .catch({ error in
-                Just(
-                    .insertSearchHistoryFailure(
-                        message: error.localizedDescription,
-                        query: query
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-    case .insertSearchHistorySuccess(let query):
-        environment.logger.log(
-            """
-            Inserted search history: \(query)
-            """
-        )
-    case .insertSearchHistoryFailure(let message, let query):
-        environment.logger.warning(
-            """
-            Failed to insert into search history: \(query)
-            
-            Error:
-            \(message)
-            """
-        )
-    case .searchAndInsertHistory(let query):
-        let insertSearchHistory = Just(
-            DatabaseAction.insertSearchHistory(query)
-        )
-        let search = Just(
-            DatabaseAction.search(query)
-        )
-        return Publishers.Merge(
-            insertSearchHistory,
-            search
-        ).eraseToAnyPublisher()
     }
     return Empty().eraseToAnyPublisher()
 }

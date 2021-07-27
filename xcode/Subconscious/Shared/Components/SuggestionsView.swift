@@ -22,15 +22,10 @@ struct SuggestionsModel: Equatable {
     var suggestions = Suggestions()
 }
 
-struct SuggestionsService {
-    var logger: Logger
-    var database: DatabaseEnvironment
-}
-
 func updateSuggestions(
     state: inout SuggestionsModel,
     action: SuggestionsAction,
-    environment: SuggestionsService
+    environment: IOService
 ) -> AnyPublisher<SuggestionsAction, Never> {
     switch action {
     case .suggest(let query):

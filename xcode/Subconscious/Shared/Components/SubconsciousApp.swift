@@ -44,11 +44,6 @@ enum AppAction {
     case warning(_ message: String)
     case info(_ message: String)
 
-    /// Issue search and log search history
-    static func searchAndInsertHistory(_ query: String) -> AppAction {
-        .database(.searchAndInsertHistory(query))
-    }
-
     /// Issue search without logging search history
     static func search(_ query: String) -> AppAction {
         .database(.search(query))
@@ -158,18 +153,19 @@ func updateApp(
         return updateEditor(
             state: &state.editor,
             action: action,
-            environment: environment.editor
+            environment: environment.io
         ).map(tagEditorAction).eraseToAnyPublisher()
     case .searchBar(let action):
         return updateSubSearchBar(
             state: &state.searchBar,
-            action: action
+            action: action,
+            environment: environment.io
         ).map(tagSearchBarAction).eraseToAnyPublisher()
     case .suggestions(let action):
         return updateSuggestions(
             state: &state.suggestions,
             action: action,
-            environment: environment.suggestions
+            environment: environment.io
         ).map(tagSuggestionsAction).eraseToAnyPublisher()
     case .search(let action):
         return updateEntryList(
@@ -250,13 +246,9 @@ func updateApp(
     case .commitQuery(let query):
         let commit = Just(AppAction.searchBar(.commit(query)))
         let suggest = Just(AppAction.suggestions(.suggest(query)))
-        let searchAndInsertHistory = Just(
-            AppAction.searchAndInsertHistory(query)
-        )
-        return Publishers.Merge3(
+        return Publishers.Merge(
             commit,
-            suggest,
-            searchAndInsertHistory
+            suggest
         ).eraseToAnyPublisher()
     case .setQuery(let query):
         let setText = Just(AppAction.searchBar(.setText(query)))
@@ -306,8 +298,7 @@ struct AppEnvironment {
     let databaseUrl: URL
     let logger = SubConstants.logger
     let database: DatabaseEnvironment
-    let editor: EditorService
-    let suggestions: SuggestionsService
+    let io: IOService
 
     init() {
         self.databaseUrl = try! fileManager.url(
@@ -325,12 +316,7 @@ struct AppEnvironment {
             migrations: SubConstants.migrations
         )
 
-        self.editor = EditorService(
-            logger: logger,
-            database: database
-        )
-
-        self.suggestions = SuggestionsService(
+        self.io = IOService(
             logger: logger,
             database: database
         )

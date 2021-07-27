@@ -8,11 +8,14 @@
 import SwiftUI
 import Combine
 import Elmo
+import os
 
 enum SubSearchBarAction {
     case cancel
-    case setText(_ text: String)
-    case commit(_ text: String)
+    case setText(String)
+    case commit(String)
+    case commitSuccess(String)
+    case commitFailure(message: String)
     case setFocus(_ isFocused: Bool)
 }
 
@@ -24,7 +27,8 @@ struct SubSearchBarModel: Equatable {
 
 func updateSubSearchBar(
     state: inout SubSearchBarModel,
-    action: SubSearchBarAction
+    action: SubSearchBarAction,
+    environment: IOService
 ) -> AnyPublisher<SubSearchBarAction, Never> {
     switch action {
     case .cancel:
@@ -36,6 +40,18 @@ func updateSubSearchBar(
         state.isFocused = false
         state.text = text
         state.comitted = text
+        return environment.database.insertSearchHistory(query: text)
+            .map({ query in
+                .commitSuccess(query)
+            })
+            .catch({ error in
+                Just(.commitFailure(message: error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+    case .commitSuccess(let query):
+        environment.logger.log("Inserted search history: \(query)")
+    case .commitFailure(let message):
+        environment.logger.warning("\(message)")
     case .setFocus(let isFocused):
         state.isFocused = isFocused
     }

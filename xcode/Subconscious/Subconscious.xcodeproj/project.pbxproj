@@ -53,6 +53,7 @@
 		B8B2C18926471E6B008AA3EC /* FakeTextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18826471E6B008AA3EC /* FakeTextFieldView.swift */; };
 		B8B2C18B26474326008AA3EC /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18A26474326008AA3EC /* Colors.swift */; };
 		B8C951B326AF867B00EEC3AB /* Suggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C951B226AF867B00EEC3AB /* Suggestions.swift */; };
+		B8C951B726AF8DDF00EEC3AB /* IOService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C951B626AF8DDF00EEC3AB /* IOService.swift */; };
 		B8CA2F9A26AB6B890000BFFB /* DynamicTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA2F9926AB6B890000BFFB /* DynamicTextViewRepresentable.swift */; };
 		B8CA2F9C26AB7E350000BFFB /* EditableEntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA2F9B26AB7E350000BFFB /* EditableEntryListView.swift */; };
 		B8CCBF5A26A74CFB00218458 /* Elmo in Frameworks */ = {isa = PBXBuildFile; productRef = B8CCBF5926A74CFB00218458 /* Elmo */; };
@@ -143,6 +144,7 @@
 		B8B2C18826471E6B008AA3EC /* FakeTextFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeTextFieldView.swift; sourceTree = "<group>"; };
 		B8B2C18A26474326008AA3EC /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		B8C951B226AF867B00EEC3AB /* Suggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestions.swift; sourceTree = "<group>"; };
+		B8C951B626AF8DDF00EEC3AB /* IOService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IOService.swift; path = Shared/Library/IOService.swift; sourceTree = SOURCE_ROOT; };
 		B8CA2F9926AB6B890000BFFB /* DynamicTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8CA2F9B26AB7E350000BFFB /* EditableEntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableEntryListView.swift; sourceTree = "<group>"; };
 		B8CCBF5826A7492B00218458 /* Elmo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Elmo; path = ../Elmo; sourceTree = "<group>"; };
@@ -337,6 +339,7 @@
 		B8C951AD26AF54E300EEC3AB /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				B8C951B626AF8DDF00EEC3AB /* IOService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -556,6 +559,7 @@
 				B82FD94C26AA04270087AE95 /* TranscludeView.swift in Sources */,
 				B853EB412633959E001BB584 /* StringUtilities.swift in Sources */,
 				B8A3E58926A8E5C0007A9F8F /* RegularExpressionUtilities.swift in Sources */,
+				B8C951B726AF8DDF00EEC3AB /* IOService.swift in Sources */,
 				B8B24FA52655CDF500EE6CB9 /* FileSync.swift in Sources */,
 				B8E628222672E9B2005B86CE /* PublisherManager.swift in Sources */,
 				B8CA2F9A26AB6B890000BFFB /* DynamicTextViewRepresentable.swift in Sources */,
