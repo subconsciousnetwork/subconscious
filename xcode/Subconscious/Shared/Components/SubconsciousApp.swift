@@ -236,7 +236,7 @@ func updateApp(
     case .commitQuery(let query):
         let commit = Just(AppAction.searchBar(.commit(query)))
         let suggest = Just(AppAction.suggestions(.suggest(query)))
-        let search = Just(AppAction.search(.search(query)))
+        let search = Just(AppAction.search(.fetch(query)))
         return Publishers.Merge3(
             commit,
             suggest,

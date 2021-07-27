@@ -38,19 +38,13 @@ struct ContentView: View, Equatable {
             }
             Divider()
             ZStack {
-                VStack(spacing: 0) {
-                    if store.state.searchBar.comitted.isEmpty {
-                        StreamView().equatable()
-                    } else {
-                        EntryListView(
-                            store: ViewStore(
-                                state: store.state.search,
-                                send: store.send,
-                                tag: tagSearchAction
-                            )
-                        ).equatable()
-                    }
-                }
+                EntryListView(
+                    store: ViewStore(
+                        state: store.state.search,
+                        send: store.send,
+                        tag: tagSearchAction
+                    )
+                ).equatable()
 
                 Group {
                     SuggestionsView(

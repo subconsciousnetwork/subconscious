@@ -16,7 +16,19 @@ enum EntryListAction {
     case search(String)
     case searchSuccess([EntryFile])
     case searchFailure(message: String)
+    case selectRecent
+    case selectRecentSuccess([EntryFile])
+    case selectRecentFailure(message: String)
+    case setItems([EntryFile])
     case requestEdit(url: URL)
+
+    static func fetch(_ query: String) -> Self {
+        if query.isWhitespace {
+            return .selectRecent
+        } else {
+            return .search(query)
+        }
+    }
 }
 
 
@@ -74,16 +86,8 @@ func updateEntryList(
                 """
             )
         }
-    case .search(let query):
-        return environment.database.search(query: query)
-            .map({ results in
-                .searchSuccess(results)
-            })
-            .catch({ error in
-                Just(.searchFailure(message: error.localizedDescription))
-            }).eraseToAnyPublisher()
-    case .searchSuccess(let entries):
-        state.entries = entries
+    case .setItems(let results):
+        state.entries = results
             .enumerated()
             .map({ (i, wrapper) in
                 EntryModel(
@@ -92,7 +96,32 @@ func updateEntryList(
                     isFolded: i > 0
                 )
             })
+    case .search(let query):
+        return environment.database.search(query: query)
+            .map({ results in
+                .searchSuccess(results)
+            })
+            .catch({ error in
+                Just(.searchFailure(message: error.localizedDescription))
+            }).eraseToAnyPublisher()
+    case .searchSuccess(let results):
+        return Just(.setItems(results)).eraseToAnyPublisher()
     case .searchFailure(let message):
+        environment.logger.warning("\(message)")
+    case .selectRecent:
+        return environment.database.selectRecent()
+            .map({ results in
+                .selectRecentSuccess(results)
+            })
+            .catch({ error in
+                Just(
+                    .selectRecentFailure(message: error.localizedDescription)
+                )
+            })
+            .eraseToAnyPublisher()
+    case .selectRecentSuccess(let results):
+        return Just(.setItems(results)).eraseToAnyPublisher()
+    case .selectRecentFailure(let message):
         environment.logger.warning("\(message)")
     case .requestEdit:
         environment.logger.debug(
