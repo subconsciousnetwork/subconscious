@@ -7,33 +7,6 @@
 
 import SwiftUI
 
-enum ActionSuggestion: Equatable, Hashable {
-    case edit(url: URL, title: String)
-    case create(_ text: String)
-}
-
-extension ActionSuggestion: Identifiable {
-    var id: String {
-        switch self {
-        case .edit(_, let title):
-            return "entry/\(title.hash)"
-        case .create(let text):
-            return "create/\(text.hash)"
-        }
-    }
-}
-
-extension ActionSuggestion: CustomStringConvertible {
-    var description: String {
-        switch self {
-        case .edit(_, let title):
-            return title
-        case .create(let text):
-            return text
-        }
-    }
-}
-
 //  MARK: Row View
 struct ActionSuggestionView: View, Equatable {
     var suggestion: ActionSuggestion

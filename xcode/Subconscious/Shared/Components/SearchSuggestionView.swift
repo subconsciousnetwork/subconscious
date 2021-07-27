@@ -7,13 +7,6 @@
 
 import SwiftUI
 
-struct SearchSuggestion: Equatable, Hashable, Identifiable {
-    var id: String {
-        "search-suggestion/\(query.hash)"
-    }
-    var query: String
-}
-
 struct SearchSuggestionView: View, Equatable {
     var suggestion: SearchSuggestion
 

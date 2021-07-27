@@ -8,15 +8,50 @@
 import SwiftUI
 import Combine
 import Elmo
+import os
 
 enum SuggestionsAction {
-    case selectSearch(_ query: String)
-    case selectAction(_ suggestion: ActionSuggestion)
+    case suggest(String)
+    case suggestSuccess(Suggestions)
+    case suggestFailure(message: String)
+    case selectSearch(String)
+    case selectAction(ActionSuggestion)
 }
 
 struct SuggestionsModel: Equatable {
-    var searches: [SearchSuggestion] = []
-    var actions: [ActionSuggestion] = []
+    var suggestions = Suggestions()
+}
+
+struct SuggestionsService {
+    var logger: Logger
+    var database: DatabaseEnvironment
+}
+
+func updateSuggestions(
+    state: inout SuggestionsModel,
+    action: SuggestionsAction,
+    environment: SuggestionsService
+) -> AnyPublisher<SuggestionsAction, Never> {
+    switch action {
+    case .suggest(let query):
+        return environment.database.searchSuggestions(query)
+            .map({ suggestions in
+                .suggestSuccess(suggestions)
+            })
+            .catch({ error in
+                Just(.suggestFailure(message: error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+    case .suggestSuccess(let suggestions):
+        state.suggestions = suggestions
+    case .suggestFailure(let message):
+        environment.logger.warning("\(message)")
+    case .selectSearch:
+        break
+    case .selectAction:
+        break
+    }
+    return Empty().eraseToAnyPublisher()
 }
 
 //  MARK: Suggestions list view
@@ -36,7 +71,7 @@ struct SuggestionsView: View, Equatable {
             Section(
                 header: Text("Search")
             ) {
-                ForEach(store.state.searches) { suggestion in
+                ForEach(store.state.suggestions.searches) { suggestion in
                     Button(action: {
                         store.send(.selectSearch(suggestion.query))
                     }) {
@@ -49,11 +84,11 @@ struct SuggestionsView: View, Equatable {
                 }
             }.textCase(nil)
 
-            if (store.state.actions.count > 0) {
+            if (store.state.suggestions.actions.count > 0) {
                 Section(
                     header: Text("Actions")
                 ) {
-                    ForEach(store.state.actions) { suggestion in
+                    ForEach(store.state.suggestions.actions) { suggestion in
                         Button(action: {
                             store.send(.selectAction(suggestion))
                         }) {
@@ -76,18 +111,20 @@ struct Suggestions_Previews: PreviewProvider {
             SuggestionsView(
                 store: ViewStore(
                     state: SuggestionsModel(
-                        searches: [
-                            SearchSuggestion(
-                                query: "If you have 70 notecards, you have a movie"
-                            ),
-                            SearchSuggestion(
-                                query: "Tenuki"
-                            ),
-                            SearchSuggestion(
-                                query: "Notecard"
-                            ),
-                        ],
-                        actions: []
+                        suggestions: Suggestions(
+                            searches: [
+                                SearchSuggestion(
+                                    query: "If you have 70 notecards, you have a movie"
+                                ),
+                                SearchSuggestion(
+                                    query: "Tenuki"
+                                ),
+                                SearchSuggestion(
+                                    query: "Notecard"
+                                ),
+                            ],
+                            actions: []
+                        )
                     ),
                     send:  { query in }
                 )

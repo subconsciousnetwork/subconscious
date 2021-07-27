@@ -46,11 +46,6 @@ enum DatabaseAction {
     case insertSearchHistorySuccess(_ query: String)
     case insertSearchHistoryFailure(message: String, query: String)
     case searchAndInsertHistory(_ query: String)
-    /// Perform a search over suggestions with query string
-    case searchSuggestions(_ query: String)
-    /// Search suggestion success with array of results
-    case searchSuggestionsSuccess(_ results: SuggestionsModel)
-    case searchSuggestionsFailure(message: String)
 }
 
 //  MARK: Model
@@ -202,29 +197,6 @@ func updateDatabase(
             insertSearchHistory,
             search
         ).eraseToAnyPublisher()
-    case .searchSuggestions(let query):
-        return environment.searchSuggestions(query)
-            .map({ results in .searchSuggestionsSuccess(results) })
-            .catch({ error in
-                Just(
-                    .searchSuggestionsFailure(
-                        message: error.localizedDescription
-                    )
-                )
-            }).eraseToAnyPublisher()
-    case .searchSuggestionsSuccess:
-        environment.logger.debug(
-            "DatabaseAction.searchSuggestionsSuccess should be handled by parent component"
-        )
-    case .searchSuggestionsFailure(let message):
-        environment.logger.warning(
-            """
-            Search suggestions failed.
-            
-            Error:
-            \(message)
-            """
-        )
     }
     return Empty().eraseToAnyPublisher()
 }
@@ -465,7 +437,7 @@ struct DatabaseEnvironment {
         CombineUtilities.async(qos: .userInitiated, execute: selectRecent)
     }
 
-    func searchSuggestionsForZeroQuery() -> AnyPublisher<SuggestionsModel, Error> {
+    func searchSuggestionsForZeroQuery() -> AnyPublisher<Suggestions, Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
             let searches = try db.connection().execute(
                 sql: """
@@ -506,7 +478,7 @@ struct DatabaseEnvironment {
                 )
             })
 
-            return SuggestionsModel(
+            return Suggestions(
                 searches: searches,
                 actions: recent
             )
@@ -515,10 +487,10 @@ struct DatabaseEnvironment {
 
     func searchSuggestionsForQuery(
         _ query: String
-    ) -> AnyPublisher<SuggestionsModel, Error> {
+    ) -> AnyPublisher<Suggestions, Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
             guard !query.isWhitespace else {
-                return SuggestionsModel()
+                return Suggestions()
             }
 
             let entries = try db.connection().execute(
@@ -598,7 +570,7 @@ struct DatabaseEnvironment {
                     .unique()
             )
 
-            return SuggestionsModel(
+            return Suggestions(
                 searches: searches,
                 actions: actions
             )
@@ -609,7 +581,7 @@ struct DatabaseEnvironment {
     /// A whitespace query string will fetch zero-query suggestions.
     func searchSuggestions(
         _ query: String
-    ) -> AnyPublisher<SuggestionsModel, Error> {
+    ) -> AnyPublisher<Suggestions, Error> {
         if query.isWhitespace {
             return searchSuggestionsForZeroQuery()
         } else {
@@ -622,7 +594,7 @@ struct DatabaseEnvironment {
     /// behavior.
     func searchTitleSuggestions(
         _ query: String
-    ) -> AnyPublisher<SuggestionsModel, Error> {
+    ) -> AnyPublisher<Suggestions, Error> {
         return searchSuggestions(query)
     }
 

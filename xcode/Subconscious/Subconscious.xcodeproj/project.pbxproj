@@ -52,6 +52,7 @@
 		B8B2C1872647172A008AA3EC /* PostHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C1862647172A008AA3EC /* PostHeaderView.swift */; };
 		B8B2C18926471E6B008AA3EC /* FakeTextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18826471E6B008AA3EC /* FakeTextFieldView.swift */; };
 		B8B2C18B26474326008AA3EC /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18A26474326008AA3EC /* Colors.swift */; };
+		B8C951B326AF867B00EEC3AB /* Suggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C951B226AF867B00EEC3AB /* Suggestions.swift */; };
 		B8CA2F9A26AB6B890000BFFB /* DynamicTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA2F9926AB6B890000BFFB /* DynamicTextViewRepresentable.swift */; };
 		B8CA2F9C26AB7E350000BFFB /* EditableEntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA2F9B26AB7E350000BFFB /* EditableEntryListView.swift */; };
 		B8CCBF5A26A74CFB00218458 /* Elmo in Frameworks */ = {isa = PBXBuildFile; productRef = B8CCBF5926A74CFB00218458 /* Elmo */; };
@@ -141,6 +142,7 @@
 		B8B2C1862647172A008AA3EC /* PostHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostHeaderView.swift; sourceTree = "<group>"; };
 		B8B2C18826471E6B008AA3EC /* FakeTextFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeTextFieldView.swift; sourceTree = "<group>"; };
 		B8B2C18A26474326008AA3EC /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		B8C951B226AF867B00EEC3AB /* Suggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestions.swift; sourceTree = "<group>"; };
 		B8CA2F9926AB6B890000BFFB /* DynamicTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8CA2F9B26AB7E350000BFFB /* EditableEntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableEntryListView.swift; sourceTree = "<group>"; };
 		B8CCBF5826A7492B00218458 /* Elmo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Elmo; path = ../Elmo; sourceTree = "<group>"; };
@@ -245,6 +247,7 @@
 				B8158D1D269796BB00F927EF /* Truncate.swift */,
 				B82211F426375A9C005CFBBE /* URLUtilities.swift */,
 				B82FD94D26AA2A1C0087AE95 /* JSONUtilities.swift */,
+				B8C951B226AF867B00EEC3AB /* Suggestions.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -516,6 +519,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B8E628242673B54B005B86CE /* SQLite3Migrations.swift in Sources */,
+				B8C951B326AF867B00EEC3AB /* Suggestions.swift in Sources */,
 				B8E84270269A663C00B74172 /* SQLite3ConnectionManager.swift in Sources */,
 				B8B2C18B26474326008AA3EC /* Colors.swift in Sources */,
 				B81BD104269E604C00E2E991 /* SearchSuggestionView.swift in Sources */,

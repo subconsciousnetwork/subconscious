@@ -23,6 +23,8 @@ enum AppAction {
     case editor(_ action: EditorAction)
     /// Search Bar actions
     case searchBar(_ action: SubSearchBarAction)
+    /// Search suggestions actions
+    case suggestions(SuggestionsAction)
     /// Search results actions
     case search(_ action: EntryListAction)
     case suggestionTokens(_ action: TextTokenBarAction)
@@ -42,10 +44,6 @@ enum AppAction {
     case warning(_ message: String)
     case info(_ message: String)
 
-    static func searchSuggestions(_ query: String) -> AppAction {
-        .database(.searchSuggestions(query))
-    }
-
     /// Issue search and log search history
     static func searchAndInsertHistory(_ query: String) -> AppAction {
         .database(.searchAndInsertHistory(query))
@@ -63,8 +61,6 @@ func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
     switch action {
     case .searchSuccess(let results):
         return .search(.setItems(results))
-    case .searchSuggestionsSuccess(let results):
-        return .setSuggestions(results)
     default:
         return .database(action)
     }
@@ -114,6 +110,8 @@ func tagSuggestionsAction(_ action: SuggestionsAction) -> AppAction {
         case .create(let text):
             return .editorOpenCreate(text)
         }
+    default:
+        return .suggestions(action)
     }
 }
 
@@ -167,6 +165,12 @@ func updateApp(
             state: &state.searchBar,
             action: action
         ).map(tagSearchBarAction).eraseToAnyPublisher()
+    case .suggestions(let action):
+        return updateSuggestions(
+            state: &state.suggestions,
+            action: action,
+            environment: environment.suggestions
+        ).map(tagSuggestionsAction).eraseToAnyPublisher()
     case .search(let action):
         return updateEntryList(
             state: &state.search,
@@ -244,22 +248,22 @@ func updateApp(
             search
         ).eraseToAnyPublisher()
     case .commitQuery(let query):
-        let commitSearchBar = Just(AppAction.searchBar(.commit(query)))
-        let searchSuggestions = Just(AppAction.searchSuggestions(query))
+        let commit = Just(AppAction.searchBar(.commit(query)))
+        let suggest = Just(AppAction.suggestions(.suggest(query)))
         let searchAndInsertHistory = Just(
             AppAction.searchAndInsertHistory(query)
         )
         return Publishers.Merge3(
-            commitSearchBar,
-            searchSuggestions,
+            commit,
+            suggest,
             searchAndInsertHistory
         ).eraseToAnyPublisher()
-    case .setQuery(let text):
-        let setText = Just(AppAction.searchBar(.setText(text)))
-        let searchSuggestions = Just(AppAction.searchSuggestions(text))
+    case .setQuery(let query):
+        let setText = Just(AppAction.searchBar(.setText(query)))
+        let suggest = Just(AppAction.suggestions(.suggest(query)))
         return Publishers.Merge(
             setText,
-            searchSuggestions
+            suggest
         ).eraseToAnyPublisher()
     case .setSuggestions(let suggestions):
         state.suggestions = suggestions
@@ -297,12 +301,13 @@ struct SubconsciousApp: App {
 //  MARK: App Environment
 /// Access to external network services and other supporting services
 struct AppEnvironment {
-    var fileManager = FileManager.default
-    var documentsUrl: URL
-    var databaseUrl: URL
-    var logger = SubConstants.logger
-    var database: DatabaseEnvironment
-    var editor: EditorService
+    let fileManager = FileManager.default
+    let documentsUrl: URL
+    let databaseUrl: URL
+    let logger = SubConstants.logger
+    let database: DatabaseEnvironment
+    let editor: EditorService
+    let suggestions: SuggestionsService
 
     init() {
         self.databaseUrl = try! fileManager.url(
@@ -321,6 +326,11 @@ struct AppEnvironment {
         )
 
         self.editor = EditorService(
+            logger: logger,
+            database: database
+        )
+
+        self.suggestions = SuggestionsService(
             logger: logger,
             database: database
         )
