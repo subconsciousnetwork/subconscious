@@ -37,10 +37,6 @@ enum DatabaseAction {
     case sync
     case syncSuccess(_ changes: [FileSync.Change])
     case syncFailure(message: String)
-    /// Perform a search with query string
-    case search(_ query: String)
-    case searchSuccess([EntryFile])
-    case searchFailure(message: String, query: String)
 }
 
 //  MARK: Model
@@ -122,31 +118,6 @@ func updateDatabase(
         environment.logger.warning(
             """
             File sync failed.
-            
-            Error:
-            \(message)
-            """
-        )
-    case .search(let query):
-        return environment.search(query: query)
-            .map({ results in .searchSuccess(results) })
-            .catch({ error in
-                Just(
-                    .searchFailure(
-                        message: error.localizedDescription,
-                        query: query
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-    case .searchSuccess:
-        environment.logger.debug(
-            "DatabaseAction.searchSuccess should be handled by parent component"
-        )
-    case .searchFailure(let message, let query):
-        environment.logger.warning(
-            """
-            Search failed for: \(query)
             
             Error:
             \(message)

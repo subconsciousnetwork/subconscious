@@ -13,9 +13,12 @@ import Elmo
 // MARK:  Action
 enum EntryListAction {
     case item(_ item: ItemAction<URL, EntryAction>)
-    case setItems(_ entries: [EntryFile])
+    case search(String)
+    case searchSuccess([EntryFile])
+    case searchFailure(message: String)
     case requestEdit(url: URL)
 }
+
 
 //  MARK: Model
 struct EntryListModel: Equatable {
@@ -39,7 +42,7 @@ struct EntryListModel: Equatable {
 func updateEntryList(
     state: inout EntryListModel,
     action: EntryListAction,
-    environment: Logger
+    environment: IOService
 ) -> AnyPublisher<EntryListAction, Never> {
     switch action {
     case .item(let action):
@@ -52,7 +55,7 @@ func updateEntryList(
             return updateEntry(
                 state: &state.entries[i],
                 action: action.action,
-                environment: environment
+                environment: environment.logger
             ).map({ action in
                 tagEntryListItem(
                     key: id,
@@ -60,7 +63,7 @@ func updateEntryList(
                 )
             }).eraseToAnyPublisher()
         } else {
-            environment.info(
+            environment.logger.info(
                 """
                 EntryListAction.item
                 Passed non-existant item key: \(action.key).
@@ -71,7 +74,15 @@ func updateEntryList(
                 """
             )
         }
-    case .setItems(let entries):
+    case .search(let query):
+        return environment.database.search(query: query)
+            .map({ results in
+                .searchSuccess(results)
+            })
+            .catch({ error in
+                Just(.searchFailure(message: error.localizedDescription))
+            }).eraseToAnyPublisher()
+    case .searchSuccess(let entries):
         state.entries = entries
             .enumerated()
             .map({ (i, wrapper) in
@@ -81,8 +92,10 @@ func updateEntryList(
                     isFolded: i > 0
                 )
             })
+    case .searchFailure(let message):
+        environment.logger.warning("\(message)")
     case .requestEdit:
-        environment.warning(
+        environment.logger.debug(
             """
             EntryListAction.requestEdit
             This action should have been handled by parent view.

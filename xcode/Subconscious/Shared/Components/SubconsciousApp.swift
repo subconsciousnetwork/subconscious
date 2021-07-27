@@ -43,22 +43,12 @@ enum AppAction {
     case setSuggestions(_ suggestions: SuggestionsModel)
     case warning(_ message: String)
     case info(_ message: String)
-
-    /// Issue search without logging search history
-    static func search(_ query: String) -> AppAction {
-        .database(.search(query))
-    }
 }
 
 //  MARK: Tagging functions
 
 func tagDatabaseAction(_ action: DatabaseAction) -> AppAction {
-    switch action {
-    case .searchSuccess(let results):
-        return .search(.setItems(results))
-    default:
-        return .database(action)
-    }
+    .database(action)
 }
 
 func tagEditorAction(_ action: EditorAction) -> AppAction {
@@ -171,7 +161,7 @@ func updateApp(
         return updateEntryList(
             state: &state.search,
             action: action,
-            environment: environment.logger
+            environment: environment.io
         ).map(tagSearchAction).eraseToAnyPublisher()
     case .suggestionTokens(let action):
         return updateTextTokenBar(
@@ -246,9 +236,11 @@ func updateApp(
     case .commitQuery(let query):
         let commit = Just(AppAction.searchBar(.commit(query)))
         let suggest = Just(AppAction.suggestions(.suggest(query)))
-        return Publishers.Merge(
+        let search = Just(AppAction.search(.search(query)))
+        return Publishers.Merge3(
             commit,
-            suggest
+            suggest,
+            search
         ).eraseToAnyPublisher()
     case .setQuery(let query):
         let setText = Just(AppAction.searchBar(.setText(query)))
