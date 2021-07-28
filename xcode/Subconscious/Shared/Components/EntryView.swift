@@ -80,10 +80,10 @@ struct EntryView: View, Equatable {
                         store.send(.setFolded(false))
                     }) {
                         Image(systemName: "ellipsis")
-                            .foregroundColor(Color.Sub.secondaryIcon)
+                            .foregroundColor(Constants.Color.secondaryIcon)
                             .padding(8)
                     }
-                    .background(Color.Sub.buttonBackground)
+                    .background(Constants.Color.primaryButtonBackground)
                     .cornerRadius(8)
 
                     Spacer()
@@ -95,7 +95,7 @@ struct EntryView: View, Equatable {
         }
         .contentShape(Rectangle())
         .padding(.vertical, 24)
-        .background(Color.Sub.background)
+        .background(Constants.Color.background)
     }
 }
 
@@ -142,6 +142,6 @@ struct EntryView_Previews: PreviewProvider {
             )
             Spacer()
         }
-        .background(Color.Sub.secondaryBackground)
+        .background(Constants.Color.secondaryBackground)
     }
 }

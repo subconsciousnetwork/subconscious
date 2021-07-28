@@ -288,7 +288,7 @@ struct AppEnvironment {
     let fileManager = FileManager.default
     let documentsUrl: URL
     let databaseUrl: URL
-    let logger = SubConstants.logger
+    let logger = Constants.logger
     let database: DatabaseService
     let io: IOService
 
@@ -305,7 +305,7 @@ struct AppEnvironment {
         self.database = DatabaseService(
             databaseUrl: databaseUrl,
             documentsUrl: documentsUrl,
-            migrations: SubConstants.migrations
+            migrations: Constants.migrations
         )
 
         self.io = IOService(

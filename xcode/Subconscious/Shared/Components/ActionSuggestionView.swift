@@ -21,7 +21,7 @@ struct ActionSuggestionView: View, Equatable {
                         image: Image(systemName: "doc.text")
                     )
 
-                    Text(" – Edit").foregroundColor(Color.Sub.secondaryText)
+                    Text(" – Edit").foregroundColor(Constants.Color.secondaryText)
                 }
             case .create(let title):
                 HStack(spacing: 0) {
@@ -30,7 +30,7 @@ struct ActionSuggestionView: View, Equatable {
                         image: Image(systemName: "doc.badge.plus")
                     )
 
-                    Text(" – Create").foregroundColor(Color.Sub.secondaryText)
+                    Text(" – Create").foregroundColor(Constants.Color.secondaryText)
                 }
             }
         }

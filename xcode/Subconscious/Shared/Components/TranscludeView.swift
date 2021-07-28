@@ -23,8 +23,8 @@ struct TranscludeView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 24)
         .contentShape(Rectangle())
-        .background(Color.Sub.secondaryBackground)
-        .cornerRadius(CGFloat(SubConstants.Theme.cornerRadius))
+        .background(Constants.Color.secondaryBackground)
+        .cornerRadius(CGFloat(Constants.Theme.cornerRadius))
     }
 }
 

@@ -78,7 +78,7 @@ struct QuoteBlockView: View {
     var body: some View {
         Text(block.value)
             .font(.body)
-            .foregroundColor(Color.Sub.quotedText)
+            .foregroundColor(Constants.Color.quotedText)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

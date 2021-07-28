@@ -57,10 +57,10 @@ struct ContentView: View, Equatable {
                     .equatable()
                     .animation(.none)
                 }
-                .background(Color.Sub.background)
+                .background(Constants.Color.background)
                 .opacity(store.state.searchBar.isFocused ? 1 : 0)
                 .transition(.opacity)
-                .animation(.easeOut(duration: SubConstants.Duration.fast))
+                .animation(.easeOut(duration: Constants.Duration.fast))
             }
         }
         .onAppear {

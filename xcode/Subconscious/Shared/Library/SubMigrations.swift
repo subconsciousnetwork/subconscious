@@ -5,7 +5,7 @@
 //  Created by Gordon Brander on 7/12/21.
 //
 
-extension SubConstants {
+extension Constants {
     static let migrations = SQLite3Migrations([
         SQLite3Migrations.Migration(
             date: "2021-07-26T10:33:00",

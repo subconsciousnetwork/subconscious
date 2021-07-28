@@ -85,12 +85,12 @@ struct TextViewRepresentablePreview: PreviewProvider {
             TextViewRepresentable(
                 text: .constant("Text")
             )
-            .background(Color.Sub.secondaryBackground)
+            .background(Constants.Color.secondaryBackground)
 
             TextViewRepresentable(
                 text: .constant("Text")
             )
-            .background(Color.Sub.secondaryBackground)
+            .background(Constants.Color.secondaryBackground)
         }
     }
 }

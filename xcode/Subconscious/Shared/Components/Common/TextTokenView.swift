@@ -16,7 +16,7 @@ struct TextTokenView: View {
             .padding(.vertical, 6)
             .background(
                 Capsule()
-                    .foregroundColor(.Sub.buttonBackground)
+                    .foregroundColor(Constants.Color.primaryButtonBackground)
             )
     }
 }

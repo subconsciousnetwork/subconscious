@@ -10,8 +10,8 @@ import SwiftUI
 struct IconLabelRowView: View {
     var title: String
     var image: Image
-    var titleColor: Color = .Sub.text
-    var iconColor: Color = .Sub.accent
+    var titleColor: Color = Constants.Color.text
+    var iconColor: Color = Constants.Color.accent
 
     var body: some View {
         Label {

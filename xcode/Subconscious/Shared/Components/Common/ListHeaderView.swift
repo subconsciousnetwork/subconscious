@@ -19,7 +19,7 @@ struct ListHeaderView<Subview: View>: View {
         }
         .padding(.vertical, 4)
         .padding(.horizontal, 16)
-        .background(Color.Sub.secondaryBackground)
+        .background(Constants.Color.secondaryBackground)
     }
 }
 

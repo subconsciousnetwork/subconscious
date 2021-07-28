@@ -16,7 +16,7 @@ struct SearchSuggestionView: View, Equatable {
             title: suggestion.query,
             image: Image(systemName: "magnifyingglass")
         )
-        .foregroundColor(.Sub.text)
+        .foregroundColor(Constants.Color.text)
         .lineLimit(1)
     }
 }

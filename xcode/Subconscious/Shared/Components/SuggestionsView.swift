@@ -62,39 +62,41 @@ struct SuggestionsView: View, Equatable {
     let store: ViewStore<SuggestionsModel, SuggestionsAction>
 
     var body: some View {
-        List {
-            Section(
-                header: Text("Search")
-            ) {
-                ForEach(store.state.suggestions.searches) { suggestion in
-                    Button(action: {
-                        store.send(.selectSearch(suggestion.query))
-                    }) {
-                        SearchSuggestionView(
-                            suggestion: suggestion
-                        )
-                        .equatable()
-                    }
-                    .id("search/\(suggestion.id)")
-                }
-            }.textCase(nil)
-
-            if (store.state.suggestions.actions.count > 0) {
+        VStack {
+            List {
                 Section(
-                    header: Text("Actions")
+                    header: Text("Search")
                 ) {
-                    ForEach(store.state.suggestions.actions) { suggestion in
+                    ForEach(store.state.suggestions.searches) { suggestion in
                         Button(action: {
-                            store.send(.selectAction(suggestion))
+                            store.send(.selectSearch(suggestion.query))
                         }) {
-                            ActionSuggestionView(
+                            SearchSuggestionView(
                                 suggestion: suggestion
                             )
                             .equatable()
                         }
-                        .id("action/\(suggestion.id)")
+                        .id("search/\(suggestion.id)")
                     }
                 }.textCase(nil)
+
+                if (store.state.suggestions.actions.count > 0) {
+                    Section(
+                        header: Text("Actions")
+                    ) {
+                        ForEach(store.state.suggestions.actions) { suggestion in
+                            Button(action: {
+                                store.send(.selectAction(suggestion))
+                            }) {
+                                ActionSuggestionView(
+                                    suggestion: suggestion
+                                )
+                                .equatable()
+                            }
+                            .id("action/\(suggestion.id)")
+                        }
+                    }.textCase(nil)
+                }
             }
         }
     }

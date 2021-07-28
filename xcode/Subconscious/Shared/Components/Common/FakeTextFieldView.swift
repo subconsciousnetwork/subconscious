@@ -15,7 +15,7 @@ struct FakeTextFieldView: View {
             Text(text)
             Spacer()
         }
-        .foregroundColor(Color.Sub.secondaryText)
+        .foregroundColor(Constants.Color.secondaryText)
         .frame(
             width: .infinity,
             height: 36,
@@ -24,7 +24,7 @@ struct FakeTextFieldView: View {
         .padding(.horizontal, 12)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.Sub.separator, lineWidth: 1)
+                .stroke(Constants.Color.separator, lineWidth: 1)
         )
     }
 }

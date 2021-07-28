@@ -104,14 +104,14 @@ struct DynamicTextViewRepresentable_Preview: PreviewProvider {
                     fixedWidth: geometry.size.width
                 )
                 .fixedSize(horizontal: false, vertical: true)
-                .background(Color.Sub.secondaryBackground)
+                .background(Constants.Color.secondaryBackground)
 
                 DynamicTextViewRepresentable(
                     text: .constant("Text"),
                     fixedWidth: geometry.size.width
                 )
                 .fixedSize(horizontal: false, vertical: true)
-                .background(Color.Sub.secondaryBackground)
+                .background(Constants.Color.secondaryBackground)
             }
         }
     }
