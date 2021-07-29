@@ -11,6 +11,7 @@ import SwiftUI
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .lineLimit(1)
             .foregroundColor(Constants.Color.link)
             .padding(.horizontal, 16)
             .frame(height: Constants.Theme.buttonHeight)

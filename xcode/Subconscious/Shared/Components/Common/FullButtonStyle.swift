@@ -12,6 +12,7 @@ import SwiftUI
 struct FullButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .lineLimit(1)
             .foregroundColor(Constants.Color.link)
             .padding(.horizontal, 16)
             .frame(
@@ -38,7 +39,7 @@ struct FullButtonStyle_Preview: PreviewProvider {
                     
                 },
                 label: {
-                    Text("Button")
+                    Text("Button lorem ipsum dolor sit amet consectetur adipisicing elit")
                 }
             )
             .buttonStyle(FullButtonStyle())
