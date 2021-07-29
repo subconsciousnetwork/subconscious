@@ -34,7 +34,7 @@ struct Constants {
 
     struct Theme {
         static let cornerRadius: Double = 12
-        static let buttonHeight: CGFloat = 44
+        static let buttonHeight: CGFloat = 40
     }
 
     struct Duration {

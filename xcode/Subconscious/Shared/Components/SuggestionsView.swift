@@ -113,7 +113,7 @@ struct SuggestionsView: View, Equatable {
                     },
                     label: {
                         if store.state.suggestions.query.isWhitespace {
-                            Text("Create")
+                            Text("Create note")
                         } else {
                             Text(#"Create "\#(store.state.suggestions.query)""#)
                         }

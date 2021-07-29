@@ -28,6 +28,7 @@ struct FullButtonStyle: ButtonStyle {
                 Constants.Color.primaryButtonPressedBackground
             )
             .cornerRadius(CGFloat(Constants.Theme.cornerRadius))
+            .shadow(color: .black.opacity(0.2), radius: 0, x: 0, y: 1)
     }
 }
 
