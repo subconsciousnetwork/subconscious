@@ -16,6 +16,7 @@ enum SuggestionsAction {
     case suggestFailure(message: String)
     case selectResult(String)
     case selectQuery(String)
+    case selectCreate(String)
 }
 
 struct SuggestionsModel: Equatable {
@@ -44,6 +45,8 @@ func updateSuggestions(
     case .selectResult:
         break
     case .selectQuery:
+        break
+    case .selectCreate:
         break
     }
     return Empty().eraseToAnyPublisher()
@@ -103,7 +106,9 @@ struct SuggestionsView: View, Equatable {
                 }
 
                 Button(
-                    action: {},
+                    action: {
+                        store.send(.selectCreate(store.state.suggestions.query))
+                    },
                     label: {
                         if store.state.suggestions.query.isWhitespace {
                             Text("Create")

@@ -90,6 +90,8 @@ func tagSuggestionsAction(_ action: SuggestionsAction) -> AppAction {
         return .commitQuery(query)
     case .selectQuery(let query):
         return .setQuery(query)
+    case .selectCreate(let query):
+        return .editorOpenCreate(query)
     default:
         return .suggestions(action)
     }
