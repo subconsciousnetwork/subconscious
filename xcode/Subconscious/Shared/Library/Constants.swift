@@ -21,7 +21,7 @@ struct Constants {
         static let text = SwiftUI.Color.primary
         static let secondaryText = SwiftUI.Color.secondary
         static let placeholderText = SwiftUI.Color(.placeholderText)
-        static let link = SwiftUI.Color(.link)
+        static let link = accent
         static let inputBackground = secondaryBackground
         static let primaryButtonBackground = secondaryBackground
         static let primaryButtonPressedBackground = secondaryBackground
@@ -34,7 +34,7 @@ struct Constants {
 
     struct Theme {
         static let cornerRadius: Double = 12
-        static let buttonHeight: CGFloat = 48
+        static let buttonHeight: CGFloat = 44
     }
 
     struct Duration {
