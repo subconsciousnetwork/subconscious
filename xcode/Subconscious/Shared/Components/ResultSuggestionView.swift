@@ -7,14 +7,14 @@
 
 import SwiftUI
 
-struct SearchSuggestionView: View, Equatable {
-    var suggestion: SearchSuggestion
+struct ResultSuggestionView: View, Equatable {
+    var suggestion: ResultSuggestion
 
     var body: some View {
         
         IconLabelRowView(
             title: suggestion.query,
-            image: Image(systemName: "magnifyingglass")
+            image: Image(systemName: "doc.text")
         )
         .foregroundColor(Constants.Color.text)
         .lineLimit(1)
@@ -23,8 +23,8 @@ struct SearchSuggestionView: View, Equatable {
 
 struct SearchSuggestionView_Preview: PreviewProvider {
     static var previews: some View {
-        SearchSuggestionView(
-            suggestion: SearchSuggestion(query: "Query string")
+        ResultSuggestionView(
+            suggestion: ResultSuggestion(query: "Query string")
         )
     }
 }

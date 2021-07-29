@@ -14,7 +14,7 @@
 		B81268F42696259C007AC708 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81268F32696259C007AC708 /* Slug.swift */; };
 		B81268F626962DD5007AC708 /* Tests_Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81268F526962DD5007AC708 /* Tests_Slug.swift */; };
 		B8158D1E269796BB00F927EF /* Truncate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8158D1D269796BB00F927EF /* Truncate.swift */; };
-		B81BD104269E604C00E2E991 /* SearchSuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81BD103269E604C00E2E991 /* SearchSuggestionView.swift */; };
+		B81BD104269E604C00E2E991 /* ResultSuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81BD103269E604C00E2E991 /* ResultSuggestionView.swift */; };
 		B81BD764263885DE00BAEC67 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81BD763263885DE00BAEC67 /* EditorView.swift */; };
 		B82211F526375A9C005CFBBE /* URLUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82211F426375A9C005CFBBE /* URLUtilities.swift */; };
 		B82FD94A26A9DC7C0087AE95 /* LabelRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82FD94926A9DC7C0087AE95 /* LabelRepresentable.swift */; };
@@ -44,7 +44,7 @@
 		B87DA9192624DDEA00BA5232 /* StreamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87DA9182624DDEA00BA5232 /* StreamView.swift */; };
 		B87DA91F26250CF900BA5232 /* SearchBarRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */; };
 		B880975A26B1DE2D000430F7 /* FullButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B880975926B1DE2D000430F7 /* FullButtonStyle.swift */; };
-		B88715132642F2D0009BEE1E /* ActionSuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88715122642F2D0009BEE1E /* ActionSuggestionView.swift */; };
+		B88715132642F2D0009BEE1E /* QuerySuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88715122642F2D0009BEE1E /* QuerySuggestionView.swift */; };
 		B8929E262695101B00131928 /* TextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8929E252695101B00131928 /* TextViewRepresentable.swift */; };
 		B8A3E58726A8DC04007A9F8F /* Wikilinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A3E58626A8DC04007A9F8F /* Wikilinks.swift */; };
 		B8A3E58926A8E5C0007A9F8F /* RegularExpressionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A3E58826A8E5C0007A9F8F /* RegularExpressionUtilities.swift */; };
@@ -99,7 +99,7 @@
 		B81268F32696259C007AC708 /* Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
 		B81268F526962DD5007AC708 /* Tests_Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Slug.swift; sourceTree = "<group>"; };
 		B8158D1D269796BB00F927EF /* Truncate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Truncate.swift; sourceTree = "<group>"; };
-		B81BD103269E604C00E2E991 /* SearchSuggestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchSuggestionView.swift; sourceTree = "<group>"; };
+		B81BD103269E604C00E2E991 /* ResultSuggestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultSuggestionView.swift; sourceTree = "<group>"; };
 		B81BD763263885DE00BAEC67 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
 		B82211F426375A9C005CFBBE /* URLUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLUtilities.swift; sourceTree = "<group>"; };
 		B82FD94926A9DC7C0087AE95 /* LabelRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelRepresentable.swift; sourceTree = "<group>"; };
@@ -136,7 +136,7 @@
 		B87DA9182624DDEA00BA5232 /* StreamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamView.swift; sourceTree = "<group>"; };
 		B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarRepresentable.swift; sourceTree = "<group>"; };
 		B880975926B1DE2D000430F7 /* FullButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullButtonStyle.swift; sourceTree = "<group>"; };
-		B88715122642F2D0009BEE1E /* ActionSuggestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionSuggestionView.swift; sourceTree = "<group>"; };
+		B88715122642F2D0009BEE1E /* QuerySuggestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuerySuggestionView.swift; sourceTree = "<group>"; };
 		B8929E252695101B00131928 /* TextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8A3E58626A8DC04007A9F8F /* Wikilinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wikilinks.swift; sourceTree = "<group>"; };
 		B8A3E58826A8E5C0007A9F8F /* RegularExpressionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegularExpressionUtilities.swift; sourceTree = "<group>"; };
@@ -204,7 +204,6 @@
 		B804C09D2620FFDD00D59CC6 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				B88715122642F2D0009BEE1E /* ActionSuggestionView.swift */,
 				B87C7D7B261E0E6C003EFC6F /* BlockView.swift */,
 				B8E152EF2656F2A30032F5A7 /* Common */,
 				B86F339C261AB2C6009D3D48 /* ContentView.swift */,
@@ -215,7 +214,8 @@
 				B811E60E261D0FBF00484E45 /* EntryView.swift */,
 				B8B2C1862647172A008AA3EC /* PostHeaderView.swift */,
 				B8B2C18426470EC0008AA3EC /* PostView.swift */,
-				B81BD103269E604C00E2E991 /* SearchSuggestionView.swift */,
+				B88715122642F2D0009BEE1E /* QuerySuggestionView.swift */,
+				B81BD103269E604C00E2E991 /* ResultSuggestionView.swift */,
 				B87DA9182624DDEA00BA5232 /* StreamView.swift */,
 				B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */,
 				B874D7AC26540A7800351C8E /* SubSearchBarView.swift */,
@@ -519,7 +519,7 @@
 				B8E628242673B54B005B86CE /* SQLite3Migrations.swift in Sources */,
 				B8C951B326AF867B00EEC3AB /* Suggestions.swift in Sources */,
 				B8E84270269A663C00B74172 /* SQLite3ConnectionManager.swift in Sources */,
-				B81BD104269E604C00E2E991 /* SearchSuggestionView.swift in Sources */,
+				B81BD104269E604C00E2E991 /* ResultSuggestionView.swift in Sources */,
 				B87C7D7C261E0E6C003EFC6F /* BlockView.swift in Sources */,
 				B874D7AD26540A7800351C8E /* SubSearchBarView.swift in Sources */,
 				B8FDE3372678474D00BA307D /* Entry.swift in Sources */,
@@ -561,7 +561,7 @@
 				B8CA2F9A26AB6B890000BFFB /* DynamicTextViewRepresentable.swift in Sources */,
 				B8A3E58726A8DC04007A9F8F /* Wikilinks.swift in Sources */,
 				B86F33C8261AB2C7009D3D48 /* ContentView.swift in Sources */,
-				B88715132642F2D0009BEE1E /* ActionSuggestionView.swift in Sources */,
+				B88715132642F2D0009BEE1E /* QuerySuggestionView.swift in Sources */,
 				B8B2C18526470EC0008AA3EC /* PostView.swift in Sources */,
 				B8796F5B269E3D3A001AC8C1 /* ListHeaderView.swift in Sources */,
 				B82FD94E26AA2A1C0087AE95 /* JSONUtilities.swift in Sources */,

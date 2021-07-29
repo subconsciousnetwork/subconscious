@@ -362,48 +362,42 @@ struct DatabaseService {
 
     func searchSuggestionsForZeroQuery() -> AnyPublisher<Suggestions, Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
-            let searches = try db.connection().execute(
+            let resultStrings: [String] = try db.connection().execute(
                 sql: """
-                SELECT query FROM (
-                    SELECT title AS query
-                    FROM entry_search
-                    ORDER BY modified DESC
-                    LIMIT 4
-                )
-                UNION
-                SELECT query FROM (
-                    SELECT query, count(query) AS queries
-                    FROM search_history
-                    WHERE hits > 0
-                    GROUP BY query
-                    ORDER BY queries DESC
-                    LIMIT 4
-                )
-                """
-            ).compactMap({ row in
-                try SearchSuggestion(query: row.get(0).unwrap())
-            })
-
-            let recent = try db.connection().execute(
-                sql: """
-                SELECT path, title
+                SELECT DISTINCT title
                 FROM entry_search
                 ORDER BY modified DESC
+                LIMIT 5
+                """
+            ).compactMap({ row in row.get(0) })
+
+            // Selects all queries that
+            let queryStrings: [String] = try db.connection().execute(
+                sql: """
+                SELECT DISTINCT search_history.query
+                FROM search_history
+                ORDER BY search_history.created DESC
                 LIMIT 3
                 """
             ).compactMap({ row in
-                try ActionSuggestion.edit(
-                    url: URL(
-                        fileURLWithPath: row.get(0).unwrap(),
-                        relativeTo: documentsUrl
-                    ),
-                    title: row.get(1).unwrap()
-                )
+                row.get(0)
             })
 
+            let results = resultStrings.map({ query in
+                ResultSuggestion(query: query)
+            })
+            
+            /// Remove queries that match titles
+            let queries = queryStrings
+                .subtracting(resultStrings, with: { query in query.toSlug() })
+                .map({ query in
+                    QuerySuggestion(query: query)
+                })
+            
             return Suggestions(
-                searches: searches,
-                actions: recent
+                query: "",
+                results: results,
+                queries: queries
             )
         })
     }
@@ -413,89 +407,53 @@ struct DatabaseService {
     ) -> AnyPublisher<Suggestions, Error> {
         CombineUtilities.async(qos: .userInitiated, execute: {
             guard !query.isWhitespace else {
-                return Suggestions()
+                return Suggestions(query: query)
             }
 
-            let entries = try db.connection().execute(
+            let resultStrings: [String] = try db.connection().execute(
                 sql: """
-                SELECT DISTINCT path, title AS query
+                SELECT DISTINCT title
                 FROM entry_search
                 WHERE entry_search.title MATCH ?
                 ORDER BY rank
                 LIMIT 5
                 """,
                 parameters: [
-                    SQLite3Connection.Value.queryFTS5(query)
+                    SQLite3Connection.Value.prefixQueryFTS5(query)
                 ]
-            )
+            ).compactMap({ row in row.get(0) })
 
-            let history = try db.connection().execute(
+            let queryStrings: [String] = try db.connection().execute(
                 sql: """
                 SELECT DISTINCT query
                 FROM search_history
                 WHERE query LIKE ?
                 ORDER BY created DESC
-                LIMIT 5
+                LIMIT 3
                 """,
                 parameters: [
                     SQLite3Connection.Value.prefixQueryLike(query)
                 ]
-            )
+            ).compactMap({ row in row.get(0) })
 
-            let literalSearches = [SearchSuggestion(query: query)]
-
-            let titleSearches: [SearchSuggestion] = entries.compactMap({ row in
-                if let text: String = row.get(1) {
-                    return SearchSuggestion(query: text)
-                }
-                return nil
+            let results = resultStrings.map({ query in
+                ResultSuggestion(query: query)
             })
 
-            let historySearches: [SearchSuggestion] = history.compactMap({ row in
-                if let text: String = row.get(0) {
-                    return SearchSuggestion(query: text)
-                }
-                return nil
-            })
-
-            let searches = Array(
-                literalSearches
-                    .appending(contentsOf: titleSearches)
-                    .appending(contentsOf: historySearches)
-                    .unique()
-                    .prefix(6)
-            )
-
-            let editActions: [ActionSuggestion] = entries
-                .prefix(3)
-                .compactMap({ row in
-                    if
-                        let path: String = row.get(0),
-                        let text: String = row.get(1)
-                    {
-                        return ActionSuggestion.edit(
-                            url: URL(
-                                fileURLWithPath: path, relativeTo: documentsUrl
-                            ),
-                            title: text
-                        )
-                    }
-                    return nil
+            var queriesToRemove = resultStrings
+            queriesToRemove.append(query)
+            
+            /// Remove queries that match titles
+            let queries = queryStrings
+                .subtracting(queriesToRemove, with: { query in query.toSlug() })
+                .map({ query in
+                    QuerySuggestion(query: query)
                 })
 
-            let createActions = [
-                ActionSuggestion.create(query)
-            ]
-
-            let actions = Array(
-                editActions
-                    .appending(contentsOf: createActions)
-                    .unique()
-            )
-
             return Suggestions(
-                searches: searches,
-                actions: actions
+                query: query,
+                results: results,
+                queries: queries
             )
         })
     }

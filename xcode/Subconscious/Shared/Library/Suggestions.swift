@@ -7,41 +7,23 @@
 
 import Foundation
 
-struct SearchSuggestion: Equatable, Hashable, Identifiable {
+struct ResultSuggestion: Equatable, Hashable, Identifiable {
     var id: String {
-        "search-suggestion/\(query.hash)"
+        "result/\(query.hash)"
     }
     var query: String
 }
 
-enum ActionSuggestion: Equatable, Hashable {
-    case edit(url: URL, title: String)
-    case create(_ text: String)
-}
-
-extension ActionSuggestion: Identifiable {
+struct QuerySuggestion: Equatable, Hashable, Identifiable {
     var id: String {
-        switch self {
-        case .edit(_, let title):
-            return "entry/\(title.hash)"
-        case .create(let text):
-            return "create/\(text.hash)"
-        }
+        "query/\(query.hash)"
     }
-}
-
-extension ActionSuggestion: CustomStringConvertible {
-    var description: String {
-        switch self {
-        case .edit(_, let title):
-            return title
-        case .create(let text):
-            return text
-        }
-    }
+    var query: String
 }
 
 struct Suggestions: Equatable, Hashable {
-    var searches: [SearchSuggestion] = []
-    var actions: [ActionSuggestion] = []
+    static let Empty = Suggestions()
+    var query: String = ""
+    var results: [ResultSuggestion] = []
+    var queries: [QuerySuggestion] = []
 }

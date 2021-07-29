@@ -14,12 +14,12 @@ enum SuggestionsAction {
     case suggest(String)
     case suggestSuccess(Suggestions)
     case suggestFailure(message: String)
-    case selectSearch(String)
-    case selectAction(ActionSuggestion)
+    case selectResult(String)
+    case selectQuery(String)
 }
 
 struct SuggestionsModel: Equatable {
-    var suggestions = Suggestions()
+    var suggestions = Suggestions.Empty
 }
 
 func updateSuggestions(
@@ -41,9 +41,9 @@ func updateSuggestions(
         state.suggestions = suggestions
     case .suggestFailure(let message):
         environment.logger.warning("\(message)")
-    case .selectSearch:
+    case .selectResult:
         break
-    case .selectAction:
+    case .selectQuery:
         break
     }
     return Empty().eraseToAnyPublisher()
@@ -64,31 +64,15 @@ struct SuggestionsView: View, Equatable {
     var body: some View {
         VStack {
             List {
-                Section(
-                    header: Text("Search")
-                ) {
-                    ForEach(store.state.suggestions.searches) { suggestion in
-                        Button(action: {
-                            store.send(.selectSearch(suggestion.query))
-                        }) {
-                            SearchSuggestionView(
-                                suggestion: suggestion
-                            )
-                            .equatable()
-                        }
-                        .id("search/\(suggestion.id)")
-                    }
-                }.textCase(nil)
-
-                if (store.state.suggestions.actions.count > 0) {
+                if (store.state.suggestions.queries.count > 0) {
                     Section(
-                        header: Text("Actions")
+                        header: Text("Suggestions")
                     ) {
-                        ForEach(store.state.suggestions.actions) { suggestion in
+                        ForEach(store.state.suggestions.queries) { suggestion in
                             Button(action: {
-                                store.send(.selectAction(suggestion))
+                                store.send(.selectQuery(suggestion.query))
                             }) {
-                                ActionSuggestionView(
+                                QuerySuggestionView(
                                     suggestion: suggestion
                                 )
                                 .equatable()
@@ -97,6 +81,38 @@ struct SuggestionsView: View, Equatable {
                         }
                     }.textCase(nil)
                 }
+
+                if (store.state.suggestions.results.count > 0) {
+                    Section(
+                        header: Text("Notes")
+                    ) {
+                        ForEach(
+                            store.state.suggestions.results
+                        ) { suggestion in
+                            Button(action: {
+                                store.send(.selectResult(suggestion.query))
+                            }) {
+                                ResultSuggestionView(
+                                    suggestion: suggestion
+                                )
+                                .equatable()
+                            }
+                            .id("search/\(suggestion.id)")
+                        }
+                    }.textCase(nil)
+                }
+
+                Button(
+                    action: {},
+                    label: {
+                        if store.state.suggestions.query.isWhitespace {
+                            Text("Create")
+                        } else {
+                            Text(#"Create "\#(store.state.suggestions.query)""#)
+                        }
+                    }
+                )
+                .buttonStyle(FullButtonStyle())
             }
         }
     }
@@ -109,18 +125,18 @@ struct Suggestions_Previews: PreviewProvider {
                 store: ViewStore(
                     state: SuggestionsModel(
                         suggestions: Suggestions(
-                            searches: [
-                                SearchSuggestion(
+                            results: [
+                                ResultSuggestion(
                                     query: "If you have 70 notecards, you have a movie"
                                 ),
-                                SearchSuggestion(
+                                ResultSuggestion(
                                     query: "Tenuki"
                                 ),
-                                SearchSuggestion(
+                                ResultSuggestion(
                                     query: "Notecard"
                                 ),
                             ],
-                            actions: []
+                            queries: []
                         )
                     ),
                     send:  { query in }

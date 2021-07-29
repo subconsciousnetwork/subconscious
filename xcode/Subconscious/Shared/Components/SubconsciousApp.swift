@@ -86,15 +86,10 @@ func tagSearchAction(_ action: EntryListAction) -> AppAction {
 
 func tagSuggestionsAction(_ action: SuggestionsAction) -> AppAction {
     switch action {
-    case .selectSearch(let query):
+    case .selectResult(let query):
         return .commitQuery(query)
-    case .selectAction(let suggestion):
-        switch suggestion {
-        case .edit(let url, _):
-            return .editorOpenUpdate(url)
-        case .create(let text):
-            return .editorOpenCreate(text)
-        }
+    case .selectQuery(let query):
+        return .setQuery(query)
     default:
         return .suggestions(action)
     }
