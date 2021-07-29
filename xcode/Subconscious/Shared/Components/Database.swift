@@ -367,7 +367,7 @@ struct DatabaseService {
                 SELECT DISTINCT title
                 FROM entry_search
                 ORDER BY modified DESC
-                LIMIT 5
+                LIMIT 10
                 """
             ).compactMap({ row in row.get(0) })
 
@@ -377,7 +377,7 @@ struct DatabaseService {
                 SELECT DISTINCT search_history.query
                 FROM search_history
                 ORDER BY search_history.created DESC
-                LIMIT 3
+                LIMIT 2
                 """
             ).compactMap({ row in
                 row.get(0)
@@ -416,7 +416,7 @@ struct DatabaseService {
                 FROM entry_search
                 WHERE entry_search.title MATCH ?
                 ORDER BY rank
-                LIMIT 5
+                LIMIT 10
                 """,
                 parameters: [
                     SQLite3Connection.Value.prefixQueryFTS5(query)
@@ -429,7 +429,7 @@ struct DatabaseService {
                 FROM search_history
                 WHERE query LIKE ?
                 ORDER BY created DESC
-                LIMIT 3
+                LIMIT 2
                 """,
                 parameters: [
                     SQLite3Connection.Value.prefixQueryLike(query)

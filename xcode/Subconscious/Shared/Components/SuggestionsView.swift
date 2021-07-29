@@ -65,7 +65,7 @@ struct SuggestionsView: View, Equatable {
     let store: ViewStore<SuggestionsModel, SuggestionsAction>
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             List {
                 if (store.state.suggestions.queries.count > 0) {
                     Section(
@@ -104,7 +104,9 @@ struct SuggestionsView: View, Equatable {
                         }
                     }.textCase(nil)
                 }
-
+            }
+            VStack(spacing: 0) {
+                Divider()
                 Button(
                     action: {
                         store.send(.selectCreate(store.state.suggestions.query))
@@ -118,6 +120,7 @@ struct SuggestionsView: View, Equatable {
                     }
                 )
                 .buttonStyle(FullButtonStyle())
+                .padding(8)
             }
         }
     }
