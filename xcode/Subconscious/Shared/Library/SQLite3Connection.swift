@@ -65,28 +65,23 @@ final class SQLite3Connection {
         public var columns: [Value] = []
 
         public func get(_ i: Int) -> String? {
-            let column = columns[i]
-            return column.unwrap()
+            columns.get(i)?.unwrap()
         }
 
         public func get(_ i: Int) -> Date? {
-            let column = columns[i]
-            return column.unwrap()
+            columns.get(i)?.unwrap()
         }
 
         public func get(_ i: Int) -> Int? {
-            let column = columns[i]
-            return column.unwrap()
+            columns.get(i)?.unwrap()
         }
 
         public func get(_ i: Int) -> Double? {
-            let column = columns[i]
-            return column.unwrap()
+            columns.get(i)?.unwrap()
         }
 
         public func get(_ i: Int) -> Data? {
-            let column = columns[i]
-            return column.unwrap()
+            columns.get(i)?.unwrap()
         }
     }
 
