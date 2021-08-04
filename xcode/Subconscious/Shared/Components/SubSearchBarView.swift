@@ -69,9 +69,17 @@ struct SubSearchBarView: View, Equatable {
                 get: { store.state.text  },
                 set: { text in store.send(.setText(text)) }
             ),
-            onFocus: { store.send(.setFocus(true)) },
+            onFocus: {
+                withAnimation {
+                    store.send(.setFocus(true))
+                }
+            },
             onCommit: { text in store.send(.commit(text)) },
-            onCancel: { store.send(.cancel) }
+            onCancel: {
+                withAnimation {
+                    store.send(.cancel)
+                }
+            }
         )
         .focused(store.state.isFocused)
         .showCancel(store.state.isFocused)
