@@ -159,7 +159,12 @@ struct DatabaseService {
     
     func migrateDatabase() ->
         AnyPublisher<SQLite3Migrations.MigrationSuccess, Error> {
-        CombineUtilities.async(qos: .background, execute: migrateDatabase)
+        CombineUtilities.async(
+            qos: .background,
+            execute: migrateDatabase
+        )
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     func deleteDatabase() throws {
@@ -168,7 +173,11 @@ struct DatabaseService {
     }
     
     func deleteDatabase() -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(execute: deleteDatabase)
+        CombineUtilities.async(
+            execute: deleteDatabase
+        )
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     func syncDatabase() -> AnyPublisher<[FileSync.Change], Error> {
@@ -224,6 +233,8 @@ struct DatabaseService {
             }
             return changes
         }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     func readEntry(url: URL) throws -> EntryFile {
@@ -283,6 +294,8 @@ struct DatabaseService {
             let fileWrapper = try EntryFile(entry: entry).unwrap()
             return try writeEntry(fileWrapper)
         }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     func writeEntry(
@@ -308,6 +321,8 @@ struct DatabaseService {
         CombineUtilities.async {
             try writeEntry(fileWrapper)
         }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
     
     private func deleteEntryFromDatabase(_ url: URL) throws {
@@ -328,6 +343,8 @@ struct DatabaseService {
             try deleteEntryFromDatabase(url)
             return url
         }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     /// List recent entries
@@ -357,11 +374,16 @@ struct DatabaseService {
     }
 
     func selectRecent() -> AnyPublisher<EntryResults, Error> {
-        CombineUtilities.async(qos: .userInitiated, execute: selectRecent)
+        CombineUtilities.async(
+            qos: .userInitiated,
+            execute: selectRecent
+        )
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     func searchSuggestionsForZeroQuery() -> AnyPublisher<Suggestions, Error> {
-        CombineUtilities.async(qos: .userInitiated, execute: {
+        CombineUtilities.async(qos: .userInitiated) {
             let resultStrings: [String] = try db.connection().execute(
                 sql: """
                 SELECT DISTINCT title
@@ -399,13 +421,15 @@ struct DatabaseService {
                 results: results,
                 queries: queries
             )
-        })
+        }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     func searchSuggestionsForQuery(
         _ query: String
     ) -> AnyPublisher<Suggestions, Error> {
-        CombineUtilities.async(qos: .userInitiated, execute: {
+        CombineUtilities.async(qos: .userInitiated) {
             guard !query.isWhitespace else {
                 return Suggestions(query: query)
             }
@@ -455,7 +479,9 @@ struct DatabaseService {
                 results: results,
                 queries: queries
             )
-        })
+        }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     /// Fetch search suggestions
@@ -481,7 +507,7 @@ struct DatabaseService {
 
     /// Log a search query in search history db
     func insertSearchHistory(query: String) -> AnyPublisher<String, Error> {
-        CombineUtilities.async(qos: .background, execute: {
+        CombineUtilities.async(qos: .background) {
             guard !query.isWhitespace else {
                 return query
             }
@@ -504,7 +530,9 @@ struct DatabaseService {
             )
 
             return query
-        })
+        }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     func findEntriesByTitles(_ titles: [String]) throws -> [EntryFile] {
@@ -539,7 +567,7 @@ struct DatabaseService {
     }
 
     func search(query: String) -> AnyPublisher<EntryResults, Error> {
-        CombineUtilities.async(qos: .userInitiated, execute: {
+        CombineUtilities.async(qos: .userInitiated) {
             guard !query.isWhitespace else {
                 return EntryResults()
             }
@@ -572,6 +600,8 @@ struct DatabaseService {
                 results: results,
                 index: index
             )
-        })
+        }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 }
