@@ -47,6 +47,14 @@ public final class Store<State, Action, Environment>: ObservableObject, Equatabl
         self.logger = logger
     }
 
+    /// Send an action to the store
+    /// Note that this method is not thread-safe. This is by-design, since SwiftUI requires actions to be
+    /// performed on the main thread, and some actions, like animation transactions to happen
+    /// syncronously with state changes on the main thread.
+    ///
+    /// This means you...
+    /// - Must always send from the main thread in your UI code.
+    /// - Make sure your effects always deliver on the main thread via .receive(on:).
     public func send(_ action: Action) {
         if let logger = self.logger {
             let debug = String(reflecting: action)
@@ -57,20 +65,14 @@ public final class Store<State, Action, Environment>: ObservableObject, Equatabl
             )
         }
 
-        guard let effect = reducer(&state, action, environment) else {
-            return
-        }
+        let effect = reducer(&state, action, environment)
 
-        effects.sink(
-            publisher: effect
-                /// Specifies the schedular used to pull events
-                /// This drives UI, so it MUST use main thread, since SwiftUI currently does not allow
-                /// publishing changes on background threads.
-                /// <https://developer.apple.com/documentation/combine/fail/receive(on:options:)>
-                .receive(on: DispatchQueue.main)
-                .eraseToAnyPublisher(),
-            receiveValue: self.send
-        )
+        if let effect = effect {
+            effects.sink(
+                publisher: effect,
+                receiveValue: self.send
+            )
+        }
     }
 }
 
