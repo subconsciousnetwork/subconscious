@@ -6,11 +6,7 @@
 //
 
 import SwiftUI
-import Combine
-import os
-import Elmo
 
-//  MARK: App root view
 @main
 struct SubconsciousApp: App {
     var body: some Scene {
