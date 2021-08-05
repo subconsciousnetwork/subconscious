@@ -55,7 +55,11 @@ struct DynamicTextViewRepresentable: UIViewRepresentable {
 
     func updateUIView(_ view: DynamicTextView, context: Context) {
         if view.text != text {
+            // Save selected range (cursor position).
+            let selectedRange = view.selectedRange
             view.text = text
+            // Restore selected range (cursor position) after setting text.
+            view.selectedRange = selectedRange
         }
 
         if view.fixedWidth != fixedWidth {
