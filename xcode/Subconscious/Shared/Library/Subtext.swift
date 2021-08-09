@@ -7,7 +7,8 @@
 
 import Foundation
 
-public struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashable {
+public struct Subtext:
+    CustomStringConvertible, Identifiable, Equatable, Hashable {
     public struct BlankBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
         public var description: String { "" }
@@ -20,7 +21,7 @@ public struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashabl
         public let id = UUID()
         public let value: String
     }
-    
+
     public struct LinkBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
         static let sigil = "&"
@@ -52,7 +53,7 @@ public struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashabl
         public let id = UUID()
         public let value: String
     }
-    
+
     public enum Block: CustomStringConvertible, Identifiable, Equatable, Hashable {
         case blank(BlankBlock)
         case text(TextBlock)
@@ -188,7 +189,18 @@ public struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashabl
             }
         }
     }
-    
+
+    public static func excerpt(markup: String) -> String {
+        Subtext(markup: markup).excerpt
+    }
+
+    /// Render blocks as plain text (lossy)
+    public static func strip(_ blocks: [Block]) -> String {
+        blocks
+            .map({ block in block.value })
+            .joined(separator: "\n")
+    }
+
     public var blocks: [Block]
 
     public var id: Int {
@@ -201,12 +213,10 @@ public struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashabl
             .map({ block in block.value }) ?? ""
     }
 
-    public static func excerpt(markup: String) -> String {
-        Subtext(markup: markup).excerpt
-    }
-
     public var markup: String {
-        Self.render(self.blocks)
+        blocks
+            .map({ block in block.description })
+            .joined(separator: "\n")
     }
 
     public var description: String {
@@ -217,36 +227,17 @@ public struct Subtext: CustomStringConvertible, Identifiable, Equatable, Hashabl
         Self.strip(self.blocks)
     }
 
-    /// Render blocks as markup
-    public static func render(_ blocks: [Block]) -> String {
-        blocks
-            .map({ block in block.description })
-            .joined(separator: "\n")
-    }
-
-    /// Render blocks as plain text (lossy)
-    public static func strip(_ blocks: [Block]) -> String {
-        blocks
-            .map({ block in block.value })
-            .joined(separator: "\n")
-    }
-
-    /// Parse markup to blocks
-    public static func parse(_ markup: String) -> [Block] {
-        markup.split(
-            maxSplits: Int.max,
-            omittingEmptySubsequences: false,
-            whereSeparator: \.isNewline
-        )
-        .map({ sub in Block.fromLine(String(sub)) })
-    }
-
     public init(blocks: [Block]) {
         self.blocks = blocks
     }
 
     public init(markup: String) {
-        self.blocks = Self.parse(markup)
+        self.blocks = markup.split(
+            maxSplits: Int.max,
+            omittingEmptySubsequences: false,
+            whereSeparator: \.isNewline
+        )
+        .map({ sub in Block.fromLine(String(sub)) })
     }
 
     public func prefix(_ max: Int) -> Subtext {
