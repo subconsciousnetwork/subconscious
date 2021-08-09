@@ -54,23 +54,15 @@ public struct Subtext:
         public let value: String
     }
 
-    public enum Block: CustomStringConvertible, Identifiable, Equatable, Hashable {
-        case blank(BlankBlock)
+    public enum Block:
+        CustomStringConvertible, Identifiable, Equatable, Hashable {
         case text(TextBlock)
-        case link(LinkBlock)
-        case list(ListBlock)
         case heading(HeadingBlock)
         case quote(QuoteBlock)
 
         public var id: UUID {
             switch self {
-            case .blank(let block):
-                return block.id
             case .text(let block):
-                return block.id
-            case .link(let block):
-                return block.id
-            case .list(let block):
                 return block.id
             case .heading(let block):
                 return block.id
@@ -85,13 +77,7 @@ public struct Subtext:
 
         public var description: String {
             switch self {
-            case .blank(let block):
-                return block.description
             case .text(let block):
-                return block.description
-            case .link(let block):
-                return block.description
-            case .list(let block):
                 return block.description
             case .heading(let block):
                 return block.description
@@ -108,11 +94,11 @@ public struct Subtext:
                 return block.value
             case .quote(let block):
                 return block.value
-            case .list(let block):
-                return block.value
-            default:
-                return ""
             }
+        }
+
+        public func extractWikilinks() -> [String] {
+            value.extractWikilinks()
         }
         
         private static func trimSigil(
@@ -136,33 +122,11 @@ public struct Subtext:
                 return true
             case .quote:
                 return true
-            case .list:
-                return true
-            default:
-                return false
             }
         }
         
         public static func fromLine(_ line: String) -> Block {
-            if line.hasPrefix(LinkBlock.sigil) {
-                return Block.link(
-                    .init(
-                        value: trimSigil(
-                            from: line,
-                            sigil: LinkBlock.sigil
-                        )
-                    )
-                )
-            } else if line.hasPrefix(ListBlock.sigil) {
-                return Block.list(
-                    .init(
-                        value: trimSigil(
-                            from: line,
-                            sigil: ListBlock.sigil
-                        )
-                    )
-                )
-            } else if line.hasPrefix(HeadingBlock.sigil) {
+            if line.hasPrefix(HeadingBlock.sigil) {
                 return Block.heading(
                     .init(
                         value: trimSigil(
@@ -180,10 +144,6 @@ public struct Subtext:
                         )
                     )
                 )
-            } else if line.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ).isEmpty {
-                return Block.blank(BlankBlock())
             } else {
                 return Block.text(TextBlock(value: line))
             }
@@ -237,6 +197,7 @@ public struct Subtext:
             omittingEmptySubsequences: false,
             whereSeparator: \.isNewline
         )
+        .filter({ text in !text.isWhitespace })
         .map({ sub in Block.fromLine(String(sub)) })
     }
 

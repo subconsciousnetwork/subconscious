@@ -63,37 +63,25 @@ struct EntryView: View, Equatable {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(visibleDom.blocks) { block in
-                    BlockView(block: block)
-                        .equatable()
-                        .padding(.horizontal, 16)
-                    
-                    if let slug = block.wikilinks().first?.toSlug(),
-                       let fileEntry = store.state.transcludes.get(slug) {
-                        Button(
-                            action: {
-                                store.send(.activateWikilink(fileEntry.title))
-                            },
-                            label: {
-                                TranscludeView(
-                                    dom: fileEntry.dom
-                                )
-                            }
-                        )
-                        .padding(.vertical, 24)
-                        .padding(.horizontal, 16)
-                    }
+        VStack(alignment: .leading, spacing: 24) {
+            ForEach(visibleDom.blocks) { block in
+                BlockView(block: block).equatable()
+
+                if let slug = block.extractWikilinks().first?.toSlug(),
+                   let fileEntry = store.state.transcludes.get(slug) {
+                    Button(
+                        action: {
+                            store.send(.activateWikilink(fileEntry.title))
+                        },
+                        label: {
+                            TranscludeView(
+                                dom: fileEntry.dom
+                            )
+                        }
+                    )
                 }
             }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                store.send(
-                    .requestEdit(url: store.state.fileEntry.url)
-                )
-            }
-            
+
             if (
                 store.state.isFolded &&
                 (
@@ -114,14 +102,17 @@ struct EntryView: View, Equatable {
 
                     Spacer()
                 }
-                .padding(.top, 24)
-                .padding(.leading, 16)
-                .padding(.trailing, 16)
             }
         }
         .contentShape(Rectangle())
         .padding(.vertical, 24)
+        .padding(.horizontal, 16)
         .background(Constants.Color.background)
+        .onTapGesture {
+            store.send(
+                .requestEdit(url: store.state.fileEntry.url)
+            )
+        }
     }
 }
 

@@ -13,7 +13,7 @@ extension String {
 
 
     /// Find ranges for wikilinks in a string
-    func findWikilinks() -> [NSTextCheckingResult] {
+    func matchWikilinks() -> [NSTextCheckingResult] {
         do {
             return try self.matches(pattern: String.wikilinkPattern)
         } catch {
@@ -22,8 +22,8 @@ extension String {
     }
 
     /// Get an array of Strings, each of which is the text portion of a Wikilink
-    func wikilinks() -> [String] {
-        self.findWikilinks().compactMap({ result in
+    func extractWikilinks() -> [String] {
+        self.matchWikilinks().compactMap({ result in
             let nsrange = result.range(at: 1)
             if let range = Range(nsrange, in: self) {
                 return String(self[range])
@@ -32,18 +32,15 @@ extension String {
         })
     }
 
-    func renderingWikilinks() -> NSAttributedString {
+    func renderingWikilinks(url: (String) -> String) -> NSAttributedString {
         let string = NSMutableAttributedString(string: self)
-        for result in self.findWikilinks() {
-            let range = result.range(at: 1)
-            string.addAttribute(.link, value: "http://google.com", range: range)
+        for result in self.matchWikilinks() {
+            let nsrange = result.range(at: 1)
+            if let range = Range(nsrange, in: self) {
+                let text = String(self[range])
+                string.addAttribute(.link, value: url(text), range: nsrange)
+            }
         }
-        return NSAttributedString(attributedString: string)
-    }
-}
-
-extension Subtext.Block {
-    func wikilinks() -> [String] {
-        self.value.wikilinks()
+        return string
     }
 }

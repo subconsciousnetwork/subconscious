@@ -16,16 +16,10 @@ struct BlockView: View, Equatable {
             switch block {
             case .text(let block):
                 TextBlockView(block: block)
-            case .link(let block):
-                LinkBlockView(block: block)
-            case .list(let block):
-                ListBlockView(block: block)
             case .heading(let block):
                 HeadingBlockView(block: block)
             case .quote(let block):
                 QuoteBlockView(block: block)
-            case .blank:
-                BlankBlockView()
             }
         }
     }
@@ -33,26 +27,6 @@ struct BlockView: View, Equatable {
 
 struct TextBlockView: View {
     var block: Subtext.TextBlock
-
-    var body: some View {
-        Text(block.value)
-            .font(.body)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-struct ListBlockView: View {
-    var block: Subtext.ListBlock
-
-    var body: some View {
-        Text(block.value)
-            .font(.body)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-struct LinkBlockView: View {
-    var block: Subtext.LinkBlock
 
     var body: some View {
         Text(block.value)
@@ -80,11 +54,5 @@ struct QuoteBlockView: View {
             .font(.body)
             .foregroundColor(Constants.Color.quotedText)
             .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-struct BlankBlockView: View {
-    var body: some View {
-        Spacer().frame(height: 24)
     }
 }

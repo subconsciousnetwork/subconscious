@@ -22,7 +22,7 @@ struct TranscludeView: View {
         }
         .foregroundColor(Constants.Color.text)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 24)
+        .padding(.vertical, 16)
         .padding(.horizontal, 16)
         .contentShape(Rectangle())
         .background(Constants.Color.secondaryBackground)

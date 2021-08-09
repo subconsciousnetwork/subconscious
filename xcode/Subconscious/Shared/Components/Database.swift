@@ -562,7 +562,7 @@ struct DatabaseService {
         _ fileEntries: [FileEntry]
     ) throws -> SlugIndex<FileEntry> {
         let wikilinks = fileEntries.flatMap({ fileEntry in
-            fileEntry.content.wikilinks()
+            fileEntry.content.extractWikilinks()
         })
         let linked = try findEntriesByTitles(wikilinks)
         return SlugIndex(linked)
