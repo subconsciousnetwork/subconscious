@@ -20,6 +20,7 @@ struct TranscludeView: View {
                 BlockView(block: block)
             }
         }
+        .foregroundColor(Constants.Color.text)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 24)
         .padding(.horizontal, 16)
