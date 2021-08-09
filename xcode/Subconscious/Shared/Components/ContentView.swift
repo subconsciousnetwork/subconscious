@@ -80,6 +80,8 @@ func tagSearchAction(_ action: EntryListAction) -> ContentAction {
     switch action {
     case .requestEdit(let url):
         return .editorOpenUpdate(url)
+    case .activateWikilink(let search):
+        return .commitQuery(search)
     default:
         return .search(action)
     }

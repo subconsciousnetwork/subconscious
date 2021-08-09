@@ -12,7 +12,7 @@ import Elmo
 
 // MARK:  Action
 enum EntryListAction {
-    case item(_ item: ItemAction<URL, EntryView.Action>)
+    case item(id: URL, action: EntryView.Action)
     case search(String)
     case searchSuccess(EntryResults)
     case searchFailure(message: String)
@@ -20,6 +20,7 @@ enum EntryListAction {
     case selectRecentSuccess(EntryResults)
     case selectRecentFailure(message: String)
     case setItems(EntryResults)
+    case activateWikilink(String)
     case requestEdit(url: URL)
 
     static func fetch(_ query: String) -> Self {
@@ -63,20 +64,20 @@ func updateEntryList(
     environment: IOService
 ) -> AnyPublisher<EntryListAction, Never> {
     switch action {
-    case .item(let action):
+    case .item(let id, let action):
         // Am I getting a copy, rather than a reference?
         // Is that why it never changes?
         if let i = state.entries.firstIndex(
-            where: { entry in entry.id ==  action.key }
+            where: { entry in entry.id ==  id }
         ) {
             let id = state.entries[i].id
             return EntryView.update(
                 state: &state.entries[i],
-                action: action.action,
+                action: action,
                 environment: environment.logger
             ).map({ action in
                 tagEntryListItem(
-                    key: id,
+                    id: id,
                     action: action
                 )
             }).eraseToAnyPublisher()
@@ -84,7 +85,7 @@ func updateEntryList(
             environment.logger.info(
                 """
                 EntryListAction.item
-                Passed non-existant item key: \(action.key).
+                Passed non-existant item id: \(id).
 
                 This can happen if an effect is issued from an item,
                 and then the item is removed before the effect generates
@@ -130,7 +131,14 @@ func updateEntryList(
         environment.logger.debug(
             """
             EntryListAction.requestEdit
-            This action should have been handled by parent view.
+            This action should be handled by parent view.
+            """
+        )
+    case .activateWikilink:
+        environment.logger.debug(
+            """
+            EntryListAction.activateWikilink
+            This action should be handled by parent view.
             """
         )
     }
@@ -138,15 +146,17 @@ func updateEntryList(
 }
 
 //  MARK: Tagging
-func tagEntryListItem(key: URL, action: EntryView.Action) -> EntryListAction {
+func tagEntryListItem(id: URL, action: EntryView.Action) -> EntryListAction {
     switch action {
     case .requestEdit(let url):
         return .requestEdit(url: url)
+    case .activateWikilink(let search):
+        return .activateWikilink(search)
     default:
-        return .item(ItemAction(
-            key: key,
+        return .item(
+            id: id,
             action: action
-        ))
+        )
     }
 }
 
@@ -170,7 +180,7 @@ struct EntryListView: View, Equatable {
                                 send: store.send,
                                 tag: { action in
                                     tagEntryListItem(
-                                        key: entry.id,
+                                        id: entry.id,
                                         action: action
                                     )
                                 }

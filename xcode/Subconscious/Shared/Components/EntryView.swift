@@ -15,6 +15,7 @@ struct EntryView: View, Equatable {
     enum Action {
         case setFolded(_ isFolded: Bool)
         case requestEdit(url: URL)
+        case activateWikilink(String)
     }
 
     struct Model: Identifiable, Equatable {
@@ -38,7 +39,14 @@ struct EntryView: View, Equatable {
             environment.debug(
                 """
                 EntryAction.requestEdit
-                This action should have been handled by the parent view.
+                Action should be handled by parent view.
+                """
+            )
+        case .activateWikilink:
+            environment.debug(
+                """
+                EntryAction.activateWikilink
+                Action should be handled by parent view.
                 """
             )
         }
@@ -64,9 +72,18 @@ struct EntryView: View, Equatable {
                     
                     if let slug = block.wikilinks().first?.toSlug(),
                        let fileEntry = store.state.transcludes.get(slug) {
-                        TranscludeView(
-                            dom: fileEntry.dom
+                        Button(
+                            action: {
+                                store.send(.activateWikilink(fileEntry.title))
+                            },
+                            label: {
+                                TranscludeView(
+                                    dom: fileEntry.dom
+                                )
+                            }
                         )
+                        .padding(.vertical, 24)
+                        .padding(.horizontal, 16)
                     }
                 }
             }
