@@ -12,7 +12,7 @@ import Elmo
 
 // MARK:  Action
 enum EntryListAction {
-    case item(_ item: ItemAction<URL, EntryAction>)
+    case item(_ item: ItemAction<URL, EntryView.Action>)
     case search(String)
     case searchSuccess(EntryResults)
     case searchFailure(message: String)
@@ -39,29 +39,16 @@ struct EntryListModel: Equatable {
         case ready
     }
 
-    var entries: [EntryModel]
-    var state: State
-
-    init(_ entries: [EntryFile]) {
-        self.state = .ready
-        self.entries = entries
-            .enumerated()
-            .map({ (i, wrapper) in
-                EntryModel(
-                    url: wrapper.url,
-                    dom: wrapper.entry.dom,
-                    isFolded: i > 0
-                )
-            })
-    }
+    var entries: [EntryView.Model] = []
+    var state: State = .loading
 
     mutating func replace(_ results: EntryResults) {
-        self.entries = results.results
+        self.entries = results.fileEntries
             .enumerated()
-            .map({ (i, entryFile) in
-                EntryModel(
-                    url: entryFile.url,
-                    dom: entryFile.entry.dom,
+            .map({ (i, fileEntry) in
+                EntryView.Model(
+                    fileEntry: fileEntry,
+                    transcludes: results.transcludes,
                     isFolded: i > 0
                 )
             })
@@ -83,7 +70,7 @@ func updateEntryList(
             where: { entry in entry.id ==  action.key }
         ) {
             let id = state.entries[i].id
-            return updateEntry(
+            return EntryView.update(
                 state: &state.entries[i],
                 action: action.action,
                 environment: environment.logger
@@ -151,7 +138,7 @@ func updateEntryList(
 }
 
 //  MARK: Tagging
-func tagEntryListItem(key: URL, action: EntryAction) -> EntryListAction {
+func tagEntryListItem(key: URL, action: EntryView.Action) -> EntryListAction {
     switch action {
     case .requestEdit(let url):
         return .requestEdit(url: url)
@@ -202,7 +189,7 @@ struct EntryListView_Previews: PreviewProvider {
     static var previews: some View {
         EntryListView(
             store: ViewStore(
-                state: EntryListModel([]),
+                state: .init(),
                 send: { action in }
             )
         )

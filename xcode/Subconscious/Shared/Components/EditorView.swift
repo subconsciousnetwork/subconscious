@@ -20,10 +20,10 @@ enum EditorAction {
     case editCreate(content: String)
     case editUpdate(url: URL)
     case save
-    case saveCreate(Entry)
-    case saveCreateSuccess(EntryFile)
-    case saveUpdate(EntryFile)
-    case saveUpdateSuccess(EntryFile)
+    case saveCreate(DraftEntry)
+    case saveCreateSuccess(FileEntry)
+    case saveUpdate(FileEntry)
+    case saveUpdateSuccess(FileEntry)
     case cancel
     case failure(message: String)
     static let clear = set(url: nil, body: "")
@@ -53,10 +53,10 @@ func updateEditor(
         state.body = body
     case .editUpdate(let url):
         return environment.database.readEntry(url: url)
-            .map({ entryFile in
+            .map({ fileEntry in
                 .set(
-                    url: entryFile.url,
-                    body: entryFile.entry.content
+                    url: fileEntry.url,
+                    body: fileEntry.content
                 )
             })
             .catch({ error in
@@ -71,7 +71,7 @@ func updateEditor(
         if let url = state.url {
             return Just(
                 .saveUpdate(
-                    EntryFile(
+                    FileEntry(
                         url: url,
                         content: state.body
                     )
@@ -80,38 +80,38 @@ func updateEditor(
         } else {
             return Just(
                 .saveCreate(
-                    Entry(
+                    DraftEntry(
                         content: state.body
                     )
                 )
             ).eraseToAnyPublisher()
         }
-    case .saveCreate(let entry):
-        return environment.database.createEntry(entry)
-            .map({ entryFile in
-                .saveCreateSuccess(entryFile)
+    case .saveCreate(let draft):
+        return environment.database.createEntry(draft)
+            .map({ fileEntry in
+                .saveCreateSuccess(fileEntry)
             })
             .catch({ error in
                 Just(.failure(message: error.localizedDescription))
             })
             .eraseToAnyPublisher()
-    case .saveCreateSuccess(let entryFile):
+    case .saveCreateSuccess(let fileEntry):
         environment.logger.log(
-            "Created entry \(entryFile.url)"
+            "Created entry \(fileEntry.url)"
         )
         return Just(.clear).eraseToAnyPublisher()
-    case .saveUpdate(let entryFile):
-        return environment.database.writeEntry(entryFile)
-            .map({ entryFile in
-                .saveUpdateSuccess(entryFile)
+    case .saveUpdate(let fileEntry):
+        return environment.database.writeEntry(fileEntry)
+            .map({ fileEntry in
+                .saveUpdateSuccess(fileEntry)
             })
             .catch({ error in
                 Just(.failure(message: error.localizedDescription))
             })
             .eraseToAnyPublisher()
-    case .saveUpdateSuccess(let entryFile):
+    case .saveUpdateSuccess(let fileEntry):
         environment.logger.log(
-            "Updated entry \(entryFile.url)"
+            "Updated entry \(fileEntry.url)"
         )
         return Just(.clear).eraseToAnyPublisher()
     case .cancel:

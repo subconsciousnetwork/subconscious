@@ -42,4 +42,23 @@ extension String {
                 .joined(separator: " ")
         }
     }
+
+    /// Remove quotation marks from string
+    func unquote() -> String {
+        self.replacingOccurrences(
+            of: #"["']"#,
+            with: "",
+            options: .regularExpression
+        )
+    }
+
+    /// Derive a title from free-range text by taking the first sentence and cleaning it up.
+    func derivingTitle() -> String {
+        self
+            .firstPseudoSentence
+            /// Remove quotes. We rarely want these in derived titles
+            .unquote()
+            /// Truncate, so it doesn't get too long
+            .truncatingByWord(characters: 120)
+    }
 }

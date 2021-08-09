@@ -39,8 +39,8 @@ enum ContentAction {
     case editorOpenCreate(String)
     case editorOpenUpdate(URL)
     case editorCancel
-    case editorSaveCreateSuccess(EntryFile)
-    case editorSaveUpdateSuccess(EntryFile)
+    case editorSaveCreateSuccess(FileEntry)
+    case editorSaveUpdateSuccess(FileEntry)
     case setSuggestions(_ suggestions: SuggestionsModel)
     case warning(_ message: String)
     case info(_ message: String)
@@ -56,10 +56,10 @@ func tagEditorAction(_ action: EditorAction) -> ContentAction {
     switch action {
     case .cancel:
         return .editorCancel
-    case .saveCreateSuccess(let entryFile):
-        return .editorSaveCreateSuccess(entryFile)
-    case .saveUpdateSuccess(let entryFile):
-        return .editorSaveUpdateSuccess(entryFile)
+    case .saveCreateSuccess(let fileEntry):
+        return .editorSaveCreateSuccess(fileEntry)
+    case .saveUpdateSuccess(let fileEntry):
+        return .editorSaveUpdateSuccess(fileEntry)
     default:
         return .editor(action)
     }
@@ -112,7 +112,7 @@ func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> ContentAction {
 struct ContentModel: Equatable {
     var database = DatabaseModel()
     var searchBar = SubSearchBarModel()
-    var search = EntryListModel([])
+    var search = EntryListModel()
     /// Semi-permanent suggestions that show up as tokens in the search view.
     /// We don't differentiate between types of token, so these are all just strings.
     var suggestionTokens = TextTokenBarModel()
@@ -206,10 +206,10 @@ func updateContent(
             create,
             open
         ).eraseToAnyPublisher()
-    case .editorSaveCreateSuccess(let entryFile):
-        let update = Just(ContentAction.editor(.saveCreateSuccess(entryFile)))
+    case .editorSaveCreateSuccess(let fileEntry):
+        let update = Just(ContentAction.editor(.saveCreateSuccess(fileEntry)))
         let close = Just(ContentAction.setEditorPresented(false))
-        let search = Just(ContentAction.commitQuery(entryFile.entry.title))
+        let search = Just(ContentAction.commitQuery(fileEntry.title))
         return Publishers.Merge3(
             update,
             close,
@@ -222,10 +222,10 @@ func updateContent(
             update,
             open
         ).eraseToAnyPublisher()
-    case .editorSaveUpdateSuccess(let entryFile):
-        let update = Just(ContentAction.editor(.saveUpdateSuccess(entryFile)))
+    case .editorSaveUpdateSuccess(let fileEntry):
+        let update = Just(ContentAction.editor(.saveUpdateSuccess(fileEntry)))
         let close = Just(ContentAction.setEditorPresented(false))
-        let search = Just(ContentAction.commitQuery(entryFile.entry.title))
+        let search = Just(ContentAction.commitQuery(fileEntry.title))
         return Publishers.Merge3(
             update,
             close,

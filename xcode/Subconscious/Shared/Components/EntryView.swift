@@ -10,48 +10,48 @@ import Combine
 import os
 import Elmo
 
-enum EntryAction {
-    case setFolded(_ isFolded: Bool)
-    case requestEdit(url: URL)
-}
-
-struct EntryModel: Identifiable, Equatable {
-    var id: URL {
-        url
-    }
-    var url: URL
-    var dom: Subtext
-    var isFolded: Bool = true
-}
-
-func updateEntry(
-    state: inout EntryModel,
-    action: EntryAction,
-    environment: Logger
-) -> AnyPublisher<EntryAction, Never> {
-    switch action {
-    case .setFolded(let isFolded):
-        state.isFolded = isFolded
-    case .requestEdit:
-        environment.debug(
-            """
-            EntryAction.requestEdit
-            This action should have been handled by the parent view.
-            """
-        )
-    }
-    return Empty().eraseToAnyPublisher()
-}
-
 /// A foldable note entry
 struct EntryView: View, Equatable {
-    let store: ViewStore<EntryModel, EntryAction>
+    enum Action {
+        case setFolded(_ isFolded: Bool)
+        case requestEdit(url: URL)
+    }
+
+    struct Model: Identifiable, Equatable {
+        var id: URL {
+            fileEntry.url
+        }
+        var fileEntry: FileEntry
+        var transcludes = SlugIndex<FileEntry>()
+        var isFolded: Bool = true
+    }
+
+    static func update(
+        state: inout Model,
+        action: Action,
+        environment: Logger
+    ) -> AnyPublisher<Action, Never> {
+        switch action {
+        case .setFolded(let isFolded):
+            state.isFolded = isFolded
+        case .requestEdit:
+            environment.debug(
+                """
+                EntryAction.requestEdit
+                This action should have been handled by the parent view.
+                """
+            )
+        }
+        return Empty().eraseToAnyPublisher()
+    }
+
+    let store: ViewStore<Model, Action>
     let showBlocksWhenFolded = 3
 
     var visibleDom: Subtext {
-        store.state.isFolded ?
-            store.state.dom.prefix(showBlocksWhenFolded) :
-            store.state.dom
+        store.state.isFolded
+        ? store.state.fileEntry.dom.prefix(showBlocksWhenFolded)
+        : store.state.fileEntry.dom
     }
 
     var body: some View {
@@ -65,13 +65,15 @@ struct EntryView: View, Equatable {
             }
             .contentShape(Rectangle())
             .onTapGesture {
-                store.send(.requestEdit(url: store.state.url))
+                store.send(
+                    .requestEdit(url: store.state.fileEntry.url)
+                )
             }
             
             if (
                 store.state.isFolded &&
                 (
-                    store.state.dom.blocks.count >
+                    store.state.fileEntry.dom.blocks.count >
                     showBlocksWhenFolded
                 )
             ) {
@@ -104,37 +106,37 @@ struct EntryView_Previews: PreviewProvider {
         ScrollView {
             EntryView(
                 store: ViewStore(
-                    state: EntryModel(
-                        url: URL(fileURLWithPath: "example.subtext"),
-                        dom: Subtext(
-                            markup:
-                            """
-                            # Overview
+                    state: .init(
+                        fileEntry: .init(
+                            url: URL(fileURLWithPath: "example.subtext"),
+                            content:
+                                """
+                                # Overview
 
-                            Evolution is a behavior that emerges in any [[system]] with:
+                                Evolution is a behavior that emerges in any [[system]] with:
 
-                            - Mutation
-                            - Heredity
-                            - Selection
+                                - Mutation
+                                - Heredity
+                                - Selection
 
-                            Evolutionary systems often generate unexpected solutions. Nature selects for good enough.
+                                Evolutionary systems often generate unexpected solutions. Nature selects for good enough.
 
-                            > There is no such thing as advantageous in a general sense. There is only advantageous for the circumstances you’re living in. (Olivia Judson, Santa Fe Institute)
+                                > There is no such thing as advantageous in a general sense. There is only advantageous for the circumstances you’re living in. (Olivia Judson, Santa Fe Institute)
 
-                            Evolving systems exist in [[punctuated equilibrium]].
+                                Evolving systems exist in [[punctuated equilibrium]].
 
-                            & punctuated-equilibrium.st
+                                & punctuated-equilibrium.st
 
-                            # Questions
+                                # Questions
 
-                            - What systems (beside biology) exhibit evolutionary behavior? Remember, evolution happens in any system with mutation, heredity, selection.
-                            - What happens to an evolutionary system when you remove mutation? Heredity? Selection?
-                            - Do you see a system with one of these properties? How can you introduce the other two?
+                                - What systems (beside biology) exhibit evolutionary behavior? Remember, evolution happens in any system with mutation, heredity, selection.
+                                - What happens to an evolutionary system when you remove mutation? Heredity? Selection?
+                                - Do you see a system with one of these properties? How can you introduce the other two?
 
-                            # See also
+                                # See also
 
-                            & https://en.wikipedia.org/wiki/Evolutionary_systems
-                            """
+                                & https://en.wikipedia.org/wiki/Evolutionary_systems
+                                """
                         )
                     ),
                     send: { action in }

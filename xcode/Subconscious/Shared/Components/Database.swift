@@ -237,11 +237,11 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
-    func readEntry(url: URL) throws -> EntryFile {
-        try EntryFile(url: url)
+    func readEntry(url: URL) throws -> FileEntry {
+        try FileEntry(url: url)
     }
 
-    func readEntry(url: URL) -> AnyPublisher<EntryFile, Error> {
+    func readEntry(url: URL) -> AnyPublisher<FileEntry, Error> {
         Result(catching: {
             try readEntry(url: url)
         }).publisher.eraseToAnyPublisher()
@@ -249,12 +249,12 @@ struct DatabaseService {
     
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        fileWrapper: EntryFile,
+        fileEntry: FileEntry,
         attributes: FileFingerprint.Attributes
     ) throws {
         // Must store relative path, since absolute path of user documents
         // directory can be changed by system.
-        let path = try fileWrapper.url.relativizingPath(
+        let path = try fileEntry.url.relativizingPath(
             relativeTo: documentsUrl
         ).unwrap()
 
@@ -270,8 +270,8 @@ struct DatabaseService {
             """,
             parameters: [
                 .text(path),
-                .text(fileWrapper.entry.title),
-                .text(fileWrapper.entry.content),
+                .text(fileEntry.title),
+                .text(fileEntry.content),
                 .date(attributes.modifiedDate),
                 .integer(attributes.size)
             ]
@@ -280,18 +280,18 @@ struct DatabaseService {
     
     /// Write entry syncronously by reading it off of file system
     private func writeEntryToDatabase(_ url: URL) throws {
-        let wrapper = try EntryFile(url: url)
+        let fileEntry = try FileEntry(url: url)
         let attributes = try FileFingerprint.Attributes.init(url: url).unwrap()
         try writeEntryToDatabase(
-            fileWrapper: wrapper,
+            fileEntry: fileEntry,
             attributes: attributes
         )
     }
 
     /// Create a new entry on the file system, and write to the database
-    func createEntry(_ entry: Entry) -> AnyPublisher<EntryFile, Error> {
+    func createEntry(_ entry: DraftEntry) -> AnyPublisher<FileEntry, Error> {
         CombineUtilities.async {
-            let fileWrapper = try EntryFile(entry: entry).unwrap()
+            let fileWrapper = try FileEntry(entry: entry).unwrap()
             return try writeEntry(fileWrapper)
         }
         .receive(on: DispatchQueue.main)
@@ -299,8 +299,8 @@ struct DatabaseService {
     }
 
     func writeEntry(
-        _ fileWrapper: EntryFile
-    ) throws -> EntryFile {
+        _ fileWrapper: FileEntry
+    ) throws -> FileEntry {
         try fileWrapper.write()
         // Re-read size and file modified from file system to make sure
         // what we store is exactly equal to file system.
@@ -308,7 +308,7 @@ struct DatabaseService {
             url: fileWrapper.url
         ).unwrap()
         try writeEntryToDatabase(
-            fileWrapper: fileWrapper,
+            fileEntry: fileWrapper,
             attributes: attributes
         )
         return fileWrapper
@@ -316,8 +316,8 @@ struct DatabaseService {
     
     /// Write an entry to the file system, and to the database
     func writeEntry(
-        _ fileWrapper: EntryFile
-    ) -> AnyPublisher<EntryFile, Error> {
+        _ fileWrapper: FileEntry
+    ) -> AnyPublisher<FileEntry, Error> {
         CombineUtilities.async {
             try writeEntry(fileWrapper)
         }
@@ -356,7 +356,7 @@ struct DatabaseService {
             LIMIT 25
             """
         ).map({ row in
-            EntryFile(
+            FileEntry(
                 url: URL(
                     fileURLWithPath: try row.get(0).unwrap(),
                     relativeTo: documentsUrl
@@ -365,11 +365,11 @@ struct DatabaseService {
             )
         })
 
-        let index = try selectLinked(results)
+        let transcludes = try selectTranscludes(results)
 
         return EntryResults(
-            results: results,
-            index: index
+            fileEntries: results,
+            transcludes: transcludes
         )
     }
 
@@ -535,7 +535,7 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
-    func findEntriesByTitles(_ titles: [String]) throws -> [EntryFile] {
+    func findEntriesByTitles(_ titles: [String]) throws -> [FileEntry] {
         let titlesJSON = try SQLite3Connection.Value.json(titles).unwrap()
         return try db.connection().execute(
             sql: """
@@ -550,20 +550,22 @@ struct DatabaseService {
         ).map({ row in
             let path: String = try row.get(0).unwrap()
             let content: String = try row.get(1).unwrap()
-            return EntryFile(
+            return FileEntry(
                 url: URL(fileURLWithPath: path, relativeTo: documentsUrl),
                 content: content
             )
         })
     }
 
-    /// Given a list of EntryFiles, get all documents linked to with wikilinks within that list of EntryFiles.
-    func selectLinked(_ entryFiles: [EntryFile]) throws -> EntryResults.Index {
-        let wikilinks = entryFiles.flatMap({ entryFile in
-            entryFile.entry.content.wikilinks()
+    /// Given a list of FileEntrys, get all documents linked to with wikilinks within that list of FileEntrys.
+    func selectTranscludes(
+        _ fileEntries: [FileEntry]
+    ) throws -> SlugIndex<FileEntry> {
+        let wikilinks = fileEntries.flatMap({ fileEntry in
+            fileEntry.content.wikilinks()
         })
         let linked = try findEntriesByTitles(wikilinks)
-        return EntryResults.Index(linked)
+        return SlugIndex(linked)
     }
 
     func search(query: String) -> AnyPublisher<EntryResults, Error> {
@@ -572,7 +574,7 @@ struct DatabaseService {
                 return EntryResults()
             }
 
-            let results: [EntryFile] = try db.connection().execute(
+            let fileEntries: [FileEntry] = try db.connection().execute(
                 sql: """
                 SELECT path, body
                 FROM entry_search
@@ -588,17 +590,17 @@ struct DatabaseService {
                 let path: String = try row.get(0).unwrap()
                 let content: String = try row.get(1).unwrap()
                 let url = documentsUrl.appendingPathComponent(path)
-                return EntryFile(
+                return FileEntry(
                     url: url,
                     content: content
                 )
             })
 
-            let index = try selectLinked(results)
+            let transcludes = try selectTranscludes(fileEntries)
 
             return EntryResults(
-                results: results,
-                index: index
+                fileEntries: fileEntries,
+                transcludes: transcludes
             )
         }
         .receive(on: DispatchQueue.main)

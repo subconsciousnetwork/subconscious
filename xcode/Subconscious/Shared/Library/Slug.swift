@@ -73,3 +73,40 @@ extension String {
             .truncatingSafeFileNameLength()
     }
 }
+
+protocol StringKeyed {
+    var key: String { get }
+}
+
+extension StringKeyed {
+    var slug: String {
+        key.toSlug()
+    }
+}
+
+/// A wrapper for hashmap that slugifies keys for fuzzier matches.
+struct SlugIndex<T>: Equatable
+where T: StringKeyed, T: Equatable {
+    private(set) var index: [String: T]
+
+    init(_ items: [T] = []) {
+        var dict: [String: T] = [:]
+        for element in items {
+            dict[element.slug] = element
+        }
+        self.index = dict
+    }
+
+    func get(_ key: String) -> T? {
+        return index[key]
+    }
+
+    mutating func set(_ value: T) {
+        index[value.slug] = value
+    }
+
+    /// Given an array of keys, returns a set of items corresponding to a list of keys.
+    func pluck(_ keys: [String]) -> [T] {
+        keys.compactMap(self.get)
+    }
+}
