@@ -15,13 +15,14 @@ struct TranscludeView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 8) {
             ForEach(dom.blocks) { block in
                 BlockView(block: block)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 24)
+        .padding(.horizontal, 16)
         .contentShape(Rectangle())
         .background(Constants.Color.secondaryBackground)
         .cornerRadius(CGFloat(Constants.Theme.cornerRadius))
