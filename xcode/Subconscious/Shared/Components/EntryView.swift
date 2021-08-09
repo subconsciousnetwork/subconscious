@@ -61,6 +61,13 @@ struct EntryView: View, Equatable {
                     BlockView(block: block)
                         .equatable()
                         .padding(.horizontal, 16)
+                    
+                    if let slug = block.wikilinks().first?.toSlug(),
+                       let fileEntry = store.state.transcludes.get(slug) {
+                        TranscludeView(
+                            dom: fileEntry.dom
+                        )
+                    }
                 }
             }
             .contentShape(Rectangle())

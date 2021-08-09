@@ -42,3 +42,8 @@ extension String {
     }
 }
 
+extension Subtext.Block {
+    func wikilinks() -> [String] {
+        self.value.wikilinks()
+    }
+}
