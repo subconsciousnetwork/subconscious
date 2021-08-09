@@ -170,14 +170,3 @@ public func address<Action, LocalAction>(
         send(tag(localAction))
     }
 }
-
-/// A generic struct in which you can box actions from lists of items in arrays or dictionaries
-public struct ItemAction<K, V> {
-    public var key: K;
-    public var action: V;
-
-    public init(key: K, action: V) {
-        self.key = key
-        self.action = action
-    }
-}
