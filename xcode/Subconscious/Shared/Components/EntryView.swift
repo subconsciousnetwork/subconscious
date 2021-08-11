@@ -22,6 +22,10 @@ struct EntryView: View, Equatable {
         var id: URL {
             fileEntry.url
         }
+        var blocks: [Subtext2.BlockNode] {
+            let blocks = Subtext2.parse(markup: fileEntry.content)
+            return isFolded ? Array(blocks.prefix(3)) : blocks
+        }
         var fileEntry: FileEntry
         var transcludes = SlugIndex<FileEntry>()
         var isFolded: Bool = true
@@ -54,20 +58,13 @@ struct EntryView: View, Equatable {
     }
 
     let store: ViewStore<Model, Action>
-    let showBlocksWhenFolded = 3
-
-    var visibleDom: Subtext {
-        store.state.isFolded
-        ? store.state.fileEntry.dom.prefix(showBlocksWhenFolded)
-        : store.state.fileEntry.dom
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            ForEach(visibleDom.blocks) { block in
+            ForEach(store.state.blocks) { block in
                 BlockView(block: block).equatable()
 
-                if let slug = block.extractWikilinks().first?.toSlug(),
+                if let slug = block.wikilinks().first?.toSlug(),
                    let fileEntry = store.state.transcludes.get(slug) {
                     Button(
                         action: {
@@ -82,13 +79,7 @@ struct EntryView: View, Equatable {
                 }
             }
 
-            if (
-                store.state.isFolded &&
-                (
-                    store.state.fileEntry.dom.blocks.count >
-                    showBlocksWhenFolded
-                )
-            ) {
+            if store.state.isFolded {
                 HStack {
                     Button(action: {
                         store.send(.setFolded(false))

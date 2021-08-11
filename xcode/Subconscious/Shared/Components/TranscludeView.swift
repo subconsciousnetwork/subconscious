@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct TranscludeView: View {
-    var dom: Subtext
+    var dom: [Subtext2.BlockNode]
 
-    init(dom: Subtext) {
-        self.dom = dom.filter(Subtext.Block.isContent).prefix(2)
+    init(dom: [Subtext2.BlockNode]) {
+        self.dom = Array(dom.prefix(2))
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(dom.blocks) { block in
+            ForEach(dom) { block in
                 BlockView(block: block)
             }
         }
@@ -33,7 +33,7 @@ struct TranscludeView: View {
 struct TranscludeView_Previews: PreviewProvider {
     static var previews: some View {
         TranscludeView(
-            dom: Subtext(
+            dom: Subtext2.parse(
                 markup: """
                 # Namespaced wikilinks
 

@@ -119,7 +119,7 @@ func updateEditor(
         // Note that SwiftUI animations don't yet have reasonable
         // onComplete handlers, so we're making do.
         return Just(EditorAction.clear).delay(
-            for: .milliseconds(500),
+            for: .milliseconds(10),
             scheduler: RunLoop.main
         ).eraseToAnyPublisher()
     }

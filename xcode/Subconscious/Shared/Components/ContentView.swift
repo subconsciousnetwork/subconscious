@@ -352,7 +352,7 @@ struct ContentView: View {
                         )
                     )
                     .equatable()
-                    .transition(.opacity.combined(with: .offset(x: 0, y: 24)))
+                    .transition(.opacity)
                 } else {
                     EntryListView(
                         store: ViewStore(

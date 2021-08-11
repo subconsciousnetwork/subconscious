@@ -37,23 +37,23 @@ struct AttributedLabelRepresentable: UIViewRepresentable {
     }
 }
 
-struct LabelRepresentablePreview: PreviewProvider {
-    static var previews: some View {
-        VStack {
-            GeometryReader { geometry in
-                ScrollView {
-                    ForEach(Range(1...3)) { _ in
-                        AttributedLabelRepresentable(
-                            attributedText:
-                                """
-                                Life is good when you have [[wikilinks]]. They allow you to [[link to other pages by name]].
-                                """.renderingWikilinks(url: { text in text }),
-                            width: geometry.size.width
-                        )
-                        .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-        }
-    }
-}
+//struct LabelRepresentablePreview: PreviewProvider {
+//    static var previews: some View {
+//        VStack {
+//            GeometryReader { geometry in
+//                ScrollView {
+//                    ForEach(Range(1...3)) { _ in
+//                        AttributedLabelRepresentable(
+//                            attributedText:
+//                                """
+//                                Life is good when you have [[wikilinks]]. They allow you to [[link to other pages by name]].
+//                                """.renderingWikilinks(url: { text in text }),
+//                            width: geometry.size.width
+//                        )
+//                        .fixedSize(horizontal: false, vertical: true)
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}

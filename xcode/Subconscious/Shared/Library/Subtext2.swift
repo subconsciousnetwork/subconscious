@@ -7,6 +7,15 @@
 
 import Foundation
 extension String {
+    /// Split lines by newline, omitting blank lines
+    func splitlines() -> [String.SubSequence] {
+        self.split(
+            maxSplits: Int.max,
+            whereSeparator: \.isNewline
+        )
+        .filter({ line in line != "" })
+    }
+
     /// Safely get the character at index.
     /// This is the same as string subscribt, but it prevents panicks when the index exceeds the string
     /// boundaries.
@@ -69,6 +78,20 @@ struct Tape<T> where T: Collection {
         return nil
     }
 
+    /// Peek forward n elements, returning an array of elements.
+    func peek(count: Int) -> [T.Element] {
+        let count = max(count, 0)
+        var elements: [T.Element] = []
+        for offset in 0...count {
+            if let element = self.peek(offset) {
+                elements.append(element)
+            } else {
+                return elements
+            }
+        }
+        return elements
+    }
+
     mutating func consume() -> T.Element? {
         let element = self.peek()
         self.advance()
@@ -116,18 +139,14 @@ struct Subtext2 {
         case wikilinkOpen
         case wikilinkClose
     }
+    
+    enum InlineNode: Equatable {
+        case text(String)
+        case wikilink(String)
+    }
 
-    enum InlineNodeType {
-        case wikilink
-        case text
-    }
-    
-    struct InlineNode {
-        var type: InlineNodeType
-        var text: String = ""
-    }
-    
-    struct BlockNode {
+    struct BlockNode: Equatable, Identifiable {
+        var id = UUID()
         var children: [InlineNode] = []
     }
 
@@ -152,7 +171,14 @@ struct Subtext2 {
         return tokens
     }
 
-    static func parse(markup: String) -> BlockNode {
+    static func parse(markup: String) -> [BlockNode] {
+        markup
+            .splitlines()
+            .map({ substring in String(substring) })
+            .map(parseBlock)
+    }
+    
+    static func parseBlock(markup: String) -> BlockNode {
         var stream = Tape(markup)
         var tokens = Tape(tokenize(&stream))
         var root = BlockNode()
@@ -178,10 +204,7 @@ struct Subtext2 {
                     }
                 })
                 root.children.append(
-                    InlineNode(
-                        type: .wikilink,
-                        text: String(characters)
-                    )
+                    .wikilink(String(characters))
                 )
             case .wikilinkClose:
                 break
@@ -203,30 +226,45 @@ struct Subtext2 {
                 })
                 characters.insert(firstCharacter, at: 0)
                 root.children.append(
-                    InlineNode(
-                        type: .text,
-                        text: String(characters)
-                    )
+                    .text(String(characters))
                 )
             }
         }
     }
 }
 
+extension Subtext2 {
+    static func wikilinks(markup: String) -> [String] {
+        Self.parse(markup: markup).flatMap({ block in
+            block.wikilinks()
+        })
+    }
+}
+
 extension Subtext2.BlockNode {
+    func wikilinks() -> [String] {
+        children.compactMap({ token in
+            switch token {
+            case .wikilink(let text):
+                return text
+            default:
+                return nil
+            }
+        })
+    }
+
     func render(url readURL: (String) -> URL?) -> AttributedString {
         var attributedString = AttributedString()
         for child in self.children {
-            switch child.type {
-            case .wikilink:
-                var wikilink = AttributedString(child.text)
-                if let url = readURL(child.text) {
+            switch child {
+            case .wikilink(let text):
+                var wikilink = AttributedString(text)
+                if let url = readURL(text) {
                     wikilink.link = url
                 }
                 attributedString.append(wikilink)
-            case .text:
-                let text = AttributedString(child.text)
-                attributedString.append(text)
+            case .text(let text):
+                attributedString.append(AttributedString(text))
             }
         }
         return attributedString

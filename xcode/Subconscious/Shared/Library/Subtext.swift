@@ -9,6 +9,7 @@ import Foundation
 
 public struct Subtext:
     CustomStringConvertible, Identifiable, Equatable, Hashable {
+
     public struct BlankBlock:
         CustomStringConvertible, Identifiable, Equatable, Hashable {
         public var description: String { "" }

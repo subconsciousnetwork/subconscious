@@ -77,8 +77,8 @@ extension FileEntry {
     var title: String {
         Subtext.excerpt(markup: content).derivingTitle()
     }
-    var dom: Subtext {
-        Subtext(markup: content)
+    var dom: [Subtext2.BlockNode] {
+        Subtext2.parse(markup: content)
     }
 }
 

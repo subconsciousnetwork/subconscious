@@ -12,7 +12,6 @@
 		B811E60F261D0FBF00484E45 /* EntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B811E60E261D0FBF00484E45 /* EntryView.swift */; };
 		B811E610261D0FBF00484E45 /* EntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B811E60E261D0FBF00484E45 /* EntryView.swift */; };
 		B81268F42696259C007AC708 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81268F32696259C007AC708 /* Slug.swift */; };
-		B81268F626962DD5007AC708 /* Tests_Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81268F526962DD5007AC708 /* Tests_Slug.swift */; };
 		B8158D1E269796BB00F927EF /* Truncate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8158D1D269796BB00F927EF /* Truncate.swift */; };
 		B81BD104269E604C00E2E991 /* ResultSuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81BD103269E604C00E2E991 /* ResultSuggestionView.swift */; };
 		B81BD764263885DE00BAEC67 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81BD763263885DE00BAEC67 /* EditorView.swift */; };
@@ -45,6 +44,7 @@
 		B87DA91F26250CF900BA5232 /* SearchBarRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */; };
 		B880975A26B1DE2D000430F7 /* FullButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B880975926B1DE2D000430F7 /* FullButtonStyle.swift */; };
 		B88715132642F2D0009BEE1E /* QuerySuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88715122642F2D0009BEE1E /* QuerySuggestionView.swift */; };
+		B890CD5326C2FC7A00F0DDEE /* Subtext2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B890CD5226C2FC7A00F0DDEE /* Subtext2.swift */; };
 		B8929E262695101B00131928 /* TextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8929E252695101B00131928 /* TextViewRepresentable.swift */; };
 		B8A3E58726A8DC04007A9F8F /* Wikilinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A3E58626A8DC04007A9F8F /* Wikilinks.swift */; };
 		B8A3E58926A8E5C0007A9F8F /* RegularExpressionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A3E58826A8E5C0007A9F8F /* RegularExpressionUtilities.swift */; };
@@ -96,7 +96,6 @@
 		B805AAF926447F4E0051F205 /* TextTokenBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextTokenBarView.swift; sourceTree = "<group>"; };
 		B811E60E261D0FBF00484E45 /* EntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryView.swift; sourceTree = "<group>"; };
 		B81268F32696259C007AC708 /* Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
-		B81268F526962DD5007AC708 /* Tests_Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Slug.swift; sourceTree = "<group>"; };
 		B8158D1D269796BB00F927EF /* Truncate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Truncate.swift; sourceTree = "<group>"; };
 		B81BD103269E604C00E2E991 /* ResultSuggestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultSuggestionView.swift; sourceTree = "<group>"; };
 		B81BD763263885DE00BAEC67 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
@@ -136,6 +135,7 @@
 		B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarRepresentable.swift; sourceTree = "<group>"; };
 		B880975926B1DE2D000430F7 /* FullButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullButtonStyle.swift; sourceTree = "<group>"; };
 		B88715122642F2D0009BEE1E /* QuerySuggestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuerySuggestionView.swift; sourceTree = "<group>"; };
+		B890CD5226C2FC7A00F0DDEE /* Subtext2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext2.swift; sourceTree = "<group>"; };
 		B8929E252695101B00131928 /* TextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8A3E58626A8DC04007A9F8F /* Wikilinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wikilinks.swift; sourceTree = "<group>"; };
 		B8A3E58826A8E5C0007A9F8F /* RegularExpressionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegularExpressionUtilities.swift; sourceTree = "<group>"; };
@@ -244,6 +244,7 @@
 				B853EB402633959E001BB584 /* StringUtilities.swift */,
 				B8E84271269CAE3200B74172 /* SubMigrations.swift */,
 				B853EB36263274DD001BB584 /* Subtext.swift */,
+				B890CD5226C2FC7A00F0DDEE /* Subtext2.swift */,
 				B8C951B226AF867B00EEC3AB /* Suggestions.swift */,
 				B8158D1D269796BB00F927EF /* Truncate.swift */,
 				B82211F426375A9C005CFBBE /* URLUtilities.swift */,
@@ -320,7 +321,6 @@
 				B86F33B6261AB2C7009D3D48 /* Tests_iOS.swift */,
 				B8EB2ACB265EBE52008F4D91 /* Tests_SQLiteConnection.swift */,
 				B86F33B8261AB2C7009D3D48 /* Info.plist */,
-				B81268F526962DD5007AC708 /* Tests_Slug.swift */,
 			);
 			path = "Tests iOS";
 			sourceTree = "<group>";
@@ -535,6 +535,7 @@
 				B8158D1E269796BB00F927EF /* Truncate.swift in Sources */,
 				B862343C2677FF960099CD87 /* CombineUtilities.swift in Sources */,
 				B85CABF8265C68AF00BE1BE6 /* SQLite3Connection.swift in Sources */,
+				B890CD5326C2FC7A00F0DDEE /* Subtext2.swift in Sources */,
 				B8B2C18926471E6B008AA3EC /* FakeTextFieldView.swift in Sources */,
 				B805AAFA26447F4E0051F205 /* TextTokenBarView.swift in Sources */,
 				B86F33C4261AB2C7009D3D48 /* SubconsciousApp.swift in Sources */,
@@ -582,7 +583,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B86F33B7261AB2C7009D3D48 /* Tests_iOS.swift in Sources */,
-				B81268F626962DD5007AC708 /* Tests_Slug.swift in Sources */,
 				B8EB2ACC265EBE52008F4D91 /* Tests_SQLiteConnection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -731,7 +731,7 @@
 				DEVELOPMENT_TEAM = LA8RNJ2LQP;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = iOS/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -753,7 +753,7 @@
 				DEVELOPMENT_TEAM = LA8RNJ2LQP;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = iOS/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

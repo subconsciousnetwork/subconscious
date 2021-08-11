@@ -31,16 +31,4 @@ extension String {
             return nil
         })
     }
-
-    func renderingWikilinks(url: (String) -> String) -> NSAttributedString {
-        let string = NSMutableAttributedString(string: self)
-        for result in self.matchWikilinks() {
-            let nsrange = result.range(at: 1)
-            if let range = Range(nsrange, in: self) {
-                let text = String(self[range])
-                string.addAttribute(.link, value: url(text), range: nsrange)
-            }
-        }
-        return string
-    }
 }
