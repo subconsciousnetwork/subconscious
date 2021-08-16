@@ -23,8 +23,14 @@ struct EntryView: View, Equatable {
             fileEntry.url
         }
         var blocks: [Subtext2.BlockNode] {
-            let blocks = Subtext2.parse(markup: fileEntry.content)
-            return isFolded ? Array(blocks.prefix(3)) : blocks
+            return (
+                isFolded
+                ? Array(fileEntry.dom.children.prefix(3))
+                : fileEntry.dom.children
+            )
+        }
+        var isTruncated: Bool {
+            isFolded && fileEntry.dom.children.count > 3
         }
         var fileEntry: FileEntry
         var transcludes = SlugIndex<FileEntry>()
@@ -73,13 +79,13 @@ struct EntryView: View, Equatable {
                         label: {
                             TranscludeView(
                                 dom: fileEntry.dom
-                            )
+                            ).equatable()
                         }
                     )
                 }
             }
 
-            if store.state.isFolded {
+            if store.state.isTruncated {
                 HStack {
                     Button(action: {
                         store.send(.setFolded(false))
