@@ -16,7 +16,7 @@ struct BlockView: View, Equatable {
             Text(
                 block.renderAttributedString(
                     url: { wikitext in
-                        URL(string: "https://example.com")
+                        SubURL.wikilinkToURL(wikitext)
                     }
                 )
             ).multilineTextAlignment(.leading)

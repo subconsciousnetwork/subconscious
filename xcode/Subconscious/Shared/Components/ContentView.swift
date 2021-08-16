@@ -369,6 +369,13 @@ struct ContentView: View {
         .onAppear {
             store.send(.appear)
         }
+        .environment(\.openURL, OpenURLAction { url in
+            if let query = SubURL.urlToWikilink(url) {
+                store.send(.commitQuery(query))
+                return .handled
+            }
+            return .systemAction
+        })
         .sheet(
             isPresented: Binding(
                 get: { store.state.isEditorPresented },

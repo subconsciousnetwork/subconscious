@@ -44,6 +44,7 @@
 		B87DA91F26250CF900BA5232 /* SearchBarRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */; };
 		B880975A26B1DE2D000430F7 /* FullButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B880975926B1DE2D000430F7 /* FullButtonStyle.swift */; };
 		B88715132642F2D0009BEE1E /* QuerySuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88715122642F2D0009BEE1E /* QuerySuggestionView.swift */; };
+		B88CAEB826CACC7300C90EDB /* SubURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88CAEB726CACC7300C90EDB /* SubURL.swift */; };
 		B890CD5326C2FC7A00F0DDEE /* Subtext2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B890CD5226C2FC7A00F0DDEE /* Subtext2.swift */; };
 		B8929E262695101B00131928 /* TextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8929E252695101B00131928 /* TextViewRepresentable.swift */; };
 		B8A3E58726A8DC04007A9F8F /* Wikilinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A3E58626A8DC04007A9F8F /* Wikilinks.swift */; };
@@ -135,6 +136,7 @@
 		B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarRepresentable.swift; sourceTree = "<group>"; };
 		B880975926B1DE2D000430F7 /* FullButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullButtonStyle.swift; sourceTree = "<group>"; };
 		B88715122642F2D0009BEE1E /* QuerySuggestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuerySuggestionView.swift; sourceTree = "<group>"; };
+		B88CAEB726CACC7300C90EDB /* SubURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubURL.swift; sourceTree = "<group>"; };
 		B890CD5226C2FC7A00F0DDEE /* Subtext2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext2.swift; sourceTree = "<group>"; };
 		B8929E252695101B00131928 /* TextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8A3E58626A8DC04007A9F8F /* Wikilinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wikilinks.swift; sourceTree = "<group>"; };
@@ -245,6 +247,7 @@
 				B8E84271269CAE3200B74172 /* SubMigrations.swift */,
 				B853EB36263274DD001BB584 /* Subtext.swift */,
 				B890CD5226C2FC7A00F0DDEE /* Subtext2.swift */,
+				B88CAEB726CACC7300C90EDB /* SubURL.swift */,
 				B8C951B226AF867B00EEC3AB /* Suggestions.swift */,
 				B8158D1D269796BB00F927EF /* Truncate.swift */,
 				B82211F426375A9C005CFBBE /* URLUtilities.swift */,
@@ -537,6 +540,7 @@
 				B85CABF8265C68AF00BE1BE6 /* SQLite3Connection.swift in Sources */,
 				B890CD5326C2FC7A00F0DDEE /* Subtext2.swift in Sources */,
 				B8B2C18926471E6B008AA3EC /* FakeTextFieldView.swift in Sources */,
+				B88CAEB826CACC7300C90EDB /* SubURL.swift in Sources */,
 				B805AAFA26447F4E0051F205 /* TextTokenBarView.swift in Sources */,
 				B86F33C4261AB2C7009D3D48 /* SubconsciousApp.swift in Sources */,
 				B838FF36261FB7B40055C5CF /* SuggestionsView.swift in Sources */,
