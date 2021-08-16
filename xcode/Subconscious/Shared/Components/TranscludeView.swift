@@ -7,17 +7,13 @@
 
 import SwiftUI
 
-struct TranscludeView: View {
-    var dom: [Subtext2.BlockNode]
+struct TranscludeView: View, Equatable {
+    var dom: Subtext2
 
-    init(dom: [Subtext2.BlockNode]) {
-        self.dom = Array(dom.prefix(2))
-    }
-    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(dom) { block in
-                BlockView(block: block)
+            ForEach(dom.children.prefix(2)) { block in
+                BlockView(block: block).equatable()
             }
         }
         .foregroundColor(Constants.Color.text)
@@ -33,7 +29,7 @@ struct TranscludeView: View {
 struct TranscludeView_Previews: PreviewProvider {
     static var previews: some View {
         TranscludeView(
-            dom: Subtext2.parse(
+            dom: Subtext2(
                 markup: """
                 # Namespaced wikilinks
 

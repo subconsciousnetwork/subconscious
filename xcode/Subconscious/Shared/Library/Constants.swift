@@ -32,6 +32,14 @@ struct Constants {
         static let quotedText = accent
     }
 
+    struct Text {
+        static var secondary: AttributeContainer {
+            var secondary = AttributeContainer()
+            secondary.foregroundColor = Constants.Color.secondaryText
+            return secondary
+        }
+    }
+
     struct Theme {
         static let cornerRadius: Double = 12
         static let buttonHeight: CGFloat = 40
