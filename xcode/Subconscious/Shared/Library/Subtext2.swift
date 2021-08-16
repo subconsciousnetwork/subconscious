@@ -133,24 +133,135 @@ struct Tape<T> where T: Collection {
     }
 }
 
-struct Subtext2 {
-    enum Token {
+struct Subtext2: Hashable, Equatable {
+    enum Token: Hashable, Equatable {
         case character(Character)
         case wikilinkOpen
         case wikilinkClose
     }
-    
-    enum InlineNode: Equatable {
+
+    enum InlineNode: Hashable, Equatable {
         case text(String)
         case wikilink(String)
+        
+        /// Return a plain text version (lossy)
+        func renderPlain() -> String {
+            switch self {
+            case .wikilink(let text):
+                return text
+            case .text(let text):
+                return text
+            }
+        }
+
+        /// Return a markup string
+        func renderMarkup() -> String {
+            switch self {
+            case .wikilink(let text):
+                return "[[\(text)]]"
+            case .text(let text):
+                return text
+            }
+        }
+
+        /// Render as attributed string.
+        func renderAttributedString(
+            url: (String) -> URL?
+        ) -> AttributedString {
+            switch self {
+            case .wikilink(let text):
+                var link = AttributedString(text)
+                if let url = url(text) {
+                    link.link = url
+                }
+                return link
+            case .text(let text):
+                return AttributedString(text)
+            }
+        }
+
+        /// Return a markup string, attributed to highlight syntax
+        func renderMarkupAttributedString(
+            url: (String) -> URL?
+        ) -> AttributedString {
+            switch self {
+            case .wikilink(let text):
+                let secondary = Constants.Text.secondary
+                var attributedString = AttributedString()
+                let open = AttributedString(
+                    "[[",
+                    attributes: secondary
+                )
+                let close = AttributedString(
+                    "]]",
+                    attributes: secondary
+                )
+                var link = AttributedString(text)
+                if let url = url(text) {
+                    link.link = url
+                }
+                attributedString.append(open)
+                attributedString.append(link)
+                attributedString.append(close)
+                return attributedString
+            case .text(let text):
+                return AttributedString(text)
+            }
+        }
     }
 
-    struct BlockNode: Equatable, Identifiable {
+    struct BlockNode: Hashable, Equatable, Identifiable {
         var id = UUID()
         var children: [InlineNode] = []
+
+        /// Pluck text of wikilinks out of block, returning a list of strings
+        func wikilinks() -> [String] {
+            children.compactMap({ token in
+                switch token {
+                case .wikilink(let text):
+                    return text
+                default:
+                    return nil
+                }
+            })
+        }
+
+        func renderPlain() -> String {
+            children.map({ inline in
+                inline.renderPlain()
+            }).joined()
+        }
+
+        func renderMarkup() -> String {
+            children.map({ inline in
+                inline.renderMarkup()
+            }).joined()
+        }
+        
+        func renderAttributedString(
+            url: (String) -> URL?
+        ) -> AttributedString {
+            var attributedString = AttributedString()
+            for child in children {
+                attributedString.append(child.renderAttributedString(url: url))
+            }
+            return attributedString
+        }
+
+        func renderMarkupAttributedString(
+            url: (String) -> URL?
+        ) -> AttributedString {
+            var attributedString = AttributedString()
+            for child in children {
+                attributedString.append(
+                    child.renderMarkupAttributedString(url: url)
+                )
+            }
+            return attributedString
+        }
     }
 
-    static func tokenize(_ stream: inout Tape<String>) -> [Token] {
+    private static func tokenize(_ stream: inout Tape<String>) -> [Token] {
         var tokens: [Token] = []
         while true {
             let curr = stream.peek(0)
@@ -177,8 +288,8 @@ struct Subtext2 {
             .map({ substring in String(substring) })
             .map(parseBlock)
     }
-    
-    static func parseBlock(markup: String) -> BlockNode {
+
+    private static func parseBlock(markup: String) -> BlockNode {
         var stream = Tape(markup)
         var tokens = Tape(tokenize(&stream))
         var root = BlockNode()
@@ -231,41 +342,57 @@ struct Subtext2 {
             }
         }
     }
-}
 
-extension Subtext2 {
-    static func wikilinks(markup: String) -> [String] {
-        Self.parse(markup: markup).flatMap({ block in
+    var children: [BlockNode]
+
+    init(markup: String) {
+        self.children = Self.parse(markup: markup)
+    }
+
+    /// Get a short plain text string version of this Subtext.
+    func excerpt() -> String {
+        children.first?.renderPlain() ?? ""
+    }
+
+    /// Get all wikilinks that appear in this Subtext.
+    func wikilinks(markup: String) -> [String] {
+        children.flatMap({ block in
             block.wikilinks()
         })
     }
-}
 
-extension Subtext2.BlockNode {
-    func wikilinks() -> [String] {
-        children.compactMap({ token in
-            switch token {
-            case .wikilink(let text):
-                return text
-            default:
-                return nil
-            }
-        })
+    func renderPlain() -> String {
+        children
+            .map({ block in block.renderPlain() })
+            .joined(separator: "\n\n")
     }
 
-    func render(url readURL: (String) -> URL?) -> AttributedString {
+    func renderMarkup() -> String {
+        children
+            .map({ block in block.renderMarkup() })
+            .joined(separator: "\n\n")
+    }
+
+    func renderAttributedString(url: (String) -> URL?) -> AttributedString {
         var attributedString = AttributedString()
-        for child in self.children {
-            switch child {
-            case .wikilink(let text):
-                var wikilink = AttributedString(text)
-                if let url = readURL(text) {
-                    wikilink.link = url
-                }
-                attributedString.append(wikilink)
-            case .text(let text):
-                attributedString.append(AttributedString(text))
-            }
+        let br = AttributedString("\n\n")
+        for child in children {
+            attributedString.append(child.renderAttributedString(url: url))
+            attributedString.append(br)
+        }
+        return attributedString
+    }
+
+    func renderMarkupAttributedString(
+        url: (String) -> URL?
+    ) -> AttributedString {
+        var attributedString = AttributedString()
+        let br = AttributedString("\n\n")
+        for child in children {
+            attributedString.append(
+                child.renderMarkupAttributedString(url: url)
+            )
+            attributedString.append(br)
         }
         return attributedString
     }
