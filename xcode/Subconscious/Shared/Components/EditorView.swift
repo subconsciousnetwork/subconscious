@@ -32,6 +32,12 @@ enum EditorAction {
 
 //  MARK: State
 struct EditorModel: Equatable {
+    var attributedBody: NSAttributedString {
+        let attributedString = Subtext2(markup: body).renderMarkupAttributedString(url: {
+            url in URL(string: "http://example.com")
+        })
+        return NSAttributedString(attributedString)
+    }
     var url: URL?
     var body = ""
 }
@@ -149,10 +155,12 @@ struct EditorView: View, Equatable {
             }
             .padding(16)
             Divider()
-            TextViewRepresentable(
-                text: Binding(
-                    get: { store.state.body },
-                    set: { text in store.send(.setBody(text)) }
+            AttributedTextViewRepresentable(
+                attributedText: Binding(
+                    get: { store.state.attributedBody },
+                    set: { attributedText in
+                        store.send(.setBody(attributedText.string))
+                    }
                 )
             )
             .insets(

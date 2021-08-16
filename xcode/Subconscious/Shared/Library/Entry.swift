@@ -8,11 +8,22 @@
 import Foundation
 
 struct DraftEntry: Identifiable, Hashable, Equatable {
-    var id = UUID()
     var title: String {
-        Subtext2(markup: content).excerpt().derivingTitle()
+        dom.excerpt().derivingTitle()
     }
-    var content: String
+    var content: String {
+        dom.renderMarkup()
+    }
+    var id = UUID()
+    var dom: Subtext2
+
+    init(content: String) {
+        self.dom = Subtext2(markup: content)
+    }
+
+    init(dom: Subtext2) {
+        self.dom = dom
+    }
 }
 
 /// Represents an entry on the file system.
@@ -58,7 +69,7 @@ struct FileEntry: Identifiable, Hashable, Equatable {
             )
         {
             self.url = url
-            self.dom = Subtext2(markup: entry.content)
+            self.dom = entry.dom
         } else {
             return nil
         }

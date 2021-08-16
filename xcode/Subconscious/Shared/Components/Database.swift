@@ -291,35 +291,35 @@ struct DatabaseService {
     /// Create a new entry on the file system, and write to the database
     func createEntry(_ entry: DraftEntry) -> AnyPublisher<FileEntry, Error> {
         CombineUtilities.async {
-            let fileWrapper = try FileEntry(entry: entry).unwrap()
-            return try writeEntry(fileWrapper)
+            let fileEntry = try FileEntry(entry: entry).unwrap()
+            return try writeEntry(fileEntry)
         }
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
     }
 
     func writeEntry(
-        _ fileWrapper: FileEntry
+        _ fileEntry: FileEntry
     ) throws -> FileEntry {
-        try fileWrapper.write()
+        try fileEntry.write()
         // Re-read size and file modified from file system to make sure
         // what we store is exactly equal to file system.
         let attributes = try FileFingerprint.Attributes(
-            url: fileWrapper.url
+            url: fileEntry.url
         ).unwrap()
         try writeEntryToDatabase(
-            fileEntry: fileWrapper,
+            fileEntry: fileEntry,
             attributes: attributes
         )
-        return fileWrapper
+        return fileEntry
     }
     
     /// Write an entry to the file system, and to the database
     func writeEntry(
-        _ fileWrapper: FileEntry
+        _ fileEntry: FileEntry
     ) -> AnyPublisher<FileEntry, Error> {
         CombineUtilities.async {
-            try writeEntry(fileWrapper)
+            try writeEntry(fileEntry)
         }
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
