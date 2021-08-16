@@ -10,16 +10,16 @@ import SwiftUI
 /// Provides a single concrete view for all kinds of block
 struct BlockView: View, Equatable {
     var block: Subtext2.BlockNode
-    
+
     var body: some View {
-        Group {
+        VStack(alignment: .leading) {
             Text(
-                block.render(
-                    url: {
-                        wikitext in URL(string: "https://example.com")
+                block.renderAttributedString(
+                    url: { wikitext in
+                        URL(string: "https://example.com")
                     }
                 )
-            )
+            ).multilineTextAlignment(.leading)
         }
     }
 }
