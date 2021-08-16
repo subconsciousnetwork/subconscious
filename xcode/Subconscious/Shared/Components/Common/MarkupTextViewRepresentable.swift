@@ -1,5 +1,5 @@
 //
-//  AttributedTextViewRepresentable.swift
+//  MarkupTextViewRepresentable.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 7/6/21.
@@ -7,23 +7,29 @@
 
 import SwiftUI
 
-struct AttributedTextViewRepresentable: UIViewRepresentable {
+struct MarkupTextViewRepresentable: UIViewRepresentable {
     class Coordinator: NSObject, UITextViewDelegate {
-        var representable: AttributedTextViewRepresentable
+        var representable: MarkupTextViewRepresentable
 
-        init(_ representable: AttributedTextViewRepresentable) {
+        init(_ representable: MarkupTextViewRepresentable) {
             self.representable = representable
         }
         
         func textViewDidChange(_ view: UITextView) {
-            if representable.attributedText != view.attributedText {
-                representable.attributedText = view.attributedText
+            if representable.markup != view.attributedText.string {
+                representable.markup = view.attributedText.string
                 view.invalidateIntrinsicContentSize()
             }
         }
     }
 
-    @Binding var attributedText: NSAttributedString
+    /// The default render function coerces the string to a plain NSAttributedString
+    private static func render(_ string: String) -> NSAttributedString {
+        return NSAttributedString(string: string)
+    }
+
+    @Binding var markup: String
+    var render: (String) -> NSAttributedString = render
     var isFocused = false
     var font: UIFont = UIFont.preferredFont(forTextStyle: .body)
     var textColor: UIColor = UIColor(.primary)
@@ -43,6 +49,7 @@ struct AttributedTextViewRepresentable: UIViewRepresentable {
     }
 
     func updateUIView(_ view: UITextView, context: Context) {
+        let attributedText = render(markup)
         if view.attributedText != attributedText {
             // Save selected range (cursor position).
             let selectedRange = view.selectedRange
@@ -61,7 +68,7 @@ struct AttributedTextViewRepresentable: UIViewRepresentable {
         }
     }
 
-    func makeCoordinator() -> AttributedTextViewRepresentable.Coordinator {
+    func makeCoordinator() -> MarkupTextViewRepresentable.Coordinator {
         Coordinator(self)
     }
 
@@ -86,13 +93,13 @@ struct AttributedTextViewRepresentable: UIViewRepresentable {
 struct AttributedTextViewRepresentablePreview: PreviewProvider {
     static var previews: some View {
         VStack {
-            AttributedTextViewRepresentable(
-                attributedText: .constant(NSAttributedString(string: "Text"))
+            MarkupTextViewRepresentable(
+                markup: .constant("Text")
             )
             .background(Constants.Color.secondaryBackground)
 
-            AttributedTextViewRepresentable(
-                attributedText: .constant(NSAttributedString(string: "Text"))
+            MarkupTextViewRepresentable(
+                markup: .constant("Text")
             )
             .background(Constants.Color.secondaryBackground)
         }

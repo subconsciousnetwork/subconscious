@@ -32,12 +32,6 @@ enum EditorAction {
 
 //  MARK: State
 struct EditorModel: Equatable {
-    var attributedBody: NSAttributedString {
-        let attributedString = Subtext2(markup: body).renderMarkupAttributedString(url: {
-            url in URL(string: "http://example.com")
-        })
-        return NSAttributedString(attributedString)
-    }
     var url: URL?
     var body = ""
 }
@@ -155,13 +149,20 @@ struct EditorView: View, Equatable {
             }
             .padding(16)
             Divider()
-            AttributedTextViewRepresentable(
-                attributedText: Binding(
-                    get: { store.state.attributedBody },
-                    set: { attributedText in
-                        store.send(.setBody(attributedText.string))
+            MarkupTextViewRepresentable(
+                markup: Binding(
+                    get: { store.state.body },
+                    set: { text in
+                        store.send(.setBody(text))
                     }
-                )
+                ),
+                render: { text in
+                    let attributedString = Subtext2(markup: text)
+                        .renderMarkupAttributedString(url: { text in
+                            SubURL.wikilinkToURL(text)
+                        })
+                    return NSAttributedString(attributedString)
+                }
             )
             .insets(
                 EdgeInsets(
