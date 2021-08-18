@@ -80,23 +80,6 @@ where T: Collection,
         return false
     }
 
-    /// Consume elements, advancing until tape is exausted, or filtermap returns nil.
-    mutating func consumeWhile<U>(
-        _ map: (T.Element) -> U?
-    ) -> [U] {
-        // Capture starting position
-        var elements: [U] = []
-        while !self.isExhausted() {
-            let element = map(self.peek()!)
-            guard element != nil else {
-                break
-            }
-            elements.append(element!)
-            self.advance()
-        }
-        return elements
-    }
-
     @discardableResult mutating func advance(
         _ offset: Int = 1
     ) -> Bool {
@@ -351,28 +334,34 @@ struct Subtext2: Hashable, Equatable {
     private static func parseText(
         _ tokens: inout Tape<[Token]>
     ) -> String {
-        let sub: [Character] = tokens.consumeWhile({ token in
-            switch token {
+        var characters: [Character] = []
+        loop: while !tokens.isExhausted() {
+            let char = tokens.peek()!
+            switch char {
             case .character(let char):
-                return char
+                characters.append(char)
             default:
-                return nil
+                break loop
             }
-        })
-        return String(sub)
+            tokens.advance()
+        }
+        return String(characters)
     }
 
     private static func parseNonWhitespace(
         _ tokens: inout Tape<String>
     ) -> String {
-        let sub: [Character] = tokens.consumeWhile({ char in
+        var characters: [Character] = []
+        loop: while !tokens.isExhausted() {
+            let char = tokens.peek()!
             if !char.isWhitespace {
-                return char
+                characters.append(char)
             } else {
-                return nil
+                break loop
             }
-        })
-        return String(sub)
+            tokens.advance()
+        }
+        return String(characters)
     }
     
     var children: [BlockNode]
