@@ -55,16 +55,24 @@ extension Array {
     }
 }
 
-struct Tape<T> where T: Collection {
+struct Tape<T>
+where T: Collection,
+      T.Element: Equatable,
+      T.SubSequence: Equatable
+{
     private(set) var position: T.Index
-    var collection: T
+    let collection: T
 
     init(_ collection: T) {
         self.collection = collection
         self.position = collection.startIndex
     }
 
-    /// Advance to next char and return it
+    func isExhausted() -> Bool {
+        self.position >= self.collection.endIndex
+    }
+
+    /// Peek forward one element
     func peek(_ offset: Int = 0) -> T.Element? {
         if let i = collection.index(
             position,
@@ -78,79 +86,110 @@ struct Tape<T> where T: Collection {
         return nil
     }
 
-    /// Peek forward n elements, returning an array of elements.
-    func peek(count: Int) -> [T.Element] {
-        let count = max(count, 0)
-        var elements: [T.Element] = []
-        for offset in 0...count {
-            if let element = self.peek(offset) {
-                elements.append(element)
-            } else {
-                return elements
-            }
-        }
-        return elements
-    }
-
-    mutating func consume() -> T.Element? {
-        let element = self.peek()
-        self.advance()
-        return element
-    }
-    
-    mutating func consumeUntil(
-        _ predicate: (T.Element) -> Bool
-    ) -> [T.Element] {
-        var elements: [T.Element] = []
-        while true {
-            let element = self.peek()
-            guard element != nil else {
-                break
-            }
-            guard predicate(element!) else {
-                break
-            }
-            elements.append(element!)
-            self.advance()
-        }
-        return elements
-    }
-    
-    mutating func advance(_ offset: Int = 1) {
+    /// Peek forward by `offset`, returning a subsequence from `position` through `offset`,
+    /// or from `position` through `endIndex`, whichever is smaller..
+    func peek(count: Int) -> T.SubSequence {
         if let i = collection.index(
             position,
-            offsetBy: offset,
+            offsetBy: count,
             limitedBy: collection.endIndex
         ) {
-            self.position = i
-        } else {
-            self.position = collection.endIndex
+            if position < collection.endIndex && i <= collection.endIndex {
+                return collection[position..<i]
+            }
         }
+        return collection[position..<collection.endIndex]
     }
 
-    mutating func rewind() {
-        self.position = self.collection.startIndex
+    /// Consume one element, returning it, and advancing tape by 1
+    @discardableResult mutating func consume() -> T.Element? {
+        if position < collection.endIndex {
+            let element = collection[position]
+            self.advance()
+            return element
+        }
+        return nil
+    }
+
+    @discardableResult mutating func consume(count: Int) -> T.SubSequence {
+        let sub = self.peek(count: count)
+        self.advance(count)
+        return sub
+    }
+
+    mutating func consumeMatch(element: T.Element) -> Bool {
+        let next = self.peek()
+        if next == element {
+            self.advance()
+            return true
+        }
+        return false
+    }
+
+    mutating func consumeMatch(_ subsequence: T.SubSequence) -> Bool {
+        let next = self.peek(count: subsequence.count)
+        if next == subsequence {
+            self.advance(subsequence.count)
+            return true
+        }
+        return false
+    }
+
+    /// Consume elements, advancing until tape is exausted, or predicate returns false.
+    mutating func consumeWhile(
+        _ predicate: (T.Element) -> Bool
+    ) -> T.SubSequence {
+        // Capture starting position
+        let startIndex = position
+        while !self.isExhausted() {
+            if predicate(collection[position]) {
+                self.advance()
+            } else {
+                // Return everything up to, but not including this element
+                return collection[startIndex..<position]
+            }
+        }
+        return collection[startIndex..<collection.endIndex]
+    }
+
+    @discardableResult mutating func advance(
+        _ offset: Int = 1
+    ) -> Bool {
+        self.collection.formIndex(
+            &self.position,
+            offsetBy: offset,
+            limitedBy: collection.endIndex
+        )
     }
 }
 
 struct Subtext2: Hashable, Equatable {
     enum Token: Hashable, Equatable {
         case character(Character)
+        case blockbreak
+        case linebreak
         case wikilinkOpen
         case wikilinkClose
+        case url(String)
     }
 
     enum InlineNode: Hashable, Equatable {
         case text(String)
         case wikilink(String)
+        case url(String)
+        case linebreak
         
         /// Return a plain text version (lossy)
         func renderPlain() -> String {
             switch self {
             case .wikilink(let text):
                 return text
+            case .url(let href):
+                return href
             case .text(let text):
                 return text
+            case .linebreak:
+                return "\n"
             }
         }
 
@@ -159,8 +198,12 @@ struct Subtext2: Hashable, Equatable {
             switch self {
             case .wikilink(let text):
                 return "[[\(text)]]"
+            case .url(let href):
+                return href
             case .text(let text):
                 return text
+            case .linebreak:
+                return "\n"
             }
         }
 
@@ -175,8 +218,14 @@ struct Subtext2: Hashable, Equatable {
                     link.link = url
                 }
                 return link
+            case .url(let href):
+                var link = AttributedString(href)
+                link.link = URL(string: href)
+                return link
             case .text(let text):
                 return AttributedString(text)
+            case .linebreak:
+                return AttributedString("\n")
             }
         }
 
@@ -204,8 +253,14 @@ struct Subtext2: Hashable, Equatable {
                 attributedString.append(link)
                 attributedString.append(close)
                 return attributedString
+            case .url(let href):
+                var link = AttributedString(href)
+                link.link = URL(string: href)
+                return link
             case .text(let text):
                 return AttributedString(text)
+            case .linebreak:
+                return AttributedString("\n")
             }
         }
     }
@@ -261,92 +316,129 @@ struct Subtext2: Hashable, Equatable {
         }
     }
 
-    private static func tokenize(_ stream: inout Tape<String>) -> [Token] {
+    private static func tokenize(_ markup: String) -> [Token] {
+        var stream = Tape(markup)
         var tokens: [Token] = []
-        while true {
-            let curr = stream.peek(0)
-            let next = stream.peek(1)
-            if curr == "[" && next == "[" {
+        while !stream.isExhausted() {
+            if stream.consumeMatch("[[") {
                 tokens.append(.wikilinkOpen)
-                stream.advance(2)
-            } else if curr == "]" && next == "]" {
+            } else if stream.consumeMatch("]]") {
                 tokens.append(.wikilinkClose)
-                stream.advance(2)
-            } else if curr != nil {
-                tokens.append(.character(curr!))
-                stream.advance()
+            } else if stream.consumeMatch("\n\n") {
+                tokens.append(.blockbreak)
+            } else if stream.consumeMatch(element: "\n") {
+                tokens.append(.linebreak)
+            } else if
+                stream.peek(count: 8) == "https://" ||
+                stream.peek(count: 7) == "http://"
+            {
+                let url = stream.consumeWhile({ char in
+                    !char.isWhitespace
+                })
+                tokens.append(.url(String(url)))
             } else {
-                break
+                // We can safely unwrap because we know the tape is not exhausted.
+                let curr = stream.consume()!
+                tokens.append(.character(curr))
             }
         }
         return tokens
     }
 
-    static func parse(markup: String) -> [BlockNode] {
-        markup
-            .splitlines()
-            .map({ substring in String(substring) })
-            .map(parseBlock)
+    private static func parseRoot(
+        _ tokens: inout Tape<[Token]>
+    ) -> [BlockNode] {
+        var node: [BlockNode] = []
+        while !tokens.isExhausted() {
+            let block = parseBlock(&tokens)
+            node.append(block)
+        }
+        return node
     }
 
-    private static func parseBlock(markup: String) -> BlockNode {
-        var stream = Tape(markup)
-        var tokens = Tape(tokenize(&stream))
-        var root = BlockNode()
-        while true {
+    private static func parseBlock(
+        _ tokens: inout Tape<[Token]>
+    ) -> BlockNode {
+        var node = BlockNode()
+        while !tokens.isExhausted() {
             let token = tokens.consume()
             switch token {
-            case .none:
-                return root
             case .wikilinkOpen:
-                let characters: [Character] = tokens.consumeUntil({ token in
-                    switch token {
-                    case .wikilinkClose:
-                        return false
-                    default:
-                        return true
-                    }
-                }).compactMap({ token in
-                    switch token {
-                    case .character(let char):
-                        return char
-                    default:
-                        return nil
-                    }
-                })
-                root.children.append(
-                    .wikilink(String(characters))
-                )
-            case .wikilinkClose:
-                break
-            case .character(let firstCharacter):
-                var characters: [Character] = tokens.consumeUntil({ token in
-                    switch token {
-                    case .character:
-                        return true
-                    default:
-                        return false
-                    }
-                }).compactMap({ token in
-                    switch token {
-                    case .character(let char):
-                        return char
-                    default:
-                        return nil
-                    }
-                })
-                characters.insert(firstCharacter, at: 0)
-                root.children.append(
-                    .text(String(characters))
-                )
+                let wikilink = parseWikilink(&tokens)
+                node.children.append(wikilink)
+            case .character(let char):
+                let text = parseText(&tokens, initial: char)
+                node.children.append(text)
+            case .linebreak:
+                node.children.append(.linebreak)
+            case .url(let url):
+                node.children.append(.url(url))
+            case .blockbreak:
+                return node
+            default:
+                return node
             }
         }
+        return node
+    }
+
+    private static func parseWikilink(
+        _ tokens: inout Tape<[Token]>
+    ) -> InlineNode {
+        // Open tag should already have been consumed before
+        // calling this function.
+        let characters: [Character] = tokens.consumeWhile({ token in
+            switch token {
+            case .character:
+                return true
+            default:
+                return false
+            }
+        }).compactMap({ token in
+            switch token {
+            case .character(let char):
+                return char
+            default:
+                return nil
+            }
+        })
+        // Drop close tag, if any
+        if tokens.peek() == .wikilinkClose {
+            tokens.consume()
+        }
+        return .wikilink(String(characters))
+    }
+
+    private static func parseText(
+        _ tokens: inout Tape<[Token]>,
+        initial: Character
+    ) -> InlineNode {
+        // Consume until we reach a non-character token
+        var characters = [initial]
+        let remainingCharacters: [Character] = tokens.consumeWhile({ token in
+            switch token {
+            case .character:
+                return true
+            default:
+                return false
+            }
+        }).compactMap({ token in
+            switch token {
+            case .character(let char):
+                return char
+            default:
+                return nil
+            }
+        })
+        characters.append(contentsOf: remainingCharacters)
+        return InlineNode.text(String(characters))
     }
 
     var children: [BlockNode]
 
     init(markup: String) {
-        self.children = Self.parse(markup: markup)
+        var tokens = Tape(Self.tokenize(markup))
+        self.children = Self.parseRoot(&tokens)
     }
 
     /// Get a short plain text string version of this Subtext.
