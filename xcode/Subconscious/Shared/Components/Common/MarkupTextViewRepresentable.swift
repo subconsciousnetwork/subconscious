@@ -38,7 +38,6 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> UITextView {
         let view = UITextView()
         view.delegate = context.coordinator
-        view.translatesAutoresizingMaskIntoConstraints = false
         // Remove that extra bit of inner padding.
         // Text in view should now be flush with view edge.
         // This puts you in full control of view padding.
