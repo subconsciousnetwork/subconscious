@@ -14,7 +14,7 @@ struct BlockView: View, Equatable {
     var body: some View {
         VStack(alignment: .leading) {
             Text(
-                block.renderMarkupAttributedString(
+                block.renderAttributedString(
                     url: { wikitext in
                         SubURL.wikilinkToURL(wikitext)
                     }
