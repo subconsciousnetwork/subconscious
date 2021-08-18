@@ -4,56 +4,7 @@
 //
 //  Created by Gordon Brander on 8/10/21.
 //
-
 import Foundation
-extension String {
-    /// Split lines by newline, omitting blank lines
-    func splitlines() -> [String.SubSequence] {
-        self.split(
-            maxSplits: Int.max,
-            whereSeparator: \.isNewline
-        )
-        .filter({ line in line != "" })
-    }
-
-    /// Safely get the character at index.
-    /// This is the same as string subscribt, but it prevents panicks when the index exceeds the string
-    /// boundaries.
-    func characterAt(index: String.Index) -> Character? {
-        if (index < self.endIndex) {
-            return self[index]
-        }
-        return nil
-    }
-
-    /// Get character at a specific offset from startIndex
-    func characterAt(offset: String.IndexDistance) -> Character? {
-        let i = self.index(
-            self.startIndex,
-            offsetBy: offset,
-            limitedBy: self.endIndex
-        )
-        if let i = i {
-            if i < self.endIndex {
-                return self[i]
-            }
-        }
-        return nil
-    }
-}
-
-extension Array {
-    mutating func removeWhile(
-        _ predicate: (Array.Element) -> Bool
-    ) -> [Array.Element] {
-        if let until = self.lastIndex(where: predicate) {
-            let elements = Array(self[self.startIndex...until])
-            self.removeSubrange(self.startIndex...until)
-            return elements
-        }
-        return []
-    }
-}
 
 struct Tape<T>
 where T: Collection,
@@ -111,13 +62,7 @@ where T: Collection,
         return nil
     }
 
-    @discardableResult mutating func consume(count: Int) -> T.SubSequence {
-        let sub = self.peek(count: count)
-        self.advance(count)
-        return sub
-    }
-
-    mutating func consumeMatch(element: T.Element) -> Bool {
+    mutating func consumeMatch(_ element: T.Element) -> Bool {
         let next = self.peek()
         if next == element {
             self.advance()
@@ -126,7 +71,7 @@ where T: Collection,
         return false
     }
 
-    mutating func consumeMatch(_ subsequence: T.SubSequence) -> Bool {
+    mutating func consumeMatch(subsequence: T.SubSequence) -> Bool {
         let next = self.peek(count: subsequence.count)
         if next == subsequence {
             self.advance(subsequence.count)
@@ -135,21 +80,21 @@ where T: Collection,
         return false
     }
 
-    /// Consume elements, advancing until tape is exausted, or predicate returns false.
-    mutating func consumeWhile(
-        _ predicate: (T.Element) -> Bool
-    ) -> T.SubSequence {
+    /// Consume elements, advancing until tape is exausted, or filtermap returns nil.
+    mutating func consumeWhile<U>(
+        _ map: (T.Element) -> U?
+    ) -> [U] {
         // Capture starting position
-        let startIndex = position
+        var elements: [U] = []
         while !self.isExhausted() {
-            if predicate(collection[position]) {
-                self.advance()
-            } else {
-                // Return everything up to, but not including this element
-                return collection[startIndex..<position]
+            let element = map(self.peek()!)
+            guard element != nil else {
+                break
             }
+            elements.append(element!)
+            self.advance()
         }
-        return collection[startIndex..<collection.endIndex]
+        return elements
     }
 
     @discardableResult mutating func advance(
@@ -320,30 +265,28 @@ struct Subtext2: Hashable, Equatable {
         var stream = Tape(markup)
         var tokens: [Token] = []
         while !stream.isExhausted() {
-            let head = stream.peek(count: 8)
-            if head.hasPrefix("[[") {
+            let curr = stream.consume()!
+            if curr == "[" && stream.consumeMatch("[") {
                 tokens.append(.wikilinkOpen)
-                stream.advance(2)
-            } else if head.hasPrefix("]]") {
+            } else if curr == "]" && stream.consumeMatch("]") {
                 tokens.append(.wikilinkClose)
-                stream.advance(2)
-            } else if head.hasPrefix("\n\n") {
+            } else if curr == "\n" && stream.consumeMatch("\n") {
                 tokens.append(.blockbreak)
-                stream.advance(2)
-            } else if head.hasPrefix("\n") {
+            } else if curr == "\n" {
                 tokens.append(.linebreak)
-                stream.advance()
             } else if
-                head.hasPrefix("http://") ||
-                head.hasPrefix("https://")
+                curr == "h" &&
+                stream.consumeMatch(subsequence: "ttp://")
             {
-                let url = stream.consumeWhile({ char in
-                    !char.isWhitespace
-                })
-                tokens.append(.url(String(url)))
+                let urlBody = parseNonWhitespace(&stream)
+                tokens.append(.url(String("http://" + urlBody)))
+            } else if
+                curr == "h" &&
+                stream.consumeMatch(subsequence: "ttps://")
+            {
+                let urlBody = parseNonWhitespace(&stream)
+                tokens.append(.url(String("https://" + urlBody)))
             } else {
-                // We can safely unwrap because we know the tape is not exhausted.
-                let curr = stream.consume()!
                 tokens.append(.character(curr))
             }
         }
@@ -366,25 +309,24 @@ struct Subtext2: Hashable, Equatable {
     ) -> BlockNode {
         var node = BlockNode()
         while !tokens.isExhausted() {
-            let token = tokens.peek()
+            let token = tokens.consume()!
             switch token {
             case .wikilinkOpen:
-                tokens.advance()
                 let wikilink = parseWikilink(&tokens)
                 node.children.append(wikilink)
-            case .character:
-                let text = parseText(&tokens)
-                node.children.append(text)
+            case .character(let char):
+                var text = parseText(&tokens)
+                text.insert(char, at: text.startIndex)
+                node.children.append(.text(text))
+            // Catch stray wikilink closes that don't have a corresponding
+            // wikilink open. Treat them as plain text.
+            case .wikilinkClose:
+                node.children.append(.text("]]"))
             case .linebreak:
-                tokens.advance()
                 node.children.append(.linebreak)
             case .url(let url):
-                tokens.advance()
                 node.children.append(.url(url))
             case .blockbreak:
-                tokens.advance()
-                return node
-            default:
                 return node
             }
         }
@@ -394,43 +336,22 @@ struct Subtext2: Hashable, Equatable {
     private static func parseWikilink(
         _ tokens: inout Tape<[Token]>
     ) -> InlineNode {
-        // Wikilink open tag is already dropped by this point
-        let characters: [Character] = tokens.consumeWhile({ token in
-            switch token {
-            case .character:
-                return true
-            default:
-                return false
-            }
-        }).compactMap({ token in
-            switch token {
-            case .character(let char):
-                return char
-            default:
-                return nil
-            }
-        })
-        // Drop close tag, if any
-        if tokens.peek() == .wikilinkClose {
-            tokens.advance()
-            return .wikilink(String(characters))
+        // Wikilink open tag is already consumed by this point.
+        // Consume text portion of wikilink.
+        let text = parseText(&tokens)
+        // If we find a closing tag, create a wikilink
+        if tokens.consumeMatch(.wikilinkClose) {
+            return .wikilink(text)
+        // Otherwise, return plain text
         } else {
-            return .text(String("[[" + characters))
+            return .text("[[" + text)
         }
     }
 
     private static func parseText(
         _ tokens: inout Tape<[Token]>
-    ) -> InlineNode {
-        // Consume until we reach a non-character token
-        let characters: [Character] = tokens.consumeWhile({ token in
-            switch token {
-            case .character:
-                return true
-            default:
-                return false
-            }
-        }).compactMap({ token in
+    ) -> String {
+        let sub: [Character] = tokens.consumeWhile({ token in
             switch token {
             case .character(let char):
                 return char
@@ -438,9 +359,22 @@ struct Subtext2: Hashable, Equatable {
                 return nil
             }
         })
-        return InlineNode.text(String(characters))
+        return String(sub)
     }
 
+    private static func parseNonWhitespace(
+        _ tokens: inout Tape<String>
+    ) -> String {
+        let sub: [Character] = tokens.consumeWhile({ char in
+            if !char.isWhitespace {
+                return char
+            } else {
+                return nil
+            }
+        })
+        return String(sub)
+    }
+    
     var children: [BlockNode]
 
     init(markup: String) {
