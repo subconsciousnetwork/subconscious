@@ -320,17 +320,22 @@ struct Subtext2: Hashable, Equatable {
         var stream = Tape(markup)
         var tokens: [Token] = []
         while !stream.isExhausted() {
-            if stream.consumeMatch("[[") {
+            let head = stream.peek(count: 8)
+            if head.hasPrefix("[[") {
                 tokens.append(.wikilinkOpen)
-            } else if stream.consumeMatch("]]") {
+                stream.advance(2)
+            } else if head.hasPrefix("]]") {
                 tokens.append(.wikilinkClose)
-            } else if stream.consumeMatch("\n\n") {
+                stream.advance(2)
+            } else if head.hasPrefix("\n\n") {
                 tokens.append(.blockbreak)
-            } else if stream.consumeMatch(element: "\n") {
+                stream.advance(2)
+            } else if head.hasPrefix("\n") {
                 tokens.append(.linebreak)
+                stream.advance()
             } else if
-                stream.peek(count: 8) == "https://" ||
-                stream.peek(count: 7) == "http://"
+                head.hasPrefix("http://") ||
+                head.hasPrefix("https://")
             {
                 let url = stream.consumeWhile({ char in
                     !char.isWhitespace
@@ -361,19 +366,23 @@ struct Subtext2: Hashable, Equatable {
     ) -> BlockNode {
         var node = BlockNode()
         while !tokens.isExhausted() {
-            let token = tokens.consume()
+            let token = tokens.peek()
             switch token {
             case .wikilinkOpen:
+                tokens.advance()
                 let wikilink = parseWikilink(&tokens)
                 node.children.append(wikilink)
-            case .character(let char):
-                let text = parseText(&tokens, initial: char)
+            case .character:
+                let text = parseText(&tokens)
                 node.children.append(text)
             case .linebreak:
+                tokens.advance()
                 node.children.append(.linebreak)
             case .url(let url):
+                tokens.advance()
                 node.children.append(.url(url))
             case .blockbreak:
+                tokens.advance()
                 return node
             default:
                 return node
@@ -385,8 +394,7 @@ struct Subtext2: Hashable, Equatable {
     private static func parseWikilink(
         _ tokens: inout Tape<[Token]>
     ) -> InlineNode {
-        // Open tag should already have been consumed before
-        // calling this function.
+        // Wikilink open tag is already dropped by this point
         let characters: [Character] = tokens.consumeWhile({ token in
             switch token {
             case .character:
@@ -404,18 +412,18 @@ struct Subtext2: Hashable, Equatable {
         })
         // Drop close tag, if any
         if tokens.peek() == .wikilinkClose {
-            tokens.consume()
+            tokens.advance()
+            return .wikilink(String(characters))
+        } else {
+            return .text(String("[[" + characters))
         }
-        return .wikilink(String(characters))
     }
 
     private static func parseText(
-        _ tokens: inout Tape<[Token]>,
-        initial: Character
+        _ tokens: inout Tape<[Token]>
     ) -> InlineNode {
         // Consume until we reach a non-character token
-        var characters = [initial]
-        let remainingCharacters: [Character] = tokens.consumeWhile({ token in
+        let characters: [Character] = tokens.consumeWhile({ token in
             switch token {
             case .character:
                 return true
@@ -430,7 +438,6 @@ struct Subtext2: Hashable, Equatable {
                 return nil
             }
         })
-        characters.append(contentsOf: remainingCharacters)
         return InlineNode.text(String(characters))
     }
 
