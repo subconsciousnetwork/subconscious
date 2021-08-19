@@ -39,10 +39,10 @@ where T: Collection,
 
     /// Peek forward by `offset`, returning a subsequence from `position` through `offset`,
     /// or from `position` through `endIndex`, whichever is smaller..
-    func peek(count: Int) -> T.SubSequence {
+    func peek(next: Int) -> T.SubSequence {
         if let i = collection.index(
             position,
-            offsetBy: count,
+            offsetBy: next,
             limitedBy: collection.endIndex
         ) {
             if position < collection.endIndex && i <= collection.endIndex {
@@ -72,7 +72,7 @@ where T: Collection,
     }
 
     mutating func consumeMatch(subsequence: T.SubSequence) -> Bool {
-        let next = self.peek(count: subsequence.count)
+        let next = self.peek(next: subsequence.count)
         if next == subsequence {
             self.advance(subsequence.count)
             return true
