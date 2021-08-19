@@ -33,9 +33,14 @@ struct Constants {
     }
 
     struct Text {
-        static var text: AttributeContainer {
+        static var textFont: AttributeContainer {
             var attributes = AttributeContainer()
             attributes.font = UIFont.preferredFont(forTextStyle: .body)
+            return attributes
+        }
+
+        static var text: AttributeContainer {
+            var attributes = AttributeContainer()
             attributes.foregroundColor = Constants.Color.text
             return attributes
         }
@@ -55,7 +60,6 @@ struct Constants {
 
         static var secondary: AttributeContainer {
             var attributes = AttributeContainer()
-            attributes.font = UIFont.preferredFont(forTextStyle: .body)
             attributes.foregroundColor = Constants.Color.secondaryText
             return attributes
         }

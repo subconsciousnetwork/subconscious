@@ -558,6 +558,7 @@ struct Subtext2: Hashable, Equatable {
             attributedString.append(child.renderAttributedString(url: url))
             attributedString.append(br)
         }
+        attributedString.mergeAttributes(Constants.Text.textFont)
         return attributedString
     }
 
@@ -572,6 +573,7 @@ struct Subtext2: Hashable, Equatable {
             )
             attributedString.append(br)
         }
+        attributedString.mergeAttributes(Constants.Text.textFont)
         return attributedString
     }
 }
