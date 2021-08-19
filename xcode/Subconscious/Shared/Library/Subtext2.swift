@@ -475,7 +475,7 @@ struct Subtext2: Hashable, Equatable {
     ) -> String {
         var text = ""
         loop: while !tokens.isExhausted() {
-            let token = tokens.peek()!
+            let token = tokens.consume()!
             switch token {
             case .character(let char):
                 text.append(char)
@@ -490,7 +490,6 @@ struct Subtext2: Hashable, Equatable {
             case .newline:
                 break loop
             }
-            tokens.advance()
         }
         return text
     }
