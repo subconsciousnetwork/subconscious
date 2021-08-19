@@ -100,8 +100,9 @@ protocol MarkupRenderable {
 
 struct Subtext2: Hashable, Equatable {
     enum Token: Hashable, Equatable {
-        case character(Character)
+        case word(String)
         case newline
+        case space
         case wikilinkOpen
         case wikilinkClose
         case headingOpen
@@ -109,7 +110,8 @@ struct Subtext2: Hashable, Equatable {
     }
 
     enum InlineNode: Hashable, Equatable, MarkupRenderable {
-        case text(String)
+        case word(String)
+        case space
         case wikilink(String)
         case url(String)
         
@@ -120,8 +122,10 @@ struct Subtext2: Hashable, Equatable {
                 return text
             case .url(let href):
                 return href
-            case .text(let text):
+            case .word(let text):
                 return text
+            case .space:
+                return " "
             }
         }
 
@@ -132,8 +136,10 @@ struct Subtext2: Hashable, Equatable {
                 return "[[\(text)]]"
             case .url(let href):
                 return href
-            case .text(let text):
+            case .word(let text):
                 return text
+            case .space:
+                return " "
             }
         }
 
@@ -152,8 +158,10 @@ struct Subtext2: Hashable, Equatable {
                 var link = AttributedString(href)
                 link.link = URL(string: href)
                 return link
-            case .text(let text):
+            case .word(let text):
                 return AttributedString(text)
+            case .space:
+                return AttributedString(" ")
             }
         }
 
@@ -185,8 +193,10 @@ struct Subtext2: Hashable, Equatable {
                 var link = AttributedString(href)
                 link.link = URL(string: href)
                 return link
-            case .text(let text):
+            case .word(let text):
                 return AttributedString(text)
+            case .space:
+                return AttributedString(" ")
             }
         }
     }
@@ -355,8 +365,10 @@ struct Subtext2: Hashable, Equatable {
         var tokens: [Token] = []
         while !stream.isExhausted() {
             let curr = stream.consume()!
-            if curr == "\n" {
+            if curr.isNewline {
                 tokens.append(.newline)
+            } else if curr.isWhitespace {
+                tokens.append(.space)
             } else if curr == "[" && stream.consumeMatch("[") {
                 tokens.append(.wikilinkOpen)
             } else if curr == "]" && stream.consumeMatch("]") {
@@ -376,12 +388,32 @@ struct Subtext2: Hashable, Equatable {
                 let urlBody = parseNonWhitespace(&stream)
                 tokens.append(.url(String("https://" + urlBody)))
             } else {
-                tokens.append(.character(curr))
+                var text = tokenizeWord(&stream)
+                text.insert(curr, at: text.startIndex)
+                tokens.append(.word(text))
             }
         }
         return tokens
     }
 
+    private static func isWordTerminator(_ char: Character) -> Bool {
+        char == "]" || char == "[" || char.isWhitespace
+    }
+
+    private static func tokenizeWord(
+        _ tokens: inout Tape<String>
+    ) -> String {
+        var text = ""
+        while !tokens.isExhausted() {
+            let char = tokens.peek()!
+            if isWordTerminator(char) {
+                return text
+            }
+            text.append(char)
+            tokens.advance()
+        }
+        return text
+    }
     private static func parseRoot(
         _ tokens: inout Tape<[Token]>
     ) -> [BlockNode] {
@@ -416,18 +448,18 @@ struct Subtext2: Hashable, Equatable {
             case .wikilinkOpen:
                 let wikilink = parseWikilink(&tokens)
                 node.children.append(wikilink)
-            case .character(let char):
-                var text = parseText(&tokens)
-                text.insert(char, at: text.startIndex)
-                node.children.append(.text(text))
             // Catch stray wikilink closes that don't have a corresponding
             // wikilink open. Treat them as plain text.
             case .wikilinkClose:
-                node.children.append(.text("]]"))
+                node.children.append(.word("]]"))
+            case .word(let text):
+                node.children.append(.word(text))
             case .headingOpen:
-                node.children.append(.text("# "))
+                node.children.append(.word("# "))
             case .url(let url):
                 node.children.append(.url(url))
+            case .space:
+                node.children.append(.space)
             case .newline:
                 return node
             }
@@ -440,25 +472,27 @@ struct Subtext2: Hashable, Equatable {
     ) -> InlineNode {
         // Wikilink open tag is already consumed by this point.
         // Consume text portion of wikilink.
-        let text = parseText(&tokens)
+        let text = parseTextRun(&tokens)
         // If we find a closing tag, create a wikilink
         if tokens.consumeMatch(.wikilinkClose) {
             return .wikilink(text)
         // Otherwise, return plain text
         } else {
-            return .text("[[" + text)
+            return .word("[[" + text)
         }
     }
 
-    private static func parseText(
+    private static func parseTextRun(
         _ tokens: inout Tape<[Token]>
     ) -> String {
         var text = ""
         loop: while !tokens.isExhausted() {
             let char = tokens.peek()!
             switch char {
-            case .character(let char):
-                text.append(char)
+            case .word(let word):
+                text.append(word)
+            case .space:
+                text.append(" ")
             default:
                 break loop
             }
@@ -492,7 +526,7 @@ struct Subtext2: Hashable, Equatable {
         loop: while !tokens.isExhausted() {
             let token = tokens.consume()!
             switch token {
-            case .character(let char):
+            case .word(let char):
                 text.append(char)
             case .wikilinkOpen:
                 text.append("[[")
@@ -502,6 +536,8 @@ struct Subtext2: Hashable, Equatable {
                 text.append("# ")
             case .url(let href):
                 text.append(href)
+            case .space:
+                text.append(" ")
             case .newline:
                 break loop
             }
@@ -514,6 +550,7 @@ struct Subtext2: Hashable, Equatable {
     init(markup: String) {
         var tokens = Tape(Self.tokenize(markup))
         self.children = Self.parseRoot(&tokens)
+        print(self.children)
     }
 
     init(children: [BlockNode]) {
