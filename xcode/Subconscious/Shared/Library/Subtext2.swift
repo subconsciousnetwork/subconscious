@@ -550,7 +550,6 @@ struct Subtext2: Hashable, Equatable {
     init(markup: String) {
         var tokens = Tape(Self.tokenize(markup))
         self.children = Self.parseRoot(&tokens)
-        print(self.children)
     }
 
     init(children: [BlockNode]) {
