@@ -25,8 +25,8 @@ struct EntryView: View, Equatable {
         var blocks: [Subtext2.BlockNode] {
             return (
                 isFolded
-                ? Array(fileEntry.dom.children.prefix(3))
-                : fileEntry.dom.children
+                ? Array(fileEntry.dom.filterContentBlocks().prefix(3))
+                : fileEntry.dom.filterContentBlocks()
             )
         }
         var isTruncated: Bool {

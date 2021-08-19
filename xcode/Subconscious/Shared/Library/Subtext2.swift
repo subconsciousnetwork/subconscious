@@ -252,7 +252,10 @@ struct Subtext2: Hashable, Equatable {
         func renderAttributedString(
             url: (String) -> URL?
         ) -> AttributedString {
-            var attributedString = AttributedString()
+            var attributedString = AttributedString(
+                "",
+                attributes: Constants.Text.text
+            )
             for child in children {
                 attributedString.append(child.renderAttributedString(url: url))
             }
@@ -262,7 +265,10 @@ struct Subtext2: Hashable, Equatable {
         func renderMarkupAttributedString(
             url: (String) -> URL?
         ) -> AttributedString {
-            var attributedString = AttributedString()
+            var attributedString = AttributedString(
+                "",
+                attributes: Constants.Text.text
+            )
             for child in children {
                 attributedString.append(
                     child.renderMarkupAttributedString(url: url)
@@ -293,7 +299,7 @@ struct Subtext2: Hashable, Equatable {
                 return block.renderPlain()
             }
         }
-        
+
         func renderMarkup() -> String {
             switch self {
             case .text(let block):
@@ -302,7 +308,7 @@ struct Subtext2: Hashable, Equatable {
                 return block.renderMarkup()
             }
         }
-        
+
         func renderAttributedString(
             url: (String) -> URL?
         ) -> AttributedString {
@@ -313,7 +319,7 @@ struct Subtext2: Hashable, Equatable {
                 return block.renderAttributedString(url: url)
             }
         }
-        
+
         func renderMarkupAttributedString(
             url: (String) -> URL?
         ) -> AttributedString {
@@ -331,6 +337,15 @@ struct Subtext2: Hashable, Equatable {
                 return block.wikilinks()
             default:
                 return []
+            }
+        }
+
+        func hasContent() -> Bool {
+            switch self {
+            case .text(let block):
+                return block.children.count > 0
+            case .heading(let block):
+                return !block.text.isEmpty
             }
         }
     }
@@ -501,9 +516,20 @@ struct Subtext2: Hashable, Equatable {
         self.children = Self.parseRoot(&tokens)
     }
 
+    init(children: [BlockNode]) {
+        self.children = children
+    }
+
+    func filterContentBlocks() -> [BlockNode] {
+        self.children.filter({ block in
+            block.hasContent()
+        })
+    }
+
     /// Get a short plain text string version of this Subtext.
     func excerpt() -> String {
-        children.first?.renderPlain() ?? ""
+        children
+            .first(where: { block in block.hasContent() })?.renderPlain() ?? ""
     }
 
     /// Get all wikilinks that appear in this Subtext.
