@@ -33,10 +33,31 @@ struct Constants {
     }
 
     struct Text {
+        static var text: AttributeContainer {
+            var attributes = AttributeContainer()
+            attributes.font = UIFont.preferredFont(forTextStyle: .body)
+            attributes.foregroundColor = Constants.Color.text
+            return attributes
+        }
+
+        static var heading: AttributeContainer {
+            var attributes = AttributeContainer()
+            let font = UIFont.preferredFont(forTextStyle: .body)
+            if let desc = font.fontDescriptor.withSymbolicTraits(.traitBold) {
+                // 0 means "keep same size"
+                attributes.font = UIFont(descriptor: desc, size: 0)
+            } else {
+                attributes.font = font
+            }
+            attributes.foregroundColor = Constants.Color.text
+            return attributes
+        }
+
         static var secondary: AttributeContainer {
-            var secondary = AttributeContainer()
-            secondary.foregroundColor = Constants.Color.secondaryText
-            return secondary
+            var attributes = AttributeContainer()
+            attributes.font = UIFont.preferredFont(forTextStyle: .body)
+            attributes.foregroundColor = Constants.Color.secondaryText
+            return attributes
         }
     }
 

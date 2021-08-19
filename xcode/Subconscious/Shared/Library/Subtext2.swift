@@ -91,21 +91,27 @@ where T: Collection,
     }
 }
 
+protocol MarkupRenderable {
+    func renderPlain() -> String
+    func renderMarkup() -> String
+    func renderAttributedString(url: (String) -> URL?) -> AttributedString
+    func renderMarkupAttributedString(url: (String) -> URL?) -> AttributedString
+}
+
 struct Subtext2: Hashable, Equatable {
     enum Token: Hashable, Equatable {
         case character(Character)
-        case blockbreak
-        case linebreak
+        case newline
         case wikilinkOpen
         case wikilinkClose
+        case headingOpen
         case url(String)
     }
 
-    enum InlineNode: Hashable, Equatable {
+    enum InlineNode: Hashable, Equatable, MarkupRenderable {
         case text(String)
         case wikilink(String)
         case url(String)
-        case linebreak
         
         /// Return a plain text version (lossy)
         func renderPlain() -> String {
@@ -116,8 +122,6 @@ struct Subtext2: Hashable, Equatable {
                 return href
             case .text(let text):
                 return text
-            case .linebreak:
-                return "\n"
             }
         }
 
@@ -130,8 +134,6 @@ struct Subtext2: Hashable, Equatable {
                 return href
             case .text(let text):
                 return text
-            case .linebreak:
-                return "\n"
             }
         }
 
@@ -152,8 +154,6 @@ struct Subtext2: Hashable, Equatable {
                 return link
             case .text(let text):
                 return AttributedString(text)
-            case .linebreak:
-                return AttributedString("\n")
             }
         }
 
@@ -187,13 +187,41 @@ struct Subtext2: Hashable, Equatable {
                 return link
             case .text(let text):
                 return AttributedString(text)
-            case .linebreak:
-                return AttributedString("\n")
             }
         }
     }
 
-    struct BlockNode: Hashable, Equatable, Identifiable {
+    struct HeadingBlockNode:
+        Hashable, Equatable, Identifiable, MarkupRenderable {
+        var id = UUID()
+        var text = ""
+
+        func renderPlain() -> String {
+            text
+        }
+        
+        func renderMarkup() -> String {
+            "# \(text)"
+        }
+        
+        func renderAttributedString(url: (String) -> URL?) -> AttributedString {
+            AttributedString(
+                text,
+                attributes: Constants.Text.heading
+            )
+        }
+        
+        func renderMarkupAttributedString(
+            url: (String) -> URL?
+        ) -> AttributedString {
+            AttributedString(
+                "# \(text)",
+                attributes: Constants.Text.heading
+            )
+        }
+    }
+    
+    struct TextBlockNode: Hashable, Equatable, Identifiable, MarkupRenderable {
         var id = UUID()
         var children: [InlineNode] = []
 
@@ -244,19 +272,82 @@ struct Subtext2: Hashable, Equatable {
         }
     }
 
+    enum BlockNode: Hashable, Equatable, Identifiable, MarkupRenderable {
+        case text(TextBlockNode)
+        case heading(HeadingBlockNode)
+
+        var id: UUID {
+            switch self {
+            case .text(let block):
+                return block.id
+            case .heading(let block):
+                return block.id
+            }
+        }
+
+        func renderPlain() -> String {
+            switch self {
+            case .text(let block):
+                return block.renderPlain()
+            case .heading(let block):
+                return block.renderPlain()
+            }
+        }
+        
+        func renderMarkup() -> String {
+            switch self {
+            case .text(let block):
+                return block.renderMarkup()
+            case .heading(let block):
+                return block.renderMarkup()
+            }
+        }
+        
+        func renderAttributedString(
+            url: (String) -> URL?
+        ) -> AttributedString {
+            switch self {
+            case .text(let block):
+                return block.renderAttributedString(url: url)
+            case .heading(let block):
+                return block.renderAttributedString(url: url)
+            }
+        }
+        
+        func renderMarkupAttributedString(
+            url: (String) -> URL?
+        ) -> AttributedString {
+            switch self {
+            case .text(let block):
+                return block.renderMarkupAttributedString(url: url)
+            case .heading(let block):
+                return block.renderMarkupAttributedString(url: url)
+            }
+        }
+
+        func wikilinks() -> [String] {
+            switch self {
+            case .text(let block):
+                return block.wikilinks()
+            default:
+                return []
+            }
+        }
+    }
+    
     private static func tokenize(_ markup: String) -> [Token] {
         var stream = Tape(markup)
         var tokens: [Token] = []
         while !stream.isExhausted() {
             let curr = stream.consume()!
-            if curr == "[" && stream.consumeMatch("[") {
+            if curr == "\n" {
+                tokens.append(.newline)
+            } else if curr == "[" && stream.consumeMatch("[") {
                 tokens.append(.wikilinkOpen)
             } else if curr == "]" && stream.consumeMatch("]") {
                 tokens.append(.wikilinkClose)
-            } else if curr == "\n" && stream.consumeMatch("\n") {
-                tokens.append(.blockbreak)
-            } else if curr == "\n" {
-                tokens.append(.linebreak)
+            } else if curr == "#" && stream.consumeMatch(" ") {
+                tokens.append(.headingOpen)
             } else if
                 curr == "h" &&
                 stream.consumeMatch(subsequence: "ttp://")
@@ -290,7 +381,20 @@ struct Subtext2: Hashable, Equatable {
     private static func parseBlock(
         _ tokens: inout Tape<[Token]>
     ) -> BlockNode {
-        var node = BlockNode()
+        // HeadingBlock
+        if tokens.consumeMatch(.headingOpen) {
+            let text = parseLine(&tokens)
+            return .heading(HeadingBlockNode(text: text))
+        } else {
+            let block = parseTextBlock(&tokens)
+            return .text(block)
+        }
+    }
+
+    private static func parseTextBlock(
+        _ tokens: inout Tape<[Token]>
+    ) -> TextBlockNode {
+        var node = TextBlockNode()
         while !tokens.isExhausted() {
             let token = tokens.consume()!
             switch token {
@@ -305,17 +409,17 @@ struct Subtext2: Hashable, Equatable {
             // wikilink open. Treat them as plain text.
             case .wikilinkClose:
                 node.children.append(.text("]]"))
-            case .linebreak:
-                node.children.append(.linebreak)
+            case .headingOpen:
+                node.children.append(.text("# "))
             case .url(let url):
                 node.children.append(.url(url))
-            case .blockbreak:
+            case .newline:
                 return node
             }
         }
         return node
     }
-
+    
     private static func parseWikilink(
         _ tokens: inout Tape<[Token]>
     ) -> InlineNode {
@@ -334,36 +438,63 @@ struct Subtext2: Hashable, Equatable {
     private static func parseText(
         _ tokens: inout Tape<[Token]>
     ) -> String {
-        var characters: [Character] = []
+        var text = ""
         loop: while !tokens.isExhausted() {
             let char = tokens.peek()!
             switch char {
             case .character(let char):
-                characters.append(char)
+                text.append(char)
             default:
                 break loop
             }
             tokens.advance()
         }
-        return String(characters)
+        return text
     }
 
+    /// Consume string until first whitespace character
     private static func parseNonWhitespace(
         _ tokens: inout Tape<String>
     ) -> String {
-        var characters: [Character] = []
+        var text = ""
         loop: while !tokens.isExhausted() {
             let char = tokens.peek()!
             if !char.isWhitespace {
-                characters.append(char)
+                text.append(char)
             } else {
                 break loop
             }
             tokens.advance()
         }
-        return String(characters)
+        return text
     }
-    
+
+    /// Consume string until end of line
+    private static func parseLine(
+        _ tokens: inout Tape<[Token]>
+    ) -> String {
+        var text = ""
+        loop: while !tokens.isExhausted() {
+            let token = tokens.peek()!
+            switch token {
+            case .character(let char):
+                text.append(char)
+            case .wikilinkOpen:
+                text.append("[[")
+            case .wikilinkClose:
+                text.append("]]")
+            case .headingOpen:
+                text.append("# ")
+            case .url(let href):
+                text.append(href)
+            case .newline:
+                break loop
+            }
+            tokens.advance()
+        }
+        return text
+    }
+
     var children: [BlockNode]
 
     init(markup: String) {
@@ -386,18 +517,18 @@ struct Subtext2: Hashable, Equatable {
     func renderPlain() -> String {
         children
             .map({ block in block.renderPlain() })
-            .joined(separator: "\n\n")
+            .joined(separator: "\n")
     }
 
     func renderMarkup() -> String {
         children
             .map({ block in block.renderMarkup() })
-            .joined(separator: "\n\n")
+            .joined(separator: "\n")
     }
 
     func renderAttributedString(url: (String) -> URL?) -> AttributedString {
         var attributedString = AttributedString()
-        let br = AttributedString("\n\n")
+        let br = AttributedString("\n")
         for child in children {
             attributedString.append(child.renderAttributedString(url: url))
             attributedString.append(br)
@@ -409,7 +540,7 @@ struct Subtext2: Hashable, Equatable {
         url: (String) -> URL?
     ) -> AttributedString {
         var attributedString = AttributedString()
-        let br = AttributedString("\n\n")
+        let br = AttributedString("\n")
         for child in children {
             attributedString.append(
                 child.renderMarkupAttributedString(url: url)
