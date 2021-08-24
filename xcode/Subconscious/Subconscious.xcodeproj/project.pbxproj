@@ -57,6 +57,7 @@
 		B8C951B326AF867B00EEC3AB /* Suggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C951B226AF867B00EEC3AB /* Suggestions.swift */; };
 		B8C951B726AF8DDF00EEC3AB /* IOService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C951B626AF8DDF00EEC3AB /* IOService.swift */; };
 		B8CA2F9A26AB6B890000BFFB /* DynamicTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA2F9926AB6B890000BFFB /* DynamicTextViewRepresentable.swift */; };
+		B8CB7E7526D449C90018717D /* Subtext3.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CB7E7426D449C90018717D /* Subtext3.swift */; };
 		B8CCBF5A26A74CFB00218458 /* Elmo in Frameworks */ = {isa = PBXBuildFile; productRef = B8CCBF5926A74CFB00218458 /* Elmo */; };
 		B8D7D9C026B10E9E005961BB /* PrimaryButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D7D9BF26B10E9E005961BB /* PrimaryButtonStyle.swift */; };
 		B8DF24AE267A5764000987C5 /* FileFingerprint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DF24AD267A5764000987C5 /* FileFingerprint.swift */; };
@@ -150,6 +151,7 @@
 		B8C951B226AF867B00EEC3AB /* Suggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestions.swift; sourceTree = "<group>"; };
 		B8C951B626AF8DDF00EEC3AB /* IOService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IOService.swift; path = Shared/Library/IOService.swift; sourceTree = SOURCE_ROOT; };
 		B8CA2F9926AB6B890000BFFB /* DynamicTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicTextViewRepresentable.swift; sourceTree = "<group>"; };
+		B8CB7E7426D449C90018717D /* Subtext3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext3.swift; sourceTree = "<group>"; };
 		B8CCBF5826A7492B00218458 /* Elmo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Elmo; path = ../Elmo; sourceTree = "<group>"; };
 		B8D7D9BF26B10E9E005961BB /* PrimaryButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButtonStyle.swift; sourceTree = "<group>"; };
 		B8DF24AD267A5764000987C5 /* FileFingerprint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileFingerprint.swift; sourceTree = "<group>"; };
@@ -249,6 +251,7 @@
 				B8E84271269CAE3200B74172 /* SubMigrations.swift */,
 				B853EB36263274DD001BB584 /* Subtext.swift */,
 				B890CD5226C2FC7A00F0DDEE /* Subtext2.swift */,
+				B8CB7E7426D449C90018717D /* Subtext3.swift */,
 				B88CAEB726CACC7300C90EDB /* SubURL.swift */,
 				B8C951B226AF867B00EEC3AB /* Suggestions.swift */,
 				B8158D1D269796BB00F927EF /* Truncate.swift */,
@@ -569,6 +572,7 @@
 				B88715132642F2D0009BEE1E /* QuerySuggestionView.swift in Sources */,
 				B8B2C18526470EC0008AA3EC /* PostView.swift in Sources */,
 				B8796F5B269E3D3A001AC8C1 /* ListHeaderView.swift in Sources */,
+				B8CB7E7526D449C90018717D /* Subtext3.swift in Sources */,
 				B82FD94E26AA2A1C0087AE95 /* JSONUtilities.swift in Sources */,
 				B85AD0E9269F62220089ADFD /* Shadow.swift in Sources */,
 				B8B2C1872647172A008AA3EC /* PostHeaderView.swift in Sources */,
@@ -827,7 +831,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = "Tests iOS/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -848,7 +852,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = "Tests iOS/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

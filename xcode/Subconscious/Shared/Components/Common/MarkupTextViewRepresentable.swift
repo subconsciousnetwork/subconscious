@@ -14,7 +14,11 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         init(_ representable: MarkupTextViewRepresentable) {
             self.representable = representable
         }
-        
+
+        func textViewDidChangeSelection(_ view: UITextView) {
+            self.representable.onChangeSelection(view.selectedRange)
+        }
+
         func textViewDidChange(_ view: UITextView) {
             if representable.markup != view.attributedText.string {
                 representable.markup = view.attributedText.string
@@ -23,14 +27,9 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         }
     }
 
-    /// The default render function coerces the string to a plain NSAttributedString
-    private static func render(_ string: String) -> NSAttributedString {
-        return NSAttributedString(string: string)
-    }
-
     @Binding var markup: String
-    var render: (String) -> NSAttributedString = render
-    var isFocused = false
+    var render: (String) -> NSAttributedString
+    var onChangeSelection: (NSRange) -> Void
     var font: UIFont = UIFont.preferredFont(forTextStyle: .body)
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
@@ -48,15 +47,6 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     }
 
     func updateUIView(_ view: UITextView, context: Context) {
-        let attributedText = render(markup)
-        if view.attributedText != attributedText {
-            // Save selected range (cursor position).
-            let selectedRange = view.selectedRange
-            view.attributedText = attributedText
-            // Restore selected range (cursor position) after setting text.
-            view.selectedRange = selectedRange
-        }
-
         if view.font != font {
             view.font = font
         }
@@ -64,6 +54,16 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         if view.textContainerInset != textContainerInset {
             // Set inner padding
             view.textContainerInset = textContainerInset
+        }
+
+        // Rerender markup, and update view if necessary
+        let attributedText = render(markup)
+        if attributedText != view.attributedText {
+            // Save selected range (cursor position).
+            let selectedRange = view.selectedRange
+            view.attributedText = attributedText
+            // Restore selected range (cursor position) after setting text.
+            view.selectedRange = selectedRange
         }
     }
 
@@ -93,12 +93,16 @@ struct AttributedTextViewRepresentablePreview: PreviewProvider {
     static var previews: some View {
         VStack {
             MarkupTextViewRepresentable(
-                markup: .constant("Text")
+                markup: .constant("Text"),
+                render: { string in NSAttributedString(string: string) },
+                onChangeSelection: { range in }
             )
             .background(Constants.Color.secondaryBackground)
 
             MarkupTextViewRepresentable(
-                markup: .constant("Text")
+                markup: .constant("Text"),
+                render: { string in NSAttributedString(string: string) },
+                onChangeSelection: { range in }
             )
             .background(Constants.Color.secondaryBackground)
         }

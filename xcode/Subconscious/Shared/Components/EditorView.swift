@@ -157,11 +157,10 @@ struct EditorView: View, Equatable {
                     }
                 ),
                 render: { text in
-                    let attributedString = Subtext2(markup: text)
-                        .renderMarkupAttributedString(url: { text in
-                            SubURL.wikilinkToURL(text)
-                        })
-                    return NSAttributedString(attributedString)
+                    Subtext3.render(text)
+                },
+                onChangeSelection: { nsrange in
+                    print(nsrange)
                 }
             )
             .insets(
