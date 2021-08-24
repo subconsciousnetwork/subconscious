@@ -360,6 +360,16 @@ struct Subtext2: Hashable, Equatable {
         }
     }
     
+    private static let nonWordCharacters = Set("[]")
+
+    /// Check if character belongs to the set of characters we use as word boundaries.
+    /// These characters are special characters that could be part of markup, or boundaries
+    /// for markup.
+    private static func isWordBoundary(_ char: Character) -> Bool {
+        char.isWhitespace || nonWordCharacters.contains(char)
+    }
+
+    /// Tokenize a markup string
     private static func tokenize(_ markup: String) -> [Token] {
         var stream = Tape(markup)
         var tokens: [Token] = []
@@ -396,17 +406,13 @@ struct Subtext2: Hashable, Equatable {
         return tokens
     }
 
-    private static func isWordTerminator(_ char: Character) -> Bool {
-        char == "]" || char == "[" || char.isWhitespace
-    }
-
     private static func tokenizeWord(
         _ tokens: inout Tape<String>
     ) -> String {
         var text = ""
         while !tokens.isExhausted() {
             let char = tokens.peek()!
-            if isWordTerminator(char) {
+            if isWordBoundary(char) {
                 return text
             }
             text.append(char)
@@ -414,6 +420,7 @@ struct Subtext2: Hashable, Equatable {
         }
         return text
     }
+
     private static func parseRoot(
         _ tokens: inout Tape<[Token]>
     ) -> [BlockNode] {
