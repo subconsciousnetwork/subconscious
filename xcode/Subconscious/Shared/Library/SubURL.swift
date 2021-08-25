@@ -21,6 +21,18 @@ struct SubURL {
         return nil
     }
 
+    static func wikilinkToURLString(_ text: String.SubSequence) -> String? {
+        if
+            let path = text.addingPercentEncoding(
+                withAllowedCharacters: .urlHostAllowed
+            ),
+            let url = URL(string: "sub://wikilink/\(path)")
+        {
+            return url.absoluteString
+        }
+        return nil
+    }
+
     static func urlToWikilink(_ url: URL) -> String? {
         if isWikilinkURL(url) {
             if let path = url.path.removingPercentEncoding {

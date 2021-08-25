@@ -157,7 +157,9 @@ struct EditorView: View, Equatable {
                     }
                 ),
                 render: { text in
-                    Subtext3.render(text)
+                    Subtext3(text).renderMarkup(url: { label in
+                        SubURL.wikilinkToURLString(label)
+                    })
                 },
                 onChangeSelection: { nsrange in
                     print(nsrange)

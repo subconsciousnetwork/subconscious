@@ -81,12 +81,12 @@ struct Subtext3 {
         func peek(_ offset: Int = 0) -> T.SubSequence? {
             if
                 let startIndex = collection.index(
-                    startIndex,
+                    currentIndex,
                     offsetBy: offset,
                     limitedBy: collection.endIndex
                 ),
                 let endIndex = collection.index(
-                    startIndex,
+                    currentIndex,
                     offsetBy: offset + 1,
                     limitedBy: collection.endIndex
                 )
@@ -100,11 +100,11 @@ struct Subtext3 {
         /// or from `position` through `endIndex`, whichever is smaller..
         func peek(next offset: Int) -> T.SubSequence? {
             if let endIndex = collection.index(
-                startIndex,
+                currentIndex,
                 offsetBy: offset,
                 limitedBy: collection.endIndex
             ) {
-                return collection[startIndex..<endIndex]
+                return collection[currentIndex..<endIndex]
             }
             return nil
         }
@@ -113,25 +113,7 @@ struct Subtext3 {
     struct Tokens {
         var wikilinks: [String.SubSequence] = []
         var headings: [String.SubSequence] = []
-
-        // Get wikilink labels, without the double brackets
-        func wikilinkLabels() -> [String.SubSequence] {
-            wikilinks.map({ wikilink in
-                var wikilink = wikilink
-                wikilink.removeFirst(2)
-                wikilink.removeLast(2)
-                return wikilink
-            })
-        }
-
-        // Get the range of the wikilink enclosing this `String.Index`, if any.
-        func wikilinkRangeEnclosing(
-            _ index: String.Index
-        ) -> String.SubSequence? {
-            wikilinks.first(where: { sub in
-                sub.indices.contains(index)
-            })
-        }
+        var urls: [String.SubSequence] = []
     }
 
     static func tokenize(_ markup: String) -> Tokens {
@@ -152,32 +134,15 @@ struct Subtext3 {
             } else if curr == "#" && tape.consumeMatch(" ") {
                 let heading = consumeHeading(tape: &tape)
                 tokens.headings.append(heading)
+            } else if curr == "h" && tape.consumeMatch("ttp://") {
+                let url = consumeUntilSpace(tape: &tape)
+                tokens.urls.append(url)
+            }  else if curr == "h" && tape.consumeMatch("ttps://") {
+                let url = consumeUntilSpace(tape: &tape)
+                tokens.urls.append(url)
             }
         }
         return tokens
-    }
-
-    static func render(_ markup: String) -> NSAttributedString {
-        let tokens = tokenize(markup)
-        let attributedString = NSMutableAttributedString(string: markup)
-        // Set default styles for entire string
-        attributedString.addAttribute(
-            .font,
-            value: UIFont.preferredFont(forTextStyle: .body),
-            range: NSRange(markup.startIndex..<markup.endIndex, in: markup)
-        )
-        for wikilink in tokens.wikilinks {
-            let nsRange = NSRange(
-                wikilink.startIndex..<wikilink.endIndex,
-                in: markup
-            )
-            attributedString.addAttribute(
-                .link,
-                value: "http://example.com",
-                range: nsRange
-            )
-        }
-        return attributedString
     }
 
     static func isWikilinkForbidden(_ subsequence: String.SubSequence) -> Bool {
@@ -216,5 +181,87 @@ struct Subtext3 {
             }
         }
         return tape.subsequence
+    }
+
+    static func consumeUntilSpace(
+        tape: inout Tape<String>
+    ) -> String.SubSequence {
+        while !tape.isExhausted() {
+            let curr = tape.peek()
+            if curr == nil || curr!.isWhitespace {
+                return tape.subsequence
+            }
+            tape.advance()
+        }
+        return tape.subsequence
+    }
+
+    let base: String
+    let wikilinks: [String.SubSequence]
+    let headings: [String.SubSequence]
+    let urls: [String.SubSequence]
+
+    init(_ markup: String) {
+        self.base = markup
+        let tokens = Self.tokenize(markup)
+        self.wikilinks = tokens.wikilinks
+        self.headings = tokens.headings
+        self.urls = tokens.urls
+    }
+
+    // Get wikilink labels, without the double brackets
+    func wikilinkLabels() -> [String.SubSequence] {
+        wikilinks.map({ wikilink in
+            var wikilink = wikilink
+            wikilink.removeFirst(2)
+            wikilink.removeLast(2)
+            return wikilink
+        })
+    }
+
+    // Get the range of the wikilink enclosing this `String.Index`, if any.
+    func wikilinkRangeEnclosing(
+        _ index: String.Index
+    ) -> String.SubSequence? {
+        wikilinks.first(where: { sub in
+            sub.indices.contains(index)
+        })
+    }
+
+    func renderMarkup(
+        url: (String.SubSequence) -> String?
+    ) -> NSAttributedString {
+        let attributedString = NSMutableAttributedString(string: base)
+        // Set default styles for entire string
+        attributedString.addAttribute(
+            .font,
+            value: UIFont.preferredFont(forTextStyle: .body),
+            range: NSRange(base.startIndex..<base.endIndex, in: base)
+        )
+        for label in wikilinkLabels() {
+            let nsRange = NSRange(
+                label.startIndex..<label.endIndex,
+                in: base
+            )
+            if let url = url(label) {
+                attributedString.addAttribute(
+                    .link,
+                    value: url,
+                    range: nsRange
+                )
+            }
+        }
+        for url in urls {
+            let nsRange = NSRange(
+                url.startIndex..<url.endIndex,
+                in: base
+            )
+            attributedString.addAttribute(
+                .link,
+                value: String(url),
+                range: nsRange
+            )
+        }
+        return attributedString
     }
 }
