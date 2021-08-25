@@ -16,14 +16,14 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         }
 
         func textViewDidChangeSelection(_ view: UITextView) {
-            self.representable.onChangeSelection(view.selectedRange)
+            self.representable.onChangeSelection(
+                view.selectedRange
+            )
         }
 
         func textViewDidChange(_ view: UITextView) {
-            if representable.markup != view.attributedText.string {
-                representable.markup = view.attributedText.string
-                view.invalidateIntrinsicContentSize()
-            }
+            representable.markup = view.attributedText.string
+            view.invalidateIntrinsicContentSize()
         }
     }
 
