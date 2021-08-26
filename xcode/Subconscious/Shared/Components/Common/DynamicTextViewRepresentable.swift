@@ -24,6 +24,16 @@ struct DynamicTextViewRepresentable: UIViewRepresentable {
             self.representable = representable
         }
 
+        /// Intercept text changes before they happen, and accept or reject them.
+        /// See  <https://developer.apple.com/documentation/uikit/uitextviewdelegate/1618630-textview>
+        func textView(
+            _ textView: UITextView,
+            shouldChangeTextIn range: NSRange,
+            replacementText text: String
+        ) -> Bool {
+            !text.hasSuffix("\n")
+        }
+        
         func textViewDidChange(_ view: UITextView) {
             if representable.text != view.text {
                 representable.text = view.text
@@ -34,7 +44,6 @@ struct DynamicTextViewRepresentable: UIViewRepresentable {
 
     @Binding var text: String
     var fixedWidth: CGFloat
-    var isFocused = false
     var font: UIFont = UIFont.preferredFont(forTextStyle: .body)
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
@@ -42,7 +51,6 @@ struct DynamicTextViewRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> DynamicTextView {
         let view = DynamicTextView()
         view.delegate = context.coordinator
-        view.translatesAutoresizingMaskIntoConstraints = false
         view.fixedWidth = fixedWidth
         // Remove that extra bit of inner padding.
         // Text in view should now be flush with view edge.
