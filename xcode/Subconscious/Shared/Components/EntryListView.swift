@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 import os
 import Elmo
+import OrderedCollections
 
 // MARK:  Action
 enum EntryListAction {
@@ -40,19 +41,19 @@ struct EntryListModel: Equatable {
         case ready
     }
 
-    var entries: [EntryView.Model] = []
+    var entries = OrderedDictionary<URL, EntryView.Model>()
     var state: State = .loading
 
     mutating func replace(_ results: EntryResults) {
-        self.entries = results.fileEntries
-            .enumerated()
-            .map({ (i, fileEntry) in
-                EntryView.Model(
-                    fileEntry: fileEntry,
-                    transcludes: results.transcludes,
-                    isFolded: i > 0
-                )
-            })
+        entries.removeAll()
+        for (i, fileEntry) in results.fileEntries.enumerated() {
+            let model = EntryView.Model(
+                fileEntry: fileEntry,
+                transcludes: results.transcludes,
+                isFolded: i > 0
+            )
+            entries[model.id] = model
+        }
     }
 }
 
@@ -65,14 +66,11 @@ func updateEntryList(
 ) -> AnyPublisher<EntryListAction, Never> {
     switch action {
     case .item(let id, let action):
-        // Am I getting a copy, rather than a reference?
-        // Is that why it never changes?
-        if let i = state.entries.firstIndex(
-            where: { entry in entry.id ==  id }
-        ) {
-            let id = state.entries[i].id
+        if state.entries[id] != nil {
             return EntryView.update(
-                state: &state.entries[i],
+                // It's important to send down a reference,
+                // not a copy
+                state: &state.entries[id]!,
                 action: action,
                 environment: environment.logger
             ).map({ action in
@@ -173,7 +171,7 @@ struct EntryListView: View, Equatable {
                 // onscreen.
                 // <https://developer.apple.com/documentation/swiftui/lazyvstack>
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(store.state.entries) { entry in
+                    ForEach(store.state.entries.values) { entry in
                         EntryView(
                             store: ViewStore(
                                 state: entry,
