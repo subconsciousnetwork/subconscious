@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 /// Attempting to implement Subtext as a pure Range-based tokenizer
-struct Subtext3 {
+struct Subtext3: Equatable {
     struct Tape<T>
     where T: Collection,
           T.SubSequence: Equatable
@@ -196,13 +196,13 @@ struct Subtext3 {
         return tape.subsequence
     }
 
-    let base: String
+    let markup: String
     let wikilinks: [String.SubSequence]
     let headings: [String.SubSequence]
     let urls: [String.SubSequence]
 
     init(_ markup: String) {
-        self.base = markup
+        self.markup = markup
         let tokens = Self.tokenize(markup)
         self.wikilinks = tokens.wikilinks
         self.headings = tokens.headings
@@ -231,17 +231,17 @@ struct Subtext3 {
     func renderMarkup(
         url: (String.SubSequence) -> String?
     ) -> NSAttributedString {
-        let attributedString = NSMutableAttributedString(string: base)
+        let attributedString = NSMutableAttributedString(string: markup)
         // Set default styles for entire string
         attributedString.addAttribute(
             .font,
             value: UIFont.preferredFont(forTextStyle: .body),
-            range: NSRange(base.startIndex..<base.endIndex, in: base)
+            range: NSRange(markup.startIndex..<markup.endIndex, in: markup)
         )
         for label in wikilinkLabels() {
             let nsRange = NSRange(
                 label.startIndex..<label.endIndex,
-                in: base
+                in: markup
             )
             if let url = url(label) {
                 attributedString.addAttribute(
@@ -254,7 +254,7 @@ struct Subtext3 {
         for url in urls {
             let nsRange = NSRange(
                 url.startIndex..<url.endIndex,
-                in: base
+                in: markup
             )
             attributedString.addAttribute(
                 .link,
