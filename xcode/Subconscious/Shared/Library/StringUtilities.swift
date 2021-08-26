@@ -16,6 +16,14 @@ extension String {
             return self
         }
     }
+
+    func splitlines() -> [Substring] {
+        self.split(
+            maxSplits: Int.max,
+            omittingEmptySubsequences: true,
+            whereSeparator: \.isNewline
+        )
+    }
 }
 
 extension StringProtocol {
