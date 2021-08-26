@@ -162,7 +162,6 @@ struct EditorView: View, Equatable {
                     })
                 },
                 onChangeSelection: { nsrange in
-                    print(nsrange)
                 }
             )
             .insets(

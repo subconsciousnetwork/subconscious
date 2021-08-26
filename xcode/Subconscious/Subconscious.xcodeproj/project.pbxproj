@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		B805AAF626447BF30051F205 /* TextTokenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B805AAF526447BF30051F205 /* TextTokenView.swift */; };
 		B805AAFA26447F4E0051F205 /* TextTokenBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B805AAF926447F4E0051F205 /* TextTokenBarView.swift */; };
+		B80A226E26D6DAEB00E7D49D /* EditableSubtextBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80A226D26D6DAEB00E7D49D /* EditableSubtextBlockView.swift */; };
+		B80A227026D6E72C00E7D49D /* EntryView2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80A226F26D6E72C00E7D49D /* EntryView2.swift */; };
 		B811E60F261D0FBF00484E45 /* EntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B811E60E261D0FBF00484E45 /* EntryView.swift */; };
 		B811E610261D0FBF00484E45 /* EntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B811E60E261D0FBF00484E45 /* EntryView.swift */; };
 		B81268F42696259C007AC708 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81268F32696259C007AC708 /* Slug.swift */; };
@@ -42,6 +44,9 @@
 		B87C7D7D261E0E6C003EFC6F /* BlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87C7D7B261E0E6C003EFC6F /* BlockView.swift */; };
 		B87DA9192624DDEA00BA5232 /* StreamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87DA9182624DDEA00BA5232 /* StreamView.swift */; };
 		B87DA91F26250CF900BA5232 /* SearchBarRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */; };
+		B87E2A0926D6F6770092B3F3 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = B87E2A0826D6F6770092B3F3 /* Collections */; };
+		B87E2A0B26D6F6770092B3F3 /* DequeModule in Frameworks */ = {isa = PBXBuildFile; productRef = B87E2A0A26D6F6770092B3F3 /* DequeModule */; };
+		B87E2A0D26D6F6770092B3F3 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = B87E2A0C26D6F6770092B3F3 /* OrderedCollections */; };
 		B880975A26B1DE2D000430F7 /* FullButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B880975926B1DE2D000430F7 /* FullButtonStyle.swift */; };
 		B88715132642F2D0009BEE1E /* QuerySuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88715122642F2D0009BEE1E /* QuerySuggestionView.swift */; };
 		B88CAEB826CACC7300C90EDB /* SubURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88CAEB726CACC7300C90EDB /* SubURL.swift */; };
@@ -97,6 +102,8 @@
 /* Begin PBXFileReference section */
 		B805AAF526447BF30051F205 /* TextTokenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TextTokenView.swift; path = Shared/Components/Common/TextTokenView.swift; sourceTree = SOURCE_ROOT; };
 		B805AAF926447F4E0051F205 /* TextTokenBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextTokenBarView.swift; sourceTree = "<group>"; };
+		B80A226D26D6DAEB00E7D49D /* EditableSubtextBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableSubtextBlockView.swift; sourceTree = "<group>"; };
+		B80A226F26D6E72C00E7D49D /* EntryView2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryView2.swift; sourceTree = "<group>"; };
 		B811E60E261D0FBF00484E45 /* EntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryView.swift; sourceTree = "<group>"; };
 		B81268F32696259C007AC708 /* Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
 		B8158D1D269796BB00F927EF /* Truncate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Truncate.swift; sourceTree = "<group>"; };
@@ -173,6 +180,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B87E2A0D26D6F6770092B3F3 /* OrderedCollections in Frameworks */,
+				B87E2A0926D6F6770092B3F3 /* Collections in Frameworks */,
+				B87E2A0B26D6F6770092B3F3 /* DequeModule in Frameworks */,
 				B85CABF3265C511100BE1BE6 /* libsqlite3.tbd in Frameworks */,
 				B8CCBF5A26A74CFB00218458 /* Elmo in Frameworks */,
 			);
@@ -215,6 +225,7 @@
 				B81BD763263885DE00BAEC67 /* EditorView.swift */,
 				B83B5295261E58260031988E /* EntryListView.swift */,
 				B811E60E261D0FBF00484E45 /* EntryView.swift */,
+				B80A226F26D6E72C00E7D49D /* EntryView2.swift */,
 				B8B2C1862647172A008AA3EC /* PostHeaderView.swift */,
 				B8B2C18426470EC0008AA3EC /* PostView.swift */,
 				B88715122642F2D0009BEE1E /* QuerySuggestionView.swift */,
@@ -358,6 +369,7 @@
 				B805AAF926447F4E0051F205 /* TextTokenBarView.swift */,
 				B805AAF526447BF30051F205 /* TextTokenView.swift */,
 				B8929E252695101B00131928 /* TextViewRepresentable.swift */,
+				B80A226D26D6DAEB00E7D49D /* EditableSubtextBlockView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -380,6 +392,9 @@
 			name = "Subconscious (iOS)";
 			packageProductDependencies = (
 				B8CCBF5926A74CFB00218458 /* Elmo */,
+				B87E2A0826D6F6770092B3F3 /* Collections */,
+				B87E2A0A26D6F6770092B3F3 /* DequeModule */,
+				B87E2A0C26D6F6770092B3F3 /* OrderedCollections */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B86F33A2261AB2C7009D3D48 /* Subconscious.app */;
@@ -472,6 +487,9 @@
 				Base,
 			);
 			mainGroup = B86F3394261AB2C6009D3D48;
+			packageReferences = (
+				B87E2A0726D6F6770092B3F3 /* XCRemoteSwiftPackageReference "swift-collections" */,
+			);
 			productRefGroup = B86F33A3261AB2C7009D3D48 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -524,6 +542,7 @@
 			files = (
 				B8E628242673B54B005B86CE /* SQLite3Migrations.swift in Sources */,
 				B8C951B326AF867B00EEC3AB /* Suggestions.swift in Sources */,
+				B80A227026D6E72C00E7D49D /* EntryView2.swift in Sources */,
 				B8E84270269A663C00B74172 /* SQLite3ConnectionManager.swift in Sources */,
 				B81BD104269E604C00E2E991 /* ResultSuggestionView.swift in Sources */,
 				B87C7D7C261E0E6C003EFC6F /* BlockView.swift in Sources */,
@@ -555,6 +574,7 @@
 				B811E60F261D0FBF00484E45 /* EntryView.swift in Sources */,
 				B85AD0EB269F92A10089ADFD /* IconLabelRowView.swift in Sources */,
 				B87DA91F26250CF900BA5232 /* SearchBarRepresentable.swift in Sources */,
+				B80A226E26D6DAEB00E7D49D /* EditableSubtextBlockView.swift in Sources */,
 				B87DA9192624DDEA00BA5232 /* StreamView.swift in Sources */,
 				B880975A26B1DE2D000430F7 /* FullButtonStyle.swift in Sources */,
 				B8EC23D726694A33009E4474 /* OptionalUtilities.swift in Sources */,
@@ -960,7 +980,33 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		B87E2A0726D6F6770092B3F3 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-collections.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.5;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		B87E2A0826D6F6770092B3F3 /* Collections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B87E2A0726D6F6770092B3F3 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = Collections;
+		};
+		B87E2A0A26D6F6770092B3F3 /* DequeModule */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B87E2A0726D6F6770092B3F3 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = DequeModule;
+		};
+		B87E2A0C26D6F6770092B3F3 /* OrderedCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B87E2A0726D6F6770092B3F3 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = OrderedCollections;
+		};
 		B8CCBF5926A74CFB00218458 /* Elmo */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Elmo;

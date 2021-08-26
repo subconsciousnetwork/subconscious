@@ -13,7 +13,7 @@ import OrderedCollections
 
 // MARK:  Action
 enum EntryListAction {
-    case item(id: URL, action: EntryView.Action)
+    case item(id: URL, action: EntryView2.Action)
     case search(String)
     case searchSuccess(EntryResults)
     case searchFailure(message: String)
@@ -41,16 +41,15 @@ struct EntryListModel: Equatable {
         case ready
     }
 
-    var entries = OrderedDictionary<URL, EntryView.Model>()
+    var entries = OrderedDictionary<URL, EntryView2.Model>()
     var state: State = .loading
 
     mutating func replace(_ results: EntryResults) {
         entries.removeAll()
-        for (i, fileEntry) in results.fileEntries.enumerated() {
-            let model = EntryView.Model(
-                fileEntry: fileEntry,
-                transcludes: results.transcludes,
-                isFolded: i > 0
+        for fileEntry in results.fileEntries {
+            let model = EntryView2.Model(
+                url: fileEntry.url,
+                markup: fileEntry.content
             )
             entries[model.id] = model
         }
@@ -67,7 +66,7 @@ func updateEntryList(
     switch action {
     case .item(let id, let action):
         if state.entries[id] != nil {
-            return EntryView.update(
+            return EntryView2.update(
                 // It's important to send down a reference,
                 // not a copy
                 state: &state.entries[id]!,
@@ -144,18 +143,11 @@ func updateEntryList(
 }
 
 //  MARK: Tagging
-func tagEntryListItem(id: URL, action: EntryView.Action) -> EntryListAction {
-    switch action {
-    case .requestEdit(let url):
-        return .requestEdit(url: url)
-    case .activateWikilink(let search):
-        return .activateWikilink(search)
-    default:
-        return .item(
-            id: id,
-            action: action
-        )
-    }
+func tagEntryListItem(id: URL, action: EntryView2.Action) -> EntryListAction {
+    .item(
+        id: id,
+        action: action
+    )
 }
 
 //  MARK: View
@@ -166,26 +158,29 @@ struct EntryListView: View, Equatable {
         if store.state.state == .loading {
             ProgressView()
         } else {
-            ScrollView {
-                // LazyVStack creates items only when they need to be rendered
-                // onscreen.
-                // <https://developer.apple.com/documentation/swiftui/lazyvstack>
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(store.state.entries.values) { entry in
-                        EntryView(
-                            store: ViewStore(
-                                state: entry,
-                                send: store.send,
-                                tag: { action in
-                                    tagEntryListItem(
-                                        id: entry.id,
-                                        action: action
-                                    )
-                                }
+            GeometryReader { geometry in
+                ScrollView {
+                    // LazyVStack creates items only when they need to be rendered
+                    // onscreen.
+                    // <https://developer.apple.com/documentation/swiftui/lazyvstack>
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        ForEach(store.state.entries.values) { entry in
+                            EntryView2(
+                                store: ViewStore(
+                                    state: entry,
+                                    send: store.send,
+                                    tag: { action in
+                                        tagEntryListItem(
+                                            id: entry.id,
+                                            action: action
+                                        )
+                                    }
+                                ),
+                                fixedWidth: geometry.size.width
                             )
-                        )
-                        .equatable()
-                        Divider()
+                            .equatable()
+                            Divider()
+                        }
                     }
                 }
             }
