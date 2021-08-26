@@ -16,6 +16,7 @@ struct EntryView2: View, Equatable {
     //  MARK: Action
     enum Action {
         case block(id: UUID, action: EditableSubtextBlockView.Action)
+        case setFolded(Bool)
     }
 
     //  MARK: Model
@@ -25,6 +26,17 @@ struct EntryView2: View, Equatable {
         }
         var url: URL
         var blocks: OrderedDictionary<UUID, EditableSubtextBlockView.Model>
+        var isFolded = true
+        var isTruncated: Bool {
+            isFolded && blocks.values.count > 3
+        }
+        var visibleBlocks: [EditableSubtextBlockView.Model] {
+            if isFolded && blocks.values.count > 3 {
+                return Array(blocks.values.elements.prefix(3))
+            } else {
+                return blocks.values.elements
+            }
+        }
 
         init(
             url: URL,
@@ -63,6 +75,8 @@ struct EntryView2: View, Equatable {
             // This is a normal case. It can happen if
             // the block was deleted before an action sent to it was
             // delivered.
+        case .setFolded(let isFolded):
+            state.isFolded = isFolded
         }
         return Empty().eraseToAnyPublisher()
     }
@@ -80,7 +94,7 @@ struct EntryView2: View, Equatable {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            ForEach(store.state.blocks.values) { block in
+            ForEach(store.state.visibleBlocks) { block in
                 EditableSubtextBlockView(
                     store: ViewStore(
                         state: block,
@@ -94,6 +108,21 @@ struct EntryView2: View, Equatable {
                     ),
                     fixedWidth: fixedWidth - (16 * 2)
                 ).equatable()
+            }
+            if store.state.isTruncated {
+                HStack {
+                    Button(action: {
+                        store.send(.setFolded(false))
+                    }) {
+                        Image(systemName: "ellipsis")
+                            .foregroundColor(Constants.Color.secondaryIcon)
+                            .padding(8)
+                    }
+                    .background(Constants.Color.primaryButtonBackground)
+                    .cornerRadius(8)
+
+                    Spacer()
+                }
             }
         }
         .padding(.vertical, 24)
