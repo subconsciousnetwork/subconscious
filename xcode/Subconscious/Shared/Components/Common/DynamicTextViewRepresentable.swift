@@ -31,10 +31,11 @@ struct DynamicTextViewRepresentable: UIViewRepresentable {
             shouldChangeTextIn range: NSRange,
             replacementText text: String
         ) -> Bool {
-            print("[textView:shouldChangeTextIn]", range, text)
+            // If user hit enter
             if range.length == 0 && text == "\n" {
                 textView.resignFirstResponder()
                 return false
+            // If user pasted text containing newline
             } else if text.contains("\n") {
                 let clean = text.replacingOccurrences(
                     of: "\n",
@@ -51,7 +52,6 @@ struct DynamicTextViewRepresentable: UIViewRepresentable {
         }
         
         func textViewDidChange(_ view: UITextView) {
-            print("[textViewDidChange]")
             representable.text = view.text
             view.invalidateIntrinsicContentSize()
         }
