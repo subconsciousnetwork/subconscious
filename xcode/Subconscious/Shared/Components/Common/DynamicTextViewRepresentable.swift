@@ -31,14 +31,29 @@ struct DynamicTextViewRepresentable: UIViewRepresentable {
             shouldChangeTextIn range: NSRange,
             replacementText text: String
         ) -> Bool {
-            !text.hasSuffix("\n")
+            print("[textView:shouldChangeTextIn]", range, text)
+            if range.length == 0 && text == "\n" {
+                textView.resignFirstResponder()
+                return false
+            } else if text.contains("\n") {
+                let clean = text.replacingOccurrences(
+                    of: "\n",
+                    with: " "
+                )
+                if let range = Range(range, in: textView.text) {
+                    textView.text.replaceSubrange(range, with: clean)
+                    textView.invalidateIntrinsicContentSize()
+                    return false
+                }
+                return true
+            }
+            return true
         }
         
         func textViewDidChange(_ view: UITextView) {
-            if representable.text != view.text {
-                representable.text = view.text
-                view.invalidateIntrinsicContentSize()
-            }
+            print("[textViewDidChange]")
+            representable.text = view.text
+            view.invalidateIntrinsicContentSize()
         }
     }
 
