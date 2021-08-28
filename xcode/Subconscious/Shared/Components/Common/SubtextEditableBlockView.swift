@@ -53,6 +53,7 @@ struct SubtextEditableBlockView: View, Equatable {
 
     var store: ViewStore<Model, Action>
     var fixedWidth: CGFloat
+    var padding: CGFloat = 8
 
     var body: some View {
 //        if !store.state.isEditing {
@@ -79,13 +80,16 @@ struct SubtextEditableBlockView: View, Equatable {
                 onEditingChange: { isEditing in
                     store.send(.setEditing(isEditing))
                 },
-                fixedWidth: fixedWidth
+                fixedWidth: fixedWidth - (padding * 2)
             )
+            .padding(.vertical, padding)
+            .padding(.horizontal, padding)
             .background(
                   store.state.isEditing
                 ? Constants.Color.secondaryBackground
                 : Constants.Color.background
             )
+            .cornerRadius(8)
 //        }
     }
 }

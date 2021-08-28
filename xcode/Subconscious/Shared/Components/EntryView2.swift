@@ -92,9 +92,10 @@ struct EntryView2: View, Equatable {
 
     var store: ViewStore<Model, Action>
     var fixedWidth: CGFloat
+    var padding: CGFloat = 8
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        VStack(alignment: .leading, spacing: 0) {
             ForEach(store.state.visibleBlocks) { block in
                 SubtextEditableBlockView(
                     store: ViewStore(
@@ -107,7 +108,7 @@ struct EntryView2: View, Equatable {
                             )
                         }
                     ),
-                    fixedWidth: fixedWidth - (16 * 2)
+                    fixedWidth: fixedWidth - (padding * 2)
                 ).equatable()
             }
             if store.state.isTruncated {
@@ -123,11 +124,11 @@ struct EntryView2: View, Equatable {
                     .cornerRadius(8)
 
                     Spacer()
-                }
+                }.padding(padding)
             }
         }
-        .padding(.vertical, 24)
-        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
+        .padding(.horizontal, padding)
         .background(Constants.Color.background)
     }
 }
