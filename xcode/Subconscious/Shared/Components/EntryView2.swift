@@ -15,7 +15,7 @@ import OrderedCollections
 struct EntryView2: View, Equatable {
     //  MARK: Action
     enum Action {
-        case block(id: UUID, action: EditableSubtextBlockView.Action)
+        case block(id: UUID, action: SubtextEditableBlockView.Action)
         case setFolded(Bool)
     }
 
@@ -25,12 +25,12 @@ struct EntryView2: View, Equatable {
             url
         }
         var url: URL
-        var blocks: OrderedDictionary<UUID, EditableSubtextBlockView.Model>
+        var blocks: OrderedDictionary<UUID, SubtextEditableBlockView.Model>
         var isFolded = true
         var isTruncated: Bool {
             isFolded && blocks.values.count > 3
         }
-        var visibleBlocks: [EditableSubtextBlockView.Model] {
+        var visibleBlocks: [SubtextEditableBlockView.Model] {
             if isFolded && blocks.values.count > 3 {
                 return Array(blocks.values.elements.prefix(3))
             } else {
@@ -43,9 +43,9 @@ struct EntryView2: View, Equatable {
             markup: String
         ) {
             self.url = url
-            var blocks = OrderedDictionary<UUID, EditableSubtextBlockView.Model>()
+            var blocks = OrderedDictionary<UUID, SubtextEditableBlockView.Model>()
             for line in markup.splitlines() {
-                let block = EditableSubtextBlockView.Model(markup: String(line))
+                let block = SubtextEditableBlockView.Model(markup: String(line))
                 blocks[block.id] = block
             }
             self.blocks = blocks
@@ -61,9 +61,10 @@ struct EntryView2: View, Equatable {
         switch action {
         case .block(let id, let action):
             if state.blocks[id] != nil {
-                return EditableSubtextBlockView.update(
+                return SubtextEditableBlockView.update(
                     state: &state.blocks[id]!,
-                    action: action
+                    action: action,
+                    environment: environment
                 ).map({ action in
                     tagEntry(
                         id: id,
@@ -84,7 +85,7 @@ struct EntryView2: View, Equatable {
     //  MARK: Tags
     static func tagEntry(
         id: UUID,
-        action: EditableSubtextBlockView.Action
+        action: SubtextEditableBlockView.Action
     ) -> Action {
         .block(id: id, action: action)
     }
@@ -95,7 +96,7 @@ struct EntryView2: View, Equatable {
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             ForEach(store.state.visibleBlocks) { block in
-                EditableSubtextBlockView(
+                SubtextEditableBlockView(
                     store: ViewStore(
                         state: block,
                         send: store.send,

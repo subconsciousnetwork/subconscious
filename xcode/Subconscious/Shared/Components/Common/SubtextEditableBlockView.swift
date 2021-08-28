@@ -1,6 +1,6 @@
 //
-//  EditableSubtextBlockView.swift
-//  EditableSubtextBlockView
+//  SubtextEditableBlockView.swift
+//  SubtextEditableBlockView
 //
 //  Created by Gordon Brander on 8/25/21.
 //
@@ -8,11 +8,13 @@
 import SwiftUI
 import Combine
 import Elmo
+import os
 
-struct EditableSubtextBlockView: View, Equatable {
+struct SubtextEditableBlockView: View, Equatable {
     enum Action {
         case setEditing(Bool)
         case setMarkup(String)
+        case enter
     }
 
     struct Model: Equatable, Identifiable {
@@ -31,13 +33,20 @@ struct EditableSubtextBlockView: View, Equatable {
 
     static func update(
         state: inout Model,
-        action: Action
+        action: Action,
+        environment: Logger
     ) -> AnyPublisher<Action, Never> {
         switch action {
         case .setMarkup(let markup):
             state.dom = Subtext3(markup)
         case .setEditing(let isEditing):
             state.isEditing = isEditing
+        case .enter:
+            environment.debug(
+                """
+                .enter should be handled by parent.
+                """
+            )
         }
         return Empty().eraseToAnyPublisher()
     }
@@ -46,34 +55,45 @@ struct EditableSubtextBlockView: View, Equatable {
     var fixedWidth: CGFloat
 
     var body: some View {
-        if !store.state.isEditing {
-            Text(
-                AttributedString(
-                    store.state.dom.renderMarkup(
-                        url: SubURL.wikilinkToURLString
-                    )
-                )
-            ).onTapGesture(perform: {
-                store.send(.setEditing(true))
-            })
-        } else {
-            DynamicTextViewRepresentable(
+//        if !store.state.isEditing {
+//            Text(
+//                AttributedString(
+//                    store.state.dom.renderMarkup(
+//                        url: SubURL.wikilinkToURLString
+//                    )
+//                )
+//            ).onTapGesture(perform: {
+//                store.send(.setEditing(true))
+//            })
+//        } else {
+            LineTextViewRepresentable(
                 text: Binding(
                     get: { store.state.dom.markup },
                     set: { markup in
                         store.send(.setMarkup(markup))
                     }
                 ),
+                onEnter: {
+                    store.send(.enter)
+                },
+                onEditingChange: { isEditing in
+                    store.send(.setEditing(isEditing))
+                },
                 fixedWidth: fixedWidth
             )
-        }
+            .background(
+                  store.state.isEditing
+                ? Constants.Color.secondaryBackground
+                : Constants.Color.background
+            )
+//        }
     }
 }
 
 struct EditableSubtextBlock_Previews: PreviewProvider {
     static var previews: some View {
         GeometryReader { geometry in
-            EditableSubtextBlockView(
+            SubtextEditableBlockView(
                 store: ViewStore(
                     state: .init(),
                     send: { action in

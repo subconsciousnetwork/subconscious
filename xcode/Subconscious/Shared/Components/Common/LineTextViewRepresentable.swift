@@ -1,5 +1,5 @@
 //
-//  DynamicTextViewRepresentable.swift
+//  LineTextViewRepresentable.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 7/6/21.
@@ -8,9 +8,9 @@
 import SwiftUI
 
 /// A textview that grows to the height of its content
-struct DynamicTextViewRepresentable: UIViewRepresentable {
+struct LineTextViewRepresentable: UIViewRepresentable {
     /// Extends UITTextView to provide an intrinsicContentSize given a fixed width.
-    class DynamicTextView: UITextView {
+    class FixedWidthTextView: UITextView {
         var fixedWidth: CGFloat = 0
         override var intrinsicContentSize: CGSize {
             sizeThatFits(CGSize(width: fixedWidth, height: frame.height))
@@ -18,9 +18,9 @@ struct DynamicTextViewRepresentable: UIViewRepresentable {
     }
 
     class Coordinator: NSObject, UITextViewDelegate {
-        var representable: DynamicTextViewRepresentable
+        var representable: LineTextViewRepresentable
 
-        init(_ representable: DynamicTextViewRepresentable) {
+        init(_ representable: LineTextViewRepresentable) {
             self.representable = representable
         }
 
@@ -50,21 +50,45 @@ struct DynamicTextViewRepresentable: UIViewRepresentable {
             }
             return true
         }
-        
+
+        /// Handle changes to textview
         func textViewDidChange(_ view: UITextView) {
             representable.text = view.text
             view.invalidateIntrinsicContentSize()
         }
+
+        /// Handle editing begin (focus)
+        func textViewDidBeginEditing(_ textView: UITextView) {
+            representable.onEditingChange(true)
+        }
+
+        /// Handle editing end (blur)
+        func textViewDidEndEditing(_ textView: UITextView) {
+            representable.onEditingChange(false)
+        }
     }
 
+    /// Defalult no-op event handlers
+    private static func onEnter() -> Void {}
+    private static func onEditingChange(
+        _ isEditing: Bool
+    ) -> Void {}
+
     @Binding var text: String
+    /// Called when user hits enter, or tries to create a line break.
+    var onEnter: () -> Void = onEnter
+    /// Called when textview begins or ends editing.
+    /// Callback is passed a boolean that flags if textview is being edited.
+    var onEditingChange: (Bool) -> Void = onEditingChange
+    /// Fixed width of textview container, needed to determine textview height.
+    /// Use `GeometryView` to find container width.
     var fixedWidth: CGFloat
     var font: UIFont = UIFont.preferredFont(forTextStyle: .body)
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
 
-    func makeUIView(context: Context) -> DynamicTextView {
-        let view = DynamicTextView()
+    func makeUIView(context: Context) -> FixedWidthTextView {
+        let view = FixedWidthTextView()
         view.delegate = context.coordinator
         view.fixedWidth = fixedWidth
         // Remove that extra bit of inner padding.
@@ -76,7 +100,7 @@ struct DynamicTextViewRepresentable: UIViewRepresentable {
         return view
     }
 
-    func updateUIView(_ view: DynamicTextView, context: Context) {
+    func updateUIView(_ view: FixedWidthTextView, context: Context) {
         if view.text != text {
             // Save selected range (cursor position).
             let selectedRange = view.selectedRange
@@ -100,7 +124,7 @@ struct DynamicTextViewRepresentable: UIViewRepresentable {
         }
     }
 
-    func makeCoordinator() -> DynamicTextViewRepresentable.Coordinator {
+    func makeCoordinator() -> LineTextViewRepresentable.Coordinator {
         Coordinator(self)
     }
 
@@ -122,18 +146,18 @@ struct DynamicTextViewRepresentable: UIViewRepresentable {
     }
 }
 
-struct DynamicTextViewRepresentable_Preview: PreviewProvider {
+struct LineTextViewRepresentable_Preview: PreviewProvider {
     static var previews: some View {
         GeometryReader { geometry in
             VStack {
-                DynamicTextViewRepresentable(
+                LineTextViewRepresentable(
                     text: .constant("Text"),
                     fixedWidth: geometry.size.width
                 )
                 .fixedSize(horizontal: false, vertical: true)
                 .background(Constants.Color.secondaryBackground)
 
-                DynamicTextViewRepresentable(
+                LineTextViewRepresentable(
                     text: .constant("Text"),
                     fixedWidth: geometry.size.width
                 )

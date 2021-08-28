@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		B805AAF626447BF30051F205 /* TextTokenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B805AAF526447BF30051F205 /* TextTokenView.swift */; };
 		B805AAFA26447F4E0051F205 /* TextTokenBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B805AAF926447F4E0051F205 /* TextTokenBarView.swift */; };
-		B80A226E26D6DAEB00E7D49D /* EditableSubtextBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80A226D26D6DAEB00E7D49D /* EditableSubtextBlockView.swift */; };
+		B80A226E26D6DAEB00E7D49D /* SubtextEditableBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80A226D26D6DAEB00E7D49D /* SubtextEditableBlockView.swift */; };
 		B80A227026D6E72C00E7D49D /* EntryView2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80A226F26D6E72C00E7D49D /* EntryView2.swift */; };
 		B811E60F261D0FBF00484E45 /* EntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B811E60E261D0FBF00484E45 /* EntryView.swift */; };
 		B811E610261D0FBF00484E45 /* EntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B811E60E261D0FBF00484E45 /* EntryView.swift */; };
@@ -38,6 +38,7 @@
 		B86F33CA261AB2C7009D3D48 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B86F339D261AB2C7009D3D48 /* Assets.xcassets */; };
 		B86F33CB261AB2C7009D3D48 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B86F339D261AB2C7009D3D48 /* Assets.xcassets */; };
 		B874D7AD26540A7800351C8E /* SubSearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B874D7AC26540A7800351C8E /* SubSearchBarView.swift */; };
+		B877CF7626D84BE100808EC5 /* DynamicRichTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877CF7526D84BE100808EC5 /* DynamicRichTextViewRepresentable.swift */; };
 		B8796F55269E223F001AC8C1 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8796F54269E223F001AC8C1 /* Constants.swift */; };
 		B8796F5B269E3D3A001AC8C1 /* ListHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8796F5A269E3D3A001AC8C1 /* ListHeaderView.swift */; };
 		B87C7D7C261E0E6C003EFC6F /* BlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87C7D7B261E0E6C003EFC6F /* BlockView.swift */; };
@@ -61,7 +62,7 @@
 		B8B2C18926471E6B008AA3EC /* FakeTextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B2C18826471E6B008AA3EC /* FakeTextFieldView.swift */; };
 		B8C951B326AF867B00EEC3AB /* Suggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C951B226AF867B00EEC3AB /* Suggestions.swift */; };
 		B8C951B726AF8DDF00EEC3AB /* IOService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C951B626AF8DDF00EEC3AB /* IOService.swift */; };
-		B8CA2F9A26AB6B890000BFFB /* DynamicTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA2F9926AB6B890000BFFB /* DynamicTextViewRepresentable.swift */; };
+		B8CA2F9A26AB6B890000BFFB /* LineTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA2F9926AB6B890000BFFB /* LineTextViewRepresentable.swift */; };
 		B8CB7E7526D449C90018717D /* Subtext3.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CB7E7426D449C90018717D /* Subtext3.swift */; };
 		B8CCBF5A26A74CFB00218458 /* Elmo in Frameworks */ = {isa = PBXBuildFile; productRef = B8CCBF5926A74CFB00218458 /* Elmo */; };
 		B8D7D9C026B10E9E005961BB /* PrimaryButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D7D9BF26B10E9E005961BB /* PrimaryButtonStyle.swift */; };
@@ -102,7 +103,7 @@
 /* Begin PBXFileReference section */
 		B805AAF526447BF30051F205 /* TextTokenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TextTokenView.swift; path = Shared/Components/Common/TextTokenView.swift; sourceTree = SOURCE_ROOT; };
 		B805AAF926447F4E0051F205 /* TextTokenBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextTokenBarView.swift; sourceTree = "<group>"; };
-		B80A226D26D6DAEB00E7D49D /* EditableSubtextBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableSubtextBlockView.swift; sourceTree = "<group>"; };
+		B80A226D26D6DAEB00E7D49D /* SubtextEditableBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextEditableBlockView.swift; sourceTree = "<group>"; };
 		B80A226F26D6E72C00E7D49D /* EntryView2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryView2.swift; sourceTree = "<group>"; };
 		B811E60E261D0FBF00484E45 /* EntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryView.swift; sourceTree = "<group>"; };
 		B81268F32696259C007AC708 /* Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
@@ -138,6 +139,7 @@
 		B86F33C1261AB2C7009D3D48 /* Tests_macOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_macOS.swift; sourceTree = "<group>"; };
 		B86F33C3261AB2C7009D3D48 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B874D7AC26540A7800351C8E /* SubSearchBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubSearchBarView.swift; sourceTree = "<group>"; };
+		B877CF7526D84BE100808EC5 /* DynamicRichTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicRichTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8796F54269E223F001AC8C1 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		B8796F5A269E3D3A001AC8C1 /* ListHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListHeaderView.swift; sourceTree = "<group>"; };
 		B87C7D7B261E0E6C003EFC6F /* BlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockView.swift; sourceTree = "<group>"; };
@@ -157,7 +159,7 @@
 		B8B2C18826471E6B008AA3EC /* FakeTextFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeTextFieldView.swift; sourceTree = "<group>"; };
 		B8C951B226AF867B00EEC3AB /* Suggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestions.swift; sourceTree = "<group>"; };
 		B8C951B626AF8DDF00EEC3AB /* IOService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IOService.swift; path = Shared/Library/IOService.swift; sourceTree = SOURCE_ROOT; };
-		B8CA2F9926AB6B890000BFFB /* DynamicTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicTextViewRepresentable.swift; sourceTree = "<group>"; };
+		B8CA2F9926AB6B890000BFFB /* LineTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8CB7E7426D449C90018717D /* Subtext3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext3.swift; sourceTree = "<group>"; };
 		B8CCBF5826A7492B00218458 /* Elmo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Elmo; path = ../Elmo; sourceTree = "<group>"; };
 		B8D7D9BF26B10E9E005961BB /* PrimaryButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButtonStyle.swift; sourceTree = "<group>"; };
@@ -357,7 +359,8 @@
 			isa = PBXGroup;
 			children = (
 				B88CAEB926CB140700C90EDB /* MarkupTextViewRepresentable.swift */,
-				B8CA2F9926AB6B890000BFFB /* DynamicTextViewRepresentable.swift */,
+				B8CA2F9926AB6B890000BFFB /* LineTextViewRepresentable.swift */,
+				B877CF7526D84BE100808EC5 /* DynamicRichTextViewRepresentable.swift */,
 				B8B2C18826471E6B008AA3EC /* FakeTextFieldView.swift */,
 				B880975926B1DE2D000430F7 /* FullButtonStyle.swift */,
 				B85AD0EA269F92A10089ADFD /* IconLabelRowView.swift */,
@@ -369,7 +372,7 @@
 				B805AAF926447F4E0051F205 /* TextTokenBarView.swift */,
 				B805AAF526447BF30051F205 /* TextTokenView.swift */,
 				B8929E252695101B00131928 /* TextViewRepresentable.swift */,
-				B80A226D26D6DAEB00E7D49D /* EditableSubtextBlockView.swift */,
+				B80A226D26D6DAEB00E7D49D /* SubtextEditableBlockView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -574,8 +577,9 @@
 				B811E60F261D0FBF00484E45 /* EntryView.swift in Sources */,
 				B85AD0EB269F92A10089ADFD /* IconLabelRowView.swift in Sources */,
 				B87DA91F26250CF900BA5232 /* SearchBarRepresentable.swift in Sources */,
-				B80A226E26D6DAEB00E7D49D /* EditableSubtextBlockView.swift in Sources */,
+				B80A226E26D6DAEB00E7D49D /* SubtextEditableBlockView.swift in Sources */,
 				B87DA9192624DDEA00BA5232 /* StreamView.swift in Sources */,
+				B877CF7626D84BE100808EC5 /* DynamicRichTextViewRepresentable.swift in Sources */,
 				B880975A26B1DE2D000430F7 /* FullButtonStyle.swift in Sources */,
 				B8EC23D726694A33009E4474 /* OptionalUtilities.swift in Sources */,
 				B8D7D9C026B10E9E005961BB /* PrimaryButtonStyle.swift in Sources */,
@@ -586,7 +590,7 @@
 				B8C951B726AF8DDF00EEC3AB /* IOService.swift in Sources */,
 				B8B24FA52655CDF500EE6CB9 /* FileSync.swift in Sources */,
 				B8E628222672E9B2005B86CE /* PublisherManager.swift in Sources */,
-				B8CA2F9A26AB6B890000BFFB /* DynamicTextViewRepresentable.swift in Sources */,
+				B8CA2F9A26AB6B890000BFFB /* LineTextViewRepresentable.swift in Sources */,
 				B8A3E58726A8DC04007A9F8F /* Wikilinks.swift in Sources */,
 				B86F33C8261AB2C7009D3D48 /* ContentView.swift in Sources */,
 				B88715132642F2D0009BEE1E /* QuerySuggestionView.swift in Sources */,
