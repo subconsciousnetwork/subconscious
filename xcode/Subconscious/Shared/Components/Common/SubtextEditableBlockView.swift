@@ -74,12 +74,8 @@ struct SubtextEditableBlockView: View, Equatable {
                         store.send(.setMarkup(markup))
                     }
                 ),
-                onEnter: {
-                    store.send(.enter)
-                },
-                onEditingChange: { isEditing in
-                    store.send(.setEditing(isEditing))
-                },
+                onEnter: onEnter,
+                onEditingChange: onEditingChange,
                 fixedWidth: fixedWidth - (padding * 2)
             )
             .padding(.vertical, padding)
@@ -91,6 +87,16 @@ struct SubtextEditableBlockView: View, Equatable {
             )
             .cornerRadius(8)
 //        }
+    }
+
+    func onEnter() {
+        store.send(.enter)
+    }
+
+    func onEditingChange(_ isEditing: Bool) {
+        withAnimation(.easeOut(duration: Constants.Duration.fast)) {
+            store.send(.setEditing(isEditing))
+        }
     }
 }
 
