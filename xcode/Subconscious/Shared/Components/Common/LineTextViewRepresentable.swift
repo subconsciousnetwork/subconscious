@@ -34,6 +34,7 @@ struct LineTextViewRepresentable: UIViewRepresentable {
             // If user hit enter
             if range.length == 0 && text == "\n" {
                 textView.resignFirstResponder()
+                representable.onEnter()
                 return false
             // If user pasted text containing newline
             } else if text.contains("\n") {
