@@ -111,6 +111,7 @@ struct EntryView2: View, Equatable {
                     fixedWidth: fixedWidth - (padding * 2)
                 ).equatable()
             }
+
             if store.state.isTruncated {
                 HStack {
                     Button(action: {

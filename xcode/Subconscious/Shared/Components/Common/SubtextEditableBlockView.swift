@@ -14,7 +14,7 @@ struct SubtextEditableBlockView: View, Equatable {
     enum Action {
         case setEditing(Bool)
         case setMarkup(String)
-        case enter
+        case enter(selection: NSRange, text: String)
     }
 
     struct Model: Equatable, Identifiable {
@@ -74,8 +74,9 @@ struct SubtextEditableBlockView: View, Equatable {
                         store.send(.setMarkup(markup))
                     }
                 ),
-                onEnter: onEnter,
-                onEditingChange: onEditingChange,
+                shouldChange: shouldChange,
+                onBeginEditing: onBeginEditing,
+                onEndEditing: onEndEditing,
                 fixedWidth: fixedWidth - (padding * 2)
             )
             .padding(.vertical, padding)
@@ -89,13 +90,41 @@ struct SubtextEditableBlockView: View, Equatable {
 //        }
     }
 
-    func onEnter() {
-        store.send(.enter)
+    func shouldChange(
+        view: UITextView,
+        selection range: NSRange,
+        text: String
+    ) -> Bool {
+        // If user hit enter
+        if range.length == 0 && text == "\n" {
+            view.resignFirstResponder()
+            self.store.send(.enter(selection: range, text: text))
+            return false
+        // If user pasted text containing newline
+        } else if text.contains("\n") {
+            let clean = text.replacingOccurrences(
+                of: "\n",
+                with: " "
+            )
+            if let range = Range(range, in: view.text) {
+                view.text.replaceSubrange(range, with: clean)
+                view.invalidateIntrinsicContentSize()
+                return false
+            }
+            return true
+        }
+        return true
     }
 
-    func onEditingChange(_ isEditing: Bool) {
+    func onBeginEditing(_ text: String) {
         withAnimation(.easeOut(duration: Constants.Duration.fast)) {
-            store.send(.setEditing(isEditing))
+            store.send(.setEditing(true))
+        }
+    }
+
+    func onEndEditing(_ text: String) {
+        withAnimation(.easeOut(duration: Constants.Duration.fast)) {
+            store.send(.setEditing(false))
         }
     }
 }

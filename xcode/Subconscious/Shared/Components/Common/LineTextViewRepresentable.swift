@@ -31,56 +31,55 @@ struct LineTextViewRepresentable: UIViewRepresentable {
             shouldChangeTextIn range: NSRange,
             replacementText text: String
         ) -> Bool {
-            // If user hit enter
-            if range.length == 0 && text == "\n" {
-                textView.resignFirstResponder()
-                representable.onEnter()
-                return false
-            // If user pasted text containing newline
-            } else if text.contains("\n") {
-                let clean = text.replacingOccurrences(
-                    of: "\n",
-                    with: " "
-                )
-                if let range = Range(range, in: textView.text) {
-                    textView.text.replaceSubrange(range, with: clean)
-                    textView.invalidateIntrinsicContentSize()
-                    return false
-                }
-                return true
-            }
-            return true
+            representable.shouldChange(
+                textView,
+                range,
+                text
+            )
         }
 
         /// Handle changes to textview
         func textViewDidChange(_ view: UITextView) {
             representable.text = view.text
             view.invalidateIntrinsicContentSize()
+            representable.onChange(view.text)
         }
 
         /// Handle editing begin (focus)
         func textViewDidBeginEditing(_ textView: UITextView) {
-            representable.onEditingChange(true)
+            representable.onBeginEditing(textView.text)
         }
 
         /// Handle editing end (blur)
         func textViewDidEndEditing(_ textView: UITextView) {
-            representable.onEditingChange(false)
+            representable.onEndEditing(textView.text)
         }
     }
 
     /// Defalult no-op event handlers
-    private static func onEnter() -> Void {}
-    private static func onEditingChange(
-        _ isEditing: Bool
-    ) -> Void {}
+    private static func shouldChangeDefault(
+        view: UITextView,
+        selection: NSRange,
+        text: String
+    ) -> Bool {
+        return true
+    }
+
+    private static func onChangeDefault(_ text: String) -> Void {}
+    private static func onBeginEditingDefault(_ text: String) -> Void {}
+    private static func onEndEditingDefault(_ text: String) -> Void {}
 
     @Binding var text: String
-    /// Called when user hits enter, or tries to create a line break.
-    var onEnter: () -> Void = onEnter
-    /// Called when textview begins or ends editing.
-    /// Callback is passed a boolean that flags if textview is being edited.
-    var onEditingChange: (Bool) -> Void = onEditingChange
+    /// Called before a text change, to determine if the text should be changed.
+    var shouldChange: (
+        UITextView, NSRange, String
+    ) -> Bool = shouldChangeDefault
+    /// Called after text has changed
+    var onChange: (String) -> Void = onChangeDefault
+    /// Called when textview begins editing (acquires first responder).
+    var onBeginEditing: (String) -> Void = onBeginEditingDefault
+    /// Called when textview ends editing (resigns first responder).
+    var onEndEditing: (String) -> Void = onEndEditingDefault
     /// Fixed width of textview container, needed to determine textview height.
     /// Use `GeometryView` to find container width.
     var fixedWidth: CGFloat
