@@ -14,7 +14,11 @@ struct SubtextEditableBlockView: View, Equatable {
     enum Action {
         case setEditing(Bool)
         case setMarkup(String)
-        case enter(selection: NSRange, text: String)
+        case append
+        case prepend
+        case remove
+        case split
+        case mergeUp
     }
 
     struct Model: Equatable, Identifiable {
@@ -41,10 +45,34 @@ struct SubtextEditableBlockView: View, Equatable {
             state.dom = Subtext3(markup)
         case .setEditing(let isEditing):
             state.isEditing = isEditing
-        case .enter:
+        case .append:
             environment.debug(
                 """
-                .enter should be handled by parent.
+                .append should be handled by parent.
+                """
+            )
+        case .prepend:
+            environment.debug(
+                """
+                .prepend should be handled by parent.
+                """
+            )
+        case .split:
+            environment.debug(
+                """
+                .split should be handled by parent.
+                """
+            )
+        case .remove:
+            environment.debug(
+                """
+                .remove should be handled by parent.
+                """
+            )
+        case .mergeUp:
+            environment.debug(
+                """
+                .mergeUp should be handled by parent.
                 """
             )
         }
@@ -92,28 +120,76 @@ struct SubtextEditableBlockView: View, Equatable {
 
     func shouldChange(
         view: UITextView,
-        selection range: NSRange,
-        text: String
+        shouldChangeTextIn nsRange: NSRange,
+        replacementText: String
     ) -> Bool {
-        // If user hit enter
-        if range.length == 0 && text == "\n" {
-            view.resignFirstResponder()
-            self.store.send(.enter(selection: range, text: text))
-            return false
-        // If user pasted text containing newline
-        } else if text.contains("\n") {
-            let clean = text.replacingOccurrences(
-                of: "\n",
-                with: " "
-            )
-            if let range = Range(range, in: view.text) {
+        if let range = Range(nsRange, in: view.text) {
+            // User hit enter at begginging of text.
+            // Prepend new block before.
+            if (
+                replacementText == "\n" &&
+                nsRange.length == 0 &&
+                nsRange.location == 0
+            ) {
+                store.send(.prepend)
+                return false
+            // User hit enter at end of text.
+            // Append new block after.
+            } else if (
+                replacementText == "\n" &&
+                nsRange.length == 0 &&
+                range.upperBound == view.text.endIndex
+            ) {
+                view.resignFirstResponder()
+                store.send(.append)
+                return false
+            // User hit enter in middle of text.
+            // Split block at location.
+            } else if (
+                replacementText == "\n" &&
+                nsRange.length == 0 &&
+                range.lowerBound > view.text.startIndex &&
+                range.upperBound < view.text.endIndex
+            ) {
+                view.resignFirstResponder()
+                store.send(.split)
+                return false
+            // User hit delete in empty block.
+            // Remove block.
+            } else if (
+                replacementText == "" &&
+                view.text == "" &&
+                nsRange.location == 0 &&
+                nsRange.length == 0
+            ) {
+                view.resignFirstResponder()
+                store.send(.remove)
+                return true
+            // User hit delete with cursor at beginning of block.
+            // Merge block with block above.
+            } else if (
+                replacementText == "" &&
+                nsRange.location == 0 &&
+                nsRange.length == 0
+            ) {
+                view.resignFirstResponder()
+                store.send(.mergeUp)
+                return false
+            // User pasted text containing newline.
+            // Sanitize by removing newlines and append.
+            } else if replacementText.contains("\n") {
+                let clean = replacementText.replacingOccurrences(
+                    of: "\n",
+                    with: " "
+                )
                 view.text.replaceSubrange(range, with: clean)
                 view.invalidateIntrinsicContentSize()
                 return false
             }
             return true
+        } else {
+            return true
         }
-        return true
     }
 
     func onBeginEditing(_ text: String) {
