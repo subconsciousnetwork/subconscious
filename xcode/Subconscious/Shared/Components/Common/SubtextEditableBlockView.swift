@@ -33,6 +33,10 @@ struct SubtextEditableBlockView: View, Equatable {
         init(markup: String = "") {
             self.dom = Subtext3(markup)
         }
+
+        mutating func append(_ model: Model) {
+            self.dom = self.dom.appending(dom: model.dom)
+        }
     }
 
     static func update(

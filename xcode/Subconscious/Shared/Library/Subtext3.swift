@@ -264,4 +264,16 @@ struct Subtext3: Equatable {
         }
         return attributedString
     }
+
+    /// Append additional markup.
+    /// Returns a new Subtext instance
+    func appending(dom: Self) -> Self {
+        Self(self.markup + dom.markup)
+    }
+
+    /// Append additional markup.
+    /// Returns a new Subtext instance
+    func appending(markup: String) -> Self {
+        Self(self.markup + markup)
+    }
 }

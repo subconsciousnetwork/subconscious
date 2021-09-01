@@ -20,6 +20,26 @@ struct EntryView2: View, Equatable {
         case append(id: UUID)
         case prepend(id: UUID)
         case remove(id: UUID)
+        case mergeUp(id: UUID)
+    }
+
+    //  MARK: Tags
+    static func tagEntry(
+        id: UUID,
+        action: SubtextEditableBlockView.Action
+    ) -> Action {
+        switch action {
+        case .append:
+            return .append(id: id)
+        case .prepend:
+            return .prepend(id: id)
+        case .remove:
+            return .remove(id: id)
+        case .mergeUp:
+            return .mergeUp(id: id)
+        default:
+            return .block(id: id, action: action)
+        }
     }
 
     //  MARK: Model
@@ -134,27 +154,34 @@ struct EntryView2: View, Equatable {
         case .remove(let id):
             // Delete block
             state.blocks.removeValue(forKey: id)
+        case .mergeUp(let id):
+            if let focusedIndex = state.blocks.index(forKey: id) {
+                // Merge up for index 0 is a no-op
+                if focusedIndex > 0 {
+                    // Remove block
+                    if let block = state.blocks.removeValue(forKey: id) {
+                        let prevIndex = max(
+                            focusedIndex - 1,
+                            state.blocks.values.startIndex
+                        )
+                        state.blocks.values[prevIndex].append(block)
+                    }
+                }
+            } else {
+                // Could not find block.
+                // This is a normal case. It can happen if the block was
+                // deleted before an action sent to it was delivered.
+                environment.log(
+                    """
+                    Could not prepend block before ID \(id). ID does not exist.
+                    This is ok. It can happen if the block was deleted before an action sent to it was delivered.
+                    """
+                )
+            }
         case .setFolded(let isFolded):
             state.isFolded = isFolded
         }
         return Empty().eraseToAnyPublisher()
-    }
-
-    //  MARK: Tags
-    static func tagEntry(
-        id: UUID,
-        action: SubtextEditableBlockView.Action
-    ) -> Action {
-        switch action {
-        case .append:
-            return .append(id: id)
-        case .prepend:
-            return .prepend(id: id)
-        case .remove:
-            return .remove(id: id)
-        default:
-            return .block(id: id, action: action)
-        }
     }
 
     var store: ViewStore<Model, Action>
