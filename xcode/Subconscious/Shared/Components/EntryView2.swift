@@ -18,6 +18,7 @@ struct EntryView2: View, Equatable {
         case block(id: UUID, action: SubtextEditableBlockView.Action)
         case setFolded(Bool)
         case prepend(id: UUID)
+        case remove(id: UUID)
     }
 
     //  MARK: Model
@@ -73,10 +74,12 @@ struct EntryView2: View, Equatable {
                     )
                 }).eraseToAnyPublisher()
             }
-            // If we didn't find a block, do nothing.
-            // This is a normal case. It can happen if
-            // the block was deleted before an action sent to it was
-            // delivered.
+            environment.log(
+                """
+                Could not send action to block with ID \(id).
+                This is ok. It can happen if the block was deleted before an action sent to it was delivered.
+                """
+            )
         case .prepend(let id):
             let focusedIndex = state.blocks.index(forKey: id)
             if let focusedIndex = focusedIndex {
@@ -90,13 +93,19 @@ struct EntryView2: View, Equatable {
                 // Set new block `OrderedDictionary` as new state.
                 state.blocks = blocks
             } else {
+                // Could not find block.
+                // This is a normal case. It can happen if the block was
+                // deleted before an action sent to it was delivered.
                 environment.log(
                     """
-                    Could not prepend block before ID \(id).
-                    ID does not exist.
+                    Could not prepend block before ID \(id). ID does not exist.
+                    This is ok. It can happen if the block was deleted before an action sent to it was delivered.
                     """
                 )
             }
+        case .remove(let id):
+            // Delete block
+            state.blocks.removeValue(forKey: id)
         case .setFolded(let isFolded):
             state.isFolded = isFolded
         }
@@ -111,6 +120,8 @@ struct EntryView2: View, Equatable {
         switch action {
         case .prepend:
             return .prepend(id: id)
+        case .remove:
+            return .remove(id: id)
         default:
             return .block(id: id, action: action)
         }
