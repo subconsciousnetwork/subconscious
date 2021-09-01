@@ -17,6 +17,7 @@ struct EntryView2: View, Equatable {
     enum Action {
         case block(id: UUID, action: SubtextEditableBlockView.Action)
         case setFolded(Bool)
+        case append(id: UUID)
         case prepend(id: UUID)
         case remove(id: UUID)
     }
@@ -80,6 +81,33 @@ struct EntryView2: View, Equatable {
                 This is ok. It can happen if the block was deleted before an action sent to it was delivered.
                 """
             )
+        case .append(let id):
+            let focusedIndex = state.blocks.index(forKey: id)
+            if let focusedIndex = focusedIndex {
+                let block = SubtextEditableBlockView.Model(markup: "")
+                // Insert new block after index
+                let nextIndex = min(
+                    focusedIndex + 1,
+                    state.blocks.keys.endIndex
+                )
+                let blocks = state.blocks.inserting(
+                    key: block.id,
+                    value: block,
+                    at: nextIndex
+                )
+                // Set new block `OrderedDictionary` as new state.
+                state.blocks = blocks
+            } else {
+                // Could not find block.
+                // This is a normal case. It can happen if the block was
+                // deleted before an action sent to it was delivered.
+                environment.log(
+                    """
+                    Could not append block before ID \(id). ID does not exist.
+                    This is ok. It can happen if the block was deleted before an action sent to it was delivered.
+                    """
+                )
+            }
         case .prepend(let id):
             let focusedIndex = state.blocks.index(forKey: id)
             if let focusedIndex = focusedIndex {
@@ -118,6 +146,8 @@ struct EntryView2: View, Equatable {
         action: SubtextEditableBlockView.Action
     ) -> Action {
         switch action {
+        case .append:
+            return .append(id: id)
         case .prepend:
             return .prepend(id: id)
         case .remove:
