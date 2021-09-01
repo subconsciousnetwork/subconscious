@@ -17,6 +17,7 @@ struct EntryView2: View, Equatable {
     enum Action {
         case block(id: UUID, action: SubtextEditableBlockView.Action)
         case setFolded(Bool)
+        case prepend(id: UUID)
     }
 
     //  MARK: Model
@@ -76,6 +77,26 @@ struct EntryView2: View, Equatable {
             // This is a normal case. It can happen if
             // the block was deleted before an action sent to it was
             // delivered.
+        case .prepend(let id):
+            let focusedIndex = state.blocks.index(forKey: id)
+            if let focusedIndex = focusedIndex {
+                let block = SubtextEditableBlockView.Model(markup: "")
+                // Insert new block before index
+                let blocks = state.blocks.inserting(
+                    key: block.id,
+                    value: block,
+                    at: focusedIndex
+                )
+                // Set new block `OrderedDictionary` as new state.
+                state.blocks = blocks
+            } else {
+                environment.log(
+                    """
+                    Could not prepend block before ID \(id).
+                    ID does not exist.
+                    """
+                )
+            }
         case .setFolded(let isFolded):
             state.isFolded = isFolded
         }
@@ -87,7 +108,12 @@ struct EntryView2: View, Equatable {
         id: UUID,
         action: SubtextEditableBlockView.Action
     ) -> Action {
-        .block(id: id, action: action)
+        switch action {
+        case .prepend:
+            return .prepend(id: id)
+        default:
+            return .block(id: id, action: action)
+        }
     }
 
     var store: ViewStore<Model, Action>

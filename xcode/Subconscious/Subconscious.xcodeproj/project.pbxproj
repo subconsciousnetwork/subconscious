@@ -54,6 +54,7 @@
 		B88CAEBA26CB140700C90EDB /* MarkupTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88CAEB926CB140700C90EDB /* MarkupTextViewRepresentable.swift */; };
 		B890CD5326C2FC7A00F0DDEE /* Subtext2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B890CD5226C2FC7A00F0DDEE /* Subtext2.swift */; };
 		B8929E262695101B00131928 /* TextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8929E252695101B00131928 /* TextViewRepresentable.swift */; };
+		B894E77826DFF16E00BADC74 /* OrdereredDictionaryUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B894E77726DFF16E00BADC74 /* OrdereredDictionaryUtilities.swift */; };
 		B8A3E58726A8DC04007A9F8F /* Wikilinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A3E58626A8DC04007A9F8F /* Wikilinks.swift */; };
 		B8A3E58926A8E5C0007A9F8F /* RegularExpressionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A3E58826A8E5C0007A9F8F /* RegularExpressionUtilities.swift */; };
 		B8B24FA52655CDF500EE6CB9 /* FileSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B24FA42655CDF500EE6CB9 /* FileSync.swift */; };
@@ -151,6 +152,7 @@
 		B88CAEB926CB140700C90EDB /* MarkupTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkupTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B890CD5226C2FC7A00F0DDEE /* Subtext2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext2.swift; sourceTree = "<group>"; };
 		B8929E252695101B00131928 /* TextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextViewRepresentable.swift; sourceTree = "<group>"; };
+		B894E77726DFF16E00BADC74 /* OrdereredDictionaryUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdereredDictionaryUtilities.swift; sourceTree = "<group>"; };
 		B8A3E58626A8DC04007A9F8F /* Wikilinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wikilinks.swift; sourceTree = "<group>"; };
 		B8A3E58826A8E5C0007A9F8F /* RegularExpressionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegularExpressionUtilities.swift; sourceTree = "<group>"; };
 		B8B24FA42655CDF500EE6CB9 /* FileSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSync.swift; sourceTree = "<group>"; };
@@ -270,6 +272,7 @@
 				B8158D1D269796BB00F927EF /* Truncate.swift */,
 				B82211F426375A9C005CFBBE /* URLUtilities.swift */,
 				B8A3E58626A8DC04007A9F8F /* Wikilinks.swift */,
+				B894E77726DFF16E00BADC74 /* OrdereredDictionaryUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -569,6 +572,7 @@
 				B85CABF8265C68AF00BE1BE6 /* SQLite3Connection.swift in Sources */,
 				B890CD5326C2FC7A00F0DDEE /* Subtext2.swift in Sources */,
 				B8B2C18926471E6B008AA3EC /* FakeTextFieldView.swift in Sources */,
+				B894E77826DFF16E00BADC74 /* OrdereredDictionaryUtilities.swift in Sources */,
 				B88CAEB826CACC7300C90EDB /* SubURL.swift in Sources */,
 				B805AAFA26447F4E0051F205 /* TextTokenBarView.swift in Sources */,
 				B86F33C4261AB2C7009D3D48 /* SubconsciousApp.swift in Sources */,
