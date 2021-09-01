@@ -17,7 +17,7 @@ struct SubtextEditableBlockView: View, Equatable {
         case append
         case prepend
         case remove
-        case split
+        case split(at: NSRange)
         case mergeUp
     }
 
@@ -61,12 +61,6 @@ struct SubtextEditableBlockView: View, Equatable {
                 .prepend should be handled by parent.
                 """
             )
-        case .split:
-            environment.debug(
-                """
-                .split should be handled by parent.
-                """
-            )
         case .remove:
             environment.debug(
                 """
@@ -77,6 +71,12 @@ struct SubtextEditableBlockView: View, Equatable {
             environment.debug(
                 """
                 .mergeUp should be handled by parent.
+                """
+            )
+        case .split:
+            environment.debug(
+                """
+                .split should be handled by parent.
                 """
             )
         }
@@ -156,7 +156,7 @@ struct SubtextEditableBlockView: View, Equatable {
                 range.upperBound < view.text.endIndex
             ) {
                 view.resignFirstResponder()
-                store.send(.split)
+                store.send(.split(at: nsRange))
                 return false
             // User hit delete in empty block.
             // Remove block.

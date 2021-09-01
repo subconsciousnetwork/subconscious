@@ -17,10 +17,15 @@ struct EntryView2: View, Equatable {
     enum Action {
         case block(id: UUID, action: SubtextEditableBlockView.Action)
         case setFolded(Bool)
-        case append(id: UUID)
-        case prepend(id: UUID)
+        case append(id: UUID, markup: String)
+        case prepend(id: UUID, markup: String)
         case remove(id: UUID)
         case mergeUp(id: UUID)
+        case split(id: UUID, at: NSRange)
+
+        static func setMarkup(id: UUID, markup: String) -> Self {
+            .block(id: id, action: .setMarkup(markup))
+        }
     }
 
     //  MARK: Tags
@@ -30,13 +35,15 @@ struct EntryView2: View, Equatable {
     ) -> Action {
         switch action {
         case .append:
-            return .append(id: id)
+            return .append(id: id, markup: "")
         case .prepend:
-            return .prepend(id: id)
+            return .prepend(id: id, markup: "")
         case .remove:
             return .remove(id: id)
         case .mergeUp:
             return .mergeUp(id: id)
+        case .split(let range):
+            return .split(id: id, at: range)
         default:
             return .block(id: id, action: action)
         }
@@ -101,26 +108,23 @@ struct EntryView2: View, Equatable {
                 This is ok. It can happen if the block was deleted before an action sent to it was delivered.
                 """
             )
-        case .append(let id):
+        case .append(let id, let markup):
             let focusedIndex = state.blocks.index(forKey: id)
             if let focusedIndex = focusedIndex {
-                let block = SubtextEditableBlockView.Model(markup: "")
+                let nextBlock = SubtextEditableBlockView.Model(markup: markup)
                 // Insert new block after index
                 let nextIndex = min(
                     focusedIndex + 1,
                     state.blocks.keys.endIndex
                 )
                 let blocks = state.blocks.inserting(
-                    key: block.id,
-                    value: block,
+                    key: nextBlock.id,
+                    value: nextBlock,
                     at: nextIndex
                 )
                 // Set new block `OrderedDictionary` as new state.
                 state.blocks = blocks
             } else {
-                // Could not find block.
-                // This is a normal case. It can happen if the block was
-                // deleted before an action sent to it was delivered.
                 environment.log(
                     """
                     Could not append block before ID \(id). ID does not exist.
@@ -128,22 +132,19 @@ struct EntryView2: View, Equatable {
                     """
                 )
             }
-        case .prepend(let id):
+        case .prepend(let id, let markup):
             let focusedIndex = state.blocks.index(forKey: id)
             if let focusedIndex = focusedIndex {
-                let block = SubtextEditableBlockView.Model(markup: "")
+                let prevBlock = SubtextEditableBlockView.Model(markup: markup)
                 // Insert new block before index
                 let blocks = state.blocks.inserting(
-                    key: block.id,
-                    value: block,
+                    key: prevBlock.id,
+                    value: prevBlock,
                     at: focusedIndex
                 )
                 // Set new block `OrderedDictionary` as new state.
                 state.blocks = blocks
             } else {
-                // Could not find block.
-                // This is a normal case. It can happen if the block was
-                // deleted before an action sent to it was delivered.
                 environment.log(
                     """
                     Could not prepend block before ID \(id). ID does not exist.
@@ -158,22 +159,54 @@ struct EntryView2: View, Equatable {
             if let focusedIndex = state.blocks.index(forKey: id) {
                 // Merge up for index 0 is a no-op
                 if focusedIndex > 0 {
-                    // Remove block
-                    if let block = state.blocks.removeValue(forKey: id) {
-                        let prevIndex = max(
-                            focusedIndex - 1,
-                            state.blocks.values.startIndex
-                        )
-                        state.blocks.values[prevIndex].append(block)
-                    }
+                    // Remove block and capture var.
+                    // We know block exists at this point, so we force unwrap.
+                    let block = state.blocks.removeValue(forKey: id)!
+                    // Get previous index. Bound it out of paranoia.
+                    let prevIndex = max(
+                        focusedIndex - 1,
+                        state.blocks.values.startIndex
+                    )
+                    state.blocks.values[prevIndex].append(block)
                 }
             } else {
-                // Could not find block.
-                // This is a normal case. It can happen if the block was
-                // deleted before an action sent to it was delivered.
                 environment.log(
                     """
-                    Could not prepend block before ID \(id). ID does not exist.
+                    Could not merge block with ID \(id). ID does not exist.
+                    This is ok. It can happen if the block was deleted before an action sent to it was delivered.
+                    """
+                )
+            }
+        case .split(let id, let nsRange):
+            if
+                let block = state.blocks[id],
+                let range = Range(nsRange, in: block.dom.markup)
+            {
+                let markup = block.dom.markup
+                let beforeText = markup[
+                    markup.startIndex..<range.lowerBound
+                ]
+                let afterText = markup[
+                    range.upperBound..<markup.endIndex
+                ]
+                return Publishers.Merge(
+                    Just(
+                        Action.prepend(
+                            id: id,
+                            markup: String(beforeText)
+                        )
+                    ),
+                    Just(
+                        Action.setMarkup(
+                            id: id,
+                            markup: String(afterText)
+                        )
+                    )
+                ).eraseToAnyPublisher()
+            } else {
+                environment.log(
+                    """
+                    Could not split block with ID \(id). ID does not exist.
                     This is ok. It can happen if the block was deleted before an action sent to it was delivered.
                     """
                 )
