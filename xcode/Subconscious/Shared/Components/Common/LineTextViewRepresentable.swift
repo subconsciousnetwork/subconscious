@@ -54,6 +54,10 @@ struct LineTextViewRepresentable: UIViewRepresentable {
         func textViewDidEndEditing(_ textView: UITextView) {
             representable.onEndEditing(textView.text)
         }
+
+        func textViewDidChangeSelection(_ textView: UITextView) {
+            representable.onSelectionChange(textView.selectedRange)
+        }
     }
 
     /// Defalult no-op event handlers
@@ -68,6 +72,7 @@ struct LineTextViewRepresentable: UIViewRepresentable {
     private static func onChangeDefault(_ text: String) -> Void {}
     private static func onBeginEditingDefault(_ text: String) -> Void {}
     private static func onEndEditingDefault(_ text: String) -> Void {}
+    private static func onSelectionChangeDefault(_ range: NSRange) -> Void {}
 
     @Binding var text: String
     /// Called before a text change, to determine if the text should be changed.
@@ -80,6 +85,7 @@ struct LineTextViewRepresentable: UIViewRepresentable {
     var onBeginEditing: (String) -> Void = onBeginEditingDefault
     /// Called when textview ends editing (resigns first responder).
     var onEndEditing: (String) -> Void = onEndEditingDefault
+    var onSelectionChange: (NSRange) -> Void = onSelectionChangeDefault
     /// Fixed width of textview container, needed to determine textview height.
     /// Use `GeometryView` to find container width.
     var fixedWidth: CGFloat

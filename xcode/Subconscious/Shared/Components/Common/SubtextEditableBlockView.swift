@@ -12,7 +12,8 @@ import os
 
 struct SubtextEditableBlockView: View, Equatable {
     enum Action {
-        case setEditing(Bool)
+        case setFirstResponder(Bool)
+        case setSelection(NSRange)
         case setMarkup(String)
         case append
         case prepend
@@ -24,7 +25,8 @@ struct SubtextEditableBlockView: View, Equatable {
     struct Model: Equatable, Identifiable {
         var id = UUID()
         var dom: Subtext3
-        var isEditing: Bool = false
+        var selection: NSRange = NSMakeRange(0, 0)
+        var isFirstResponder: Bool = false
 
         init(dom: Subtext3) {
             self.dom = dom
@@ -47,8 +49,10 @@ struct SubtextEditableBlockView: View, Equatable {
         switch action {
         case .setMarkup(let markup):
             state.dom = Subtext3(markup)
-        case .setEditing(let isEditing):
-            state.isEditing = isEditing
+        case .setFirstResponder(let isFirstResponder):
+            state.isFirstResponder = isFirstResponder
+        case .setSelection(let selection):
+            state.selection = selection
         case .append:
             environment.debug(
                 """
@@ -114,7 +118,7 @@ struct SubtextEditableBlockView: View, Equatable {
             .padding(.vertical, padding)
             .padding(.horizontal, padding)
             .background(
-                  store.state.isEditing
+                  store.state.isFirstResponder
                 ? Constants.Color.secondaryBackground
                 : Constants.Color.background
             )
@@ -198,13 +202,13 @@ struct SubtextEditableBlockView: View, Equatable {
 
     func onBeginEditing(_ text: String) {
         withAnimation(.easeOut(duration: Constants.Duration.fast)) {
-            store.send(.setEditing(true))
+            store.send(.setFirstResponder(true))
         }
     }
 
     func onEndEditing(_ text: String) {
         withAnimation(.easeOut(duration: Constants.Duration.fast)) {
-            store.send(.setEditing(false))
+            store.send(.setFirstResponder(false))
         }
     }
 }
