@@ -12,7 +12,7 @@ import os
 
 struct SubtextEditableBlockView: View, Equatable {
     enum Action {
-        case setFirstResponder(Bool)
+        case setFocus(Bool)
         case setSelection(NSRange)
         case setMarkup(String)
         case append
@@ -26,7 +26,7 @@ struct SubtextEditableBlockView: View, Equatable {
         var id = UUID()
         var dom: Subtext3
         var selection: NSRange = NSMakeRange(0, 0)
-        var isFirstResponder: Bool = false
+        var isFocused: Bool = false
 
         init(dom: Subtext3) {
             self.dom = dom
@@ -49,8 +49,8 @@ struct SubtextEditableBlockView: View, Equatable {
         switch action {
         case .setMarkup(let markup):
             state.dom = Subtext3(markup)
-        case .setFirstResponder(let isFirstResponder):
-            state.isFirstResponder = isFirstResponder
+        case .setFocus(let isFocused):
+            state.isFocused = isFocused
         case .setSelection(let selection):
             state.selection = selection
         case .append:
@@ -92,7 +92,7 @@ struct SubtextEditableBlockView: View, Equatable {
     var padding: CGFloat = 8
 
     var body: some View {
-//        if !store.state.isEditing {
+//        if !store.state.isFocused {
 //            Text(
 //                AttributedString(
 //                    store.state.dom.renderMarkup(
@@ -110,6 +110,7 @@ struct SubtextEditableBlockView: View, Equatable {
                         store.send(.setMarkup(markup))
                     }
                 ),
+                isFocused: store.state.isFocused,
                 shouldChange: shouldChange,
                 onBeginEditing: onBeginEditing,
                 onEndEditing: onEndEditing,
@@ -118,7 +119,7 @@ struct SubtextEditableBlockView: View, Equatable {
             .padding(.vertical, padding)
             .padding(.horizontal, padding)
             .background(
-                  store.state.isFirstResponder
+                  store.state.isFocused
                 ? Constants.Color.secondaryBackground
                 : Constants.Color.background
             )
@@ -202,13 +203,13 @@ struct SubtextEditableBlockView: View, Equatable {
 
     func onBeginEditing(_ text: String) {
         withAnimation(.easeOut(duration: Constants.Duration.fast)) {
-            store.send(.setFirstResponder(true))
+            store.send(.setFocus(true))
         }
     }
 
     func onEndEditing(_ text: String) {
         withAnimation(.easeOut(duration: Constants.Duration.fast)) {
-            store.send(.setFirstResponder(false))
+            store.send(.setFocus(false))
         }
     }
 }

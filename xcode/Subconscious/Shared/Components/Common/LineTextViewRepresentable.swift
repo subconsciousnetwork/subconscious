@@ -75,6 +75,7 @@ struct LineTextViewRepresentable: UIViewRepresentable {
     private static func onSelectionChangeDefault(_ range: NSRange) -> Void {}
 
     @Binding var text: String
+    var isFocused = false
     /// Called before a text change, to determine if the text should be changed.
     var shouldChange: (
         UITextView, NSRange, String
@@ -118,6 +119,12 @@ struct LineTextViewRepresentable: UIViewRepresentable {
         if view.fixedWidth != fixedWidth {
             view.fixedWidth = fixedWidth
             view.invalidateIntrinsicContentSize()
+        }
+
+        if isFocused && !view.isFirstResponder {
+            view.becomeFirstResponder()
+        } else if !isFocused && view.isFirstResponder {
+            view.resignFirstResponder()
         }
 
         if view.font != font {
