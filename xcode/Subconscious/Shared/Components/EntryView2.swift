@@ -55,6 +55,10 @@ struct EntryView2: View, Equatable {
 
     //  MARK: Model
     struct Model: Identifiable, Equatable {
+        enum ModelError: Error {
+            case idNotFound(id: UUID)
+        }
+
         var id: URL {
             url
         }
@@ -82,6 +86,26 @@ struct EntryView2: View, Equatable {
                 let block = SubtextEditableBlockView.Model(markup: String(line))
                 blocks[block.id] = block
             }
+            self.blocks = blocks
+        }
+
+        mutating func append(
+            after id: UUID,
+            block: SubtextEditableBlockView.Model
+        ) throws {
+            let focusedIndex = try blocks.index(forKey: id)
+                .unwrap(or: ModelError.idNotFound(id: id))
+            // Insert new block after index
+            let nextIndex = min(
+                focusedIndex + 1,
+                blocks.keys.endIndex
+            )
+            let blocks = blocks.inserting(
+                key: block.id,
+                value: block,
+                at: nextIndex
+            )
+            // Set new block `OrderedDictionary` as new state.
             self.blocks = blocks
         }
     }
@@ -113,32 +137,26 @@ struct EntryView2: View, Equatable {
                 """
             )
         case .append(let id, let markup):
-            let focusedIndex = state.blocks.index(forKey: id)
-            if let focusedIndex = focusedIndex {
-                let nextBlock = SubtextEditableBlockView.Model(markup: markup)
-                // Insert new block after index
-                let nextIndex = min(
-                    focusedIndex + 1,
-                    state.blocks.keys.endIndex
-                )
-                let blocks = state.blocks.inserting(
-                    key: nextBlock.id,
-                    value: nextBlock,
-                    at: nextIndex
-                )
-                // Set new block `OrderedDictionary` as new state.
-                state.blocks = blocks
+            do {
+                let block = SubtextEditableBlockView.Model(markup: markup)
+                try state.append(after: id, block: block)
                 return Just(
                     Action.setFocus(
-                        id: nextBlock.id,
+                        id: block.id,
                         isFocused: true
                     )
                 ).eraseToAnyPublisher()
-            } else {
+            } catch Model.ModelError.idNotFound(let id) {
                 environment.log(
                     """
                     Could not append block before ID \(id). ID does not exist.
                     This is ok. It can happen if the block was deleted before an action sent to it was delivered.
+                    """
+                )
+            } catch {
+                environment.warning(
+                    """
+                    Unexpected error: \(error.localizedDescription)
                     """
                 )
             }
