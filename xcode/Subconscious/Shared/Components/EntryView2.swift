@@ -19,7 +19,7 @@ struct EntryView2: View, Equatable {
         case setFolded(Bool)
         case append(id: UUID, markup: String)
         case prepend(id: UUID, markup: String)
-        case remove(id: UUID)
+        case deleteEmpty(id: UUID)
         case mergeUp(id: UUID)
         case split(id: UUID, at: NSRange)
 
@@ -42,8 +42,8 @@ struct EntryView2: View, Equatable {
             return .append(id: id, markup: "")
         case .prepend:
             return .prepend(id: id, markup: "")
-        case .remove:
-            return .remove(id: id)
+        case .deleteEmpty:
+            return .deleteEmpty(id: id)
         case .mergeUp:
             return .mergeUp(id: id)
         case .split(let range):
@@ -57,6 +57,7 @@ struct EntryView2: View, Equatable {
     struct Model: Identifiable, Equatable {
         enum ModelError: Error {
             case idNotFound(id: UUID)
+            case indexOutOfBounds
         }
 
         var id: URL {
@@ -96,11 +97,28 @@ struct EntryView2: View, Equatable {
             let focusedIndex = try blocks.index(forKey: id)
                 .unwrap(or: ModelError.idNotFound(id: id))
             // Insert new block after index
-            let nextIndex = blocks.index(focusedIndex, clampedOffset: 1)
+            let nextIndex = try blocks.index(focusedIndex, offsetBy: 1)
+                .unwrap(or: ModelError.indexOutOfBounds)
             let blocks = blocks.inserting(
                 key: block.id,
                 value: block,
                 at: nextIndex
+            )
+            // Set new block `OrderedDictionary` as new state.
+            self.blocks = blocks
+        }
+
+        mutating func prepend(
+            before id: UUID,
+            block: SubtextEditableBlockView.Model
+        ) throws {
+            let index = try blocks.index(forKey: id)
+                .unwrap(or: ModelError.idNotFound(id: id))
+            // `inserting` inserts *before* given index, prepending.
+            let blocks = blocks.inserting(
+                key: block.id,
+                value: block,
+                at: index
             )
             // Set new block `OrderedDictionary` as new state.
             self.blocks = blocks
@@ -127,10 +145,10 @@ struct EntryView2: View, Equatable {
                     )
                 }).eraseToAnyPublisher()
             }
-            environment.log(
+            let action = String(reflecting: action)
+            environment.debug(
                 """
-                Could not send action to block with ID \(id).
-                This is ok. It can happen if the block was deleted before an action sent to it was delivered.
+                Could not route action. Block does not exist.\t\(id)\t\(action)
                 """
             )
         case .append(let id, let markup):
@@ -146,8 +164,7 @@ struct EntryView2: View, Equatable {
             } catch Model.ModelError.idNotFound(let id) {
                 environment.log(
                     """
-                    Could not append block before ID \(id). ID does not exist.
-                    This is ok. It can happen if the block was deleted before an action sent to it was delivered.
+                    Could not append. Block does not exist.\t\(id)
                     """
                 )
             } catch {
@@ -158,47 +175,62 @@ struct EntryView2: View, Equatable {
                 )
             }
         case .prepend(let id, let markup):
-            let focusedIndex = state.blocks.index(forKey: id)
-            if let focusedIndex = focusedIndex {
-                let prevBlock = SubtextEditableBlockView.Model(markup: markup)
-                // Insert new block before index
-                let blocks = state.blocks.inserting(
-                    key: prevBlock.id,
-                    value: prevBlock,
-                    at: focusedIndex
-                )
-                // Set new block `OrderedDictionary` as new state.
-                state.blocks = blocks
-            } else {
+            do {
+                let block = SubtextEditableBlockView.Model(markup: markup)
+                try state.prepend(before: id, block: block)
+            } catch Model.ModelError.idNotFound(let id) {
                 environment.log(
                     """
-                    Could not prepend block before ID \(id). ID does not exist.
-                    This is ok. It can happen if the block was deleted before an action sent to it was delivered.
+                    Could not prepend. Block does not exist.\t\(id)
+                    """
+                )
+            } catch {
+                environment.warning(
+                    """
+                    Unexpected error: \(error.localizedDescription)
                     """
                 )
             }
-        case .remove(let id):
-            // Delete block
-            state.blocks.removeValue(forKey: id)
-        case .mergeUp(let id):
-            if let focusedIndex = state.blocks.index(forKey: id) {
-                // Merge up for index 0 is a no-op
-                if focusedIndex > 0 {
-                    // Remove block and capture var.
-                    // We know block exists at this point, so we force unwrap.
-                    let block = state.blocks.removeValue(forKey: id)!
-                    // Get previous index.
-                    let prevIndex = state.blocks.index(
-                        focusedIndex,
-                        clampedOffset: -1
-                    )
-                    state.blocks.values[prevIndex].append(block)
+        case .deleteEmpty(let id):
+            if let index = state.blocks.index(forKey: id) {
+                // Only delete empty if there is a previous block.
+                // Deleting empty block with no previous (e.g. index 0)
+                // is a no-op.
+                if let prevIndex = state.blocks.index(index, offsetBy: -1) {
+                    let prev = state.blocks.values[prevIndex]
+                    state.blocks.removeValue(forKey: id)
+                    return Just(
+                        Action.setFocus(
+                            id: prev.id,
+                            isFocused: true
+                        )
+                    ).eraseToAnyPublisher()
                 }
             } else {
                 environment.log(
                     """
-                    Could not merge block with ID \(id). ID does not exist.
-                    This is ok. It can happen if the block was deleted before an action sent to it was delivered.
+                    Could not delete empty block. Block does not exist.\t\(id)
+                    """
+                )
+            }
+        case .mergeUp(let id):
+            if let focusedIndex = state.blocks.index(forKey: id) {
+                // Merge up for index 0 is a no-op
+                if focusedIndex > 0 {
+                    if let prevIndex = state.blocks.index(
+                        focusedIndex,
+                        offsetBy: -1
+                    ) {
+                        // Remove block and capture var.
+                        // We know block exists at this point, so we force unwrap.
+                        let block = state.blocks.removeValue(forKey: id)!
+                        state.blocks.values[prevIndex].append(block)
+                    }
+                }
+            } else {
+                environment.log(
+                    """
+                    Could not merge up block. Block does not exist.\t\(id)
                     """
                 )
             }
@@ -231,8 +263,7 @@ struct EntryView2: View, Equatable {
             } else {
                 environment.log(
                     """
-                    Could not split block with ID \(id). ID does not exist.
-                    This is ok. It can happen if the block was deleted before an action sent to it was delivered.
+                    Could not split block. Block does not exist.\t\(id)
                     """
                 )
             }
@@ -261,7 +292,7 @@ struct EntryView2: View, Equatable {
                         }
                     ),
                     fixedWidth: fixedWidth - (padding * 2)
-                ).equatable()
+                )
             }
 
             if store.state.isTruncated {
