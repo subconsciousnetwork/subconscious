@@ -22,4 +22,18 @@ extension OrderedDictionary {
             last
         })
     }
+
+    /// Get offset index, clamped between start and end indexes.
+    func index(
+        _ index: OrderedDictionary.Index,
+        clampedOffset offset: Int
+    ) -> OrderedDictionary.Index {
+        Swift.min(
+            Swift.max(
+                index + offset,
+                self.keys.startIndex
+            ),
+            self.keys.endIndex
+        )
+    }
 }
