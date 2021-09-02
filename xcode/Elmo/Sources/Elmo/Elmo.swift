@@ -60,7 +60,7 @@ public final class Store<State, Action, Environment>: ObservableObject, Equatabl
             let debug = String(reflecting: action)
             logger.debug(
                 """
-                Action: \(debug)
+                [action]\t\(debug)
                 """
             )
         }
