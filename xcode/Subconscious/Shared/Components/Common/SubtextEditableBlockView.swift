@@ -17,7 +17,7 @@ struct SubtextEditableBlockView: View, Equatable {
         case setMarkup(String)
         case append
         case prepend
-        case remove
+        case deleteEmpty
         case split(at: NSRange)
         case mergeUp
     }
@@ -53,34 +53,11 @@ struct SubtextEditableBlockView: View, Equatable {
             state.isFocused = isFocused
         case .setSelection(let selection):
             state.selection = selection
-        case .append:
+        case .append, .prepend, .deleteEmpty, .mergeUp, .split:
+            let action = String(reflecting: action)
             environment.debug(
                 """
-                .append should be handled by parent.
-                """
-            )
-        case .prepend:
-            environment.debug(
-                """
-                .prepend should be handled by parent.
-                """
-            )
-        case .remove:
-            environment.debug(
-                """
-                .remove should be handled by parent.
-                """
-            )
-        case .mergeUp:
-            environment.debug(
-                """
-                .mergeUp should be handled by parent.
-                """
-            )
-        case .split:
-            environment.debug(
-                """
-                .split should be handled by parent.
+                Action should be handled by parent.\t\(action)
                 """
             )
         }
@@ -157,7 +134,7 @@ struct SubtextEditableBlockView: View, Equatable {
                 nsRange.location == 0 &&
                 nsRange.length == 0
             ) {
-                store.send(.remove)
+                store.send(.deleteEmpty)
                 return true
             // User hit delete with cursor at beginning of block.
             // Merge block with block above.
@@ -186,15 +163,11 @@ struct SubtextEditableBlockView: View, Equatable {
     }
 
     func onBeginEditing(_ text: String) {
-        withAnimation(.easeOut(duration: Constants.Duration.fast)) {
-            store.send(.setFocus(true))
-        }
+        store.send(.setFocus(true))
     }
 
     func onEndEditing(_ text: String) {
-        withAnimation(.easeOut(duration: Constants.Duration.fast)) {
-            store.send(.setFocus(false))
-        }
+        store.send(.setFocus(false))
     }
 }
 
