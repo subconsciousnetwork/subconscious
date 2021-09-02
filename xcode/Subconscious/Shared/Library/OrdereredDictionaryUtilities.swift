@@ -26,14 +26,13 @@ extension OrderedDictionary {
     /// Get offset index, clamped between start and end indexes.
     func index(
         _ index: OrderedDictionary.Index,
-        clampedOffset offset: Int
-    ) -> OrderedDictionary.Index {
-        Swift.min(
-            Swift.max(
-                index + offset,
-                self.keys.startIndex
-            ),
-            self.keys.endIndex
-        )
+        offsetBy offset: Int
+    ) -> OrderedDictionary.Index? {
+        let i = index + offset
+        if i < self.keys.startIndex || i > self.keys.endIndex {
+            return nil
+        } else {
+            return i
+        }
     }
 }
