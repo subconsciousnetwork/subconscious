@@ -92,39 +92,27 @@ struct SubtextEditableBlockView: View, Equatable {
     var padding: CGFloat = 8
 
     var body: some View {
-//        if !store.state.isFocused {
-//            Text(
-//                AttributedString(
-//                    store.state.dom.renderMarkup(
-//                        url: SubURL.wikilinkToURLString
-//                    )
-//                )
-//            ).onTapGesture(perform: {
-//                store.send(.setEditing(true))
-//            })
-//        } else {
-            LineTextViewRepresentable(
-                text: Binding(
-                    get: { store.state.dom.markup },
-                    set: { markup in
-                        store.send(.setMarkup(markup))
-                    }
-                ),
-                isFocused: store.state.isFocused,
-                shouldChange: shouldChange,
-                onBeginEditing: onBeginEditing,
-                onEndEditing: onEndEditing,
-                fixedWidth: fixedWidth - (padding * 2)
-            )
-            .padding(.vertical, padding)
-            .padding(.horizontal, padding)
-            .background(
-                  store.state.isFocused
-                ? Constants.Color.secondaryBackground
-                : Constants.Color.background
-            )
-            .cornerRadius(8)
-//        }
+        LineTextViewRepresentable(
+            text: Binding(
+                get: { store.state.dom.markup },
+                set: { markup in
+                    store.send(.setMarkup(markup))
+                }
+            ),
+            isFocused: store.state.isFocused,
+            shouldChange: shouldChange,
+            onBeginEditing: onBeginEditing,
+            onEndEditing: onEndEditing,
+            fixedWidth: fixedWidth - (padding * 2)
+        )
+        .padding(.vertical, padding)
+        .padding(.horizontal, padding)
+        .background(
+              store.state.isFocused
+            ? Constants.Color.secondaryBackground
+            : Constants.Color.background
+        )
+        .cornerRadius(8)
     }
 
     func shouldChange(
@@ -149,7 +137,6 @@ struct SubtextEditableBlockView: View, Equatable {
                 nsRange.length == 0 &&
                 range.upperBound == view.text.endIndex
             ) {
-                view.resignFirstResponder()
                 store.send(.append)
                 return false
             // User hit enter in middle of text.
@@ -160,7 +147,6 @@ struct SubtextEditableBlockView: View, Equatable {
                 range.lowerBound > view.text.startIndex &&
                 range.upperBound < view.text.endIndex
             ) {
-                view.resignFirstResponder()
                 store.send(.split(at: nsRange))
                 return false
             // User hit delete in empty block.
@@ -171,7 +157,6 @@ struct SubtextEditableBlockView: View, Equatable {
                 nsRange.location == 0 &&
                 nsRange.length == 0
             ) {
-                view.resignFirstResponder()
                 store.send(.remove)
                 return true
             // User hit delete with cursor at beginning of block.
@@ -181,7 +166,6 @@ struct SubtextEditableBlockView: View, Equatable {
                 nsRange.location == 0 &&
                 nsRange.length == 0
             ) {
-                view.resignFirstResponder()
                 store.send(.mergeUp)
                 return false
             // User pasted text containing newline.

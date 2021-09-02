@@ -26,6 +26,10 @@ struct EntryView2: View, Equatable {
         static func setMarkup(id: UUID, markup: String) -> Self {
             .block(id: id, action: .setMarkup(markup))
         }
+
+        static func setFocus(id: UUID, isFocused: Bool) -> Self {
+            .block(id: id, action: .setFocus(isFocused))
+        }
     }
 
     //  MARK: Tags
@@ -124,6 +128,12 @@ struct EntryView2: View, Equatable {
                 )
                 // Set new block `OrderedDictionary` as new state.
                 state.blocks = blocks
+                return Just(
+                    Action.setFocus(
+                        id: nextBlock.id,
+                        isFocused: true
+                    )
+                ).eraseToAnyPublisher()
             } else {
                 environment.log(
                     """
