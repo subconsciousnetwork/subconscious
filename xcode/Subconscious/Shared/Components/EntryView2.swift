@@ -96,10 +96,7 @@ struct EntryView2: View, Equatable {
             let focusedIndex = try blocks.index(forKey: id)
                 .unwrap(or: ModelError.idNotFound(id: id))
             // Insert new block after index
-            let nextIndex = min(
-                focusedIndex + 1,
-                blocks.keys.endIndex
-            )
+            let nextIndex = blocks.index(focusedIndex, clampedOffset: 1)
             let blocks = blocks.inserting(
                 key: block.id,
                 value: block,
@@ -190,10 +187,10 @@ struct EntryView2: View, Equatable {
                     // Remove block and capture var.
                     // We know block exists at this point, so we force unwrap.
                     let block = state.blocks.removeValue(forKey: id)!
-                    // Get previous index. Bound it out of paranoia.
-                    let prevIndex = max(
-                        focusedIndex - 1,
-                        state.blocks.values.startIndex
+                    // Get previous index.
+                    let prevIndex = state.blocks.index(
+                        focusedIndex,
+                        clampedOffset: -1
                     )
                     state.blocks.values[prevIndex].append(block)
                 }
