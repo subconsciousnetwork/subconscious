@@ -35,4 +35,24 @@ extension OrderedDictionary {
             return i
         }
     }
+
+    func key(before key: OrderedDictionary.Key) -> OrderedDictionary.Key? {
+        if
+            let index = self.index(forKey: key),
+            let prevIndex = self.index(index, offsetBy: -1)
+        {
+            return keys[prevIndex]
+        }
+        return nil
+    }
+
+    func key(after key: OrderedDictionary.Key) -> OrderedDictionary.Key? {
+        if
+            let index = self.index(forKey: key),
+            let nextIndex = self.index(index, offsetBy: 1)
+        {
+            return keys[nextIndex]
+        }
+        return nil
+    }
 }

@@ -32,7 +32,7 @@ struct SubtextEditableBlockView: View, Equatable {
         init(dom: Subtext3) {
             self.dom = dom
         }
-        
+
         init(markup: String = "") {
             self.dom = Subtext3(markup)
         }

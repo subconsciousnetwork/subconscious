@@ -32,6 +32,10 @@ struct EntryView2: View, Equatable {
             .block(id: id, action: .setFocus(isFocused))
         }
 
+        static func setSelection(id: UUID, range: NSRange) -> Self {
+            .block(id: id, action: .setSelection(range))
+        }
+
         static func appendMarkup(id: UUID, markup: String) -> Self {
             .block(id: id, action: .appendMarkup(markup))
         }
@@ -199,20 +203,32 @@ struct EntryView2: View, Equatable {
         case .delete(let id):
             state.blocks.removeValue(forKey: id)
         case .deleteEmpty(let id):
-            if let index = state.blocks.index(forKey: id) {
-                // Only delete empty if there is a previous block.
-                // Deleting empty block with no previous (e.g. index 0)
-                // is a no-op.
-                if let prevIndex = state.blocks.index(index, offsetBy: -1) {
-                    let prev = state.blocks.values[prevIndex]
-                    state.blocks.removeValue(forKey: id)
-                    return Just(
+            // Only delete empty if there is a previous block.
+            // Deleting empty block with no previous (e.g. index 0)
+            // is a no-op.
+            if let prevId = state.blocks.key(before: id) {
+                let prev = state.blocks[prevId]!
+                let selection = NSRange(
+                    prev.dom.markup.endIndex..<prev.dom.markup.endIndex,
+                    in: prev.dom.markup
+                )
+                return Publishers.Merge3(
+                    Just(
+                        Action.delete(id: id)
+                    ),
+                    Just(
                         Action.setFocus(
-                            id: prev.id,
+                            id: prevId,
                             isFocused: true
                         )
-                    ).eraseToAnyPublisher()
-                }
+                    ),
+                    Just(
+                        Action.setSelection(
+                            id: prevId,
+                            range: selection
+                        )
+                    )
+                ).eraseToAnyPublisher()
             } else {
                 environment.log(
                     """
@@ -221,34 +237,41 @@ struct EntryView2: View, Equatable {
                 )
             }
         case .mergeUp(let id):
-            if let focusedIndex = state.blocks.index(forKey: id),
-               let block = state.blocks[id]
+            if
+                let index = state.blocks.index(forKey: id),
+                let prevId = state.blocks.key(before: id),
+                let block = state.blocks[id],
+                let prev = state.blocks[prevId]
             {
                 // Merge up for index 0 is a no-op
-                if focusedIndex > 0 {
-                    if let prevIndex = state.blocks.index(
-                        focusedIndex,
-                        offsetBy: -1
-                    ) {
-                        let prevId = state.blocks.keys[prevIndex]
-                        return Publishers.Merge3(
-                            Just(
-                                Action.delete(id: id)
-                            ),
-                            Just(
-                                Action.appendMarkup(
-                                    id: prevId,
-                                    markup: block.dom.markup
-                                )
-                            ),
-                            Just(
-                                Action.setFocus(
-                                    id: prevId,
-                                    isFocused: true
-                                )
+                if index > 0 {
+                    let selection = NSRange(
+                        prev.dom.markup.endIndex..<prev.dom.markup.endIndex,
+                        in: prev.dom.markup
+                    )
+                    return Publishers.Merge4(
+                        Just(
+                            Action.delete(id: id)
+                        ),
+                        Just(
+                            Action.appendMarkup(
+                                id: prevId,
+                                markup: block.dom.markup
                             )
-                        ).eraseToAnyPublisher()
-                    }
+                        ),
+                        Just(
+                            Action.setFocus(
+                                id: prevId,
+                                isFocused: true
+                            )
+                        ),
+                        Just(
+                            Action.setSelection(
+                                id: prevId,
+                                range: selection
+                            )
+                        )
+                    ).eraseToAnyPublisher()
                 }
             } else {
                 environment.log(
