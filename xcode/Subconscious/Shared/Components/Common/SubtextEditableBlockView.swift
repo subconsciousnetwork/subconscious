@@ -79,6 +79,12 @@ struct SubtextEditableBlockView: View, Equatable {
                     store.send(.setMarkup(markup))
                 }
             ),
+            selection: Binding(
+                get: { store.state.selection },
+                set: { selection in
+                    store.send(.setSelection(selection))
+                }
+            ),
             isFocused: store.state.isFocused,
             shouldChange: shouldChange,
             onBeginEditing: onBeginEditing,

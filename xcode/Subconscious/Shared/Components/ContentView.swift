@@ -172,8 +172,7 @@ func updateContent(
     case .appear:
         environment.logger.info(
             """
-            User Directory:
-            \(environment.documentsUrl.absoluteString)
+            User Directory: \t\(environment.documentsUrl.absoluteString)
             """
         )
         let initialQueryEffect = Just(ContentAction.commitQuery(""))

@@ -105,22 +105,16 @@ func updateDatabase(
                 Just(.syncFailure(message: error.localizedDescription))
             })
             .eraseToAnyPublisher()
-    case .syncSuccess(let changes):
+    case .syncSuccess:
         environment.logger.log(
             """
             File sync finished
-            
-            Changes:
-            \(changes)
             """
         )
     case .syncFailure(let message):
         environment.logger.warning(
             """
-            File sync failed.
-            
-            Error:
-            \(message)
+            File sync failed.\t\(message)
             """
         )
     }

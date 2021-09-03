@@ -56,6 +56,7 @@ struct LineTextViewRepresentable: UIViewRepresentable {
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
+            representable.selection = textView.selectedRange
             representable.onSelectionChange(textView.selectedRange)
         }
     }
@@ -75,6 +76,7 @@ struct LineTextViewRepresentable: UIViewRepresentable {
     private static func onSelectionChangeDefault(_ range: NSRange) -> Void {}
 
     @Binding var text: String
+    @Binding var selection: NSRange
     var isFocused = false
     /// Called before a text change, to determine if the text should be changed.
     var shouldChange: (
@@ -121,10 +123,16 @@ struct LineTextViewRepresentable: UIViewRepresentable {
             view.invalidateIntrinsicContentSize()
         }
 
+        // Set firstResponder
         if isFocused && !view.isFirstResponder {
             view.becomeFirstResponder()
         } else if !isFocused && view.isFirstResponder {
             view.resignFirstResponder()
+        }
+
+        // Set selection
+        if selection != view.selectedRange {
+            view.selectedRange = selection
         }
 
         if view.font != font {
@@ -165,6 +173,7 @@ struct LineTextViewRepresentable_Preview: PreviewProvider {
             VStack {
                 LineTextViewRepresentable(
                     text: .constant("Text"),
+                    selection: .constant(NSRange.zero),
                     fixedWidth: geometry.size.width
                 )
                 .fixedSize(horizontal: false, vertical: true)
@@ -172,6 +181,7 @@ struct LineTextViewRepresentable_Preview: PreviewProvider {
 
                 LineTextViewRepresentable(
                     text: .constant("Text"),
+                    selection: .constant(NSRange.zero),
                     fixedWidth: geometry.size.width
                 )
                 .fixedSize(horizontal: false, vertical: true)
