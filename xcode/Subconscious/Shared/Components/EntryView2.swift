@@ -17,8 +17,9 @@ struct EntryView2: View, Equatable {
     enum Action {
         case block(id: UUID, action: SubtextEditableBlockView.Action)
         case setFolded(Bool)
-        case append(id: UUID, markup: String)
-        case prepend(id: UUID, markup: String)
+        case createBelow(id: UUID, markup: String)
+        case createAbove(id: UUID, markup: String)
+        case delete(id: UUID)
         case deleteEmpty(id: UUID)
         case mergeUp(id: UUID)
         case split(id: UUID, at: NSRange)
@@ -30,6 +31,10 @@ struct EntryView2: View, Equatable {
         static func setFocus(id: UUID, isFocused: Bool) -> Self {
             .block(id: id, action: .setFocus(isFocused))
         }
+
+        static func appendMarkup(id: UUID, markup: String) -> Self {
+            .block(id: id, action: .appendMarkup(markup))
+        }
     }
 
     //  MARK: Tags
@@ -38,10 +43,10 @@ struct EntryView2: View, Equatable {
         action: SubtextEditableBlockView.Action
     ) -> Action {
         switch action {
-        case .append:
-            return .append(id: id, markup: "")
-        case .prepend:
-            return .prepend(id: id, markup: "")
+        case .createBelow:
+            return .createBelow(id: id, markup: "")
+        case .createAbove:
+            return .createAbove(id: id, markup: "")
         case .deleteEmpty:
             return .deleteEmpty(id: id)
         case .mergeUp:
@@ -151,7 +156,7 @@ struct EntryView2: View, Equatable {
                 Could not route action. Block does not exist.\t\(id)\t\(action)
                 """
             )
-        case .append(let id, let markup):
+        case .createBelow(let id, let markup):
             do {
                 let block = SubtextEditableBlockView.Model(markup: markup)
                 try state.append(after: id, block: block)
@@ -164,7 +169,7 @@ struct EntryView2: View, Equatable {
             } catch Model.ModelError.idNotFound(let id) {
                 environment.log(
                     """
-                    Could not append. Block does not exist.\t\(id)
+                    Could not createBelow. Block does not exist.\t\(id)
                     """
                 )
             } catch {
@@ -174,14 +179,14 @@ struct EntryView2: View, Equatable {
                     """
                 )
             }
-        case .prepend(let id, let markup):
+        case .createAbove(let id, let markup):
             do {
                 let block = SubtextEditableBlockView.Model(markup: markup)
                 try state.prepend(before: id, block: block)
             } catch Model.ModelError.idNotFound(let id) {
                 environment.log(
                     """
-                    Could not prepend. Block does not exist.\t\(id)
+                    Could not createAbove. Block does not exist.\t\(id)
                     """
                 )
             } catch {
@@ -191,6 +196,8 @@ struct EntryView2: View, Equatable {
                     """
                 )
             }
+        case .delete(let id):
+            state.blocks.removeValue(forKey: id)
         case .deleteEmpty(let id):
             if let index = state.blocks.index(forKey: id) {
                 // Only delete empty if there is a previous block.
@@ -214,17 +221,33 @@ struct EntryView2: View, Equatable {
                 )
             }
         case .mergeUp(let id):
-            if let focusedIndex = state.blocks.index(forKey: id) {
+            if let focusedIndex = state.blocks.index(forKey: id),
+               let block = state.blocks[id]
+            {
                 // Merge up for index 0 is a no-op
                 if focusedIndex > 0 {
                     if let prevIndex = state.blocks.index(
                         focusedIndex,
                         offsetBy: -1
                     ) {
-                        // Remove block and capture var.
-                        // We know block exists at this point, so we force unwrap.
-                        let block = state.blocks.removeValue(forKey: id)!
-                        state.blocks.values[prevIndex].append(block)
+                        let prevId = state.blocks.keys[prevIndex]
+                        return Publishers.Merge3(
+                            Just(
+                                Action.delete(id: id)
+                            ),
+                            Just(
+                                Action.appendMarkup(
+                                    id: prevId,
+                                    markup: block.dom.markup
+                                )
+                            ),
+                            Just(
+                                Action.setFocus(
+                                    id: prevId,
+                                    isFocused: true
+                                )
+                            )
+                        ).eraseToAnyPublisher()
                     }
                 }
             } else {
@@ -248,7 +271,7 @@ struct EntryView2: View, Equatable {
                 ]
                 return Publishers.Merge(
                     Just(
-                        Action.prepend(
+                        Action.createAbove(
                             id: id,
                             markup: String(beforeText)
                         )

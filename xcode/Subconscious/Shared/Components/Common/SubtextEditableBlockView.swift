@@ -15,8 +15,9 @@ struct SubtextEditableBlockView: View, Equatable {
         case setFocus(Bool)
         case setSelection(NSRange)
         case setMarkup(String)
-        case append
-        case prepend
+        case appendMarkup(String)
+        case createBelow
+        case createAbove
         case deleteEmpty
         case split(at: NSRange)
         case mergeUp
@@ -49,11 +50,13 @@ struct SubtextEditableBlockView: View, Equatable {
         switch action {
         case .setMarkup(let markup):
             state.dom = Subtext3(markup)
+        case .appendMarkup(let markup):
+            state.dom = state.dom.appending(markup: markup)
         case .setFocus(let isFocused):
             state.isFocused = isFocused
         case .setSelection(let selection):
             state.selection = selection
-        case .append, .prepend, .deleteEmpty, .mergeUp, .split:
+        case .createBelow, .createAbove, .deleteEmpty, .mergeUp, .split:
             let action = String(reflecting: action)
             environment.debug(
                 """
@@ -105,7 +108,7 @@ struct SubtextEditableBlockView: View, Equatable {
                 nsRange.length == 0 &&
                 nsRange.location == 0
             ) {
-                store.send(.prepend)
+                store.send(.createAbove)
                 return false
             // User hit enter at end of text.
             // Append new block after.
@@ -114,7 +117,7 @@ struct SubtextEditableBlockView: View, Equatable {
                 nsRange.length == 0 &&
                 range.upperBound == view.text.endIndex
             ) {
-                store.send(.append)
+                store.send(.createBelow)
                 return false
             // User hit enter in middle of text.
             // Split block at location.
