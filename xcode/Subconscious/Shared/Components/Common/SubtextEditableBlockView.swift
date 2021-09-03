@@ -79,16 +79,19 @@ struct SubtextEditableBlockView: View, Equatable {
                     store.send(.setMarkup(markup))
                 }
             ),
+            isFocused: Binding(
+                get: { store.state.isFocused },
+                set: { isFocused in
+                    store.send(.setFocus(isFocused))
+                }
+            ),
             selection: Binding(
                 get: { store.state.selection },
                 set: { selection in
                     store.send(.setSelection(selection))
                 }
             ),
-            isFocused: store.state.isFocused,
             shouldChange: shouldChange,
-            onBeginEditing: onBeginEditing,
-            onEndEditing: onEndEditing,
             fixedWidth: fixedWidth - (padding * 2)
         )
         .padding(.vertical, padding)
@@ -169,14 +172,6 @@ struct SubtextEditableBlockView: View, Equatable {
         } else {
             return true
         }
-    }
-
-    func onBeginEditing(_ text: String) {
-        store.send(.setFocus(true))
-    }
-
-    func onEndEditing(_ text: String) {
-        store.send(.setFocus(false))
     }
 }
 

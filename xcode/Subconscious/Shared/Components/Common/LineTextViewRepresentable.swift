@@ -42,22 +42,20 @@ struct LineTextViewRepresentable: UIViewRepresentable {
         func textViewDidChange(_ view: UITextView) {
             representable.text = view.text
             view.invalidateIntrinsicContentSize()
-            representable.onChange(view.text)
         }
 
         /// Handle editing begin (focus)
         func textViewDidBeginEditing(_ textView: UITextView) {
-            representable.onBeginEditing(textView.text)
+            representable.isFocused = true
         }
 
         /// Handle editing end (blur)
         func textViewDidEndEditing(_ textView: UITextView) {
-            representable.onEndEditing(textView.text)
+            representable.isFocused = false
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
             representable.selection = textView.selectedRange
-            representable.onSelectionChange(textView.selectedRange)
         }
     }
 
@@ -70,25 +68,13 @@ struct LineTextViewRepresentable: UIViewRepresentable {
         return true
     }
 
-    private static func onChangeDefault(_ text: String) -> Void {}
-    private static func onBeginEditingDefault(_ text: String) -> Void {}
-    private static func onEndEditingDefault(_ text: String) -> Void {}
-    private static func onSelectionChangeDefault(_ range: NSRange) -> Void {}
-
     @Binding var text: String
+    @Binding var isFocused: Bool
     @Binding var selection: NSRange
-    var isFocused = false
     /// Called before a text change, to determine if the text should be changed.
     var shouldChange: (
         UITextView, NSRange, String
     ) -> Bool = shouldChangeDefault
-    /// Called after text has changed
-    var onChange: (String) -> Void = onChangeDefault
-    /// Called when textview begins editing (acquires first responder).
-    var onBeginEditing: (String) -> Void = onBeginEditingDefault
-    /// Called when textview ends editing (resigns first responder).
-    var onEndEditing: (String) -> Void = onEndEditingDefault
-    var onSelectionChange: (NSRange) -> Void = onSelectionChangeDefault
     /// Fixed width of textview container, needed to determine textview height.
     /// Use `GeometryView` to find container width.
     var fixedWidth: CGFloat
@@ -173,6 +159,7 @@ struct LineTextViewRepresentable_Preview: PreviewProvider {
             VStack {
                 LineTextViewRepresentable(
                     text: .constant("Text"),
+                    isFocused: .constant(true),
                     selection: .constant(NSRange.zero),
                     fixedWidth: geometry.size.width
                 )
@@ -181,6 +168,7 @@ struct LineTextViewRepresentable_Preview: PreviewProvider {
 
                 LineTextViewRepresentable(
                     text: .constant("Text"),
+                    isFocused: .constant(false),
                     selection: .constant(NSRange.zero),
                     fixedWidth: geometry.size.width
                 )
