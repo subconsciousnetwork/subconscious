@@ -86,28 +86,6 @@ struct EntryView2: View, Equatable {
             }
             self.blocks = blocks
         }
-
-        func getBlock(_ id: UUID) throws -> SubtextEditableBlockView.Model {
-            try blocks[id].unwrap(or: ModelError.idNotFound(id: id))
-        }
-
-        mutating func append(
-            after id: UUID,
-            block: SubtextEditableBlockView.Model
-        ) throws {
-            let focusedIndex = try blocks.index(forKey: id)
-                .unwrap(or: ModelError.idNotFound(id: id))
-            // Insert new block after index
-            let nextIndex = try blocks.index(focusedIndex, offsetBy: 1)
-                .unwrap(or: ModelError.indexOutOfBounds)
-            let blocks = blocks.inserting(
-                key: block.id,
-                value: block,
-                at: nextIndex
-            )
-            // Set new block `OrderedDictionary` as new state.
-            self.blocks = blocks
-        }
     }
 
     //  MARK: Update
@@ -159,9 +137,10 @@ struct EntryView2: View, Equatable {
         case .setFolded(let isFolded):
             state.isFolded = isFolded
         case .insertBreak(let id, let nsRange):
-            do {
-                let markup = try state.getBlock(id).dom.markup
-                let sel = try Range(nsRange, in: markup).unwrap()
+            if
+                let markup = state.blocks[id]?.dom.markup,
+                let sel = Range(nsRange, in: markup)
+            {
                 let upperMarkup = String(
                     markup[markup.startIndex..<sel.lowerBound]
                 )
@@ -191,66 +170,47 @@ struct EntryView2: View, Equatable {
                         )
                     )
                 ).eraseToAnyPublisher()
-            } catch Model.ModelError.idNotFound(let id) {
-                environment.log(
-                    """
-                    Could not insert break in nonexistant block.\t\(id)
-                    """
-                )
-            } catch {
-                environment.warning(
-                    """
-                    Unexpected error: \(error.localizedDescription)
-                    """
-                )
             }
+            // If block isn't found, do nothing.
         case .deleteBreak(let id, _):
-            // Only delete break if there is a previous block.
-            // Deleting empty block with no previous (e.g. index 0)
-            // is a no-op.
-            do {
-                if
-                    let upperId = state.blocks.key(before: id),
-                    let upper = state.blocks[upperId]
-                {
-                    let lowerMarkup = try state.getBlock(id).dom.markup
-                    let upperMarkup = upper.dom.markup + lowerMarkup
-                    let selection = NSRange(
-                        upper.dom.markup.endIndex..<upper.dom.markup.endIndex,
-                        in: upper.dom.markup
-                    )
-                    return Publishers.Merge4(
-                        Just(
-                            Action.setMarkup(
-                                id: upperId,
-                                markup: upperMarkup
-                            )
-                        ),
-                        Just(
-                            Action.setFocus(
-                                id: upperId,
-                                isFocused: true
-                            )
-                        ),
-                        Just(
-                            Action.setSelection(
-                                id: upperId,
-                                range: selection
-                            )
-                        ),
-                        Just(
-                            Action.delete(
-                                id: id
-                            )
-                        )
-                    ).eraseToAnyPublisher()
-                }
-            } catch {
-                environment.warning(
-                    """
-                    Unexpected error: \(error.localizedDescription)
-                    """
+            if
+                let lower = state.blocks[id],
+                // Only delete break if there is a previous block.
+                // Deleting empty block with no previous (e.g. index 0)
+                // is a no-op.
+                let upperId = state.blocks.key(before: id),
+                let upper = state.blocks[upperId]
+            {
+                let upperMarkup = upper.dom.markup + lower.dom.markup
+                let selection = NSRange(
+                    upper.dom.markup.endIndex..<upper.dom.markup.endIndex,
+                    in: upper.dom.markup
                 )
+                return Publishers.Merge4(
+                    Just(
+                        Action.setMarkup(
+                            id: upperId,
+                            markup: upperMarkup
+                        )
+                    ),
+                    Just(
+                        Action.setFocus(
+                            id: upperId,
+                            isFocused: true
+                        )
+                    ),
+                    Just(
+                        Action.setSelection(
+                            id: upperId,
+                            range: selection
+                        )
+                    ),
+                    Just(
+                        Action.delete(
+                            id: id
+                        )
+                    )
+                ).eraseToAnyPublisher()
             }
         }
         return Empty().eraseToAnyPublisher()
