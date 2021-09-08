@@ -228,13 +228,10 @@ struct EntryView2: View, Equatable {
                     let lowerMarkup = try state.getBlock(id).dom.markup
                     let upperMarkup = upper.dom.markup + lowerMarkup
                     let selection = NSRange(
-                        upperMarkup.endIndex..<upperMarkup.endIndex,
-                        in: upperMarkup
+                        upper.dom.markup.endIndex..<upper.dom.markup.endIndex,
+                        in: upper.dom.markup
                     )
                     return Publishers.Merge4(
-                        Just(
-                            Action.delete(id: id)
-                        ),
                         Just(
                             Action.setMarkup(
                                 id: upperId,
@@ -251,6 +248,11 @@ struct EntryView2: View, Equatable {
                             Action.setSelection(
                                 id: upperId,
                                 range: selection
+                            )
+                        ),
+                        Just(
+                            Action.delete(
+                                id: id
                             )
                         )
                     ).eraseToAnyPublisher()

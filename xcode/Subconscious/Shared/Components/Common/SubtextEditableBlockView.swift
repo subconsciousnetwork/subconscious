@@ -117,7 +117,8 @@ struct SubtextEditableBlockView: View, Equatable {
             // User hit delete in empty block, or at beginning of block.
             } else if (
                 replacementText == "" &&
-                nsRange.location == 0
+                nsRange.location == 0 &&
+                nsRange.length == 0
             ) {
                 store.send(.deleteBreak(nsRange))
                 return false
