@@ -33,10 +33,6 @@ struct EntryView2: View, Equatable {
         static func setSelection(id: UUID, range: NSRange) -> Self {
             .block(id: id, action: .setSelection(range))
         }
-
-        static func appendMarkup(id: UUID, markup: String) -> Self {
-            .block(id: id, action: .appendMarkup(markup))
-        }
     }
 
     //  MARK: Tags

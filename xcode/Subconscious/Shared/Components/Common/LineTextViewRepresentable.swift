@@ -40,7 +40,7 @@ struct LineTextViewRepresentable: UIViewRepresentable {
 
         /// Handle changes to textview
         func textViewDidChange(_ view: UITextView) {
-            representable.text = view.text
+            representable.attributedText = view.attributedText
             view.invalidateIntrinsicContentSize()
         }
 
@@ -68,7 +68,7 @@ struct LineTextViewRepresentable: UIViewRepresentable {
         return true
     }
 
-    @Binding var text: String
+    @Binding var attributedText: NSAttributedString
     @Binding var isFocused: Bool
     @Binding var selection: NSRange
     /// Called before a text change, to determine if the text should be changed.
@@ -96,10 +96,10 @@ struct LineTextViewRepresentable: UIViewRepresentable {
     }
 
     func updateUIView(_ view: FixedWidthTextView, context: Context) {
-        if view.text != text {
+        if !view.attributedText.isEqual(to: attributedText) {
             // Save selected range (cursor position).
             let selectedRange = view.selectedRange
-            view.text = text
+            view.attributedText = attributedText
             // Restore selected range (cursor position) after setting text.
             view.selectedRange = selectedRange
         }
@@ -158,7 +158,7 @@ struct LineTextViewRepresentable_Preview: PreviewProvider {
         GeometryReader { geometry in
             VStack {
                 LineTextViewRepresentable(
-                    text: .constant("Text"),
+                    attributedText: .constant(NSAttributedString("Text")),
                     isFocused: .constant(true),
                     selection: .constant(NSRange.zero),
                     fixedWidth: geometry.size.width
@@ -167,7 +167,7 @@ struct LineTextViewRepresentable_Preview: PreviewProvider {
                 .background(Constants.Color.secondaryBackground)
 
                 LineTextViewRepresentable(
-                    text: .constant("Text"),
+                    attributedText: .constant(NSAttributedString("Text")),
                     isFocused: .constant(false),
                     selection: .constant(NSRange.zero),
                     fixedWidth: geometry.size.width

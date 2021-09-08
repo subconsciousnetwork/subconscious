@@ -15,7 +15,6 @@ struct SubtextEditableBlockView: View, Equatable {
         case setFocus(Bool)
         case setSelection(NSRange)
         case setMarkup(String)
-        case appendMarkup(String)
         case insertBreak(NSRange)
         case deleteBreak(NSRange)
     }
@@ -47,8 +46,6 @@ struct SubtextEditableBlockView: View, Equatable {
         switch action {
         case .setMarkup(let markup):
             state.dom = Subtext3(markup)
-        case .appendMarkup(let markup):
-            state.dom = state.dom.appending(markup: markup)
         case .setFocus(let isFocused):
             state.isFocused = isFocused
         case .setSelection(let selection):
@@ -72,10 +69,14 @@ struct SubtextEditableBlockView: View, Equatable {
 
     var body: some View {
         LineTextViewRepresentable(
-            text: Binding(
-                get: { store.state.dom.markup },
+            attributedText: Binding(
+                get: {
+                    store.state.dom.renderMarkup(url: { sub in
+                        SubURL.wikilinkToURLString(sub)
+                    })
+                },
                 set: { markup in
-                    store.send(.setMarkup(markup))
+                    store.send(.setMarkup(markup.string))
                 }
             ),
             isFocused: Binding(
