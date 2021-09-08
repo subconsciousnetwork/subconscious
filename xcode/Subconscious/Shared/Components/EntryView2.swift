@@ -66,7 +66,7 @@ struct EntryView2: View, Equatable {
         }
         var url: URL
         var blocks: OrderedDictionary<UUID, SubtextEditableBlockView.Model>
-        var isFolded = true
+        var isFolded = false
         var isTruncated: Bool {
             isFolded && blocks.values.count > 3
         }
@@ -112,22 +112,6 @@ struct EntryView2: View, Equatable {
             // Set new block `OrderedDictionary` as new state.
             self.blocks = blocks
         }
-
-        mutating func prepend(
-            before id: UUID,
-            block: SubtextEditableBlockView.Model
-        ) throws {
-            let index = try blocks.index(forKey: id)
-                .unwrap(or: ModelError.idNotFound(id: id))
-            // `inserting` inserts *before* given index, prepending.
-            let blocks = blocks.inserting(
-                key: block.id,
-                value: block,
-                at: index
-            )
-            // Set new block `OrderedDictionary` as new state.
-            self.blocks = blocks
-        }
     }
 
     //  MARK: Update
@@ -140,6 +124,7 @@ struct EntryView2: View, Equatable {
         case .block(let id, let action):
             if state.blocks[id] != nil {
                 return SubtextEditableBlockView.update(
+                    // Pass in a reference, not a copy!
                     state: &state.blocks[id]!,
                     action: action,
                     environment: environment
@@ -150,23 +135,30 @@ struct EntryView2: View, Equatable {
                     )
                 }).eraseToAnyPublisher()
             }
-            let action = String(reflecting: action)
-            environment.debug(
-                """
-                Could not route action. Block does not exist.\t\(id)\t\(action)
-                """
-            )
+            // If block does not exist, do nothing.
+            // This is ok and can happen if block was deleted
+            // after action was sent.
         case .delete(let id):
+            // Remove value if key exists, or do nothing if it doesn't.
             state.blocks.removeValue(forKey: id)
-        case .insert(let after, let block):
-            do {
-                try state.append(after: after, block: block)
-            } catch {
-                environment.log(
-                    """
-                    Could not append block after \(after).\t\(error.localizedDescription)
-                    """
+        case .insert(let id, let block):
+            if
+                let upperIndex = state.blocks.index(forKey: id),
+                let lowerIndex = state.blocks.index(upperIndex, offsetBy: 1)
+            {
+                let blocks = state.blocks.inserting(
+                    key: block.id,
+                    value: block,
+                    at: lowerIndex
                 )
+                // Set new block `OrderedDictionary` as new state.
+                state.blocks = blocks
+            // If insertion block does not exist append to end.
+            // This is an error case that should not happen, but we want to
+            // handle it without data loss, in case block was somehow deleted
+            // after action was sent.
+            } else {
+                state.blocks[block.id] = block
             }
         case .setFolded(let isFolded):
             state.isFolded = isFolded
@@ -287,7 +279,7 @@ struct EntryView2: View, Equatable {
                         }
                     ),
                     fixedWidth: fixedWidth - (padding * 2)
-                )
+                ).equatable()
             }
 
             if store.state.isTruncated {
