@@ -17,12 +17,10 @@ struct EntryView2: View, Equatable {
     enum Action {
         case block(id: UUID, action: SubtextEditableBlockView.Action)
         case setFolded(Bool)
-        case createBelow(id: UUID, markup: String)
-        case createAbove(id: UUID, markup: String)
+        case insertBreak(id: UUID, at: NSRange)
+        case deleteBreak(id: UUID, at: NSRange)
         case delete(id: UUID)
-        case deleteEmpty(id: UUID)
-        case mergeUp(id: UUID)
-        case split(id: UUID, at: NSRange)
+        case insert(after: UUID, block: SubtextEditableBlockView.Model)
 
         static func setMarkup(id: UUID, markup: String) -> Self {
             .block(id: id, action: .setMarkup(markup))
@@ -47,16 +45,10 @@ struct EntryView2: View, Equatable {
         action: SubtextEditableBlockView.Action
     ) -> Action {
         switch action {
-        case .createBelow:
-            return .createBelow(id: id, markup: "")
-        case .createAbove:
-            return .createAbove(id: id, markup: "")
-        case .deleteEmpty:
-            return .deleteEmpty(id: id)
-        case .mergeUp:
-            return .mergeUp(id: id)
-        case .split(let range):
-            return .split(id: id, at: range)
+        case .insertBreak(let range):
+            return .insertBreak(id: id, at: range)
+        case .deleteBreak(let range):
+            return .deleteBreak(id: id, at: range)
         default:
             return .block(id: id, action: action)
         }
@@ -97,6 +89,10 @@ struct EntryView2: View, Equatable {
                 blocks[block.id] = block
             }
             self.blocks = blocks
+        }
+
+        func getBlock(_ id: UUID) throws -> SubtextEditableBlockView.Model {
+            try blocks[id].unwrap(or: ModelError.idNotFound(id: id))
         }
 
         mutating func append(
@@ -160,161 +156,112 @@ struct EntryView2: View, Equatable {
                 Could not route action. Block does not exist.\t\(id)\t\(action)
                 """
             )
-        case .createBelow(let id, let markup):
-            do {
-                let block = SubtextEditableBlockView.Model(markup: markup)
-                try state.append(after: id, block: block)
-                return Just(
-                    Action.setFocus(
-                        id: block.id,
-                        isFocused: true
-                    )
-                ).eraseToAnyPublisher()
-            } catch Model.ModelError.idNotFound(let id) {
-                environment.log(
-                    """
-                    Could not createBelow. Block does not exist.\t\(id)
-                    """
-                )
-            } catch {
-                environment.warning(
-                    """
-                    Unexpected error: \(error.localizedDescription)
-                    """
-                )
-            }
-        case .createAbove(let id, let markup):
-            do {
-                let block = SubtextEditableBlockView.Model(markup: markup)
-                try state.prepend(before: id, block: block)
-            } catch Model.ModelError.idNotFound(let id) {
-                environment.log(
-                    """
-                    Could not createAbove. Block does not exist.\t\(id)
-                    """
-                )
-            } catch {
-                environment.warning(
-                    """
-                    Unexpected error: \(error.localizedDescription)
-                    """
-                )
-            }
         case .delete(let id):
             state.blocks.removeValue(forKey: id)
-        case .deleteEmpty(let id):
-            // Only delete empty if there is a previous block.
-            // Deleting empty block with no previous (e.g. index 0)
-            // is a no-op.
-            if let prevId = state.blocks.key(before: id) {
-                let prev = state.blocks[prevId]!
-                let selection = NSRange(
-                    prev.dom.markup.endIndex..<prev.dom.markup.endIndex,
-                    in: prev.dom.markup
+        case .insert(let after, let block):
+            do {
+                try state.append(after: after, block: block)
+            } catch {
+                environment.log(
+                    """
+                    Could not append block after \(after).\t\(error.localizedDescription)
+                    """
+                )
+            }
+        case .setFolded(let isFolded):
+            state.isFolded = isFolded
+        case .insertBreak(let id, let nsRange):
+            do {
+                let markup = try state.getBlock(id).dom.markup
+                let sel = try Range(nsRange, in: markup).unwrap()
+                let upperMarkup = String(
+                    markup[markup.startIndex..<sel.lowerBound]
+                )
+                let lowerMarkup = String(
+                    markup[sel.upperBound..<markup.endIndex]
+                )
+                let lowerBlock = SubtextEditableBlockView.Model(
+                    markup: lowerMarkup
                 )
                 return Publishers.Merge3(
                     Just(
-                        Action.delete(id: id)
+                        Action.setMarkup(
+                            id: id,
+                            markup: upperMarkup
+                        )
+                    ),
+                    Just(
+                        Action.insert(
+                            after: id,
+                            block: lowerBlock
+                        )
                     ),
                     Just(
                         Action.setFocus(
-                            id: prevId,
+                            id: lowerBlock.id,
                             isFocused: true
-                        )
-                    ),
-                    Just(
-                        Action.setSelection(
-                            id: prevId,
-                            range: selection
                         )
                     )
                 ).eraseToAnyPublisher()
-            } else {
+            } catch Model.ModelError.idNotFound(let id) {
                 environment.log(
                     """
-                    Could not delete empty block. Block does not exist.\t\(id)
+                    Could not insert break in nonexistant block.\t\(id)
+                    """
+                )
+            } catch {
+                environment.warning(
+                    """
+                    Unexpected error: \(error.localizedDescription)
                     """
                 )
             }
-        case .mergeUp(let id):
-            if
-                let index = state.blocks.index(forKey: id),
-                let prevId = state.blocks.key(before: id),
-                let block = state.blocks[id],
-                let prev = state.blocks[prevId]
-            {
-                // Merge up for index 0 is a no-op
-                if index > 0 {
+        case .deleteBreak(let id, _):
+            // Only delete break if there is a previous block.
+            // Deleting empty block with no previous (e.g. index 0)
+            // is a no-op.
+            do {
+                if
+                    let upperId = state.blocks.key(before: id),
+                    let upper = state.blocks[upperId]
+                {
+                    let lowerMarkup = try state.getBlock(id).dom.markup
+                    let upperMarkup = upper.dom.markup + lowerMarkup
                     let selection = NSRange(
-                        prev.dom.markup.endIndex..<prev.dom.markup.endIndex,
-                        in: prev.dom.markup
+                        upperMarkup.endIndex..<upperMarkup.endIndex,
+                        in: upperMarkup
                     )
                     return Publishers.Merge4(
                         Just(
                             Action.delete(id: id)
                         ),
                         Just(
-                            Action.appendMarkup(
-                                id: prevId,
-                                markup: block.dom.markup
+                            Action.setMarkup(
+                                id: upperId,
+                                markup: upperMarkup
                             )
                         ),
                         Just(
                             Action.setFocus(
-                                id: prevId,
+                                id: upperId,
                                 isFocused: true
                             )
                         ),
                         Just(
                             Action.setSelection(
-                                id: prevId,
+                                id: upperId,
                                 range: selection
                             )
                         )
                     ).eraseToAnyPublisher()
                 }
-            } else {
-                environment.log(
+            } catch {
+                environment.warning(
                     """
-                    Could not merge up block. Block does not exist.\t\(id)
-                    """
-                )
-            }
-        case .split(let id, let nsRange):
-            if
-                let block = state.blocks[id],
-                let range = Range(nsRange, in: block.dom.markup)
-            {
-                let markup = block.dom.markup
-                let beforeText = markup[
-                    markup.startIndex..<range.lowerBound
-                ]
-                let afterText = markup[
-                    range.upperBound..<markup.endIndex
-                ]
-                return Publishers.Merge(
-                    Just(
-                        Action.createAbove(
-                            id: id,
-                            markup: String(beforeText)
-                        )
-                    ),
-                    Just(
-                        Action.setMarkup(
-                            id: id,
-                            markup: String(afterText)
-                        )
-                    )
-                ).eraseToAnyPublisher()
-            } else {
-                environment.log(
-                    """
-                    Could not split block. Block does not exist.\t\(id)
+                    Unexpected error: \(error.localizedDescription)
                     """
                 )
             }
-        case .setFolded(let isFolded):
-            state.isFolded = isFolded
         }
         return Empty().eraseToAnyPublisher()
     }

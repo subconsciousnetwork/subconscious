@@ -16,11 +16,8 @@ struct SubtextEditableBlockView: View, Equatable {
         case setSelection(NSRange)
         case setMarkup(String)
         case appendMarkup(String)
-        case createBelow
-        case createAbove
-        case deleteEmpty
-        case split(at: NSRange)
-        case mergeUp
+        case insertBreak(NSRange)
+        case deleteBreak(NSRange)
     }
 
     struct Model: Equatable, Identifiable {
@@ -56,11 +53,13 @@ struct SubtextEditableBlockView: View, Equatable {
             state.isFocused = isFocused
         case .setSelection(let selection):
             state.selection = selection
-        case .createBelow, .createAbove, .deleteEmpty, .mergeUp, .split:
+        case .insertBreak, .deleteBreak:
             let action = String(reflecting: action)
             environment.debug(
                 """
-                Action should be handled by parent.\t\(action)
+                Action should be handled by parent.\t\(action).
+                Inserts and deletes cross multiple blocks, so they need to be
+                coordinated by parent component.
                 """
             )
         }
@@ -110,52 +109,17 @@ struct SubtextEditableBlockView: View, Equatable {
         replacementText: String
     ) -> Bool {
         if let range = Range(nsRange, in: view.text) {
-            // User hit enter at begginging of text.
-            // Prepend new block before.
-            if (
-                replacementText == "\n" &&
-                nsRange.length == 0 &&
+            // User hit enter in block.
+            // This could be at the beginning of text, middle of text.
+            if (replacementText == "\n") {
+                store.send(.insertBreak(nsRange))
+                return false
+            // User hit delete in empty block, or at beginning of block.
+            } else if (
+                replacementText == "" &&
                 nsRange.location == 0
             ) {
-                store.send(.createAbove)
-                return false
-            // User hit enter at end of text.
-            // Append new block after.
-            } else if (
-                replacementText == "\n" &&
-                nsRange.length == 0 &&
-                range.upperBound == view.text.endIndex
-            ) {
-                store.send(.createBelow)
-                return false
-            // User hit enter in middle of text.
-            // Split block at location.
-            } else if (
-                replacementText == "\n" &&
-                nsRange.length == 0 &&
-                range.lowerBound > view.text.startIndex &&
-                range.upperBound < view.text.endIndex
-            ) {
-                store.send(.split(at: nsRange))
-                return false
-            // User hit delete in empty block.
-            // Remove block.
-            } else if (
-                replacementText == "" &&
-                view.text == "" &&
-                nsRange.location == 0 &&
-                nsRange.length == 0
-            ) {
-                store.send(.deleteEmpty)
-                return true
-            // User hit delete with cursor at beginning of block.
-            // Merge block with block above.
-            } else if (
-                replacementText == "" &&
-                nsRange.location == 0 &&
-                nsRange.length == 0
-            ) {
-                store.send(.mergeUp)
+                store.send(.deleteBreak(nsRange))
                 return false
             // User pasted text containing newline.
             // Sanitize by removing newlines and append.
