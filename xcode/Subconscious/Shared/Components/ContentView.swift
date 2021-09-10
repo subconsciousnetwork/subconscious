@@ -362,14 +362,13 @@ struct ContentView: View {
                     .equatable()
                     .transition(.opacity)
                 } else {
-                    EntryListView(
+                    EntryDetailView(
                         store: ViewStore(
-                            state: store.state.search,
+                            state: store.state.entryDetail,
                             send: store.send,
-                            tag: tagSearchAction
+                            tag: tagEntryDetailAction
                         )
-                    )
-                    .equatable()
+                    ).equatable()
                 }
             }
             .background(Constants.Color.background)

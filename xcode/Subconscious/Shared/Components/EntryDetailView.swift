@@ -10,7 +10,7 @@ import Combine
 import os
 import Elmo
 
-struct EntryDetailView: View {
+struct EntryDetailView: View, Equatable {
     enum Action {
         case editor(SubtextEditableBlockView.Action)
     }
