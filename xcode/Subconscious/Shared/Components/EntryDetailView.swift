@@ -12,17 +12,17 @@ import Elmo
 
 struct EntryDetailView: View, Equatable {
     enum Action {
-        case editor(SubtextEditableBlockView.Action)
+        case editor(SubtextEditorView.Action)
     }
 
     static func tagEditor(
-        _ action: SubtextEditableBlockView.Action
+        _ action: SubtextEditorView.Action
     ) -> Action {
         .editor(action)
     }
 
     struct Model: Equatable {
-        var editor = SubtextEditableBlockView.Model()
+        var editor = SubtextEditorView.Model()
     }
 
     static func update(
@@ -32,7 +32,7 @@ struct EntryDetailView: View, Equatable {
     ) -> AnyPublisher<Action, Never> {
         switch action {
         case .editor(let action):
-            return SubtextEditableBlockView.update(
+            return SubtextEditorView.update(
                 state: &state.editor,
                 action: action,
                 environment: environment
@@ -45,7 +45,7 @@ struct EntryDetailView: View, Equatable {
     var body: some View {
         VStack {
             GeometryReader { geometry in
-                SubtextEditableBlockView(
+                SubtextEditorView(
                     store: ViewStore(
                         state: store.state.editor,
                         send: store.send,

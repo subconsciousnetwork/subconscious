@@ -25,10 +25,8 @@ enum ContentAction {
     case searchBar(SubSearchBarAction)
     /// Search suggestions actions
     case suggestions(SuggestionsAction)
-    /// Search results actions
-    case search(EntryListAction)
     /// Entry detail view
-    case entryDetail(EntryDetailView.Action)
+    case result(ResultView.Action)
     case suggestionTokens(TextTokenBarAction)
     /// On view appear
     case appear
@@ -77,17 +75,6 @@ func tagSearchBarAction(_ action: SubSearchBarAction) -> ContentAction {
     }
 }
 
-func tagSearchAction(_ action: EntryListAction) -> ContentAction {
-    switch action {
-    case .requestEdit(let url):
-        return .editorOpenUpdate(url)
-    case .activateWikilink(let search):
-        return .commitQuery(search)
-    default:
-        return .search(action)
-    }
-}
-
 func tagSuggestionsAction(_ action: SuggestionsAction) -> ContentAction {
     switch action {
     case .selectResult(let query):
@@ -110,8 +97,8 @@ func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> ContentAction {
     }
 }
 
-func tagEntryDetailAction(_ action: EntryDetailView.Action) -> ContentAction {
-    .entryDetail(action)
+func tagResultView(_ action: ResultView.Action) -> ContentAction {
+    .result(action)
 }
 
 //  MARK: State
@@ -119,8 +106,7 @@ func tagEntryDetailAction(_ action: EntryDetailView.Action) -> ContentAction {
 struct ContentModel: Equatable {
     var database = DatabaseModel()
     var searchBar = SubSearchBarModel()
-    var search = EntryListModel()
-    var entryDetail = EntryDetailView.Model()
+    var result = ResultView.Model()
     /// Semi-permanent suggestions that show up as tokens in the search view.
     /// We don't differentiate between types of token, so these are all just strings.
     var suggestionTokens = TextTokenBarModel()
@@ -163,18 +149,12 @@ func updateContent(
             action: action,
             environment: environment.io
         ).map(tagSuggestionsAction).eraseToAnyPublisher()
-    case .search(let action):
-        return updateEntryList(
-            state: &state.search,
+    case .result(let action):
+        return ResultView.update(
+            state: &state.result,
             action: action,
             environment: environment.io
-        ).map(tagSearchAction).eraseToAnyPublisher()
-    case .entryDetail(let action):
-        return EntryDetailView.update(
-            state: &state.entryDetail,
-            action: action,
-            environment: environment.logger
-        ).map(tagEntryDetailAction).eraseToAnyPublisher()
+        ).map(tagResultView).eraseToAnyPublisher()
     case .suggestionTokens(let action):
         return updateTextTokenBar(
             state: &state.suggestionTokens,
@@ -247,7 +227,7 @@ func updateContent(
     case .commitQuery(let query):
         let commit = Just(ContentAction.searchBar(.commit(query)))
         let suggest = Just(ContentAction.suggestions(.suggest(query)))
-        let search = Just(ContentAction.search(.fetch(query)))
+        let search = Just(ContentAction.result(.search(query)))
         return Publishers.Merge3(
             commit,
             suggest,
@@ -362,11 +342,11 @@ struct ContentView: View {
                     .equatable()
                     .transition(.opacity)
                 } else {
-                    EntryDetailView(
+                    ResultView(
                         store: ViewStore(
-                            state: store.state.entryDetail,
+                            state: store.state.result,
                             send: store.send,
-                            tag: tagEntryDetailAction
+                            tag: tagResultView
                         )
                     ).equatable()
                 }
