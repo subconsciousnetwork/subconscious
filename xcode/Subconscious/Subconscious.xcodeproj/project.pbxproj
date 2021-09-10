@@ -231,6 +231,7 @@
 				B86F339C261AB2C6009D3D48 /* ContentView.swift */,
 				B8E152F126570B890032F5A7 /* Database.swift */,
 				B81BD763263885DE00BAEC67 /* EditorView.swift */,
+				B850097226EAE45B0061B3A3 /* EntryDetailView.swift */,
 				B83B5295261E58260031988E /* EntryListView.swift */,
 				B811E60E261D0FBF00484E45 /* EntryView.swift */,
 				B80A226F26D6E72C00E7D49D /* EntryView2.swift */,
@@ -242,7 +243,6 @@
 				B874D7AC26540A7800351C8E /* SubSearchBarView.swift */,
 				B838FF35261FB7B40055C5CF /* SuggestionsView.swift */,
 				B82FD94B26AA04270087AE95 /* TranscludeView.swift */,
-				B850097226EAE45B0061B3A3 /* EntryDetailView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -310,9 +310,9 @@
 			isa = PBXGroup;
 			children = (
 				B86F339D261AB2C7009D3D48 /* Assets.xcassets */,
-				B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */,
 				B804C09D2620FFDD00D59CC6 /* Components */,
 				B853EB2326326F9F001BB584 /* Library */,
+				B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -367,21 +367,21 @@
 		B8E152EF2656F2A30032F5A7 /* Common */ = {
 			isa = PBXGroup;
 			children = (
-				B88CAEB926CB140700C90EDB /* MarkupTextViewRepresentable.swift */,
-				B8CA2F9926AB6B890000BFFB /* LineTextViewRepresentable.swift */,
 				B877CF7526D84BE100808EC5 /* DynamicRichTextViewRepresentable.swift */,
 				B8B2C18826471E6B008AA3EC /* FakeTextFieldView.swift */,
 				B880975926B1DE2D000430F7 /* FullButtonStyle.swift */,
 				B85AD0EA269F92A10089ADFD /* IconLabelRowView.swift */,
 				B8F41F07262F8FD500D134F8 /* IconView.swift */,
 				B82FD94926A9DC7C0087AE95 /* LabelRepresentable.swift */,
+				B8CA2F9926AB6B890000BFFB /* LineTextViewRepresentable.swift */,
 				B8796F5A269E3D3A001AC8C1 /* ListHeaderView.swift */,
+				B88CAEB926CB140700C90EDB /* MarkupTextViewRepresentable.swift */,
 				B8D7D9BF26B10E9E005961BB /* PrimaryButtonStyle.swift */,
 				B87DA91E26250CF900BA5232 /* SearchBarRepresentable.swift */,
+				B80A226D26D6DAEB00E7D49D /* SubtextEditableBlockView.swift */,
 				B805AAF926447F4E0051F205 /* TextTokenBarView.swift */,
 				B805AAF526447BF30051F205 /* TextTokenView.swift */,
 				B8929E252695101B00131928 /* TextViewRepresentable.swift */,
-				B80A226D26D6DAEB00E7D49D /* SubtextEditableBlockView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";

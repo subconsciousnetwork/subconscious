@@ -14,36 +14,37 @@ import Elmo
 //  MARK: Store typealias
 typealias ContentStore = Elmo.Store<ContentModel, ContentAction, ContentEnvironment>
 
-
 //  MARK: Actions
 /// Actions that may be taken on the Store
 enum ContentAction {
     /// Database actions
-    case database(_ action: DatabaseAction)
+    case database(DatabaseAction)
     /// Editor actions
-    case editor(_ action: EditorAction)
+    case editor(EditorAction)
     /// Search Bar actions
-    case searchBar(_ action: SubSearchBarAction)
+    case searchBar(SubSearchBarAction)
     /// Search suggestions actions
     case suggestions(SuggestionsAction)
     /// Search results actions
-    case search(_ action: EntryListAction)
-    case suggestionTokens(_ action: TextTokenBarAction)
+    case search(EntryListAction)
+    /// Entry detail view
+    case entryDetail(EntryDetailView.Action)
+    case suggestionTokens(TextTokenBarAction)
     /// On view appear
     case appear
     /// Issue and log search
-    case commitQuery(_ query: String)
+    case commitQuery(String)
     /// Set live query
-    case setQuery(_ text: String)
-    case setEditorPresented(_ isPresented: Bool)
+    case setQuery(String)
+    case setEditorPresented(Bool)
     case editorOpenCreate(String)
     case editorOpenUpdate(URL)
     case editorCancel
     case editorSaveCreateSuccess(FileEntry)
     case editorSaveUpdateSuccess(FileEntry)
     case setSuggestions(_ suggestions: SuggestionsModel)
-    case warning(_ message: String)
-    case info(_ message: String)
+    case warning(String)
+    case info(String)
 }
 
 //  MARK: Tagging functions
@@ -109,12 +110,17 @@ func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> ContentAction {
     }
 }
 
+func tagEntryDetailAction(_ action: EntryDetailView.Action) -> ContentAction {
+    .entryDetail(action)
+}
+
 //  MARK: State
 /// Central source of truth for all shared app state
 struct ContentModel: Equatable {
     var database = DatabaseModel()
     var searchBar = SubSearchBarModel()
     var search = EntryListModel()
+    var entryDetail = EntryDetailView.Model()
     /// Semi-permanent suggestions that show up as tokens in the search view.
     /// We don't differentiate between types of token, so these are all just strings.
     var suggestionTokens = TextTokenBarModel()
@@ -163,6 +169,12 @@ func updateContent(
             action: action,
             environment: environment.io
         ).map(tagSearchAction).eraseToAnyPublisher()
+    case .entryDetail(let action):
+        return EntryDetailView.update(
+            state: &state.entryDetail,
+            action: action,
+            environment: environment.logger
+        ).map(tagEntryDetailAction).eraseToAnyPublisher()
     case .suggestionTokens(let action):
         return updateTextTokenBar(
             state: &state.suggestionTokens,
@@ -258,8 +270,6 @@ func updateContent(
     return Empty().eraseToAnyPublisher()
 }
 
-
-
 //  MARK: Environment
 /// Access to external network services and other supporting services
 struct ContentEnvironment {
@@ -310,8 +320,7 @@ struct ContentEnvironment {
     }
 }
 
-
-
+//  MARK: View
 struct ContentView: View {
     @StateObject private var store = ContentStore(
         state: .init(),

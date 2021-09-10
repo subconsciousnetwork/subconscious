@@ -22,7 +22,7 @@ struct EntryDetailView: View {
     }
 
     struct Model: Equatable {
-        var editor: SubtextEditableBlockView.Model
+        var editor = SubtextEditableBlockView.Model()
     }
 
     static func update(
