@@ -19,8 +19,6 @@ typealias ContentStore = Elmo.Store<ContentModel, ContentAction, ContentEnvironm
 enum ContentAction {
     /// Database actions
     case database(DatabaseAction)
-    /// Editor actions
-    case editor(EditorAction)
     /// Search Bar actions
     case searchBar(SubSearchBarAction)
     /// Search suggestions actions
@@ -34,12 +32,6 @@ enum ContentAction {
     case commitQuery(String)
     /// Set live query
     case setQuery(String)
-    case setEditorPresented(Bool)
-    case editorOpenCreate(String)
-    case editorOpenUpdate(URL)
-    case editorCancel
-    case editorSaveCreateSuccess(FileEntry)
-    case editorSaveUpdateSuccess(FileEntry)
     case setSuggestions(_ suggestions: SuggestionsModel)
     case warning(String)
     case info(String)
@@ -49,19 +41,6 @@ enum ContentAction {
 
 func tagDatabaseAction(_ action: DatabaseAction) -> ContentAction {
     .database(action)
-}
-
-func tagEditorAction(_ action: EditorAction) -> ContentAction {
-    switch action {
-    case .cancel:
-        return .editorCancel
-    case .saveCreateSuccess(let fileEntry):
-        return .editorSaveCreateSuccess(fileEntry)
-    case .saveUpdateSuccess(let fileEntry):
-        return .editorSaveUpdateSuccess(fileEntry)
-    default:
-        return .editor(action)
-    }
 }
 
 func tagSearchBarAction(_ action: SubSearchBarAction) -> ContentAction {
@@ -81,8 +60,6 @@ func tagSuggestionsAction(_ action: SuggestionsAction) -> ContentAction {
         return .commitQuery(query)
     case .selectQuery(let query):
         return .setQuery(query)
-    case .selectCreate(let query):
-        return .editorOpenCreate(query)
     default:
         return .suggestions(action)
     }
@@ -112,8 +89,6 @@ struct ContentModel: Equatable {
     var suggestionTokens = TextTokenBarModel()
     /// Live-as-you-type suggestions
     var suggestions = SuggestionsModel()
-    var editor = EditorModel()
-    var isEditorPresented = false
 }
 
 //  MARK: Reducer
@@ -131,12 +106,6 @@ func updateContent(
             action: action,
             environment: environment.database
         ).map(tagDatabaseAction).eraseToAnyPublisher()
-    case .editor(let action):
-        return updateEditor(
-            state: &state.editor,
-            action: action,
-            environment: environment.io
-        ).map(tagEditorAction).eraseToAnyPublisher()
     case .searchBar(let action):
         return updateSubSearchBar(
             state: &state.searchBar,
@@ -178,51 +147,6 @@ func updateContent(
             initialQueryEffect,
             suggestionTokensEffect,
             setupDatabaseEffect
-        ).eraseToAnyPublisher()
-    case .setEditorPresented(let isPresented):
-        state.isEditorPresented = isPresented
-    case .editorCancel:
-        let clear = Just(ContentAction.editor(.cancel))
-            .delay(
-                for: .milliseconds(500),
-                scheduler: RunLoop.main
-            )
-        let close = Just(ContentAction.setEditorPresented(false))
-        return Publishers.Merge(
-            close,
-            clear
-        ).eraseToAnyPublisher()
-    case .editorOpenCreate(let content):
-        let open = Just(ContentAction.setEditorPresented(true))
-        let create = Just(ContentAction.editor(.editCreate(content: content)))
-        return Publishers.Merge(
-            create,
-            open
-        ).eraseToAnyPublisher()
-    case .editorSaveCreateSuccess(let fileEntry):
-        let update = Just(ContentAction.editor(.saveCreateSuccess(fileEntry)))
-        let close = Just(ContentAction.setEditorPresented(false))
-        let search = Just(ContentAction.commitQuery(fileEntry.title))
-        return Publishers.Merge3(
-            update,
-            close,
-            search
-        ).eraseToAnyPublisher()
-    case .editorOpenUpdate(let url):
-        let update = Just(ContentAction.editor(.editUpdate(url: url)))
-        let open = Just(ContentAction.setEditorPresented(true))
-        return Publishers.Merge(
-            update,
-            open
-        ).eraseToAnyPublisher()
-    case .editorSaveUpdateSuccess(let fileEntry):
-        let update = Just(ContentAction.editor(.saveUpdateSuccess(fileEntry)))
-        let close = Just(ContentAction.setEditorPresented(false))
-        let search = Just(ContentAction.commitQuery(fileEntry.title))
-        return Publishers.Merge3(
-            update,
-            close,
-            search
         ).eraseToAnyPublisher()
     case .commitQuery(let query):
         let commit = Just(ContentAction.searchBar(.commit(query)))
@@ -363,23 +287,6 @@ struct ContentView: View {
             }
             return .systemAction
         })
-        .sheet(
-            isPresented: Binding(
-                get: { store.state.isEditorPresented },
-                set: { isPresented in
-                    store.send(.setEditorPresented(isPresented))
-                }
-            )
-        ) {
-            EditorView(
-                store: ViewStore(
-                    state: store.state.editor,
-                    send: store.send,
-                    tag: tagEditorAction
-                )
-            )
-            .equatable()
-        }
     }
 }
 
