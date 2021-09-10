@@ -23,6 +23,10 @@ struct EntryDetailView: View, Equatable {
 
     struct Model: Equatable {
         var editor = SubtextEditorView.Model()
+
+        init(markup: String = "") {
+            self.editor = .init(markup: markup)
+        }
     }
 
     static func update(
@@ -63,7 +67,7 @@ struct EntryDetailView_Previews: PreviewProvider {
     static var previews: some View {
         EntryDetailView(
             store: ViewStore(
-                state: .init(editor: .init()),
+                state: .init(),
                 send: { action in }
             )
         )

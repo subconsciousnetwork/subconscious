@@ -52,7 +52,11 @@ struct ResultView: View, Equatable {
                     Just(.searchFailure(message: error.localizedDescription))
                 }).eraseToAnyPublisher()
         case .searchSuccess(let results):
-            environment.logger.debug("TODO searchSuccess")
+            if let top = results.fileEntries.first {
+                state.entryDetail = .init(
+                    markup: top.content
+                )
+            }
         case .searchFailure(let message):
             environment.logger.warning("\(message)")
         }
