@@ -66,14 +66,22 @@ struct ResultView: View, Equatable {
     var store: ViewStore<Model, Action>
 
     var body: some View {
-        if let entryDetail = store.state.entryDetail {
-            EntryDetailView(
-                store: ViewStore(
-                    state: entryDetail,
-                    send: store.send,
-                    tag: Self.tagEntryDetail
+        VStack {
+            if let entryDetail = store.state.entryDetail {
+                EntryDetailView(
+                    store: ViewStore(
+                        state: entryDetail,
+                        send: store.send,
+                        tag: Self.tagEntryDetail
+                    )
                 )
-            )
+            } else {
+                VStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                }
+            }
         }
     }
 }
