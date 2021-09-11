@@ -52,12 +52,10 @@ struct ResultView: View, Equatable {
                     Just(.searchFailure(message: error.localizedDescription))
                 }).eraseToAnyPublisher()
         case .searchSuccess(let results):
-            if let top = results.entry {
-                state.entryDetail = .init(
-                    markup: top.content,
-                    backlinks: results.backlinks
-                )
-            }
+            state.entryDetail = .init(
+                markup: results.entry?.content ?? "",
+                backlinks: results.backlinks
+            )
         case .searchFailure(let message):
             environment.logger.warning("\(message)")
         }

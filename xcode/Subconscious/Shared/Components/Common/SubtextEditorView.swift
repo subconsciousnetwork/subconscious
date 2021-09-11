@@ -55,6 +55,7 @@ struct SubtextEditorView: View, Equatable {
     var store: ViewStore<Model, Action>
     var fixedWidth: CGFloat
     var padding: CGFloat = 8
+    var textContainerInset: UIEdgeInsets = .zero
 
     var body: some View {
         LineTextViewRepresentable(
@@ -80,16 +81,9 @@ struct SubtextEditorView: View, Equatable {
                     store.send(.setSelection(selection))
                 }
             ),
-            fixedWidth: fixedWidth - (padding * 2)
+            fixedWidth: fixedWidth,
+            textContainerInset: textContainerInset
         )
-        .padding(.vertical, padding)
-        .padding(.horizontal, padding)
-        .background(
-              store.state.isFocused
-            ? Constants.Color.secondaryBackground
-            : Constants.Color.background
-        )
-        .cornerRadius(8)
     }
 }
 

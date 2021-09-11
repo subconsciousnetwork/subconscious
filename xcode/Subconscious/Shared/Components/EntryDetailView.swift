@@ -61,7 +61,13 @@ struct EntryDetailView: View, Equatable {
                             send: store.send,
                             tag: Self.tagEditor
                         ),
-                        fixedWidth: geometry.size.width
+                        fixedWidth: geometry.size.width,
+                        textContainerInset: .init(
+                            top: 8,
+                            left: 8,
+                            bottom: 8,
+                            right: 8
+                        )
                     )
                     VStack(spacing: 8) {
                         ForEach(store.state.backlinks) { fileEntry in

@@ -516,6 +516,28 @@ struct DatabaseService {
         })
     }
 
+    func findEntryByTitle(_ title: String) throws -> FileEntry? {
+        let results: [FileEntry] = try db.connection().execute(
+            sql: """
+            SELECT entry.path, entry.body
+            FROM entry
+            WHERE entry.title LIKE ?
+            LIMIT 1
+            """,
+            parameters: [
+                .text(title)
+            ]
+        ).map({ row in
+            let path: String = try row.get(0).unwrap()
+            let content: String = try row.get(1).unwrap()
+            return FileEntry(
+                url: URL(fileURLWithPath: path, relativeTo: documentsUrl),
+                content: content
+            )
+        })
+        return results.first
+    }
+    
     /// Given a list of FileEntrys, get all documents linked to with wikilinks within that list of FileEntrys.
     func selectTranscludes(
         _ fileEntries: [FileEntry]
@@ -533,14 +555,14 @@ struct DatabaseService {
                 return EntryResults()
             }
 
-            let fileEntries: [FileEntry] = try db.connection().execute(
+            let matches: [FileEntry] = try db.connection().execute(
                 sql: """
                 SELECT path, body
                 FROM entry_search
                 WHERE entry_search MATCH ?
                 AND rank = 'bm25(0.0, 10.0, 1.0, 0.0, 0.0)'
                 ORDER BY rank
-                LIMIT 25
+                LIMIT 200
                 """,
                 parameters: [
                     .queryFTS5(query)
@@ -555,15 +577,22 @@ struct DatabaseService {
                 )
             })
 
-            if fileEntries.count > 0 {
-                return EntryResults(
-                    entry: fileEntries.first,
-                    backlinks: Array(fileEntries.dropFirst())
-                )
+            let entry = try findEntryByTitle(query)
+
+            let backlinks: [FileEntry]
+            if let entry = entry {
+                // If we have an entry, filter it out of the results
+                backlinks = matches.filter({ fileEntry in
+                    fileEntry.id != entry.id
+                })
             } else {
-                return EntryResults()
+                backlinks = matches
             }
-            
+
+            return EntryResults(
+                entry: entry,
+                backlinks: backlinks
+            )
         }
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
