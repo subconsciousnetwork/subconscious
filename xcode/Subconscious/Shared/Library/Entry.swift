@@ -89,6 +89,6 @@ extension FileEntry: StringKeyed {
 }
 
 struct EntryResults: Equatable {
-    var fileEntries: [FileEntry] = []
-    var transcludes = SlugIndex<FileEntry>()
+    var entry: FileEntry? = nil
+    var backlinks: [FileEntry] = []
 }

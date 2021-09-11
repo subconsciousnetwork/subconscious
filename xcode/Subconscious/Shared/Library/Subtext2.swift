@@ -575,6 +575,11 @@ struct Subtext2: Hashable, Equatable {
             .first(where: { block in block.hasContent() })?.renderPlain() ?? ""
     }
 
+    func truncate() -> Subtext2 {
+        let children = Array(filterContentBlocks().prefix(2))
+        return Subtext2(children: children)
+    }
+    
     /// Get all wikilinks that appear in this Subtext.
     func wikilinks(markup: String) -> [String] {
         children.flatMap({ block in

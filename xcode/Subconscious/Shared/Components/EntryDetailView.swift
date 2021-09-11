@@ -23,9 +23,14 @@ struct EntryDetailView: View, Equatable {
 
     struct Model: Equatable {
         var editor = SubtextEditorView.Model()
+        var backlinks: [FileEntry] = []
 
-        init(markup: String = "") {
+        init(
+            markup: String = "",
+            backlinks: [FileEntry] = []
+        ) {
             self.editor = .init(markup: markup)
+            self.backlinks = backlinks
         }
     }
 
@@ -47,18 +52,26 @@ struct EntryDetailView: View, Equatable {
     var store: ViewStore<Model, Action>
 
     var body: some View {
-        VStack {
-            GeometryReader { geometry in
-                SubtextEditorView(
-                    store: ViewStore(
-                        state: store.state.editor,
-                        send: store.send,
-                        tag: Self.tagEditor
-                    ),
-                    fixedWidth: geometry.size.width
-                )
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 8) {
+                    SubtextEditorView(
+                        store: ViewStore(
+                            state: store.state.editor,
+                            send: store.send,
+                            tag: Self.tagEditor
+                        ),
+                        fixedWidth: geometry.size.width
+                    )
+                    VStack(spacing: 8) {
+                        ForEach(store.state.backlinks) { fileEntry in
+                            TranscludeView(
+                                state: .init(dom: fileEntry.dom)
+                            ).equatable()
+                        }
+                    }.padding(8)
+                }
             }
-            // TODO list of entry summaries
         }
     }
 }

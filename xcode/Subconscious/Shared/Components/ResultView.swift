@@ -52,9 +52,10 @@ struct ResultView: View, Equatable {
                     Just(.searchFailure(message: error.localizedDescription))
                 }).eraseToAnyPublisher()
         case .searchSuccess(let results):
-            if let top = results.fileEntries.first {
+            if let top = results.entry {
                 state.entryDetail = .init(
-                    markup: top.content
+                    markup: top.content,
+                    backlinks: results.backlinks
                 )
             }
         case .searchFailure(let message):
@@ -74,7 +75,7 @@ struct ResultView: View, Equatable {
                         send: store.send,
                         tag: Self.tagEntryDetail
                     )
-                )
+                ).equatable()
             } else {
                 VStack {
                     Spacer()

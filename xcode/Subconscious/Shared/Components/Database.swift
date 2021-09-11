@@ -341,41 +341,6 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
-    /// List recent entries
-    func selectRecent() throws -> EntryResults {
-        let results = try db.connection().execute(
-            sql: """
-            SELECT path, body FROM entry
-            ORDER BY modified DESC
-            LIMIT 25
-            """
-        ).map({ row in
-            FileEntry(
-                url: URL(
-                    fileURLWithPath: try row.get(0).unwrap(),
-                    relativeTo: documentsUrl
-                ),
-                content: try row.get(1).unwrap()
-            )
-        })
-
-        let transcludes = try selectTranscludes(results)
-
-        return EntryResults(
-            fileEntries: results,
-            transcludes: transcludes
-        )
-    }
-
-    func selectRecent() -> AnyPublisher<EntryResults, Error> {
-        CombineUtilities.async(
-            qos: .userInitiated,
-            execute: selectRecent
-        )
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
-    }
-
     func searchSuggestionsForZeroQuery() -> AnyPublisher<Suggestions, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             let resultStrings: [String] = try db.connection().execute(
@@ -590,12 +555,15 @@ struct DatabaseService {
                 )
             })
 
-            let transcludes = try selectTranscludes(fileEntries)
-
-            return EntryResults(
-                fileEntries: fileEntries,
-                transcludes: transcludes
-            )
+            if fileEntries.count > 0 {
+                return EntryResults(
+                    entry: fileEntries.first,
+                    backlinks: Array(fileEntries.dropFirst())
+                )
+            } else {
+                return EntryResults()
+            }
+            
         }
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
