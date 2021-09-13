@@ -39,25 +39,40 @@ struct FileEntry: Identifiable, Hashable, Equatable {
     var url: URL
     var dom: Subtext2
 
-    init(url: URL, entry: DraftEntry) {
-        self.url = url
-        self.dom = Subtext2(markup: entry.content)
+    /// Basic initializer
+    init(url: URL, dom: Subtext2) {
+        self.url = url.absoluteURL
+        self.dom = dom
     }
 
-    /// Initialize entry file wrapper by reading URL
-    init(url: URL) throws {
-        self.url = url
-        let content = try String(contentsOf: url, encoding: .utf8)
-        self.dom = Subtext2(markup: content)
+    /// Initialize from draft
+    init(url: URL, entry: DraftEntry) {
+        self.init(
+            url: url,
+            dom: Subtext2(markup: entry.content)
+        )
     }
 
     /// Initialize with URL and string
     init(url: URL, content: String) {
-        self.url = url
+        self.init(
+            url: url,
+            dom: Subtext2(markup: content)
+        )
+        self.url = url.absoluteURL
         self.dom = Subtext2(markup: content)
     }
 
-    /// Initialize with entry, synthesizing URL
+    /// Initialize entry file wrapper by reading URL
+    init(url: URL) throws {
+        let content = try String(contentsOf: url, encoding: .utf8)
+        self.init(
+            url: url,
+            content: content
+        )
+    }
+    
+    /// Initialize with from draft, synthesizing URL
     init?(entry: DraftEntry) {
         let name = entry.title.toFilename()
         if
@@ -68,8 +83,10 @@ struct FileEntry: Identifiable, Hashable, Equatable {
                 ext: "subtext"
             )
         {
-            self.url = url
-            self.dom = entry.dom
+            self.init(
+                url: url,
+                dom: entry.dom
+            )
         } else {
             return nil
         }
