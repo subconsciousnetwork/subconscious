@@ -59,7 +59,7 @@ func tagSuggestionsAction(_ action: SuggestionsAction) -> ContentAction {
     case .selectResult(let query):
         return .commitQuery(query)
     case .selectQuery(let query):
-        return .setQuery(query)
+        return .commitQuery(query)
     default:
         return .suggestions(action)
     }
