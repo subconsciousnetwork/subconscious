@@ -17,10 +17,16 @@ struct ResultView: View, Equatable {
         case search(String)
         case searchSuccess(EntryResults)
         case searchFailure(message: String)
+        case commitQuery(String)
     }
 
     static func tagEntryDetail(_ action: EntryDetailView.Action) -> Action {
-        .entryDetail(action)
+        switch action {
+        case .commitQuery(let query):
+            return .commitQuery(query)
+        default:
+            return .entryDetail(action)
+        }
     }
 
     struct Model: Equatable {
@@ -58,6 +64,13 @@ struct ResultView: View, Equatable {
             )
         case .searchFailure(let message):
             environment.logger.warning("\(message)")
+        case .commitQuery:
+            let string = String(reflecting: action)
+            environment.logger.debug(
+                """
+                Action should be handled by parent\t\(string)
+                """
+            )
         }
         return Empty().eraseToAnyPublisher()
     }

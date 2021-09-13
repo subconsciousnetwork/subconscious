@@ -13,6 +13,7 @@ import Elmo
 struct EntryDetailView: View, Equatable {
     enum Action {
         case editor(SubtextEditorView.Action)
+        case commitQuery(String)
     }
 
     static func tagEditor(
@@ -46,7 +47,15 @@ struct EntryDetailView: View, Equatable {
                 action: action,
                 environment: environment
             ).map(tagEditor).eraseToAnyPublisher()
+        case .commitQuery:
+            let string = String(reflecting: action)
+            environment.debug(
+                """
+                Action should be handled by parent component.\t\(string)
+                """
+            )
         }
+        return Empty().eraseToAnyPublisher()
     }
 
     var store: ViewStore<Model, Action>
@@ -63,19 +72,34 @@ struct EntryDetailView: View, Equatable {
                         ),
                         fixedWidth: geometry.size.width,
                         textContainerInset: .init(
-                            top: 8,
-                            left: 8,
-                            bottom: 8,
-                            right: 8
+                            top: 16,
+                            left: 16,
+                            bottom: 16,
+                            right: 16
                         )
                     )
-                    VStack(spacing: 8) {
+                    Divider()
+                    VStack {
                         ForEach(store.state.backlinks) { fileEntry in
-                            TranscludeView(
-                                state: .init(dom: fileEntry.dom)
-                            ).equatable()
+                            Button(
+                                action: {
+                                    store.send(.commitQuery(fileEntry.title))
+                                },
+                                label: {
+                                    EntrySummaryView(
+                                        state: .init(dom: fileEntry.dom)
+                                    )
+                                    .equatable()
+                                    .foregroundColor(Constants.Color.text)
+                                    .padding(.leading, 0)
+                                    .padding(.trailing, 16)
+                                    .padding(.top, 8)
+                                    .padding(.bottom, 8)
+                                }
+                            )
+                            Divider()
                         }
-                    }.padding(8)
+                    }.padding(.leading, 16)
                 }
             }
         }

@@ -75,7 +75,12 @@ func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> ContentAction {
 }
 
 func tagResultView(_ action: ResultView.Action) -> ContentAction {
-    .result(action)
+    switch action {
+    case .commitQuery(let query):
+        return .commitQuery(query)
+    default:
+        return .result(action)
+    }
 }
 
 //  MARK: State

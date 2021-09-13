@@ -63,6 +63,7 @@
 		B8CA2F9A26AB6B890000BFFB /* LineTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA2F9926AB6B890000BFFB /* LineTextViewRepresentable.swift */; };
 		B8CB7E7526D449C90018717D /* Subtext3.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CB7E7426D449C90018717D /* Subtext3.swift */; };
 		B8CCBF5A26A74CFB00218458 /* Elmo in Frameworks */ = {isa = PBXBuildFile; productRef = B8CCBF5926A74CFB00218458 /* Elmo */; };
+		B8D5B11826ED1BBF0023F5A3 /* EntrySummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D5B11726ED1BBF0023F5A3 /* EntrySummaryView.swift */; };
 		B8D7D9C026B10E9E005961BB /* PrimaryButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D7D9BF26B10E9E005961BB /* PrimaryButtonStyle.swift */; };
 		B8DF24AE267A5764000987C5 /* FileFingerprint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DF24AD267A5764000987C5 /* FileFingerprint.swift */; };
 		B8E152F02656F2D20032F5A7 /* SubconsciousApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F339A261AB2C6009D3D48 /* SubconsciousApp.swift */; };
@@ -159,6 +160,7 @@
 		B8CA2F9926AB6B890000BFFB /* LineTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8CB7E7426D449C90018717D /* Subtext3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext3.swift; sourceTree = "<group>"; };
 		B8CCBF5826A7492B00218458 /* Elmo */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Elmo; path = ../Elmo; sourceTree = "<group>"; };
+		B8D5B11726ED1BBF0023F5A3 /* EntrySummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntrySummaryView.swift; sourceTree = "<group>"; };
 		B8D7D9BF26B10E9E005961BB /* PrimaryButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButtonStyle.swift; sourceTree = "<group>"; };
 		B8DF24AD267A5764000987C5 /* FileFingerprint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileFingerprint.swift; sourceTree = "<group>"; };
 		B8E152F126570B890032F5A7 /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
@@ -231,6 +233,7 @@
 				B874D7AC26540A7800351C8E /* SubSearchBarView.swift */,
 				B838FF35261FB7B40055C5CF /* SuggestionsView.swift */,
 				B82FD94B26AA04270087AE95 /* TranscludeView.swift */,
+				B8D5B11726ED1BBF0023F5A3 /* EntrySummaryView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -576,6 +579,7 @@
 				B80A226E26D6DAEB00E7D49D /* SubtextEditableBlockView.swift in Sources */,
 				B87DA9192624DDEA00BA5232 /* StreamView.swift in Sources */,
 				B880975A26B1DE2D000430F7 /* FullButtonStyle.swift in Sources */,
+				B8D5B11826ED1BBF0023F5A3 /* EntrySummaryView.swift in Sources */,
 				B8EC23D726694A33009E4474 /* OptionalUtilities.swift in Sources */,
 				B8D7D9C026B10E9E005961BB /* PrimaryButtonStyle.swift in Sources */,
 				B8DF24AE267A5764000987C5 /* FileFingerprint.swift in Sources */,
