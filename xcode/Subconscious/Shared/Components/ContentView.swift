@@ -55,9 +55,7 @@ func tagSearchBarAction(_ action: SubSearchBarAction) -> ContentAction {
 
 func tagSuggestionsAction(_ action: SuggestionsAction) -> ContentAction {
     switch action {
-    case .selectResult(let query):
-        return .commitQuery(query)
-    case .selectQuery(let query):
+    case .select(let query):
         return .commitQuery(query)
     default:
         return .suggestions(action)

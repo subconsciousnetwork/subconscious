@@ -14,9 +14,7 @@ enum SuggestionsAction {
     case suggest(String)
     case suggestSuccess(Suggestions)
     case suggestFailure(message: String)
-    case selectResult(String)
-    case selectQuery(String)
-    case selectCreate(String)
+    case select(String)
 }
 
 struct SuggestionsModel: Equatable {
@@ -42,12 +40,13 @@ func updateSuggestions(
         state.suggestions = suggestions
     case .suggestFailure(let message):
         environment.logger.warning("\(message)")
-    case .selectResult:
-        break
-    case .selectQuery:
-        break
-    case .selectCreate:
-        break
+    case .select:
+        let string = String(reflecting: action)
+        environment.logger.debug(
+            """
+            Action should be handled by parent component\t\(string)
+            """
+        )
     }
     return Empty().eraseToAnyPublisher()
 }
@@ -68,33 +67,37 @@ struct SuggestionsView: View, Equatable {
         VStack(spacing: 0) {
             List {
                 if !store.state.suggestions.query.isWhitespace {
-                    QuerySuggestionView(
-                        suggestion: QuerySuggestion(
-                            query: store.state.suggestions.query
-                        )
-                    )
+                    Button(action: {
+                        store.send(.select(store.state.suggestions.query))
+                    }) {
+                        QuerySuggestionView(
+                            suggestion: QuerySuggestion(
+                                query: store.state.suggestions.query
+                            )
+                        ).equatable()
+                    }.id("literalquery")
                 }
                 ForEach(
                     store.state.suggestions.results
                 ) { suggestion in
                     Button(action: {
-                        store.send(.selectResult(suggestion.query))
+                        store.send(.select(suggestion.query))
                     }) {
                         ResultSuggestionView(
                             suggestion: suggestion
                         )
                         .equatable()
-                    }.id("search/\(suggestion.id)")
+                    }.id("result/\(suggestion.id)")
                 }
                 ForEach(store.state.suggestions.queries) { suggestion in
                     Button(action: {
-                        store.send(.selectQuery(suggestion.query))
+                        store.send(.select(suggestion.query))
                     }) {
                         QuerySuggestionView(
                             suggestion: suggestion
                         )
                         .equatable()
-                    }.id("action/\(suggestion.id)")
+                    }.id("query/\(suggestion.id)")
                 }
             }.listStyle(.plain)
         }
