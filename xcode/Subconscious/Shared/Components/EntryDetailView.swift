@@ -63,7 +63,7 @@ struct EntryDetailView: View, Equatable {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 0) {
                     SubtextEditorView(
                         store: ViewStore(
                             state: store.state.editor,
@@ -73,33 +73,38 @@ struct EntryDetailView: View, Equatable {
                         fixedWidth: geometry.size.width,
                         textContainerInset: .init(
                             top: 16,
-                            left: 16,
+                            left: 20,
                             bottom: 16,
-                            right: 16
+                            right: 20
                         )
                     )
                     Divider()
-                    VStack {
-                        ForEach(store.state.backlinks) { fileEntry in
-                            Button(
-                                action: {
-                                    store.send(.commitQuery(fileEntry.title))
-                                },
-                                label: {
-                                    EntrySummaryView(
-                                        state: .init(dom: fileEntry.dom)
-                                    )
-                                    .equatable()
-                                    .foregroundColor(Constants.Color.text)
-                                    .padding(.leading, 0)
-                                    .padding(.trailing, 16)
-                                    .padding(.top, 8)
-                                    .padding(.bottom, 8)
-                                }
-                            )
-                            Divider()
+                    Group {
+                        VStack {
+                            ForEach(store.state.backlinks) { fileEntry in
+                                Button(
+                                    action: {
+                                        store.send(.commitQuery(fileEntry.title))
+                                    },
+                                    label: {
+                                        EntrySummaryView(
+                                            state: .init(dom: fileEntry.dom)
+                                        )
+                                        .equatable()
+                                        .foregroundColor(Constants.Color.text)
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 16)
+                                    }
+                                )
+                                Divider()
+                            }
                         }
-                    }.padding(.leading, 16)
+                        .background(Constants.Color.background)
+                        .cornerRadius(Constants.Theme.cornerRadius)
+
+                    }
+                    .padding(20)
+                    .background(Constants.Color.secondaryBackground)
                 }
             }
         }

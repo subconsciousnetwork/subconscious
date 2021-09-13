@@ -76,7 +76,7 @@ struct Constants {
     }
 
     struct Theme {
-        static let cornerRadius: Double = 12
+        static let cornerRadius: Double = 20
         static let buttonHeight: CGFloat = 40
     }
 
