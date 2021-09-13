@@ -78,33 +78,35 @@ struct EntryDetailView: View, Equatable {
                             right: 20
                         )
                     )
-                    Divider()
-                    Group {
-                        VStack {
-                            ForEach(store.state.backlinks) { fileEntry in
-                                Button(
-                                    action: {
-                                        store.send(.commitQuery(fileEntry.title))
-                                    },
-                                    label: {
-                                        EntrySummaryView(
-                                            state: .init(dom: fileEntry.dom)
-                                        )
-                                        .equatable()
-                                        .foregroundColor(Constants.Color.text)
-                                        .padding(.horizontal, 20)
-                                        .padding(.vertical, 16)
-                                    }
-                                )
-                                Divider()
+                    if !store.state.backlinks.isEmpty {
+                        Divider()
+                        Group {
+                            VStack {
+                                ForEach(store.state.backlinks) { fileEntry in
+                                    Button(
+                                        action: {
+                                            store.send(.commitQuery(fileEntry.title))
+                                        },
+                                        label: {
+                                            EntrySummaryView(
+                                                state: .init(dom: fileEntry.dom)
+                                            )
+                                            .equatable()
+                                            .foregroundColor(Constants.Color.text)
+                                            .padding(.horizontal, 20)
+                                            .padding(.vertical, 16)
+                                        }
+                                    )
+                                    Divider()
+                                }
                             }
-                        }
-                        .background(Constants.Color.background)
-                        .cornerRadius(Constants.Theme.cornerRadius)
+                            .background(Constants.Color.background)
+                            .cornerRadius(Constants.Theme.cornerRadius)
 
+                        }
+                        .padding(20)
+                        .background(Constants.Color.secondaryBackground)
                     }
-                    .padding(20)
-                    .background(Constants.Color.secondaryBackground)
                 }
             }
         }
