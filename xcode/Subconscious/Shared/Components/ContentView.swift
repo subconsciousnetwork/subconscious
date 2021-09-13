@@ -238,13 +238,21 @@ struct ContentView: View {
                     .equatable()
                     .transition(.opacity)
                 } else {
-                    ResultView(
-                        store: ViewStore(
-                            state: store.state.result,
-                            send: store.send,
-                            tag: tagResultView
-                        )
-                    ).equatable()
+                    if !store.state.searchBar.comitted.isWhitespace {
+                        ResultView(
+                            store: ViewStore(
+                                state: store.state.result,
+                                send: store.send,
+                                tag: tagResultView
+                            )
+                        ).equatable()
+                    } else {
+                        VStack {
+                            Spacer()
+                            Text("Home")
+                            Spacer()
+                        }
+                    }
                 }
             }
             .background(Constants.Color.background)
