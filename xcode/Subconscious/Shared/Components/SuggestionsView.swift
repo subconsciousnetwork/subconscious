@@ -67,61 +67,36 @@ struct SuggestionsView: View, Equatable {
     var body: some View {
         VStack(spacing: 0) {
             List {
-                if (store.state.suggestions.queries.count > 0) {
-                    Section(
-                        header: Text("Suggestions")
-                    ) {
-                        ForEach(store.state.suggestions.queries) { suggestion in
-                            Button(action: {
-                                store.send(.selectQuery(suggestion.query))
-                            }) {
-                                QuerySuggestionView(
-                                    suggestion: suggestion
-                                )
-                                .equatable()
-                            }
-                            .id("action/\(suggestion.id)")
-                        }
-                    }.textCase(nil)
+                if !store.state.suggestions.query.isWhitespace {
+                    QuerySuggestionView(
+                        suggestion: QuerySuggestion(
+                            query: store.state.suggestions.query
+                        )
+                    )
                 }
-
-                if (store.state.suggestions.results.count > 0) {
-                    Section(
-                        header: Text("Notes")
-                    ) {
-                        ForEach(
-                            store.state.suggestions.results
-                        ) { suggestion in
-                            Button(action: {
-                                store.send(.selectResult(suggestion.query))
-                            }) {
-                                ResultSuggestionView(
-                                    suggestion: suggestion
-                                )
-                                .equatable()
-                            }
-                            .id("search/\(suggestion.id)")
-                        }
-                    }.textCase(nil)
+                ForEach(
+                    store.state.suggestions.results
+                ) { suggestion in
+                    Button(action: {
+                        store.send(.selectResult(suggestion.query))
+                    }) {
+                        ResultSuggestionView(
+                            suggestion: suggestion
+                        )
+                        .equatable()
+                    }.id("search/\(suggestion.id)")
                 }
-            }
-            VStack(spacing: 0) {
-                Divider()
-                Button(
-                    action: {
-                        store.send(.selectCreate(store.state.suggestions.query))
-                    },
-                    label: {
-                        if store.state.suggestions.query.isWhitespace {
-                            Text("Create note")
-                        } else {
-                            Text(#"Create "\#(store.state.suggestions.query)""#)
-                        }
-                    }
-                )
-                .buttonStyle(FullButtonStyle())
-                .padding(8)
-            }
+                ForEach(store.state.suggestions.queries) { suggestion in
+                    Button(action: {
+                        store.send(.selectQuery(suggestion.query))
+                    }) {
+                        QuerySuggestionView(
+                            suggestion: suggestion
+                        )
+                        .equatable()
+                    }.id("action/\(suggestion.id)")
+                }
+            }.listStyle(.plain)
         }
     }
 }

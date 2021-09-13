@@ -25,7 +25,6 @@
 		B853EB37263274DD001BB584 /* Subtext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B853EB36263274DD001BB584 /* Subtext.swift */; };
 		B853EB412633959E001BB584 /* StringUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B853EB402633959E001BB584 /* StringUtilities.swift */; };
 		B85AD0E9269F62220089ADFD /* Shadow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85AD0E8269F62220089ADFD /* Shadow.swift */; };
-		B85AD0EB269F92A10089ADFD /* IconLabelRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85AD0EA269F92A10089ADFD /* IconLabelRowView.swift */; };
 		B85CABF3265C511100BE1BE6 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B85CABF2265C510300BE1BE6 /* libsqlite3.tbd */; };
 		B85CABF8265C68AF00BE1BE6 /* SQLite3Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85CABF7265C68AF00BE1BE6 /* SQLite3Connection.swift */; };
 		B85EBCAA269DFD4400A8D4FF /* ArrayUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85EBCA9269DFD4400A8D4FF /* ArrayUtilities.swift */; };
@@ -118,7 +117,6 @@
 		B853EB36263274DD001BB584 /* Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext.swift; sourceTree = "<group>"; };
 		B853EB402633959E001BB584 /* StringUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringUtilities.swift; sourceTree = "<group>"; };
 		B85AD0E8269F62220089ADFD /* Shadow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shadow.swift; sourceTree = "<group>"; };
-		B85AD0EA269F92A10089ADFD /* IconLabelRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconLabelRowView.swift; sourceTree = "<group>"; };
 		B85CABF2265C510300BE1BE6 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.5.sdk/usr/lib/libsqlite3.tbd; sourceTree = DEVELOPER_DIR; };
 		B85CABF7265C68AF00BE1BE6 /* SQLite3Connection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Connection.swift; sourceTree = "<group>"; };
 		B85EBCA9269DFD4400A8D4FF /* ArrayUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrayUtilities.swift; sourceTree = "<group>"; };
@@ -360,7 +358,6 @@
 			children = (
 				B8B2C18826471E6B008AA3EC /* FakeTextFieldView.swift */,
 				B880975926B1DE2D000430F7 /* FullButtonStyle.swift */,
-				B85AD0EA269F92A10089ADFD /* IconLabelRowView.swift */,
 				B8F41F07262F8FD500D134F8 /* IconView.swift */,
 				B82FD94926A9DC7C0087AE95 /* LabelRepresentable.swift */,
 				B8CA2F9926AB6B890000BFFB /* LineTextViewRepresentable.swift */,
@@ -574,7 +571,6 @@
 				B838FF36261FB7B40055C5CF /* SuggestionsView.swift in Sources */,
 				B8929E262695101B00131928 /* TextViewRepresentable.swift in Sources */,
 				B850097726EC0AAE0061B3A3 /* ResultView.swift in Sources */,
-				B85AD0EB269F92A10089ADFD /* IconLabelRowView.swift in Sources */,
 				B87DA91F26250CF900BA5232 /* SearchBarRepresentable.swift in Sources */,
 				B80A226E26D6DAEB00E7D49D /* SubtextEditableBlockView.swift in Sources */,
 				B87DA9192624DDEA00BA5232 /* StreamView.swift in Sources */,

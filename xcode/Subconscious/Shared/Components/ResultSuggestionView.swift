@@ -11,13 +11,22 @@ struct ResultSuggestionView: View, Equatable {
     var suggestion: ResultSuggestion
 
     var body: some View {
-        
-        IconLabelRowView(
-            title: suggestion.query,
-            image: Image(systemName: "doc.text")
-        )
-        .foregroundColor(Constants.Color.text)
+        Label {
+            HStack(spacing: 0) {
+                Text(suggestion.query).foregroundColor(Constants.Color.text)
+                Text(" — Edit").foregroundColor(Constants.Color.secondaryText)
+            }
+        } icon: {
+            IconView(
+                image: Image(systemName: "doc")
+            ).foregroundColor(Constants.Color.accentIcon)
+        }
         .lineLimit(1)
+        .contentShape(Rectangle())
+        .frame(
+            maxWidth: .infinity,
+            alignment: .leading
+        )
     }
 }
 

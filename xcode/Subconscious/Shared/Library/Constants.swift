@@ -29,6 +29,7 @@ struct Constants {
         static let separator = SwiftUI.Color(.separator)
         static let icon = text
         static let secondaryIcon = secondaryText
+        static let accentIcon = accent
         static let quotedText = accent
     }
 

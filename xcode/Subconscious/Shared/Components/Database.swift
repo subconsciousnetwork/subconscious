@@ -399,7 +399,7 @@ struct DatabaseService {
                 FROM entry_search
                 WHERE entry_search.title MATCH ?
                 ORDER BY rank
-                LIMIT 10
+                LIMIT 5
                 """,
                 parameters: [
                     SQLite3Connection.Value.prefixQueryFTS5(query)
@@ -412,7 +412,7 @@ struct DatabaseService {
                 FROM search_history
                 WHERE query LIKE ?
                 ORDER BY created DESC
-                LIMIT 2
+                LIMIT 3
                 """,
                 parameters: [
                     SQLite3Connection.Value.prefixQueryLike(query)

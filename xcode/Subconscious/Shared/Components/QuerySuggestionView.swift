@@ -12,10 +12,17 @@ struct QuerySuggestionView: View, Equatable {
     var suggestion: QuerySuggestion
 
     var body: some View {
-        IconLabelRowView(
-            title: suggestion.query,
-            image: Image(systemName: "arrow.up.left")
-        )
+        Label {
+            HStack(spacing: 0) {
+                Text(suggestion.query).foregroundColor(Constants.Color.text)
+                Text(" — Create").foregroundColor(Constants.Color.secondaryText)
+            }
+        } icon: {
+            IconView(
+                image: Image(systemName: "magnifyingglass")
+            ).foregroundColor(Constants.Color.accentIcon)
+        }
+        .lineLimit(1)
         .contentShape(Rectangle())
         .frame(
             maxWidth: .infinity,
