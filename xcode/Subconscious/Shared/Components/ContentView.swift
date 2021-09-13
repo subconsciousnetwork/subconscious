@@ -25,7 +25,6 @@ enum ContentAction {
     case suggestions(SuggestionsAction)
     /// Entry detail view
     case result(ResultView.Action)
-    case suggestionTokens(TextTokenBarAction)
     /// On view appear
     case appear
     /// Issue and log search
@@ -65,15 +64,6 @@ func tagSuggestionsAction(_ action: SuggestionsAction) -> ContentAction {
     }
 }
 
-func tagSuggestionTokensAction(_ action: TextTokenBarAction) -> ContentAction {
-    switch action {
-    case .select(let text):
-        return .commitQuery(text)
-    default:
-        return .suggestionTokens(action)
-    }
-}
-
 func tagResultView(_ action: ResultView.Action) -> ContentAction {
     switch action {
     case .commitQuery(let query):
@@ -89,9 +79,6 @@ struct ContentModel: Equatable {
     var database = DatabaseModel()
     var searchBar = SubSearchBarModel()
     var result = ResultView.Model()
-    /// Semi-permanent suggestions that show up as tokens in the search view.
-    /// We don't differentiate between types of token, so these are all just strings.
-    var suggestionTokens = TextTokenBarModel()
     /// Live-as-you-type suggestions
     var suggestions = SuggestionsModel()
 }
@@ -129,12 +116,6 @@ func updateContent(
             action: action,
             environment: environment.io
         ).map(tagResultView).eraseToAnyPublisher()
-    case .suggestionTokens(let action):
-        return updateTextTokenBar(
-            state: &state.suggestionTokens,
-            action: action,
-            environment: environment.logger
-        ).map(tagSuggestionTokensAction).eraseToAnyPublisher()
     case .appear:
         environment.logger.info(
             """
