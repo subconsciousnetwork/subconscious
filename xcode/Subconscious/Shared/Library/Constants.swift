@@ -14,6 +14,15 @@ struct Constants {
         category: "main"
     )
 
+    static let databaseURL = try! FileManager.default.url(
+        for: .applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: true
+    ).appendingPathComponent("database.sqlite")
+
+    static let documentDirectoryURL = FileManager.default.documentDirectoryUrl!
+
     struct Color {
         static let accent = SwiftUI.Color.accentColor
         static let background = SwiftUI.Color(.systemBackground)

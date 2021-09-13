@@ -142,15 +142,9 @@ func updateContent(
             """
         )
         let initialQueryEffect = Just(ContentAction.commitQuery(""))
-        let suggestionTokensEffect = environment
-            .fetchSuggestionTokens()
-            .map({ suggestions in
-                ContentAction.suggestionTokens(.setTokens(suggestions))
-            })
         let setupDatabaseEffect = Just(ContentAction.database(.setup))
-        return Publishers.Merge3(
+        return Publishers.Merge(
             initialQueryEffect,
-            suggestionTokensEffect,
             setupDatabaseEffect
         ).eraseToAnyPublisher()
     case .commitQuery(let query):
@@ -182,23 +176,13 @@ func updateContent(
 //  MARK: Environment
 /// Access to external network services and other supporting services
 struct ContentEnvironment {
-    let fileManager = FileManager.default
-    let documentsUrl: URL
-    let databaseUrl: URL
+    let documentsUrl = Constants.documentDirectoryURL
+    let databaseUrl = Constants.databaseURL
     let logger = Constants.logger
     let database: DatabaseService
     let io: IOService
 
     init() {
-        self.databaseUrl = try! fileManager.url(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        ).appendingPathComponent("database.sqlite")
-
-        self.documentsUrl = fileManager.documentDirectoryUrl!
-
         self.database = DatabaseService(
             databaseUrl: databaseUrl,
             documentsUrl: documentsUrl,
@@ -209,23 +193,6 @@ struct ContentEnvironment {
             logger: logger,
             database: database
         )
-    }
-
-    //  FIXME: serves up static suggestions
-    func fetchSuggestionTokens() -> Future<[String], Never> {
-        Future({ promise in
-            let suggestions = [
-                "#log",
-                "#idea",
-                "#pattern",
-                "#project",
-                "#decision",
-                "#quote",
-                "#book",
-                "#person"
-            ]
-            promise(.success(suggestions))
-        })
     }
 }
 
