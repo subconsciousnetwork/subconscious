@@ -24,7 +24,7 @@ enum ContentAction {
     /// Search suggestions actions
     case suggestions(SuggestionsAction)
     /// Entry detail view
-    case result(ResultView.Action)
+    case detail(ResultView.Action)
     /// On view appear
     case appear
     /// Issue and log search
@@ -32,6 +32,7 @@ enum ContentAction {
     /// Set live query
     case setQuery(String)
     case setSuggestions(_ suggestions: SuggestionsModel)
+    case setDetailActive(Bool)
     case warning(String)
     case info(String)
 }
@@ -67,16 +68,17 @@ func tagResultView(_ action: ResultView.Action) -> ContentAction {
     case .commitQuery(let query):
         return .commitQuery(query)
     default:
-        return .result(action)
+        return .detail(action)
     }
 }
 
 //  MARK: State
 /// Central source of truth for all shared app state
 struct ContentModel: Equatable {
+    var isDetailActive = false
     var database = DatabaseModel()
     var searchBar = SubSearchBarModel()
-    var result = ResultView.Model()
+    var detail = ResultView.Model()
     /// Live-as-you-type suggestions
     var suggestions = SuggestionsModel()
 }
@@ -108,12 +110,14 @@ func updateContent(
             action: action,
             environment: environment.io
         ).map(tagSuggestionsAction).eraseToAnyPublisher()
-    case .result(let action):
+    case .detail(let action):
         return ResultView.update(
-            state: &state.result,
+            state: &state.detail,
             action: action,
             environment: environment.io
         ).map(tagResultView).eraseToAnyPublisher()
+    case .setDetailActive(let isDetailActive):
+        state.isDetailActive = isDetailActive
     case .appear:
         environment.logger.info(
             """
@@ -129,11 +133,15 @@ func updateContent(
     case .commitQuery(let query):
         let commit = Just(ContentAction.searchBar(.commit(query)))
         let suggest = Just(ContentAction.suggestions(.suggest(query)))
-        let search = Just(ContentAction.result(.search(query)))
-        return Publishers.Merge3(
+        let search = Just(ContentAction.detail(.search(query)))
+        let setDetailActive = Just(
+            ContentAction.setDetailActive(!query.isWhitespace)
+        )
+        return Publishers.Merge4(
             commit,
             suggest,
-            search
+            search,
+            setDetailActive
         ).eraseToAnyPublisher()
     case .setQuery(let query):
         let setText = Just(ContentAction.searchBar(.setText(query)))
@@ -184,47 +192,37 @@ struct ContentView: View {
     )
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                Button(
-                    action: {
-                        store.send(.commitQuery(""))
-                    },
+        NavigationView {
+            VStack(spacing: 0) {
+                NavigationLink(
+                    destination: ResultView(
+                        store: ViewStore(
+                            state: store.state.detail,
+                            send: store.send,
+                            tag: tagResultView
+                        )
+                    ).equatable(),
+                    isActive: Binding(
+                        get: { store.state.isDetailActive },
+                        set: { isDetailActive in
+                            store.send(.setDetailActive(isDetailActive))
+                        }
+                    ),
                     label: {
-                        IconView(image: Image(systemName: "chevron.left"))
+                        EmptyView()
                     }
                 )
-                .padding(.leading, 8)
-                .disabled(store.state.searchBar.comitted.isEmpty)
-                SubSearchBarView(
-                    store: ViewStore(
-                        state: store.state.searchBar,
-                        send: store.send,
-                        tag: tagSearchBarAction
-                    )
-                ).equatable()
-            }.background(Constants.Color.background)
-            Divider()
-            ZStack {
-                if store.state.searchBar.isFocused {
-                    SuggestionsView(
-                        store: ViewStore(
-                            state: store.state.suggestions,
-                            send: store.send,
-                            tag: tagSuggestionsAction
-                        )
-                    )
-                    .equatable()
-                    .transition(.opacity)
-                } else {
-                    if !store.state.searchBar.comitted.isWhitespace {
-                        ResultView(
+                ZStack {
+                    if store.state.searchBar.isFocused {
+                        SuggestionsView(
                             store: ViewStore(
-                                state: store.state.result,
+                                state: store.state.suggestions,
                                 send: store.send,
-                                tag: tagResultView
+                                tag: tagSuggestionsAction
                             )
-                        ).equatable()
+                        )
+                        .equatable()
+                        .transition(.opacity)
                     } else {
                         VStack {
                             Spacer()
@@ -234,8 +232,32 @@ struct ContentView: View {
                     }
                 }
             }
+            .background(Constants.Color.secondaryBackground)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 0) {
+                        Button(
+                            action: {
+                                store.send(.commitQuery(""))
+                            },
+                            label: {
+                                IconView(image: Image(systemName: "chevron.left"))
+                            }
+                        )
+                        .padding(.leading, 8)
+                        .disabled(store.state.searchBar.comitted.isEmpty)
+                        SubSearchBarView(
+                            store: ViewStore(
+                                state: store.state.searchBar,
+                                send: store.send,
+                                tag: tagSearchBarAction
+                            )
+                        ).equatable()
+                    }
+                }
+            }
         }
-        .background(Constants.Color.secondaryBackground)
         .onAppear {
             store.send(.appear)
         }
