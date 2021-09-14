@@ -12,8 +12,14 @@ struct LineTextViewRepresentable: UIViewRepresentable {
     /// Extends UITTextView to provide an intrinsicContentSize given a fixed width.
     class FixedWidthTextView: UITextView {
         var fixedWidth: CGFloat = 0
+        var minHeight: CGFloat = 300
         override var intrinsicContentSize: CGSize {
-            sizeThatFits(CGSize(width: fixedWidth, height: frame.height))
+            sizeThatFits(
+                CGSize(
+                    width: fixedWidth,
+                    height: max(frame.height, minHeight)
+                )
+            )
         }
     }
 
