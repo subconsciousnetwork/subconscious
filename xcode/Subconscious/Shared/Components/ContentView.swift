@@ -235,25 +235,13 @@ struct ContentView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    HStack(spacing: 0) {
-                        Button(
-                            action: {
-                                store.send(.commitQuery(""))
-                            },
-                            label: {
-                                IconView(image: Image(systemName: "chevron.left"))
-                            }
+                    SubSearchBarView(
+                        store: ViewStore(
+                            state: store.state.searchBar,
+                            send: store.send,
+                            tag: tagSearchBarAction
                         )
-                        .padding(.leading, 8)
-                        .disabled(store.state.searchBar.comitted.isEmpty)
-                        SubSearchBarView(
-                            store: ViewStore(
-                                state: store.state.searchBar,
-                                send: store.send,
-                                tag: tagSearchBarAction
-                            )
-                        ).equatable()
-                    }
+                    ).equatable()
                 }
             }
         }
