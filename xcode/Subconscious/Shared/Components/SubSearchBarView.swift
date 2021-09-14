@@ -21,7 +21,6 @@ enum SubSearchBarAction {
 
 struct SubSearchBarModel: Equatable {
     var text = ""
-    var comitted = ""
     var isFocused = false
 }
 
@@ -32,22 +31,28 @@ func updateSubSearchBar(
 ) -> AnyPublisher<SubSearchBarAction, Never> {
     switch action {
     case .cancel:
-        state.isFocused = false
-        state.text = state.comitted
+        return Publishers.Merge(
+            Just(SubSearchBarAction.commit("")),
+            Just(SubSearchBarAction.setFocus(false))
+        ).eraseToAnyPublisher()
     case .setText(let text):
         state.text = text
     case .commit(let text):
-        state.isFocused = false
-        state.text = text
-        state.comitted = text
-        return environment.database.insertSearchHistory(query: text)
+        let insertQuery = environment.database.insertSearchHistory(query: text)
             .map({ query in
-                .commitSuccess(query)
+                SubSearchBarAction.commitSuccess(query)
             })
             .catch({ error in
-                Just(.commitFailure(message: error.localizedDescription))
+                Just(
+                    SubSearchBarAction.commitFailure(
+                        message: error.localizedDescription
+                    )
+                )
             })
-            .eraseToAnyPublisher()
+        return Publishers.Merge(
+            insertQuery,
+            Just(SubSearchBarAction.setText(text))
+        ).eraseToAnyPublisher()
     case .commitSuccess(let query):
         environment.logger.log("Inserted search history: \(query)")
     case .commitFailure(let message):
