@@ -62,7 +62,7 @@ struct EntryDetailView: View, Equatable {
 
     var body: some View {
         GeometryReader { geometry in
-            ScrollView {
+            ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: 0) {
                     SubtextEditorView(
                         store: ViewStore(
@@ -80,9 +80,15 @@ struct EntryDetailView: View, Equatable {
                     )
                     if !store.state.backlinks.isEmpty {
                         Divider()
-                        Group {
+                        VStack {
                             VStack {
-                                ForEach(store.state.backlinks) { fileEntry in
+                                ForEach(
+                                    Array(store.state.backlinks.enumerated()),
+                                    id: \.element
+                                ) { offset, fileEntry in
+                                    if offset > 0 {
+                                        Divider()
+                                    }
                                     Button(
                                         action: {
                                             store.send(.commitQuery(fileEntry.title))
@@ -97,12 +103,11 @@ struct EntryDetailView: View, Equatable {
                                             .padding(.vertical, 16)
                                         }
                                     )
-                                    Divider()
                                 }
                             }
                             .background(Constants.Color.background)
                             .cornerRadius(Constants.Theme.cornerRadius)
-
+                            Spacer()
                         }
                         .padding(20)
                         .background(Constants.Color.secondaryBackground)
