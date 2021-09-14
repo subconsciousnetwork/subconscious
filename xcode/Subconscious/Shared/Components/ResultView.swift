@@ -95,6 +95,7 @@ struct ResultView: View, Equatable {
                 }
             }
         }
+        .background(Constants.Color.secondaryBackground)
     }
 }
 

@@ -232,7 +232,6 @@ struct ContentView: View {
                     }
                 }
             }
-            .background(Constants.Color.secondaryBackground)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
