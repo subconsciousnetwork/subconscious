@@ -78,7 +78,6 @@ struct EntryDetailView: View, Equatable {
                             right: 20
                         )
                     )
-                    .frame(minHeight: 300)
                     if !store.state.backlinks.isEmpty {
                         Divider()
                         VStack {
