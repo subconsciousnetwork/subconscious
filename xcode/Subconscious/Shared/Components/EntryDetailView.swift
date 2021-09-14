@@ -78,6 +78,9 @@ struct EntryDetailView: View, Equatable {
                             right: 20
                         )
                     )
+                    //  TODO: set explicit line height via attributedString
+                    .frame(minHeight: 29 * 16)
+                    .background(Constants.Color.background)
                     if !store.state.backlinks.isEmpty {
                         Divider()
                         VStack {

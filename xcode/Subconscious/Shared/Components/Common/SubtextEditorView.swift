@@ -84,9 +84,6 @@ struct SubtextEditorView: View, Equatable {
             fixedWidth: fixedWidth,
             textContainerInset: textContainerInset
         )
-        //  TODO: set explicit line height via attributedString
-        //  This is at or close to 5 lines of text at default line height.
-        .frame(minHeight: 29 * 5)
     }
 }
 

@@ -203,7 +203,7 @@ struct ContentView: View {
                         tag: tagSearchBarAction
                     )
                 ).equatable()
-            }
+            }.background(Constants.Color.background)
             Divider()
             ZStack {
                 if store.state.searchBar.isFocused {
@@ -234,8 +234,8 @@ struct ContentView: View {
                     }
                 }
             }
-            .background(Constants.Color.background)
         }
+        .background(Constants.Color.secondaryBackground)
         .onAppear {
             store.send(.appear)
         }
