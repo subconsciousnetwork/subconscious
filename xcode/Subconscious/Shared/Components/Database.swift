@@ -9,6 +9,7 @@
 import Foundation
 import Combine
 import os
+import OrderedCollections
 
 //  TODO: consider moving search results and suggestions into database model
 //  or else merge database model into App root.
@@ -341,41 +342,84 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
+    private static func collateSuggestions(
+        query: String,
+        results: [String],
+        queries: [String]
+    ) -> Suggestions {
+        let resultPairs = results.map({ string in
+            (string.toSlug(), string)
+        })
+
+        let queryPairs = queries.map({ string in
+            (string.toSlug(), string)
+        })
+
+        let resultDict = OrderedDictionary(
+            resultPairs,
+            uniquingKeysWith: { (first, _) in first }
+        )
+
+        let querySlug = query.toSlug()
+
+        var queryDict = OrderedDictionary(
+            queryPairs,
+            uniquingKeysWith: { (first, _) in first }
+        )
+
+        // Remove queries that are also in results
+        queryDict.removeKeys(keys: resultDict.keys.elements)
+        // Remove query itself. We always place the literal query as the first result.
+        queryDict.removeValue(forKey: querySlug)
+
+        // Create a mutable array we can use for suggestions.
+        var suggestions: [Suggestion] = []
+
+        // If we have a user query, and the query is not in results,
+        // then append it to top.
+        if !query.isWhitespace && resultDict[query.toSlug()] == nil {
+            suggestions.append(
+                .query(.init(query: query))
+            )
+        }
+
+        for query in resultDict.values {
+            suggestions.append(.result(.init(query: query)))
+        }
+
+        for query in queryDict.values {
+            suggestions.append(.query(.init(query: query)))
+        }
+
+        return Suggestions(
+            query: query,
+            suggestions: suggestions
+        )
+    }
+    
     func searchSuggestionsForZeroQuery() -> AnyPublisher<Suggestions, Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            let resultStrings: [String] = try db.connection().execute(
+            let results: [String] = try db.connection().execute(
                 sql: """
                 SELECT DISTINCT title
                 FROM entry_search
                 ORDER BY modified DESC
-                LIMIT 10
+                LIMIT 5
                 """
             ).compactMap({ row in row.get(0) })
 
-            // Selects all queries that
-            let queryStrings: [String] = try db.connection().execute(
+            let queries: [String] = try db.connection().execute(
                 sql: """
                 SELECT DISTINCT search_history.query
                 FROM search_history
                 ORDER BY search_history.created DESC
-                LIMIT 2
+                LIMIT 5
                 """
             ).compactMap({ row in
                 row.get(0)
             })
 
-            let results = resultStrings.map({ query in
-                ResultSuggestion(query: query)
-            })
-            
-            /// Remove queries that match titles
-            let queries = queryStrings
-                .subtracting(resultStrings, with: { query in query.toSlug() })
-                .map({ query in
-                    QuerySuggestion(query: query)
-                })
-            
-            return Suggestions(
+            return Self.collateSuggestions(
                 query: "",
                 results: results,
                 queries: queries
@@ -393,7 +437,7 @@ struct DatabaseService {
                 return Suggestions(query: query)
             }
 
-            let resultStrings: [String] = try db.connection().execute(
+            let results: [String] = try db.connection().execute(
                 sql: """
                 SELECT DISTINCT title
                 FROM entry_search
@@ -404,9 +448,11 @@ struct DatabaseService {
                 parameters: [
                     SQLite3Connection.Value.prefixQueryFTS5(query)
                 ]
-            ).compactMap({ row in row.get(0) })
+            ).compactMap({ row in
+                row.get(0)
+            })
 
-            let queryStrings: [String] = try db.connection().execute(
+            let queries: [String] = try db.connection().execute(
                 sql: """
                 SELECT DISTINCT query
                 FROM search_history
@@ -417,23 +463,11 @@ struct DatabaseService {
                 parameters: [
                     SQLite3Connection.Value.prefixQueryLike(query)
                 ]
-            ).compactMap({ row in row.get(0) })
-
-            let results = resultStrings.map({ query in
-                ResultSuggestion(query: query)
+            ).compactMap({ row in
+                row.get(0)
             })
 
-            var queriesToRemove = resultStrings
-            queriesToRemove.append(query)
-            
-            /// Remove queries that match titles
-            let queries = queryStrings
-                .subtracting(queriesToRemove, with: { query in query.toSlug() })
-                .map({ query in
-                    QuerySuggestion(query: query)
-                })
-
-            return Suggestions(
+            return Self.collateSuggestions(
                 query: query,
                 results: results,
                 queries: queries

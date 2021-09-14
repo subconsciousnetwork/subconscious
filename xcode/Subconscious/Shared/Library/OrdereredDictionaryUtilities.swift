@@ -23,6 +23,12 @@ extension OrderedDictionary {
         })
     }
 
+    mutating func removeKeys(keys: [OrderedDictionary.Key]) {
+        for key in keys {
+            self.removeValue(forKey: key)
+        }
+    }
+
     /// Get offset index, clamped between start and end indexes.
     func index(
         _ index: OrderedDictionary.Index,

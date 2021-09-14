@@ -8,22 +8,40 @@
 import Foundation
 
 struct ResultSuggestion: Equatable, Hashable, Identifiable {
-    var id: String {
-        "result/\(query.hash)"
-    }
+    var id = UUID()
     var query: String
 }
 
 struct QuerySuggestion: Equatable, Hashable, Identifiable {
-    var id: String {
-        "query/\(query.hash)"
-    }
+    var id = UUID()
     var query: String
+}
+
+enum Suggestion: Equatable, Hashable, Identifiable {
+    case result(ResultSuggestion)
+    case query(QuerySuggestion)
+
+    var id: UUID {
+        switch self {
+        case .result(let suggestion):
+            return suggestion.id
+        case .query(let suggestion):
+            return suggestion.id
+        }
+    }
+
+    var query: String {
+        switch self {
+        case .result(let result):
+            return result.query
+        case .query(let query):
+            return query.query
+        }
+    }
 }
 
 struct Suggestions: Equatable, Hashable {
     static let Empty = Suggestions()
     var query: String = ""
-    var results: [ResultSuggestion] = []
-    var queries: [QuerySuggestion] = []
+    var suggestions: [Suggestion] = []
 }

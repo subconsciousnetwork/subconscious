@@ -66,38 +66,17 @@ struct SuggestionsView: View, Equatable {
     var body: some View {
         VStack(spacing: 0) {
             List {
-                if !store.state.suggestions.query.isWhitespace {
-                    Button(action: {
-                        store.send(.select(store.state.suggestions.query))
-                    }) {
-                        QuerySuggestionView(
-                            suggestion: QuerySuggestion(
-                                query: store.state.suggestions.query
-                            )
-                        ).equatable()
-                    }.id("literalquery")
-                }
                 ForEach(
-                    store.state.suggestions.results
+                    store.state.suggestions.suggestions
                 ) { suggestion in
                     Button(action: {
                         store.send(.select(suggestion.query))
                     }) {
-                        ResultSuggestionView(
+                        SuggestionView(
                             suggestion: suggestion
                         )
                         .equatable()
-                    }.id("result/\(suggestion.id)")
-                }
-                ForEach(store.state.suggestions.queries) { suggestion in
-                    Button(action: {
-                        store.send(.select(suggestion.query))
-                    }) {
-                        QuerySuggestionView(
-                            suggestion: suggestion
-                        )
-                        .equatable()
-                    }.id("query/\(suggestion.id)")
+                    }.id("suggestion/\(suggestion.id)")
                 }
             }.listStyle(.plain)
         }
@@ -111,18 +90,11 @@ struct Suggestions_Previews: PreviewProvider {
                 store: ViewStore(
                     state: SuggestionsModel(
                         suggestions: Suggestions(
-                            results: [
-                                ResultSuggestion(
-                                    query: "If you have 70 notecards, you have a movie"
-                                ),
-                                ResultSuggestion(
-                                    query: "Tenuki"
-                                ),
-                                ResultSuggestion(
-                                    query: "Notecard"
-                                ),
-                            ],
-                            queries: []
+                            query: "",
+                            suggestions: [
+                                .result(.init(query: "Floop")),
+                                .query(.init(query: "Pig"))
+                            ]
                         )
                     ),
                     send:  { query in }
