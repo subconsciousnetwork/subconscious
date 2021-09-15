@@ -31,13 +31,10 @@ func updateSubSearchBar(
 ) -> AnyPublisher<SubSearchBarAction, Never> {
     switch action {
     case .cancel:
-        return Publishers.Merge(
-            Just(SubSearchBarAction.commit("")),
-            Just(SubSearchBarAction.setFocus(false))
-        ).eraseToAnyPublisher()
-    case .setText(let text):
-        state.text = text
+        return Just(SubSearchBarAction.commit("")).eraseToAnyPublisher()
     case .commit(let text):
+        let blur = Just(SubSearchBarAction.setFocus(false))
+        let setText = Just(SubSearchBarAction.setText(""))
         let insertQuery = environment.database.insertSearchHistory(query: text)
             .map({ query in
                 SubSearchBarAction.commitSuccess(query)
@@ -49,14 +46,17 @@ func updateSubSearchBar(
                     )
                 )
             })
-        return Publishers.Merge(
+        return Publishers.Merge3(
             insertQuery,
-            Just(SubSearchBarAction.setText(text))
+            blur,
+            setText
         ).eraseToAnyPublisher()
     case .commitSuccess(let query):
         environment.logger.log("Inserted search history: \(query)")
     case .commitFailure(let message):
         environment.logger.warning("\(message)")
+    case .setText(let text):
+        state.text = text
     case .setFocus(let isFocused):
         state.isFocused = isFocused
     }
