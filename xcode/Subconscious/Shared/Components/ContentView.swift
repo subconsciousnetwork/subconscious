@@ -195,19 +195,21 @@ struct ContentView: View {
         NavigationView {
             VStack(spacing: 0) {
                 NavigationLink(
-                    destination: ResultView(
-                        store: ViewStore(
-                            state: store.state.detail,
-                            send: store.send,
-                            tag: tagResultView
-                        )
-                    ).equatable(),
                     isActive: Binding(
                         get: { store.state.isDetailActive },
                         set: { isDetailActive in
                             store.send(.setDetailActive(isDetailActive))
                         }
                     ),
+                    destination: {
+                        ResultView(
+                            store: ViewStore(
+                                state: store.state.detail,
+                                send: store.send,
+                                tag: tagResultView
+                            )
+                        ).equatable()
+                    },
                     label: {
                         EmptyView()
                     }
