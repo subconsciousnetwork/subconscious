@@ -11,6 +11,7 @@ import Combine
 
 /// Actions for modifying state
 enum AppAction {
+    case setDatabaseReady
     case setDetailShowing(Bool)
     case setEditor(EditorModel)
     case setSearchBarText(String)
@@ -29,6 +30,7 @@ struct EditorModel: Equatable {
 }
 
 struct AppModel: Modelable {
+    var isDatabaseReady = false
     var isDetailShowing = false
     var isDetailLoading = true
     var editor: EditorModel = EditorModel.empty
@@ -46,6 +48,10 @@ struct AppModel: Modelable {
 
     func update(action: AppAction) -> Self {
         switch action {
+        case .setDatabaseReady:
+            var model = self
+            model.isDatabaseReady = true
+            return model
         case let .setEditor(editor):
             var model = self
             model.editor = editor
@@ -83,80 +89,93 @@ struct AppView: View {
     @ObservedObject var store: Store<AppModel>
 
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                VStack(spacing: 0) {
-                    if store.state.isSearchBarFocused {
-                        SuggestionsView(
-                            suggestions: store.state.suggestions,
-                            action: { suggestion in
-                                store.send(
-                                    action: .commit(suggestion.description)
+        VStack {
+            if store.state.isDatabaseReady {
+                NavigationView {
+                    VStack(spacing: 0) {
+                        VStack(spacing: 0) {
+                            if store.state.isSearchBarFocused {
+                                SuggestionsView(
+                                    suggestions: store.state.suggestions,
+                                    action: { suggestion in
+                                        store.send(
+                                            action:
+                                                .commit(suggestion.description)
+                                        )
+                                    }
+                                )
+                            } else {
+                                Button(
+                                    action: {
+                                        store.send(
+                                            action: .setDetailShowing(true)
+                                        )
+                                    },
+                                    label: {
+                                        Text("Toggle")
+                                    }
                                 )
                             }
-                        )
-                    } else {
-                        Button(
-                            action: {
-                                store.send(action: .setDetailShowing(true))
+                        }
+                        NavigationLink(
+                            isActive: Binding(
+                                get: { store.state.isDetailShowing },
+                                set: { value in
+                                    store.send(
+                                        action: .setDetailShowing(value)
+                                    )
+                                }
+                            ),
+                            destination: {
+                                VStack {
+                                    if store.state.isDetailLoading {
+                                        VStack {
+                                            Spacer()
+                                            ProgressView()
+                                            Spacer()
+                                        }
+                                    } else {
+                                        EditorView(
+                                            editor: store.binding(
+                                                get: { state in state.editor },
+                                                tag: AppAction.setEditor
+                                            )
+                                        )
+                                    }
+                                }
+                                .navigationTitle(store.state.query)
                             },
                             label: {
-                                Text("Toggle")
+                                EmptyView()
                             }
                         )
                     }
-                }
-                NavigationLink(
-                    isActive: Binding(
-                        get: { store.state.isDetailShowing },
-                        set: { value in
-                            store.send(action: .setDetailShowing(value))
+                    .navigationTitle("Home")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .principal) {
+                            SearchBarRepresentable(
+                                placeholder: "Search or create",
+                                text: store.binding(
+                                    get: { state in state.searchBarText },
+                                    tag: AppAction.setSearchBarText
+                                ),
+                                isFocused: store.binding(
+                                    get: { state in state.isSearchBarFocused },
+                                    tag: AppAction.setSearchBarFocus
+                                ),
+                                onCommit: { text in
+                                    store.send(action: .commit(text))
+                                },
+                                onCancel: {}
+                            ).showCancel(true)
                         }
-                    ),
-                    destination: {
-                        VStack {
-                            if store.state.isDetailLoading {
-                                VStack {
-                                    Spacer()
-                                    ProgressView()
-                                    Spacer()
-                                }
-                            } else {
-                                EditorView(
-                                    editor: store.binding(
-                                        get: { state in state.editor },
-                                        tag: AppAction.setEditor
-                                    )
-                                )
-                            }
-                        }
-                        .navigationTitle(store.state.query)
-                    },
-                    label: {
-                        EmptyView()
                     }
-                )
-            }
-            .navigationTitle("Home")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    SearchBarRepresentable(
-                        placeholder: "Search or create",
-                        text: store.binding(
-                            get: { state in state.searchBarText },
-                            tag: AppAction.setSearchBarText
-                        ),
-                        isFocused: store.binding(
-                            get: { state in state.isSearchBarFocused },
-                            tag: AppAction.setSearchBarFocus
-                        ),
-                        onCommit: { text in
-                            store.send(action: .commit(text))
-                        },
-                        onCancel: {}
-                    ).showCancel(true)
                 }
+            } else {
+                Spacer()
+                ProgressView()
+                Spacer()
             }
         }
     }
