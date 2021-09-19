@@ -10,6 +10,10 @@ import Foundation
 import OrderedCollections
 
 struct DatabaseService {
+    enum DatabaseServiceError: Error {
+        case pathNotInFilePath
+    }
+
     private var documentsURL: URL
     private var databaseURL: URL
     private var database: SQLite3Database
@@ -41,12 +45,12 @@ struct DatabaseService {
 
     /// Write entry syncronously
     mutating func writeEntry(
-        path: String,
-        title: String,
-        body: String,
+        entry: TextFile,
         modified: Date,
         size: Int
     ) throws {
+        let path = try entry.url.relativizingPath(relativeTo: documentsURL)
+            .unwrap(or: DatabaseServiceError.pathNotInFilePath)
         try database.execute(
             sql: """
             INSERT INTO entry (path, title, body, modified, size)
@@ -59,8 +63,8 @@ struct DatabaseService {
             """,
             parameters: [
                 .text(path),
-                .text(title),
-                .text(body),
+                .text(entry.title),
+                .text(entry.content),
                 .date(modified),
                 .integer(size)
             ]
@@ -129,7 +133,7 @@ struct DatabaseService {
 
         return suggestions
     }
-    
+
     func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
         let results: [String] = try database.execute(
             sql: """
