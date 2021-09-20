@@ -11,7 +11,10 @@ import Combine
 
 /// Actions for modifying state
 enum AppAction {
+    case appear
     case setDatabaseReady
+    case rebuildDatabase
+    case rebuildDatabaseFailure(String)
     case setDetailShowing(Bool)
     case setEditor(EditorModel)
     case setSearchBarText(String)
@@ -41,6 +44,28 @@ struct AppModel: Modelable {
 
     func effect(action: AppAction) -> Effect<AppAction> {
         switch action {
+        case .appear:
+            return AppEnvironment.database.migrate()
+                .map({ _ in .setDatabaseReady })
+                .catch({ _ in
+                    Just(.rebuildDatabase)
+                })
+                .eraseToAnyPublisher()
+        case .rebuildDatabase:
+            AppEnvironment.logger.warning(
+                "Database is broken or has wrong schema. Attempting to rebuild."
+            )
+            return AppEnvironment.database.delete()
+                .flatMap({ _ in
+                    AppEnvironment.database.migrate()
+                })
+                .map({ success in AppAction.setDatabaseReady })
+                .catch({ error in
+                    Just(AppAction.rebuildDatabaseFailure(
+                        error.localizedDescription)
+                    )
+                })
+                .eraseToAnyPublisher()
         default:
             return Empty().eraseToAnyPublisher()
         }
@@ -81,6 +106,8 @@ struct AppModel: Modelable {
             model.isDetailShowing = true
             model.isDetailLoading = true
             return model
+        default:
+            return self
         }
     }
 }
@@ -177,6 +204,9 @@ struct AppView: View {
                 ProgressView()
                 Spacer()
             }
+        }
+        .onAppear {
+            store.send(action: .appear)
         }
     }
 }

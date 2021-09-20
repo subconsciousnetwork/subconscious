@@ -7,11 +7,20 @@
 
 import Foundation
 import SwiftUI
+import os
 
 /// A place for constants and services
 enum AppEnvironment {}
 
+//  MARK: Basics
 extension AppEnvironment {
+    static let rdns = "com.subconscious.Subconscious"
+
+    static let logger = Logger(
+        subsystem: rdns,
+        category: "main"
+    )
+
     static let applicationSupportURL = try! FileManager.default.url(
         for: .applicationSupportDirectory,
         in: .userDomainMask,
@@ -20,6 +29,7 @@ extension AppEnvironment {
     )
 }
 
+//  MARK: Migrations
 extension AppEnvironment {
     static let migrations = SQLite3Migrations([
         SQLite3Migrations.Migration(
@@ -113,6 +123,7 @@ extension AppEnvironment {
     ])!
 }
 
+//  MARK: Database
 extension AppEnvironment {
     static let database = DatabaseService(
         documentsURL: FileManager.default.documentDirectoryUrl!,
@@ -122,13 +133,18 @@ extension AppEnvironment {
     )
 }
 
+
 enum AppTheme {}
 
+
+//  MARK: Theme units
 extension AppTheme {
     static let unit: CGFloat = 8
     static let unit2 = unit * 2
 }
 
+
+//  MARK: Colors
 extension Color {
     static let text = SwiftUI.Color.primary
     static let secondaryText = SwiftUI.Color.secondary

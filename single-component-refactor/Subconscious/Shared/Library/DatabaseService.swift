@@ -7,6 +7,7 @@
 //  Handles reading from, writing to, and migrating database.
 
 import Foundation
+import Combine
 import OrderedCollections
 
 struct DatabaseService {
@@ -34,13 +35,23 @@ struct DatabaseService {
     }
 
     /// Close database connection and delete database file
-    func delete() throws {
-        database.close()
-        try FileManager.default.removeItem(at: databaseURL)
+    func delete() -> AnyPublisher<Void, Error> {
+        CombineUtilities.async(
+            qos: .background,
+            execute: {
+                database.close()
+                try FileManager.default.removeItem(at: databaseURL)
+            }
+        ).receive(on: DispatchQueue.main).eraseToAnyPublisher()
     }
 
-    func migrate() throws -> SQLite3Migrations.MigrationSuccess {
-        try migrations.migrate(database: database)
+    func migrate() -> AnyPublisher<SQLite3Migrations.MigrationSuccess, Error> {
+        CombineUtilities.async(
+            qos: .userInitiated,
+            execute: {
+                try migrations.migrate(database: database)
+            }
+        ).receive(on: DispatchQueue.main).eraseToAnyPublisher()
     }
 
     /// Write entry syncronously
