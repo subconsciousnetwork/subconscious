@@ -9,12 +9,15 @@ import SwiftUI
 import os
 import Combine
 
+//  MARK: Actions
 /// Actions for modifying state
 enum AppAction {
     case appear
-    case setDatabaseReady
+    case databaseReady(SQLite3Migrations.MigrationSuccess)
     case rebuildDatabase
     case rebuildDatabaseFailure(String)
+    case syncSuccess([FileSync.Change])
+    case syncFailure(String)
     case setDetailShowing(Bool)
     case setEditor(EditorModel)
     case setSearchBarText(String)
@@ -32,6 +35,7 @@ struct EditorModel: Equatable {
     static let empty = EditorModel()
 }
 
+//  MARK: Model
 struct AppModel: Modelable {
     var isDatabaseReady = false
     var isDetailShowing = false
@@ -42,6 +46,7 @@ struct AppModel: Modelable {
     var suggestions: [Suggestion] = []
     var query = ""
 
+    //  MARK: Effect
     func effect(action: AppAction) -> Effect<AppAction> {
         switch action {
         case .appear:
@@ -51,7 +56,9 @@ struct AppModel: Modelable {
                 """
             )
             return AppEnvironment.database.migrate()
-                .map({ _ in .setDatabaseReady })
+                .map({ success in
+                    .databaseReady(success)
+                })
                 .catch({ _ in
                     Just(.rebuildDatabase)
                 })
@@ -64,7 +71,9 @@ struct AppModel: Modelable {
                 .flatMap({ _ in
                     AppEnvironment.database.migrate()
                 })
-                .map({ success in AppAction.setDatabaseReady })
+                .map({ success in
+                    AppAction.databaseReady(success)
+                })
                 .catch({ error in
                     Just(AppAction.rebuildDatabaseFailure(
                         error.localizedDescription)
@@ -78,14 +87,44 @@ struct AppModel: Modelable {
                 """
             )
             return Empty().eraseToAnyPublisher()
+        case let .databaseReady(success):
+            if success.from != success.to {
+                AppEnvironment.logger.log(
+                    """
+                    Migrated database\t\(success.from)->\(success.to)
+                    """
+                )
+            }
+            AppEnvironment.logger.log("File sync started")
+            return AppEnvironment.database.syncDatabase()
+                .map({ changes in .syncSuccess(changes) })
+                .catch({ error in
+                    Just(.syncFailure(error.localizedDescription))
+                })
+                .eraseToAnyPublisher()
+        case let .syncSuccess(changes):
+            AppEnvironment.logger.log(
+                """
+                File sync finished\t\(changes)
+                """
+            )
+            return Empty().eraseToAnyPublisher()
+        case let .syncFailure(message):
+            AppEnvironment.logger.warning(
+                """
+                File sync failed.\t\(message)
+                """
+            )
+            return Empty().eraseToAnyPublisher()
         default:
             return Empty().eraseToAnyPublisher()
         }
     }
 
+    //  MARK: Update
     func update(action: AppAction) -> Self {
         switch action {
-        case .setDatabaseReady:
+        case .databaseReady:
             var model = self
             model.isDatabaseReady = true
             return model
@@ -118,12 +157,14 @@ struct AppModel: Modelable {
             model.isDetailShowing = true
             model.isDetailLoading = true
             return model
-        case .appear, .rebuildDatabase, .rebuildDatabaseFailure:
+        case .appear, .rebuildDatabase, .rebuildDatabaseFailure,
+                .syncFailure, .syncSuccess:
             return self
         }
     }
 }
 
+//  MARK: View
 struct AppView: View {
     @ObservedObject var store: Store<AppModel>
 
