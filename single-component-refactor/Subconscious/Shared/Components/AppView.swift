@@ -45,6 +45,11 @@ struct AppModel: Modelable {
     func effect(action: AppAction) -> Effect<AppAction> {
         switch action {
         case .appear:
+            AppEnvironment.logger.debug(
+                """
+                Documents\t\(AppEnvironment.documentURL)
+                """
+            )
             return AppEnvironment.database.migrate()
                 .map({ _ in .setDatabaseReady })
                 .catch({ _ in
