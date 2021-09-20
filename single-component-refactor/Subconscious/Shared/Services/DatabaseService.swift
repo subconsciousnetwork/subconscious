@@ -301,30 +301,32 @@ struct DatabaseService {
     }
 
     /// Log a search query in search history db
-    func insertSearchHistory(query: String) throws {
-        guard !query.isWhitespace else {
-            return
-        }
+    func insertSearchHistory(query: String) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async(qos: .utility) {
+            guard !query.isWhitespace else {
+                return
+            }
 
-        // Log search in database, along with number of hits
-        try database.execute(
-            sql: """
-            INSERT INTO search_history (id, query, hits)
-            VALUES (?, ?, (
-                SELECT count(path)
-                FROM entry_search
-                WHERE entry_search MATCH ?
-            ));
-            """,
-            parameters: [
-                .text(UUID().uuidString),
-                .text(query),
-                .queryFTS5(query),
-            ]
-        )
+            // Log search in database, along with number of hits
+            try database.execute(
+                sql: """
+                INSERT INTO search_history (id, query, hits)
+                VALUES (?, ?, (
+                    SELECT count(path)
+                    FROM entry_search
+                    WHERE entry_search MATCH ?
+                ));
+                """,
+                parameters: [
+                    .text(UUID().uuidString),
+                    .text(query),
+                    .queryFTS5(query),
+                ]
+            )
+        }
     }
 
-    func findEntryByTitle(_ title: String) throws -> TextFile? {
+    private func findEntryByTitle(_ title: String) throws -> TextFile? {
         let results: [TextFile] = try database.execute(
             sql: """
             SELECT entry.path, entry.body
@@ -346,48 +348,50 @@ struct DatabaseService {
         return results.first
     }
 
-    func search(query: String) throws -> TextFileResults {
-        guard !query.isWhitespace else {
-            return TextFileResults()
-        }
+    func search(query: String) -> AnyPublisher<TextFileResults, Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            guard !query.isWhitespace else {
+                return TextFileResults()
+            }
 
-        let matches: [TextFile] = try database.execute(
-            sql: """
-            SELECT path, body
-            FROM entry_search
-            WHERE entry_search MATCH ?
-            AND rank = 'bm25(0.0, 10.0, 1.0, 0.0, 0.0)'
-            ORDER BY rank
-            LIMIT 200
-            """,
-            parameters: [
-                .queryFTS5(query)
-            ]
-        ).map({ row in
-            let path: String = try row.get(0).unwrap()
-            let content: String = try row.get(1).unwrap()
-            let url = documentUrl.appendingPathComponent(path)
-            return TextFile(
-                url: url,
-                content: content
-            )
-        })
-
-        let entry = try findEntryByTitle(query)
-
-        let backlinks: [TextFile]
-        if let entry = entry {
-            // If we have an entry, filter it out of the results
-            backlinks = matches.filter({ fileEntry in
-                fileEntry.id != entry.id
+            let matches: [TextFile] = try database.execute(
+                sql: """
+                SELECT path, body
+                FROM entry_search
+                WHERE entry_search MATCH ?
+                AND rank = 'bm25(0.0, 10.0, 1.0, 0.0, 0.0)'
+                ORDER BY rank
+                LIMIT 200
+                """,
+                parameters: [
+                    .queryFTS5(query)
+                ]
+            ).map({ row in
+                let path: String = try row.get(0).unwrap()
+                let content: String = try row.get(1).unwrap()
+                let url = documentUrl.appendingPathComponent(path)
+                return TextFile(
+                    url: url,
+                    content: content
+                )
             })
-        } else {
-            backlinks = matches
-        }
 
-        return TextFileResults(
-            entry: entry,
-            backlinks: backlinks
-        )
+            let entry = try findEntryByTitle(query)
+
+            let backlinks: [TextFile]
+            if let entry = entry {
+                // If we have an entry, filter it out of the results
+                backlinks = matches.filter({ fileEntry in
+                    fileEntry.id != entry.id
+                })
+            } else {
+                backlinks = matches
+            }
+
+            return TextFileResults(
+                entry: entry,
+                backlinks: backlinks
+            )
+        }
     }
 }

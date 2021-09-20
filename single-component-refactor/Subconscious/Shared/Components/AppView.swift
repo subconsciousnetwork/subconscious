@@ -18,14 +18,15 @@ enum AppAction {
     case rebuildDatabaseFailure(String)
     case syncSuccess([FileSync.Change])
     case syncFailure(String)
+    case setSearch(String)
+    case setSearchBarFocus(Bool)
+    case setSuggestions([Suggestion])
+    case suggestionsFailure(String)
+    case commitSearch(String)
+    case setDetail(TextFileResults)
+    case detailFailure(String)
     case setDetailShowing(Bool)
     case setEditor(EditorModel)
-    case setSearchBarText(String)
-    case setSearchBarFocus(Bool)
-    case suggest(String)
-    case suggestFailure(String)
-    case setSuggestions([Suggestion])
-    case commit(String)
 }
 
 struct EditorModel: Equatable {
@@ -42,11 +43,13 @@ struct AppModel: Modelable {
     var isDatabaseReady = false
     var isDetailShowing = false
     var isDetailLoading = true
-    var editor: EditorModel = EditorModel.empty
     var isSearchBarFocused = false
     var searchBarText = ""
     var suggestions: [Suggestion] = []
     var query = ""
+    var editor: EditorModel = EditorModel.empty
+    var entry: TextFile?
+    var backlinks: [TextFile] = []
 
     //  MARK: Effect
     func effect(action: AppAction) -> Effect<AppAction> {
@@ -118,21 +121,35 @@ struct AppModel: Modelable {
                 """
             )
             return Empty().eraseToAnyPublisher()
-        case let .setSearchBarText(query):
-            return Just(AppAction.suggest(query)).eraseToAnyPublisher()
-        case let .suggest(query):
+        case let .setSearch(query):
             return AppEnvironment.database.searchSuggestions(query: query)
                 .map({ suggestions in
                     AppAction.setSuggestions(suggestions)
                 })
                 .catch({ error in
-                    Just(.suggestFailure(error.localizedDescription))
+                    Just(.suggestionsFailure(error.localizedDescription))
                 })
                 .eraseToAnyPublisher()
-        case let .suggestFailure(message):
+        case let .suggestionsFailure(message):
             AppEnvironment.logger.debug(
                 """
                 Suggest failed\t\(message)
+                """
+            )
+            return Empty().eraseToAnyPublisher()
+        case let .commitSearch(query):
+            return AppEnvironment.database.search(query: query)
+                .map({ results in
+                    AppAction.setDetail(results)
+                })
+                .catch({ error in
+                    Just(AppAction.detailFailure(error.localizedDescription))
+                })
+                .eraseToAnyPublisher()
+        case let .detailFailure(message):
+            AppEnvironment.logger.log(
+                """
+                Failed to get details for search.\t\(message)
                 """
             )
             return Empty().eraseToAnyPublisher()
@@ -156,7 +173,7 @@ struct AppModel: Modelable {
             var model = self
             model.isDetailShowing = isShowing
             return model
-        case let .setSearchBarText(text):
+        case let .setSearch(text):
             var model = self
             model.searchBarText = text
             return model
@@ -168,7 +185,7 @@ struct AppModel: Modelable {
             var model = self
             model.suggestions = suggestions
             return model
-        case let .commit(query):
+        case let .commitSearch(query):
             var model = self
             model.query = query
             model.editor = EditorModel.empty
@@ -177,10 +194,29 @@ struct AppModel: Modelable {
             model.isDetailShowing = true
             model.isDetailLoading = true
             return model
-        case
-            .appear, .rebuildDatabase, .rebuildDatabaseFailure,
-            .syncFailure, .syncSuccess, .suggest, .suggestFailure
-        :
+        case let .setDetail(results):
+            var model = self
+            model.editor = EditorModel(
+                attributedText: NSAttributedString(
+                    string: results.entry?.content ?? model.query
+                )
+            )
+            model.backlinks = results.backlinks
+            model.isDetailLoading = false
+            return model
+        case .appear:
+            return self
+        case .rebuildDatabase:
+            return self
+        case .rebuildDatabaseFailure:
+            return self
+        case .syncSuccess:
+            return self
+        case .syncFailure:
+            return self
+        case .suggestionsFailure(_):
+            return self
+        case .detailFailure(_):
             return self
         }
     }

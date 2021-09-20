@@ -19,7 +19,7 @@ struct AppNavigationView: View {
                             suggestions: store.state.suggestions,
                             action: { suggestion in
                                 store.send(
-                                    action: .commit(suggestion.description)
+                                    action: .commitSearch(suggestion.description)
                                 )
                             }
                         )
@@ -77,14 +77,14 @@ struct AppNavigationView: View {
                         placeholder: "Search or create",
                         text: store.binding(
                             get: { state in state.searchBarText },
-                            tag: AppAction.setSearchBarText
+                            tag: AppAction.setSearch
                         ),
                         isFocused: store.binding(
                             get: { state in state.isSearchBarFocused },
                             tag: AppAction.setSearchBarFocus
                         ),
                         onCommit: { text in
-                            store.send(action: .commit(text))
+                            store.send(action: .commitSearch(text))
                         },
                         onCancel: {}
                     ).showCancel(true)
