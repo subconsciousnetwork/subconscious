@@ -58,7 +58,17 @@ struct EditorModel: Equatable {
         self.isFocused = isFocused
         self.selection = selection
     }
-    
+
+    /// Render attributes based on markup
+    mutating func render() {
+        let dom = Subtext3(self.attributedText.string)
+        self.attributedText = dom.renderMarkup(
+            url: { text in
+                Subtext3.wikilinkToURLString(text)
+            }
+        )
+    }
+
     // Empty state
     static let empty = EditorModel()
 }
@@ -190,8 +200,10 @@ struct AppModel: Modelable {
             var model = self
             model.isDatabaseReady = true
             return model
-        case let .setEditor(editor):
+        case var .setEditor(editor):
             var model = self
+            // Render attributes from markup
+            editor.render()
             model.editor = editor
             return model
         case let .setDetailShowing(isShowing):
