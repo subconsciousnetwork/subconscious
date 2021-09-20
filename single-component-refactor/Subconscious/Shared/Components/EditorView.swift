@@ -7,31 +7,25 @@
 
 import SwiftUI
 import Combine
-import os
 
 struct EditorView: View {
     @Binding var editor: EditorModel
+    var fixedWidth: CGFloat
 
     var body: some View {
-        GeometryReader { geometry in
-            VStack {
-                GrowableTextViewRepresentable(
-                    attributedText: $editor.attributedText,
-                    isFocused: $editor.isFocused,
-                    selection: $editor.selection,
-                    fixedWidth: geometry.size.width
-                )
-                .insets(
-                    EdgeInsets(
-                        top: 16,
-                        leading: 16,
-                        bottom: 16,
-                        trailing: 16
-                    )
-                )
-                //  TODO: set explicit line height via attributedString
-                .frame(minHeight: 29 * 16)
-            }
-        }
+        GrowableTextViewRepresentable(
+            attributedText: $editor.attributedText,
+            isFocused: $editor.isFocused,
+            selection: $editor.selection,
+            fixedWidth: fixedWidth
+        )
+        .insets(
+            EdgeInsets(
+                top: AppTheme.unit2,
+                leading: AppTheme.unit2,
+                bottom: AppTheme.unit2,
+                trailing: AppTheme.unit2
+            )
+        )
     }
 }

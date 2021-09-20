@@ -54,12 +54,21 @@ struct AppNavigationView: View {
                                     Spacer()
                                 }
                             } else {
-                                EditorView(
-                                    editor: store.binding(
-                                        get: { state in state.editor },
-                                        tag: AppAction.setEditor
-                                    )
-                                )
+                                GeometryReader { geometry in
+                                    ScrollView {
+                                        EditorView(
+                                            editor: store.binding(
+                                                get: { store in
+                                                    store.editor
+                                                },
+                                                tag: { value in
+                                                    .setEditor(value)
+                                                }
+                                            ),
+                                            fixedWidth: geometry.size.width
+                                        )
+                                    }
+                                }
                             }
                         }
                         .navigationTitle(store.state.query)
