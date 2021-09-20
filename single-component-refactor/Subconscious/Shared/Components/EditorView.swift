@@ -21,6 +21,16 @@ struct EditorView: View {
                     selection: $editor.selection,
                     fixedWidth: geometry.size.width
                 )
+                .insets(
+                    EdgeInsets(
+                        top: 16,
+                        leading: 16,
+                        bottom: 16,
+                        trailing: 16
+                    )
+                )
+                //  TODO: set explicit line height via attributedString
+                .frame(minHeight: 29 * 16)
             }
         }
     }
