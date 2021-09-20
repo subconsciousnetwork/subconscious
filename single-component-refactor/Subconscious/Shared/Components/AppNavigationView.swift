@@ -54,31 +54,22 @@ struct AppNavigationView: View {
                                     Spacer()
                                 }
                             } else {
-                                GeometryReader { geometry in
-                                    ScrollView {
-                                        VStack {
-                                            EditorView(
-                                                editor: store.binding(
-                                                    get: { store in
-                                                        store.editor
-                                                    },
-                                                    tag: { value in
-                                                        .setEditor(value)
-                                                    }
-                                                ),
-                                                fixedWidth: geometry.size.width
-                                            )
-                                            BacklinksView(
-                                                backlinks: store.state.backlinks,
-                                                action: { query in
-                                                    store.send(
-                                                        action: AppAction.commitSearch(query)
-                                                    )
-                                                }
-                                            )
+                                DetailView(
+                                    editor: store.binding(
+                                        get: { store in
+                                            store.editor
+                                        },
+                                        tag: { value in
+                                            .setEditor(value)
                                         }
+                                    ),
+                                    backlinks: store.state.backlinks,
+                                    onBacklinkTap: { query in
+                                        store.send(
+                                            action: .commitSearch(query)
+                                        )
                                     }
-                                }
+                                )
                             }
                         }
                         .navigationTitle(store.state.query)
