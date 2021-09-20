@@ -216,7 +216,7 @@ struct DatabaseService {
         return suggestions
     }
 
-    func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
+    private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
         let results: [String] = try database.execute(
             sql: """
             SELECT DISTINCT title
@@ -244,7 +244,7 @@ struct DatabaseService {
         )
     }
 
-    func searchSuggestionsForQuery(query: String) throws -> [Suggestion] {
+    private func searchSuggestionsForQuery(query: String) throws -> [Suggestion] {
         guard !query.isWhitespace else {
             return []
         }
@@ -290,11 +290,13 @@ struct DatabaseService {
     /// A whitespace query string will fetch zero-query suggestions.
     func searchSuggestions(
         query: String
-    ) throws -> [Suggestion] {
-        if query.isWhitespace {
-            return try searchSuggestionsForZeroQuery()
-        } else {
-            return try searchSuggestionsForQuery(query: query)
+    ) -> AnyPublisher<[Suggestion], Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            if query.isWhitespace {
+                return try searchSuggestionsForZeroQuery()
+            } else {
+                return try searchSuggestionsForQuery(query: query)
+            }
         }
     }
 

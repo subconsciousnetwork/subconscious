@@ -28,7 +28,7 @@ struct SubconsciousApp: App {
                         subsystem: "com.subconscious",
                         category: "store"
                     ),
-                    debug: true
+                    debug: false
                 )
             )
         }

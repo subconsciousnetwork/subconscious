@@ -141,11 +141,6 @@ extension AppEnvironment {
     )
 }
 
-//  MARK: File service
-extension AppEnvironment {
-    static let files = FileService(documentURL: documentURL)
-}
-
 enum AppTheme {}
 
 

@@ -22,6 +22,8 @@ enum AppAction {
     case setEditor(EditorModel)
     case setSearchBarText(String)
     case setSearchBarFocus(Bool)
+    case suggest(String)
+    case suggestFailure(String)
     case setSuggestions([Suggestion])
     case commit(String)
 }
@@ -116,6 +118,24 @@ struct AppModel: Modelable {
                 """
             )
             return Empty().eraseToAnyPublisher()
+        case let .setSearchBarText(query):
+            return Just(AppAction.suggest(query)).eraseToAnyPublisher()
+        case let .suggest(query):
+            return AppEnvironment.database.searchSuggestions(query: query)
+                .map({ suggestions in
+                    AppAction.setSuggestions(suggestions)
+                })
+                .catch({ error in
+                    Just(.suggestFailure(error.localizedDescription))
+                })
+                .eraseToAnyPublisher()
+        case let .suggestFailure(message):
+            AppEnvironment.logger.debug(
+                """
+                Suggest failed\t\(message)
+                """
+            )
+            return Empty().eraseToAnyPublisher()
         default:
             return Empty().eraseToAnyPublisher()
         }
@@ -157,8 +177,10 @@ struct AppModel: Modelable {
             model.isDetailShowing = true
             model.isDetailLoading = true
             return model
-        case .appear, .rebuildDatabase, .rebuildDatabaseFailure,
-                .syncFailure, .syncSuccess:
+        case
+            .appear, .rebuildDatabase, .rebuildDatabaseFailure,
+            .syncFailure, .syncSuccess, .suggest, .suggestFailure
+        :
             return self
         }
     }
@@ -171,87 +193,7 @@ struct AppView: View {
     var body: some View {
         VStack {
             if store.state.isDatabaseReady {
-                NavigationView {
-                    VStack(spacing: 0) {
-                        VStack(spacing: 0) {
-                            if store.state.isSearchBarFocused {
-                                SuggestionsView(
-                                    suggestions: store.state.suggestions,
-                                    action: { suggestion in
-                                        store.send(
-                                            action:
-                                                .commit(suggestion.description)
-                                        )
-                                    }
-                                )
-                            } else {
-                                Button(
-                                    action: {
-                                        store.send(
-                                            action: .setDetailShowing(true)
-                                        )
-                                    },
-                                    label: {
-                                        Text("Toggle")
-                                    }
-                                )
-                            }
-                        }
-                        NavigationLink(
-                            isActive: Binding(
-                                get: { store.state.isDetailShowing },
-                                set: { value in
-                                    store.send(
-                                        action: .setDetailShowing(value)
-                                    )
-                                }
-                            ),
-                            destination: {
-                                VStack {
-                                    if store.state.isDetailLoading {
-                                        VStack {
-                                            Spacer()
-                                            ProgressView()
-                                            Spacer()
-                                        }
-                                    } else {
-                                        EditorView(
-                                            editor: store.binding(
-                                                get: { state in state.editor },
-                                                tag: AppAction.setEditor
-                                            )
-                                        )
-                                    }
-                                }
-                                .navigationTitle(store.state.query)
-                            },
-                            label: {
-                                EmptyView()
-                            }
-                        )
-                    }
-                    .navigationTitle("Home")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .principal) {
-                            SearchBarRepresentable(
-                                placeholder: "Search or create",
-                                text: store.binding(
-                                    get: { state in state.searchBarText },
-                                    tag: AppAction.setSearchBarText
-                                ),
-                                isFocused: store.binding(
-                                    get: { state in state.isSearchBarFocused },
-                                    tag: AppAction.setSearchBarFocus
-                                ),
-                                onCommit: { text in
-                                    store.send(action: .commit(text))
-                                },
-                                onCancel: {}
-                            ).showCancel(true)
-                        }
-                    }
-                }
+                AppNavigationView(store: store)
             } else {
                 Spacer()
                 ProgressView()
