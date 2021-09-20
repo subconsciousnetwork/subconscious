@@ -16,16 +16,24 @@ enum AppEnvironment {}
 extension AppEnvironment {
     static let rdns = "com.subconscious.Subconscious"
 
-    static let logger = Logger(
-        subsystem: rdns,
-        category: "main"
-    )
+    static let documentURL = FileManager.default.urls(
+        for: .documentDirectory,
+           in: .userDomainMask
+    ).first!
 
     static let applicationSupportURL = try! FileManager.default.url(
         for: .applicationSupportDirectory,
         in: .userDomainMask,
         appropriateFor: nil,
         create: true
+    )
+}
+
+//  MARK: Logger
+extension AppEnvironment {
+    static let logger = Logger(
+        subsystem: rdns,
+        category: "main"
     )
 }
 
