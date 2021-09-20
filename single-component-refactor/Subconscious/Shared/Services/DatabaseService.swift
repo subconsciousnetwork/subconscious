@@ -15,17 +15,17 @@ struct DatabaseService {
         case pathNotInFilePath
     }
 
-    private var documentsURL: URL
+    private var documentUrl: URL
     private var databaseURL: URL
     private var database: SQLite3Database
     private var migrations: SQLite3Migrations
 
     init(
-        documentsURL: URL,
+        documentURL: URL,
         databaseURL: URL,
         migrations: SQLite3Migrations
     ) {
-        self.documentsURL = documentsURL
+        self.documentUrl = documentURL
         self.databaseURL = databaseURL
         self.database = .init(
             path: databaseURL.absoluteString,
@@ -54,13 +54,73 @@ struct DatabaseService {
         ).receive(on: DispatchQueue.main).eraseToAnyPublisher()
     }
 
+    func syncDatabase() -> AnyPublisher<[FileSync.Change], Error> {
+        CombineUtilities.async(qos: .utility) {
+            let fileUrls = try listEntries()
+
+            // Left = Leader (files)
+            let left = try FileSync.readFileFingerprints(urls: fileUrls)
+
+            // Right = Follower (search index)
+            let right = try database.execute(
+                sql: "SELECT path, modified, size FROM entry"
+            ).map({ row  in
+                FileFingerprint(
+                    url: URL(
+                        fileURLWithPath: try row.get(0).unwrap(),
+                        relativeTo: documentUrl
+                    ),
+                    modified: try row.get(1).unwrap(),
+                    size: try row.get(2).unwrap()
+                )
+            })
+            
+            let changes = FileSync.calcChanges(
+                left: left,
+                right: right
+            ).filter({ change in change.status != .same })
+            
+            for change in changes {
+                switch change.status {
+                // .leftOnly = create.
+                // .leftNewer = update.
+                // .rightNewer = Follower shouldn't be ahead.
+                //               Leader wins.
+                // .conflict. Leader wins.
+                case .leftOnly, .leftNewer, .rightNewer, .conflict:
+                    if let left = change.left {
+                        try writeEntryToDatabase(url: left.url)
+                    }
+                // .rightOnly = delete. Remove from search index
+                case .rightOnly:
+                    if let right = change.right {
+                        try deleteEntryFromDatabase(url: right.url)
+                    }
+                // .same = no change. Do nothing.
+                case .same:
+                    break
+                }
+            }
+            return changes
+        }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
+    }
+
+    private func listEntries() throws -> [URL] {
+        try FileManager.default.contentsOfDirectory(
+            at: documentUrl,
+            includingPropertiesForKeys: nil,
+            options: .skipsHiddenFiles
+        ).withPathExtension("subtext")
+    }
+
     /// Write entry syncronously
-    mutating func writeEntry(
+    private func writeEntryToDatabase(
         entry: TextFile,
-        modified: Date,
-        size: Int
+        fingerprint: FileFingerprint.Attributes
     ) throws {
-        let path = try entry.url.relativizingPath(relativeTo: documentsURL)
+        let path = try entry.url.relativizingPath(relativeTo: documentUrl)
             .unwrap(or: DatabaseServiceError.pathNotInFilePath)
         try database.execute(
             sql: """
@@ -76,13 +136,24 @@ struct DatabaseService {
                 .text(path),
                 .text(entry.title),
                 .text(entry.content),
-                .date(modified),
-                .integer(size)
+                .date(fingerprint.modifiedDate),
+                .integer(fingerprint.size)
             ]
         )
     }
 
-    private func deleteEntry(path: String) throws {
+    private func writeEntryToDatabase(url: URL) throws {
+        let entry = try TextFile(url: url)
+        let fingerprint = try FileFingerprint.Attributes(url: url).unwrap()
+        return try writeEntryToDatabase(
+            entry: entry,
+            fingerprint: fingerprint
+        )
+    }
+    
+    private func deleteEntryFromDatabase(url: URL) throws {
+        let path = try url.relativizingPath(relativeTo: documentUrl)
+            .unwrap(or: DatabaseServiceError.pathNotInFilePath)
         try database.execute(
             sql: """
             DELETE FROM entry WHERE path = ?
@@ -266,7 +337,7 @@ struct DatabaseService {
             let path: String = try row.get(0).unwrap()
             let content: String = try row.get(1).unwrap()
             return TextFile(
-                url: URL(fileURLWithPath: path, relativeTo: documentsURL),
+                url: URL(fileURLWithPath: path, relativeTo: documentUrl),
                 content: content
             )
         })
@@ -293,7 +364,7 @@ struct DatabaseService {
         ).map({ row in
             let path: String = try row.get(0).unwrap()
             let content: String = try row.get(1).unwrap()
-            let url = documentsURL.appendingPathComponent(path)
+            let url = documentUrl.appendingPathComponent(path)
             return TextFile(
                 url: url,
                 content: content

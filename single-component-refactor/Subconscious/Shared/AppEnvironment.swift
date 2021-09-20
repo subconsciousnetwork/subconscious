@@ -131,16 +131,20 @@ extension AppEnvironment {
     ])!
 }
 
-//  MARK: Database
+//  MARK: Database service
 extension AppEnvironment {
     static let database = DatabaseService(
-        documentsURL: FileManager.default.documentDirectoryUrl!,
+        documentURL: FileManager.default.documentDirectoryUrl!,
         databaseURL: applicationSupportURL
             .appendingPathComponent("database.sqlite"),
         migrations: migrations
     )
 }
 
+//  MARK: File service
+extension AppEnvironment {
+    static let files = FileService(documentURL: documentURL)
+}
 
 enum AppTheme {}
 
