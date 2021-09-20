@@ -30,10 +30,35 @@ enum AppAction {
 }
 
 struct EditorModel: Equatable {
-    var attributedText = NSAttributedString("")
-    var isFocused = false
-    var selection = NSMakeRange(0, 0)
+    var attributedText: NSAttributedString
+    var isFocused: Bool
+    var selection: NSRange
 
+    init(
+        markup: String,
+        isFocused: Bool = false,
+        selection: NSRange = NSMakeRange(0, 0)
+    ) {
+        let dom = Subtext3(markup)
+        self.attributedText = dom.renderMarkup(
+            url: { text in
+                Subtext3.wikilinkToURLString(text)
+            }
+        )
+        self.isFocused = isFocused
+        self.selection = selection
+    }
+
+    init(
+        attributedText: NSAttributedString = NSAttributedString(""),
+        isFocused: Bool = false,
+        selection: NSRange = NSMakeRange(0, 0)
+    ) {
+        self.attributedText = attributedText
+        self.isFocused = isFocused
+        self.selection = selection
+    }
+    
     // Empty state
     static let empty = EditorModel()
 }
@@ -197,9 +222,7 @@ struct AppModel: Modelable {
         case let .setDetail(results):
             var model = self
             model.editor = EditorModel(
-                attributedText: NSAttributedString(
-                    string: results.entry?.content ?? model.query
-                )
+                markup: results.entry?.content ?? model.query
             )
             model.backlinks = results.backlinks
             model.isDetailLoading = false
@@ -239,6 +262,13 @@ struct AppView: View {
         .onAppear {
             store.send(action: .appear)
         }
+        .environment(\.openURL, OpenURLAction { url in
+            if let query = Subtext3.urlToWikilink(url) {
+                store.send(action: .commitSearch(query))
+                return .handled
+            }
+            return .systemAction
+        })
     }
 }
 

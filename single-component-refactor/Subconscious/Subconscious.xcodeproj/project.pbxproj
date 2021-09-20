@@ -33,6 +33,10 @@
 		B82C3A7726F6B5BF00833CC8 /* StringUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */; };
 		B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */; };
 		B8879EA126F90C5100A0B4FF /* AppNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */; };
+		B8879EA326F9334800A0B4FF /* Subtext3.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA226F9334800A0B4FF /* Subtext3.swift */; };
+		B8879EA426F9334800A0B4FF /* Subtext3.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA226F9334800A0B4FF /* Subtext3.swift */; };
+		B8879EA626F9348600A0B4FF /* SubtextURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA526F9348600A0B4FF /* SubtextURL.swift */; };
+		B8879EA726F9348600A0B4FF /* SubtextURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA526F9348600A0B4FF /* SubtextURL.swift */; };
 		B8E4B6F226F28BA600B9BE21 /* GrowableTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4B6F126F28BA600B9BE21 /* GrowableTextViewRepresentable.swift */; };
 		B8E4B6F326F28BA700B9BE21 /* GrowableTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4B6F126F28BA600B9BE21 /* GrowableTextViewRepresentable.swift */; };
 		B8E4B6F526F28CDB00B9BE21 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4B6F426F28CDB00B9BE21 /* EditorView.swift */; };
@@ -91,6 +95,8 @@
 		B82C3A7226F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrdereredDictionaryUtilities.swift; sourceTree = "<group>"; };
 		B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringUtilities.swift; sourceTree = "<group>"; };
 		B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigationView.swift; sourceTree = "<group>"; };
+		B8879EA226F9334800A0B4FF /* Subtext3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext3.swift; sourceTree = "<group>"; };
+		B8879EA526F9348600A0B4FF /* SubtextURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextURL.swift; sourceTree = "<group>"; };
 		B8E4B6F126F28BA600B9BE21 /* GrowableTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowableTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8E4B6F426F28CDB00B9BE21 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
 		B8EB29F326F27794006E97C3 /* SubconsciousApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubconsciousApp.swift; sourceTree = "<group>"; };
@@ -256,6 +262,8 @@
 				B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */,
 				B82C3A6726F57CE200833CC8 /* TextFile.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
+				B8879EA226F9334800A0B4FF /* Subtext3.swift */,
+				B8879EA526F9348600A0B4FF /* SubtextURL.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -439,8 +447,10 @@
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
 				B82C3A6826F57CE200833CC8 /* TextFile.swift in Sources */,
 				B8082AAA26F3B43A004B10BB /* Store.swift in Sources */,
+				B8879EA626F9348600A0B4FF /* SubtextURL.swift in Sources */,
 				B82C3A7626F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B8EB2A1F26F27797006E97C3 /* SubconsciousApp.swift in Sources */,
+				B8879EA326F9334800A0B4FF /* Subtext3.swift in Sources */,
 				B8E4B6F526F28CDB00B9BE21 /* EditorView.swift in Sources */,
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8EC568626F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
@@ -468,8 +478,10 @@
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
 				B82C3A6926F57CE200833CC8 /* TextFile.swift in Sources */,
 				B8082AAB26F3B43A004B10BB /* Store.swift in Sources */,
+				B8879EA726F9348600A0B4FF /* SubtextURL.swift in Sources */,
 				B82C3A7726F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B8EB2A2026F27797006E97C3 /* SubconsciousApp.swift in Sources */,
+				B8879EA426F9334800A0B4FF /* Subtext3.swift in Sources */,
 				B8E4B6F626F28CDB00B9BE21 /* EditorView.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
