@@ -66,6 +66,13 @@ struct AppModel: Modelable {
                     )
                 })
                 .eraseToAnyPublisher()
+        case let .rebuildDatabaseFailure(error):
+            AppEnvironment.logger.warning(
+                """
+                Could not rebuild database.\t\(error)
+                """
+            )
+            return Empty().eraseToAnyPublisher()
         default:
             return Empty().eraseToAnyPublisher()
         }
@@ -106,7 +113,7 @@ struct AppModel: Modelable {
             model.isDetailShowing = true
             model.isDetailLoading = true
             return model
-        default:
+        case .appear, .rebuildDatabase, .rebuildDatabaseFailure:
             return self
         }
     }
