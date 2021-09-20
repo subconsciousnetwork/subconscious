@@ -54,7 +54,7 @@ struct SuggestionsView: View {
                         }
                         .contentShape(Rectangle())
                         .lineLimit(1)
-                        .padding(AppTheme.unit2)
+                        .padding(AppTheme.padding)
                     }
                 )
                 Divider()

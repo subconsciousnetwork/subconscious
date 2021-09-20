@@ -21,10 +21,10 @@ struct EditorView: View {
         )
         .insets(
             EdgeInsets(
-                top: AppTheme.unit2,
-                leading: AppTheme.unit2,
-                bottom: AppTheme.unit2,
-                trailing: AppTheme.unit2
+                top: AppTheme.padding,
+                leading: AppTheme.padding,
+                bottom: AppTheme.padding,
+                trailing: AppTheme.padding
             )
         )
     }

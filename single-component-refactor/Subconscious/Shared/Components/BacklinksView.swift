@@ -20,8 +20,11 @@ struct BacklinksView: View {
                     },
                     label: {
                         VStack {
-                            Text(entry.title).bold()
+                            Text(entry.title)
+                                .bold()
+                                .lineLimit(1)
                         }
+                        .padding(AppTheme.padding)
                     }
                 )
                 .contentShape(Rectangle())
