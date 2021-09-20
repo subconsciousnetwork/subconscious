@@ -298,6 +298,8 @@ struct DatabaseService {
                 return try searchSuggestionsForQuery(query: query)
             }
         }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     /// Log a search query in search history db
@@ -324,6 +326,8 @@ struct DatabaseService {
                 ]
             )
         }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     private func findEntryByTitle(_ title: String) throws -> TextFile? {
@@ -393,5 +397,7 @@ struct DatabaseService {
                 backlinks: backlinks
             )
         }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 }
