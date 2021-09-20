@@ -148,6 +148,7 @@ enum AppTheme {}
 extension AppTheme {
     static let unit: CGFloat = 8
     static let unit2 = unit * 2
+    static let cornerRadius: Double = 20
 }
 
 
@@ -156,4 +157,7 @@ extension Color {
     static let text = SwiftUI.Color.primary
     static let secondaryText = SwiftUI.Color.secondary
     static let placeholderText = SwiftUI.Color(.placeholderText)
+    static let accent = SwiftUI.Color.accentColor
+    static let background = SwiftUI.Color(.systemBackground)
+    static let secondaryBackground = SwiftUI.Color(.secondarySystemBackground)
 }

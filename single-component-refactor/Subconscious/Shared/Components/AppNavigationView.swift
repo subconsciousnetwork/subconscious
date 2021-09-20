@@ -56,17 +56,27 @@ struct AppNavigationView: View {
                             } else {
                                 GeometryReader { geometry in
                                     ScrollView {
-                                        EditorView(
-                                            editor: store.binding(
-                                                get: { store in
-                                                    store.editor
-                                                },
-                                                tag: { value in
-                                                    .setEditor(value)
+                                        VStack {
+                                            EditorView(
+                                                editor: store.binding(
+                                                    get: { store in
+                                                        store.editor
+                                                    },
+                                                    tag: { value in
+                                                        .setEditor(value)
+                                                    }
+                                                ),
+                                                fixedWidth: geometry.size.width
+                                            )
+                                            BacklinksView(
+                                                backlinks: store.state.backlinks,
+                                                action: { query in
+                                                    store.send(
+                                                        action: AppAction.commitSearch(query)
+                                                    )
                                                 }
-                                            ),
-                                            fixedWidth: geometry.size.width
-                                        )
+                                            )
+                                        }
                                     }
                                 }
                             }
