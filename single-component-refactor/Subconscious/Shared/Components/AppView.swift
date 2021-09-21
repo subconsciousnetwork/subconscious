@@ -199,8 +199,10 @@ struct AppModel: Modelable {
         case .databaseReady:
             self.isDatabaseReady = true
         case var .setEditor(editor):
-            // Render attributes from markup
-            editor.render()
+            // Render attributes from markup if text has changed
+            if !self.editor.attributedText.isEqual(to: editor.attributedText) {
+                editor.render()
+            }
             self.editor = editor
         case let .setDetailShowing(isShowing):
             self.isDetailShowing = isShowing
@@ -267,11 +269,3 @@ struct AppView: View {
         })
     }
 }
-
-//struct ContentView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        AppView(
-//
-//        )
-//    }
-//}
