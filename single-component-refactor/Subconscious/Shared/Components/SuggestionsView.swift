@@ -26,40 +26,41 @@ struct SuggestionsView: View {
     var action: (Suggestion) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Divider()
-            ForEach(suggestions, id: \.self) { suggestion in
-                Button(
-                    action: {
-                        self.action(suggestion)
-                    },
-                    label: {
-                        VStack {
-                            switch suggestion {
-                            case .entry(let string):
-                                HStack {
-                                    Image(systemName: "doc")
-                                    Text(string)
-                                    Text("— Open")
-                                        .foregroundColor(Color.secondaryText)
-                                }
-                            case .search(let string):
-                                HStack {
-                                    Image(systemName: "magnifyingglass")
-                                    Text(string)
-                                    Text("- Create")
-                                        .foregroundColor(Color.secondaryText)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                Divider()
+                ForEach(suggestions, id: \.self) { suggestion in
+                    Button(
+                        action: {
+                            self.action(suggestion)
+                        },
+                        label: {
+                            VStack {
+                                switch suggestion {
+                                case .entry(let string):
+                                    HStack {
+                                        Image(systemName: "doc")
+                                        Text(string)
+                                        Text("— Open")
+                                            .foregroundColor(Color.secondaryText)
+                                    }
+                                case .search(let string):
+                                    HStack {
+                                        Image(systemName: "magnifyingglass")
+                                        Text(string)
+                                        Text("- Create")
+                                            .foregroundColor(Color.secondaryText)
+                                    }
                                 }
                             }
+                            .contentShape(Rectangle())
+                            .lineLimit(1)
+                            .padding(AppTheme.padding)
                         }
-                        .contentShape(Rectangle())
-                        .lineLimit(1)
-                        .padding(AppTheme.padding)
-                    }
-                )
-                Divider()
+                    )
+                    Divider()
+                }
             }
-            Spacer()
         }
     }
 }
