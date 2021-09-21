@@ -39,17 +39,29 @@ struct SuggestionsView: View {
                                 switch suggestion {
                                 case .entry(let string):
                                     HStack {
-                                        Image(systemName: "doc")
+                                        Image(
+                                            systemName: "doc"
+                                        ).frame(
+                                            width: AppTheme.icon,
+                                            height: AppTheme.icon
+                                        )
                                         Text(string)
-                                        Text("— Open")
-                                            .foregroundColor(Color.secondaryText)
+                                        Text("— Open").foregroundColor(
+                                            Color.secondaryText
+                                        )
                                     }
                                 case .search(let string):
                                     HStack {
-                                        Image(systemName: "magnifyingglass")
+                                        Image(
+                                            systemName: "magnifyingglass"
+                                        ).frame(
+                                            width: AppTheme.icon,
+                                            height: AppTheme.icon
+                                        )
                                         Text(string)
-                                        Text("- Create")
-                                            .foregroundColor(Color.secondaryText)
+                                        Text("- Create").foregroundColor(
+                                            Color.secondaryText
+                                        )
                                     }
                                 }
                             }

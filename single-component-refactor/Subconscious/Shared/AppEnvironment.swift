@@ -150,6 +150,7 @@ extension AppTheme {
     static let unit2 = unit * 2
     static let cornerRadius: Double = 20
     static let padding = unit2
+    static let icon: CGFloat = 24
 }
 
 
