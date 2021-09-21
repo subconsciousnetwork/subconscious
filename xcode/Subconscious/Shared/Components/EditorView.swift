@@ -10,14 +10,14 @@ import Combine
 
 struct EditorView: View {
     @Binding var editor: EditorModel
-    var fixedWidth: CGFloat
+    var size: CGSize
 
     var body: some View {
         GrowableTextViewRepresentable(
             attributedText: $editor.attributedText,
             isFocused: $editor.isFocused,
             selection: $editor.selection,
-            fixedWidth: fixedWidth
+            fixedWidth: size.width
         )
         .insets(
             EdgeInsets(
@@ -27,5 +27,6 @@ struct EditorView: View {
                 trailing: AppTheme.padding
             )
         )
+        .frame(minHeight: size.height)
     }
 }

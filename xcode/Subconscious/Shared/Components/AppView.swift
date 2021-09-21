@@ -27,6 +27,7 @@ enum AppAction {
     case detailFailure(String)
     case setDetailShowing(Bool)
     case setEditor(EditorModel)
+    case save
 }
 
 struct EditorModel: Equatable {
@@ -225,6 +226,8 @@ struct AppModel: Modelable {
             )
             self.backlinks = results.backlinks
             self.isDetailLoading = false
+        case .save:
+            self.editor.isFocused = false
         case .appear:
             break
         case .rebuildDatabase:

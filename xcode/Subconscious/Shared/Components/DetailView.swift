@@ -19,7 +19,15 @@ struct DetailView: View {
                     VStack {
                         EditorView(
                             editor: $editor,
-                            fixedWidth: geometry.size.width
+                            size: CGSize(
+                                width: geometry.size.width,
+                                height: (
+                                    geometry.size.height -
+                                    AppTheme.icon -
+                                    (AppTheme.tightPadding * 2) -
+                                    (AppTheme.unit4)
+                                )
+                            )
                         )
                         Divider()
                         BacklinksView(
