@@ -14,16 +14,7 @@ struct SubconsciousApp: App {
         WindowGroup {
             AppView(
                 store: Store(
-                    state: .init(
-                        suggestions: [
-                            .search("El"),
-                            .entry("Elm discourages deeply nested records"),
-                            .entry("Elm a very long page title that should get truncated"),
-                            .entry("Elm app architecture"),
-                            .search("Elm"),
-                            .search("Elephant")
-                        ]
-                    ),
+                    state: .init(),
                     logger: Logger.init(
                         subsystem: "com.subconscious",
                         category: "store"
