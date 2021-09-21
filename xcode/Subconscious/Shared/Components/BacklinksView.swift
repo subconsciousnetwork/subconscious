@@ -19,10 +19,11 @@ struct BacklinksView: View {
                         onActivateBacklink(entry.title)
                     },
                     label: {
-                        VStack {
+                        HStack {
                             Text(entry.title)
                                 .bold()
-                                .lineLimit(1)
+                                .multilineTextAlignment(.leading)
+                            Spacer()
                         }
                         .padding(AppTheme.padding)
                     }
