@@ -9,14 +9,14 @@ import SwiftUI
 
 struct BacklinksView: View {
     var backlinks: [TextFile]
-    var action: (String) -> Void
+    var onActivateBacklink: (String) -> Void
 
     var body: some View {
         VStack(alignment: .leading) {
             ForEach(backlinks) { entry in
                 Button(
                     action: {
-                        action(entry.title)
+                        onActivateBacklink(entry.title)
                     },
                     label: {
                         VStack {
@@ -46,7 +46,7 @@ struct BacklinksView_Previews: PreviewProvider {
                     """
                 )
             ],
-            action: { title in }
+            onActivateBacklink: { title in }
         )
     }
 }

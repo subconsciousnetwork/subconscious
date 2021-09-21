@@ -10,7 +10,7 @@ import SwiftUI
 struct DetailView: View {
     @Binding var editor: EditorModel
     var backlinks: [TextFile]
-    var onBacklinkTap: (String) -> Void
+    var onActivateBacklink: (String) -> Void
 
     var body: some View {
         GeometryReader { geometry in
@@ -24,13 +24,18 @@ struct DetailView: View {
                         Divider()
                         BacklinksView(
                             backlinks: backlinks,
-                            action: onBacklinkTap
+                            onActivateBacklink: onActivateBacklink
                         )
                     }
                 }
-                KeyboardToolbarView(
-                    suggestions: []
-                )
+                if editor.isFocused {
+                    KeyboardToolbarView(
+                        isFocused: $editor.isFocused,
+                        suggestion: "An organism is a living system maintaining both a higher level of internal cooperation"
+                    )
+                    .transition(.move(edge: .bottom))
+                    .animation(.default, value: editor.isFocused)
+                }
             }
         }
     }

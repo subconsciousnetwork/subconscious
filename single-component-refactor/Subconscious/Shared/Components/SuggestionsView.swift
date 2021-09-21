@@ -50,6 +50,8 @@ struct SuggestionsView: View {
                                             Color.secondaryText
                                         )
                                     }
+                                    .padding(AppTheme.padding)
+                                    .contentShape(Rectangle())
                                 case .search(let string):
                                     HStack {
                                         Image(
@@ -63,11 +65,12 @@ struct SuggestionsView: View {
                                             Color.secondaryText
                                         )
                                     }
+                                    .padding(AppTheme.padding)
+                                    .contentShape(Rectangle())
+
                                 }
                             }
-                            .contentShape(Rectangle())
                             .lineLimit(1)
-                            .padding(AppTheme.padding)
                         }
                     )
                     Divider()

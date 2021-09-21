@@ -146,11 +146,13 @@ enum AppTheme {}
 
 //  MARK: Theme units
 extension AppTheme {
-    static let unit: CGFloat = 8
+    static let unit: CGFloat = 4
     static let unit2 = unit * 2
+    static let unit4 = unit * 4
     static let cornerRadius: Double = 20
-    static let padding = unit2
-    static let icon: CGFloat = 24
+    static let padding = unit4
+    static let tightPadding = unit * 3
+    static let icon: CGFloat = unit * 6
 }
 
 

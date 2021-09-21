@@ -64,7 +64,7 @@ struct AppNavigationView: View {
                                         }
                                     ),
                                     backlinks: store.state.backlinks,
-                                    onBacklinkTap: { query in
+                                    onActivateBacklink: { query in
                                         store.send(
                                             action: .commitSearch(query)
                                         )
