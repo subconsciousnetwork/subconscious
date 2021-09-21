@@ -194,65 +194,49 @@ struct AppModel: Modelable {
     }
 
     //  MARK: Update
-    func update(action: AppAction) -> Self {
+    mutating func update(action: AppAction) {
         switch action {
         case .databaseReady:
-            var model = self
-            model.isDatabaseReady = true
-            return model
+            self.isDatabaseReady = true
         case var .setEditor(editor):
-            var model = self
             // Render attributes from markup
             editor.render()
-            model.editor = editor
-            return model
+            self.editor = editor
         case let .setDetailShowing(isShowing):
-            var model = self
-            model.isDetailShowing = isShowing
-            return model
+            self.isDetailShowing = isShowing
         case let .setSearch(text):
-            var model = self
-            model.searchBarText = text
-            return model
+            self.searchBarText = text
         case let .setSearchBarFocus(isFocused):
-            var model = self
-            model.isSearchBarFocused = isFocused
-            return model
+            self.isSearchBarFocused = isFocused
         case let .setSuggestions(suggestions):
-            var model = self
-            model.suggestions = suggestions
-            return model
+            self.suggestions = suggestions
         case let .commitSearch(query):
-            var model = self
-            model.query = query
-            model.editor = EditorModel.empty
-            model.searchBarText = ""
-            model.isSearchBarFocused = false
-            model.isDetailShowing = true
-            model.isDetailLoading = true
-            return model
+            self.query = query
+            self.editor = EditorModel.empty
+            self.searchBarText = ""
+            self.isSearchBarFocused = false
+            self.isDetailShowing = true
+            self.isDetailLoading = true
         case let .setDetail(results):
-            var model = self
-            model.editor = EditorModel(
-                markup: results.entry?.content ?? model.query
+            self.editor = EditorModel(
+                markup: results.entry?.content ?? self.query
             )
-            model.backlinks = results.backlinks
-            model.isDetailLoading = false
-            return model
+            self.backlinks = results.backlinks
+            self.isDetailLoading = false
         case .appear:
-            return self
+            break
         case .rebuildDatabase:
-            return self
+            break
         case .rebuildDatabaseFailure:
-            return self
+            break
         case .syncSuccess:
-            return self
+            break
         case .syncFailure:
-            return self
-        case .suggestionsFailure(_):
-            return self
-        case .detailFailure(_):
-            return self
+            break
+        case .suggestionsFailure:
+            break
+        case .detailFailure:
+            break
         }
     }
 }

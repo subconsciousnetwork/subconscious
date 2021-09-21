@@ -17,7 +17,7 @@ typealias Effect<Action> = AnyPublisher<Action, Never>
 /// to being passed an action.
 protocol Updatable {
     associatedtype Action
-    func update(action: Action) -> Self
+    mutating func update(action: Action)
 }
 
 /// An Effectable is a type that knows how to create an `Effect` (Combine Publisher) in response
@@ -31,7 +31,7 @@ protocol Effectable {
 /// - Update itself in response to actions
 /// - Generate effects (Combine publishers) in response to actions
 /// Typically, you conform to Modelable with a simple struct that is used to model app state.
-protocol Modelable: Updatable, Effectable, Equatable {
+protocol Modelable: Updatable, Effectable {
     
 }
 
@@ -84,29 +84,20 @@ where Model: Modelable
     }
 
     func send(action: Model.Action) {
-        let next = state.update(action: action)
+        state.update(action: action)
         let effect = state.effect(action: action)
         if debug {
             let actionString = String(reflecting: action)
-            let prevString = String(reflecting: self.state)
-            let currString = String(reflecting: next)
+            let stateString = String(reflecting: self.state)
             let effectString = String(reflecting: effect)
             logger.debug(
                 """
                 [send]
                 Action: \(actionString)
-                Prev: \(prevString)
-                Next: \(currString)
+                State: \(stateString)
                 Effect: \(effectString)
                 """
             )
-        }
-        // Check if state has changed before setting.
-        // As a `@Published` property, state will fire for any willSet, even
-        // for values that are equal. We cut down on uneccessary rendering by
-        // checking for state equality before setting.
-        if self.state != next {
-            self.state = next
         }
         cancellables.sink(
             publisher: effect.receive(
