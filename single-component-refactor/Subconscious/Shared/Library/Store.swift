@@ -36,27 +36,42 @@ protocol Modelable: Updatable, Effectable {
 }
 
 /// Store is a source of truth for a central state.
-/// It holds a model (typically a struct that conforms to `Modelable`) which represents app state.
-/// All updates and effects happen through actions sent to `store.send`.
 ///
-/// Following Elm, Store is meant to be used as a single app-wide, or major-view-wide model.
-/// Deeply nested components are discouraged. Instead, the app should be a single component, or perhaps
-/// one component per major view.
+/// Store is an `ObservableObject`. You use it in a view via `@ObservedObject`
+/// or `@StateObject` to power view rendering.
 ///
-/// Components should never have to communicate with each other.
-/// Instead of decomposing app into components, we decompose the app into many views that share the
+/// Store has a `@Published` `state` that conforms to`Modelable` (typically a struct).
+/// All updates and effects to this state happen through actions sent to `store.send`.
+///
+/// Store is meant to be used as part of a single app-wide, or major-view-wide component.
+/// Store deliberately does not solve for nested components or nested stores. Following Elm,
+/// deeply nested components are discouraged. Instead, the app should use a single store,
+/// or perhaps one store per major view.
+///
+/// Components should not have to communicate with each other. If nested components do have to
+/// communicate, it is probably a sign they should be the same component with a shared store.
+///
+/// Instead of decomposing an app into components, we decompose the app into sub-views that share the
 /// same store and actions. This cuts down on the amount of mapping and unwrapping that must be done.
-/// It also means we don't need machinery for republishing changes across multiple stores, and we don't
-/// need to hold on to that redundant state.
+/// It also means we don't need machinery for republishing changes across nested stores, and we don't
+/// need to hold on to redundant state across multiple components.
 ///
 /// Sub-views should be either stateless, consuming bare properties of `store.state`, or
 /// take bindings, which can be created with `store.binding`.
+///
+/// See https://guide.elm-lang.org/webapps/structure.html
+/// for more about this philosophy.
 final class Store<Model>: ObservableObject
 where Model: Modelable
 {
+    /// Logger, used when in debug mode
     private(set) var logger: Logger
+    /// Toggle debug mode
     private(set) var debug: Bool
+    /// Holds on to cancellables until they complete
     private var cancellables = PublisherBag()
+    /// Current state.
+    /// All writes to state happen through actions sent to `Store.send`.
     @Published private(set) var state: Model
 
     init(
@@ -83,9 +98,14 @@ where Model: Modelable
         )
     }
 
+    /// Send an action to the store to update state and generate effects.
+    /// Any effects generated are fed back into the store.
     func send(action: Model.Action) {
-        state.update(action: action)
+        // Generate effect before mutating state.
+        // This gives effect access to previous value.
         let effect = state.effect(action: action)
+        // Then mutate model
+        state.update(action: action)
         if debug {
             let actionString = String(reflecting: action)
             let stateString = String(reflecting: self.state)
