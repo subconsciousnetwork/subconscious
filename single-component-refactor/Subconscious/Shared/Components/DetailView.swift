@@ -14,18 +14,23 @@ struct DetailView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            ScrollView {
-                VStack {
-                    EditorView(
-                        editor: $editor,
-                        fixedWidth: geometry.size.width
-                    )
-                    Divider()
-                    BacklinksView(
-                        backlinks: backlinks,
-                        action: onBacklinkTap
-                    )
+            VStack {
+                ScrollView {
+                    VStack {
+                        EditorView(
+                            editor: $editor,
+                            fixedWidth: geometry.size.width
+                        )
+                        Divider()
+                        BacklinksView(
+                            backlinks: backlinks,
+                            action: onBacklinkTap
+                        )
+                    }
                 }
+                KeyboardToolbarView(
+                    suggestions: []
+                )
             }
         }
     }
