@@ -129,6 +129,12 @@ struct AppModel: Modelable {
             )
             return Empty().eraseToAnyPublisher()
         case let .databaseReady(success):
+            let sync = AppEnvironment.database.syncDatabase()
+                .map({ changes in AppAction.syncSuccess(changes) })
+                .catch({ error in
+                    Just(.syncFailure(error.localizedDescription))
+                })
+            let suggestions = Just(AppAction.setSearch(""))
             if success.from != success.to {
                 AppEnvironment.logger.log(
                     """
@@ -137,12 +143,10 @@ struct AppModel: Modelable {
                 )
             }
             AppEnvironment.logger.log("File sync started")
-            return AppEnvironment.database.syncDatabase()
-                .map({ changes in .syncSuccess(changes) })
-                .catch({ error in
-                    Just(.syncFailure(error.localizedDescription))
-                })
-                .eraseToAnyPublisher()
+            return Publishers.Merge(
+                suggestions,
+                sync
+            ).eraseToAnyPublisher()
         case let .syncSuccess(changes):
             AppEnvironment.logger.log(
                 """
@@ -174,14 +178,18 @@ struct AppModel: Modelable {
             )
             return Empty().eraseToAnyPublisher()
         case let .commitSearch(query):
-            return AppEnvironment.database.search(query: query)
+            let suggest = Just(AppAction.setSearch(""))
+            let search = AppEnvironment.database.search(query: query)
                 .map({ results in
                     AppAction.setDetail(results)
                 })
                 .catch({ error in
                     Just(AppAction.detailFailure(error.localizedDescription))
                 })
-                .eraseToAnyPublisher()
+            return Publishers.Merge(
+                suggest,
+                search
+            ).eraseToAnyPublisher()
         case let .detailFailure(message):
             AppEnvironment.logger.log(
                 """
