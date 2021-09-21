@@ -49,6 +49,7 @@ struct SuggestionsView: View {
                                         Text("— Open").foregroundColor(
                                             Color.secondaryText
                                         )
+                                        Spacer()
                                     }
                                     .padding(AppTheme.padding)
                                     .contentShape(Rectangle())
@@ -64,6 +65,7 @@ struct SuggestionsView: View {
                                         Text("- Create").foregroundColor(
                                             Color.secondaryText
                                         )
+                                        Spacer()
                                     }
                                     .padding(AppTheme.padding)
                                     .contentShape(Rectangle())
