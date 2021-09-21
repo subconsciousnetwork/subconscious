@@ -64,14 +64,14 @@ struct AppNavigationView: View {
                                 )
                             }
                         }
-                        .navigationTitle(store.state.query)
+                        .navigationTitle("")
                     },
                     label: {
                         EmptyView()
                     }
                 )
             }
-            .navigationTitle("Home")
+            .navigationTitle("Notes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
