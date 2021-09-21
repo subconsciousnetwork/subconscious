@@ -37,13 +37,9 @@ struct AppNavigationView: View {
                     }
                 }
                 NavigationLink(
-                    isActive: Binding(
-                        get: { store.state.isDetailShowing },
-                        set: { value in
-                            store.send(
-                                action: .setDetailShowing(value)
-                            )
-                        }
+                    isActive: store.binding(
+                        get: \.isDetailShowing,
+                        tag: AppAction.setDetailShowing
                     ),
                     destination: {
                         VStack {
@@ -56,12 +52,8 @@ struct AppNavigationView: View {
                             } else {
                                 DetailView(
                                     editor: store.binding(
-                                        get: { store in
-                                            store.editor
-                                        },
-                                        tag: { value in
-                                            .setEditor(value)
-                                        }
+                                        get: \.editor,
+                                        tag: AppAction.setEditor
                                     ),
                                     backlinks: store.state.backlinks,
                                     onActivateBacklink: { query in
