@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct KeyboardToolbarView: View {
-    @Binding var isFocused: Bool
     var suggestion: String
 
     var body: some View {
@@ -27,7 +26,6 @@ struct KeyboardToolbarView: View {
                     }
                 )
                 Divider()
-                Spacer()
                 Button(
                     action: {},
                     label: {
@@ -35,20 +33,6 @@ struct KeyboardToolbarView: View {
                     }
                 )
                 Spacer()
-                Divider()
-                Button(
-                    action: {
-                        self.isFocused = false
-                    },
-                    label: {
-                        Image(
-                            systemName: "keyboard.chevron.compact.down"
-                        ).frame(
-                            width: AppTheme.icon,
-                            height: AppTheme.icon
-                        )
-                    }
-                )
             }
             .frame(height: AppTheme.icon, alignment: .center)
             .padding(.horizontal, AppTheme.padding)
@@ -60,7 +44,6 @@ struct KeyboardToolbarView: View {
 struct KeyboardToolbarView_Previews: PreviewProvider {
     static var previews: some View {
         KeyboardToolbarView(
-            isFocused: .constant(true),
             suggestion: "An organism is a living system maintaining both a higher level of internal cooperation"
         )
     }
