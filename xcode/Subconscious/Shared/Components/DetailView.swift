@@ -9,12 +9,12 @@ import SwiftUI
 
 struct DetailView: View {
     @Binding var editor: EditorModel
-    var backlinks: [TextFile]
+    var backlinks: [SubtextDocumentLocation]
     var onActivateBacklink: (String) -> Void
 
     var body: some View {
         GeometryReader { geometry in
-            VStack {
+            VStack(spacing: 0) {
                 ScrollView {
                     VStack {
                         EditorView(

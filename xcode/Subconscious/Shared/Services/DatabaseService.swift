@@ -330,10 +330,12 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
-    private func findEntryByTitle(_ title: String) throws -> TextFile? {
-        let results: [TextFile] = try database.execute(
+    private func findEntryByTitle(
+        _ title: String
+    ) throws -> SubtextDocumentLocation? {
+        let results: [SubtextDocumentLocation] = try database.execute(
             sql: """
-            SELECT entry.path, entry.body
+            SELECT entry.path
             FROM entry
             WHERE entry.title LIKE ?
             LIMIT 1
@@ -341,26 +343,26 @@ struct DatabaseService {
             parameters: [
                 .text(title)
             ]
-        ).map({ row in
-            let path: String = try row.get(0).unwrap()
-            let content: String = try row.get(1).unwrap()
-            return TextFile(
-                url: URL(fileURLWithPath: path, relativeTo: documentUrl),
-                content: content
-            )
+        ).compactMap({ row in
+            if let path: String = row.get(0) {
+                return try? SubtextDocumentLocation(
+                    url: URL(fileURLWithPath: path, relativeTo: documentUrl)
+                )
+            }
+            return nil
         })
         return results.first
     }
 
-    func search(query: String) -> AnyPublisher<TextFileResults, Error> {
+    func search(query: String) -> AnyPublisher<ResultSet, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             guard !query.isWhitespace else {
-                return TextFileResults()
+                return ResultSet()
             }
 
-            let matches: [TextFile] = try database.execute(
+            let matches: [SubtextDocumentLocation] = try database.execute(
                 sql: """
-                SELECT path, body
+                SELECT path
                 FROM entry_search
                 WHERE entry_search MATCH ?
                 AND rank = 'bm25(0.0, 10.0, 1.0, 0.0, 0.0)'
@@ -370,19 +372,17 @@ struct DatabaseService {
                 parameters: [
                     .queryFTS5(query)
                 ]
-            ).map({ row in
-                let path: String = try row.get(0).unwrap()
-                let content: String = try row.get(1).unwrap()
-                let url = documentUrl.appendingPathComponent(path)
-                return TextFile(
-                    url: url,
-                    content: content
-                )
+            ).compactMap({ row in
+                if let path: String = row.get(0) {
+                    let url = documentUrl.appendingPathComponent(path)
+                    return try? SubtextDocumentLocation(url: url)
+                }
+                return nil
             })
 
             let entry = try findEntryByTitle(query)
 
-            let backlinks: [TextFile]
+            let backlinks: [SubtextDocumentLocation]
             if let entry = entry {
                 // If we have an entry, filter it out of the results
                 backlinks = matches.filter({ fileEntry in
@@ -392,7 +392,7 @@ struct DatabaseService {
                 backlinks = matches
             }
 
-            return TextFileResults(
+            return ResultSet(
                 entry: entry,
                 backlinks: backlinks
             )
