@@ -34,31 +34,24 @@ extension FileManager {
         name: String,
         ext: String,
         version: Int = 1
-    ) -> URL? {
-        guard url.isFileURL else {
-            return nil
-        }
-
+    ) -> URL {
         // Only version numbers one and above, please.
         let version = max(version, 1)
 
-        if let versionedURL = url.appendingVersionedFilename(
+        let versionedURL = url.appendingVersionedFilename(
             name: name,
             ext: ext,
             version: version
-        ) {
-            if self.fileExists(atURL: versionedURL) {
-                return findUniqueURL(
-                    at: url,
-                    name: name,
-                    ext: ext,
-                    version: version + 1
-                )
-            } else {
-                return versionedURL
-            }
+        )
+        if self.fileExists(atURL: versionedURL) {
+            return findUniqueURL(
+                at: url,
+                name: name,
+                ext: ext,
+                version: version + 1
+            )
+        } else {
+            return versionedURL
         }
-
-        return nil
     }
 }
