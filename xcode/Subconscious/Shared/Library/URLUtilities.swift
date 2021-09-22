@@ -32,12 +32,11 @@ extension URL {
     func appendingVersionedFilename(
         name: String,
         ext: String,
-        version: Int = 1
-    ) -> URL? {
-        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty else {
-            return nil
-        }
+        version: Int = 1,
+        untitled: String = "Untitled"
+    ) -> URL {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = trimmed.isEmpty ? untitled : name
         var url = self
         // Only version numbers one and above, please.
         let version = max(version, 1)
