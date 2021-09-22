@@ -15,6 +15,7 @@ enum AppEnvironment {}
 //  MARK: Basics
 extension AppEnvironment {
     static let rdns = "com.subconscious.Subconscious"
+    static let untitled = "Untitled"
 
     static let documentURL = FileManager.default.urls(
         for: .documentDirectory,
