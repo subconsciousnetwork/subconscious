@@ -37,6 +37,7 @@ struct KeyboardToolbarView: View {
             .frame(height: AppTheme.icon, alignment: .center)
             .padding(.horizontal, AppTheme.padding)
             .padding(.vertical, AppTheme.tightPadding)
+            .background(Color.background)
         }
     }
 }
