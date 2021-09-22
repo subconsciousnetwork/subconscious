@@ -35,6 +35,8 @@ struct Subtext3: Equatable {
             return self.currentIndex >= self.collection.endIndex
         }
 
+        /// Sets the start of the current range to the current index
+        /// Generally called at the beginning of each loop.
         mutating func setStart() {
             startIndex = currentIndex
         }
@@ -226,6 +228,20 @@ struct Subtext3: Equatable {
         wikilinks.first(where: { sub in
             sub.indices.contains(index)
         })
+    }
+
+    func strip() -> String {
+        var markup = self.markup
+        for wikilink in wikilinks {
+            var text = wikilink
+            text.removeFirst(2)
+            text.removeLast(2)
+            markup.replaceSubrange(
+                wikilink.startIndex..<wikilink.endIndex,
+                with: text
+            )
+        }
+        return markup
     }
 
     func renderMarkup(
