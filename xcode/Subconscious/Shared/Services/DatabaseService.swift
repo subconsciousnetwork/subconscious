@@ -34,6 +34,15 @@ struct DatabaseService {
         self.migrations = migrations
     }
 
+    /// Helper function for generating draft URLs
+    func findUniqueURL(name: String) -> URL {
+        FileManager.default.findUniqueURL(
+            at: documentUrl,
+            name: name,
+            ext: "subtext"
+        )
+    }
+
     /// Close database connection and delete database file
     func delete() -> AnyPublisher<Void, Error> {
         CombineUtilities.async(
@@ -117,10 +126,12 @@ struct DatabaseService {
 
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        entry: TextFile,
-        fingerprint: FileFingerprint.Attributes
+        url: URL,
+        content: String,
+        modified: Date,
+        size: Int
     ) throws {
-        let path = try entry.url.relativizingPath(relativeTo: documentUrl)
+        let path = try url.relativizingPath(relativeTo: documentUrl)
             .unwrap(or: DatabaseServiceError.pathNotInFilePath)
         try database.execute(
             sql: """
@@ -134,23 +145,47 @@ struct DatabaseService {
             """,
             parameters: [
                 .text(path),
-                .text(entry.title),
-                .text(entry.content),
-                .date(fingerprint.modifiedDate),
-                .integer(fingerprint.size)
+                .text(url.stem),
+                .text(content),
+                .date(modified),
+                .integer(size)
             ]
         )
     }
 
     private func writeEntryToDatabase(url: URL) throws {
-        let entry = try TextFile(url: url)
+        let content = try String(contentsOf: url, encoding: .utf8)
         let fingerprint = try FileFingerprint.Attributes(url: url).unwrap()
         return try writeEntryToDatabase(
-            entry: entry,
-            fingerprint: fingerprint
+            url: url,
+            content: content,
+            modified: fingerprint.modifiedDate,
+            size: fingerprint.size
         )
     }
-    
+
+    func writeEntry(
+        url: URL,
+        content: String
+    ) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            // Write contents to file
+            try content.write(
+                to: url,
+                atomically: true,
+                encoding: .utf8
+            )
+            // Read fingerprint after writing to get updated time
+            let fingerprint = try FileFingerprint.Attributes(url: url).unwrap()
+            return try writeEntryToDatabase(
+                url: url,
+                content: content,
+                modified: fingerprint.modifiedDate,
+                size: fingerprint.size
+            )
+        }
+    }
+
     private func deleteEntryFromDatabase(url: URL) throws {
         let path = try url.relativizingPath(relativeTo: documentUrl)
             .unwrap(or: DatabaseServiceError.pathNotInFilePath)
