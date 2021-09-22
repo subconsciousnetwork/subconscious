@@ -23,7 +23,7 @@ enum AppAction {
     case setSuggestions([Suggestion])
     case suggestionsFailure(String)
     case commitSearch(String)
-    case setDetail(TextFileResults)
+    case setDetail(ResultSet)
     case detailFailure(String)
     case setDetailShowing(Bool)
     case setEditor(EditorModel)
@@ -75,7 +75,7 @@ struct EditorModel: Equatable {
 }
 
 //  MARK: Model
-struct AppModel: Modelable {
+struct AppModel: Updatable {
     var isDatabaseReady = false
     var isDetailShowing = false
     var isDetailLoading = true
@@ -84,31 +84,49 @@ struct AppModel: Modelable {
     var suggestions: [Suggestion] = []
     var query = ""
     var editor: EditorModel = EditorModel.empty
-    var entry: TextFile?
-    var backlinks: [TextFile] = []
+    var entry: SubtextDocumentLocation?
+    var backlinks: [SubtextDocumentLocation] = []
 
-    //  MARK: Effect
-    func effect(action: AppAction) -> Effect<AppAction> {
+    //  MARK: Update
+    func update(action: AppAction) -> (Self, AnyPublisher<AppAction, Never>) {
         switch action {
         case .appear:
             AppEnvironment.logger.debug(
-                """
-                Documents\t\(AppEnvironment.documentURL)
-                """
+                "Documents\t\(AppEnvironment.documentURL)"
             )
-            return AppEnvironment.database.migrate()
+            let fx = AppEnvironment.database.migrate()
                 .map({ success in
-                    .databaseReady(success)
+                    AppAction.databaseReady(success)
                 })
                 .catch({ _ in
-                    Just(.rebuildDatabase)
+                    Just(AppAction.rebuildDatabase)
                 })
                 .eraseToAnyPublisher()
+            return (self, fx)
+        case let .databaseReady(success):
+            var model = self
+            model.isDatabaseReady = true
+            let sync = AppEnvironment.database.syncDatabase()
+                .map({ changes in AppAction.syncSuccess(changes) })
+                .catch({ error in
+                    Just(.syncFailure(error.localizedDescription))
+                })
+            let suggestions = Just(AppAction.setSearch(""))
+            let fx = Publishers.Merge(suggestions, sync).eraseToAnyPublisher()
+            if success.from != success.to {
+                AppEnvironment.logger.log(
+                    """
+                    Migrated database\t\(success.from)->\(success.to)
+                    """
+                )
+            }
+            AppEnvironment.logger.log("File sync started")
+            return (model, fx)
         case .rebuildDatabase:
             AppEnvironment.logger.warning(
                 "Database is broken or has wrong schema. Attempting to rebuild."
             )
-            return AppEnvironment.database.delete()
+            let fx = AppEnvironment.database.delete()
                 .flatMap({ _ in
                     AppEnvironment.database.migrate()
                 })
@@ -121,48 +139,42 @@ struct AppModel: Modelable {
                     )
                 })
                 .eraseToAnyPublisher()
+            return (self, fx)
         case let .rebuildDatabaseFailure(error):
             AppEnvironment.logger.warning(
-                """
-                Could not rebuild database.\t\(error)
-                """
+                "Could not rebuild database.\t\(error)"
             )
-            return Empty().eraseToAnyPublisher()
-        case let .databaseReady(success):
-            let sync = AppEnvironment.database.syncDatabase()
-                .map({ changes in AppAction.syncSuccess(changes) })
-                .catch({ error in
-                    Just(.syncFailure(error.localizedDescription))
-                })
-            let suggestions = Just(AppAction.setSearch(""))
-            if success.from != success.to {
-                AppEnvironment.logger.log(
-                    """
-                    Migrated database\t\(success.from)->\(success.to)
-                    """
-                )
-            }
-            AppEnvironment.logger.log("File sync started")
-            return Publishers.Merge(
-                suggestions,
-                sync
-            ).eraseToAnyPublisher()
+            return (self, Empty().eraseToAnyPublisher())
         case let .syncSuccess(changes):
-            AppEnvironment.logger.log(
-                """
-                File sync finished\t\(changes)
-                """
+            AppEnvironment.logger.debug(
+                "File sync finished\t\(changes)"
             )
-            return Empty().eraseToAnyPublisher()
+            return (self, Empty().eraseToAnyPublisher())
         case let .syncFailure(message):
             AppEnvironment.logger.warning(
-                """
-                File sync failed.\t\(message)
-                """
+                "File sync failed.\t\(message)"
             )
-            return Empty().eraseToAnyPublisher()
-        case let .setSearch(query):
-            return AppEnvironment.database.searchSuggestions(query: query)
+            return (self, Empty().eraseToAnyPublisher())
+        case var .setEditor(editor):
+            var model = self
+            // Render attributes from markup if text has changed
+            if !self.editor.attributedText.isEqual(to: editor.attributedText) {
+                editor.render()
+            }
+            model.editor = editor
+            return (model, Empty().eraseToAnyPublisher())
+        case let .setDetailShowing(isShowing):
+            var model = self
+            model.isDetailShowing = isShowing
+            return (model, Empty().eraseToAnyPublisher())
+        case let .setSearchBarFocus(isFocused):
+            var model = self
+            model.isSearchBarFocused = isFocused
+            return (model, Empty().eraseToAnyPublisher())
+        case let .setSearch(text):
+            var model = self
+            model.searchBarText = text
+            let fx = AppEnvironment.database.searchSuggestions(query: text)
                 .map({ suggestions in
                     AppAction.setSuggestions(suggestions)
                 })
@@ -170,14 +182,25 @@ struct AppModel: Modelable {
                     Just(.suggestionsFailure(error.localizedDescription))
                 })
                 .eraseToAnyPublisher()
+            return (model, fx)
+        case let .setSuggestions(suggestions):
+            var model = self
+            model.suggestions = suggestions
+            return (model, Empty().eraseToAnyPublisher())
         case let .suggestionsFailure(message):
             AppEnvironment.logger.debug(
-                """
-                Suggest failed\t\(message)
-                """
+                "Suggest failed\t\(message)"
             )
-            return Empty().eraseToAnyPublisher()
+            return (self, Empty().eraseToAnyPublisher())
         case let .commitSearch(query):
+            var model = self
+            model.query = query
+            model.editor = EditorModel.empty
+            model.searchBarText = ""
+            model.isSearchBarFocused = false
+            model.isDetailShowing = true
+            model.isDetailLoading = true
+
             let suggest = Just(AppAction.setSearch(""))
             let search = AppEnvironment.database.search(query: query)
                 .map({ results in
@@ -186,70 +209,34 @@ struct AppModel: Modelable {
                 .catch({ error in
                     Just(AppAction.detailFailure(error.localizedDescription))
                 })
-            return Publishers.Merge(
+            let fx = Publishers.Merge(
                 suggest,
                 search
             ).eraseToAnyPublisher()
+
+            return (model, fx)
+        case let .setDetail(results):
+            var model = self
+            model.entry = results.entry ?? SubtextDocumentLocation.new(
+                directory: AppEnvironment.documentURL,
+                document: SubtextDocument(title: query, content: query)
+            )
+            model.backlinks = results.backlinks
+            model.editor = EditorModel(
+                markup: results.entry?.document.content ?? self.query
+            )
+            model.isDetailLoading = false
+            return (model, Empty().eraseToAnyPublisher())
         case let .detailFailure(message):
             AppEnvironment.logger.log(
-                """
-                Failed to get details for search.\t\(message)
-                """
+                "Failed to get details for search.\t\(message)"
             )
-            return Empty().eraseToAnyPublisher()
-        default:
-            return Empty().eraseToAnyPublisher()
-        }
-    }
-
-    //  MARK: Update
-    mutating func update(action: AppAction) {
-        switch action {
-        case .databaseReady:
-            self.isDatabaseReady = true
-        case var .setEditor(editor):
-            // Render attributes from markup if text has changed
-            if !self.editor.attributedText.isEqual(to: editor.attributedText) {
-                editor.render()
-            }
-            self.editor = editor
-        case let .setDetailShowing(isShowing):
-            self.isDetailShowing = isShowing
-        case let .setSearch(text):
-            self.searchBarText = text
-        case let .setSearchBarFocus(isFocused):
-            self.isSearchBarFocused = isFocused
-        case let .setSuggestions(suggestions):
-            self.suggestions = suggestions
-        case let .commitSearch(query):
-            self.query = query
-            self.editor = EditorModel.empty
-            self.searchBarText = ""
-            self.isSearchBarFocused = false
-            self.isDetailShowing = true
-            self.isDetailLoading = true
-        case let .setDetail(results):
-            self.editor = EditorModel(
-                markup: results.entry?.content ?? self.query
-            )
-            self.backlinks = results.backlinks
-            self.isDetailLoading = false
+            return (self, Empty().eraseToAnyPublisher())
         case .save:
-            self.editor.isFocused = false
-        case .appear:
-            break
-        case .rebuildDatabase:
-            break
-        case .rebuildDatabaseFailure:
-            break
-        case .syncSuccess:
-            break
-        case .syncFailure:
-            break
-        case .suggestionsFailure:
-            break
-        case .detailFailure:
-            break
+            var model = self
+            model.entry?.document.content = model.editor.attributedText.string
+            model.editor.isFocused = false
+            return (model, Empty().eraseToAnyPublisher())
         }
     }
 }
