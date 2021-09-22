@@ -9,8 +9,8 @@
 /* Begin PBXBuildFile section */
 		B8082AAA26F3B43A004B10BB /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8082AA926F3B43A004B10BB /* Store.swift */; };
 		B8082AAB26F3B43A004B10BB /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8082AA926F3B43A004B10BB /* Store.swift */; };
-		B824FDCE26FA662200B81BBD /* SubtextDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDCD26FA662200B81BBD /* SubtextDocument.swift */; };
-		B824FDCF26FA662200B81BBD /* SubtextDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDCD26FA662200B81BBD /* SubtextDocument.swift */; };
+		B824FDCE26FA662200B81BBD /* TextFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDCD26FA662200B81BBD /* TextFile.swift */; };
+		B824FDCF26FA662200B81BBD /* TextFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDCD26FA662200B81BBD /* TextFile.swift */; };
 		B824FDD126FA98F300B81BBD /* ResultSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD026FA98F300B81BBD /* ResultSet.swift */; };
 		B824FDD226FA98F300B81BBD /* ResultSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD026FA98F300B81BBD /* ResultSet.swift */; };
 		B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD326FAB1BC00B81BBD /* Truncate.swift */; };
@@ -27,8 +27,6 @@
 		B82C3A6326F576FC00833CC8 /* URLUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6126F576FB00833CC8 /* URLUtilities.swift */; };
 		B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */; };
 		B82C3A6626F5796300833CC8 /* OptionalUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */; };
-		B82C3A6826F57CE200833CC8 /* TextFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6726F57CE200833CC8 /* TextFile.swift */; };
-		B82C3A6926F57CE200833CC8 /* TextFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6726F57CE200833CC8 /* TextFile.swift */; };
 		B82C3A6B26F6B18100833CC8 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6A26F6B18100833CC8 /* Slug.swift */; };
 		B82C3A6C26F6B18100833CC8 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6A26F6B18100833CC8 /* Slug.swift */; };
 		B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = B82C3A6E26F6B1C000833CC8 /* Collections */; };
@@ -96,7 +94,7 @@
 
 /* Begin PBXFileReference section */
 		B8082AA926F3B43A004B10BB /* Store.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
-		B824FDCD26FA662200B81BBD /* SubtextDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextDocument.swift; sourceTree = "<group>"; };
+		B824FDCD26FA662200B81BBD /* TextFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFile.swift; sourceTree = "<group>"; };
 		B824FDD026FA98F300B81BBD /* ResultSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultSet.swift; sourceTree = "<group>"; };
 		B824FDD326FAB1BC00B81BBD /* Truncate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Truncate.swift; sourceTree = "<group>"; };
 		B82C3A5226F528B000833CC8 /* DatabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseService.swift; sourceTree = "<group>"; };
@@ -105,7 +103,6 @@
 		B82C3A5E26F576C600833CC8 /* FileManagerUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileManagerUtilities.swift; sourceTree = "<group>"; };
 		B82C3A6126F576FB00833CC8 /* URLUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URLUtilities.swift; sourceTree = "<group>"; };
 		B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionalUtilities.swift; sourceTree = "<group>"; };
-		B82C3A6726F57CE200833CC8 /* TextFile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextFile.swift; sourceTree = "<group>"; };
 		B82C3A6A26F6B18100833CC8 /* Slug.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
 		B82C3A7226F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrdereredDictionaryUtilities.swift; sourceTree = "<group>"; };
 		B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringUtilities.swift; sourceTree = "<group>"; };
@@ -202,7 +199,6 @@
 				B8EC568026F4156F00AC64E5 /* Library */,
 				B8879E9B26F8F3BD00A0B4FF /* Services */,
 				B8EB29F326F27794006E97C3 /* SubconsciousApp.swift */,
-				B824FDCD26FA662200B81BBD /* SubtextDocument.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -284,9 +280,9 @@
 				B8082AA926F3B43A004B10BB /* Store.swift */,
 				B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */,
 				B8879EA226F9334800A0B4FF /* Subtext3.swift */,
-				B824FDD326FAB1BC00B81BBD /* Truncate.swift */,
 				B8879EA526F9348600A0B4FF /* SubtextURL.swift */,
-				B82C3A6726F57CE200833CC8 /* TextFile.swift */,
+				B824FDCD26FA662200B81BBD /* TextFile.swift */,
+				B824FDD326FAB1BC00B81BBD /* Truncate.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
 			);
 			path = Library;
@@ -471,7 +467,6 @@
 				B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
-				B82C3A6826F57CE200833CC8 /* TextFile.swift in Sources */,
 				B8082AAA26F3B43A004B10BB /* Store.swift in Sources */,
 				B8879EA626F9348600A0B4FF /* SubtextURL.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* DetailView.swift in Sources */,
@@ -482,7 +477,7 @@
 				B824FDD126FA98F300B81BBD /* ResultSet.swift in Sources */,
 				B8E4B6F526F28CDB00B9BE21 /* EditorView.swift in Sources */,
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
-				B824FDCE26FA662200B81BBD /* SubtextDocument.swift in Sources */,
+				B824FDCE26FA662200B81BBD /* TextFile.swift in Sources */,
 				B8EC568626F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
 				B8EC568226F415C800AC64E5 /* PublisherBag.swift in Sources */,
 				B8EC568F26F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
@@ -508,7 +503,6 @@
 				B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B824FDD526FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
-				B82C3A6926F57CE200833CC8 /* TextFile.swift in Sources */,
 				B8082AAB26F3B43A004B10BB /* Store.swift in Sources */,
 				B8879EA726F9348600A0B4FF /* SubtextURL.swift in Sources */,
 				B8879EAD26F944DA00A0B4FF /* DetailView.swift in Sources */,
@@ -519,7 +513,7 @@
 				B824FDD226FA98F300B81BBD /* ResultSet.swift in Sources */,
 				B8E4B6F626F28CDB00B9BE21 /* EditorView.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
-				B824FDCF26FA662200B81BBD /* SubtextDocument.swift in Sources */,
+				B824FDCF26FA662200B81BBD /* TextFile.swift in Sources */,
 				B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
 				B8EC568326F415C800AC64E5 /* PublisherBag.swift in Sources */,
 				B8EC569026F4233B00AC64E5 /* AppEnvironment.swift in Sources */,

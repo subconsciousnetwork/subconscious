@@ -9,7 +9,7 @@ import SwiftUI
 
 struct DetailView: View {
     @Binding var editor: EditorModel
-    var backlinks: [SubtextDocumentLocation]
+    var backlinks: [TextFile]
     var onDone: () -> Void
     var onActivateBacklink: (String) -> Void
 

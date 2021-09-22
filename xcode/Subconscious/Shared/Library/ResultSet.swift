@@ -8,6 +8,6 @@
 import Foundation
 
 struct ResultSet {
-    var entry: SubtextDocumentLocation? = nil
-    var backlinks: [SubtextDocumentLocation] = []
+    var entry: TextFile? = nil
+    var backlinks: [TextFile] = []
 }

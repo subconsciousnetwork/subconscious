@@ -154,11 +154,11 @@ struct DatabaseService {
     }
 
     private func writeEntryToDatabase(url: URL) throws {
-        let content = try String(contentsOf: url, encoding: .utf8)
+        let entry = try TextFile(url: url)
         let fingerprint = try FileFingerprint.Attributes(url: url).unwrap()
         return try writeEntryToDatabase(
             url: url,
-            content: content,
+            content: entry.content,
             modified: fingerprint.modifiedDate,
             size: fingerprint.size
         )
@@ -367,8 +367,8 @@ struct DatabaseService {
 
     private func findEntryByTitle(
         _ title: String
-    ) throws -> SubtextDocumentLocation? {
-        let results: [SubtextDocumentLocation] = try database.execute(
+    ) throws -> TextFile? {
+        let results: [TextFile] = try database.execute(
             sql: """
             SELECT entry.path
             FROM entry
@@ -380,7 +380,7 @@ struct DatabaseService {
             ]
         ).compactMap({ row in
             if let path: String = row.get(0) {
-                return try? SubtextDocumentLocation(
+                return try? TextFile(
                     url: URL(fileURLWithPath: path, relativeTo: documentUrl)
                 )
             }
@@ -395,7 +395,7 @@ struct DatabaseService {
                 return ResultSet()
             }
 
-            let matches: [SubtextDocumentLocation] = try database.execute(
+            let matches: [TextFile] = try database.execute(
                 sql: """
                 SELECT path
                 FROM entry_search
@@ -410,14 +410,14 @@ struct DatabaseService {
             ).compactMap({ row in
                 if let path: String = row.get(0) {
                     let url = documentUrl.appendingPathComponent(path)
-                    return try? SubtextDocumentLocation(url: url)
+                    return try? TextFile(url: url)
                 }
                 return nil
             })
 
             let entry = try findEntryByTitle(query)
 
-            let backlinks: [SubtextDocumentLocation]
+            let backlinks: [TextFile]
             if let entry = entry {
                 // If we have an entry, filter it out of the results
                 backlinks = matches.filter({ fileEntry in

@@ -1,34 +1,30 @@
 //
-//  Entry.swift
-//  Subconscious (iOS)
+//  SubtextDocument.swift
+//  Subconscious
 //
-//  Created by Gordon Brander on 6/14/21.
-//
-
+//  Created by Gordon Brander on 9/21/21.
 import Foundation
 
-/// Represents an entry on the file system.
-/// Contains an entry, and a URL for the file in which the entry is stored.
-struct TextFile: Identifiable, Hashable, Equatable {
-    var id: URL { url }
+/// A SubtextDocument together with a location for that document
+struct TextFile: Hashable, Equatable, Identifiable {
     var url: URL
-    var title: String
     var content: String
- 
-    /// Basic initializer
+    var id: URL { url }
+    var title: String { url.stem }
+
     init(
         url: URL,
         content: String
     ) {
+        // Absolutize URL in order to allow it to function as an ID
         self.url = url.absoluteURL
-        self.title = url.stem
         self.content = content
     }
 
-    /// File initializer
+    /// Open existing document
     init(url: URL) throws {
-        self.url = url
-        self.title = url.stem
+        // Absolutize URL in order to allow it to function as an ID
+        self.url = url.absoluteURL
         self.content = try String(contentsOf: url, encoding: .utf8)
     }
 
@@ -39,9 +35,4 @@ struct TextFile: Identifiable, Hashable, Equatable {
             encoding: .utf8
         )
     }
-}
-
-struct TextFileResults: Equatable {
-    var entry: TextFile? = nil
-    var backlinks: [TextFile] = []
 }

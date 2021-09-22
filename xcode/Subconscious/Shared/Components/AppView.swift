@@ -90,14 +90,14 @@ struct AppModel: Updatable {
     var query = ""
     var editor: EditorModel = EditorModel.empty
     var entryURL: URL?
-    var backlinks: [SubtextDocumentLocation] = []
+    var backlinks: [TextFile] = []
 
     //  MARK: Update
     func update(action: AppAction) -> (Self, AnyPublisher<AppAction, Never>) {
         switch action {
         case .appear:
             AppEnvironment.logger.debug(
-                "Documents\t\(AppEnvironment.documentURL)"
+                "Documents: \(AppEnvironment.documentURL)"
             )
             let fx = AppEnvironment.database.migrate().map({ success in
                 AppAction.databaseReady(success)
@@ -119,7 +119,7 @@ struct AppModel: Updatable {
             ).eraseToAnyPublisher()
             if success.from != success.to {
                 AppEnvironment.logger.log(
-                    "Migrated database\t\(success.from)->\(success.to)"
+                    "Migrated database: \(success.from)->\(success.to)"
                 )
             }
             AppEnvironment.logger.log("File sync started")
@@ -140,17 +140,17 @@ struct AppModel: Updatable {
             return (self, fx)
         case let .rebuildDatabaseFailure(error):
             AppEnvironment.logger.warning(
-                "Could not rebuild database.\t\(error)"
+                "Could not rebuild database: \(error)"
             )
             return (self, Empty().eraseToAnyPublisher())
         case let .syncSuccess(changes):
             AppEnvironment.logger.debug(
-                "File sync finished\t\(changes)"
+                "File sync finished: \(changes)"
             )
             return (self, Empty().eraseToAnyPublisher())
         case let .syncFailure(message):
             AppEnvironment.logger.warning(
-                "File sync failed.\t\(message)"
+                "File sync failed: \(message)"
             )
             return (self, Empty().eraseToAnyPublisher())
         case var .setEditor(editor):
@@ -186,7 +186,7 @@ struct AppModel: Updatable {
             return (model, Empty().eraseToAnyPublisher())
         case let .suggestionsFailure(message):
             AppEnvironment.logger.debug(
-                "Suggest failed\t\(message)"
+                "Suggest failed: \(message)"
             )
             return (self, Empty().eraseToAnyPublisher())
         case let .commitSearch(query):
@@ -219,7 +219,7 @@ struct AppModel: Updatable {
             model.entryURL = entryURL ?? AppEnvironment.database.findUniqueURL(
                 name: query
             )
-            let entryContent = results.entry?.document.content
+            let entryContent = results.entry?.content
             model.editor = EditorModel(
                 markup: entryContent ?? self.query
             )
@@ -227,7 +227,7 @@ struct AppModel: Updatable {
             return (model, Empty().eraseToAnyPublisher())
         case let .detailFailure(message):
             AppEnvironment.logger.log(
-                "Failed to get details for search.\t\(message)"
+                "Failed to get details for search: \(message)"
             )
             return (self, Empty().eraseToAnyPublisher())
         case .save:
@@ -256,7 +256,7 @@ struct AppModel: Updatable {
             }
         case let .saveSuccess(url):
             AppEnvironment.logger.debug(
-                "Saved entry\t\(url)"
+                "Saved entry \(url)"
             )
             return (self, Empty().eraseToAnyPublisher())
         case let .saveFailure(url, message):
