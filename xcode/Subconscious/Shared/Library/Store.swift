@@ -10,29 +10,11 @@ import Combine
 import SwiftUI
 import os
 
-/// A shorthand for Combine Publisher effect signature. We'll be typing this often.
-typealias Effect<Action> = AnyPublisher<Action, Never>
-
-/// An Updatable is a type that knows how to create a new instance of itself in response
-/// to being passed an action.
+/// An Updatable is a type that knows how create updates and effects in response to actions.
+/// Effects are Combine Publishers that produce Actions and never fail.
 protocol Updatable {
     associatedtype Action
-    mutating func update(action: Action)
-}
-
-/// An Effectable is a type that knows how to create an `Effect` (Combine Publisher) in response
-/// to an `Action` sent to `effect`.
-protocol Effectable {
-    associatedtype Action
-    func effect(action: Action) -> Effect<Action>
-}
-
-/// A model that knows how to:
-/// - Update itself in response to actions
-/// - Generate effects (Combine publishers) in response to actions
-/// Typically, you conform to Modelable with a simple struct that is used to model app state.
-protocol Modelable: Updatable, Effectable {
-    
+    func update(action: Action) -> (Self, AnyPublisher<Action, Never>)
 }
 
 /// Store is a source of truth for a central state.
@@ -40,7 +22,7 @@ protocol Modelable: Updatable, Effectable {
 /// Store is an `ObservableObject`. You use it in a view via `@ObservedObject`
 /// or `@StateObject` to power view rendering.
 ///
-/// Store has a `@Published` `state` that conforms to`Modelable` (typically a struct).
+/// Store has a `@Published` `state` that conforms to`Updatable` (typically a struct).
 /// All updates and effects to this state happen through actions sent to `store.send`.
 ///
 /// Store is meant to be used as part of a single app-wide, or major-view-wide component.
@@ -62,7 +44,7 @@ protocol Modelable: Updatable, Effectable {
 /// See https://guide.elm-lang.org/webapps/structure.html
 /// for more about this philosophy.
 final class Store<Model>: ObservableObject
-where Model: Modelable
+where Model: Updatable
 {
     /// Logger, used when in debug mode
     private(set) var logger: Logger
@@ -101,24 +83,26 @@ where Model: Modelable
     /// Send an action to the store to update state and generate effects.
     /// Any effects generated are fed back into the store.
     func send(action: Model.Action) {
-        // Generate effect before mutating state.
-        // This gives effect access to previous value.
-        let effect = state.effect(action: action)
-        // Then mutate model
-        state.update(action: action)
+        // Generate next state and effect
+        let (next, effect) = state.update(action: action)
         if debug {
             let actionString = String(reflecting: action)
-            let stateString = String(reflecting: self.state)
+            let previousStateString = String(reflecting: self.state)
+            let nextStateString = String(reflecting: next)
             let effectString = String(reflecting: effect)
             logger.debug(
                 """
                 [send]
                 Action: \(actionString)
-                State: \(stateString)
+                Previous State: \(previousStateString)
+                Next State: \(nextStateString)
                 Effect: \(effectString)
                 """
             )
         }
+        // Set state. This mutates published property, firing objectWillChange.
+        self.state = next
+        // Run effect
         cancellables.sink(
             publisher: effect.receive(
                 on: DispatchQueue.main,
