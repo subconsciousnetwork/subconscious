@@ -43,7 +43,7 @@ struct AppNavigationView: View {
                     ),
                     destination: {
                         VStack {
-                            if store.state.isDetailLoading {
+                            if store.state.entryURL == nil {
                                 VStack {
                                     Spacer()
                                     ProgressView()

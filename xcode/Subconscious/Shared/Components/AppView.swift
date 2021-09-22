@@ -83,7 +83,6 @@ struct EditorModel: Equatable {
 struct AppModel: Updatable {
     var isDatabaseReady = false
     var isDetailShowing = false
-    var isDetailLoading = true
     var isSearchBarFocused = false
     var searchBarText = ""
     var suggestions: [Suggestion] = []
@@ -192,11 +191,11 @@ struct AppModel: Updatable {
         case let .commitSearch(query):
             var model = self
             model.query = query
+            model.entryURL = nil
             model.editor = EditorModel.empty
             model.searchBarText = ""
             model.isSearchBarFocused = false
             model.isDetailShowing = true
-            model.isDetailLoading = true
 
             let suggest = Just(AppAction.setSearch(""))
             let search = AppEnvironment.database.search(
@@ -223,7 +222,6 @@ struct AppModel: Updatable {
             model.editor = EditorModel(
                 markup: entryContent ?? self.query
             )
-            model.isDetailLoading = false
             return (model, Empty().eraseToAnyPublisher())
         case let .detailFailure(message):
             AppEnvironment.logger.log(
@@ -250,7 +248,10 @@ struct AppModel: Updatable {
                 return (model, fx)
             } else {
                 AppEnvironment.logger.warning(
-                    "Could not save. No URL for entry."
+                    """
+                    Could not save. No URL set for entry.
+                    It should not be possible to reach this state.
+                    """
                 )
                 return (model, Empty().eraseToAnyPublisher())
             }
@@ -260,6 +261,7 @@ struct AppModel: Updatable {
             )
             return (self, Empty().eraseToAnyPublisher())
         case let .saveFailure(url, message):
+            //  TODO: show user a "try again" banner
             AppEnvironment.logger.warning(
                 "Save failed for entry (\(url)) with error: \(message)"
             )
