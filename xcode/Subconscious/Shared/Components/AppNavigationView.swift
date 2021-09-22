@@ -56,6 +56,9 @@ struct AppNavigationView: View {
                                         tag: AppAction.setEditor
                                     ),
                                     backlinks: store.state.backlinks,
+                                    onDone: {
+                                        store.send(action: .save)
+                                    },
                                     onActivateBacklink: { query in
                                         store.send(
                                             action: .commitSearch(query)

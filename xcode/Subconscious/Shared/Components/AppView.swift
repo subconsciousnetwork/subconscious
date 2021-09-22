@@ -28,6 +28,11 @@ enum AppAction {
     case setDetailShowing(Bool)
     case setEditor(EditorModel)
     case save
+    case saveSuccess(URL)
+    case saveFailure(
+        url: URL,
+        message: String
+    )
 }
 
 struct EditorModel: Equatable {
@@ -84,7 +89,7 @@ struct AppModel: Updatable {
     var suggestions: [Suggestion] = []
     var query = ""
     var editor: EditorModel = EditorModel.empty
-    var entry: SubtextDocumentLocation?
+    var entryURL: URL?
     var backlinks: [SubtextDocumentLocation] = []
 
     //  MARK: Update
@@ -94,30 +99,27 @@ struct AppModel: Updatable {
             AppEnvironment.logger.debug(
                 "Documents\t\(AppEnvironment.documentURL)"
             )
-            let fx = AppEnvironment.database.migrate()
-                .map({ success in
-                    AppAction.databaseReady(success)
-                })
-                .catch({ _ in
-                    Just(AppAction.rebuildDatabase)
-                })
-                .eraseToAnyPublisher()
+            let fx = AppEnvironment.database.migrate().map({ success in
+                AppAction.databaseReady(success)
+            }).catch({ _ in
+                Just(AppAction.rebuildDatabase)
+            }).eraseToAnyPublisher()
             return (self, fx)
         case let .databaseReady(success):
             var model = self
             model.isDatabaseReady = true
-            let sync = AppEnvironment.database.syncDatabase()
-                .map({ changes in AppAction.syncSuccess(changes) })
-                .catch({ error in
-                    Just(.syncFailure(error.localizedDescription))
-                })
+            let sync = AppEnvironment.database.syncDatabase().map({ changes in
+                AppAction.syncSuccess(changes)
+            }).catch({ error in
+                Just(.syncFailure(error.localizedDescription))
+            })
             let suggestions = Just(AppAction.setSearch(""))
-            let fx = Publishers.Merge(suggestions, sync).eraseToAnyPublisher()
+            let fx = Publishers.Merge(
+                suggestions, sync
+            ).eraseToAnyPublisher()
             if success.from != success.to {
                 AppEnvironment.logger.log(
-                    """
-                    Migrated database\t\(success.from)->\(success.to)
-                    """
+                    "Migrated database\t\(success.from)->\(success.to)"
                 )
             }
             AppEnvironment.logger.log("File sync started")
@@ -126,19 +128,15 @@ struct AppModel: Updatable {
             AppEnvironment.logger.warning(
                 "Database is broken or has wrong schema. Attempting to rebuild."
             )
-            let fx = AppEnvironment.database.delete()
-                .flatMap({ _ in
-                    AppEnvironment.database.migrate()
-                })
-                .map({ success in
-                    AppAction.databaseReady(success)
-                })
-                .catch({ error in
-                    Just(AppAction.rebuildDatabaseFailure(
-                        error.localizedDescription)
-                    )
-                })
-                .eraseToAnyPublisher()
+            let fx = AppEnvironment.database.delete().flatMap({ _ in
+                AppEnvironment.database.migrate()
+            }).map({ success in
+                AppAction.databaseReady(success)
+            }).catch({ error in
+                Just(AppAction.rebuildDatabaseFailure(
+                    error.localizedDescription)
+                )
+            }).eraseToAnyPublisher()
             return (self, fx)
         case let .rebuildDatabaseFailure(error):
             AppEnvironment.logger.warning(
@@ -174,14 +172,13 @@ struct AppModel: Updatable {
         case let .setSearch(text):
             var model = self
             model.searchBarText = text
-            let fx = AppEnvironment.database.searchSuggestions(query: text)
-                .map({ suggestions in
-                    AppAction.setSuggestions(suggestions)
-                })
-                .catch({ error in
-                    Just(.suggestionsFailure(error.localizedDescription))
-                })
-                .eraseToAnyPublisher()
+            let fx = AppEnvironment.database.searchSuggestions(
+                query: text
+            ).map({ suggestions in
+                AppAction.setSuggestions(suggestions)
+            }).catch({ error in
+                Just(.suggestionsFailure(error.localizedDescription))
+            }).eraseToAnyPublisher()
             return (model, fx)
         case let .setSuggestions(suggestions):
             var model = self
@@ -202,13 +199,13 @@ struct AppModel: Updatable {
             model.isDetailLoading = true
 
             let suggest = Just(AppAction.setSearch(""))
-            let search = AppEnvironment.database.search(query: query)
-                .map({ results in
-                    AppAction.setDetail(results)
-                })
-                .catch({ error in
-                    Just(AppAction.detailFailure(error.localizedDescription))
-                })
+            let search = AppEnvironment.database.search(
+                query: query
+            ).map({ results in
+                AppAction.setDetail(results)
+            }).catch({ error in
+                Just(AppAction.detailFailure(error.localizedDescription))
+            })
             let fx = Publishers.Merge(
                 suggest,
                 search
@@ -217,13 +214,14 @@ struct AppModel: Updatable {
             return (model, fx)
         case let .setDetail(results):
             var model = self
-            model.entry = results.entry ?? SubtextDocumentLocation.new(
-                directory: AppEnvironment.documentURL,
-                document: SubtextDocument(title: query, content: query)
-            )
             model.backlinks = results.backlinks
+            let entryURL = results.entry?.url
+            model.entryURL = entryURL ?? AppEnvironment.database.findUniqueURL(
+                name: query
+            )
+            let entryContent = results.entry?.document.content
             model.editor = EditorModel(
-                markup: results.entry?.document.content ?? self.query
+                markup: entryContent ?? self.query
             )
             model.isDetailLoading = false
             return (model, Empty().eraseToAnyPublisher())
@@ -234,9 +232,38 @@ struct AppModel: Updatable {
             return (self, Empty().eraseToAnyPublisher())
         case .save:
             var model = self
-            model.entry?.document.content = model.editor.attributedText.string
             model.editor.isFocused = false
-            return (model, Empty().eraseToAnyPublisher())
+            if let entryURL = self.entryURL {
+                let fx = AppEnvironment.database.writeEntry(
+                    url: entryURL,
+                    content: model.editor.attributedText.string
+                ).map({ _ in
+                    AppAction.saveSuccess(entryURL)
+                }).catch({ error in
+                    Just(
+                        AppAction.saveFailure(
+                            url: entryURL,
+                            message: error.localizedDescription
+                        )
+                    )
+                }).eraseToAnyPublisher()
+                return (model, fx)
+            } else {
+                AppEnvironment.logger.warning(
+                    "Could not save. No URL for entry."
+                )
+                return (model, Empty().eraseToAnyPublisher())
+            }
+        case let .saveSuccess(url):
+            AppEnvironment.logger.debug(
+                "Saved entry\t\(url)"
+            )
+            return (self, Empty().eraseToAnyPublisher())
+        case let .saveFailure(url, message):
+            AppEnvironment.logger.warning(
+                "Save failed for entry (\(url)) with error: \(message)"
+            )
+            return (self, Empty().eraseToAnyPublisher())
         }
     }
 }

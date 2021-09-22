@@ -10,6 +10,7 @@ import SwiftUI
 struct DetailView: View {
     @Binding var editor: EditorModel
     var backlinks: [SubtextDocumentLocation]
+    var onDone: () -> Void
     var onActivateBacklink: (String) -> Void
 
     var body: some View {
@@ -49,9 +50,7 @@ struct DetailView: View {
             ToolbarItem(placement: .confirmationAction) {
                 if editor.isFocused {
                     Button(
-                        action: {
-                            editor.isFocused = false
-                        },
+                        action: onDone,
                         label: {
                             Text("Done")
                         }
