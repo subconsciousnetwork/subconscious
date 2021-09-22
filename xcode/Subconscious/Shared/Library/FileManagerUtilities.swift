@@ -29,7 +29,7 @@ extension FileManager {
     /// Get a unique versioned filename for file, given a base URL, name, extension.
     /// Increments version until it finds a unique filename.
     /// - Returns: URL
-    func findUniqueFilename(
+    func findUniqueURL(
         at url: URL,
         name: String,
         ext: String,
@@ -48,7 +48,7 @@ extension FileManager {
             version: version
         ) {
             if self.fileExists(atURL: versionedURL) {
-                return findUniqueFilename(
+                return findUniqueURL(
                     at: url,
                     name: name,
                     ext: ext,
