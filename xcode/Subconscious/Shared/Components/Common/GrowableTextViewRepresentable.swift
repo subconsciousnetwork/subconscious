@@ -43,6 +43,16 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
             )
         }
 
+        /// Handle link taps
+        func textView(
+            _ textView: UITextView,
+            shouldInteractWith url: URL,
+            in characterRange: NSRange,
+            interaction: UITextItemInteraction
+        ) -> Bool {
+            representable.onLink(url, interaction)
+        }
+
         /// Handle changes to textview
         func textViewDidChange(_ view: UITextView) {
             representable.attributedText = view.attributedText
@@ -73,6 +83,14 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
         return true
     }
 
+    /// Default handler for link clicks. Always defers to OS-level handler.
+    private static func onLinkDefault(
+        url: URL,
+        interaction: UITextItemInteraction
+    ) -> Bool {
+        return true
+    }
+
     @Binding var attributedText: NSAttributedString
     @Binding var isFocused: Bool
     @Binding var selection: NSRange
@@ -82,6 +100,7 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
     ) -> Bool = shouldChangeDefault
     /// Fixed width of textview container, needed to determine textview height.
     /// Use `GeometryView` to find container width.
+    var onLink: (URL, UITextItemInteraction) -> Bool = onLinkDefault
     var fixedWidth: CGFloat
     var font: UIFont = UIFont.preferredFont(forTextStyle: .body)
     var textColor: UIColor = UIColor(.primary)

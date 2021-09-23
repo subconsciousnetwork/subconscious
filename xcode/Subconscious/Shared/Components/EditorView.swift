@@ -10,6 +10,7 @@ import Combine
 
 struct EditorView: View {
     @Binding var editor: EditorModel
+    var onLink: (URL, UITextItemInteraction) -> Bool
     var size: CGSize
 
     var body: some View {
@@ -17,6 +18,7 @@ struct EditorView: View {
             attributedText: $editor.attributedText,
             isFocused: $editor.isFocused,
             selection: $editor.selection,
+            onLink: onLink,
             fixedWidth: size.width
         )
         .insets(

@@ -11,6 +11,7 @@ struct DetailView: View {
     @Binding var editor: EditorModel
     var backlinks: [TextFile]
     var onDone: () -> Void
+    var onLink: (URL, UITextItemInteraction) -> Bool
     var onActivateBacklink: (String) -> Void
 
     var body: some View {
@@ -20,6 +21,7 @@ struct DetailView: View {
                     VStack {
                         EditorView(
                             editor: $editor,
+                            onLink: onLink,
                             size: CGSize(
                                 width: geometry.size.width,
                                 height: (

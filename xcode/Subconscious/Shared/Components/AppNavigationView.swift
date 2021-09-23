@@ -59,6 +59,15 @@ struct AppNavigationView: View {
                                     onDone: {
                                         store.send(action: .save)
                                     },
+                                    onLink: { url, interaction in
+                                        if let query = Subtext3.urlToWikilink(url) {
+                                            store.send(
+                                                action: .commitSearch(query)
+                                            )
+                                            return false
+                                        }
+                                        return true
+                                    },
                                     onActivateBacklink: { query in
                                         store.send(
                                             action: .commitSearch(query)
