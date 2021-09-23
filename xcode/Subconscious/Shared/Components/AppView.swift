@@ -12,7 +12,9 @@ import Combine
 //  MARK: Actions
 /// Actions for modifying state
 enum AppAction {
+    case noop
     case appear
+    case openURL(URL)
     case databaseReady(SQLite3Migrations.MigrationSuccess)
     case rebuildDatabase
     case rebuildDatabaseFailure(String)
@@ -94,6 +96,8 @@ struct AppModel: Updatable {
     //  MARK: Update
     func update(action: AppAction) -> (Self, AnyPublisher<AppAction, Never>) {
         switch action {
+        case .noop:
+            return (self, Empty().eraseToAnyPublisher())
         case .appear:
             AppEnvironment.logger.debug(
                 "Documents: \(AppEnvironment.documentURL)"
@@ -104,6 +108,39 @@ struct AppModel: Updatable {
                 Just(AppAction.rebuildDatabase)
             }).eraseToAnyPublisher()
             return (self, fx)
+        case let .openURL(url):
+            // Don't follow links while editing.
+            // We don't want to follow a link in the middle of an edit
+            // and lose changes.
+            //
+            // Other approaches we could take in future:
+            // - Save before following
+            // - Have a disclosure step before following (like Google Docs)
+            // For now, I think this is the best approach.
+            //
+            // 2021-09-23 Gordon Brander
+            if self.editor.isFocused {
+                return (self, Empty().eraseToAnyPublisher())
+            } else {
+                if let query = Subtext3.urlToWikilink(
+                    url
+                ) {
+                    // If this is a Subtext URL, then commit a search for the
+                    // corresponding query
+                    let fx = Just(
+                        AppAction.commitSearch(query)
+                    ).eraseToAnyPublisher()
+                    return (self, fx)
+                } else {
+                    // Otherwise open the URL using the shared system
+                    // open function.
+                    let fx = Deferred<Just<AppAction>>(createPublisher: {
+                        UIApplication.shared.open(url)
+                        return Just(.noop)
+                    }).eraseToAnyPublisher()
+                    return (self, fx)
+                }
+            }
         case let .databaseReady(success):
             var model = self
             model.isDatabaseReady = true
@@ -288,11 +325,8 @@ struct AppView: View {
             store.send(action: .appear)
         }
         .environment(\.openURL, OpenURLAction { url in
-            if let query = Subtext3.urlToWikilink(url) {
-                store.send(action: .commitSearch(query))
-                return .handled
-            }
-            return .systemAction
+            store.send(action: .openURL(url))
+            return .handled
         })
     }
 }
