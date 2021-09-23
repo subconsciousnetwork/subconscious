@@ -59,8 +59,13 @@ struct AppNavigationView: View {
                                     onDone: {
                                         store.send(action: .save)
                                     },
-                                    onLink: { url, interaction in
-                                        store.send(action: .openURL(url))
+                                    onEditorLink: { url, _, range, interaction in
+                                        store.send(
+                                            action: .openEditorURL(
+                                                url: url,
+                                                range: range
+                                            )
+                                        )
                                         return false
                                     },
                                     onActivateBacklink: { query in

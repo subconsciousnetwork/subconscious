@@ -50,7 +50,12 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
             in characterRange: NSRange,
             interaction: UITextItemInteraction
         ) -> Bool {
-            representable.onLink(url, interaction)
+            representable.onLink(
+                url,
+                textView.attributedText,
+                characterRange,
+                interaction
+            )
         }
 
         /// Handle changes to textview
@@ -86,6 +91,8 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
     /// Default handler for link clicks. Always defers to OS-level handler.
     private static func onLinkDefault(
         url: URL,
+        attributedText: NSAttributedString,
+        in characterRange: NSRange,
         interaction: UITextItemInteraction
     ) -> Bool {
         return true
@@ -100,7 +107,12 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
     ) -> Bool = shouldChangeDefault
     /// Fixed width of textview container, needed to determine textview height.
     /// Use `GeometryView` to find container width.
-    var onLink: (URL, UITextItemInteraction) -> Bool = onLinkDefault
+    var onLink: (
+        URL,
+        NSAttributedString,
+        NSRange,
+        UITextItemInteraction
+    ) -> Bool = onLinkDefault
     var fixedWidth: CGFloat
     var font: UIFont = UIFont.preferredFont(forTextStyle: .body)
     var textColor: UIColor = UIColor(.primary)

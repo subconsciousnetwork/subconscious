@@ -10,7 +10,12 @@ import Combine
 
 struct EditorView: View {
     @Binding var editor: EditorModel
-    var onLink: (URL, UITextItemInteraction) -> Bool
+    var onLink: (
+        URL,
+        NSAttributedString,
+        NSRange,
+        UITextItemInteraction
+    ) -> Bool
     var size: CGSize
 
     var body: some View {

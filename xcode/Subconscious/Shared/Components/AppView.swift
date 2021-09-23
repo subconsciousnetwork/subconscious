@@ -15,6 +15,7 @@ enum AppAction {
     case noop
     case appear
     case openURL(URL)
+    case openEditorURL(url: URL, range: NSRange)
     case databaseReady(SQLite3Migrations.MigrationSuccess)
     case rebuildDatabase
     case rebuildDatabaseFailure(String)
@@ -29,6 +30,7 @@ enum AppAction {
     case detailFailure(String)
     case setDetailShowing(Bool)
     case setEditor(EditorModel)
+    case setEditorSelection(NSRange)
     case save
     case saveSuccess(URL)
     case saveFailure(
@@ -109,9 +111,17 @@ struct AppModel: Updatable {
             }).eraseToAnyPublisher()
             return (self, fx)
         case let .openURL(url):
-            // Don't follow links while editing.
-            // We don't want to follow a link in the middle of an edit
-            // and lose changes.
+            let fx = Deferred<Just<AppAction>>(createPublisher: {
+                UIApplication.shared.open(url)
+                return Just(.noop)
+            }).eraseToAnyPublisher()
+            return (self, fx)
+        case let .openEditorURL(url, range):
+            // Don't follow links while editing. Instead, select the link.
+            //
+            // When editing, you usually don't want to follow a link, you
+            // want to tap into it to edit it. Also, we don't want to follow a
+            // link in the middle of an edit and lose changes.
             //
             // Other approaches we could take in future:
             // - Save before following
@@ -120,7 +130,10 @@ struct AppModel: Updatable {
             //
             // 2021-09-23 Gordon Brander
             if self.editor.isFocused {
-                return (self, Empty().eraseToAnyPublisher())
+                let fx = Just(
+                    AppAction.setEditorSelection(range)
+                ).eraseToAnyPublisher()
+                return (self, fx)
             } else {
                 if let query = Subtext3.urlToWikilink(
                     url
@@ -195,6 +208,15 @@ struct AppModel: Updatable {
             if !self.editor.attributedText.isEqual(to: editor.attributedText) {
                 editor.render()
             }
+            model.editor = editor
+            return (model, Empty().eraseToAnyPublisher())
+        case let .setEditorSelection(range):
+            var model = self
+            let editor = EditorModel(
+                attributedText: model.editor.attributedText,
+                isFocused: model.editor.isFocused,
+                selection: range
+            )
             model.editor = editor
             return (model, Empty().eraseToAnyPublisher())
         case let .setDetailShowing(isShowing):
