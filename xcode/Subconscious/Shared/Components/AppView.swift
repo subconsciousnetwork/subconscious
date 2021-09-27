@@ -29,58 +29,15 @@ enum AppAction {
     case setDetail(ResultSet)
     case detailFailure(String)
     case setDetailShowing(Bool)
-    case setEditor(EditorModel)
+    case setEditorAttributedText(NSAttributedString)
     case setEditorSelection(NSRange)
+    case setEditorFocus(Bool)
     case save
     case saveSuccess(URL)
     case saveFailure(
         url: URL,
         message: String
     )
-}
-
-struct EditorModel: Equatable {
-    var attributedText: NSAttributedString
-    var isFocused: Bool
-    var selection: NSRange
-
-    init(
-        markup: String,
-        isFocused: Bool = false,
-        selection: NSRange = NSMakeRange(0, 0)
-    ) {
-        let dom = Subtext3(markup)
-        self.attributedText = dom.renderMarkup(
-            url: { text in
-                Subtext3.wikilinkToURLString(text)
-            }
-        )
-        self.isFocused = isFocused
-        self.selection = selection
-    }
-
-    init(
-        attributedText: NSAttributedString = NSAttributedString(""),
-        isFocused: Bool = false,
-        selection: NSRange = NSMakeRange(0, 0)
-    ) {
-        self.attributedText = attributedText
-        self.isFocused = isFocused
-        self.selection = selection
-    }
-
-    /// Render attributes based on markup
-    mutating func render() {
-        let dom = Subtext3(self.attributedText.string)
-        self.attributedText = dom.renderMarkup(
-            url: { text in
-                Subtext3.wikilinkToURLString(text)
-            }
-        )
-    }
-
-    // Empty state
-    static let empty = EditorModel()
 }
 
 //  MARK: Model
@@ -91,9 +48,24 @@ struct AppModel: Updatable {
     var searchBarText = ""
     var suggestions: [Suggestion] = []
     var query = ""
-    var editor: EditorModel = EditorModel.empty
+    var editorAttributedText = NSAttributedString("")
+    var editorSelection = NSMakeRange(0, 0)
+    var isEditorFocused = false
     var entryURL: URL?
     var backlinks: [TextFile] = []
+
+    // Set all editor properties to initial values
+    static func resetEditor(_ model: inout Self) {
+        model.editorAttributedText = NSAttributedString("")
+        model.editorSelection = NSMakeRange(0, 0)
+        model.isEditorFocused = false
+    }
+
+    static func renderMarkup(
+        _ markup: String
+    ) -> NSAttributedString {
+        Subtext3(markup).renderMarkup(url: Subtext3.wikilinkToURLString)
+    }
 
     //  MARK: Update
     func update(action: AppAction) -> (Self, AnyPublisher<AppAction, Never>) {
@@ -129,7 +101,7 @@ struct AppModel: Updatable {
             // For now, I think this is the best approach.
             //
             // 2021-09-23 Gordon Brander
-            if self.editor.isFocused {
+            if self.isEditorFocused {
                 let fx = Just(
                     AppAction.setEditorSelection(range)
                 ).eraseToAnyPublisher()
@@ -202,22 +174,24 @@ struct AppModel: Updatable {
                 "File sync failed: \(message)"
             )
             return (self, Empty().eraseToAnyPublisher())
-        case var .setEditor(editor):
+        case let .setEditorAttributedText(attributedText):
             var model = self
             // Render attributes from markup if text has changed
-            if !self.editor.attributedText.isEqual(to: editor.attributedText) {
-                editor.render()
+            if !self.editorAttributedText.isEqual(to: attributedText) {
+                // Rerender attributes from markup, then assign to
+                // model.
+                model.editorAttributedText = Self.renderMarkup(
+                    attributedText.string
+                )
             }
-            model.editor = editor
             return (model, Empty().eraseToAnyPublisher())
         case let .setEditorSelection(range):
             var model = self
-            let editor = EditorModel(
-                attributedText: model.editor.attributedText,
-                isFocused: model.editor.isFocused,
-                selection: range
-            )
-            model.editor = editor
+            model.editorSelection = range
+            return (model, Empty().eraseToAnyPublisher())
+        case let .setEditorFocus(isFocused):
+            var model = self
+            model.isEditorFocused = isFocused
             return (model, Empty().eraseToAnyPublisher())
         case let .setDetailShowing(isShowing):
             var model = self
@@ -249,9 +223,9 @@ struct AppModel: Updatable {
             return (self, Empty().eraseToAnyPublisher())
         case let .commitSearch(query):
             var model = self
+            Self.resetEditor(&model)
             model.query = query
             model.entryURL = nil
-            model.editor = EditorModel.empty
             model.searchBarText = ""
             model.isSearchBarFocused = false
             model.isDetailShowing = true
@@ -278,8 +252,8 @@ struct AppModel: Updatable {
                 name: query
             )
             let entryContent = results.entry?.content
-            model.editor = EditorModel(
-                markup: entryContent ?? self.query
+            model.editorAttributedText = Self.renderMarkup(
+                entryContent ?? self.query
             )
             return (model, Empty().eraseToAnyPublisher())
         case let .detailFailure(message):
@@ -289,11 +263,11 @@ struct AppModel: Updatable {
             return (self, Empty().eraseToAnyPublisher())
         case .save:
             var model = self
-            model.editor.isFocused = false
+            model.isEditorFocused = false
             if let entryURL = self.entryURL {
                 let fx = AppEnvironment.database.writeEntry(
                     url: entryURL,
-                    content: model.editor.attributedText.string
+                    content: model.editorAttributedText.string
                 ).map({ _ in
                     AppAction.saveSuccess(entryURL)
                 }).catch({ error in

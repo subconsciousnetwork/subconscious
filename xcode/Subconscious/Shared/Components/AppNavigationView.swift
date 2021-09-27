@@ -57,9 +57,24 @@ struct AppNavigationView: View {
                                 }
                             } else {
                                 DetailView(
-                                    editor: store.binding(
-                                        get: \.editor,
-                                        tag: AppAction.setEditor
+                                    editorAttributedText: store.binding(
+                                        get: { state in
+                                            state.editorAttributedText
+                                        },
+                                        tag: AppAction.setEditorAttributedText
+                                    ),
+                                    isEditorFocused: store.binding(
+                                        get: { state in
+                                            state.isEditorFocused
+                                        },
+                                        tag: AppAction.setEditorFocus,
+                                        animation: .easeOut(
+                                            duration: Duration.normal
+                                        )
+                                    ),
+                                    editorSelection: store.binding(
+                                        get: { state in state.editorSelection },
+                                        tag: AppAction.setEditorSelection
                                     ),
                                     backlinks: store.state.backlinks,
                                     onDone: {

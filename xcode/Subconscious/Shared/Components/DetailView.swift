@@ -8,7 +8,9 @@
 import SwiftUI
 
 struct DetailView: View {
-    @Binding var editor: EditorModel
+    @Binding var editorAttributedText: NSAttributedString
+    @Binding var isEditorFocused: Bool
+    @Binding var editorSelection: NSRange
     var backlinks: [TextFile]
     var onDone: () -> Void
     var onEditorLink: (
@@ -24,19 +26,22 @@ struct DetailView: View {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack(spacing: 0) {
-                        EditorView(
-                            editor: $editor,
+                        GrowableTextViewRepresentable(
+                            attributedText: $editorAttributedText,
+                            isFocused: $isEditorFocused,
+                            selection: $editorSelection,
                             onLink: onEditorLink,
-                            size: CGSize(
-                                width: geometry.size.width,
-                                height: (
-                                    geometry.size.height -
-                                    AppTheme.icon -
-                                    (AppTheme.tightPadding * 2) -
-                                    (AppTheme.unit4)
-                                )
+                            fixedWidth: geometry.size.width
+                        )
+                        .insets(
+                            EdgeInsets(
+                                top: AppTheme.padding,
+                                leading: AppTheme.padding,
+                                bottom: AppTheme.padding,
+                                trailing: AppTheme.padding
                             )
                         )
+                        .frame(minHeight: geometry.size.height)
                         Divider()
                         BacklinksView(
                             backlinks: backlinks,
@@ -44,18 +49,17 @@ struct DetailView: View {
                         )
                     }
                 }
-                if editor.isFocused {
+                if isEditorFocused {
                     KeyboardToolbarView(
                         suggestion: "An organism is a living system maintaining both a higher level of internal cooperation"
                     )
-                    .transition(.move(edge: .bottom))
-                    .animation(.default, value: editor.isFocused)
+                    .transition(.opacity)
                 }
             }
         }
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                if editor.isFocused {
+                if isEditorFocused {
                     Button(
                         action: onDone,
                         label: {
