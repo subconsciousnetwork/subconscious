@@ -13,7 +13,7 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                VStack(spacing: 0) {
+                ZStack {
                     if store.state.isSearchBarFocused {
                         SuggestionsView(
                             suggestions: store.state.suggestions,
@@ -23,17 +23,23 @@ struct AppNavigationView: View {
                                 )
                             }
                         )
+                        .transition(.opacity)
+                        .zIndex(1)
                     } else {
-                        Button(
-                            action: {
-                                store.send(
-                                    action: .setDetailShowing(true)
-                                )
-                            },
-                            label: {
-                                Text("Toggle")
-                            }
-                        )
+                        VStack {
+                            Spacer()
+                            Button(
+                                action: {
+                                    store.send(
+                                        action: .setDetailShowing(true)
+                                    )
+                                },
+                                label: {
+                                    Text("Toggle")
+                                }
+                            )
+                            Spacer()
+                        }.zIndex(0)
                     }
                 }
                 NavigationLink(
