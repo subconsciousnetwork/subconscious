@@ -165,7 +165,9 @@ extension Color {
     static let accent = SwiftUI.Color.accentColor
     static let background = SwiftUI.Color(.systemBackground)
     static let secondaryBackground = SwiftUI.Color(.secondarySystemBackground)
+    static let pressedText = text
     static let pressedBackground = secondaryBackground
+    static let disabledText = text.opacity(0.5)
 }
 
 //  MARK: Animation durations
