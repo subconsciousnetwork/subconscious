@@ -101,7 +101,8 @@ struct AppNavigationView: View {
                         ),
                         isFocused: store.binding(
                             get: { state in state.isSearchBarFocused },
-                            tag: AppAction.setSearchBarFocus
+                            tag: AppAction.setSearchBarFocus,
+                            animation: .easeOut(duration: Duration.normal)
                         ),
                         onCommit: { text in
                             store.send(action: .commitSearch(text))

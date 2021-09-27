@@ -85,12 +85,15 @@ where State: Updatable
     /// Sets send actions to the store, rather than setting values directly.
     public func binding<Value>(
         get: @escaping (State) -> Value,
-        tag: @escaping (Value) -> State.Action
+        tag: @escaping (Value) -> State.Action,
+        animation: Animation? = nil
     ) -> Binding<Value> {
         Binding(
             get: { get(self.state) },
             set: { value in
-                self.send(action: tag(value))
+                withAnimation(animation) {
+                    self.send(action: tag(value))
+                }
             }
         )
     }
