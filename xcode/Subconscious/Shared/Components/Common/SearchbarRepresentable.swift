@@ -42,9 +42,6 @@ struct SearchBarRepresentable: UIViewRepresentable {
     }
 
     private var showsCancelButton = false
-    // TODO a LocalizedStringKey would be preferrable here.
-    // Figure out how to get LocalizeStringKey to place nicely with
-    // UIViewRepresentable-wrapped UIKit views.
     var placeholder: String
     @Binding var text: String
     @Binding var isFocused: Bool
