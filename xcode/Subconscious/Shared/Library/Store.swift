@@ -83,6 +83,7 @@ where State: Updatable
 
     /// Create a binding that can update the store.
     /// Sets send actions to the store, rather than setting values directly.
+    /// Optional `animation` parameter allows you to trigger an animation for binding sets.
     public func binding<Value>(
         get: @escaping (State) -> Value,
         tag: @escaping (Value) -> State.Action,
