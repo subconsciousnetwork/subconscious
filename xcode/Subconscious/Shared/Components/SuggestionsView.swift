@@ -74,7 +74,7 @@ struct SuggestionsView: View {
                             }
                             .lineLimit(1)
                         }
-                    )
+                    ).buttonStyle(RowButtonStyle())
                     Divider()
                 }
             }
