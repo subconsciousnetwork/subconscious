@@ -23,7 +23,7 @@ struct DetailView: View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
                 ScrollView {
-                    VStack {
+                    VStack(spacing: 0) {
                         EditorView(
                             editor: $editor,
                             onLink: onEditorLink,

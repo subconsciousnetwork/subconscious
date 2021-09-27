@@ -25,14 +25,10 @@ struct BacklinksView: View {
                                 .multilineTextAlignment(.leading)
                             Spacer()
                         }
-                        .padding(AppTheme.padding)
                     }
-                )
-                .contentShape(Rectangle())
-                .cornerRadius(AppTheme.cornerRadius)
-                .background(Color.background)
+                ).buttonStyle(TranscludeButtonStyle())
             }
-        }
+        }.padding(AppTheme.padding)
     }
 }
 
