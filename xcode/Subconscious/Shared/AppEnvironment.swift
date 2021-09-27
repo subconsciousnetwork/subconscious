@@ -165,4 +165,13 @@ extension Color {
     static let accent = SwiftUI.Color.accentColor
     static let background = SwiftUI.Color(.systemBackground)
     static let secondaryBackground = SwiftUI.Color(.secondarySystemBackground)
+    static let pressedBackground = secondaryBackground
+}
+
+//  MARK: Animation durations
+typealias Duration = Double
+
+extension Duration {
+    static let fast: Double = 0.128
+    static let normal: Double = 0.2
 }
