@@ -19,11 +19,7 @@ struct RowButtonStyle: ButtonStyle {
                 Color.pressedBackground :
                 Color.background
             )
-            .foregroundColor(
-                !isEnabled ?
-                Color.disabledText :
-                (configuration.isPressed ? Color.pressedText : Color.text)
-            )
+            .foregroundColor(!isEnabled ? Color.disabledText : Color.text)
             .animation(
                 .easeOut(duration: Duration.fast),
                 value: configuration.isPressed
