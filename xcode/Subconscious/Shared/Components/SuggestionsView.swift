@@ -44,7 +44,7 @@ struct SuggestionsView: View {
                                         ).frame(
                                             width: AppTheme.icon,
                                             height: AppTheme.icon
-                                        )
+                                        ).foregroundColor(Color.icon)
                                         Text(string)
                                         Text("— Open").foregroundColor(
                                             Color.secondaryText
@@ -60,7 +60,7 @@ struct SuggestionsView: View {
                                         ).frame(
                                             width: AppTheme.icon,
                                             height: AppTheme.icon
-                                        )
+                                        ).foregroundColor(Color.icon)
                                         Text(string)
                                         Text("- Create").foregroundColor(
                                             Color.secondaryText
