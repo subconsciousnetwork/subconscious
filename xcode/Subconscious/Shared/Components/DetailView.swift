@@ -90,7 +90,7 @@ struct DetailView: View {
                     isFocused: $isLinkSearchFocused,
                     onCommit: onCommitLinkSearch
                 )
-                SuggestionsView(
+                LinkSuggestionsView(
                     suggestions: linkSuggestions,
                     action: { suggestion in
                         
