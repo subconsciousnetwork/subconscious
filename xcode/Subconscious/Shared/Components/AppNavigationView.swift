@@ -69,6 +69,26 @@ struct AppNavigationView: View {
                                         get: { state in state.editorSelection },
                                         tag: AppAction.setEditorSelection
                                     ),
+                                    isLinkSheetPresented: store.binding(
+                                        get: { state in
+                                            state.isLinkSheetPresented
+                                        },
+                                        tag: AppAction.setLinkSheetPresented
+                                    ),
+                                    isLinkSearchFocused: store.binding(
+                                        get: { state in
+                                            state.isLinkSearchFocused
+                                        },
+                                        tag: AppAction.setLinkSearchFocus
+                                    ),
+                                    linkSearchText: store.binding(
+                                        get: { state in state.linkSearchText },
+                                        tag: AppAction.setLinkSearchText
+                                    ),
+                                    linkSuggestions: store.binding(
+                                        get: { store in store.linkSuggestions },
+                                        tag: AppAction.setLinkSuggestions
+                                    ),
                                     backlinks: store.state.backlinks,
                                     onDone: {
                                         store.send(action: .save)
@@ -85,6 +105,11 @@ struct AppNavigationView: View {
                                     onActivateBacklink: { query in
                                         store.send(
                                             action: .commitSearch(query)
+                                        )
+                                    },
+                                    onCommitLinkSearch: { query in
+                                        store.send(
+                                            action: .commitLinkSearch(query)
                                         )
                                     }
                                 )

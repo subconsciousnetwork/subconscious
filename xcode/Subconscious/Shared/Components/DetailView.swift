@@ -11,6 +11,10 @@ struct DetailView: View {
     @Binding var editorAttributedText: NSAttributedString
     @Binding var isEditorFocused: Bool
     @Binding var editorSelection: NSRange
+    @Binding var isLinkSheetPresented: Bool
+    @Binding var isLinkSearchFocused: Bool
+    @Binding var linkSearchText: String
+    @Binding var linkSuggestions: [Suggestion]
     var backlinks: [TextFile]
     var onDone: () -> Void
     var onEditorLink: (
@@ -20,6 +24,7 @@ struct DetailView: View {
         UITextItemInteraction
     ) -> Bool
     var onActivateBacklink: (String) -> Void
+    var onCommitLinkSearch: (String) -> Void
 
     var body: some View {
         GeometryReader { geometry in
@@ -54,7 +59,8 @@ struct DetailView: View {
                 },
                 toolbar: {
                     KeyboardToolbarView(
-                        suggestion: "An organism is a living system maintaining both a higher level of internal cooperation"
+                        isSheetPresented: $isLinkSheetPresented,
+                        suggestions: $linkSuggestions
                     )
                 }
             )
@@ -72,6 +78,17 @@ struct DetailView: View {
                     EmptyView()
                 }
             }
+        }
+        .sheet(
+            isPresented: $isLinkSheetPresented,
+            onDismiss: {}
+        ) {
+            SearchBarRepresentable(
+                placeholder: "Search notes",
+                text: $linkSearchText,
+                isFocused: $isLinkSearchFocused,
+                onCommit: onCommitLinkSearch
+            )
         }
     }
 }
