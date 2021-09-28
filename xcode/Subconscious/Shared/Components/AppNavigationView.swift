@@ -23,23 +23,19 @@ struct AppNavigationView: View {
                                 )
                             }
                         )
-                        .transition(.opacity)
                         .zIndex(1)
                     } else {
                         VStack {
                             Spacer()
-                            Button(
-                                action: {
-                                    store.send(
-                                        action: .setDetailShowing(true)
-                                    )
-                                },
-                                label: {
-                                    Text("Toggle")
-                                }
-                            )
+                            HStack {
+                                Spacer()
+                                Text("Main (TODO)")
+                                Spacer()
+                            }
                             Spacer()
-                        }.zIndex(0)
+                        }
+                        .background(Color.secondaryBackground)
+                        .zIndex(0)
                     }
                 }
                 NavigationLink(

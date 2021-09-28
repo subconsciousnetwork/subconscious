@@ -79,6 +79,11 @@ struct SuggestionsView: View {
                 }
             }
         }
+        .background(Color.background)
+        .transition(
+            .offset(x: 0, y: 48)
+            .combined(with: .opacity)
+        )
     }
 }
 
