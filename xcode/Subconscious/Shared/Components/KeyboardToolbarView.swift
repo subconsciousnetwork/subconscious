@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct KeyboardToolbarView: View {
-    var suggestion: String
+    @Binding var isSheetPresented: Bool
+    @Binding var suggestions: [Suggestion]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -16,6 +17,7 @@ struct KeyboardToolbarView: View {
             HStack(alignment: .center, spacing: AppTheme.unit4) {
                 Button(
                     action: {
+                        isSheetPresented = true
                     },
                     label: {
                         Image(
@@ -27,13 +29,16 @@ struct KeyboardToolbarView: View {
                     }
                 )
                 Divider()
-                Button(
-                    action: {
-                    },
-                    label: {
-                        Text(suggestion).lineLimit(1)
-                    }
-                )
+                if let suggestion = suggestions.first {
+                    Button(
+                        action: {
+                        },
+                        label: {
+                            Text(suggestion.description)
+                                .lineLimit(1)
+                        }
+                    )
+                }
                 Spacer()
             }
             .frame(height: AppTheme.icon, alignment: .center)
@@ -47,7 +52,10 @@ struct KeyboardToolbarView: View {
 struct KeyboardToolbarView_Previews: PreviewProvider {
     static var previews: some View {
         KeyboardToolbarView(
-            suggestion: "An organism is a living system maintaining both a higher level of internal cooperation"
+            isSheetPresented: .constant(false),
+            suggestions: .constant([
+                .search("An organism is a living system maintaining both a higher level of internal cooperation")
+            ])
         )
     }
 }
