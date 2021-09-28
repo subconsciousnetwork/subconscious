@@ -54,46 +54,38 @@ struct AppNavigationView: View {
                             } else {
                                 DetailView(
                                     editorAttributedText: store.binding(
-                                        get: { state in
-                                            state.editorAttributedText
-                                        },
+                                        get: \.editorAttributedText,
                                         tag: AppAction.setEditorAttributedText
                                     ),
                                     isEditorFocused: store.binding(
-                                        get: { state in
-                                            state.isEditorFocused
-                                        },
+                                        get: \.isEditorFocused,
                                         tag: AppAction.setEditorFocus
                                     ),
                                     editorSelection: store.binding(
-                                        get: { state in state.editorSelection },
+                                        get: \.editorSelection,
                                         tag: AppAction.setEditorSelection
                                     ),
                                     isLinkSheetPresented: store.binding(
-                                        get: { state in
-                                            state.isLinkSheetPresented
-                                        },
+                                        get: \.isLinkSheetPresented,
                                         tag: AppAction.setLinkSheetPresented
                                     ),
                                     isLinkSearchFocused: store.binding(
-                                        get: { state in
-                                            state.isLinkSearchFocused
-                                        },
+                                        get: \.isLinkSearchFocused,
                                         tag: AppAction.setLinkSearchFocus
                                     ),
                                     linkSearchText: store.binding(
-                                        get: { state in state.linkSearchText },
+                                        get: \.linkSearchText,
                                         tag: AppAction.setLinkSearchText
                                     ),
                                     linkSuggestions: store.binding(
-                                        get: { store in store.linkSuggestions },
+                                        get: \.linkSuggestions,
                                         tag: AppAction.setLinkSuggestions
                                     ),
                                     backlinks: store.state.backlinks,
                                     onDone: {
                                         store.send(action: .save)
                                     },
-                                    onEditorLink: { url, _, range, interaction in
+                                    onEditorLink: { url, _, range, _ in
                                         store.send(
                                             action: .openEditorURL(
                                                 url: url,
@@ -129,11 +121,11 @@ struct AppNavigationView: View {
                     SearchBarRepresentable(
                         placeholder: "Search or create",
                         text: store.binding(
-                            get: { state in state.searchBarText },
+                            get: \.searchBarText,
                             tag: AppAction.setSearch
                         ),
                         isFocused: store.binding(
-                            get: { state in state.isSearchBarFocused },
+                            get: \.isSearchBarFocused,
                             tag: AppAction.setSearchBarFocus,
                             animation: .easeOut(duration: Duration.normal)
                         ),
