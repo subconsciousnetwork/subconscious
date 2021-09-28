@@ -23,8 +23,9 @@ struct DetailView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                VStack(spacing: 0) {
+            PseudoKeyboardToolbarView(
+                isKeyboardUp: isEditorFocused,
+                content: {
                     ScrollView {
                         VStack(spacing: 0) {
                             GrowableTextViewRepresentable(
@@ -50,22 +51,13 @@ struct DetailView: View {
                             )
                         }
                     }
-                }
-                .padding(.bottom, isEditorFocused ? 48 : 0)
-                VStack(spacing: 0) {
-                    Spacer()
+                },
+                toolbar: {
                     KeyboardToolbarView(
                         suggestion: "An organism is a living system maintaining both a higher level of internal cooperation"
                     )
-                    .frame(height: 48)
-                    .opacity(isEditorFocused ? 1 : 0)
-                    .offset(
-                        x: 0,
-                        y: isEditorFocused ? 0 : 48
-                    )
-                    .animation(.default, value: isEditorFocused)
                 }
-            }
+            )
         }
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
