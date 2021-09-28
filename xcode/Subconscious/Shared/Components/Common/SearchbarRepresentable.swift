@@ -41,6 +41,8 @@ struct SearchBarRepresentable: UIViewRepresentable {
         }
     }
 
+    private static func onCancelDefault() {}
+
     private var showsCancelButton = false
     var placeholder: String
     @Binding var text: String
@@ -53,7 +55,7 @@ struct SearchBarRepresentable: UIViewRepresentable {
         text: Binding<String>,
         isFocused: Binding<Bool>,
         onCommit: @escaping (String) -> Void,
-        onCancel: @escaping () -> Void
+        onCancel: @escaping () -> Void = onCancelDefault
     ) {
         self._text = text
         self._isFocused = isFocused
