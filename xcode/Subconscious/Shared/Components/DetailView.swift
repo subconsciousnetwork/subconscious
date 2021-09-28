@@ -83,20 +83,41 @@ struct DetailView: View {
             isPresented: $isLinkSheetPresented,
             onDismiss: {}
         ) {
-            VStack(spacing: 0) {
-                SearchBarRepresentable(
-                    placeholder: "Search notes",
-                    text: $linkSearchText,
-                    isFocused: $isLinkSearchFocused,
-                    onCommit: onCommitLinkSearch
-                )
-                LinkSuggestionsView(
-                    suggestions: linkSuggestions,
-                    action: { suggestion in
-                        
+            NavigationView {
+                VStack {
+                    HStack {
+                        Spacer()
+                        Text("Floop")
+                        Spacer()
                     }
-                )
-                Spacer()
+                    Spacer()
+                }
+                .searchable(text: $linkSearchText, placement: .toolbar) {
+                    ForEach(linkSuggestions, id: \.self) { suggestion in
+                        Button(action: {
+                            onCommitLinkSearch(suggestion.description)
+                        }) {
+                            Label(
+                                title: {
+                                    Text(suggestion.description).lineLimit(1)
+                                },
+                                icon: {
+                                    switch suggestion {
+                                    case .entry:
+                                        Image(systemName: "doc")
+                                    case .search:
+                                        Image(systemName: "magnifyingglass")
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+                .onSubmit(of: .search) {
+                    onCommitLinkSearch(linkSearchText)
+                }
+                .navigationTitle("Search Links")
+                .navigationBarTitleDisplayMode(.inline)
             }
         }
     }
