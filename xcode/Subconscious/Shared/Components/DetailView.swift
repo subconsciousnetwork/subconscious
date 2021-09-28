@@ -83,12 +83,21 @@ struct DetailView: View {
             isPresented: $isLinkSheetPresented,
             onDismiss: {}
         ) {
-            SearchBarRepresentable(
-                placeholder: "Search notes",
-                text: $linkSearchText,
-                isFocused: $isLinkSearchFocused,
-                onCommit: onCommitLinkSearch
-            )
+            VStack(spacing: 0) {
+                SearchBarRepresentable(
+                    placeholder: "Search notes",
+                    text: $linkSearchText,
+                    isFocused: $isLinkSearchFocused,
+                    onCommit: onCommitLinkSearch
+                )
+                SuggestionsView(
+                    suggestions: linkSuggestions,
+                    action: { suggestion in
+                        
+                    }
+                )
+                Spacer()
+            }
         }
     }
 }
