@@ -41,8 +41,6 @@
 		B82C3A7726F6B5BF00833CC8 /* StringUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */; };
 		B864598726F97B81007969E3 /* KeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B864598626F97B81007969E3 /* KeyboardToolbarView.swift */; };
 		B864598826F97B81007969E3 /* KeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B864598626F97B81007969E3 /* KeyboardToolbarView.swift */; };
-		B878C9792703AC540042DF72 /* LinkSuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B878C9782703AC540042DF72 /* LinkSuggestionsView.swift */; };
-		B878C97A2703AC540042DF72 /* LinkSuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B878C9782703AC540042DF72 /* LinkSuggestionsView.swift */; };
 		B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */; };
 		B8879EA126F90C5100A0B4FF /* AppNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */; };
 		B8879EA326F9334800A0B4FF /* Subtext3.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA226F9334800A0B4FF /* Subtext3.swift */; };
@@ -115,7 +113,6 @@
 		B82C3A7226F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrdereredDictionaryUtilities.swift; sourceTree = "<group>"; };
 		B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringUtilities.swift; sourceTree = "<group>"; };
 		B864598626F97B81007969E3 /* KeyboardToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardToolbarView.swift; sourceTree = "<group>"; };
-		B878C9782703AC540042DF72 /* LinkSuggestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkSuggestionsView.swift; sourceTree = "<group>"; };
 		B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigationView.swift; sourceTree = "<group>"; };
 		B8879EA226F9334800A0B4FF /* Subtext3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext3.swift; sourceTree = "<group>"; };
 		B8879EA526F9348600A0B4FF /* SubtextURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextURL.swift; sourceTree = "<group>"; };
@@ -268,7 +265,6 @@
 				B8879EAB26F944DA00A0B4FF /* DetailView.swift */,
 				B864598626F97B81007969E3 /* KeyboardToolbarView.swift */,
 				B8EC569126F4238F00AC64E5 /* SuggestionsView.swift */,
-				B878C9782703AC540042DF72 /* LinkSuggestionsView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -498,7 +494,6 @@
 				B82C3A7326F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */,
 				B82C3A5326F528B000833CC8 /* DatabaseService.swift in Sources */,
 				B82C3A6B26F6B18100833CC8 /* Slug.swift in Sources */,
-				B878C9792703AC540042DF72 /* LinkSuggestionsView.swift in Sources */,
 				B8E4B6F226F28BA600B9BE21 /* GrowableTextViewRepresentable.swift in Sources */,
 				B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */,
 				B8EB2A2326F27797006E97C3 /* AppView.swift in Sources */,
@@ -537,7 +532,6 @@
 				B82C3A7426F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */,
 				B82C3A5426F528B000833CC8 /* DatabaseService.swift in Sources */,
 				B82C3A6C26F6B18100833CC8 /* Slug.swift in Sources */,
-				B878C97A2703AC540042DF72 /* LinkSuggestionsView.swift in Sources */,
 				B8E4B6F326F28BA700B9BE21 /* GrowableTextViewRepresentable.swift in Sources */,
 				B8879EA126F90C5100A0B4FF /* AppNavigationView.swift in Sources */,
 				B8EB2A2426F27797006E97C3 /* AppView.swift in Sources */,
