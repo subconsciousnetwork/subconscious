@@ -16,22 +16,42 @@ enum AppAction {
     case appear
     case openURL(URL)
     case openEditorURL(url: URL, range: NSRange)
+
+    // Database
     case databaseReady(SQLite3Migrations.MigrationSuccess)
     case rebuildDatabase
     case rebuildDatabaseFailure(String)
     case syncSuccess([FileSync.Change])
     case syncFailure(String)
-    case setSearch(String)
+
+    // Search
     case setSearchBarFocus(Bool)
+    case setSearch(String)
+    case commitSearch(String)
+
+    // Search suggestions
     case setSuggestions([Suggestion])
     case suggestionsFailure(String)
-    case commitSearch(String)
+
+    // Detail
     case setDetail(ResultSet)
     case detailFailure(String)
     case setDetailShowing(Bool)
+
+    // Editor
     case setEditorAttributedText(NSAttributedString)
     case setEditorSelection(NSRange)
     case setEditorFocus(Bool)
+
+    // Link suggestions
+    case setLinkSheetPresented(Bool)
+    case setLinkSearchFocus(Bool)
+    case setLinkSearchText(String)
+    case commitLinkSearch(String)
+    case setLinkSuggestions([Suggestion])
+    case linkSuggestionsFailure(String)
+
+    // Saving entries
     case save
     case saveSuccess(URL)
     case saveFailure(
@@ -42,17 +62,33 @@ enum AppAction {
 
 //  MARK: Model
 struct AppModel: Updatable {
+    // Is database connected and migrated?
     var isDatabaseReady = false
+    // Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
+    // Is main search bar focused?
     var isSearchBarFocused = false
+    // Live search bar text
     var searchBarText = ""
-    var suggestions: [Suggestion] = []
+    // Committed search bar text
     var query = ""
-    var editorAttributedText = NSAttributedString("")
-    var editorSelection = NSMakeRange(0, 0)
+    // Main search suggestions
+    var suggestions: [Suggestion] = []
     var isEditorFocused = false
+    var editorAttributedText = NSAttributedString("")
+    // Editor selection corresponds with `editorAttributedText`
+    var editorSelection = NSMakeRange(0, 0)
+    // The URL for the currently active entry
     var entryURL: URL?
+    // Backlinks to the currently active entry
     var backlinks: [TextFile] = []
+
+    // Link suggestions for modal and bar in edit mode
+    var isLinkSheetPresented = false
+    var isLinkSearchFocused = false
+    var linkSearchText = ""
+    var linkSearchQuery = ""
+    var linkSuggestions: [Suggestion] = []
 
     // Set all editor properties to initial values
     static func resetEditor(_ model: inout Self) {
@@ -196,6 +232,9 @@ struct AppModel: Updatable {
         case let .setDetailShowing(isShowing):
             var model = self
             model.isDetailShowing = isShowing
+            if isShowing == false {
+                model.isEditorFocused = false
+            }
             return (model, Empty().eraseToAnyPublisher())
         case let .setSearchBarFocus(isFocused):
             var model = self
@@ -259,6 +298,43 @@ struct AppModel: Updatable {
         case let .detailFailure(message):
             AppEnvironment.logger.log(
                 "Failed to get details for search: \(message)"
+            )
+            return (self, Empty().eraseToAnyPublisher())
+        case let .setLinkSheetPresented(isPresented):
+            var model = self
+            model.isLinkSheetPresented = isPresented
+            return (model, Empty().eraseToAnyPublisher())
+        case let .setLinkSearchFocus(isFocused):
+            var model = self
+            model.isLinkSearchFocused = isFocused
+            return (model, Empty().eraseToAnyPublisher())
+        case let .setLinkSearchText(text):
+            var model = self
+            model.linkSearchText = text
+
+            let fx = AppEnvironment.database.searchSuggestions(
+                query: text
+            ).map({ suggestions in
+                AppAction.setLinkSuggestions(suggestions)
+            }).catch({ error in
+                Just(.linkSuggestionsFailure(error.localizedDescription))
+            }).eraseToAnyPublisher()
+
+            return (model, fx)
+        case let .commitLinkSearch(text):
+            var model = self
+            model.linkSearchQuery = text
+            model.linkSearchText = ""
+            model.isLinkSearchFocused = false
+            model.isLinkSheetPresented = false
+            return (model, Empty().eraseToAnyPublisher())
+        case let .setLinkSuggestions(suggestions):
+            var model = self
+            model.linkSuggestions = suggestions
+            return (model, Empty().eraseToAnyPublisher())
+        case let .linkSuggestionsFailure(message):
+            AppEnvironment.logger.debug(
+                "Link suggest failed: \(message)"
             )
             return (self, Empty().eraseToAnyPublisher())
         case .save:
