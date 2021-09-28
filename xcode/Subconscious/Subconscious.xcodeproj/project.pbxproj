@@ -75,6 +75,8 @@
 		B8EC569026F4233B00AC64E5 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568E26F4233B00AC64E5 /* AppEnvironment.swift */; };
 		B8EC569226F4238F00AC64E5 /* SuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC569126F4238F00AC64E5 /* SuggestionsView.swift */; };
 		B8EC569326F4238F00AC64E5 /* SuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC569126F4238F00AC64E5 /* SuggestionsView.swift */; };
+		B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */; };
+		B8EDB807270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -137,6 +139,7 @@
 		B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Migrations.swift; sourceTree = "<group>"; };
 		B8EC568E26F4233B00AC64E5 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		B8EC569126F4238F00AC64E5 /* SuggestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionsView.swift; sourceTree = "<group>"; };
+		B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PseudoKeyboardToolbarView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -297,6 +300,7 @@
 				B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */,
 				B81EBB052702533100B87594 /* RowButtonStyle.swift */,
 				B81EBB0827025C1500B87594 /* TranscludeButtonStyle.swift */,
+				B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -467,6 +471,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
+				B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
 				B81EBB0927025C1500B87594 /* TranscludeButtonStyle.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B81EBB062702533100B87594 /* RowButtonStyle.swift in Sources */,
@@ -504,6 +509,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B82C3A6626F5796300833CC8 /* OptionalUtilities.swift in Sources */,
+				B8EDB807270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
 				B81EBB0A27025C1500B87594 /* TranscludeButtonStyle.swift in Sources */,
 				B82C3A6326F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B81EBB072702533100B87594 /* RowButtonStyle.swift in Sources */,
