@@ -15,7 +15,8 @@ struct KeyboardToolbarView: View {
             Divider()
             HStack(alignment: .center, spacing: AppTheme.unit4) {
                 Button(
-                    action: {},
+                    action: {
+                    },
                     label: {
                         Image(
                             systemName: "magnifyingglass"
@@ -27,7 +28,8 @@ struct KeyboardToolbarView: View {
                 )
                 Divider()
                 Button(
-                    action: {},
+                    action: {
+                    },
                     label: {
                         Text(suggestion).lineLimit(1)
                     }

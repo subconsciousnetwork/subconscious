@@ -67,10 +67,7 @@ struct AppNavigationView: View {
                                         get: { state in
                                             state.isEditorFocused
                                         },
-                                        tag: AppAction.setEditorFocus,
-                                        animation: .easeOut(
-                                            duration: Duration.normal
-                                        )
+                                        tag: AppAction.setEditorFocus
                                     ),
                                     editorSelection: store.binding(
                                         get: { state in state.editorSelection },
