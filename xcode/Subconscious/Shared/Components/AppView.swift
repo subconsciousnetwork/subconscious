@@ -25,7 +25,6 @@ enum AppAction {
     case syncFailure(String)
 
     // Search
-    case setSearchBarFocus(Bool)
     case setSearch(String)
     case commitSearch(String)
 
@@ -66,8 +65,6 @@ struct AppModel: Updatable {
     var isDatabaseReady = false
     // Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
-    // Is main search bar focused?
-    var isSearchBarFocused = false
     // Live search bar text
     var searchBarText = ""
     // Committed search bar text
@@ -236,10 +233,6 @@ struct AppModel: Updatable {
                 model.isEditorFocused = false
             }
             return (model, Empty().eraseToAnyPublisher())
-        case let .setSearchBarFocus(isFocused):
-            var model = self
-            model.isSearchBarFocused = isFocused
-            return (model, Empty().eraseToAnyPublisher())
         case let .setSearch(text):
             var model = self
             model.searchBarText = text
@@ -266,7 +259,6 @@ struct AppModel: Updatable {
             model.query = query
             model.entryURL = nil
             model.searchBarText = ""
-            model.isSearchBarFocused = false
             model.isDetailShowing = true
 
             let suggest = Just(AppAction.setSearch(""))
