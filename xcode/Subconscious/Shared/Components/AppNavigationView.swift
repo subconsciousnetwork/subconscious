@@ -94,6 +94,7 @@ struct AppNavigationView: View {
                             }
                         }
                         .navigationTitle("")
+                        .navigationBarTitleDisplayMode(.inline)
                     },
                     label: {
                         EmptyView()
