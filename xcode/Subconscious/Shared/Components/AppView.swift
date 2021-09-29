@@ -254,7 +254,6 @@ struct AppModel: Updatable {
             )
             return (self, Empty().eraseToAnyPublisher())
         case let .commitSearch(query):
-            print("[commitSearch]", query)
             var model = self
             Self.resetEditor(&model)
             model.query = query
