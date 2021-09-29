@@ -22,8 +22,6 @@ struct AppNavigationView: View {
                     }
                     Spacer()
                 }
-                .background(Color.secondaryBackground)
-                .zIndex(0)
                 NavigationLink(
                     isActive: store.binding(
                         get: \.isDetailShowing,
