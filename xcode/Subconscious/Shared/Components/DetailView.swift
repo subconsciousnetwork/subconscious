@@ -92,6 +92,15 @@ struct DetailView: View {
                     }
                     Spacer()
                 }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(action: {
+                            isLinkSheetPresented = false
+                        }) {
+                            Text("Cancel")
+                        }
+                    }
+                }
                 .searchable(text: $linkSearchText, placement: .toolbar) {
                     ForEach(linkSuggestions, id: \.self) { suggestion in
                         Button(action: {
