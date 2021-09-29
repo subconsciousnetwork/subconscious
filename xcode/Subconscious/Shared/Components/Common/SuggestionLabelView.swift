@@ -7,6 +7,20 @@
 
 import SwiftUI
 
+enum Suggestion: Hashable, CustomStringConvertible {
+    case entry(String)
+    case search(String)
+
+    var description: String {
+        switch self {
+        case let .entry(string):
+            return string
+        case let .search(string):
+            return string
+        }
+    }
+}
+
 struct SuggestionLabelView: View {
     var suggestion: Suggestion
     var body: some View {
@@ -16,6 +30,7 @@ struct SuggestionLabelView: View {
                 title: {
                     HStack {
                         Text(text)
+                            .foregroundColor(Color.text)
                         Text("— Open")
                             .foregroundColor(Color.secondaryText)
                     }
@@ -29,6 +44,7 @@ struct SuggestionLabelView: View {
                 title: {
                     HStack {
                         Text(text)
+                            .foregroundColor(Color.text)
                         Text("— Create")
                             .foregroundColor(Color.secondaryText)
                     }

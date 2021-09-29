@@ -75,8 +75,6 @@
 		B8EC568D26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */; };
 		B8EC568F26F4233B00AC64E5 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568E26F4233B00AC64E5 /* AppEnvironment.swift */; };
 		B8EC569026F4233B00AC64E5 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568E26F4233B00AC64E5 /* AppEnvironment.swift */; };
-		B8EC569226F4238F00AC64E5 /* SuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC569126F4238F00AC64E5 /* SuggestionsView.swift */; };
-		B8EC569326F4238F00AC64E5 /* SuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC569126F4238F00AC64E5 /* SuggestionsView.swift */; };
 		B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */; };
 		B8EDB807270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */; };
 /* End PBXBuildFile section */
@@ -141,7 +139,6 @@
 		B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Database.swift; sourceTree = "<group>"; };
 		B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Migrations.swift; sourceTree = "<group>"; };
 		B8EC568E26F4233B00AC64E5 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
-		B8EC569126F4238F00AC64E5 /* SuggestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionsView.swift; sourceTree = "<group>"; };
 		B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PseudoKeyboardToolbarView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -267,7 +264,6 @@
 				B8EC568426F41A2C00AC64E5 /* Common */,
 				B8879EAB26F944DA00A0B4FF /* DetailView.swift */,
 				B864598626F97B81007969E3 /* KeyboardToolbarView.swift */,
-				B8EC569126F4238F00AC64E5 /* SuggestionsView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -505,7 +501,6 @@
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8EC568C26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
 				B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
-				B8EC569226F4238F00AC64E5 /* SuggestionsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -544,7 +539,6 @@
 				B82C3A6026F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8EC568D26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
 				B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
-				B8EC569326F4238F00AC64E5 /* SuggestionsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
