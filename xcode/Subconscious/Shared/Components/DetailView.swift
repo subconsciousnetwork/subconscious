@@ -23,7 +23,7 @@ struct DetailView: View {
         NSRange,
         UITextItemInteraction
     ) -> Bool
-    var onActivateBacklink: (String) -> Void
+    var onCommitSearch: (String) -> Void
     var onCommitLinkSearch: (String) -> Void
 
     var body: some View {
@@ -52,7 +52,7 @@ struct DetailView: View {
                             Divider()
                             BacklinksView(
                                 backlinks: backlinks,
-                                onActivateBacklink: onActivateBacklink
+                                onActivateBacklink: onCommitSearch
                             )
                         }
                     }

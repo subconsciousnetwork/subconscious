@@ -78,7 +78,7 @@ struct AppNavigationView: View {
                                         )
                                         return false
                                     },
-                                    onActivateBacklink: { query in
+                                    onCommitSearch: { query in
                                         store.send(
                                             action: .commitSearch(query)
                                         )
