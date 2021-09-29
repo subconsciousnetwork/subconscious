@@ -13,31 +13,17 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                ZStack {
-                    if store.state.isSearchBarFocused {
-                        SuggestionsView(
-                            suggestions: store.state.suggestions,
-                            action: { suggestion in
-                                store.send(
-                                    action: .commitSearch(suggestion.description)
-                                )
-                            }
-                        )
-                        .zIndex(1)
-                    } else {
-                        VStack {
-                            Spacer()
-                            HStack {
-                                Spacer()
-                                Text("Main (TODO)")
-                                Spacer()
-                            }
-                            Spacer()
-                        }
-                        .background(Color.secondaryBackground)
-                        .zIndex(0)
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Text("Main (TODO)")
+                        Spacer()
                     }
+                    Spacer()
                 }
+                .background(Color.secondaryBackground)
+                .zIndex(0)
                 NavigationLink(
                     isActive: store.binding(
                         get: \.isDetailShowing,
@@ -115,27 +101,26 @@ struct AppNavigationView: View {
                 )
             }
             .navigationTitle("Notes")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    SearchBarRepresentable(
-                        placeholder: "Search or create",
-                        text: store.binding(
-                            get: \.searchBarText,
-                            tag: AppAction.setSearch
-                        ),
-                        isFocused: store.binding(
-                            get: \.isSearchBarFocused,
-                            tag: AppAction.setSearchBarFocus,
-                            animation: .easeOut(duration: Duration.normal)
-                        ),
-                        onCommit: { text in
-                            store.send(action: .commitSearch(text))
-                        },
-                        onCancel: {}
-                    ).showCancel(true)
+            .searchable(
+                text: store.binding(
+                    get: \.searchBarText,
+                    tag: AppAction.setSearch
+                ),
+                prompt: "Search or create"
+            ) {
+                ForEach(store.state.suggestions, id: \.self) { suggestion in
+                    Button(action: {
+                        store.send(
+                            action: .commitSearch(suggestion.description)
+                        )
+                    }) {
+                        SuggestionLabelView(suggestion: suggestion)
+                    }
                 }
             }
+            .onSubmit(of: .search, {
+                store.send(action: .commitSearch(store.state.searchBarText))
+            })
         }
     }
 }
