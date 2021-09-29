@@ -254,6 +254,7 @@ struct AppModel: Updatable {
             )
             return (self, Empty().eraseToAnyPublisher())
         case let .commitSearch(query):
+            print("[commitSearch]", query)
             var model = self
             Self.resetEditor(&model)
             model.query = query
@@ -280,11 +281,10 @@ struct AppModel: Updatable {
             model.backlinks = results.backlinks
             let entryURL = results.entry?.url
             model.entryURL = entryURL ?? AppEnvironment.database.findUniqueURL(
-                name: query
+                name: results.query
             )
-            let entryContent = results.entry?.content
             model.editorAttributedText = Self.renderMarkup(
-                entryContent ?? self.query
+                results.entry?.content ?? results.query
             )
             return (model, Empty().eraseToAnyPublisher())
         case let .detailFailure(message):
