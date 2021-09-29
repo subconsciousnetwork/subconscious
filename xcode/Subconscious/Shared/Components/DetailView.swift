@@ -106,22 +106,20 @@ struct DetailView: View {
                         Button(action: {
                             onCommitLinkSearch(suggestion.description)
                         }) {
-                            Label(
-                                title: {
-                                    Text(suggestion.description).lineLimit(1)
-                                },
-                                icon: {
-                                    switch suggestion {
-                                    case .entry:
-                                        Image(systemName: "doc")
-                                    case .search:
-                                        Image(systemName: "magnifyingglass")
-                                    }
-                                }
-                            )
+                            SuggestionLabelView2(suggestion: suggestion)
                         }
+                        // We handle submission directly in button action, so
+                        // prevent button submit from bubbling up and
+                        // triggering a second submit via onSubmit handler.
+                        // 2021-09-29 Gordon Brander
+                        .submitScope(true)
                     }
                 }
+                // Catch keyboard sumit.
+                // This will also catch button activations within `.searchable`
+                // suggestions, by default. Therefore, we `.submitScope()` the
+                // suggestions so that this only catches keyboard submissions.
+                // 2021-09-29 Gordon Brander
                 .onSubmit(of: .search) {
                     onCommitLinkSearch(linkSearchText)
                 }
