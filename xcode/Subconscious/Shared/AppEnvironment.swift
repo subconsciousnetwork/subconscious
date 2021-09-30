@@ -156,6 +156,11 @@ extension AppTheme {
     static let icon: CGFloat = unit * 6
 }
 
+//  MARK: Fonts
+extension UIFont {
+    static let subText = UIFont.systemFont(ofSize: 17)
+    static let subTextBold = UIFont.boldSystemFont(ofSize: 17)
+}
 
 //  MARK: Colors
 extension Color {
