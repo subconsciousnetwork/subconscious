@@ -181,6 +181,7 @@ struct Subtext4: Equatable {
 
     let markup: String
     let blocks: [Block]
+    let cursor: String.Index?
     let selectedIndex: Array.Index?
 
     var selected: Block? {
@@ -190,24 +191,9 @@ struct Subtext4: Equatable {
         return nil
     }
 
-    init?(
-        blocks: [Block],
-        selectedIndex: Array.Index?
-    ) {
-        guard
-            selectedIndex == nil ||
-            (blocks.startIndex..<blocks.endIndex).contains(selectedIndex!)
-        else {
-            return nil
-        }
-        self.markup = blocks.first?.markup().base ?? ""
-        self.blocks = blocks
-        self.selectedIndex = selectedIndex
-    }
-
     init(
         markup: String,
-        cursor: String.Index
+        cursor: String.Index?
     ) {
         var blocks: [Block] = []
         var selectedIndex: Array.Index?
@@ -218,20 +204,23 @@ struct Subtext4: Equatable {
             let line = Self.parseLine(tape: &tape)
             let block = Block.parse(line: line)
             blocks.append(block)
-            if line.range.contains(cursor) {
+            if cursor != nil && line.range.contains(cursor!) {
                 selectedIndex = blocks.index(before: blocks.endIndex)
             }
         }
         self.markup = markup
         self.blocks = blocks
+        self.cursor = cursor
         self.selectedIndex = selectedIndex
     }
 
-    func replaceSelected(with block: Block) -> Self? {
-        if let selectedIndex = selectedIndex {
-            var blocks = self.blocks
-            blocks[selectedIndex] = block
-            return .init(blocks: blocks, selectedIndex: selectedIndex)
+    func replaceSelected(with string: String) -> Self? {
+        if let selected = selected {
+            let next = self.markup.replacingCharacters(
+                in: selected.range,
+                with: string
+            )
+            return .init(markup: next, cursor: self.cursor)
         }
         return nil
     }
