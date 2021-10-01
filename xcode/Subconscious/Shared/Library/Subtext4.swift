@@ -14,6 +14,16 @@ extension Substring {
     }
 }
 
+extension String {
+    func replacingNewlineWithSpace() -> String {
+        self.replacingOccurrences(
+            of: "\\s",
+            with: " ",
+            options: .regularExpression
+        )
+    }
+}
+
 struct Subtext4: Equatable {
     struct Tape<T>
     where T: Collection,
@@ -134,6 +144,20 @@ struct Subtext4: Equatable {
             }
         }
 
+        static func templateHeading(_ string: String) -> String {
+            let body = string.replacingNewlineWithSpace()
+            return "# \(body)"
+        }
+
+        static func templateLink(_ string: String) -> String {
+            let body = string.replacingNewlineWithSpace()
+            return "& \(body)"
+        }
+
+        static func templateText(_ string: String) -> String {
+            return string.replacingNewlineWithSpace()
+        }
+
         func markup() -> Substring {
             switch self {
             case let .link(sub):
@@ -179,7 +203,10 @@ struct Subtext4: Equatable {
         return tape.subsequence
     }
 
-    let markup: String
+    /// Static property for empty document
+    static let empty = Self(markup: "")
+
+    let base: String
     let blocks: [Block]
     let cursor: String.Index?
     let selectedIndex: Array.Index?
@@ -193,14 +220,13 @@ struct Subtext4: Equatable {
 
     init(
         markup: String,
-        cursor: String.Index?
+        cursor: String.Index? = nil
     ) {
         var blocks: [Block] = []
         var selectedIndex: Array.Index?
         // Block that cursor is placed within
         var tape = Tape(markup)
         while !tape.isExhausted() {
-            tape.setStart()
             let line = Self.parseLine(tape: &tape)
             let block = Block.parse(line: line)
             blocks.append(block)
@@ -208,17 +234,29 @@ struct Subtext4: Equatable {
                 selectedIndex = blocks.index(before: blocks.endIndex)
             }
         }
-        self.markup = markup
+        self.base = markup
         self.blocks = blocks
         self.cursor = cursor
         self.selectedIndex = selectedIndex
     }
 
-    func replaceSelected(with string: String) -> Self? {
+    init(
+        markup: String,
+        range: NSRange
+    ) {
+        let cursor = Range(range, in: markup)
+        self.init(
+            markup: markup,
+            cursor: cursor?.lowerBound
+        )
+    }
+
+    func replaceSelectedWithLink(_ string: String) -> Self? {
         if let selected = selected {
-            let next = self.markup.replacingCharacters(
+            let body = Block.templateLink(string)
+            let next = self.base.replacingCharacters(
                 in: selected.range,
-                with: string
+                with: body
             )
             return .init(markup: next, cursor: self.cursor)
         }
@@ -227,18 +265,18 @@ struct Subtext4: Equatable {
 
     /// Render markup verbatim with syntax highlighting and links
     func renderMarkup(url: (Substring) -> String?) -> NSAttributedString {
-        let attributedString = NSMutableAttributedString(string: markup)
+        let attributedString = NSMutableAttributedString(string: base)
         // Set default styles for entire string
         attributedString.addAttribute(
             .font,
             value: UIFont.subText,
-            range: NSRange(markup.startIndex..<markup.endIndex, in: markup)
+            range: NSRange(base.startIndex..<base.endIndex, in: base)
         )
         for block in blocks {
             switch block {
             case .link:
                 let text = block.stripped()
-                let nsRange = NSRange(text.range, in: markup)
+                let nsRange = NSRange(text.range, in: base)
                 if let url = url(text) {
                     attributedString.addAttribute(
                         .link,
@@ -247,7 +285,7 @@ struct Subtext4: Equatable {
                     )
                 }
             case let .heading(sub):
-                let nsRange = NSRange(sub.range, in: markup)
+                let nsRange = NSRange(sub.range, in: base)
                 attributedString.addAttribute(
                     .font,
                     value: UIFont.subTextBold,
