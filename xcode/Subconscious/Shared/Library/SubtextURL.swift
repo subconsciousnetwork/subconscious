@@ -7,7 +7,9 @@
 
 import Foundation
 
-extension Subtext3 {
+enum SubtextURL {}
+
+extension SubtextURL {
     static func isWikilinkURL(_ url: URL) -> Bool {
         url.scheme == "sub" && url.host == "wikilink"
     }
