@@ -105,19 +105,8 @@ where State: Updatable
         // Generate next state and effect
         let (next, effect) = state.update(action: action)
         if debug {
-            let actionString = String(reflecting: action)
-            let previousStateString = String(reflecting: self.state)
-            let nextStateString = String(reflecting: next)
-            let effectString = String(reflecting: effect)
-            logger.debug(
-                """
-                [send]
-                Action: \(actionString)
-                Previous State: \(previousStateString)
-                Next State: \(nextStateString)
-                Effect: \(effectString)
-                """
-            )
+            logger.debug("Action: \(String(reflecting: action))")
+            logger.debug("State: \(String(reflecting: next))")
         }
         // Set state. This mutates published property, firing objectWillChange.
         self.state = next
