@@ -95,9 +95,13 @@ struct AppModel: Updatable {
     }
 
     static func renderMarkup(
-        _ markup: String
+        markup: String,
+        selection: NSRange
     ) -> NSAttributedString {
-        Subtext3(markup).renderMarkup(url: Subtext3.wikilinkToURLString)
+        Subtext4(
+            markup: markup,
+            range: selection
+        ).renderMarkup(url: SubtextURL.wikilinkToURLString)
     }
 
     //  MARK: Update
@@ -140,7 +144,7 @@ struct AppModel: Updatable {
                 ).eraseToAnyPublisher()
                 return (self, fx)
             } else {
-                if let query = Subtext3.urlToWikilink(
+                if let query = SubtextURL.urlToWikilink(
                     url
                 ) {
                     // If this is a Subtext URL, then commit a search for the
@@ -214,7 +218,8 @@ struct AppModel: Updatable {
                 // Rerender attributes from markup, then assign to
                 // model.
                 model.editorAttributedText = Self.renderMarkup(
-                    attributedText.string
+                    markup: attributedText.string,
+                    selection: model.editorSelection
                 )
             }
             return (model, Empty().eraseToAnyPublisher())
@@ -283,7 +288,8 @@ struct AppModel: Updatable {
                 name: results.query
             )
             model.editorAttributedText = Self.renderMarkup(
-                results.entry?.content ?? results.query
+                markup: results.entry?.content ?? results.query,
+                selection: model.editorSelection
             )
             return (model, Empty().eraseToAnyPublisher())
         case let .detailFailure(message):
