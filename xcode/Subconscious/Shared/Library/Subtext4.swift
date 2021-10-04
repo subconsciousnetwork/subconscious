@@ -269,7 +269,7 @@ struct Subtext4: Equatable {
         // Set default styles for entire string
         attributedString.addAttribute(
             .font,
-            value: UIFont.subText,
+            value: UIFont.appText,
             range: NSRange(base.startIndex..<base.endIndex, in: base)
         )
         for block in blocks {
@@ -288,7 +288,7 @@ struct Subtext4: Equatable {
                 let nsRange = NSRange(sub.range, in: base)
                 attributedString.addAttribute(
                     .font,
-                    value: UIFont.subTextBold,
+                    value: UIFont.appTextBold,
                     range: nsRange
                 )
             default:

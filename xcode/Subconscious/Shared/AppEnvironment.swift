@@ -158,8 +158,8 @@ extension AppTheme {
 
 //  MARK: Fonts
 extension UIFont {
-    static let subText = UIFont.systemFont(ofSize: 17)
-    static let subTextBold = UIFont.boldSystemFont(ofSize: 17)
+    static let appText = UIFont.systemFont(ofSize: 17)
+    static let appTextBold = UIFont.boldSystemFont(ofSize: 17)
 }
 
 //  MARK: Colors
