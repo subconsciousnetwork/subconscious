@@ -60,8 +60,10 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
 
         /// Handle changes to textview
         func textViewDidChange(_ view: UITextView) {
-            representable.attributedText = view.attributedText
-            view.invalidateIntrinsicContentSize()
+            if !representable.attributedText.isEqual(to: view.attributedText) {
+                representable.attributedText = view.attributedText
+                view.invalidateIntrinsicContentSize()
+            }
         }
 
         /// Handle editing begin (focus)
@@ -75,7 +77,9 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
-            representable.selection = textView.selectedRange
+            if textView.selectedRange != representable.selection {
+                representable.selection = textView.selectedRange
+            }
         }
     }
 
@@ -140,13 +144,13 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
             view.selectedRange = selectedRange
         }
 
-        if view.fixedWidth != fixedWidth {
+        if fixedWidth != view.fixedWidth {
             view.fixedWidth = fixedWidth
             view.invalidateIntrinsicContentSize()
         }
 
         // Set firstResponder
-        if view.isFirstResponder != isFocused {
+        if isFocused != view.isFirstResponder {
             if isFocused {
                 DispatchQueue.main.async {
                     view.becomeFirstResponder()
@@ -163,11 +167,11 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
             view.selectedRange = selection
         }
 
-        if view.font != font {
+        if font != view.font {
             view.font = font
         }
 
-        if view.textContainerInset != textContainerInset {
+        if textContainerInset != view.textContainerInset {
             // Set inner padding
             view.textContainerInset = textContainerInset
         }
