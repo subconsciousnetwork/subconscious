@@ -4,6 +4,25 @@
 //
 //  Created by Gordon Brander on 7/6/21.
 //
+//  Note: GrowableTextViewRepresentable used to expose a way to set the
+//  `UITextView.font` property.
+//
+//  DO NOT SET `UITextView.font` property when using attributedText!
+//  It is meant for when you use `UITextView.text` without attributes.
+//  Setting it WHILE setting `attributedText` causes multiple issues:
+//
+//  - Styling properties will be overwritten by attributes given to
+//    `.font`. They seem to be applied after
+//    assigning `attributedText`.
+//  - You can create accidental feedback loops between the event
+//    delegate and the representable. This is because when you set
+//    attributedText on the UITextView, the attributed set on the
+//    property will no longer be equal to the attributedText before
+//    setting, since the font properties will be appended, modifying
+//    the attributes.
+//
+//  Lesson learned.
+//  2021-10-04 Gordon Brander
 
 import SwiftUI
 
@@ -118,7 +137,6 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
         UITextItemInteraction
     ) -> Bool = onLinkDefault
     var fixedWidth: CGFloat
-    var font: UIFont = UIFont.preferredFont(forTextStyle: .body)
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
 
@@ -136,10 +154,10 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
     }
 
     func updateUIView(_ view: FixedWidthTextView, context: Context) {
-        if !view.attributedText.isEqual(to: attributedText) {
+        if !view.attributedText.isEqual(to: self.attributedText) {
             // Save selected range (cursor position).
             let selectedRange = view.selectedRange
-            view.attributedText = attributedText
+            view.attributedText = self.attributedText
             // Restore selected range (cursor position) after setting text.
             view.selectedRange = selectedRange
         }
@@ -167,10 +185,6 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
             view.selectedRange = selection
         }
 
-        if font != view.font {
-            view.font = font
-        }
-
         if textContainerInset != view.textContainerInset {
             // Set inner padding
             view.textContainerInset = textContainerInset
@@ -179,12 +193,6 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
 
     func makeCoordinator() -> GrowableTextViewRepresentable.Coordinator {
         Coordinator(self)
-    }
-
-    func font(_ font: UIFont) -> Self {
-        var view = self
-        view.font = font
-        return view
     }
 
     func insets(_ inset: EdgeInsets) -> Self {
