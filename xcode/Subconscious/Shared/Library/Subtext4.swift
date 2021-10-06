@@ -145,6 +145,7 @@ struct Subtext4: Equatable {
     struct LinkBlock: Hashable, Equatable {
         var line: Substring
         var sigil: Substring
+        var link: Substring
         var body: Substring
     }
 
@@ -159,7 +160,35 @@ struct Subtext4: Equatable {
         static func consumeLine(tape: inout Tape<Substring>) -> Substring {
             tape.setStart()
             while !tape.isExhausted() {
-                if tape.peek()! == "\n" {
+                if tape.peek() == "\n" {
+                    return tape.subsequence
+                }
+                tape.advance()
+            }
+            return tape.subsequence
+        }
+
+        /// Fast-forward past contiguous whitespace
+        static func skipSpaces(tape: inout Tape<Substring>) {
+            while !tape.isExhausted() {
+                let next = tape.peek()!
+                if !next.isWhitespace {
+                    tape.setStart()
+                    return
+                }
+                tape.advance()
+            }
+            tape.setStart()
+            return
+        }
+
+        static func consumeLink(
+            tape: inout Tape<Substring>
+        ) -> Substring {
+            tape.setStart()
+            while !tape.isExhausted() {
+                let next = tape.peek()
+                if next == " " || next == "\n" {
                     return tape.subsequence
                 }
                 tape.advance()
@@ -181,11 +210,15 @@ struct Subtext4: Equatable {
                 )
             } else if tape.consumeMatch("=>") {
                 let sigil = tape.subsequence
+                skipSpaces(tape: &tape)
+                let link = consumeLink(tape: &tape)
+                skipSpaces(tape: &tape)
                 let body = consumeLine(tape: &tape)
                 return Self.link(
                     LinkBlock(
                         line: line,
                         sigil: sigil,
+                        link: link,
                         body: body
                     )
                 )
@@ -313,11 +346,11 @@ struct Subtext4: Equatable {
                     value: UIColor.appSecondaryText,
                     range: NSRange(block.sigil.range, in: base)
                 )
-                if let url = url(block.body) {
+                if let url = url(block.link) {
                     attributedString.addAttribute(
                         .link,
                         value: url,
-                        range: NSRange(block.body.range, in: base)
+                        range: NSRange(block.link.range, in: base)
                     )
                 }
             case let .heading(block):
