@@ -87,8 +87,6 @@ struct DetailView: View {
                 VStack {
                     HStack {
                         Spacer()
-                        Text("Floop")
-                        Spacer()
                     }
                     Spacer()
                 }
