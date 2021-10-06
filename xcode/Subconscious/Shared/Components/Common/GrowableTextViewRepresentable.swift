@@ -84,6 +84,10 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
 
         /// Handle changes to textview
         func textViewDidChange(_ view: UITextView) {
+            // Return early if view is updating.
+            guard !isUIViewUpdating else {
+                return
+            }
             if !representable.attributedText.isEqual(to: view.attributedText) {
                 representable.attributedText = view.attributedText
                 view.invalidateIntrinsicContentSize()
@@ -182,6 +186,7 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
             view.attributedText = self.attributedText
             // Restore selected range (cursor position) after setting text.
             view.selectedRange = selectedRange
+            view.invalidateIntrinsicContentSize()
         }
 
         if fixedWidth != view.fixedWidth {
