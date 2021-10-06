@@ -162,7 +162,7 @@ extension UIFont {
     static let appTextBold = UIFont.boldSystemFont(ofSize: 17)
 }
 
-//  MARK: Colors
+//  MARK: Color
 extension Color {
     static let text = SwiftUI.Color.primary
     static let secondaryText = SwiftUI.Color.secondary
@@ -175,6 +175,12 @@ extension Color {
     static let pressedText = buttonText.opacity(0.3)
     static let pressedBackground = secondaryBackground
     static let disabledText = text.opacity(0.5)
+}
+
+//  MARK: UIColor
+//  Needed for some older APIs, such as NSAttributedString.
+extension UIColor {
+    static let appSecondaryText = UIColor(Color.secondaryText)
 }
 
 //  MARK: Animation durations
