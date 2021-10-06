@@ -1,9 +1,11 @@
 //
-//  StringExtensions.swift
+//  StringUtilities.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 4/23/21.
 //
+//  Extensions for String and Substring, plus additional utilities.
+
 import Foundation
 
 extension String {
@@ -16,7 +18,9 @@ extension String {
             return self
         }
     }
+}
 
+extension String {
     func splitlines() -> [Substring] {
         self.split(
             maxSplits: Int.max,
@@ -30,5 +34,21 @@ extension StringProtocol {
     /// Check if a string contains only whitespace characters
     var isWhitespace: Bool {
         self.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
+
+extension Substring {
+    var range: Range<Substring.Index> {
+        self.startIndex..<self.endIndex
+    }
+}
+
+extension String {
+    func replacingNewlineWithSpace() -> String {
+        self.replacingOccurrences(
+            of: "\\s",
+            with: " ",
+            options: .regularExpression
+        )
     }
 }

@@ -8,22 +8,6 @@
 import Foundation
 import SwiftUI
 
-extension Substring {
-    var range: Range<Substring.Index> {
-        self.startIndex..<self.endIndex
-    }
-}
-
-extension String {
-    func replacingNewlineWithSpace() -> String {
-        self.replacingOccurrences(
-            of: "\\s",
-            with: " ",
-            options: .regularExpression
-        )
-    }
-}
-
 struct Subtext4: Equatable {
     struct Tape<T>
     where T: Collection,
