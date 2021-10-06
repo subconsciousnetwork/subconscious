@@ -42,9 +42,14 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
     }
 
     class Coordinator: NSObject, UITextViewDelegate {
+        /// Is event happening during updateUIView?
+        /// Used to avoid sending up events that would cause feedback cycles where an update triggers
+        /// an event, which triggers an update, which triggers an event, etc.
+        var isUIViewUpdating: Bool
         var representable: GrowableTextViewRepresentable
 
         init(_ representable: GrowableTextViewRepresentable) {
+            self.isUIViewUpdating = false
             self.representable = representable
         }
 
@@ -96,6 +101,16 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
+            // Return early if view is currently updating.
+            // We set selection during update when updating
+            // attributedText, in order to retain selection.
+            // Do not set representable selection in this case. It would
+            // generate an update feedback loop, since the direction of
+            // mutation goes from representable to view during an update.
+            // 2021-10-06 Gordon Brander
+            guard !isUIViewUpdating else {
+                return
+            }
             if textView.selectedRange != representable.selection {
                 representable.selection = textView.selectedRange
             }
@@ -154,6 +169,13 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
     }
 
     func updateUIView(_ view: FixedWidthTextView, context: Context) {
+        // Set updating flag on coordinator
+        context.coordinator.isUIViewUpdating = true
+        // Unset updating flag on coordator after this scope exits
+        defer {
+            context.coordinator.isUIViewUpdating = false
+        }
+
         if !view.attributedText.isEqual(to: self.attributedText) {
             // Save selected range (cursor position).
             let selectedRange = view.selectedRange
