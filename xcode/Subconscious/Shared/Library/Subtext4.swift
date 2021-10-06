@@ -29,16 +29,20 @@ struct Subtext4: Equatable {
     where T: Collection,
           T.SubSequence: Equatable
     {
-        private(set) var savedIndex: T.Index
         private(set) var startIndex: T.Index
+        var endIndex: T.Index {
+            self.collection.endIndex
+        }
         private(set) var currentIndex: T.Index
+        private(set) var savedIndex: T.Index
         let collection: T
 
-        init(_ collection: T) {
+        init(_ collection: T, startIndex: T.Index? = nil) {
             self.collection = collection
-            self.startIndex = collection.startIndex
-            self.currentIndex = collection.startIndex
-            self.savedIndex = collection.startIndex
+            let start = startIndex ?? collection.startIndex
+            self.startIndex = start
+            self.currentIndex = start
+            self.savedIndex = start
         }
 
         /// Returns the current subsequence
@@ -47,7 +51,7 @@ struct Subtext4: Equatable {
         }
 
         func isExhausted() -> Bool {
-            return self.currentIndex >= self.collection.endIndex
+            return self.currentIndex >= self.endIndex
         }
 
         /// Sets the start of the current range to the current index
@@ -83,7 +87,7 @@ struct Subtext4: Equatable {
             if let endIndex = collection.index(
                 currentIndex,
                 offsetBy: subsequence.count,
-                limitedBy: collection.endIndex
+                limitedBy: self.endIndex
             ) {
                 if collection[currentIndex..<endIndex] == subsequence {
                     self.currentIndex = endIndex
@@ -100,12 +104,12 @@ struct Subtext4: Equatable {
                 let startIndex = collection.index(
                     currentIndex,
                     offsetBy: offset,
-                    limitedBy: collection.endIndex
+                    limitedBy: self.endIndex
                 ),
                 let endIndex = collection.index(
                     currentIndex,
                     offsetBy: offset + 1,
-                    limitedBy: collection.endIndex
+                    limitedBy: self.endIndex
                 )
             {
                 return collection[startIndex..<endIndex]
@@ -119,7 +123,7 @@ struct Subtext4: Equatable {
             if let endIndex = collection.index(
                 currentIndex,
                 offsetBy: offset,
-                limitedBy: collection.endIndex
+                limitedBy: self.endIndex
             ) {
                 return collection[currentIndex..<endIndex]
             }
@@ -127,20 +131,72 @@ struct Subtext4: Equatable {
         }
     }
 
+    struct TextBlock: Hashable, Equatable {
+        var line: Substring
+        var body: Substring
+    }
+
+    struct HeadingBlock: Hashable, Equatable {
+        var line: Substring
+        var sigil: Substring
+        var body: Substring
+    }
+
+    struct LinkBlock: Hashable, Equatable {
+        var line: Substring
+        var sigil: Substring
+        var body: Substring
+    }
+
     /// Blocks of multiple types
     /// Associating with a substring gives us access to both content and range information
     enum Block: Equatable {
-        case text(Substring)
-        case heading(Substring)
-        case link(Substring)
+        case text(TextBlock)
+        case heading(HeadingBlock)
+        case link(LinkBlock)
+
+        /// Consumes everything up to, but not including newline
+        static func consumeLine(tape: inout Tape<Substring>) -> Substring {
+            tape.setStart()
+            while !tape.isExhausted() {
+                if tape.peek()! == "\n" {
+                    return tape.subsequence
+                }
+                tape.advance()
+            }
+            return tape.subsequence
+        }
 
         static func parse(line: Substring) -> Self {
-            if line.starts(with: "#") {
-                return Block.heading(line)
-            } else if line.starts(with: "&") {
-                return Block.link(line)
+            var tape = Tape(line)
+            if tape.consumeMatch("#") {
+                let sigil = tape.subsequence
+                let body = consumeLine(tape: &tape)
+                return Self.heading(
+                    HeadingBlock(
+                        line: line,
+                        sigil: sigil,
+                        body: body
+                    )
+                )
+            } else if tape.consumeMatch("=>") {
+                let sigil = tape.subsequence
+                let body = consumeLine(tape: &tape)
+                return Self.link(
+                    LinkBlock(
+                        line: line,
+                        sigil: sigil,
+                        body: body
+                    )
+                )
             } else {
-                return Block.text(line)
+                let body = consumeLine(tape: &tape)
+                return Block.text(
+                    TextBlock(
+                        line: line,
+                        body: body
+                    )
+                )
             }
         }
 
@@ -151,56 +207,34 @@ struct Subtext4: Equatable {
 
         static func templateLink(_ string: String) -> String {
             let body = string.replacingNewlineWithSpace()
-            return "& \(body)"
+            return "=> \(body)"
         }
 
         static func templateText(_ string: String) -> String {
             return string.replacingNewlineWithSpace()
         }
 
-        func markup() -> Substring {
+        func contains(_ index: Substring.Index) -> Bool {
             switch self {
-            case let .link(sub):
-                return sub
-            case let .heading(sub):
-                return sub
-            case let .text(sub):
-                return sub
-            }
-        }
-
-        func stripped() -> Substring {
-            switch self {
-            case let .link(sub):
-                return sub.dropFirst(1)
-            case let .heading(sub):
-                return sub.dropFirst(1)
-            case let .text(sub):
-                return sub
-            }
-        }
-
-        var range: Range<Substring.Index> {
-            switch self {
-            case let .text(sub):
-                return sub.startIndex..<sub.endIndex
-            case let .link(sub):
-                return sub.startIndex..<sub.endIndex
-            case let .heading(sub):
-                return sub.startIndex..<sub.endIndex
+            case .heading(let block):
+                return block.line.range.contains(index)
+            case .link(let block):
+                return block.line.range.contains(index)
+            case .text(let block):
+                return block.line.range.contains(index)
             }
         }
     }
 
-    private static func parseLine(tape: inout Tape<String>) -> Substring {
+    private static func parseLine(tape: inout Tape<String>) -> Block {
         tape.setStart()
         while !tape.isExhausted() {
             let curr = tape.consume()
             if curr == "\n" {
-                return tape.subsequence
+                return Block.parse(line: tape.subsequence)
             }
         }
-        return tape.subsequence
+        return Block.parse(line: tape.subsequence)
     }
 
     /// Static property for empty document
@@ -227,10 +261,9 @@ struct Subtext4: Equatable {
         // Block that cursor is placed within
         var tape = Tape(markup)
         while !tape.isExhausted() {
-            let line = Self.parseLine(tape: &tape)
-            let block = Block.parse(line: line)
+            let block = Self.parseLine(tape: &tape)
             blocks.append(block)
-            if cursor != nil && line.range.contains(cursor!) {
+            if cursor != nil && block.contains(cursor!) {
                 selectedIndex = blocks.index(before: blocks.endIndex)
             }
         }
@@ -251,17 +284,17 @@ struct Subtext4: Equatable {
         )
     }
 
-    func replaceSelectedWithLink(_ string: String) -> Self? {
-        if let selected = selected {
-            let body = Block.templateLink(string)
-            let next = self.base.replacingCharacters(
-                in: selected.range,
-                with: body
-            )
-            return .init(markup: next, cursor: self.cursor)
-        }
-        return nil
-    }
+//    func replaceSelectedWithLink(_ string: String) -> Self? {
+//        if let selected = selected {
+//            let body = Block.templateLink(string)
+//            let next = self.base.replacingCharacters(
+//                in: selected.range,
+//                with: body
+//            )
+//            return .init(markup: next, cursor: self.cursor)
+//        }
+//        return nil
+//    }
 
     /// Render markup verbatim with syntax highlighting and links
     func renderMarkup(url: (Substring) -> String?) -> NSAttributedString {
@@ -274,22 +307,24 @@ struct Subtext4: Equatable {
         )
         for block in blocks {
             switch block {
-            case .link:
-                let text = block.stripped()
-                let nsRange = NSRange(text.range, in: base)
-                if let url = url(text) {
+            case let .link(block):
+                attributedString.addAttribute(
+                    .foregroundColor,
+                    value: UIColor.appSecondaryText,
+                    range: NSRange(block.sigil.range, in: base)
+                )
+                if let url = url(block.body) {
                     attributedString.addAttribute(
                         .link,
                         value: url,
-                        range: nsRange
+                        range: NSRange(block.body.range, in: base)
                     )
                 }
-            case let .heading(sub):
-                let nsRange = NSRange(sub.range, in: base)
+            case let .heading(block):
                 attributedString.addAttribute(
                     .font,
                     value: UIFont.appTextBold,
-                    range: nsRange
+                    range: NSRange(block.line.range, in: base)
                 )
             default:
                 break
