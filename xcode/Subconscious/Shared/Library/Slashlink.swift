@@ -14,22 +14,19 @@ extension Slashlink {
         url.scheme == "sub" && url.host == "slashlink"
     }
 
-    static func toNormalizedSlashlink(_ text: String) -> String {
-        let slug = text
+    /// Given a string, returns a slashlink slug *without* the slash prefix.
+    static func toSlashlink(_ text: String) -> String {
+        text
             .lowercased()
             .replacingSpacesWithDash()
             .removingNonPosixCharacters()
             .truncatingSafeFileNameLength()
-        if slug.hasPrefix("/") {
-            return text
-        } else {
-            return "/\(text)"
-        }
+            .ltrim(prefix: "/")
     }
 
     static func slashlinkToURLString(_ text: String) -> String? {
-        let slashlink = toNormalizedSlashlink(text)
-        if let url = URL(string: "sub://slashlink\(slashlink)") {
+        let slashlink = toSlashlink(text)
+        if let url = URL(string: "sub://slashlink/\(slashlink)") {
             return url.absoluteString
         }
         return nil
@@ -42,5 +39,28 @@ extension Slashlink {
             }
         }
         return nil
+    }
+
+    /// Find unique slashlink slug
+    /// Slugifies name given.
+    /// Appends a short random string to make the URL unique, if the URL already exists.
+    static func findUniqueURL(
+        at base: URL,
+        name: String,
+        ext: String
+    ) -> URL {
+        let slug = toSlashlink(name)
+        let url = base.appendingFilename(name: slug, ext: ext)
+        if !FileManager.default.fileExists(atPath: url.path) {
+            return url
+        }
+        while true {
+            let rand = String.randomAlphanumeric(length: 8)
+            let slug = "\(slug)-\(rand)"
+            let url = base.appendingFilename(name: slug, ext: ext)
+            if !FileManager.default.fileExists(atPath: url.path) {
+                return url
+            }
+        }
     }
 }
