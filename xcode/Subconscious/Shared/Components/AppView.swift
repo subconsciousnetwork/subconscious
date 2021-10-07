@@ -144,7 +144,7 @@ struct AppModel: Updatable {
                 ).eraseToAnyPublisher()
                 return (self, fx)
             } else {
-                if let query = Slashlink.urlToWikilink(
+                if let query = Slashlink.urlToSlashlinkString(
                     url
                 ) {
                     // If this is a Subtext URL, then commit a search for the
