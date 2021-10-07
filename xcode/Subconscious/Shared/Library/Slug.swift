@@ -52,10 +52,10 @@ extension String {
     }
 
     /// Remove any character that is not POSIX fully-portable filename.
-    /// Basically anything not `[A–Za–z0–9._-]`.
+    /// Basically anything not dashes or letters.
     func removingNonPosixCharacters() -> String {
         self.replacingOccurrences(
-            of: #"[^a-zA-Z0-9\._\-\s/]"#,
+            of: #"[^a-zA-Z0-9\._\-\s]"#,
             with: "",
             options: .regularExpression,
             range: nil
