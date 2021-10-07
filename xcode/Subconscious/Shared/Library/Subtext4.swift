@@ -31,10 +31,9 @@ struct Subtext4: Equatable {
     static let empty = Self(markup: "")
 
     let base: String
-    let headings: [NSRange]
-    let slashlinks: [NSRange]
-    let barelinks: [NSRange]
-    let bracketlinks: [NSRange]
+    let headings: Set<NSRange>
+    let slashlinks: Set<NSRange>
+    let links: Set<NSRange>
 
     init(
         markup: String,
@@ -42,30 +41,35 @@ struct Subtext4: Equatable {
     ) {
         let nsRange = NSRange(markup.startIndex..<markup.endIndex, in: markup)
         self.base = markup
-        self.headings = Self.heading.matches(
+        let headings = Self.heading.matches(
             in: markup,
             range: nsRange
         ).map({ result in
             result.range
         })
-        self.slashlinks = Self.slashlink.matches(
+        self.headings = Set(headings)
+        let slashlinks = Self.slashlink.matches(
             in: markup,
             range: nsRange
         ).map({ result in
             result.range(at: 2)
         })
-        self.barelinks = Self.barelink.matches(
+        self.slashlinks = Set(slashlinks)
+
+        var links = Self.barelink.matches(
             in: markup,
             range: nsRange
         ).map({ result in
             result.range
         })
-        self.bracketlinks = Self.bracketlink.matches(
+        let bracketlinks = Self.bracketlink.matches(
             in: markup,
             range: nsRange
         ).map({ result in
             result.range(at: 1)
         })
+        links.append(contentsOf: bracketlinks)
+        self.links = Set(links)
     }
 
     init(
@@ -109,18 +113,7 @@ struct Subtext4: Equatable {
                 )
             }
         }
-        for nsRange in barelinks {
-            if let url = Range(nsRange, in: base).map({ range in
-                base[range]
-            }) {
-                attributedString.addAttribute(
-                    .link,
-                    value: url,
-                    range: nsRange
-                )
-            }
-        }
-        for nsRange in bracketlinks {
+        for nsRange in links {
             if let url = Range(nsRange, in: base).map({ range in
                 base[range]
             }) {
