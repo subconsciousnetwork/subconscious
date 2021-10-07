@@ -20,7 +20,7 @@ struct Subtext4: Equatable {
     )
 
     static let barelink = try! NSRegularExpression(
-        pattern: #"https?://[^\s]+"#
+        pattern: #"https?://[^\s>]+"#
     )
 
     static let bracketlink = try! NSRegularExpression(
