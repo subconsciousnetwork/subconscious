@@ -14,8 +14,11 @@ struct Subtext4: Equatable {
         options: .anchorsMatchLines
     )
 
+    /// Slashlink pattern
+    /// Currently we only support non-nested slashlinks.
+    /// In future we may allow for slashlink nesting.
     static let slashlink = try! NSRegularExpression(
-        pattern: #"(^|\s)(/[^\s]+)"#,
+        pattern: #"(^|\s)(/[a-zA-Z0-9\-\_]+)"#,
         options: .anchorsMatchLines
     )
 
