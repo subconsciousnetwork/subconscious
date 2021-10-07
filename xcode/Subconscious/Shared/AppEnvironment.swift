@@ -42,26 +42,23 @@ extension AppEnvironment {
 extension AppEnvironment {
     static let migrations = SQLite3Migrations([
         SQLite3Migrations.Migration(
-            date: "2021-07-26T10:33:00",
+            date: "2021-10-07T16:28:00",
             sql: """
             CREATE TABLE search_history (
                 id TEXT PRIMARY KEY,
                 query TEXT NOT NULL,
-                hits INTEGER NOT NULL,
                 created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
             CREATE TABLE entry (
-              path TEXT PRIMARY KEY,
-              title TEXT NOT NULL,
+              slug TEXT PRIMARY KEY,
               body TEXT NOT NULL,
               modified TEXT NOT NULL,
               size INTEGER NOT NULL
             );
 
             CREATE VIRTUAL TABLE entry_search USING fts5(
-              path UNINDEXED,
-              title,
+              slug,
               body,
               modified UNINDEXED,
               size UNINDEXED,
@@ -90,8 +87,7 @@ extension AppEnvironment {
               INSERT INTO entry_search
                 (
                   rowid,
-                  path,
-                  title,
+                  slug,
                   body,
                   modified,
                   size
@@ -99,8 +95,7 @@ extension AppEnvironment {
               VALUES
                 (
                   new.rowid,
-                  new.path,
-                  new.title,
+                  new.slug,
                   new.body,
                   new.modified,
                   new.size
@@ -111,8 +106,7 @@ extension AppEnvironment {
               INSERT INTO entry_search
                 (
                   rowid,
-                  path,
-                  title,
+                  slug,
                   body,
                   modified,
                   size
@@ -120,8 +114,7 @@ extension AppEnvironment {
               VALUES
                 (
                   new.rowid,
-                  new.path,
-                  new.title,
+                  new.slug,
                   new.body,
                   new.modified,
                   new.size

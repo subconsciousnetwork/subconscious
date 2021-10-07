@@ -72,12 +72,12 @@ struct DatabaseService {
 
             // Right = Follower (search index)
             let right = try database.execute(
-                sql: "SELECT path, modified, size FROM entry"
-            ).map({ row  in
+                sql: "SELECT slug, modified, size FROM entry"
+            ).map({ row in
                 FileFingerprint(
-                    url: URL(
-                        fileURLWithPath: try row.get(0).unwrap(),
-                        relativeTo: documentUrl
+                    url: documentUrl.appendingFilename(
+                        name: try row.get(0).unwrap(),
+                        ext: "subtext"
                     ),
                     modified: try row.get(1).unwrap(),
                     size: try row.get(2).unwrap()
@@ -131,20 +131,16 @@ struct DatabaseService {
         modified: Date,
         size: Int
     ) throws {
-        let path = try url.relativizingPath(relativeTo: documentUrl)
-            .unwrap(or: DatabaseServiceError.pathNotInFilePath)
         try database.execute(
             sql: """
-            INSERT INTO entry (path, title, body, modified, size)
-            VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(path) DO UPDATE SET
-                title=excluded.title,
+            INSERT INTO entry (slug, body, modified, size)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(slug) DO UPDATE SET
                 body=excluded.body,
                 modified=excluded.modified,
                 size=excluded.size
             """,
             parameters: [
-                .text(path),
                 .text(url.stem),
                 .text(content),
                 .date(modified),
@@ -254,8 +250,8 @@ struct DatabaseService {
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
         let results: [String] = try database.execute(
             sql: """
-            SELECT DISTINCT title
-            FROM entry_search
+            SELECT slug
+            FROM entry
             ORDER BY modified DESC
             LIMIT 5
             """
@@ -279,16 +275,18 @@ struct DatabaseService {
         )
     }
 
-    private func searchSuggestionsForQuery(query: String) throws -> [Suggestion] {
+    private func searchSuggestionsForQuery(
+        query: String
+    ) throws -> [Suggestion] {
         guard !query.isWhitespace else {
             return []
         }
 
         let results: [String] = try database.execute(
             sql: """
-            SELECT DISTINCT title
+            SELECT slug
             FROM entry_search
-            WHERE entry_search.title MATCH ?
+            WHERE entry_search.body MATCH ?
             ORDER BY rank
             LIMIT 5
             """,
@@ -347,17 +345,12 @@ struct DatabaseService {
             // Log search in database, along with number of hits
             try database.execute(
                 sql: """
-                INSERT INTO search_history (id, query, hits)
-                VALUES (?, ?, (
-                    SELECT count(path)
-                    FROM entry_search
-                    WHERE entry_search MATCH ?
-                ));
+                INSERT INTO search_history (id, query)
+                VALUES (?, ?);
                 """,
                 parameters: [
                     .text(UUID().uuidString),
-                    .text(query),
-                    .queryFTS5(query),
+                    .text(query)
                 ]
             )
         }
@@ -365,69 +358,47 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
-    private func findEntryByTitle(
-        _ title: String
-    ) throws -> TextFile? {
-        let results: [TextFile] = try database.execute(
-            sql: """
-            SELECT entry.path
-            FROM entry
-            WHERE entry.title LIKE ?
-            LIMIT 1
-            """,
-            parameters: [
-                .text(title)
-            ]
-        ).compactMap({ row in
-            if let path: String = row.get(0) {
-                return try? TextFile(
-                    url: URL(fileURLWithPath: path, relativeTo: documentUrl)
-                )
-            }
-            return nil
-        })
-        return results.first
+    private func getEntry(
+        slug: String
+    ) -> TextFile? {
+        try? TextFile(
+            url: documentUrl.appendingFilename(name: slug, ext: "subtext")
+        )
     }
 
-    func search(query: String) -> AnyPublisher<ResultSet, Error> {
+    /// Get entry and backlinks from slug
+    /// We trust caller to slugify the string, if necessary.
+    /// Allowing any string allows us to retreive files that don't have a clean slug.
+    func search(slug: String) -> AnyPublisher<ResultSet, Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            guard !query.isWhitespace else {
+            guard !slug.isWhitespace else {
                 return ResultSet()
             }
 
-            let matches: [TextFile] = try database.execute(
+            let backlinks: [TextFile] = try database.execute(
                 sql: """
-                SELECT path
+                SELECT slug
                 FROM entry_search
-                WHERE entry_search MATCH ?
-                AND rank = 'bm25(0.0, 10.0, 1.0, 0.0, 0.0)'
+                WHERE entry_search.body MATCH ?
                 ORDER BY rank
                 LIMIT 200
                 """,
                 parameters: [
-                    .queryFTS5(query)
+                    .queryFTS5(slug)
                 ]
             ).compactMap({ row in
-                if let path: String = row.get(0) {
-                    let url = documentUrl.appendingPathComponent(path)
-                    return try? TextFile(url: url)
+                if let matchSlug: String = row.get(0) {
+                    if matchSlug != slug {
+                        return self.getEntry(slug: matchSlug)
+                    }
                 }
                 return nil
             })
 
-            let entry = try findEntryByTitle(query)
-
-            let backlinks: [TextFile]
-            if let entry = entry {
-                // If we have an entry, filter it out of the results
-                backlinks = matches.filter({ fileEntry in
-                    fileEntry.id != entry.id
-                })
-            } else {
-                backlinks = matches
-            }
+            let entry = getEntry(slug: slug)
 
             return ResultSet(
+                query: slug,
                 entry: entry,
                 backlinks: backlinks
             )
