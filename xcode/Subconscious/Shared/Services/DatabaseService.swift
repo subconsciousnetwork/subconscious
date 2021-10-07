@@ -36,7 +36,7 @@ struct DatabaseService {
 
     /// Helper function for generating draft URLs
     func findUniqueURL(name: String) -> URL {
-        FileManager.default.findUniqueURL(
+        Slashlink.findUniqueURL(
             at: documentUrl,
             name: name,
             ext: "subtext"
