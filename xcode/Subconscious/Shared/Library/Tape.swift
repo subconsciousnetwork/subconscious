@@ -21,9 +21,9 @@ where T: Collection,
     private(set) var savedIndex: T.Index
     let collection: T
 
-    init(_ collection: T, startIndex: T.Index? = nil) {
+    init(_ collection: T) {
         self.collection = collection
-        let start = startIndex ?? collection.startIndex
+        let start = collection.startIndex
         self.startIndex = start
         self.currentIndex = start
         self.savedIndex = start
@@ -42,6 +42,13 @@ where T: Collection,
     /// Generally called at the beginning of each loop.
     mutating func setStart() {
         startIndex = currentIndex
+    }
+
+    /// Take current subsequence and advance startIndex to end of subsequence.
+    mutating func snip() -> T.SubSequence {
+        let subsequence = self.subsequence
+        self.setStart()
+        return subsequence
     }
 
     mutating func advance(_ offset: Int = 1) {
@@ -79,6 +86,19 @@ where T: Collection,
             }
         }
         return false
+    }
+
+    /// Consume tape until you encounter a flag subsequence, or until tape is exhausted.
+    /// Return subsequence up until flag, but not including flag.
+    mutating func consumeUntil(_ flag: T.SubSequence) -> T.SubSequence {
+        self.setStart()
+        while !isExhausted() {
+            if peek(next: flag.count) == flag {
+                return self.snip()
+            }
+            self.advance()
+        }
+        return self.snip()
     }
 
     /// Get a single-item SubSequence offset by `forward` of the `currentStartIndex`.
