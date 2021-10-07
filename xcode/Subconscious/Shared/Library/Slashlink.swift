@@ -35,13 +35,10 @@ extension Slashlink {
         return nil
     }
 
-    static func urlToWikilink(_ url: URL) -> String? {
+    static func urlToSlashlinkString(_ url: URL) -> String? {
         if isSlashlinkURL(url) {
-            if let path = url.path.removingPercentEncoding {
-                if path.hasPrefix("/") {
-                    return String(path.dropFirst())
-                }
-                return path
+            if url.path.hasPrefix("/") {
+                return String(url.path.dropFirst())
             }
         }
         return nil
