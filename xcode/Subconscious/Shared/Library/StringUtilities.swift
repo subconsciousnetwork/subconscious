@@ -43,6 +43,20 @@ extension Substring {
     }
 }
 
+extension Substring {
+    // Implement trim for substring
+    func trimming(_ character: Character) -> Substring {
+        var substring = self
+        while substring.first == character {
+            let _ = substring.popFirst()
+        }
+        while substring.last == character {
+            let _ = substring.popLast()
+        }
+        return substring
+    }
+}
+
 extension String {
     func replacingNewlineWithSpace() -> String {
         self.replacingOccurrences(
