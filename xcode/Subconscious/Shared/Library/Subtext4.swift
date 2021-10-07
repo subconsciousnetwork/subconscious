@@ -15,7 +15,8 @@ struct Subtext4: Equatable {
     )
 
     static let slashlink = try! NSRegularExpression(
-        pattern: #"\b/[^\s]+"#
+        pattern: #"(^|\s)(/[^\s]+)"#,
+        options: .anchorsMatchLines
     )
 
     static let barelink = try! NSRegularExpression(
@@ -51,7 +52,7 @@ struct Subtext4: Equatable {
             in: markup,
             range: nsRange
         ).map({ result in
-            result.range
+            result.range(at: 2)
         })
         self.barelinks = Self.barelink.matches(
             in: markup,
