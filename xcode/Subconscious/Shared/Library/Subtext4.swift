@@ -84,7 +84,7 @@ struct Subtext4: Equatable {
     }
 
     /// Render markup verbatim with syntax highlighting and links
-    func renderMarkup(url: (Substring) -> String?) -> NSAttributedString {
+    func renderMarkup(url: (String) -> String?) -> NSAttributedString {
         let attributedString = NSMutableAttributedString(string: base)
         // Set default styles for entire string
         attributedString.addAttribute(
@@ -104,7 +104,7 @@ struct Subtext4: Equatable {
                 let text = Range(nsRange, in: base).map({ range in
                     base[range]
                 }),
-                let url = url(text)
+                let url = url(String(text))
             {
                 attributedString.addAttribute(
                     .link,

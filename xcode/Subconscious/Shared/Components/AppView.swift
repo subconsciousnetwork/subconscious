@@ -101,7 +101,7 @@ struct AppModel: Updatable {
         Subtext4(
             markup: markup,
             range: selection
-        ).renderMarkup(url: SubtextURL.wikilinkToURLString)
+        ).renderMarkup(url: Slashlink.slashlinkToURLString)
     }
 
     //  MARK: Update
@@ -144,7 +144,7 @@ struct AppModel: Updatable {
                 ).eraseToAnyPublisher()
                 return (self, fx)
             } else {
-                if let query = SubtextURL.urlToWikilink(
+                if let query = Slashlink.urlToWikilink(
                     url
                 ) {
                     // If this is a Subtext URL, then commit a search for the

@@ -47,8 +47,8 @@
 		B878C9832703F47A0042DF72 /* SuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B878C9812703F47A0042DF72 /* SuggestionLabelView.swift */; };
 		B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */; };
 		B8879EA126F90C5100A0B4FF /* AppNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */; };
-		B8879EA626F9348600A0B4FF /* SubtextURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA526F9348600A0B4FF /* SubtextURL.swift */; };
-		B8879EA726F9348600A0B4FF /* SubtextURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA526F9348600A0B4FF /* SubtextURL.swift */; };
+		B8879EA626F9348600A0B4FF /* Slashlink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA526F9348600A0B4FF /* Slashlink.swift */; };
+		B8879EA726F9348600A0B4FF /* Slashlink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA526F9348600A0B4FF /* Slashlink.swift */; };
 		B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */; };
 		B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */; };
 		B8879EAC26F944DA00A0B4FF /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EAB26F944DA00A0B4FF /* DetailView.swift */; };
@@ -116,7 +116,7 @@
 		B864598626F97B81007969E3 /* KeyboardToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardToolbarView.swift; sourceTree = "<group>"; };
 		B878C9812703F47A0042DF72 /* SuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionLabelView.swift; sourceTree = "<group>"; };
 		B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigationView.swift; sourceTree = "<group>"; };
-		B8879EA526F9348600A0B4FF /* SubtextURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextURL.swift; sourceTree = "<group>"; };
+		B8879EA526F9348600A0B4FF /* Slashlink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slashlink.swift; sourceTree = "<group>"; };
 		B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinksView.swift; sourceTree = "<group>"; };
 		B8879EAB26F944DA00A0B4FF /* DetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
 		B8E4B6F126F28BA600B9BE21 /* GrowableTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowableTextViewRepresentable.swift; sourceTree = "<group>"; };
@@ -284,7 +284,7 @@
 				B8082AA926F3B43A004B10BB /* Store.swift */,
 				B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */,
 				B845FCC427051BF7001ECE4F /* Subtext4.swift */,
-				B8879EA526F9348600A0B4FF /* SubtextURL.swift */,
+				B8879EA526F9348600A0B4FF /* Slashlink.swift */,
 				B824FDCD26FA662200B81BBD /* TextFile.swift */,
 				B824FDD326FAB1BC00B81BBD /* Truncate.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
@@ -479,7 +479,7 @@
 				B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8082AAA26F3B43A004B10BB /* Store.swift in Sources */,
-				B8879EA626F9348600A0B4FF /* SubtextURL.swift in Sources */,
+				B8879EA626F9348600A0B4FF /* Slashlink.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* DetailView.swift in Sources */,
 				B82C3A7626F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B845FCC527051BF7001ECE4F /* Subtext4.swift in Sources */,
@@ -517,7 +517,7 @@
 				B824FDD526FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8082AAB26F3B43A004B10BB /* Store.swift in Sources */,
-				B8879EA726F9348600A0B4FF /* SubtextURL.swift in Sources */,
+				B8879EA726F9348600A0B4FF /* Slashlink.swift in Sources */,
 				B8879EAD26F944DA00A0B4FF /* DetailView.swift in Sources */,
 				B82C3A7726F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B845FCC627051BF7001ECE4F /* Subtext4.swift in Sources */,

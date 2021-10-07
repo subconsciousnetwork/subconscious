@@ -55,7 +55,7 @@ extension String {
     /// Basically anything not `[A–Za–z0–9._-]`.
     func removingNonPosixCharacters() -> String {
         self.replacingOccurrences(
-            of: #"[^a-zA-Z0-9\._\-\s]"#,
+            of: #"[^a-zA-Z0-9\._\-\s/]"#,
             with: "",
             options: .regularExpression,
             range: nil
