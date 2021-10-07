@@ -15,7 +15,7 @@ extension Slashlink {
     }
 
     /// Given a string, returns a slashlink slug *without* the slash prefix.
-    static func toSlashlink(_ text: String) -> String {
+    static func toSlug(_ text: String) -> String {
         text
             .lowercased()
             .replacingSpacesWithDash()
@@ -25,7 +25,7 @@ extension Slashlink {
     }
 
     static func slashlinkToURLString(_ text: String) -> String? {
-        let slashlink = toSlashlink(text)
+        let slashlink = toSlug(text)
         if let url = URL(string: "sub://slashlink/\(slashlink)") {
             return url.absoluteString
         }
@@ -49,7 +49,7 @@ extension Slashlink {
         name: String,
         ext: String
     ) -> URL {
-        let slug = toSlashlink(name)
+        let slug = toSlug(name)
         let url = base.appendingFilename(name: slug, ext: ext)
         if !FileManager.default.fileExists(atPath: url.path) {
             return url
