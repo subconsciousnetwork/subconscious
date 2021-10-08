@@ -287,7 +287,6 @@ struct AppModel: Updatable {
             model.entryURL = entryURL ?? AppEnvironment.database.findUniqueURL(
                 name: results.query
             )
-            print("entryURL", model.entryURL)
             model.editorAttributedText = Self.renderMarkup(
                 markup: results.entry?.content ?? results.query,
                 selection: model.editorSelection
