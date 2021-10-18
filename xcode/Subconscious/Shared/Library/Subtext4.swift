@@ -16,12 +16,12 @@ struct Subtext4: Equatable {
 
     /// Slashlink pattern
     static let slashlink = try! NSRegularExpression(
-        pattern: #"(^|\s)(/[a-zA-Z0-9/\-\_]+)\.?"#,
+        pattern: #"(^|\s)(/[a-zA-Z0-9/\-\_]+)"#,
         options: .anchorsMatchLines
     )
 
     static let barelink = try! NSRegularExpression(
-        pattern: #"https?://[^\s>]+"#
+        pattern: #"(^|\s)(https?://[^\s>]+)[\.,;]?"#
     )
 
     static let bracketlink = try! NSRegularExpression(
@@ -61,7 +61,7 @@ struct Subtext4: Equatable {
             in: markup,
             range: nsRange
         ).map({ result in
-            result.range
+            result.range(at: 2)
         })
         let bracketlinks = Self.bracketlink.matches(
             in: markup,
