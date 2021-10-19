@@ -6,21 +6,6 @@
 //
 
 import SwiftUI
-import OrderedCollections
-
-enum Suggestion: Hashable, CustomStringConvertible {
-    case entry(Stub)
-    case search(Stub)
-
-    var description: String {
-        switch self {
-        case let .entry(stub):
-            return stub.title
-        case let .search(stub):
-            return stub.title
-        }
-    }
-}
 
 struct SuggestionLabelView: View {
     var suggestion: Suggestion
@@ -29,7 +14,7 @@ struct SuggestionLabelView: View {
         case let .entry(stub):
             Label(
                 title: {
-                    VStack {
+                    VStack(alignment: .leading, spacing: 0) {
                         Text(stub.title)
                             .foregroundColor(Color.text)
                         Text(stub.slug)
@@ -43,7 +28,7 @@ struct SuggestionLabelView: View {
         case let .search(stub):
             Label(
                 title: {
-                    VStack {
+                    VStack(alignment: .leading, spacing: 0) {
                         Text(stub.title)
                             .foregroundColor(Color.text)
                         Text("New note")
@@ -66,7 +51,7 @@ struct SuggestionLabelView2: View {
         case let .entry(stub):
             Label(
                 title: {
-                    VStack {
+                    VStack(alignment: .leading, spacing: 0) {
                         Text(stub.title)
                             .foregroundColor(Color.text)
                         Text(stub.slug)
@@ -80,7 +65,7 @@ struct SuggestionLabelView2: View {
         case let .search(stub):
             Label(
                 title: {
-                    HStack {
+                    VStack(alignment: .leading, spacing: 0) {
                         Text(stub.title)
                             .foregroundColor(Color.text)
                     }
