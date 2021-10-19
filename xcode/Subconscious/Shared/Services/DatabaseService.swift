@@ -195,69 +195,28 @@ struct DatabaseService {
         )
     }
 
-    private static func collateSuggestions(
-        query: String,
-        results: [String],
-        queries: [String]
-    ) -> [Suggestion] {
-        let resultPairs = results.map({ string in
-            (string.toSlug(), string)
-        })
-
-        let queryPairs = queries.map({ string in
-            (string.toSlug(), string)
-        })
-
-        let resultDict = OrderedDictionary(
-            resultPairs,
-            uniquingKeysWith: { (first, _) in first }
-        )
-
-        let querySlug = query.toSlug()
-
-        var queryDict = OrderedDictionary(
-            queryPairs,
-            uniquingKeysWith: { (first, _) in first }
-        )
-
-        // Remove queries that are also in results
-        queryDict.removeKeys(keys: resultDict.keys.elements)
-        // Remove query itself. We always place the literal query as the first result.
-        queryDict.removeValue(forKey: querySlug)
-
-        // Create a mutable array we can use for suggestions.
-        var suggestions: [Suggestion] = []
-
-        // If we have a user query, and the query is not in results,
-        // then append it to top.
-        if !query.isWhitespace && resultDict[query.toSlug()] == nil {
-            suggestions.append(
-                .search(query)
-            )
-        }
-
-        for query in resultDict.values {
-            suggestions.append(.entry(query))
-        }
-
-        for query in queryDict.values {
-            suggestions.append(.search(query))
-        }
-
-        return suggestions
-    }
-
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
-        let results: [String] = try database.execute(
+        let results: [Stub] = try database.execute(
             sql: """
-            SELECT slug
+            SELECT slug, body
             FROM entry
             ORDER BY modified DESC
             LIMIT 5
             """
-        ).compactMap({ row in row.get(0) })
+        ).compactMap({ row in
+            if
+                let title: String = row.get(1),
+                let slug: String = row.get(0)
+            {
+                return Stub(
+                    title: title,
+                    slug: slug
+                )
+            }
+            return nil
+        })
 
-        let queries: [String] = try database.execute(
+        let queries: [Stub] = try database.execute(
             sql: """
             SELECT DISTINCT search_history.query
             FROM search_history
@@ -265,14 +224,16 @@ struct DatabaseService {
             LIMIT 5
             """
         ).compactMap({ row in
-            row.get(0)
+            if let title: String = row.get(0) {
+                return Stub(title: title)
+            }
+            return nil
         })
 
-        return Self.collateSuggestions(
-            query: "",
-            results: results,
-            queries: queries
-        )
+        var suggestions: [Suggestion] = []
+        suggestions.append(contentsOf: results.map(Suggestion.entry))
+        suggestions.append(contentsOf: queries.map(Suggestion.search))
+        return suggestions
     }
 
     private func searchSuggestionsForQuery(
@@ -282,11 +243,11 @@ struct DatabaseService {
             return []
         }
 
-        let results: [String] = try database.execute(
+        let results: [Stub] = try database.execute(
             sql: """
-            SELECT slug
+            SELECT slug, body
             FROM entry_search
-            WHERE entry_search.body MATCH ?
+            WHERE entry_search MATCH ?
             ORDER BY rank
             LIMIT 5
             """,
@@ -294,10 +255,21 @@ struct DatabaseService {
                 .prefixQueryFTS5(query)
             ]
         ).compactMap({ row in
-            row.get(0)
+            if
+                let title: String = row.get(1),
+                let slug: String = row.get(0)
+            {
+                return Stub(
+                    title: title,
+                    slug: slug
+                )
+            }
+            return nil
         })
 
-        let queries: [String] = try database.execute(
+        let resultSlugs = Set(results.map(\.slug))
+
+        let queries: [Stub] = try database.execute(
             sql: """
             SELECT DISTINCT query
             FROM search_history
@@ -309,14 +281,25 @@ struct DatabaseService {
                 .prefixQueryLike(query)
             ]
         ).compactMap({ row in
-            row.get(0)
+            if let title: String = row.get(0) {
+                return Stub(title: title)
+            }
+            return nil
+        }).filter({ stub in
+            !resultSlugs.contains(stub.slug)
         })
 
-        return Self.collateSuggestions(
-            query: query,
-            results: results,
-            queries: queries
-        )
+        var suggestions: [Suggestion] = []
+        if !resultSlugs.contains(query.toSlug()) {
+            suggestions.append(
+                .search(
+                    Stub(title: query)
+                )
+            )
+        }
+        suggestions.append(contentsOf: results.map(Suggestion.entry))
+        suggestions.append(contentsOf: queries.map(Suggestion.search))
+        return suggestions
     }
 
     /// Fetch search suggestions

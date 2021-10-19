@@ -42,7 +42,7 @@ extension AppEnvironment {
 extension AppEnvironment {
     static let migrations = SQLite3Migrations([
         SQLite3Migrations.Migration(
-            date: "2021-10-07T16:28:00",
+            date: "2021-10-19T14:17:00",
             sql: """
             CREATE TABLE search_history (
                 id TEXT PRIMARY KEY,
