@@ -80,7 +80,7 @@ struct AppNavigationView: View {
                                     },
                                     onCommitSearch: { query in
                                         store.send(
-                                            action: .commitSearch(query)
+                                            action: .commitSearch(query: query)
                                         )
                                     },
                                     onCommitLinkSearch: { query in
@@ -110,7 +110,10 @@ struct AppNavigationView: View {
                 ForEach(store.state.suggestions, id: \.self) { suggestion in
                     Button(action: {
                         store.send(
-                            action: .commitSearch(suggestion.description)
+                            action: .commit(
+                                query: suggestion.stub.title,
+                                slug: suggestion.stub.slug
+                            )
                         )
                     }) {
                         SuggestionLabelView(suggestion: suggestion)
@@ -128,7 +131,9 @@ struct AppNavigationView: View {
             // suggestions so that this only catches keyboard submissions.
             // 2021-09-29 Gordon Brander
             .onSubmit(of: .search, {
-                store.send(action: .commitSearch(store.state.searchBarText))
+                store.send(
+                    action: .commitSearch(query: store.state.searchBarText)
+                )
             })
         }
     }
