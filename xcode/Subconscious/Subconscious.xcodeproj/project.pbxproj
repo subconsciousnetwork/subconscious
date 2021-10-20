@@ -31,8 +31,6 @@
 		B82C3A6326F576FC00833CC8 /* URLUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6126F576FB00833CC8 /* URLUtilities.swift */; };
 		B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */; };
 		B82C3A6626F5796300833CC8 /* OptionalUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */; };
-		B82C3A6B26F6B18100833CC8 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6A26F6B18100833CC8 /* Slug.swift */; };
-		B82C3A6C26F6B18100833CC8 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6A26F6B18100833CC8 /* Slug.swift */; };
 		B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = B82C3A6E26F6B1C000833CC8 /* Collections */; };
 		B82C3A7126F6B1C000833CC8 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = B82C3A7026F6B1C000833CC8 /* OrderedCollections */; };
 		B82C3A7326F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A7226F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift */; };
@@ -113,7 +111,6 @@
 		B82C3A5E26F576C600833CC8 /* FileManagerUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileManagerUtilities.swift; sourceTree = "<group>"; };
 		B82C3A6126F576FB00833CC8 /* URLUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URLUtilities.swift; sourceTree = "<group>"; };
 		B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionalUtilities.swift; sourceTree = "<group>"; };
-		B82C3A6A26F6B18100833CC8 /* Slug.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
 		B82C3A7226F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrdereredDictionaryUtilities.swift; sourceTree = "<group>"; };
 		B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringUtilities.swift; sourceTree = "<group>"; };
 		B845FCC427051BF7001ECE4F /* Subtext4.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext4.swift; sourceTree = "<group>"; };
@@ -295,7 +292,6 @@
 				B82C3A7226F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift */,
 				B8EC568126F415C800AC64E5 /* PublisherBag.swift */,
 				B824FDD026FA98F300B81BBD /* ResultSet.swift */,
-				B82C3A6A26F6B18100833CC8 /* Slug.swift */,
 				B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */,
 				B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */,
 				B8082AA926F3B43A004B10BB /* Store.swift */,
@@ -513,7 +509,6 @@
 				B8EC568F26F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
 				B82C3A7326F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */,
 				B82C3A5326F528B000833CC8 /* DatabaseService.swift in Sources */,
-				B82C3A6B26F6B18100833CC8 /* Slug.swift in Sources */,
 				B878C9822703F47A0042DF72 /* SuggestionLabelView.swift in Sources */,
 				B8E4B6F226F28BA600B9BE21 /* GrowableTextViewRepresentable.swift in Sources */,
 				B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */,
@@ -553,7 +548,6 @@
 				B8EC569026F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
 				B82C3A7426F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */,
 				B82C3A5426F528B000833CC8 /* DatabaseService.swift in Sources */,
-				B82C3A6C26F6B18100833CC8 /* Slug.swift in Sources */,
 				B878C9832703F47A0042DF72 /* SuggestionLabelView.swift in Sources */,
 				B8E4B6F326F28BA700B9BE21 /* GrowableTextViewRepresentable.swift in Sources */,
 				B8879EA126F90C5100A0B4FF /* AppNavigationView.swift in Sources */,

@@ -65,7 +65,7 @@ enum AppAction {
         AppAction.commit(
             query: query,
             // Since we don't have a slug, derive slug from query
-            slug: query.toSlug()
+            slug: Slashlink.slugify(query)
         )
     }
 }

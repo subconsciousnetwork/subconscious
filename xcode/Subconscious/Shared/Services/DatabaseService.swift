@@ -290,7 +290,8 @@ struct DatabaseService {
         })
 
         var suggestions: [Suggestion] = []
-        if !resultSlugs.contains(query.toSlug()) {
+        let slug = Slashlink.slugify(query)
+        if !resultSlugs.contains(slug) {
             suggestions.append(
                 .search(
                     Stub(title: query)

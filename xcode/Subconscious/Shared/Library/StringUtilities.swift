@@ -66,3 +66,19 @@ extension String {
         )
     }
 }
+
+extension String {
+    /// Truncate to avoid file name length limit issues.
+    /// Windows systems can handle up to 255, but we truncate at 200 to leave a bit of room
+    /// for things like version numbers.
+    func truncatingSafeFileNameLength() -> String {
+        String(self.prefix(200))
+    }
+}
+
+extension StringProtocol {
+    /// Upercase first letter in string.
+    func firstUppercased() -> String {
+        prefix(1).uppercased() + dropFirst()
+    }
+}

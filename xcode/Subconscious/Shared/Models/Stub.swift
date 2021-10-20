@@ -20,7 +20,7 @@ struct Stub: Hashable, Identifiable {
 
     init(title: String) {
         self.title = title
-        self.slug = title.toSlug()
+        self.slug = Slashlink.slugify(title)
     }
 
     var id: String { slug }
