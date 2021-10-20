@@ -26,7 +26,8 @@ enum AppAction {
 
     // Search
     case setSearch(String)
-    case commitSearch(String)
+    // Commit a search with query and slug (typically via suggestion)
+    case commit(query: String, slug: String)
 
     // Search suggestions
     case setSuggestions([Suggestion])
@@ -57,6 +58,16 @@ enum AppAction {
         url: URL,
         message: String
     )
+
+    /// Create a "commit" action with only a query and no slug.
+    /// Used as a shorthand for search commits that aren't issued from suggestions.
+    static func commitSearch(query: String) -> Self {
+        AppAction.commit(
+            query: query,
+            // Since we don't have a slug, derive slug from query
+            slug: query.toSlug()
+        )
+    }
 }
 
 //  MARK: Model
@@ -67,8 +78,10 @@ struct AppModel: Updatable {
     var isDetailShowing = false
     // Live search bar text
     var searchBarText = ""
-    // Committed search bar text
+    // Committed search bar query text
     var query = ""
+    // Slug committed during search
+    var slug = ""
     // Main search suggestions
     var suggestions: [Suggestion] = []
     var isEditorFocused = false
@@ -144,13 +157,13 @@ struct AppModel: Updatable {
                 ).eraseToAnyPublisher()
                 return (self, fx)
             } else {
-                if let query = Slashlink.urlToSlashlinkString(
-                    url
-                ) {
+                if let slug = Slashlink.urlToSlashlinkString(url) {
                     // If this is a Subtext URL, then commit a search for the
                     // corresponding query
                     let fx = Just(
-                        AppAction.commitSearch(query)
+                        AppAction.commitSearch(
+                            query: slug
+                        )
                     ).eraseToAnyPublisher()
                     return (self, fx)
                 } else {
@@ -258,17 +271,17 @@ struct AppModel: Updatable {
                 "Suggest failed: \(message)"
             )
             return (self, Empty().eraseToAnyPublisher())
-        case let .commitSearch(query):
+        case let .commit(query, slug):
             var model = self
             Self.resetEditor(&model)
-            model.query = query
             model.entryURL = nil
             model.searchBarText = ""
             model.isDetailShowing = true
 
             let suggest = Just(AppAction.setSearch(""))
             let search = AppEnvironment.database.search(
-                slug: query
+                query: query,
+                slug: slug
             ).map({ results in
                 AppAction.setDetail(results)
             }).catch({ error in
@@ -282,10 +295,12 @@ struct AppModel: Updatable {
             return (model, fx)
         case let .setDetail(results):
             var model = self
+            model.query = results.query
+            model.slug = results.slug
             model.backlinks = results.backlinks
             let entryURL = results.entry?.url
             model.entryURL = entryURL ?? AppEnvironment.database.findUniqueURL(
-                name: results.query
+                name: results.slug
             )
             model.editorAttributedText = Self.renderMarkup(
                 markup: results.entry?.content ?? results.query,

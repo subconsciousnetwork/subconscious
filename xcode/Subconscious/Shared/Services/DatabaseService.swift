@@ -352,7 +352,10 @@ struct DatabaseService {
     /// Get entry and backlinks from slug
     /// We trust caller to slugify the string, if necessary.
     /// Allowing any string allows us to retreive files that don't have a clean slug.
-    func search(slug: String) -> AnyPublisher<ResultSet, Error> {
+    func search(
+        query: String,
+        slug: String
+    ) -> AnyPublisher<ResultSet, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             guard !slug.isWhitespace else {
                 return ResultSet()
@@ -372,7 +375,7 @@ struct DatabaseService {
             ).compactMap({ row in
                 if let matchSlug: String = row.get(0) {
                     if matchSlug != slug {
-                        return self.getEntry(slug: matchSlug)
+                        return getEntry(slug: matchSlug)
                     }
                 }
                 return nil
@@ -381,7 +384,8 @@ struct DatabaseService {
             let entry = getEntry(slug: slug)
 
             return ResultSet(
-                query: slug,
+                query: query,
+                slug: slug,
                 entry: entry,
                 backlinks: backlinks
             )
