@@ -7,31 +7,17 @@
 
 import SwiftUI
 
-enum Suggestion: Hashable, CustomStringConvertible {
-    case entry(String)
-    case search(String)
-
-    var description: String {
-        switch self {
-        case let .entry(string):
-            return string
-        case let .search(string):
-            return string
-        }
-    }
-}
-
 struct SuggestionLabelView: View {
     var suggestion: Suggestion
     var body: some View {
         switch suggestion {
-        case .entry(let text):
+        case let .entry(stub):
             Label(
                 title: {
-                    HStack {
-                        Text(text)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(stub.title)
                             .foregroundColor(Color.text)
-                        Text("— Open")
+                        Text(stub.slug)
                             .foregroundColor(Color.secondaryText)
                     }
                 },
@@ -39,18 +25,18 @@ struct SuggestionLabelView: View {
                     Image(systemName: "doc")
                 }
             ).lineLimit(1)
-        case .search(let text):
+        case let .search(stub):
             Label(
                 title: {
-                    HStack {
-                        Text(text)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(stub.title)
                             .foregroundColor(Color.text)
-                        Text("— Create")
+                        Text("New note")
                             .foregroundColor(Color.secondaryText)
                     }
                 },
                 icon: {
-                    Image(systemName: "magnifyingglass")
+                    Image(systemName: "doc.badge.plus")
                 }
             ).lineLimit(1)
         }
@@ -62,23 +48,25 @@ struct SuggestionLabelView2: View {
     var suggestion: Suggestion
     var body: some View {
         switch suggestion {
-        case .entry(let text):
+        case let .entry(stub):
             Label(
                 title: {
-                    HStack {
-                        Text(text)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(stub.title)
                             .foregroundColor(Color.text)
+                        Text(stub.slug)
+                            .foregroundColor(Color.secondaryText)
                     }
                 },
                 icon: {
                     Image(systemName: "doc")
                 }
             ).lineLimit(1)
-        case .search(let text):
+        case let .search(stub):
             Label(
                 title: {
-                    HStack {
-                        Text(text)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(stub.title)
                             .foregroundColor(Color.text)
                     }
                 },
@@ -93,7 +81,9 @@ struct SuggestionLabelView2: View {
 struct SuggestionLabel_Previews: PreviewProvider {
     static var previews: some View {
         SuggestionLabelView(
-            suggestion: .search("Floop the pig")
+            suggestion: .search(
+                Stub(title: "Floop the pig")
+            )
         )
     }
 }

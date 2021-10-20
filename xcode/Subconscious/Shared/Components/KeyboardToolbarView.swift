@@ -54,7 +54,11 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
         KeyboardToolbarView(
             isSheetPresented: .constant(false),
             suggestions: .constant([
-                .search("An organism is a living system maintaining both a higher level of internal cooperation")
+                .search(
+                    Stub(
+                        title: "An organism is a living system maintaining both a higher level of internal cooperation"
+                    )
+                )
             ])
         )
     }

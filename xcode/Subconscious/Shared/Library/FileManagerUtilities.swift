@@ -21,37 +21,4 @@ extension FileManager {
             options: .skipsHiddenFiles
         )
     }
-
-    func fileExists(atURL url: URL) -> Bool {
-        self.fileExists(atPath: url.path)
-    }
-
-    /// Get a unique versioned filename for file, given a base URL, name, extension.
-    /// Increments version until it finds a unique filename.
-    /// - Returns: URL
-    func findUniqueURL(
-        at url: URL,
-        name: String,
-        ext: String,
-        version: Int = 1
-    ) -> URL {
-        // Only version numbers one and above, please.
-        let version = max(version, 1)
-
-        let versionedURL = url.appendingVersionedFilename(
-            name: name,
-            ext: ext,
-            version: version
-        )
-        if self.fileExists(atURL: versionedURL) {
-            return findUniqueURL(
-                at: url,
-                name: name,
-                ext: ext,
-                version: version + 1
-            )
-        } else {
-            return versionedURL
-        }
-    }
 }
