@@ -28,25 +28,41 @@ struct Subtext5 {
 
     struct Inline {
         var links: [Substring] = []
-        var bracketLinks: [Substring] = []
+        var bracketlinks: [Substring] = []
         var slashlinks: [Substring] = []
+    }
+
+    /// Consume a well-formed bracket link, or else backtrack
+    static func consumeBracketLink(tape: inout Tape<Substring>) -> Substring? {
+        tape.save()
+        while !tape.isExhausted() {
+            if tape.consumeMatch(" ") {
+                tape.backtrack()
+                return nil
+            } else if tape.consumeMatch(">") {
+                return tape.cut()
+            } else {
+                tape.consume()
+            }
+        }
+        tape.backtrack()
+        return nil
     }
 
     static func parseInline(tape: inout Tape<Substring>) -> Inline {
         var inline = Inline()
         while !tape.isExhausted() {
             tape.start()
-            if tape.consumeMatch("https://") {
+            if tape.consumeMatch("<") {
+                if let link = consumeBracketLink(tape: &tape) {
+                    inline.bracketlinks.append(link)
+                }
+            } else if tape.consumeMatch("https://") {
                 tape.consumeUntil(" ")
                 inline.links.append(tape.cut())
             } else if tape.consumeMatch("http://") {
                 tape.consumeUntil(" ")
                 inline.links.append(tape.cut())
-            } else if tape.consumeMatch("<") {
-                tape.consumeUntil(">")
-                if tape.consumeMatch(">") {
-                    inline.bracketLinks.append(tape.cut())
-                }
             } else if tape.consumeMatch("/") {
                 tape.consumeUntil(" ")
                 inline.slashlinks.append(tape.cut())
@@ -88,6 +104,8 @@ struct Subtext5 {
             omittingEmptySubsequences: false,
             whereSeparator: \.isNewline
         ).map(Self.parseLine)
+
+        print(self.blocks)
     }
 
     /// Render markup verbatim with syntax highlighting and links
