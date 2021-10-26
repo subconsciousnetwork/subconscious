@@ -10,26 +10,42 @@ import SwiftUI
 
 struct Subtext5 {
     enum Block {
-        case text(line: Substring, inline: Inline)
-        case list(line: Substring, inline: Inline)
-        case quote(line: Substring, inline: Inline)
-        case heading(line: Substring)
+        case text(span: Substring, inline: [Inline])
+        case list(span: Substring, inline: [Inline])
+        case quote(span: Substring, inline: [Inline])
+        case heading(span: Substring)
 
         /// Returns the body of a block, without the leading sigil
         func body() -> Substring {
             switch self {
-            case .text(let line, _):
-                return line
-            case .quote(let line, _), .list(let line, _), .heading(let line):
-                return line.dropFirst()
+            case .text(let span, _):
+                return span
+            case .quote(let span, _), .list(let span, _), .heading(let span):
+                return span.dropFirst()
             }
         }
     }
 
-    struct Inline {
-        var links: [Substring] = []
-        var bracketlinks: [Substring] = []
-        var slashlinks: [Substring] = []
+    struct Link {
+        var span: Substring
+    }
+
+    struct Bracketlink {
+        var span: Substring
+
+        func body() -> Substring {
+            span.dropFirst().dropLast()
+        }
+    }
+
+    struct Slashlink {
+        var span: Substring
+    }
+
+    enum Inline {
+        case link(Link)
+        case bracketlink(Bracketlink)
+        case slashlink(Slashlink)
     }
 
     /// Consume a well-formed bracket link, or else backtrack
@@ -49,23 +65,23 @@ struct Subtext5 {
         return nil
     }
 
-    static func parseInline(tape: inout Tape<Substring>) -> Inline {
-        var inline = Inline()
+    static func parseInline(tape: inout Tape<Substring>) -> [Inline] {
+        var inline: [Inline] = []
         while !tape.isExhausted() {
             tape.start()
             if tape.consumeMatch("<") {
                 if let link = consumeBracketLink(tape: &tape) {
-                    inline.bracketlinks.append(link)
+                    inline.append(.bracketlink(Bracketlink(span: link)))
                 }
             } else if tape.consumeMatch("https://") {
                 tape.consumeUntil(" ")
-                inline.links.append(tape.cut())
+                inline.append(.link(Link(span: tape.cut())))
             } else if tape.consumeMatch("http://") {
                 tape.consumeUntil(" ")
-                inline.links.append(tape.cut())
+                inline.append(.link(Link(span: tape.cut())))
             } else if tape.consumeMatch("/") {
                 tape.consumeUntil(" ")
-                inline.slashlinks.append(tape.cut())
+                inline.append(.slashlink(Slashlink(span: tape.cut())))
             } else {
                 tape.consume()
             }
@@ -75,23 +91,23 @@ struct Subtext5 {
 
     static func parseLine(_ line: Substring) -> Block {
         if line.hasPrefix("#") {
-            return Block.heading(line: line)
+            return Block.heading(span: line)
         } else if line.hasPrefix(">") {
             var tape = Tape(line)
             // Discard prefix
             tape.consume()
             let inline = parseInline(tape: &tape)
-            return Block.quote(line: line, inline: inline)
+            return Block.quote(span: line, inline: inline)
         } else if line.hasPrefix("-") {
             var tape = Tape(line)
             // Discard prefix
             tape.consume()
             let inline = parseInline(tape: &tape)
-            return Block.list(line: line, inline: inline)
+            return Block.list(span: line, inline: inline)
         } else {
             var tape = Tape(line)
             let inline = parseInline(tape: &tape)
-            return Block.list(line: line, inline: inline)
+            return Block.list(span: line, inline: inline)
         }
     }
 
@@ -131,26 +147,39 @@ struct Subtext5 {
                 .list(_, let inline),
                 .quote(_, let inline),
                 .text(_, let inline):
-                for slashlink in inline.slashlinks {
-                    if let url = url(String(slashlink)) {
+                for inline in inline {
+                    switch inline {
+                    case let .link(link):
                         attributedString.addAttribute(
                             .link,
-                            value: url,
+                            value: link.span,
                             range: NSRange(
-                                slashlink.range, in: attributedString.string
+                                link.span.range,
+                                in: attributedString.string
                             )
                         )
+                    case let .bracketlink(bracketlink):
+                        attributedString.addAttribute(
+                            .link,
+                            value: bracketlink.body(),
+                            range: NSRange(
+                                bracketlink.body().range,
+                                in: attributedString.string
+                            )
+                        )
+                    case let .slashlink(slashlink):
+                        if let url = url(String(slashlink.span)) {
+                            attributedString.addAttribute(
+                                .link,
+                                value: url,
+                                range: NSRange(
+                                    slashlink.span.range,
+                                    in: attributedString.string
+                                )
+                            )
+                        }
                     }
-
                 }
-                for link in inline.links {
-                    attributedString.addAttribute(
-                        .link,
-                        value: link,
-                        range: NSRange(link.range, in: attributedString.string)
-                    )
-                }
-
             }
         }
 
