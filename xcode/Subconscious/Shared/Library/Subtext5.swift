@@ -49,7 +49,7 @@ struct Subtext5 {
     }
 
     /// Consume a well-formed bracket link, or else backtrack
-    static func consumeBracketLink(tape: inout Tape<Substring>) -> Substring? {
+    private static func consumeBracketLink(tape: inout Tape<Substring>) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
             if tape.consumeMatch(" ") {
@@ -65,31 +65,54 @@ struct Subtext5 {
         return nil
     }
 
-    static func parseInline(tape: inout Tape<Substring>) -> [Inline] {
-        var inline: [Inline] = []
-        while !tape.isExhausted() {
-            tape.start()
-            if tape.consumeMatch("<") {
-                if let link = consumeBracketLink(tape: &tape) {
-                    inline.append(.bracketlink(Bracketlink(span: link)))
-                }
-            } else if tape.consumeMatch("https://") {
-                tape.consumeUntil(" ")
-                inline.append(.link(Link(span: tape.cut())))
-            } else if tape.consumeMatch("http://") {
-                tape.consumeUntil(" ")
-                inline.append(.link(Link(span: tape.cut())))
-            } else if tape.consumeMatch("/") {
-                tape.consumeUntil(" ")
-                inline.append(.slashlink(Slashlink(span: tape.cut())))
+    private static func consumeInlineWordBoundaryForm(
+        tape: inout Tape<Substring>
+    ) -> Inline? {
+        if tape.consumeMatch("<") {
+            if let link = consumeBracketLink(tape: &tape) {
+                return .bracketlink(Bracketlink(span: link))
             } else {
-                tape.consume()
+                return nil
             }
+        } else if tape.consumeMatch("https://") {
+            tape.consumeUntil(" ")
+            return .link(Link(span: tape.cut()))
+        } else if tape.consumeMatch("http://") {
+            tape.consumeUntil(" ")
+            return .link(Link(span: tape.cut()))
+        } else if tape.consumeMatch("/") {
+            tape.consumeUntil(" ")
+            return .slashlink(Slashlink(span: tape.cut()))
+        } else {
+            return nil
         }
-        return inline
     }
 
-    static func parseLine(_ line: Substring) -> Block {
+    private static func parseInline(tape: inout Tape<Substring>) -> [Inline] {
+        var inlines: [Inline] = []
+
+        /// Capture word-boundary-delimited forms at beginning of line.
+        tape.start()
+        if let inline = consumeInlineWordBoundaryForm(tape: &tape) {
+            inlines.append(inline)
+        }
+
+        while !tape.isExhausted() {
+            tape.start()
+            let curr = tape.consume()
+            /// Capture word-boundary-delimited forms after space
+            if curr == " " {
+                tape.start()
+                if let inline = consumeInlineWordBoundaryForm(tape: &tape) {
+                    inlines.append(inline)
+                }
+            }
+        }
+
+        return inlines
+    }
+
+    private static func parseLine(_ line: Substring) -> Block {
         if line.hasPrefix("#") {
             return Block.heading(span: line)
         } else if line.hasPrefix(">") {
@@ -120,8 +143,6 @@ struct Subtext5 {
             omittingEmptySubsequences: false,
             whereSeparator: \.isNewline
         ).map(Self.parseLine)
-
-        print(self.blocks)
     }
 
     /// Render markup verbatim with syntax highlighting and links
