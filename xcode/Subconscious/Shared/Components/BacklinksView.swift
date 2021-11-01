@@ -16,15 +16,10 @@ struct BacklinksView: View {
             ForEach(backlinks) { entry in
                 Button(
                     action: {
-                        onActivateBacklink(entry.title)
+                        onActivateBacklink(entry.slug)
                     },
                     label: {
-                        HStack {
-                            Text(entry.title)
-                                .bold()
-                                .multilineTextAlignment(.leading)
-                            Spacer()
-                        }
+                        EntryItemView(entry: entry)
                     }
                 ).buttonStyle(TranscludeButtonStyle())
             }
