@@ -1,5 +1,5 @@
 //
-//  Subtext5.swift
+//  Subtext.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 10/25/21.
@@ -130,7 +130,7 @@ struct Subtext: Hashable, Equatable {
         } else {
             var tape = Tape(line)
             let inline = parseInline(tape: &tape)
-            return Block.list(span: line, inline: inline)
+            return Block.text(span: line, inline: inline)
         }
     }
 
