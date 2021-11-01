@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-struct Subtext5 {
+struct Subtext {
     enum Block {
         case text(span: Substring, inline: [Inline])
         case list(span: Substring, inline: [Inline])
