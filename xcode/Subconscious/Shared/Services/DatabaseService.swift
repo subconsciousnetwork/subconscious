@@ -150,7 +150,7 @@ struct DatabaseService {
     }
 
     private func writeEntryToDatabase(url: URL) throws {
-        let entry = try TextFile(url: url)
+        let entry = try SubtextFile(url: url)
         let fingerprint = try FileFingerprint.Attributes(url: url).unwrap()
         return try writeEntryToDatabase(
             url: url,
@@ -346,8 +346,8 @@ struct DatabaseService {
 
     private func getEntry(
         slug: String
-    ) -> TextFile? {
-        try? TextFile(
+    ) -> SubtextFile? {
+        try? SubtextFile(
             url: documentUrl.appendingFilename(name: slug, ext: "subtext")
         )
     }
@@ -364,7 +364,7 @@ struct DatabaseService {
                 return ResultSet()
             }
 
-            let backlinks: [TextFile] = try database.execute(
+            let backlinks: [SubtextFile] = try database.execute(
                 sql: """
                 SELECT slug
                 FROM entry_search

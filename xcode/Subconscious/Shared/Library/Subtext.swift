@@ -8,8 +8,8 @@
 import Foundation
 import SwiftUI
 
-struct Subtext {
-    enum Block {
+struct Subtext: Hashable, Equatable {
+    enum Block: Hashable, Equatable {
         case text(span: Substring, inline: [Inline])
         case list(span: Substring, inline: [Inline])
         case quote(span: Substring, inline: [Inline])
@@ -26,11 +26,11 @@ struct Subtext {
         }
     }
 
-    struct Link {
+    struct Link: Hashable, Equatable {
         var span: Substring
     }
 
-    struct Bracketlink {
+    struct Bracketlink: Hashable, Equatable {
         var span: Substring
 
         func body() -> Substring {
@@ -38,11 +38,11 @@ struct Subtext {
         }
     }
 
-    struct Slashlink {
+    struct Slashlink: Hashable, Equatable {
         var span: Substring
     }
 
-    enum Inline {
+    enum Inline: Hashable, Equatable {
         case link(Link)
         case bracketlink(Bracketlink)
         case slashlink(Slashlink)

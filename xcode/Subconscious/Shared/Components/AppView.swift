@@ -91,7 +91,7 @@ struct AppModel: Updatable {
     // The URL for the currently active entry
     var entryURL: URL?
     // Backlinks to the currently active entry
-    var backlinks: [TextFile] = []
+    var backlinks: [SubtextFile] = []
 
     // Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
