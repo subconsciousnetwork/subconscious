@@ -144,7 +144,9 @@ struct Subtext {
             whereSeparator: \.isNewline
         ).map(Self.parseLine)
     }
+}
 
+extension Subtext {
     /// Render markup verbatim with syntax highlighting and links
     func renderMarkup(url: (String) -> String?) -> NSAttributedString {
         let attributedString = NSMutableAttributedString(string: base)
