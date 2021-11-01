@@ -111,10 +111,8 @@ struct AppModel: Updatable {
         markup: String,
         selection: NSRange
     ) -> NSAttributedString {
-        Subtext4(
-            markup: markup,
-            range: selection
-        ).renderMarkup(url: Slashlink.slashlinkToURLString)
+        Subtext(markup: markup)
+            .renderMarkup(url: Slashlink.slashlinkToURLString)
     }
 
     //  MARK: Update
