@@ -6,11 +6,14 @@
 import Foundation
 
 /// A SubtextDocument together with a location for that document
-struct TextFile: Hashable, Equatable, Identifiable {
+struct SubtextFile: Hashable, Equatable, Identifiable {
     var url: URL
-    var content: String
+    var dom: Subtext
+    var content: String { dom.base }
     var id: URL { url }
-    var title: String { url.stem }
+    var title: String { dom.title() }
+    var excerpt: String { dom.excerpt() }
+    var slug: String { url.stem }
 
     init(
         url: URL,
@@ -18,14 +21,15 @@ struct TextFile: Hashable, Equatable, Identifiable {
     ) {
         // Absolutize URL in order to allow it to function as an ID
         self.url = url.absoluteURL
-        self.content = content
+        self.dom = Subtext(markup: content)
     }
 
     /// Open existing document
     init(url: URL) throws {
-        // Absolutize URL in order to allow it to function as an ID
-        self.url = url.absoluteURL
-        self.content = try String(contentsOf: url, encoding: .utf8)
+        self.init(
+            url: url,
+            content: try String(contentsOf: url, encoding: .utf8)
+        )
     }
 
     func write() throws {

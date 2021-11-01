@@ -1,5 +1,5 @@
 //
-//  Subtext5.swift
+//  Subtext.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 10/25/21.
@@ -8,8 +8,8 @@
 import Foundation
 import SwiftUI
 
-struct Subtext {
-    enum Block {
+struct Subtext: Hashable, Equatable {
+    enum Block: Hashable, Equatable {
         case text(span: Substring, inline: [Inline])
         case list(span: Substring, inline: [Inline])
         case quote(span: Substring, inline: [Inline])
@@ -19,18 +19,18 @@ struct Subtext {
         func body() -> Substring {
             switch self {
             case .text(let span, _):
-                return span
+                return span.trimming(" ")
             case .quote(let span, _), .list(let span, _), .heading(let span):
-                return span.dropFirst()
+                return span.dropFirst().trimming(" ")
             }
         }
     }
 
-    struct Link {
+    struct Link: Hashable, Equatable {
         var span: Substring
     }
 
-    struct Bracketlink {
+    struct Bracketlink: Hashable, Equatable {
         var span: Substring
 
         func body() -> Substring {
@@ -38,11 +38,11 @@ struct Subtext {
         }
     }
 
-    struct Slashlink {
+    struct Slashlink: Hashable, Equatable {
         var span: Substring
     }
 
-    enum Inline {
+    enum Inline: Hashable, Equatable {
         case link(Link)
         case bracketlink(Bracketlink)
         case slashlink(Slashlink)
@@ -130,7 +130,7 @@ struct Subtext {
         } else {
             var tape = Tape(line)
             let inline = parseInline(tape: &tape)
-            return Block.list(span: line, inline: inline)
+            return Block.text(span: line, inline: inline)
         }
     }
 
@@ -207,5 +207,25 @@ extension Subtext {
         }
 
         return attributedString
+    }
+}
+
+extension Subtext {
+    /// Derive a title
+    func title() -> String {
+        for block in blocks {
+            return String(block.body())
+        }
+        return ""
+    }
+}
+
+extension Subtext {
+    /// Generate a short excerpt
+    func excerpt() -> String {
+        blocks
+            .prefix(3)
+            .map({ block in block.body() })
+            .joined(separator: " ")
     }
 }

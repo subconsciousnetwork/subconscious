@@ -15,7 +15,7 @@ struct DetailView: View {
     @Binding var isLinkSearchFocused: Bool
     @Binding var linkSearchText: String
     @Binding var linkSuggestions: [Suggestion]
-    var backlinks: [TextFile]
+    var backlinks: [SubtextFile]
     var onDone: () -> Void
     var onEditorLink: (
         URL,

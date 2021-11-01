@@ -48,10 +48,10 @@ extension Substring {
     func trimming(_ character: Character) -> Substring {
         var substring = self
         while substring.first == character {
-            let _ = substring.popFirst()
+            substring = substring.dropFirst()
         }
         while substring.last == character {
-            let _ = substring.popLast()
+            substring = substring.dropLast()
         }
         return substring
     }
