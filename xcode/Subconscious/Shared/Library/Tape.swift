@@ -99,8 +99,8 @@ where T: Collection,
         return self.subsequence
     }
 
-    /// Get a single-item SubSequence offset by `forward` of the `currentStartIndex`.
-    /// Returns a single-item SubSequence, or nil if offset is invalid.
+    /// Get a single-item SubSequence offset by `offset` of the `currentStartIndex`.
+    /// Returns a single-item SubSequence, or nil if `offset` is invalid.
     func peek(_ offset: Int = 0) -> T.SubSequence? {
         if
             let startIndex = collection.index(
