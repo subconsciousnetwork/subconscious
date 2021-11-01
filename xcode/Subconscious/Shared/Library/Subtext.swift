@@ -19,9 +19,9 @@ struct Subtext {
         func body() -> Substring {
             switch self {
             case .text(let span, _):
-                return span
+                return span.trimming(" ")
             case .quote(let span, _), .list(let span, _), .heading(let span):
-                return span.dropFirst()
+                return span.dropFirst().trimming(" ")
             }
         }
     }
@@ -207,5 +207,25 @@ extension Subtext {
         }
 
         return attributedString
+    }
+}
+
+extension Subtext {
+    /// Derive a title
+    func title() -> String {
+        for block in blocks {
+            return String(block.body())
+        }
+        return ""
+    }
+}
+
+extension Subtext {
+    /// Generate a short excerpt
+    func excerpt() -> String {
+        blocks
+            .prefix(3)
+            .map({ block in block.body() })
+            .joined(separator: " ")
     }
 }
