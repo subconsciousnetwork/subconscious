@@ -14,12 +14,18 @@ struct EntryItemView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
-            Text(entry.title)
-                .bold()
-                .multilineTextAlignment(.leading)
-            Text(entry.excerpt)
-                .lineLimit(3)
-                .multilineTextAlignment(.leading)
+            HStack {
+                Text(entry.title)
+                    .bold()
+                    .multilineTextAlignment(.leading)
+                Spacer()
+            }
+            HStack {
+                Text(entry.excerpt)
+                    .lineLimit(3)
+                    .multilineTextAlignment(.leading)
+                Spacer()
+            }
         }
     }
 }
