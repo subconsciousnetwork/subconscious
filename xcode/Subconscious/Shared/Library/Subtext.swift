@@ -65,6 +65,38 @@ struct Subtext: Hashable, Equatable {
         return nil
     }
 
+    private static func isWordEnding(_ substring: Substring) -> Bool {
+        return (
+            substring.first == " " ||
+            substring.hasPrefix(".") && substring.hasSuffix(" ") ||
+            substring.hasPrefix(".") && substring.hasSuffix("\n") ||
+            substring.hasPrefix("?") && substring.hasSuffix(" ") ||
+            substring.hasPrefix("?") && substring.hasSuffix("\n") ||
+            substring.hasPrefix("!") && substring.hasSuffix(" ") ||
+            substring.hasPrefix("!") && substring.hasSuffix("\n") ||
+            substring.hasPrefix(",") && substring.hasSuffix(" ") ||
+            substring.hasPrefix(",") && substring.hasSuffix("\n") ||
+            substring.hasPrefix(";") && substring.hasSuffix(" ") ||
+            substring.hasPrefix(";") && substring.hasSuffix("\n") ||
+            substring.hasPrefix(":") && substring.hasSuffix(" ") ||
+            substring.hasPrefix(":") && substring.hasSuffix("\n")
+        )
+    }
+    
+    private static func consumeUntilWordEnding(
+        tape: inout Tape<Substring>
+    ) -> Substring {
+        while !tape.isExhausted() {
+            if let next = tape.peek(next: 2) {
+                if isWordEnding(next) {
+                    return tape.cut()
+                }
+            }
+            tape.consume()
+        }
+        return tape.cut()
+    }
+    
     private static func consumeInlineWordBoundaryForm(
         tape: inout Tape<Substring>
     ) -> Inline? {
@@ -75,14 +107,14 @@ struct Subtext: Hashable, Equatable {
                 return nil
             }
         } else if tape.consumeMatch("https://") {
-            tape.consumeUntil(" ")
-            return .link(Link(span: tape.cut()))
+            let span = consumeUntilWordEnding(tape: &tape)
+            return .link(Link(span: span))
         } else if tape.consumeMatch("http://") {
-            tape.consumeUntil(" ")
-            return .link(Link(span: tape.cut()))
+            let span = consumeUntilWordEnding(tape: &tape)
+            return .link(Link(span: span))
         } else if tape.consumeMatch("/") {
-            tape.consumeUntil(" ")
-            return .slashlink(Slashlink(span: tape.cut()))
+            let span = consumeUntilWordEnding(tape: &tape)
+            return .slashlink(Slashlink(span: span))
         } else {
             return nil
         }
@@ -112,7 +144,7 @@ struct Subtext: Hashable, Equatable {
         return inlines
     }
 
-    private static func parseLine(_ line: Substring) -> Block {
+    private static func parseBlock(_ line: Substring) -> Block {
         if line.hasPrefix("#") {
             return Block.heading(span: line)
         } else if line.hasPrefix(">") {
@@ -134,15 +166,35 @@ struct Subtext: Hashable, Equatable {
         }
     }
 
+    /// Parse a single line from tape, returning it
+    private static func consumeLine(tape: inout Tape<String>) -> Substring {
+        tape.start()
+        while !tape.isExhausted() {
+            let curr = tape.consume()
+            if curr == "\n" {
+                return tape.cut()
+            }
+        }
+        return tape.cut()
+    }
+
+    /// Splits lines in markup, keeping line endings
+    private static func parseLines(_ string: String) -> [Substring] {
+        var tape = Tape(string)
+        var lines: [Substring] = []
+        while !tape.isExhausted() {
+            let line = consumeLine(tape: &tape)
+            lines.append(line)
+        }
+        return lines
+    }
+
     let base: String
     let blocks: [Block]
 
     init(markup: String) {
         self.base = markup
-        self.blocks = markup.split(
-            omittingEmptySubsequences: false,
-            whereSeparator: \.isNewline
-        ).map(Self.parseLine)
+        self.blocks = Self.parseLines(markup).map(Self.parseBlock)
     }
 }
 

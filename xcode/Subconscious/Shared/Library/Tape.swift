@@ -32,8 +32,8 @@ where T: Collection,
         return self.currentIndex >= self.collection.endIndex
     }
 
-    /// Sets the start of the current range to the current index
-    /// Generally called at the beginning of each loop.
+    /// Sets the start of the current range to the current index.
+    /// Generally called at the beginning of parsing a token, to mark the beginning of the token range.
     mutating func start() {
         startIndex = currentIndex
     }
@@ -78,25 +78,6 @@ where T: Collection,
             }
         }
         return false
-    }
-
-    /// Consume up to, but not including some delimiter.
-    /// Returns subsequence.
-    @discardableResult mutating func consumeUntil(
-        _ delimiter: T.SubSequence,
-        includeDelimiter: Bool = false
-    ) -> T.SubSequence {
-        while !self.isExhausted() {
-            if self.peek(next: delimiter.count) == delimiter {
-                if includeDelimiter {
-                    self.consume()
-                }
-                return self.subsequence
-            } else {
-                self.consume()
-            }
-        }
-        return self.subsequence
     }
 
     /// Get a single-item SubSequence offset by `offset` of the `currentStartIndex`.
