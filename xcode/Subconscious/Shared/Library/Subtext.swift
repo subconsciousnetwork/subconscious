@@ -65,38 +65,52 @@ struct Subtext: Hashable, Equatable {
         return nil
     }
 
+    /// Check if substring contains a word-ending sequence.
+    /// Generally, a space, or else a punctuation character followed by a space, newline, or end of input.
     private static func isWordEnding(_ substring: Substring) -> Bool {
         return (
-            substring.first == " " ||
+            substring.hasPrefix(" ") ||
+            substring.hasPrefix("\n") ||
+            substring.hasPrefix(".") && substring.count == 1 ||
             substring.hasPrefix(".") && substring.hasSuffix(" ") ||
             substring.hasPrefix(".") && substring.hasSuffix("\n") ||
+            substring.hasPrefix("?") && substring.count == 1 ||
             substring.hasPrefix("?") && substring.hasSuffix(" ") ||
             substring.hasPrefix("?") && substring.hasSuffix("\n") ||
+            substring.hasPrefix("!") && substring.count == 1 ||
             substring.hasPrefix("!") && substring.hasSuffix(" ") ||
             substring.hasPrefix("!") && substring.hasSuffix("\n") ||
+            substring.hasPrefix(",") && substring.count == 1 ||
             substring.hasPrefix(",") && substring.hasSuffix(" ") ||
             substring.hasPrefix(",") && substring.hasSuffix("\n") ||
+            substring.hasPrefix(";") && substring.count == 1 ||
             substring.hasPrefix(";") && substring.hasSuffix(" ") ||
             substring.hasPrefix(";") && substring.hasSuffix("\n") ||
+            substring.hasPrefix(":") && substring.count == 1 ||
             substring.hasPrefix(":") && substring.hasSuffix(" ") ||
             substring.hasPrefix(":") && substring.hasSuffix("\n")
         )
     }
-    
+
+    /// Consume tape until the next word-ending sequence.
+    /// Cuts tape before word ending.
+    /// Returns Substring.
     private static func consumeUntilWordEnding(
         tape: inout Tape<Substring>
     ) -> Substring {
         while !tape.isExhausted() {
-            if let next = tape.peek(next: 2) {
-                if isWordEnding(next) {
-                    return tape.cut()
-                }
+            if isWordEnding(tape.peek(next: 2)) {
+                return tape.cut()
             }
             tape.consume()
         }
         return tape.cut()
     }
-    
+
+    /// Consume one of the inline forms that is delimited by word boundaries.
+    /// A word boundary is generally a preceding space, or beginning of input.
+    /// Cuts tape before word boundary.
+    /// Returns an Inline?
     private static func consumeInlineWordBoundaryForm(
         tape: inout Tape<Substring>
     ) -> Inline? {
