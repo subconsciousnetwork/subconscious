@@ -32,8 +32,8 @@ where T: Collection,
         return self.currentIndex >= self.collection.endIndex
     }
 
-    /// Sets the start of the current range to the current index
-    /// Generally called at the beginning of each loop.
+    /// Sets the start of the current range to the current index.
+    /// Generally called at the beginning of parsing a token, to mark the beginning of the token range.
     mutating func start() {
         startIndex = currentIndex
     }
@@ -80,25 +80,6 @@ where T: Collection,
         return false
     }
 
-    /// Consume up to, but not including some delimiter.
-    /// Returns subsequence.
-    @discardableResult mutating func consumeUntil(
-        _ delimiter: T.SubSequence,
-        includeDelimiter: Bool = false
-    ) -> T.SubSequence {
-        while !self.isExhausted() {
-            if self.peek(next: delimiter.count) == delimiter {
-                if includeDelimiter {
-                    self.consume()
-                }
-                return self.subsequence
-            } else {
-                self.consume()
-            }
-        }
-        return self.subsequence
-    }
-
     /// Get a single-item SubSequence offset by `offset` of the `currentStartIndex`.
     /// Returns a single-item SubSequence, or nil if `offset` is invalid.
     func peek(_ offset: Int = 0) -> T.SubSequence? {
@@ -120,15 +101,16 @@ where T: Collection,
     }
 
     /// Peek forward by `offset`, returning a subsequence from `position` through `offset`,
-    /// or from `position` through `endIndex`, whichever is smaller..
-    func peek(next offset: Int) -> T.SubSequence? {
+    /// or from `position` through `endIndex`, whichever is smaller.
+    func peek(next offset: Int) -> T.SubSequence {
         if let endIndex = collection.index(
             currentIndex,
             offsetBy: offset,
             limitedBy: collection.endIndex
         ) {
             return collection[currentIndex..<endIndex]
+        } else {
+            return collection[currentIndex..<collection.endIndex]
         }
-        return nil
     }
 }
