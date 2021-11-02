@@ -19,9 +19,9 @@ struct Subtext: Hashable, Equatable {
         func body() -> Substring {
             switch self {
             case .text(let span, _):
-                return span.trimming(" ")
+                return span.trimming(" ").trimming("\n")
             case .quote(let span, _), .list(let span, _), .heading(let span):
-                return span.dropFirst().trimming(" ")
+                return span.dropFirst().trimming(" ").trimming("\n")
             }
         }
     }
