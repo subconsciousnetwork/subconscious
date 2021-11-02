@@ -216,11 +216,17 @@ extension Subtext {
     /// Render markup verbatim with syntax highlighting and links
     func renderMarkup(url: (String) -> String?) -> NSAttributedString {
         let attributedString = NSMutableAttributedString(string: base)
+        let baseNSRange = NSRange(base.startIndex..<base.endIndex, in: base)
         // Set default styles for entire string
         attributedString.addAttribute(
             .font,
             value: UIFont.appText,
-            range: NSRange(base.startIndex..<base.endIndex, in: base)
+            range: baseNSRange
+        )
+        attributedString.addAttribute(
+            .foregroundColor,
+            value: UIColor(Color.text),
+            range: baseNSRange
         )
 
         for block in blocks {
