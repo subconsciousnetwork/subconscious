@@ -170,12 +170,6 @@ extension Color {
     static let disabledText = text.opacity(0.5)
 }
 
-//  MARK: UIColor
-//  Needed for some older APIs, such as NSAttributedString.
-extension UIColor {
-    static let appSecondaryText = UIColor(Color.secondaryText)
-}
-
 //  MARK: Animation durations
 typealias Duration = Double
 
