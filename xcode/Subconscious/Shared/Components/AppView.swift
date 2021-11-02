@@ -155,12 +155,12 @@ struct AppModel: Updatable {
                 ).eraseToAnyPublisher()
                 return (self, fx)
             } else {
-                if let slug = Slashlink.urlToSlashlinkString(url) {
+                if Slashlink.isSlashlinkURL(url) {
                     // If this is a Subtext URL, then commit a search for the
                     // corresponding query
                     let fx = Just(
                         AppAction.commitSearch(
-                            query: slug
+                            query: Slashlink.urlToProse(url)
                         )
                     ).eraseToAnyPublisher()
                     return (self, fx)

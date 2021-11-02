@@ -14,6 +14,13 @@ extension Slashlink {
         url.scheme == "sub" && url.host == "slashlink"
     }
 
+    static func removeLeadingSlash(_ slug: String) -> String {
+        if slug.hasPrefix("/") {
+            return String(slug.dropFirst())
+        }
+        return slug
+    }
+
     /// Given a string, returns a slashlink slug *without* the slash prefix.
     static func slugify(_ text: String) -> String {
         text
@@ -38,7 +45,7 @@ extension Slashlink {
 
     /// Given a slug, returns a string that is close-enough to prose text
     static func unslugify(_ slug: String) -> String {
-        slug
+        removeLeadingSlash(slug)
             // Replace dash with space
             .replacingOccurrences(
                 of: "-",
@@ -55,13 +62,13 @@ extension Slashlink {
         return nil
     }
 
-    static func urlToSlashlinkString(_ url: URL) -> String? {
-        if isSlashlinkURL(url) {
-            if url.path.hasPrefix("/") {
-                return String(url.path.dropFirst())
-            }
-        }
-        return nil
+    static func urlToSlug(_ url: URL) -> String {
+        return removeLeadingSlash(url.path)
+    }
+
+    /// Given a URL, extract a string that is close-enough to prose.
+    static func urlToProse(_ url: URL) -> String {
+        return unslugify(url.path)
     }
 
     /// Find unique slashlink slug
