@@ -101,15 +101,16 @@ where T: Collection,
     }
 
     /// Peek forward by `offset`, returning a subsequence from `position` through `offset`,
-    /// or from `position` through `endIndex`, whichever is smaller..
-    func peek(next offset: Int) -> T.SubSequence? {
+    /// or from `position` through `endIndex`, whichever is smaller.
+    func peek(next offset: Int) -> T.SubSequence {
         if let endIndex = collection.index(
             currentIndex,
             offsetBy: offset,
             limitedBy: collection.endIndex
         ) {
             return collection[currentIndex..<endIndex]
+        } else {
+            return collection[currentIndex..<collection.endIndex]
         }
-        return nil
     }
 }
