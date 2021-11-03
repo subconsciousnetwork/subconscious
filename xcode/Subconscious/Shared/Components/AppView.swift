@@ -48,7 +48,7 @@ enum AppAction {
     case setLinkSearchFocus(Bool)
     case setLinkSearchText(String)
     case commitLinkSearch(String)
-    case setLinkSuggestions([Suggestion])
+    case setLinkSuggestions([SubtextFile])
     case linkSuggestionsFailure(String)
 
     // Saving entries
@@ -98,7 +98,7 @@ struct AppModel: Updatable {
     var isLinkSearchFocused = false
     var linkSearchText = ""
     var linkSearchQuery = ""
-    var linkSuggestions: [Suggestion] = []
+    var linkSuggestions: [SubtextFile] = []
 
     // Set all editor properties to initial values
     static func resetEditor(_ model: inout Self) {
@@ -322,8 +322,9 @@ struct AppModel: Updatable {
             var model = self
             model.linkSearchText = text
 
-            let fx = AppEnvironment.database.searchSuggestions(
-                query: text
+            let fx = AppEnvironment.database.suggestEntries(
+                query: text,
+                limit: 20
             ).map({ suggestions in
                 AppAction.setLinkSuggestions(suggestions)
             }).catch({ error in
