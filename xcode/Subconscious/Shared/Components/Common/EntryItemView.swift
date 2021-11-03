@@ -17,12 +17,14 @@ struct EntryItemView: View {
             HStack {
                 Text(entry.title)
                     .bold()
+                    .foregroundColor(Color.text)
                     .multilineTextAlignment(.leading)
                 Spacer()
             }
             HStack {
                 Text(entry.excerpt)
                     .lineLimit(3)
+                    .foregroundColor(Color.secondaryText)
                     .multilineTextAlignment(.leading)
                 Spacer()
             }
