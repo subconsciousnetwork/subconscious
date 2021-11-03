@@ -169,6 +169,7 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
         view.textContainer.lineFragmentPadding = 0
         view.backgroundColor = .clear
         view.textColor = textColor
+        view.isScrollEnabled = false
         return view
     }
 

@@ -31,7 +31,7 @@ struct DetailView: View {
             PseudoKeyboardToolbarView(
                 isKeyboardUp: isEditorFocused,
                 content: {
-                    ScrollView {
+                    ScrollView(.vertical) {
                         VStack(spacing: 0) {
                             GrowableTextViewRepresentable(
                                 attributedText: $editorAttributedText,
@@ -39,16 +39,14 @@ struct DetailView: View {
                                 selection: $editorSelection,
                                 onLink: onEditorLink,
                                 fixedWidth: geometry.size.width
-                            )
-                            .insets(
+                            ).insets(
                                 EdgeInsets(
                                     top: AppTheme.padding,
                                     leading: AppTheme.padding,
                                     bottom: AppTheme.padding,
                                     trailing: AppTheme.padding
                                 )
-                            )
-                            .frame(minHeight: geometry.size.height)
+                            ).frame(minHeight: geometry.size.height)
                             Divider()
                             BacklinksView(
                                 backlinks: backlinks,
