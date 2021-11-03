@@ -396,4 +396,49 @@ struct DatabaseService {
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
     }
+
+    /// Search entries by query string
+    ///
+    /// Note that as an opimization, this method reads the cached contents of the file from DB,
+    /// rather than from file (source of truth). This means file contents may be slightly out-of-date.
+    /// For up-to-date file contents, read from the file instead.
+    ///
+    /// Returns an array of SubtextFile objects.
+    func suggestEntries(
+        query: String,
+        limit: Int = 100
+    ) -> AnyPublisher<[SubtextFile], Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            guard !query.isWhitespace else {
+                return []
+            }
+            return try database.execute(
+                sql: """
+                SELECT slug, body
+                FROM entry_search
+                WHERE entry_search MATCH ?
+                ORDER BY rank
+                LIMIT ?
+                """,
+                parameters: [
+                    .prefixQueryFTS5(query),
+                    .integer(limit)
+                ]
+            ).compactMap({ row in
+                if
+                    let slug: String = row.get(0),
+                    let body: String = row.get(1)
+                {
+                    return SubtextFile(
+                        url: documentUrl.appendingFilename(
+                            name: slug,
+                            ext: "subtext"
+                        ),
+                        content: body
+                    )
+                }
+                return nil
+            })
+        }
+    }
 }
