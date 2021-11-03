@@ -21,6 +21,13 @@ extension Slashlink {
         return slug
     }
 
+    static func addLeadingSlash(_ slug: String) -> String {
+        if !slug.hasPrefix("/") {
+            return "/" + slug
+        }
+        return slug
+    }
+
     /// Given a string, returns a slashlink slug *without* the slash prefix.
     static func slugify(_ text: String) -> String {
         text
