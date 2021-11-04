@@ -108,8 +108,7 @@ struct AppModel: Updatable {
     }
 
     static func renderMarkup(
-        markup: String,
-        selection: NSRange
+        markup: String
     ) -> NSAttributedString {
         Subtext(markup: markup)
             .renderMarkup(url: Slashlink.slashlinkToURLString)
@@ -229,8 +228,7 @@ struct AppModel: Updatable {
                 // Rerender attributes from markup, then assign to
                 // model.
                 model.editorAttributedText = Self.renderMarkup(
-                    markup: attributedText.string,
-                    selection: model.editorSelection
+                    markup: attributedText.string
                 )
             }
             return (model, Empty().eraseToAnyPublisher())
@@ -301,8 +299,7 @@ struct AppModel: Updatable {
                 name: results.slug
             )
             model.editorAttributedText = Self.renderMarkup(
-                markup: results.entry?.content ?? results.query,
-                selection: model.editorSelection
+                markup: results.entry?.content ?? results.query
             )
             return (model, Empty().eraseToAnyPublisher())
         case let .detailFailure(message):
@@ -333,16 +330,18 @@ struct AppModel: Updatable {
             return (model, fx)
         case let .commitLinkSearch(text):
             var model = self
-            // Create mutable copy of editor text and then replace
-            // currently selected range with committed link search text.
-            let editorAttributedText = NSMutableAttributedString(
-                attributedString: model.editorAttributedText
-            )
-            editorAttributedText.replaceCharacters(
-                in: model.editorSelection,
-                with: text
-            )
-            model.editorAttributedText = editorAttributedText
+            if let range = Range(
+                model.editorSelection,
+                in: editorAttributedText.string
+            ) {
+                // Replace selected range with committed link search text.
+                let markup = editorAttributedText.string.replacingCharacters(
+                    in: range,
+                    with: text
+                )
+                // Re-render and assign
+                model.editorAttributedText = Self.renderMarkup(markup: markup)
+            }
             model.linkSearchQuery = text
             model.linkSearchText = ""
             model.isLinkSearchFocused = false
