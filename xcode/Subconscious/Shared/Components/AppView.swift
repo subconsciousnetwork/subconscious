@@ -333,6 +333,16 @@ struct AppModel: Updatable {
             return (model, fx)
         case let .commitLinkSearch(text):
             var model = self
+            // Create mutable copy of editor text and then replace
+            // currently selected range with committed link search text.
+            let editorAttributedText = NSMutableAttributedString(
+                attributedString: model.editorAttributedText
+            )
+            editorAttributedText.replaceCharacters(
+                in: model.editorSelection,
+                with: text
+            )
+            model.editorAttributedText = editorAttributedText
             model.linkSearchQuery = text
             model.linkSearchText = ""
             model.isLinkSearchFocused = false
