@@ -351,10 +351,15 @@ struct AppModel: Updatable {
         case .save:
             var model = self
             model.isEditorFocused = false
-            if let entryURL = self.entryURL {
-                let fx = AppEnvironment.database.writeEntry(
+            if let entryURL = model.entryURL {
+                // Parse editorAttributedText to entry.
+                // TODO refactor model to store entry instead of attributedText.
+                let entry = SubtextFile(
                     url: entryURL,
                     content: model.editorAttributedText.string
+                )
+                let fx = AppEnvironment.database.writeEntry(
+                    entry: entry
                 ).map({ _ in
                     AppAction.saveSuccess(entryURL)
                 }).catch({ error in
