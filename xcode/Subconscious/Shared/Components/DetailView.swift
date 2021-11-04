@@ -46,7 +46,7 @@ struct DetailView: View {
                                     bottom: AppTheme.padding,
                                     trailing: AppTheme.padding
                                 )
-                            ).frame(minHeight: geometry.size.height)
+                            ).frame(minHeight: geometry.size.height / 2)
                             Divider()
                             BacklinksView(
                                 backlinks: backlinks,
