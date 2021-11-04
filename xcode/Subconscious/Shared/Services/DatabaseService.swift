@@ -160,10 +160,7 @@ struct DatabaseService {
         )
     }
 
-    func writeEntry(
-        entry: SubtextFile,
-        content: String
-    ) -> AnyPublisher<Void, Error> {
+    func writeEntry(entry: SubtextFile) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             // Write contents to file
             try entry.write()
