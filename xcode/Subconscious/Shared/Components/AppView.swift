@@ -341,6 +341,19 @@ struct AppModel: Updatable {
                 )
                 // Re-render and assign
                 model.editorAttributedText = Self.renderMarkup(markup: markup)
+                // Find inserted range by searching for our inserted text
+                // AFTER the cursor position.
+                if let insertedRange = markup.range(
+                    of: text,
+                    range: range.lowerBound..<markup.endIndex
+                ) {
+                    // Convert Range to NSRange of editorAttributedText,
+                    // assign to editorSelection.
+                    model.editorSelection = NSRange(
+                        insertedRange,
+                        in: markup
+                    )
+                }
             }
             model.linkSearchQuery = text
             model.linkSearchText = ""
