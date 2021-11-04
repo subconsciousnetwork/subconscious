@@ -68,6 +68,8 @@ struct SuggestionLabelView2: View {
                     VStack(alignment: .leading, spacing: 0) {
                         Text(stub.title)
                             .foregroundColor(Color.text)
+                        Text(Slashlink.addLeadingSlash(stub.slug))
+                            .foregroundColor(Color.secondaryText)
                     }
                 },
                 icon: {

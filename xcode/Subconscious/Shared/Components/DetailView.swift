@@ -102,7 +102,7 @@ struct DetailView: View {
                         Button(action: {
                             onCommitLinkSearch(suggestion.stub.slug)
                         }) {
-                            SuggestionLabelView(suggestion: suggestion)
+                            SuggestionLabelView2(suggestion: suggestion)
                         }
                         // We handle submission directly in button action, so
                         // prevent button submit from bubbling up and
