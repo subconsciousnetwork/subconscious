@@ -10,12 +10,12 @@ import Foundation
 /// A Stub is a model that contains a short description of a note
 /// suitable for list views.
 struct Stub: Hashable, Identifiable {
-    var title: String
     var slug: String
+    var title: String
 
-    init(title: String, slug: String) {
-        self.title = title
+    init(slug: String, title: String) {
         self.slug = slug
+        self.title = title
     }
 
     init(title: String) {
