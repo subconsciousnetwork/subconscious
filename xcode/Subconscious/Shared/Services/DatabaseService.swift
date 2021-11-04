@@ -192,19 +192,19 @@ struct DatabaseService {
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
         let results: [Stub] = try database.execute(
             sql: """
-            SELECT slug, substr(body, 1, 560)
+            SELECT slug, title
             FROM entry
             ORDER BY modified DESC
             LIMIT 5
             """
         ).compactMap({ row in
             if
-                let excerpt: String = row.get(1),
-                let slug: String = row.get(0)
+                let slug: String = row.get(0),
+                let title: String = row.get(1)
             {
                 return Stub(
-                    title: Subtext(markup: excerpt).title(),
-                    slug: slug
+                    slug: slug,
+                    title: title
                 )
             }
             return nil
@@ -241,7 +241,7 @@ struct DatabaseService {
         // We'll use this excerpted text to derive a title.
         let results: [Stub] = try database.execute(
             sql: """
-            SELECT slug, substr(body, 1, 560)
+            SELECT slug, title
             FROM entry_search
             WHERE entry_search MATCH ?
             ORDER BY rank
@@ -252,12 +252,12 @@ struct DatabaseService {
             ]
         ).compactMap({ row in
             if
-                let excerpt: String = row.get(1),
-                let slug: String = row.get(0)
+                let slug: String = row.get(0),
+                let title: String = row.get(1)
             {
                 return Stub(
-                    title: Subtext(markup: excerpt).title(),
-                    slug: slug
+                    slug: slug,
+                    title: title
                 )
             }
             return nil
