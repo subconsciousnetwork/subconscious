@@ -14,7 +14,7 @@ struct DetailView: View {
     @Binding var isLinkSheetPresented: Bool
     @Binding var isLinkSearchFocused: Bool
     @Binding var linkSearchText: String
-    @Binding var linkSuggestions: [SubtextFile]
+    @Binding var linkSuggestions: [Suggestion]
     var backlinks: [SubtextFile]
     var onDone: () -> Void
     var onEditorLink: (
@@ -98,11 +98,11 @@ struct DetailView: View {
                     }
                 }
                 .searchable(text: $linkSearchText, placement: .toolbar) {
-                    ForEach(linkSuggestions, id: \.self) { entry in
+                    ForEach(linkSuggestions, id: \.self) { suggestion in
                         Button(action: {
-                            onCommitLinkSearch(entry.slug)
+                            onCommitLinkSearch(suggestion.stub.slug)
                         }) {
-                            EntryItemView(entry: entry)
+                            SuggestionLabelView(suggestion: suggestion)
                         }
                         // We handle submission directly in button action, so
                         // prevent button submit from bubbling up and
