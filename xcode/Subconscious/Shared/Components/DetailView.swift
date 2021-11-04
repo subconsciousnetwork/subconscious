@@ -100,7 +100,9 @@ struct DetailView: View {
                 .searchable(text: $linkSearchText, placement: .toolbar) {
                     ForEach(linkSuggestions, id: \.self) { suggestion in
                         Button(action: {
-                            onCommitLinkSearch(suggestion.stub.slug)
+                            onCommitLinkSearch(
+                                Slashlink.addLeadingSlash(suggestion.stub.slug)
+                            )
                         }) {
                             SuggestionLabelView2(suggestion: suggestion)
                         }
