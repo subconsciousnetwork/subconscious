@@ -40,6 +40,8 @@ Background thinking:
 
 ### Generative home feed
 
+Issue: https://github.com/gordonbrander/subconscious/issues/16
+
 Algorithmic home feed view that surfaces generative prompts. The feed uses simple local-first algorithms to generate updates (recent notes and also prompts) from your notes. The design goal is spark new ideas and connections.
 
 Backround thinking:
