@@ -20,10 +20,10 @@ Subconscious is your web3 notebook. We want to build a new kind of web-like ecos
 
 ### Q1 2022 Alpha
 
-Priority: "Self-organizing ideas". Launch a simple single-player alpha that focuses on helping you creatively diverge/converge.
+Priority: Launch a simple single-player alpha, focused on "self-organizing ideas". Ideas self-organize through feedback loops that focus on creative divergence/convergence.
 
-- Diverge: the home view of Subconscious is a feed that surfaces prompts generated from your notes.
-- Converge: the core game loop of Subconscious is search-or-create, that nudges you toward writing new ideas into old notes, slowly growing knowledge from the bottom-up.
+- Diverge: the home view of Subconscious is a feed that surfaces prompts and relationships generated from your notes.
+- Converge: the core game loop of Subconscious is search-or-create. This nudges you toward capturing new ideas by adding to old notes, slowly growing knowledge artifacts from the bottom-up.
 
 Our hypothesis: the best edge-of-the-wedge is a mobile app that solves for "self-organizing ideas", a different goal from Roam/Obsidian/Notion.
 
@@ -31,6 +31,21 @@ Our hypothesis: the best edge-of-the-wedge is a mobile app that solves for "self
 - Self-organizing ideas: Roam, Obsidian and Notion are like RPGs focused on knowledge graph worldbuilding. Subconscious wants to focus on lazy knowledge gardening. Easy ambient capture + microinteractions to generate and develop ideas.
 
 #### Search-or-create flow
+
+A game mechanic inspired by [Notational Velocity](https://notational.net/) and adapted for mobile.
+
+Description:
+
+- Type-ahead search through existing notes.
+- If nothing turns up for your query, create a new note.
+- New note body populated with query
+
+This mechanic closes a feedback loop in note-taking. New notes get folded into old ones, causing knowledge artifacts to grow from the bottom up.
+
+Background thinking:
+
+- [Knowledge gardening is recursive](https://subconscious.substack.com/p/knowledge-gardening-is-recursive)
+- [Unconscious R&D](https://subconscious.substack.com/p/unconscious-r-and-d)
 
 #### Generative home feed
 
