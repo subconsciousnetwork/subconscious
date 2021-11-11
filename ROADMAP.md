@@ -30,42 +30,72 @@ Our hypothesis: the best edge-of-the-wedge is a mobile app that solves for "self
 
 ### Search-or-create flow
 
-Description: A game mechanic inspired by [Notational Velocity](https://notational.net/) and adapted for mobile. Type-ahead to search through existing notes. If nothing turns up, create a new note. New note body is populated with query. This mechanic closes a feedback loop in note-taking. New notes get folded into old ones, causing knowledge artifacts to grow from the bottom up.
+A game mechanic inspired by [Notational Velocity](https://notational.net/) and adapted for mobile. Type-ahead to search through existing notes. If nothing turns up, create a new note. New note body is populated with query. This mechanic closes a feedback loop in note-taking. New notes get folded into old ones, causing knowledge artifacts to grow from the bottom up.
 
 Background thinking:
 
 - [Knowledge gardening is recursive](https://subconscious.substack.com/p/knowledge-gardening-is-recursive)
 - [Unconscious R&D](https://subconscious.substack.com/p/unconscious-r-and-d)
+- [Search reveals useful dimensions in latent idea space](https://subconscious.substack.com/p/search-reveals-useful-dimensions)
 
 ### Generative home feed
 
+Algorithmic home feed view that surfaces generative prompts. The feed uses simple local-first algorithms to generate updates (recent notes and also prompts) from your notes. The design goal is spark new ideas and connections.
 
+Backround thinking:
+
+- [Building a second subconscious](https://subconscious.substack.com/p/second-subconscious)
+- [Getting lost in the land of ideas](https://subconscious.substack.com/p/getting-lost-in-the-land-of-ideas)
+- [Self-organizing ideas](https://subconscious.substack.com/p/self-organizing-ideas)
+- [Unconscious R&D](https://subconscious.substack.com/p/unconscious-r-and-d)
+- [Outward notes, inward notes](https://subconscious.substack.com/p/outward-notes-inward-notes)
+- [The Knowledge Ecology](https://subconscious.substack.com/p/the-knowledge-ecology)
 
 ### Subtext
 
 Project URL: https://github.com/gordonbrander/subtext
 
-Description: develop a simple plain-text markup language for note-taking. Support programmatic decomposition. Make it easy to implement so other tools and apps can choose to interoperate.
+Develop a simple plain-text markup language for note-taking. Support programmatic decomposition. Make it easy to implement so other tools and apps can choose to interoperate.
 
 Background thinking:
 
 - [Subtext README](https://github.com/gordonbrander/subtext/blob/main/README.md)
 - [Subtext: markup for note-taking](https://subconscious.substack.com/p/subtext-markup-for-note-taking)
-- [Concept refactoring](https://subconscious.substack.com/p/concept-refactoring)
+- [Thought legos](https://subconscious.substack.com/p/thought-legos)
+- [Hypertext montage](https://subconscious.substack.com/p/hypertext-montage)
 - [Self-organizing ideas](https://subconscious.substack.com/p/self-organizing-ideas)
+- [Concept refactoring](https://subconscious.substack.com/p/concept-refactoring)
 
 
 ### Live-rendered markup
 
-Description: live-render Subtext markup as you type. No separation between "view mode" and "edit mode". Link URLs and slashlinks, format headings, quotes, and lists.
+Live-render Subtext markup as you type. No separation between "view mode" and "edit mode". Link URLs and slashlinks, format headings, quotes, and lists.
 
 Background thinking:
 
 - [Slashlinks](https://subconscious.substack.com/p/slashlinks)
 
+### Backlinks
+
+List backlinks and related notes below note.
+
+Background thinking:
+
+- [Slashlinks](https://subconscious.substack.com/p/slashlinks)
+
+### Link suggestions
+
+Suggest links from existing pages and frequent searches while writing notes. This closes feedback loops between past, present, and future notes.
+
+Background thinking:
+
+- [Search reveals useful dimensions in latent idea space](https://subconscious.substack.com/p/search-reveals-useful-dimensions)
+- [Outward notes, inward notes](https://subconscious.substack.com/p/outward-notes-inward-notes)
+- [Slashlinks](https://subconscious.substack.com/p/slashlinks)
+
 ### Save to files
 
-Description: Save note content to Subtext files. Lean on integrated iOS files support until we develop an open sync system. This gives users credible exit.
+Save note content to Subtext files. Lean on integrated iOS files support until we develop an open sync system. This gives users credible exit.
 
 Background thinking:
 
@@ -84,6 +114,10 @@ Priorities: launch multiplayer version that supports open sync, public and priva
 ## Q? 2022 Subspaces
 
 Priorties: upgrade multiplayer to support "Subspaces" which support multi-user team note-taking.
+
+Background thinking:
+
+- [Wiki as a commons](https://subconscious.substack.com/p/wiki-as-a-commons)
 
 ## Future Goals
 
