@@ -39,6 +39,8 @@ Background thinking:
 
 ### Generative home feed
 
+
+
 ### Subtext
 
 Project URL: https://github.com/gordonbrander/subtext
@@ -51,6 +53,15 @@ Background thinking:
 - [Subtext: markup for note-taking](https://subconscious.substack.com/p/subtext-markup-for-note-taking)
 - [Concept refactoring](https://subconscious.substack.com/p/concept-refactoring)
 - [Self-organizing ideas](https://subconscious.substack.com/p/self-organizing-ideas)
+
+
+### Live-rendered markup
+
+Description: live-render Subtext markup as you type. No separation between "view mode" and "edit mode". Link URLs and slashlinks, format headings, quotes, and lists.
+
+Background thinking:
+
+- [Slashlinks](https://subconscious.substack.com/p/slashlinks)
 
 ### Save to files
 
@@ -67,6 +78,8 @@ Priorities: launch multiplayer version that supports open sync, public and priva
 ### Open sync
 
 ### Distributed cloud infrastructure
+
+### Block editor
 
 ## Q? 2022 Subspaces
 
