@@ -54,6 +54,12 @@ Background thinking:
 
 ### Save to files
 
+Description: Save note content to Subtext files. Lean on integrated iOS files support until we develop an open sync system. This gives users credible exit.
+
+Background thinking:
+
+- [Composability with other tools](https://subconscious.substack.com/p/composability-with-other-tools)
+
 ## Q? 2022 Multiplayer
 
 Priorities: launch multiplayer version that supports open sync, public and private notes.
