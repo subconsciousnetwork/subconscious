@@ -46,7 +46,7 @@ struct DetailView: View {
                                     bottom: AppTheme.padding,
                                     trailing: AppTheme.padding
                                 )
-                            ).frame(minHeight: geometry.size.height)
+                            ).frame(minHeight: geometry.size.height / 2)
                             Divider()
                             BacklinksView(
                                 backlinks: backlinks,
@@ -58,7 +58,7 @@ struct DetailView: View {
                 toolbar: {
                     KeyboardToolbarView(
                         isSheetPresented: $isLinkSheetPresented,
-                        suggestions: $linkSuggestions
+                        suggestions: .constant([])
                     )
                 }
             )
@@ -100,7 +100,9 @@ struct DetailView: View {
                 .searchable(text: $linkSearchText, placement: .toolbar) {
                     ForEach(linkSuggestions, id: \.self) { suggestion in
                         Button(action: {
-                            onCommitLinkSearch(suggestion.description)
+                            onCommitLinkSearch(
+                                Slashlink.addLeadingSlash(suggestion.stub.slug)
+                            )
                         }) {
                             SuggestionLabelView2(suggestion: suggestion)
                         }

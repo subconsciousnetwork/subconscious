@@ -108,8 +108,7 @@ struct AppModel: Updatable {
     }
 
     static func renderMarkup(
-        markup: String,
-        selection: NSRange
+        markup: String
     ) -> NSAttributedString {
         Subtext(markup: markup)
             .renderMarkup(url: Slashlink.slashlinkToURLString)
@@ -229,8 +228,7 @@ struct AppModel: Updatable {
                 // Rerender attributes from markup, then assign to
                 // model.
                 model.editorAttributedText = Self.renderMarkup(
-                    markup: attributedText.string,
-                    selection: model.editorSelection
+                    markup: attributedText.string
                 )
             }
             return (model, Empty().eraseToAnyPublisher())
@@ -301,8 +299,7 @@ struct AppModel: Updatable {
                 name: results.slug
             )
             model.editorAttributedText = Self.renderMarkup(
-                markup: results.entry?.content ?? results.query,
-                selection: model.editorSelection
+                markup: results.entry?.content ?? results.query
             )
             return (model, Empty().eraseToAnyPublisher())
         case let .detailFailure(message):
@@ -333,6 +330,31 @@ struct AppModel: Updatable {
             return (model, fx)
         case let .commitLinkSearch(text):
             var model = self
+            if let range = Range(
+                model.editorSelection,
+                in: editorAttributedText.string
+            ) {
+                // Replace selected range with committed link search text.
+                let markup = editorAttributedText.string.replacingCharacters(
+                    in: range,
+                    with: text
+                )
+                // Re-render and assign
+                model.editorAttributedText = Self.renderMarkup(markup: markup)
+                // Find inserted range by searching for our inserted text
+                // AFTER the cursor position.
+                if let insertedRange = markup.range(
+                    of: text,
+                    range: range.lowerBound..<markup.endIndex
+                ) {
+                    // Convert Range to NSRange of editorAttributedText,
+                    // assign to editorSelection.
+                    model.editorSelection = NSRange(
+                        insertedRange,
+                        in: markup
+                    )
+                }
+            }
             model.linkSearchQuery = text
             model.linkSearchText = ""
             model.isLinkSearchFocused = false
@@ -350,10 +372,15 @@ struct AppModel: Updatable {
         case .save:
             var model = self
             model.isEditorFocused = false
-            if let entryURL = self.entryURL {
-                let fx = AppEnvironment.database.writeEntry(
+            if let entryURL = model.entryURL {
+                // Parse editorAttributedText to entry.
+                // TODO refactor model to store entry instead of attributedText.
+                let entry = SubtextFile(
                     url: entryURL,
                     content: model.editorAttributedText.string
+                )
+                let fx = AppEnvironment.database.writeEntry(
+                    entry: entry
                 ).map({ _ in
                     AppAction.saveSuccess(entryURL)
                 }).catch({ error in

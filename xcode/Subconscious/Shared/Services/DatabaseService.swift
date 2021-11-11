@@ -126,23 +126,24 @@ struct DatabaseService {
 
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        url: URL,
-        content: String,
+        entry: SubtextFile,
         modified: Date,
         size: Int
     ) throws {
         try database.execute(
             sql: """
-            INSERT INTO entry (slug, body, modified, size)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO entry (slug, title, body, modified, size)
+            VALUES (?, ?, ?, ?, ?)
             ON CONFLICT(slug) DO UPDATE SET
+                title=excluded.title,
                 body=excluded.body,
                 modified=excluded.modified,
                 size=excluded.size
             """,
             parameters: [
-                .text(url.stem),
-                .text(content),
+                .text(entry.slug),
+                .text(entry.title),
+                .text(entry.content),
                 .date(modified),
                 .integer(size)
             ]
@@ -153,29 +154,22 @@ struct DatabaseService {
         let entry = try SubtextFile(url: url)
         let fingerprint = try FileFingerprint.Attributes(url: url).unwrap()
         return try writeEntryToDatabase(
-            url: url,
-            content: entry.content,
+            entry: entry,
             modified: fingerprint.modifiedDate,
             size: fingerprint.size
         )
     }
 
-    func writeEntry(
-        url: URL,
-        content: String
-    ) -> AnyPublisher<Void, Error> {
+    func writeEntry(entry: SubtextFile) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             // Write contents to file
-            try content.write(
-                to: url,
-                atomically: true,
-                encoding: .utf8
-            )
+            try entry.write()
             // Read fingerprint after writing to get updated time
-            let fingerprint = try FileFingerprint.Attributes(url: url).unwrap()
+            let fingerprint = try FileFingerprint.Attributes(
+                url: entry.url
+            ).unwrap()
             return try writeEntryToDatabase(
-                url: url,
-                content: content,
+                entry: entry,
                 modified: fingerprint.modifiedDate,
                 size: fingerprint.size
             )
@@ -198,19 +192,19 @@ struct DatabaseService {
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
         let results: [Stub] = try database.execute(
             sql: """
-            SELECT slug, substr(body, 1, 560)
+            SELECT slug, title
             FROM entry
             ORDER BY modified DESC
             LIMIT 5
             """
         ).compactMap({ row in
             if
-                let excerpt: String = row.get(1),
-                let slug: String = row.get(0)
+                let slug: String = row.get(0),
+                let title: String = row.get(1)
             {
                 return Stub(
-                    title: Subtext(markup: excerpt).title(),
-                    slug: slug
+                    slug: slug,
+                    title: title
                 )
             }
             return nil
@@ -247,7 +241,7 @@ struct DatabaseService {
         // We'll use this excerpted text to derive a title.
         let results: [Stub] = try database.execute(
             sql: """
-            SELECT slug, substr(body, 1, 560)
+            SELECT slug, title
             FROM entry_search
             WHERE entry_search MATCH ?
             ORDER BY rank
@@ -258,12 +252,12 @@ struct DatabaseService {
             ]
         ).compactMap({ row in
             if
-                let excerpt: String = row.get(1),
-                let slug: String = row.get(0)
+                let slug: String = row.get(0),
+                let title: String = row.get(1)
             {
                 return Stub(
-                    title: Subtext(markup: excerpt).title(),
-                    slug: slug
+                    slug: slug,
+                    title: title
                 )
             }
             return nil

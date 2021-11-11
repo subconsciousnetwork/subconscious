@@ -13,16 +13,26 @@ struct EntryItemView: View {
     var entry: SubtextFile
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit) {
+        VStack(alignment: .leading, spacing: AppTheme.unit2) {
             HStack {
                 Text(entry.title)
                     .bold()
+                    .lineLimit(2)
+                    .foregroundColor(Color.text)
                     .multilineTextAlignment(.leading)
                 Spacer()
             }
             HStack {
                 Text(entry.excerpt)
                     .lineLimit(3)
+                    .foregroundColor(Color.text)
+                    .multilineTextAlignment(.leading)
+                Spacer()
+            }
+            HStack {
+                Text(Slashlink.addLeadingSlash(entry.slug))
+                    .lineLimit(1)
+                    .foregroundColor(Color.secondaryText)
                     .multilineTextAlignment(.leading)
                 Spacer()
             }

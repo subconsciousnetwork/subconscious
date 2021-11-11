@@ -42,7 +42,7 @@ extension AppEnvironment {
 extension AppEnvironment {
     static let migrations = SQLite3Migrations([
         SQLite3Migrations.Migration(
-            date: "2021-10-19T14:17:00",
+            date: "2021-11-04T12:00:00",
             sql: """
             CREATE TABLE search_history (
                 id TEXT PRIMARY KEY,
@@ -52,6 +52,7 @@ extension AppEnvironment {
 
             CREATE TABLE entry (
               slug TEXT PRIMARY KEY,
+              title TEXT NOT NULL DEFAULT '',
               body TEXT NOT NULL,
               modified TEXT NOT NULL,
               size INTEGER NOT NULL
@@ -59,6 +60,7 @@ extension AppEnvironment {
 
             CREATE VIRTUAL TABLE entry_search USING fts5(
               slug,
+              title,
               body,
               modified UNINDEXED,
               size UNINDEXED,
@@ -88,6 +90,7 @@ extension AppEnvironment {
                 (
                   rowid,
                   slug,
+                  title,
                   body,
                   modified,
                   size
@@ -96,6 +99,7 @@ extension AppEnvironment {
                 (
                   new.rowid,
                   new.slug,
+                  new.title,
                   new.body,
                   new.modified,
                   new.size
@@ -107,6 +111,7 @@ extension AppEnvironment {
                 (
                   rowid,
                   slug,
+                  title,
                   body,
                   modified,
                   size
@@ -115,6 +120,7 @@ extension AppEnvironment {
                 (
                   new.rowid,
                   new.slug,
+                  new.title,
                   new.body,
                   new.modified,
                   new.size
