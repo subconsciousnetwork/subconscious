@@ -30,13 +30,7 @@ Our hypothesis: the best edge-of-the-wedge is a mobile app that solves for "self
 
 ### Search-or-create flow
 
-Description: A game mechanic inspired by [Notational Velocity](https://notational.net/) and adapted for mobile.
-
-- Type-ahead search through existing notes.
-- If nothing turns up for your query, create a new note.
-- New note body populated with query
-
-This mechanic closes a feedback loop in note-taking. New notes get folded into old ones, causing knowledge artifacts to grow from the bottom up.
+Description: A game mechanic inspired by [Notational Velocity](https://notational.net/) and adapted for mobile. Type-ahead to search through existing notes. If nothing turns up, create a new note. New note body is populated with query. This mechanic closes a feedback loop in note-taking. New notes get folded into old ones, causing knowledge artifacts to grow from the bottom up.
 
 Background thinking:
 
