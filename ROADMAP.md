@@ -20,7 +20,15 @@ Subconscious is your web3 notebook. We want to build a new kind of web-like ecos
 
 ### Q1 2022 Alpha
 
-Priority: launch single-player alpha that supports search-or-create and generative home feed.
+Priority: "Self-organizing ideas". Launch a simple single-player alpha that focuses on helping you creatively diverge/converge.
+
+- Diverge: the home view of Subconscious is a feed that surfaces prompts generated from your notes.
+- Converge: the core game loop of Subconscious is search-or-create, that nudges you toward writing new ideas into old notes, slowly growing knowledge from the bottom-up.
+
+Our hypothesis: the best edge-of-the-wedge is a mobile app that solves for "self-organizing ideas", a different goal from Roam/Obsidian/Notion.
+
+- Mobile: existing tools for thought skew desktop web, leaving mobile to Apple Notes, which does not do much to help you develop ideas.
+- Self-organizing ideas: Roam, Obsidian and Notion are like RPGs focused on knowledge graph worldbuilding. Subconscious wants to focus on lazy knowledge gardening. Easy ambient capture + microinteractions to generate and develop ideas.
 
 #### Search-or-create flow
 
