@@ -16,9 +16,7 @@ Subconscious is your web3 notebook. We want to build a new kind of web-like ecos
 
 **Open-ended**: Like the web, Subconscious aims to support open-ended evolution. When TBL launched the web it was just a small app for scientists to share papers, but it quickly evolved, becoming the networked app platform we have today. How? Permissionless innovation. Any user or developer can extend the system in new directions. The result is open-ended evolution.
 
-## Plan
-
-### Q1 2022 Alpha
+## Q1 2022 Alpha
 
 Priority: Launch a simple single-player alpha, focused on "self-organizing ideas". Ideas self-organize through feedback loops that focus on creative divergence/convergence.
 
@@ -30,7 +28,7 @@ Our hypothesis: the best edge-of-the-wedge is a mobile app that solves for "self
 - Mobile: existing tools for thought skew desktop web, leaving mobile to Apple Notes, which does not do much to help you develop ideas.
 - Self-organizing ideas: Roam, Obsidian and Notion are like RPGs focused on knowledge graph worldbuilding. Subconscious wants to focus on lazy knowledge gardening. Easy ambient capture + microinteractions to generate and develop ideas.
 
-#### Search-or-create flow
+### Search-or-create flow
 
 A game mechanic inspired by [Notational Velocity](https://notational.net/) and adapted for mobile.
 
@@ -47,21 +45,21 @@ Background thinking:
 - [Knowledge gardening is recursive](https://subconscious.substack.com/p/knowledge-gardening-is-recursive)
 - [Unconscious R&D](https://subconscious.substack.com/p/unconscious-r-and-d)
 
-#### Generative home feed
+### Generative home feed
 
-#### Subtext
+### Subtext
 
-#### Save to files
+### Save to files
 
-### Q? 2022 Multiplayer
+## Q? 2022 Multiplayer
 
 Priorities: launch multiplayer version that supports open sync, public and private notes.
 
-#### Open sync
+### Open sync
 
-#### Distributed cloud infrastructure
+### Distributed cloud infrastructure
 
-### Q? 2022 Subspaces
+## Q? 2022 Subspaces
 
 Priorties: upgrade multiplayer to support "Subspaces" which support multi-user team note-taking.
 
