@@ -30,9 +30,7 @@ Our hypothesis: the best edge-of-the-wedge is a mobile app that solves for "self
 
 ### Search-or-create flow
 
-A game mechanic inspired by [Notational Velocity](https://notational.net/) and adapted for mobile.
-
-Description:
+Description: A game mechanic inspired by [Notational Velocity](https://notational.net/) and adapted for mobile.
 
 - Type-ahead search through existing notes.
 - If nothing turns up for your query, create a new note.
@@ -48,6 +46,17 @@ Background thinking:
 ### Generative home feed
 
 ### Subtext
+
+Project URL: https://github.com/gordonbrander/subtext
+
+Description: develop a simple plain-text markup language for note-taking. Support programmatic decomposition. Make it easy to implement so other tools and apps can choose to interoperate.
+
+Background thinking:
+
+- [Subtext README](https://github.com/gordonbrander/subtext/blob/main/README.md)
+- [Subtext: markup for note-taking](https://subconscious.substack.com/p/subtext-markup-for-note-taking)
+- [Concept refactoring](https://subconscious.substack.com/p/concept-refactoring)
+- [Self-organizing ideas](https://subconscious.substack.com/p/self-organizing-ideas)
 
 ### Save to files
 
