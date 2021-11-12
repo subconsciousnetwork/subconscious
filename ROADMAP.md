@@ -14,7 +14,7 @@ Subconscious is your web3 notebook. We want to build a new kind of web-like ecos
 
 **Built on top of open protocols**: Like the web, Subconscious aims to build on top of general protocol primitives. New tools and apps (even competitors) should be able to usefully use the same markup and protocols that Subconscious uses.
 
-**Open-ended**: Like the web, Subconscious aims to support open-ended evolution. When TBL launched the web it was just a small app for scientists to share papers, but it quickly evolved, becoming the networked app platform we have today. How? Permissionless innovation. Any user or developer can extend the system in new directions. The result is open-ended evolution.
+**Open-ended and evolvable**: Like the web, Subconscious aims to support open-ended evolution. When TBL launched the web it was just a small app for scientists to share papers, but it quickly evolved, becoming the networked app platform we have today. How? Permissionless innovation. Any user or developer can extend the system in new directions. The result is open-ended evolution.
 
 ## Q1 2022 Alpha
 
@@ -37,12 +37,16 @@ Background thinking:
 - [Knowledge gardening is recursive](https://subconscious.substack.com/p/knowledge-gardening-is-recursive)
 - [Unconscious R&D](https://subconscious.substack.com/p/unconscious-r-and-d)
 - [Search reveals useful dimensions in latent idea space](https://subconscious.substack.com/p/search-reveals-useful-dimensions)
+- [Notes are conversations across time](https://subconscious.substack.com/p/notes-are-conversations-across-time)
 
 ### Generative home feed
 
-Issue: https://github.com/gordonbrander/subconscious/issues/16
-
 Algorithmic home feed view that surfaces generative prompts. The feed uses simple local-first algorithms to generate updates (recent notes and also prompts) from your notes. The design goal is spark new ideas and connections.
+
+Tracking:
+
+- [Implement generative feed #16](https://github.com/gordonbrander/subconscious/issues/16)
+
 
 Backround thinking:
 
@@ -50,6 +54,7 @@ Backround thinking:
 - [Getting lost in the land of ideas](https://subconscious.substack.com/p/getting-lost-in-the-land-of-ideas)
 - [Self-organizing ideas](https://subconscious.substack.com/p/self-organizing-ideas)
 - [Unconscious R&D](https://subconscious.substack.com/p/unconscious-r-and-d)
+- [Notes are conversations across time](https://subconscious.substack.com/p/notes-are-conversations-across-time)
 - [Outward notes, inward notes](https://subconscious.substack.com/p/outward-notes-inward-notes)
 - [The Knowledge Ecology](https://subconscious.substack.com/p/the-knowledge-ecology)
 
@@ -109,9 +114,13 @@ Priorities: launch multiplayer version that supports open sync, public and priva
 
 ### Open sync
 
+Cross-platform sync.
+
 ### Distributed cloud infrastructure
 
 ### Block editor
+
+Modeless block editor (like Notion or Roam) with rich transcludes.
 
 ## Q? 2022 Subspaces
 
@@ -123,7 +132,13 @@ Background thinking:
 
 ## Future Goals
 
-### Cooperatively-owned infrastructure 
+### End-to-end encryption
+
+Single player and multiplayer end-to-end encrypted private notes. Manage keys with wallet app.
+
+### Cooperatively-owned infrastructure
+
+Explore using a DAO to fund cooperatively owned server infrastructure for multiplayer and sync.
 
 ### Geists
 
