@@ -143,3 +143,20 @@ Explore using a DAO to fund cooperatively owned server infrastructure for multip
 ### Geists
 
 End-user scripting for your notes via sandboxed bots.
+
+### Save text of links
+
+Save plain text archives of links within your Subconscious note corpus. This enables full-text search of links that you care about.
+
+Background thinking:
+
+- [Saving copies of everything is like low-budget p2p](https://subconscious.substack.com/p/saving-copies-of-everything-is-like)
+
+
+### Email to note
+
+Send emails to create new notes. This would enable things like subscribing to a Google Scholar alert to build an ongoing archive of all papers on a given topic.
+
+Background thinking:
+
+- [Everything talks email](https://subconscious.substack.com/p/everything-talks-email)
