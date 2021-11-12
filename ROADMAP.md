@@ -133,6 +133,7 @@ Background thinking:
 
 - [Wiki as a commons](https://subconscious.substack.com/p/wiki-as-a-commons)
 - [Dunbar-scale social](https://subconscious.substack.com/p/dunbar-scale-social)
+- [Network intersubjectives](https://subconscious.substack.com/p/network-intersubjectives)
 
 ## Future Goals
 
