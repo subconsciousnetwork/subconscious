@@ -73,7 +73,6 @@ Background thinking:
 - [Self-organizing ideas](https://subconscious.substack.com/p/self-organizing-ideas)
 - [Concept refactoring](https://subconscious.substack.com/p/concept-refactoring)
 
-
 ### Live-rendered markup
 
 Live-render Subtext markup as you type. No separation between "view mode" and "edit mode". Link URLs and slashlinks, format headings, quotes, and lists.
@@ -118,6 +117,8 @@ Cross-platform sync.
 
 ### Distributed cloud infrastructure
 
+Create cloud infrastructure for sync (with future multiplayer support). Focus on building with general protocols that could be used by other apps and for other purposes.
+
 ### Block editor
 
 Modeless block editor (like Notion or Roam) with rich transcludes.
@@ -126,9 +127,12 @@ Modeless block editor (like Notion or Roam) with rich transcludes.
 
 Priorties: upgrade multiplayer to support "Subspaces" which support multi-user team note-taking.
 
+### Federated Subspaces
+
 Background thinking:
 
 - [Wiki as a commons](https://subconscious.substack.com/p/wiki-as-a-commons)
+- [Dunbar-scale social](https://subconscious.substack.com/p/dunbar-scale-social)
 
 ## Future Goals
 
