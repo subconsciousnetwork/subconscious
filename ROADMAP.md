@@ -47,7 +47,6 @@ Tracking:
 
 - [Implement generative feed #16](https://github.com/gordonbrander/subconscious/issues/16)
 
-
 Backround thinking:
 
 - [Building a second subconscious](https://subconscious.substack.com/p/second-subconscious)
@@ -106,6 +105,10 @@ Save note content to Subtext files. Lean on integrated iOS files support until w
 Background thinking:
 
 - [Composability with other tools](https://subconscious.substack.com/p/composability-with-other-tools)
+
+### Sharesheet
+
+Integrate with iOS sharesheet for easy note capture.
 
 ## Q? 2022 Multiplayer
 
