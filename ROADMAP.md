@@ -149,14 +149,13 @@ Explore using a DAO to fund cooperatively owned server infrastructure for multip
 
 End-user scripting for your notes via sandboxed bots.
 
-### Save text of links
+### Web clipper
 
-Save plain text archives of links within your Subconscious note corpus. This enables full-text search of links that you care about.
+Save plain text archives of all links within your Subconscious note corpus. This enables full-text search of links that you care about.
 
 Background thinking:
 
 - [Saving copies of everything is like low-budget p2p](https://subconscious.substack.com/p/saving-copies-of-everything-is-like)
-
 
 ### Email to note
 
