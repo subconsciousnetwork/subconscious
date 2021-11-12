@@ -8,13 +8,13 @@ Subconscious is your web3 notebook. We want to build a new kind of web-like ecos
 
 ## Principles
 
-**You own your data**: It's your second brain, not ours. Notes should last a lifetime. The only way to ensure this for you to retain ownership of your notes.
+**Own your data**: It's your second brain, not ours. Notes should last a lifetime. The only way to ensure this for you to retain ownership of your notes.
 
 **Credible exit**: you must be able to usefully get your data out of Subconscious and into files, or other apps.
 
-**Built on top of open protocols**: Like the web, Subconscious aims to build on top of general protocol primitives. New tools and apps (even competitors) should be able to usefully use the same markup and protocols that Subconscious uses.
+**Built on top of open protocols**: Think like TBL. Build Subconscious on general protocol primitives that will be useful for multiple tools and apps.
 
-**Open-ended and evolvable**: Like the web, Subconscious aims to support open-ended evolution. When TBL launched the web it was just a small app for scientists to share papers, but it quickly evolved, becoming the networked app platform we have today. How? Permissionless innovation. Any user or developer can extend the system in new directions. The result is open-ended evolution.
+**Open-ended and evolvable**: When TBL launched the web it was just a small app for scientists to share papers, but it quickly evolved, becoming the networked app platform we have today. How? Any user or developer can extend the system in new directions. The result is [open-ended evolution](https://subconscious.substack.com/p/open-ended-tools-for-infinite-games). Build Subconscious from an [alphabet](https://subconscious.substack.com/p/provoking-emergence-with-alphabets) of pieces you can remix and evolve for new use-cases.
 
 ## Q1 2022 Alpha
 
