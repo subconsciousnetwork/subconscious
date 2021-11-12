@@ -28,7 +28,7 @@ Our hypothesis: the best edge-of-the-wedge is a mobile app that solves for "self
 - Mobile: existing tools for thought skew desktop web, leaving mobile to Apple Notes, which does not do much to help you develop ideas.
 - Self-organizing ideas: Roam, Obsidian and Notion are like RPGs focused on knowledge graph worldbuilding. Subconscious wants to focus on lazy knowledge gardening. Easy ambient capture + microinteractions to generate and develop ideas.
 
-### Search-or-create flow
+### Search-or-create
 
 A game mechanic inspired by [Notational Velocity](https://notational.net/) and adapted for mobile. Type-ahead to search through existing notes. If nothing turns up, create a new note. New note body is populated with query. This mechanic closes a feedback loop in note-taking. New notes get folded into old ones, causing knowledge artifacts to grow from the bottom up.
 
@@ -39,7 +39,7 @@ Background thinking:
 - [Search reveals useful dimensions in latent idea space](https://subconscious.substack.com/p/search-reveals-useful-dimensions)
 - [Notes are conversations across time](https://subconscious.substack.com/p/notes-are-conversations-across-time)
 
-### Generative home feed
+### Generative feed
 
 Algorithmic home feed view that surfaces generative prompts. The feed uses simple local-first algorithms to generate updates (recent notes and also prompts) from your notes. The design goal is spark new ideas and connections.
 
