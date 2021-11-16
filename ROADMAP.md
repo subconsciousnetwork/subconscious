@@ -122,6 +122,17 @@ Cross-platform sync.
 
 Create cloud infrastructure for sync (with future multiplayer support). Focus on building with general protocols that could be used by other apps and for other purposes.
 
+### Publish notes
+
+- Publish notes to [IPFS](https://ipfs.io/), the permanent web.
+    - Server acts as IPFS gateway for notes
+- Publish notes to HTTP
+
+### Follow
+
+- Follow public notes (RSS?)
+- See updates in your feed
+
 ### Block editor
 
 Modeless block editor (like Notion or Roam) with rich transcludes.
@@ -138,6 +149,18 @@ Background thinking:
 - [Dunbar-scale social](https://subconscious.substack.com/p/dunbar-scale-social)
 - [Network intersubjectives](https://subconscious.substack.com/p/network-intersubjectives)
 
+## Q? 2022 Subconscious DAO
+
+### Coop ownership DAO
+
+## Q? 2022 Subconscious Web3
+
+### Subtitle - NFT DNS
+
+### Subwallet
+
+### Expanded subtokens
+
 ## Future Goals
 
 ### End-to-end encryption
@@ -151,6 +174,10 @@ Explore using a DAO to fund cooperatively owned server infrastructure for multip
 ### Geists
 
 End-user scripting for your notes via sandboxed bots.
+
+### Mint note NFTs
+
+Mint NFTs for notes, creating chains of provable authorship.
 
 ### Web clipper
 
