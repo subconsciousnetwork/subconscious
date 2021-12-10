@@ -168,7 +168,11 @@ extension Color {
     static let placeholderText = SwiftUI.Color(.placeholderText)
     static let accent = SwiftUI.Color.accentColor
     static let icon = accent
-    static let background = SwiftUI.Color(.systemBackground)
+    static let background = SwiftUI.Color(
+        red: 245 / 255,
+        green: 242 / 255,
+        blue: 241 / 255
+    )
     static let secondaryBackground = SwiftUI.Color(.secondarySystemBackground)
     static let buttonText = accent
     static let pressedText = buttonText.opacity(0.3)
