@@ -421,21 +421,22 @@ struct AppView: View {
     @ObservedObject var store: Store<AppModel>
 
     var body: some View {
-        VStack {
-            if store.state.isDatabaseReady {
-                AppNavigationView(store: store)
-            } else {
-                Spacer()
-                ProgressView()
-                Spacer()
-            }
+        ZStack {
+            Color.background.edgesIgnoringSafeArea(.all)
+            VStack {
+                if store.state.isDatabaseReady {
+                    AppNavigationView(store: store)
+                } else {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                }
+            }.onAppear {
+                store.send(action: .appear)
+            }.environment(\.openURL, OpenURLAction { url in
+                store.send(action: .openURL(url))
+                return .handled
+            })
         }
-        .onAppear {
-            store.send(action: .appear)
-        }
-        .environment(\.openURL, OpenURLAction { url in
-            store.send(action: .openURL(url))
-            return .handled
-        })
     }
 }

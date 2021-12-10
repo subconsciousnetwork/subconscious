@@ -100,6 +100,7 @@ struct AppNavigationView: View {
                 )
             }
             .navigationTitle("Notes")
+            .background(Color.background)
             .searchable(
                 text: store.binding(
                     get: \.searchBarText,
