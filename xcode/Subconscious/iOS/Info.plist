@@ -2,6 +2,19 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Fonts/IBMPlexMono-Bold.ttf</string>
+		<string>Fonts/IBMPlexMono-BoldItalic.ttf</string>
+		<string>Fonts/IBMPlexMono-Italic.ttf</string>
+		<string>Fonts/IBMPlexMono-Regular.ttf</string>
+		<string>Fonts/IBMPlexSans-Bold.ttf</string>
+		<string>Fonts/IBMPlexSans-BoldItalic.ttf</string>
+		<string>Fonts/IBMPlexSans-Italic.ttf</string>
+		<string>Fonts/IBMPlexSans-Light.ttf</string>
+		<string>Fonts/IBMPlexSans-Medium.ttf</string>
+		<string>Fonts/IBMPlexSans-Regular.ttf</string>
+	</array>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
