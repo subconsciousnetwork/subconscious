@@ -162,22 +162,20 @@ extension UIFont {
 }
 
 //  MARK: Color
+/// String color names are references to ColorSet assets, and can be found in Assets.xassets
+/// Each ColorSet contains a light and dark mode, and color is resolved at runtime.
 extension Color {
-    static let text = SwiftUI.Color.primary
-    static let secondaryText = SwiftUI.Color.secondary
-    static let placeholderText = SwiftUI.Color(.placeholderText)
+    static let text = SwiftUI.Color("TextColor")
+    static let secondaryText = SwiftUI.Color("SecondaryTextColor")
+    static let placeholderText = SwiftUI.Color("PlaceholderTextColor")
+    static let disabledText = placeholderText
     static let accent = SwiftUI.Color.accentColor
     static let icon = accent
-    static let background = SwiftUI.Color(
-        red: 245 / 255,
-        green: 242 / 255,
-        blue: 241 / 255
-    )
-    static let secondaryBackground = SwiftUI.Color(.secondarySystemBackground)
+    static let background = SwiftUI.Color("BackgroundColor")
+    static let secondaryBackground = SwiftUI.Color("SecondaryBackgroundColor")
     static let buttonText = accent
-    static let pressedText = buttonText.opacity(0.3)
+    static let pressedText = placeholderText
     static let pressedBackground = secondaryBackground
-    static let disabledText = text.opacity(0.5)
 }
 
 //  MARK: Animation durations
