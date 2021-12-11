@@ -437,6 +437,6 @@ struct AppView: View {
                 store.send(action: .openURL(url))
                 return .handled
             })
-        }
+        }.font(Font.appText)
     }
 }
