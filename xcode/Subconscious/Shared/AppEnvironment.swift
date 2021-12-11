@@ -151,14 +151,30 @@ extension AppTheme {
     static let unit4 = unit * 4
     static let cornerRadius: Double = 20
     static let padding = unit4
+    static let gutter = unit * 5
     static let tightPadding = unit * 3
     static let icon: CGFloat = unit * 6
+    static let textSize: CGFloat = 16
+    // Unlike in CSS, line-spacing is not described as the total height of a
+    // line. Instead, it is is measured as leading,
+    // from bottom of one line to top of the next.
+    // 4 + 4 = 8
+    // 8 + 16 = 24
+    // 8 * 1.5 = 24
+    // 2021-12-10 Gordon Brander
+    static let lineSpacing: CGFloat = 4
 }
 
 //  MARK: Fonts
 extension UIFont {
-    static let appText = UIFont.systemFont(ofSize: 17)
-    static let appTextBold = UIFont.boldSystemFont(ofSize: 17)
+    static let appText = UIFont(
+        name: "IBMPlexMono",
+        size: AppTheme.textSize
+    )!
+    static let appTextBold = UIFont(
+        name: "IBMPlexMono-Bold",
+        size: AppTheme.textSize
+    )!
 }
 
 //  MARK: Color
