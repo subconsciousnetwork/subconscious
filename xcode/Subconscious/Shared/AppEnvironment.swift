@@ -165,7 +165,7 @@ extension AppTheme {
     static let lineSpacing: CGFloat = 4
 }
 
-//  MARK: Fonts
+//  MARK: UIFonts
 extension UIFont {
     static let appText = UIFont(
         name: "IBMPlexMono",
@@ -175,6 +175,11 @@ extension UIFont {
         name: "IBMPlexMono-Bold",
         size: AppTheme.textSize
     )!
+}
+
+//  MARK: Fonts
+extension Font {
+    static let appText = Font.custom("IBMPlexSans", size: 16)
 }
 
 //  MARK: Color
