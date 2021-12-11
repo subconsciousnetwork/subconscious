@@ -4,16 +4,16 @@
 <dict>
 	<key>UIAppFonts</key>
 	<array>
-		<string>Fonts/IBMPlexMono-Bold.ttf</string>
-		<string>Fonts/IBMPlexMono-BoldItalic.ttf</string>
-		<string>Fonts/IBMPlexMono-Italic.ttf</string>
-		<string>Fonts/IBMPlexMono-Regular.ttf</string>
-		<string>Fonts/IBMPlexSans-Bold.ttf</string>
-		<string>Fonts/IBMPlexSans-BoldItalic.ttf</string>
-		<string>Fonts/IBMPlexSans-Italic.ttf</string>
-		<string>Fonts/IBMPlexSans-Light.ttf</string>
-		<string>Fonts/IBMPlexSans-Medium.ttf</string>
-		<string>Fonts/IBMPlexSans-Regular.ttf</string>
+		<string>IBMPlexMono-Bold.ttf</string>
+		<string>IBMPlexMono-BoldItalic.ttf</string>
+		<string>IBMPlexMono-Italic.ttf</string>
+		<string>IBMPlexMono-Regular.ttf</string>
+		<string>IBMPlexSans-Bold.ttf</string>
+		<string>IBMPlexSans-BoldItalic.ttf</string>
+		<string>IBMPlexSans-Italic.ttf</string>
+		<string>IBMPlexSans-Light.ttf</string>
+		<string>IBMPlexSans-Medium.ttf</string>
+		<string>IBMPlexSans-Regular.ttf</string>
 	</array>
 	<key>CFBundleDocumentTypes</key>
 	<array>
