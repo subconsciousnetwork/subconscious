@@ -46,7 +46,9 @@ struct DetailView: View {
                                     bottom: AppTheme.gutter,
                                     trailing: AppTheme.gutter
                                 )
-                            ).frame(minHeight: geometry.size.height / 2)
+                            ).frame(
+                                minHeight: geometry.size.height / 2
+                            )
                             Divider()
                             BacklinksView(
                                 backlinks: backlinks,
@@ -62,8 +64,9 @@ struct DetailView: View {
                     )
                 }
             )
-        }
-        .toolbar {
+        }.background(
+            Color.background
+        ).toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 if isEditorFocused {
                     Button(
@@ -76,8 +79,7 @@ struct DetailView: View {
                     EmptyView()
                 }
             }
-        }
-        .sheet(
+        }.sheet(
             isPresented: $isLinkSheetPresented,
             onDismiss: {}
         ) {
