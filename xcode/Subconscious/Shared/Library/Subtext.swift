@@ -220,7 +220,7 @@ extension Subtext {
         // Set default font for entire string
         attributedString.addAttribute(
             .font,
-            value: UIFont.appText,
+            value: UIFont.appTextMono,
             range: baseNSRange
         )
 
@@ -246,7 +246,7 @@ extension Subtext {
                 let nsRange = NSRange(line.range, in: attributedString.string)
                 attributedString.addAttribute(
                     .font,
-                    value: UIFont.appTextBold,
+                    value: UIFont.appTextMonoBold,
                     range: nsRange
                 )
             case
