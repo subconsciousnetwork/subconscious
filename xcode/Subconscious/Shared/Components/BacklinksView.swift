@@ -23,7 +23,7 @@ struct BacklinksView: View {
                     }
                 ).buttonStyle(TranscludeButtonStyle())
             }
-        }.padding(AppTheme.padding)
+        }.padding(AppTheme.gutter)
     }
 }
 
