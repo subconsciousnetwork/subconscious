@@ -13,10 +13,10 @@ struct EntryItemView: View {
     var entry: SubtextFile
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit2) {
+        VStack(alignment: .leading, spacing: AppTheme.unit) {
             HStack {
                 Text(entry.title)
-                    .bold()
+                    .font(Font.appTitle)
                     .lineLimit(2)
                     .foregroundColor(Color.text)
                     .multilineTextAlignment(.leading)
@@ -30,7 +30,7 @@ struct EntryItemView: View {
                 Spacer()
             }
             HStack {
-                Text(Slashlink.addLeadingSlash(entry.slug))
+                Text(Slashlink.removeLeadingSlash(entry.slug))
                     .lineLimit(1)
                     .foregroundColor(Color.secondaryText)
                     .multilineTextAlignment(.leading)
