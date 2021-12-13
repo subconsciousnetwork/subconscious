@@ -148,8 +148,9 @@ enum AppTheme {}
 extension AppTheme {
     static let unit: CGFloat = 4
     static let unit2 = unit * 2
+    static let unit3 = unit * 3
     static let unit4 = unit * 4
-    static let cornerRadius: Double = 20
+    static let cornerRadius: Double = 8
     static let padding = unit4
     static let gutter = unit * 5
     static let tightPadding = unit * 3
@@ -168,10 +169,17 @@ extension AppTheme {
 //  MARK: UIFonts
 extension UIFont {
     static let appText = UIFont(
+        name: "IBMPlexSans",
+        size: AppTheme.textSize
+    )!
+
+    static let appLargeTitle = UIFont(name: "IBMPlexSans-Light", size: 34)!
+
+    static let appTextMono = UIFont(
         name: "IBMPlexMono",
         size: AppTheme.textSize
     )!
-    static let appTextBold = UIFont(
+    static let appTextMonoBold = UIFont(
         name: "IBMPlexMono-Bold",
         size: AppTheme.textSize
     )!
@@ -179,7 +187,12 @@ extension UIFont {
 
 //  MARK: Fonts
 extension Font {
-    static let appText = Font.custom("IBMPlexSans", size: 16)
+    static let appText = Font.custom("IBMPlexSans", size: AppTheme.textSize)
+    static let appLargeTitle = Font.custom("IBMPlexSans-Light", size: 34)
+    static let appTitle = Font.custom(
+        "IBMPlexSans-Medium",
+        size: AppTheme.textSize
+    )
 }
 
 //  MARK: Color
@@ -194,6 +207,7 @@ extension Color {
     static let icon = accent
     static let background = SwiftUI.Color("BackgroundColor")
     static let secondaryBackground = SwiftUI.Color("SecondaryBackgroundColor")
+    static let secondaryBackgroundPressed = secondaryBackground.opacity(0.5)
     static let buttonText = accent
     static let pressedText = placeholderText
     static let pressedBackground = secondaryBackground
