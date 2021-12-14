@@ -428,7 +428,7 @@ struct AppView: View {
                 Button(
                     action: {},
                     label: {
-                        Image(systemName: "square.and.pencil")
+                        Image(systemName: "plus")
                     }
                 ).buttonStyle(
                     FABButtonStyle()
