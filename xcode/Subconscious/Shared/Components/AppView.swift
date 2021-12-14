@@ -421,22 +421,34 @@ struct AppView: View {
     @ObservedObject var store: Store<AppModel>
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottomTrailing) {
             Color.background.edgesIgnoringSafeArea(.all)
-            VStack {
-                if store.state.isDatabaseReady {
-                    AppNavigationView(store: store)
-                } else {
+            if store.state.isDatabaseReady {
+                AppNavigationView(store: store)
+                Button(
+                    action: {},
+                    label: {
+                        Image(systemName: "square.and.pencil")
+                    }
+                ).buttonStyle(
+                    FABButtonStyle()
+                ).padding(
+                    AppTheme.gutter
+                )
+            } else {
+                VStack {
                     Spacer()
                     ProgressView()
                     Spacer()
                 }
-            }.onAppear {
-                store.send(action: .appear)
-            }.environment(\.openURL, OpenURLAction { url in
-                store.send(action: .openURL(url))
-                return .handled
-            })
-        }.font(Font.appText)
+            }
+        }.font(
+            Font.appText
+        ).onAppear {
+            store.send(action: .appear)
+        }.environment(\.openURL, OpenURLAction { url in
+            store.send(action: .openURL(url))
+            return .handled
+        })
     }
 }
