@@ -50,10 +50,12 @@ struct DetailView: View {
                                 minHeight: geometry.size.height / 2
                             )
                             Divider()
-                            BacklinksView(
-                                backlinks: backlinks,
-                                onActivateBacklink: onCommitSearch
-                            )
+                            if backlinks.count > 0 {
+                                BacklinksView(
+                                    backlinks: backlinks,
+                                    onActivateBacklink: onCommitSearch
+                                )
+                            }
                         }
                     }
                 },
