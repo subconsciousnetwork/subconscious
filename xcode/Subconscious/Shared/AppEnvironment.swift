@@ -179,6 +179,7 @@ extension UIFont {
         name: "IBMPlexMono",
         size: AppTheme.textSize
     )!
+
     static let appTextMonoBold = UIFont(
         name: "IBMPlexMono-Bold",
         size: AppTheme.textSize
@@ -188,10 +189,17 @@ extension UIFont {
 //  MARK: Fonts
 extension Font {
     static let appText = Font.custom("IBMPlexSans", size: AppTheme.textSize)
+
     static let appLargeTitle = Font.custom("IBMPlexSans-Light", size: 34)
+
     static let appTitle = Font.custom(
         "IBMPlexSans-Medium",
         size: AppTheme.textSize
+    )
+
+    static let appCaption = Font.custom(
+        "IBMPlexSans",
+        size: 12
     )
 }
 
