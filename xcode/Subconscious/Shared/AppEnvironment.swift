@@ -164,6 +164,7 @@ extension AppTheme {
     // 8 * 1.5 = 24
     // 2021-12-10 Gordon Brander
     static let lineSpacing: CGFloat = 4
+    static let fabSize: CGFloat = 56
 }
 
 //  MARK: UIFonts
@@ -208,6 +209,7 @@ extension Font {
 /// Each ColorSet contains a light and dark mode, and color is resolved at runtime.
 extension Color {
     static let text = SwiftUI.Color("TextColor")
+    static let textPressed = text.opacity(0.5)
     static let secondaryText = SwiftUI.Color("SecondaryTextColor")
     static let placeholderText = SwiftUI.Color("PlaceholderTextColor")
     static let disabledText = placeholderText
@@ -216,8 +218,12 @@ extension Color {
     static let background = SwiftUI.Color("BackgroundColor")
     static let secondaryBackground = SwiftUI.Color("SecondaryBackgroundColor")
     static let secondaryBackgroundPressed = secondaryBackground.opacity(0.5)
+    static let fabBackground = SwiftUI.Color("FABBackgroundColor")
+    static let fabBackgroundPressed = fabBackground.opacity(0.5)
+    static let fabText = SwiftUI.Color("FABTextColor")
+    static let fabTextPressed = fabText.opacity(0.5)
+    static let fabTextDisabled = fabText.opacity(0.3)
     static let buttonText = accent
-    static let pressedText = placeholderText
     static let pressedBackground = secondaryBackground
 }
 
