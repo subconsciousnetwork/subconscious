@@ -13,6 +13,14 @@ struct BacklinksView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
+            Text(
+                "Backlinks"
+            ).font(
+                Font.appCaption
+            ).padding(
+                .horizontal,
+                AppTheme.unit4
+            )
             ForEach(backlinks) { entry in
                 Button(
                     action: {
