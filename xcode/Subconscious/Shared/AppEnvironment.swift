@@ -174,7 +174,6 @@ extension UIFont {
         size: AppTheme.textSize
     )!
 
-    static let appLargeTitle = UIFont(name: "IBMPlexSans-Light", size: 34)!
 
     static let appTextMono = UIFont(
         name: "IBMPlexMono",
@@ -185,28 +184,39 @@ extension UIFont {
         name: "IBMPlexMono-Bold",
         size: AppTheme.textSize
     )!
+
+    static let appLargeTitle = UIFont(name: "IBMPlexSans-Light", size: 34)!
+
+    static let appTitle = UIFont(
+        name: "IBMPlexSans-Medium",
+        size: AppTheme.textSize
+    )!
+
+    static let appCaption = UIFont(
+        name: "IBMPlexSans",
+        size: 12
+    )!
 }
 
 //  MARK: Fonts
+//  Note you can convert from UIFont to Font easily, but you can't yet convert
+//  from Font to UIFont. So, we define our fonts as UIFonts and then provide
+//  helpful proxies here.
+//  2021-12-15 Gordon Brander
 extension Font {
-    static let appText = Font.custom("IBMPlexSans", size: AppTheme.textSize)
-
-    static let appLargeTitle = Font.custom("IBMPlexSans-Light", size: 34)
-
-    static let appTitle = Font.custom(
-        "IBMPlexSans-Medium",
-        size: AppTheme.textSize
-    )
-
-    static let appCaption = Font.custom(
-        "IBMPlexSans",
-        size: 12
-    )
+    static let appText = Font(UIFont.appText)
+    static let appTextMono = Font(UIFont.appTextMono)
+    static let appTextMonoBold = Font(UIFont.appTextMonoBold)
+    static let appLargeTitle = Font(UIFont.appLargeTitle)
+    static let appTitle = Font(UIFont.appTitle)
+    static let appCaption = Font(UIFont.appCaption)
 }
 
 //  MARK: Color
-/// String color names are references to ColorSet assets, and can be found in Assets.xassets
-/// Each ColorSet contains a light and dark mode, and color is resolved at runtime.
+//  String color names are references to ColorSet assets, and can be found
+//  in Assets.xassets. Each ColorSet contains a light and dark mode, and color
+//  is resolved at runtime.
+//  2021-12-15 Gordon Brander
 extension Color {
     static let text = SwiftUI.Color("TextColor")
     static let textPressed = text.opacity(0.5)

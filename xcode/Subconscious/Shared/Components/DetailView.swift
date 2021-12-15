@@ -33,7 +33,7 @@ struct DetailView: View {
                 content: {
                     ScrollView(.vertical) {
                         VStack(spacing: 0) {
-                            GrowableTextViewRepresentable(
+                            GrowableAttributedTextViewRepresentable(
                                 attributedText: $editorAttributedText,
                                 isFocused: $isEditorFocused,
                                 selection: $editorSelection,

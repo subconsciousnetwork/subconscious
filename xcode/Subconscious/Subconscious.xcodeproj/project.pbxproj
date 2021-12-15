@@ -76,10 +76,14 @@
 		B88C97A02764266A00B27DF0 /* IBMPlexSans-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C979C2764266A00B27DF0 /* IBMPlexSans-Medium.ttf */; };
 		B88C97A22764270000B27DF0 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = B88C97A12764270000B27DF0 /* LICENSE.txt */; };
 		B88C97A32764270000B27DF0 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = B88C97A12764270000B27DF0 /* LICENSE.txt */; };
+		B8AE34A7276A885300777FF0 /* TextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */; };
+		B8AE34A8276A885300777FF0 /* TextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */; };
+		B8AE34AA276A986000777FF0 /* PlaceholderTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */; };
+		B8AE34AB276A986000777FF0 /* PlaceholderTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */; };
 		B8B54F3B271F6C8400B9B507 /* Stub.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3A271F6C8400B9B507 /* Stub.swift */; };
 		B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */; };
-		B8E4B6F226F28BA600B9BE21 /* GrowableTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4B6F126F28BA600B9BE21 /* GrowableTextViewRepresentable.swift */; };
-		B8E4B6F326F28BA700B9BE21 /* GrowableTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4B6F126F28BA600B9BE21 /* GrowableTextViewRepresentable.swift */; };
+		B8E4B6F226F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4B6F126F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift */; };
+		B8E4B6F326F28BA700B9BE21 /* GrowableAttributedTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4B6F126F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift */; };
 		B8E63EA6270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E63EA5270F9DD000545719 /* StringRandomAlphanumeric.swift */; };
 		B8E63EA7270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E63EA5270F9DD000545719 /* StringRandomAlphanumeric.swift */; };
 		B8EB2A1026F27797006E97C3 /* Tests_iOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EB2A0F26F27797006E97C3 /* Tests_iOS.swift */; };
@@ -158,9 +162,11 @@
 		B88C979B2764266A00B27DF0 /* IBMPlexSans-Light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexSans-Light.ttf"; sourceTree = "<group>"; };
 		B88C979C2764266A00B27DF0 /* IBMPlexSans-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexSans-Medium.ttf"; sourceTree = "<group>"; };
 		B88C97A12764270000B27DF0 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextViewRepresentable.swift; sourceTree = "<group>"; };
+		B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderTextView.swift; sourceTree = "<group>"; };
 		B8B54F3A271F6C8400B9B507 /* Stub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stub.swift; sourceTree = "<group>"; };
 		B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestion.swift; sourceTree = "<group>"; };
-		B8E4B6F126F28BA600B9BE21 /* GrowableTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowableTextViewRepresentable.swift; sourceTree = "<group>"; };
+		B8E4B6F126F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowableAttributedTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8E63EA5270F9DD000545719 /* StringRandomAlphanumeric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringRandomAlphanumeric.swift; sourceTree = "<group>"; };
 		B8EB29F326F27794006E97C3 /* SubconsciousApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubconsciousApp.swift; sourceTree = "<group>"; };
 		B8EB29F526F27794006E97C3 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppView.swift; sourceTree = "<group>"; };
@@ -368,7 +374,9 @@
 			isa = PBXGroup;
 			children = (
 				B82FD4552730A62C002CB641 /* EntryItemView.swift */,
-				B8E4B6F126F28BA600B9BE21 /* GrowableTextViewRepresentable.swift */,
+				B8E4B6F126F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift */,
+				B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */,
+				B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */,
 				B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */,
 				B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */,
 				B878C9812703F47A0042DF72 /* SuggestionLabelView.swift */,
@@ -583,6 +591,7 @@
 				B8EB2A1F26F27797006E97C3 /* SubconsciousApp.swift in Sources */,
 				B864598726F97B81007969E3 /* KeyboardToolbarView.swift in Sources */,
 				B824FDD126FA98F300B81BBD /* ResultSet.swift in Sources */,
+				B8AE34AA276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
 				B824FDCE26FA662200B81BBD /* SubtextFile.swift in Sources */,
@@ -592,9 +601,10 @@
 				B82C3A7326F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */,
 				B82C3A5326F528B000833CC8 /* DatabaseService.swift in Sources */,
 				B878C9822703F47A0042DF72 /* SuggestionLabelView.swift in Sources */,
-				B8E4B6F226F28BA600B9BE21 /* GrowableTextViewRepresentable.swift in Sources */,
+				B8E4B6F226F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift in Sources */,
 				B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */,
 				B8EB2A2326F27797006E97C3 /* AppView.swift in Sources */,
+				B8AE34A7276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */,
 				B83E91D727692EC600045C6A /* FABButtonStyle.swift in Sources */,
@@ -616,6 +626,7 @@
 				B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B824FDD526FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
+				B8AE34A8276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
 				B8082AAB26F3B43A004B10BB /* Store.swift in Sources */,
 				B82FD4572730A62C002CB641 /* EntryItemView.swift in Sources */,
 				B8879EA726F9348600A0B4FF /* Slashlink.swift in Sources */,
@@ -629,11 +640,12 @@
 				B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
 				B8EC568326F415C800AC64E5 /* PublisherBag.swift in Sources */,
 				B8EC569026F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
+				B8AE34AB276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
 				B81A5360272751EE001A6268 /* Subtext.swift in Sources */,
 				B82C3A7426F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */,
 				B82C3A5426F528B000833CC8 /* DatabaseService.swift in Sources */,
 				B878C9832703F47A0042DF72 /* SuggestionLabelView.swift in Sources */,
-				B8E4B6F326F28BA700B9BE21 /* GrowableTextViewRepresentable.swift in Sources */,
+				B8E4B6F326F28BA700B9BE21 /* GrowableAttributedTextViewRepresentable.swift in Sources */,
 				B8879EA126F90C5100A0B4FF /* AppNavigationView.swift in Sources */,
 				B8EB2A2426F27797006E97C3 /* AppView.swift in Sources */,
 				B82C3A6026F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
