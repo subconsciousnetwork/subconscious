@@ -80,6 +80,16 @@
 		B8AE34A8276A885300777FF0 /* TextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */; };
 		B8AE34AA276A986000777FF0 /* PlaceholderTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */; };
 		B8AE34AB276A986000777FF0 /* PlaceholderTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */; };
+		B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */; };
+		B8AE34AE276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */; };
+		B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */; };
+		B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */; };
+		B8AE34B3276AA98200777FF0 /* RoundedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B2276AA98200777FF0 /* RoundedTextView.swift */; };
+		B8AE34B4276AA98200777FF0 /* RoundedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B2276AA98200777FF0 /* RoundedTextView.swift */; };
+		B8AE34B6276AAAFF00777FF0 /* RoundedTextViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B5276AAAFF00777FF0 /* RoundedTextViewModifier.swift */; };
+		B8AE34B7276AAAFF00777FF0 /* RoundedTextViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B5276AAAFF00777FF0 /* RoundedTextViewModifier.swift */; };
+		B8AE34B9276AABEC00777FF0 /* FakeRoundedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B8276AABEC00777FF0 /* FakeRoundedTextView.swift */; };
+		B8AE34BA276AABEC00777FF0 /* FakeRoundedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B8276AABEC00777FF0 /* FakeRoundedTextView.swift */; };
 		B8B54F3B271F6C8400B9B507 /* Stub.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3A271F6C8400B9B507 /* Stub.swift */; };
 		B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */; };
 		B8E4B6F226F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4B6F126F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift */; };
@@ -164,6 +174,11 @@
 		B88C97A12764270000B27DF0 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderTextView.swift; sourceTree = "<group>"; };
+		B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButtonStyle.swift; sourceTree = "<group>"; };
+		B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorUtilities.swift; sourceTree = "<group>"; };
+		B8AE34B2276AA98200777FF0 /* RoundedTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedTextView.swift; sourceTree = "<group>"; };
+		B8AE34B5276AAAFF00777FF0 /* RoundedTextViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedTextViewModifier.swift; sourceTree = "<group>"; };
+		B8AE34B8276AABEC00777FF0 /* FakeRoundedTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeRoundedTextView.swift; sourceTree = "<group>"; };
 		B8B54F3A271F6C8400B9B507 /* Stub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stub.swift; sourceTree = "<group>"; };
 		B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestion.swift; sourceTree = "<group>"; };
 		B8E4B6F126F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowableAttributedTextViewRepresentable.swift; sourceTree = "<group>"; };
@@ -366,6 +381,7 @@
 				B81A535B27275138001A6268 /* Tape.swift */,
 				B824FDD326FAB1BC00B81BBD /* Truncate.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
+				B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -382,6 +398,10 @@
 				B878C9812703F47A0042DF72 /* SuggestionLabelView.swift */,
 				B81EBB0827025C1500B87594 /* TranscludeButtonStyle.swift */,
 				B83E91D627692EC600045C6A /* FABButtonStyle.swift */,
+				B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */,
+				B8AE34B2276AA98200777FF0 /* RoundedTextView.swift */,
+				B8AE34B8276AABEC00777FF0 /* FakeRoundedTextView.swift */,
+				B8AE34B5276AAAFF00777FF0 /* RoundedTextViewModifier.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -575,12 +595,15 @@
 			files = (
 				B82FD4562730A62C002CB641 /* EntryItemView.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
+				B8AE34B9276AABEC00777FF0 /* FakeRoundedTextView.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* Stub.swift in Sources */,
+				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
 				B81EBB0927025C1500B87594 /* TranscludeButtonStyle.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B81A535F272751EE001A6268 /* Subtext.swift in Sources */,
 				B8E63EA6270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */,
+				B8AE34B3276AA98200777FF0 /* RoundedTextView.swift in Sources */,
 				B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
@@ -605,10 +628,12 @@
 				B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */,
 				B8EB2A2326F27797006E97C3 /* AppView.swift in Sources */,
 				B8AE34A7276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
+				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */,
 				B83E91D727692EC600045C6A /* FABButtonStyle.swift in Sources */,
 				B8EC568C26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
+				B8AE34B6276AAAFF00777FF0 /* RoundedTextViewModifier.swift in Sources */,
 				B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -626,19 +651,24 @@
 				B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B824FDD526FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
+				B8AE34B4276AA98200777FF0 /* RoundedTextView.swift in Sources */,
 				B8AE34A8276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
 				B8082AAB26F3B43A004B10BB /* Store.swift in Sources */,
 				B82FD4572730A62C002CB641 /* EntryItemView.swift in Sources */,
 				B8879EA726F9348600A0B4FF /* Slashlink.swift in Sources */,
+				B8AE34B7276AAAFF00777FF0 /* RoundedTextViewModifier.swift in Sources */,
 				B8879EAD26F944DA00A0B4FF /* DetailView.swift in Sources */,
 				B82C3A7726F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B8EB2A2026F27797006E97C3 /* SubconsciousApp.swift in Sources */,
 				B81A535D27275138001A6268 /* Tape.swift in Sources */,
 				B864598826F97B81007969E3 /* KeyboardToolbarView.swift in Sources */,
+				B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B824FDD226FA98F300B81BBD /* ResultSet.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
+				B8AE34AE276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8EC568326F415C800AC64E5 /* PublisherBag.swift in Sources */,
+				B8AE34BA276AABEC00777FF0 /* FakeRoundedTextView.swift in Sources */,
 				B8EC569026F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
 				B8AE34AB276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
 				B81A5360272751EE001A6268 /* Subtext.swift in Sources */,

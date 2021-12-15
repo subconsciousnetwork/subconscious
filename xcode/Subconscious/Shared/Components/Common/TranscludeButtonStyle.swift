@@ -21,7 +21,7 @@ struct TranscludeButtonStyle: ButtonStyle {
                 Color.secondaryBackgroundPressed :
                 Color.secondaryBackground
             )
-            .foregroundColor(!isEnabled ? Color.disabledText : Color.text)
+            .foregroundColor(!isEnabled ? Color.textDisabled : Color.text)
             .cornerRadius(AppTheme.cornerRadius)
             .animation(
                 .easeOut(duration: Duration.fast),

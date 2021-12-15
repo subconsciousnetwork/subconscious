@@ -164,6 +164,7 @@ extension AppTheme {
     // 8 * 1.5 = 24
     // 2021-12-10 Gordon Brander
     static let lineSpacing: CGFloat = 4
+    static let lineHeight: CGFloat = 24
     static let fabSize: CGFloat = 56
 }
 
@@ -174,6 +175,10 @@ extension UIFont {
         size: AppTheme.textSize
     )!
 
+    static let appTextMedium = UIFont(
+        name: "IBMPlexSans-Medium",
+        size: AppTheme.textSize
+    )!
 
     static let appTextMono = UIFont(
         name: "IBMPlexMono",
@@ -187,10 +192,8 @@ extension UIFont {
 
     static let appLargeTitle = UIFont(name: "IBMPlexSans-Light", size: 34)!
 
-    static let appTitle = UIFont(
-        name: "IBMPlexSans-Medium",
-        size: AppTheme.textSize
-    )!
+    static let appTitle = appTextMedium
+    static let appButton = appTextMedium
 
     static let appCaption = UIFont(
         name: "IBMPlexSans",
@@ -220,21 +223,30 @@ extension Font {
 extension Color {
     static let text = SwiftUI.Color("TextColor")
     static let textPressed = text.opacity(0.5)
+    static let textDisabled = placeholderText
     static let secondaryText = SwiftUI.Color("SecondaryTextColor")
     static let placeholderText = SwiftUI.Color("PlaceholderTextColor")
-    static let disabledText = placeholderText
-    static let accent = SwiftUI.Color.accentColor
-    static let icon = accent
+    static let icon = SwiftUI.Color.accentColor
+    static let buttonText = SwiftUI.Color.accentColor
     static let background = SwiftUI.Color("BackgroundColor")
     static let secondaryBackground = SwiftUI.Color("SecondaryBackgroundColor")
     static let secondaryBackgroundPressed = secondaryBackground.opacity(0.5)
-    static let fabBackground = SwiftUI.Color("FABBackgroundColor")
-    static let fabBackgroundPressed = fabBackground.opacity(0.5)
-    static let fabText = SwiftUI.Color("FABTextColor")
-    static let fabTextPressed = fabText.opacity(0.5)
-    static let fabTextDisabled = fabText.opacity(0.3)
-    static let buttonText = accent
-    static let pressedBackground = secondaryBackground
+    static let inputBackground = SwiftUI.Color("InputBackgroundColor")
+    static let primaryButtonBackground = SwiftUI.Color(
+        "PrimaryButtonBackgroundColor"
+    )
+    static let primaryButtonBackgroundPressed = primaryButtonBackground
+        .opacity(0.5)
+    static let primaryButtonBackgroundDisabled = primaryButtonBackground
+        .opacity(0.3)
+    static let primaryButtonText = SwiftUI.Color("PrimaryButtonTextColor")
+    static let primaryButtonTextPressed = fabText.opacity(0.5)
+    static let primaryButtonTextDisabled = fabText.opacity(0.3)
+    static let fabBackground = primaryButtonBackground
+    static let fabBackgroundPressed = primaryButtonBackgroundPressed
+    static let fabText = primaryButtonText
+    static let fabTextPressed = primaryButtonTextPressed
+    static let fabTextDisabled = primaryButtonTextDisabled
 }
 
 //  MARK: Animation durations
