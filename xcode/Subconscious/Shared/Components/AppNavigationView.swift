@@ -16,18 +16,9 @@ struct AppNavigationView: View {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack {
-                        FakeRoundedTextView(
-                            action: {
-                                withAnimation {
-                                    store.send(action: .showSearch)
-                                }
-                            },
-                            placeholder: "Search or create..."
-                        )
-                    }.padding(
-                        AppTheme.margin
-                    )
-                }
+                        Text("Todo")
+                    }.padding()
+                }.background(Color.background)
                 NavigationLink(
                     isActive: store.binding(
                         get: \.isDetailShowing,
@@ -107,41 +98,6 @@ struct AppNavigationView: View {
             }
             .navigationTitle("Ideas")
             .background(Color.background)
-            .searchable(
-                text: store.binding(
-                    get: \.searchText,
-                    tag: AppAction.setSearch
-                ),
-                prompt: "Search or create"
-            ) {
-                ForEach(store.state.suggestions, id: \.self) { suggestion in
-                    Button(action: {
-                        store.send(
-                            action: .commit(
-                                query: suggestion.stub.title,
-                                slug: suggestion.stub.slug
-                            )
-                        )
-                    }) {
-                        SuggestionLabelView(suggestion: suggestion)
-                    }
-                    // We handle submission directly in button action, so
-                    // prevent button submit from bubbling up and triggering a
-                    // second submit via onSubmit handler.
-                    // 2021-09-29 Gordon Brander
-                    .submitScope(true)
-                }
-            }
-            // Catch keyboard sumit.
-            // This will also catch button activations within `.searchable`
-            // suggestions, by default. Therefore, we `.submitScope()` the
-            // suggestions so that this only catches keyboard submissions.
-            // 2021-09-29 Gordon Brander
-            .onSubmit(of: .search, {
-                store.send(
-                    action: .commitSearch(query: store.state.searchText)
-                )
-            })
         }
     }
 }
