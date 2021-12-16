@@ -28,8 +28,8 @@ struct SearchView: View {
                     }
                 )
             }
-                .frame(height: 36)
-                .padding()
+            .frame(height: 36)
+            .padding()
             Divider()
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
@@ -45,17 +45,14 @@ struct SearchView: View {
                             SuggestionLabelView(
                                 suggestion: suggestion
                             )
-                        }.padding()
-                        Divider()
+                        }
+                        .buttonStyle(RowButtonStyle())
                     }
-                        .listStyle(.plain)
-                        .background(Color.background)
+                    .background(Color.background)
                 }
             }
         }
-        .background(
-            Color.background
-        )
+        .background(Color.background)
     }
 }
 
