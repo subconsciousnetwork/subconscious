@@ -478,12 +478,21 @@ struct AppView: View {
                             tag: AppAction.setSuggestions
                         ),
                         placeholder: "Search or create...",
-                        commit: { query, slug in
-                            store.send(
-                                action: .commit(query: query, slug: slug)
-                            )
+                        onCommit: { query, slug in
+                            if let slug = slug {
+                                store.send(
+                                    action: .commit(
+                                        query: query,
+                                        slug: slug
+                                    )
+                                )
+                            } else {
+                                store.send(
+                                    action: .commitSearch(query: query)
+                                )
+                            }
                         },
-                        cancel: {
+                        onCancel: {
                             withAnimation(.easeOut(duration: Duration.fast)) {
                                 store.send(
                                     action: .hideSearch
