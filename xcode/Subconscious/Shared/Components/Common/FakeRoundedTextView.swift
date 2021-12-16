@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct FakeRoundedTextView: View {
-    var placeholder: String
     var action: () -> Void
+    var placeholder: String
     var body: some View {
         Button(
             action: action,
@@ -38,8 +38,8 @@ struct FakeRoundedTextView: View {
 struct FakeRoundedTextView_Previews: PreviewProvider {
     static var previews: some View {
         FakeRoundedTextView(
-            placeholder: "Search or create...",
-            action: {}
+            action: {},
+            placeholder: "Search or create..."
         )
     }
 }
