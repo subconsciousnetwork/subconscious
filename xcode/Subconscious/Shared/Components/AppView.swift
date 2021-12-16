@@ -451,15 +451,17 @@ struct AppView: View {
             if store.state.isDatabaseReady {
                 AppNavigationView(store: store)
                 Button(
-                    action: {},
+                    action: {
+                        withAnimation(.easeOut(duration: Duration.fast)) {
+                            store.send(action: .showSearch)
+                        }
+                    },
                     label: {
                         Image(systemName: "plus")
                     }
-                ).buttonStyle(
-                    FABButtonStyle()
-                ).padding(
-                    AppTheme.margin
                 )
+                    .buttonStyle(FABButtonStyle())
+                    .padding()
                 SearchView(
                     text: store.binding(
                         get: \.searchText,
@@ -480,15 +482,15 @@ struct AppView: View {
                         )
                     },
                     cancel: {
-                        withAnimation {                            
+                        withAnimation {
                             store.send(
                                 action: .hideSearch
                             )
                         }
                     }
-                ).opacity(
-                    store.state.isSearchShowing ? 1 : 0
                 )
+                    .opacity(store.state.isSearchShowing ? 1 : 0)
+                    .offset(x: 0, y: store.state.isSearchShowing ? 0 : 300)
             } else {
                 VStack {
                     Spacer()
