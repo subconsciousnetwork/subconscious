@@ -297,6 +297,7 @@ struct AppModel: Updatable {
             Self.resetEditor(&model)
             model.entryURL = nil
             model.searchText = ""
+            model.isSearchShowing = false
             model.isDetailShowing = true
 
             let suggest = Just(AppAction.setSearch(""))
@@ -460,37 +461,45 @@ struct AppView: View {
                         Image(systemName: "plus")
                     }
                 )
-                    .buttonStyle(FABButtonStyle())
-                    .padding()
-                SearchView(
-                    text: store.binding(
-                        get: \.searchText,
-                        tag: AppAction.setSearch
-                    ),
-                    isFocused: store.binding(
-                        get: \.isSearchFocused,
-                        tag: AppAction.setSearchFocus
-                    ),
-                    suggestions: store.binding(
-                        get: \.suggestions,
-                        tag: AppAction.setSuggestions
-                    ),
-                    placeholder: "Search or create...",
-                    commit: { query, slug in
-                        store.send(
-                            action: .commit(query: query, slug: slug)
-                        )
-                    },
-                    cancel: {
-                        withAnimation(.easeOut(duration: Duration.fast)) {
+                .buttonStyle(FABButtonStyle())
+                .padding()
+                if store.state.isSearchShowing {
+                    SearchView(
+                        text: store.binding(
+                            get: \.searchText,
+                            tag: AppAction.setSearch
+                        ),
+                        isFocused: store.binding(
+                            get: \.isSearchFocused,
+                            tag: AppAction.setSearchFocus
+                        ),
+                        suggestions: store.binding(
+                            get: \.suggestions,
+                            tag: AppAction.setSuggestions
+                        ),
+                        placeholder: "Search or create...",
+                        commit: { query, slug in
                             store.send(
-                                action: .hideSearch
+                                action: .commit(query: query, slug: slug)
                             )
+                        },
+                        cancel: {
+                            withAnimation(.easeOut(duration: Duration.fast)) {
+                                store.send(
+                                    action: .hideSearch
+                                )
+                            }
                         }
-                    }
-                )
-                    .opacity(store.state.isSearchShowing ? 1 : 0)
-                    .offset(x: 0, y: store.state.isSearchShowing ? 0 : 300)
+                    )
+                    .transition(
+                        .asymmetric(
+                            insertion:
+                                .move(edge: .bottom)
+                                .combined(with: .opacity),
+                            removal: .opacity
+                        )
+                    )
+                }
             } else {
                 VStack {
                     Spacer()
@@ -498,11 +507,12 @@ struct AppView: View {
                     Spacer()
                 }
             }
-        }.font(
-            Font.appText
-        ).onAppear {
+        }
+        .font(Font.appText)
+        .onAppear {
             store.send(action: .appear)
-        }.environment(\.openURL, OpenURLAction { url in
+        }
+        .environment(\.openURL, OpenURLAction { url in
             store.send(action: .openURL(url))
             return .handled
         })
