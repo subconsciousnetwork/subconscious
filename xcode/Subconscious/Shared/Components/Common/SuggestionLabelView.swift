@@ -14,11 +14,14 @@ struct SuggestionLabelView: View {
         case let .entry(stub):
             Label(
                 title: {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(stub.title)
-                            .foregroundColor(Color.text)
-                        Text(Slashlink.addLeadingSlash(stub.slug))
-                            .foregroundColor(Color.secondaryText)
+                    HStack {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(stub.title)
+                                .foregroundColor(Color.text)
+                            Text(Slashlink.removeLeadingSlash(stub.slug))
+                                .foregroundColor(Color.secondaryText)
+                        }
+                        Spacer()
                     }
                 },
                 icon: {
@@ -28,11 +31,14 @@ struct SuggestionLabelView: View {
         case let .search(stub):
             Label(
                 title: {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(stub.title)
-                            .foregroundColor(Color.text)
-                        Text("New note")
-                            .foregroundColor(Color.secondaryText)
+                    HStack {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(stub.title)
+                                .foregroundColor(Color.text)
+                            Text("New note")
+                                .foregroundColor(Color.secondaryText)
+                        }
+                        Spacer()
                     }
                 },
                 icon: {
@@ -54,7 +60,7 @@ struct SuggestionLabelView2: View {
                     VStack(alignment: .leading, spacing: 0) {
                         Text(stub.title)
                             .foregroundColor(Color.text)
-                        Text(Slashlink.addLeadingSlash(stub.slug))
+                        Text(Slashlink.removeLeadingSlash(stub.slug))
                             .foregroundColor(Color.secondaryText)
                     }
                 },
@@ -68,7 +74,7 @@ struct SuggestionLabelView2: View {
                     VStack(alignment: .leading, spacing: 0) {
                         Text(stub.title)
                             .foregroundColor(Color.text)
-                        Text(Slashlink.addLeadingSlash(stub.slug))
+                        Text(Slashlink.removeLeadingSlash(stub.slug))
                             .foregroundColor(Color.secondaryText)
                     }
                 },
