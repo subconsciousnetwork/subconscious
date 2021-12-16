@@ -86,10 +86,10 @@
 		B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */; };
 		B8AE34B3276AA98200777FF0 /* RoundedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B2276AA98200777FF0 /* RoundedTextView.swift */; };
 		B8AE34B4276AA98200777FF0 /* RoundedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B2276AA98200777FF0 /* RoundedTextView.swift */; };
-		B8AE34B6276AAAFF00777FF0 /* RoundedTextViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B5276AAAFF00777FF0 /* RoundedTextViewModifier.swift */; };
-		B8AE34B7276AAAFF00777FF0 /* RoundedTextViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B5276AAAFF00777FF0 /* RoundedTextViewModifier.swift */; };
-		B8AE34B9276AABEC00777FF0 /* FakeRoundedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B8276AABEC00777FF0 /* FakeRoundedTextView.swift */; };
-		B8AE34BA276AABEC00777FF0 /* FakeRoundedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B8276AABEC00777FF0 /* FakeRoundedTextView.swift */; };
+		B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */; };
+		B8AE34B7276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */; };
+		B8AE34B9276AABEC00777FF0 /* FakeRoundedTextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B8276AABEC00777FF0 /* FakeRoundedTextFieldView.swift */; };
+		B8AE34BA276AABEC00777FF0 /* FakeRoundedTextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B8276AABEC00777FF0 /* FakeRoundedTextFieldView.swift */; };
 		B8AE34BC276AB3D500777FF0 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34BB276AB3D400777FF0 /* SearchView.swift */; };
 		B8AE34BD276AB3D500777FF0 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34BB276AB3D400777FF0 /* SearchView.swift */; };
 		B8B54F3B271F6C8400B9B507 /* Stub.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3A271F6C8400B9B507 /* Stub.swift */; };
@@ -179,8 +179,8 @@
 		B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButtonStyle.swift; sourceTree = "<group>"; };
 		B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorUtilities.swift; sourceTree = "<group>"; };
 		B8AE34B2276AA98200777FF0 /* RoundedTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedTextView.swift; sourceTree = "<group>"; };
-		B8AE34B5276AAAFF00777FF0 /* RoundedTextViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedTextViewModifier.swift; sourceTree = "<group>"; };
-		B8AE34B8276AABEC00777FF0 /* FakeRoundedTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeRoundedTextView.swift; sourceTree = "<group>"; };
+		B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedTextFieldViewModifier.swift; sourceTree = "<group>"; };
+		B8AE34B8276AABEC00777FF0 /* FakeRoundedTextFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeRoundedTextFieldView.swift; sourceTree = "<group>"; };
 		B8AE34BB276AB3D400777FF0 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		B8B54F3A271F6C8400B9B507 /* Stub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stub.swift; sourceTree = "<group>"; };
 		B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestion.swift; sourceTree = "<group>"; };
@@ -404,8 +404,8 @@
 				B83E91D627692EC600045C6A /* FABButtonStyle.swift */,
 				B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */,
 				B8AE34B2276AA98200777FF0 /* RoundedTextView.swift */,
-				B8AE34B8276AABEC00777FF0 /* FakeRoundedTextView.swift */,
-				B8AE34B5276AAAFF00777FF0 /* RoundedTextViewModifier.swift */,
+				B8AE34B8276AABEC00777FF0 /* FakeRoundedTextFieldView.swift */,
+				B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -599,7 +599,7 @@
 			files = (
 				B82FD4562730A62C002CB641 /* EntryItemView.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
-				B8AE34B9276AABEC00777FF0 /* FakeRoundedTextView.swift in Sources */,
+				B8AE34B9276AABEC00777FF0 /* FakeRoundedTextFieldView.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* Stub.swift in Sources */,
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
@@ -638,7 +638,7 @@
 				B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */,
 				B83E91D727692EC600045C6A /* FABButtonStyle.swift in Sources */,
 				B8EC568C26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
-				B8AE34B6276AAAFF00777FF0 /* RoundedTextViewModifier.swift in Sources */,
+				B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
 				B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -661,7 +661,7 @@
 				B8082AAB26F3B43A004B10BB /* Store.swift in Sources */,
 				B82FD4572730A62C002CB641 /* EntryItemView.swift in Sources */,
 				B8879EA726F9348600A0B4FF /* Slashlink.swift in Sources */,
-				B8AE34B7276AAAFF00777FF0 /* RoundedTextViewModifier.swift in Sources */,
+				B8AE34B7276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
 				B8879EAD26F944DA00A0B4FF /* DetailView.swift in Sources */,
 				B82C3A7726F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B8EB2A2026F27797006E97C3 /* SubconsciousApp.swift in Sources */,
@@ -674,7 +674,7 @@
 				B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
 				B8AE34AE276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8EC568326F415C800AC64E5 /* PublisherBag.swift in Sources */,
-				B8AE34BA276AABEC00777FF0 /* FakeRoundedTextView.swift in Sources */,
+				B8AE34BA276AABEC00777FF0 /* FakeRoundedTextFieldView.swift in Sources */,
 				B8EC569026F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
 				B8AE34AB276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
 				B81A5360272751EE001A6268 /* Subtext.swift in Sources */,

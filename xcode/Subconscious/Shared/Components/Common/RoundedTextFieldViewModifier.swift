@@ -1,5 +1,5 @@
 //
-//  RoundedTextViewModifier.swift
+//  RoundedTextFieldViewModifier.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 12/15/21.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Styles a view as if it is a rounded input field.
-struct RoundedTextViewModifier: ViewModifier {
+struct RoundedTextFieldViewModifier: ViewModifier {
     func body(content: Content) -> some View {
         content.font(
             Font(UIFont.appText)

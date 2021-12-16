@@ -22,7 +22,7 @@ struct RoundedTextView: View {
             // Space for two lines
             height: AppTheme.lineHeight * 2
         ).modifier(
-            RoundedTextViewModifier()
+            RoundedTextFieldViewModifier()
         )
     }
 }

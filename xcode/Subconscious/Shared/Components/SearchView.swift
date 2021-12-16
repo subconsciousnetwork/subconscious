@@ -16,56 +16,38 @@ struct SearchView: View {
     var cancel: () -> Void
 
     var body: some View {
-        NavigationView {
-            VStack(alignment: .leading) {
-                RoundedTextView(
-                    text: $text,
-                    isFocused: $isFocused,
-                    placeholder: placeholder
+        VStack(alignment: .leading) {
+            HStack {
+                TextField("Search or create...", text: $text)
+                    .textFieldStyle(.plain)
+                    .modifier(RoundedTextFieldViewModifier())
+                Button(
+                    action: cancel,
+                    label: {
+                        Text("Cancel")
+                    }
                 )
-                ForEach(suggestions, id: \.self) { suggestion in
-                    Button(
-                        action: {
-                            commit(
-                                suggestion.stub.title,
-                                suggestion.stub.slug
-                            )
-                        }
-                    ) {
-                        SuggestionLabelView(
-                            suggestion: suggestion
+            }
+            ForEach(suggestions, id: \.self) { suggestion in
+                Button(
+                    action: {
+                        commit(
+                            suggestion.stub.title,
+                            suggestion.stub.slug
                         )
                     }
-                }
-                Spacer()
-            }.padding(
-            ).background(
-                Color.background
-            ).navigationTitle(
-                ""
-            ).navigationBarTitleDisplayMode(
-                .inline
-            ).toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(
-                        action: {},
-                        label: {
-                            Text("Create")
-                        }
-                    ).buttonStyle(
-                        PrimaryButtonStyle()
-                    )
-                }
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(
-                        action: cancel,
-                        label: {
-                            Text("Cancel")
-                        }
+                ) {
+                    SuggestionLabelView(
+                        suggestion: suggestion
                     )
                 }
             }
+            Spacer()
         }
+        .padding()
+        .background(
+            Color.background
+        )
     }
 }
 
