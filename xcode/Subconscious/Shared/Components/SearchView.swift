@@ -13,6 +13,7 @@ struct SearchView: View {
     @Binding var suggestions: [Suggestion]
     var placeholder: String
     var commit: (String, String) -> Void
+    var cancel: () -> Void
 
     var body: some View {
         NavigationView {
@@ -57,7 +58,7 @@ struct SearchView: View {
                 }
                 ToolbarItem(placement: .cancellationAction) {
                     Button(
-                        action: {},
+                        action: cancel,
                         label: {
                             Text("Cancel")
                         }
@@ -76,7 +77,8 @@ struct SearchView_Previews: PreviewProvider {
             suggestions: .constant([]),
             placeholder: "",
             commit: { title, slug in
-            }
+            },
+            cancel: {}
         )
     }
 }
