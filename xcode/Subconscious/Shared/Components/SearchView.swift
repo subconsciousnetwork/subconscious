@@ -15,31 +15,56 @@ struct SearchView: View {
     var commit: (String, String) -> Void
 
     var body: some View {
-        VStack(alignment: .leading) {
-            RoundedTextView(
-                text: $text,
-                isFocused: $isFocused,
-                placeholder: placeholder
-            )
-            ForEach(suggestions, id: \.self) { suggestion in
-                Button(
-                    action: {
-                        commit(
-                            suggestion.stub.title,
-                            suggestion.stub.slug
+        NavigationView {
+            VStack(alignment: .leading) {
+                RoundedTextView(
+                    text: $text,
+                    isFocused: $isFocused,
+                    placeholder: placeholder
+                )
+                ForEach(suggestions, id: \.self) { suggestion in
+                    Button(
+                        action: {
+                            commit(
+                                suggestion.stub.title,
+                                suggestion.stub.slug
+                            )
+                        }
+                    ) {
+                        SuggestionLabelView(
+                            suggestion: suggestion
                         )
                     }
-                ) {
-                    SuggestionLabelView(
-                        suggestion: suggestion
+                }
+                Spacer()
+            }.padding(
+            ).background(
+                Color.background
+            ).navigationTitle(
+                ""
+            ).navigationBarTitleDisplayMode(
+                .inline
+            ).toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(
+                        action: {},
+                        label: {
+                            Text("Create")
+                        }
+                    ).buttonStyle(
+                        PrimaryButtonStyle()
+                    )
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(
+                        action: {},
+                        label: {
+                            Text("Cancel")
+                        }
                     )
                 }
             }
-            Spacer()
-        }.padding(
-        ).background(
-            Color.background
-        )
+        }
     }
 }
 
