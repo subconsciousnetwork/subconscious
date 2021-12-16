@@ -229,6 +229,7 @@ extension Color {
     static let icon = SwiftUI.Color.accentColor
     static let buttonText = SwiftUI.Color.accentColor
     static let background = SwiftUI.Color("BackgroundColor")
+    static let backgroundPressed = secondaryBackground
     static let secondaryBackground = SwiftUI.Color("SecondaryBackgroundColor")
     static let secondaryBackgroundPressed = secondaryBackground.opacity(0.5)
     static let inputBackground = SwiftUI.Color("InputBackgroundColor")
