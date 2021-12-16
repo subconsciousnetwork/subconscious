@@ -26,6 +26,7 @@ enum AppAction {
 
     // Search
     case setSearch(String)
+    case setSearchFocus(Bool)
     // Commit a search with query and slug (typically via suggestion)
     case commit(query: String, slug: String)
 
@@ -76,14 +77,19 @@ struct AppModel: Updatable {
     var isDatabaseReady = false
     // Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
+
     // Live search bar text
-    var searchBarText = ""
+    var searchText = ""
+    var isSearchFocused = false
+
     // Committed search bar query text
     var query = ""
     // Slug committed during search
     var slug = ""
+
     // Main search suggestions
     var suggestions: [Suggestion] = []
+
     var isEditorFocused = false
     var editorAttributedText = NSAttributedString("")
     // Editor selection corresponds with `editorAttributedText`
@@ -249,7 +255,7 @@ struct AppModel: Updatable {
             return (model, Empty().eraseToAnyPublisher())
         case let .setSearch(text):
             var model = self
-            model.searchBarText = text
+            model.searchText = text
             let fx = AppEnvironment.database.searchSuggestions(
                 query: text
             ).map({ suggestions in
@@ -258,6 +264,10 @@ struct AppModel: Updatable {
                 Just(.suggestionsFailure(error.localizedDescription))
             }).eraseToAnyPublisher()
             return (model, fx)
+        case let .setSearchFocus(isFocused):
+            var model = self
+            model.isSearchFocused = isFocused
+            return (model, Empty().eraseToAnyPublisher())
         case let .setSuggestions(suggestions):
             var model = self
             model.suggestions = suggestions
@@ -271,7 +281,7 @@ struct AppModel: Updatable {
             var model = self
             Self.resetEditor(&model)
             model.entryURL = nil
-            model.searchBarText = ""
+            model.searchText = ""
             model.isDetailShowing = true
 
             let suggest = Just(AppAction.setSearch(""))
@@ -433,7 +443,25 @@ struct AppView: View {
                 ).buttonStyle(
                     FABButtonStyle()
                 ).padding(
-                    AppTheme.gutter
+                    AppTheme.margin
+                )
+                SearchView(
+                    text: store.binding(
+                        get: \.searchText,
+                        tag: AppAction.setSearch
+                    ),
+                    isFocused: store.binding(
+                        get: \.isSearchFocused,
+                        tag: AppAction.setSearchFocus
+                    ),
+                    suggestions: store.binding(
+                        get: \.suggestions,
+                        tag: AppAction.setSuggestions
+                    ),
+                    placeholder: "Search or create...",
+                    commit: { title, slug in
+                        
+                    }
                 )
             } else {
                 VStack {
