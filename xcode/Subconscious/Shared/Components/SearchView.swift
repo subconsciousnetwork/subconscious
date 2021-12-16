@@ -16,7 +16,7 @@ struct SearchView: View {
     var cancel: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack {
                 TextField("Search or create...", text: $text)
                     .textFieldStyle(.plain)
@@ -28,23 +28,31 @@ struct SearchView: View {
                     }
                 )
             }
-            ForEach(suggestions, id: \.self) { suggestion in
-                Button(
-                    action: {
-                        commit(
-                            suggestion.stub.title,
-                            suggestion.stub.slug
-                        )
+                .frame(height: 36)
+                .padding()
+            Divider()
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    ForEach(suggestions, id: \.self) { suggestion in
+                        Button(
+                            action: {
+                                commit(
+                                    suggestion.stub.title,
+                                    suggestion.stub.slug
+                                )
+                            }
+                        ) {
+                            SuggestionLabelView(
+                                suggestion: suggestion
+                            )
+                        }.padding()
+                        Divider()
                     }
-                ) {
-                    SuggestionLabelView(
-                        suggestion: suggestion
-                    )
+                        .listStyle(.plain)
+                        .background(Color.background)
                 }
             }
-            Spacer()
         }
-        .padding()
         .background(
             Color.background
         )
