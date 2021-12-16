@@ -26,7 +26,6 @@ enum AppAction {
 
     // Search
     case setSearch(String)
-    case setSearchFocus(Bool)
     case showSearch
     case hideSearch
     // Commit a search with query and slug (typically via suggestion)
@@ -267,10 +266,6 @@ struct AppModel: Updatable {
                 Just(.suggestionsFailure(error.localizedDescription))
             }).eraseToAnyPublisher()
             return (model, fx)
-        case let .setSearchFocus(isFocused):
-            var model = self
-            model.isSearchFocused = isFocused
-            return (model, Empty().eraseToAnyPublisher())
         case .showSearch:
             var model = self
             model.isSearchShowing = true
@@ -468,10 +463,6 @@ struct AppView: View {
                         text: store.binding(
                             get: \.searchText,
                             tag: AppAction.setSearch
-                        ),
-                        isFocused: store.binding(
-                            get: \.isSearchFocused,
-                            tag: AppAction.setSearchFocus
                         ),
                         suggestions: store.binding(
                             get: \.suggestions,

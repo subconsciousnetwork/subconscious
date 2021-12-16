@@ -9,7 +9,6 @@ import SwiftUI
 
 struct SearchView: View {
     @Binding var text: String
-    @Binding var isFocused: Bool
     @Binding var suggestions: [Suggestion]
     var placeholder: String
     var commit: (String, String) -> Void
@@ -70,7 +69,6 @@ struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
         SearchView(
             text: .constant(""),
-            isFocused: .constant(true),
             suggestions: .constant([]),
             placeholder: "",
             commit: { title, slug in
