@@ -442,10 +442,18 @@ struct AppView: View {
     @ObservedObject var store: Store<AppModel>
 
     var body: some View {
+        // Give each element in this ZStack an explicit z-index.
+        // This keeps transitions working correctly.
+        // SwiftUI will dynamically generate z-indexes when no explicit
+        // z-index is given. This can cause transitions to layer incorrectly.
+        // Adding an explicit z-index fixed problems with the
+        // out-transition for the search view.
+        // See https://stackoverflow.com/a/58512696
+        // 2021-12-16 Gordon Brander
         ZStack(alignment: .bottomTrailing) {
             Color.background.edgesIgnoringSafeArea(.all)
             if store.state.isDatabaseReady {
-                AppNavigationView(store: store)
+                AppNavigationView(store: store).zIndex(1)
                 Button(
                     action: {
                         withAnimation(.easeOut(duration: Duration.fast)) {
@@ -458,6 +466,7 @@ struct AppView: View {
                 )
                 .buttonStyle(FABButtonStyle())
                 .padding()
+                .zIndex(2)
                 if store.state.isSearchShowing {
                     SearchView(
                         text: store.binding(
@@ -490,6 +499,7 @@ struct AppView: View {
                             removal: .opacity
                         )
                     )
+                    .zIndex(3)
                 }
             } else {
                 VStack {
