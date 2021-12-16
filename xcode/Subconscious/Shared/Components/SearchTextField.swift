@@ -10,27 +10,13 @@ import SwiftUI
 struct SearchTextField: View {
     var placeholder: String
     @Binding var text: String
-    var autofocus: Bool = false
-    // The ergonomics of SwiftUI focus management make it difficult to
-    // track in our store. Accepting this limitation for now and
-    // staying on the SwiftUI happy path for now.
-    // See https://developer.apple.com/documentation/swiftui/view/focused(_:).
-    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         TextField("Search or create...", text: $text)
             .textInputAutocapitalization(.sentences)
-            .focused($isSearchFocused)
             .textFieldStyle(.plain)
             .modifier(RoundedTextFieldViewModifier())
-            .onAppear {
-                if autofocus {
-                    isSearchFocused = true
-                }
-            }
-            .onDisappear {
-                isSearchFocused = false
-            }
+            .frame(height: AppTheme.unit * 9)
     }
 }
 
