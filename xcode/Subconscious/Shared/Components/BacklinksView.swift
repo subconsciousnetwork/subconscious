@@ -35,7 +35,7 @@ struct BacklinksView: View {
                 ).buttonStyle(TranscludeButtonStyle())
             }
         }.padding(
-            AppTheme.gutter
+            AppTheme.margin
         )
     }
 }

@@ -151,8 +151,8 @@ extension AppTheme {
     static let unit3 = unit * 3
     static let unit4 = unit * 4
     static let cornerRadius: Double = 8
-    static let padding = unit4
-    static let gutter = unit * 5
+    static let padding = unit * 4
+    static let margin = unit * 4
     static let tightPadding = unit * 3
     static let icon: CGFloat = unit * 6
     static let textSize: CGFloat = 16

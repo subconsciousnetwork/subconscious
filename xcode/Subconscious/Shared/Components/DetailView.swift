@@ -41,10 +41,10 @@ struct DetailView: View {
                                 fixedWidth: geometry.size.width
                             ).insets(
                                 EdgeInsets(
-                                    top: AppTheme.gutter,
-                                    leading: AppTheme.gutter,
-                                    bottom: AppTheme.gutter,
-                                    trailing: AppTheme.gutter
+                                    top: AppTheme.margin,
+                                    leading: AppTheme.margin,
+                                    bottom: AppTheme.margin,
+                                    trailing: AppTheme.margin
                                 )
                             ).frame(
                                 minHeight: geometry.size.height / 2
