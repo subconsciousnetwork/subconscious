@@ -14,13 +14,23 @@ struct SearchView: View {
     var placeholder: String
     var commit: (String, String) -> Void
     var cancel: () -> Void
+    // The ergonomics of SwiftUI focus management make it difficult to
+    // track in our store. Accepting this limitation for now and
+    // staying on the SwiftUI happy path for now.
+    // See https://developer.apple.com/documentation/swiftui/view/focused(_:).
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 TextField("Search or create...", text: $text)
+                    .textInputAutocapitalization(.sentences)
+                    .focused($isSearchFocused)
                     .textFieldStyle(.plain)
                     .modifier(RoundedTextFieldViewModifier())
+                    .onAppear {
+                        isSearchFocused = true
+                    }
                 Button(
                     action: cancel,
                     label: {
