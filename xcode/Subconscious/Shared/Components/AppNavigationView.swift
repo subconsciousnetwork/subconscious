@@ -9,18 +9,24 @@ import SwiftUI
 
 struct AppNavigationView: View {
     @ObservedObject var store: Store<AppModel>
+    @State var isSearchFocused = false
 
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Text("Main (TODO)")
-                        Spacer()
-                    }
-                    Spacer()
+                ScrollView {
+                    VStack {
+                        FakeRoundedTextView(
+                            action: {
+                                withAnimation {
+                                    store.send(action: .showSearch)
+                                }
+                            },
+                            placeholder: "Search or create..."
+                        )
+                    }.padding(
+                        AppTheme.margin
+                    )
                 }
                 NavigationLink(
                     isActive: store.binding(
@@ -99,11 +105,11 @@ struct AppNavigationView: View {
                     }
                 )
             }
-            .navigationTitle("Notes")
+            .navigationTitle("Ideas")
             .background(Color.background)
             .searchable(
                 text: store.binding(
-                    get: \.searchBarText,
+                    get: \.searchText,
                     tag: AppAction.setSearch
                 ),
                 prompt: "Search or create"
@@ -133,7 +139,7 @@ struct AppNavigationView: View {
             // 2021-09-29 Gordon Brander
             .onSubmit(of: .search, {
                 store.send(
-                    action: .commitSearch(query: store.state.searchBarText)
+                    action: .commitSearch(query: store.state.searchText)
                 )
             })
         }
