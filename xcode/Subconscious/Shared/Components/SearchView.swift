@@ -11,8 +11,8 @@ struct SearchView: View {
     @Binding var text: String
     @Binding var suggestions: [Suggestion]
     var placeholder: String
-    var commit: (String, String) -> Void
-    var cancel: () -> Void
+    var onCommit: (String, String?) -> Void
+    var onCancel: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -21,8 +21,19 @@ struct SearchView: View {
                     placeholder: "Search or create...",
                     text: $text
                 )
+                .submitLabel(.go)
+                .onSubmit {
+                    withAnimation(
+                        .easeOut(duration: Duration.fast)
+                    ) {
+                        onCommit(
+                            text,
+                            nil
+                        )
+                    }
+                }
                 Button(
-                    action: cancel,
+                    action: onCancel,
                     label: {
                         Text("Cancel")
                     }
@@ -39,7 +50,7 @@ struct SearchView: View {
                                 withAnimation(
                                     .easeOut(duration: Duration.fast)
                                 ) {
-                                    commit(
+                                    onCommit(
                                         suggestion.stub.title,
                                         suggestion.stub.slug
                                     )
@@ -63,9 +74,9 @@ struct SearchView_Previews: PreviewProvider {
             text: .constant(""),
             suggestions: .constant([]),
             placeholder: "",
-            commit: { title, slug in
+            onCommit: { title, slug in
             },
-            cancel: {}
+            onCancel: {}
         )
     }
 }
