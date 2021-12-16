@@ -31,6 +31,8 @@ struct PrimaryButtonStyle: ButtonStyle {
                     pressed: Color.primaryButtonTextPressed,
                     disabled: Color.primaryButtonTextDisabled
                 )
+            ).padding(
+                .horizontal, AppTheme.unit * 4
             ).font(
                 Font(UIFont.appButton)
             )
