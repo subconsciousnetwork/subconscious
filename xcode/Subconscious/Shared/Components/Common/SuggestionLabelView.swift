@@ -45,7 +45,7 @@ struct SuggestionLabelView: View {
                 title: {
                     SuggestionTitleGroup(
                         title: stub.title,
-                        subtitle: "Create idea"
+                        subtitle: "New idea"
                     )
                 },
                 icon: {
