@@ -85,49 +85,17 @@ struct DetailView: View {
             isPresented: $isLinkSheetPresented,
             onDismiss: {}
         ) {
-            NavigationView {
-                VStack {
-                    HStack {
-                        Spacer()
-                    }
-                    Spacer()
+            LinkSearchView(
+                placeholder: "Search or create...",
+                text: $linkSearchText,
+                suggestions: $linkSuggestions,
+                onCancel: {
+                    isLinkSheetPresented = false
+                },
+                onCommitLinkSearch: { slug in
+                    onCommitLinkSearch(slug)
                 }
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button(action: {
-                            isLinkSheetPresented = false
-                        }) {
-                            Text("Cancel")
-                        }
-                    }
-                }
-                .searchable(text: $linkSearchText, placement: .toolbar) {
-                    ForEach(linkSuggestions, id: \.self) { suggestion in
-                        Button(action: {
-                            onCommitLinkSearch(
-                                Slashlink.addLeadingSlash(suggestion.stub.slug)
-                            )
-                        }) {
-                            SuggestionLabelView2(suggestion: suggestion)
-                        }
-                        // We handle submission directly in button action, so
-                        // prevent button submit from bubbling up and
-                        // triggering a second submit via onSubmit handler.
-                        // 2021-09-29 Gordon Brander
-                        .submitScope(true)
-                    }
-                }
-                // Catch keyboard sumit.
-                // This will also catch button activations within `.searchable`
-                // suggestions, by default. Therefore, we `.submitScope()` the
-                // suggestions so that this only catches keyboard submissions.
-                // 2021-09-29 Gordon Brander
-                .onSubmit(of: .search) {
-                    onCommitLinkSearch(linkSearchText)
-                }
-                .navigationTitle("Search Links")
-                .navigationBarTitleDisplayMode(.inline)
-            }
+            )
         }
     }
 }

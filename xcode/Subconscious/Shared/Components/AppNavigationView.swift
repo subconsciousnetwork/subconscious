@@ -16,7 +16,10 @@ struct AppNavigationView: View {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack {
-                        Text("Todo")
+                        HStack {
+                            Text("Todo")
+                            Spacer()
+                        }
                     }.padding()
                 }.background(Color.background)
                 NavigationLink(

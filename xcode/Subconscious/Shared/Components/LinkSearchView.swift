@@ -19,8 +19,7 @@ struct LinkSearchView: View {
             HStack {
                 SearchTextField(
                     placeholder: "Search or create...",
-                    text: $text,
-                    autofocus: true
+                    text: $text
                 )
                 Button(
                     action: onCancel,
