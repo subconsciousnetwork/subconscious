@@ -253,6 +253,7 @@ extension Color {
 typealias Duration = Double
 
 extension Duration {
-    static let fast: Double = 0.128
+    static let fast: Double = 0.18
+    // iOS default
     static let normal: Double = 0.2
 }
