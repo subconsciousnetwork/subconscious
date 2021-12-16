@@ -7,6 +7,23 @@
 
 import SwiftUI
 
+struct SuggestionTitleGroup: View {
+    var title: String
+    var subtitle: String
+    var lineHeight: CGFloat = AppTheme.icon
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title)
+                .foregroundColor(Color.text)
+                .frame(height: AppTheme.icon)
+            Text(subtitle)
+                .foregroundColor(Color.secondaryText)
+                .frame(height: AppTheme.icon)
+        }
+    }
+}
+
 struct SuggestionLabelView: View {
     var suggestion: Suggestion
     var body: some View {
@@ -14,37 +31,27 @@ struct SuggestionLabelView: View {
         case let .entry(stub):
             Label(
                 title: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(stub.title)
-                                .foregroundColor(Color.text)
-                            Text(Slashlink.removeLeadingSlash(stub.slug))
-                                .foregroundColor(Color.secondaryText)
-                        }
-                        Spacer()
-                    }
+                    SuggestionTitleGroup(
+                        title: stub.title,
+                        subtitle: Slashlink.removeLeadingSlash(stub.slug)
+                    )
                 },
                 icon: {
                     Image(systemName: "doc")
                 }
-            ).lineLimit(1)
+            ).labelStyle(SuggestionLabelStyle())
         case let .search(stub):
             Label(
                 title: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(stub.title)
-                                .foregroundColor(Color.text)
-                            Text("New note")
-                                .foregroundColor(Color.secondaryText)
-                        }
-                        Spacer()
-                    }
+                    SuggestionTitleGroup(
+                        title: stub.title,
+                        subtitle: "Create idea"
+                    )
                 },
                 icon: {
                     Image(systemName: "doc.badge.plus")
                 }
-            ).lineLimit(1)
+            ).labelStyle(SuggestionLabelStyle())
         }
     }
 }
@@ -57,31 +64,27 @@ struct SuggestionLabelView2: View {
         case let .entry(stub):
             Label(
                 title: {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(stub.title)
-                            .foregroundColor(Color.text)
-                        Text(Slashlink.removeLeadingSlash(stub.slug))
-                            .foregroundColor(Color.secondaryText)
-                    }
+                    SuggestionTitleGroup(
+                        title: stub.title,
+                        subtitle: Slashlink.removeLeadingSlash(stub.slug)
+                    )
                 },
                 icon: {
                     Image(systemName: "doc")
                 }
-            ).lineLimit(1)
+            ).labelStyle(SuggestionLabelStyle())
         case let .search(stub):
             Label(
                 title: {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(stub.title)
-                            .foregroundColor(Color.text)
-                        Text(Slashlink.removeLeadingSlash(stub.slug))
-                            .foregroundColor(Color.secondaryText)
-                    }
+                    SuggestionTitleGroup(
+                        title: stub.title,
+                        subtitle: Slashlink.removeLeadingSlash(stub.slug)
+                    )
                 },
                 icon: {
                     Image(systemName: "magnifyingglass")
                 }
-            ).lineLimit(1)
+            ).labelStyle(SuggestionLabelStyle())
         }
     }
 }
