@@ -482,7 +482,7 @@ struct AppView: View {
                         )
                     },
                     cancel: {
-                        withAnimation {
+                        withAnimation(.easeOut(duration: Duration.fast)) {
                             store.send(
                                 action: .hideSearch
                             )
