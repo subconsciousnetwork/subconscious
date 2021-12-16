@@ -84,12 +84,8 @@
 		B8AE34AE276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */; };
 		B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */; };
 		B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */; };
-		B8AE34B3276AA98200777FF0 /* RoundedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B2276AA98200777FF0 /* RoundedTextView.swift */; };
-		B8AE34B4276AA98200777FF0 /* RoundedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B2276AA98200777FF0 /* RoundedTextView.swift */; };
 		B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */; };
 		B8AE34B7276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */; };
-		B8AE34B9276AABEC00777FF0 /* FakeRoundedTextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B8276AABEC00777FF0 /* FakeRoundedTextFieldView.swift */; };
-		B8AE34BA276AABEC00777FF0 /* FakeRoundedTextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34B8276AABEC00777FF0 /* FakeRoundedTextFieldView.swift */; };
 		B8AE34BC276AB3D500777FF0 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34BB276AB3D400777FF0 /* SearchView.swift */; };
 		B8AE34BD276AB3D500777FF0 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34BB276AB3D400777FF0 /* SearchView.swift */; };
 		B8AE34BF276BD61400777FF0 /* RowButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34BE276BD61400777FF0 /* RowButtonStyle.swift */; };
@@ -186,9 +182,7 @@
 		B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderTextView.swift; sourceTree = "<group>"; };
 		B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButtonStyle.swift; sourceTree = "<group>"; };
 		B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorUtilities.swift; sourceTree = "<group>"; };
-		B8AE34B2276AA98200777FF0 /* RoundedTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedTextView.swift; sourceTree = "<group>"; };
 		B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundedTextFieldViewModifier.swift; sourceTree = "<group>"; };
-		B8AE34B8276AABEC00777FF0 /* FakeRoundedTextFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeRoundedTextFieldView.swift; sourceTree = "<group>"; };
 		B8AE34BB276AB3D400777FF0 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		B8AE34BE276BD61400777FF0 /* RowButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowButtonStyle.swift; sourceTree = "<group>"; };
 		B8AE34C1276BD77C00777FF0 /* SuggestionLabelStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionLabelStyle.swift; sourceTree = "<group>"; };
@@ -417,8 +411,6 @@
 				B81EBB0827025C1500B87594 /* TranscludeButtonStyle.swift */,
 				B83E91D627692EC600045C6A /* FABButtonStyle.swift */,
 				B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */,
-				B8AE34B2276AA98200777FF0 /* RoundedTextView.swift */,
-				B8AE34B8276AABEC00777FF0 /* FakeRoundedTextFieldView.swift */,
 				B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */,
 				B8AE34BE276BD61400777FF0 /* RowButtonStyle.swift */,
 				B8AE34C1276BD77C00777FF0 /* SuggestionLabelStyle.swift */,
@@ -616,7 +608,6 @@
 				B82FD4562730A62C002CB641 /* EntryItemView.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
-				B8AE34B9276AABEC00777FF0 /* FakeRoundedTextFieldView.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* Stub.swift in Sources */,
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
@@ -624,7 +615,6 @@
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B81A535F272751EE001A6268 /* Subtext.swift in Sources */,
 				B8E63EA6270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */,
-				B8AE34B3276AA98200777FF0 /* RoundedTextView.swift in Sources */,
 				B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
@@ -676,7 +666,6 @@
 				B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B824FDD526FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
-				B8AE34B4276AA98200777FF0 /* RoundedTextView.swift in Sources */,
 				B8AE34A8276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
 				B8082AAB26F3B43A004B10BB /* Store.swift in Sources */,
 				B82FD4572730A62C002CB641 /* EntryItemView.swift in Sources */,
@@ -697,7 +686,6 @@
 				B8AE34AE276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8EC568326F415C800AC64E5 /* PublisherBag.swift in Sources */,
 				B8AE34C0276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
-				B8AE34BA276AABEC00777FF0 /* FakeRoundedTextFieldView.swift in Sources */,
 				B8EC569026F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
 				B8AE34AB276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
 				B81A5360272751EE001A6268 /* Subtext.swift in Sources */,
