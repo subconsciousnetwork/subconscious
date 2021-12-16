@@ -45,10 +45,14 @@ struct SearchView: View {
                     ForEach(suggestions, id: \.self) { suggestion in
                         Button(
                             action: {
-                                commit(
-                                    suggestion.stub.title,
-                                    suggestion.stub.slug
-                                )
+                                withAnimation(
+                                    .easeOut(duration: Duration.fast)
+                                ) {
+                                    commit(
+                                        suggestion.stub.title,
+                                        suggestion.stub.slug
+                                    )
+                                }
                             }
                         ) {
                             SuggestionLabelView(
