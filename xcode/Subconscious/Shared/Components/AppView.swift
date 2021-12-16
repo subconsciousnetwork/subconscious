@@ -27,6 +27,8 @@ enum AppAction {
     // Search
     case setSearch(String)
     case setSearchFocus(Bool)
+    case showSearch
+    case hideSearch
     // Commit a search with query and slug (typically via suggestion)
     case commit(query: String, slug: String)
 
@@ -81,6 +83,7 @@ struct AppModel: Updatable {
     // Live search bar text
     var searchText = ""
     var isSearchFocused = false
+    var isSearchShowing = false
 
     // Committed search bar query text
     var query = ""
@@ -267,6 +270,18 @@ struct AppModel: Updatable {
         case let .setSearchFocus(isFocused):
             var model = self
             model.isSearchFocused = isFocused
+            return (model, Empty().eraseToAnyPublisher())
+        case .showSearch:
+            var model = self
+            model.isSearchShowing = true
+            model.searchText = ""
+            model.isSearchFocused = true
+            return (model, Empty().eraseToAnyPublisher())
+        case .hideSearch:
+            var model = self
+            model.isSearchShowing = false
+            model.searchText = ""
+            model.isSearchFocused = false
             return (model, Empty().eraseToAnyPublisher())
         case let .setSuggestions(suggestions):
             var model = self
@@ -459,9 +474,20 @@ struct AppView: View {
                         tag: AppAction.setSuggestions
                     ),
                     placeholder: "Search or create...",
-                    commit: { title, slug in
-                        
+                    commit: { query, slug in
+                        store.send(
+                            action: .commit(query: query, slug: slug)
+                        )
+                    },
+                    cancel: {
+                        withAnimation {                            
+                            store.send(
+                                action: .hideSearch
+                            )
+                        }
                     }
+                ).opacity(
+                    store.state.isSearchShowing ? 1 : 0
                 )
             } else {
                 VStack {
