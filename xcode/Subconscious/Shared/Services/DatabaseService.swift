@@ -190,28 +190,31 @@ struct DatabaseService {
     }
 
     /// List recent entries
-    func listRecentEntries() -> AnyPublisher<[Stub], Error> {
+    func listRecentEntries() -> AnyPublisher<[SubtextFile], Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            let results: [Stub] = try database.execute(
+            // Use stale body content from db. It's faster, and these
+            // are read-only teaser views.
+            try database.execute(
                 sql: """
-                SELECT slug, title
-                FROM entry
+                SELECT slug, body
+                FROM entry_search
                 ORDER BY modified DESC
                 LIMIT 200
                 """
             ).compactMap({ row in
                 if
                     let slug: String = row.get(0),
-                    let title: String = row.get(1)
+                    let content: String = row.get(1)
                 {
-                    return Stub(
-                        slug: slug,
-                        title: title
+                    return SubtextFile(
+                        url: documentUrl.appendingFilename(
+                            name: slug, ext: "subtext"
+                        ),
+                        content: content
                     )
                 }
                 return nil
             })
-            return results
         }
     }
 
