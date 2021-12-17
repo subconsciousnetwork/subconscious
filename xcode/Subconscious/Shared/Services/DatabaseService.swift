@@ -189,6 +189,32 @@ struct DatabaseService {
         )
     }
 
+    /// List recent entries
+    func listRecentEntries() -> AnyPublisher<[Stub], Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            let results: [Stub] = try database.execute(
+                sql: """
+                SELECT slug, title
+                FROM entry
+                ORDER BY modified DESC
+                LIMIT 200
+                """
+            ).compactMap({ row in
+                if
+                    let slug: String = row.get(0),
+                    let title: String = row.get(1)
+                {
+                    return Stub(
+                        slug: slug,
+                        title: title
+                    )
+                }
+                return nil
+            })
+            return results
+        }
+    }
+
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
         let results: [Stub] = try database.execute(
             sql: """
