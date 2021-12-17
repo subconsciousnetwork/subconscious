@@ -56,39 +56,6 @@ struct SuggestionLabelView: View {
     }
 }
 
-// A second label view that does not include the action label
-struct SuggestionLabelView2: View {
-    var suggestion: Suggestion
-    var body: some View {
-        switch suggestion {
-        case let .entry(stub):
-            Label(
-                title: {
-                    SuggestionTitleGroup(
-                        title: stub.title,
-                        subtitle: Slashlink.removeLeadingSlash(stub.slug)
-                    )
-                },
-                icon: {
-                    Image(systemName: "doc")
-                }
-            ).labelStyle(SuggestionLabelStyle())
-        case let .search(stub):
-            Label(
-                title: {
-                    SuggestionTitleGroup(
-                        title: stub.title,
-                        subtitle: Slashlink.removeLeadingSlash(stub.slug)
-                    )
-                },
-                icon: {
-                    Image(systemName: "magnifyingglass")
-                }
-            ).labelStyle(SuggestionLabelStyle())
-        }
-    }
-}
-
 struct SuggestionLabel_Previews: PreviewProvider {
     static var previews: some View {
         SuggestionLabelView(

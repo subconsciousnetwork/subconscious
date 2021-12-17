@@ -43,7 +43,7 @@ struct LinkSearchView: View {
                                 }
                             }
                         ) {
-                            SuggestionLabelView(
+                            LinkSuggestionLabelView(
                                 suggestion: suggestion
                             )
                         }.buttonStyle(RowButtonStyle())
