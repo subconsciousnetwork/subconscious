@@ -190,8 +190,11 @@ struct AppModel: Updatable {
                 Just(.syncFailure(error.localizedDescription))
             })
             let suggestions = Just(AppAction.setSearch(""))
-            let fx = Publishers.Merge(
-                suggestions, sync
+            let linkSuggestions = Just(AppAction.setLinkSearchText(""))
+            let fx = Publishers.Merge3(
+                suggestions,
+                linkSuggestions,
+                sync
             ).eraseToAnyPublisher()
             if success.from != success.to {
                 AppEnvironment.logger.log(
