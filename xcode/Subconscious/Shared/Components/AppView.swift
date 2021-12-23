@@ -98,7 +98,6 @@ struct AppModel: Updatable {
 
     // Live search bar text
     var searchText = ""
-    var isSearchFocused = false
     var isSearchShowing = false
 
     // Committed search bar query text
@@ -294,13 +293,13 @@ struct AppModel: Updatable {
             var model = self
             model.isSearchShowing = true
             model.searchText = ""
-            model.isSearchFocused = true
+            model.focus = .search
             return (model, Empty().eraseToAnyPublisher())
         case .hideSearch:
             var model = self
             model.isSearchShowing = false
             model.searchText = ""
-            model.isSearchFocused = false
+            model.focus = nil
             return (model, Empty().eraseToAnyPublisher())
         case let .setSuggestions(suggestions):
             var model = self
