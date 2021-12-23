@@ -189,6 +189,35 @@ struct DatabaseService {
         )
     }
 
+    /// List recent entries
+    func listRecentEntries() -> AnyPublisher<[SubtextFile], Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            // Use stale body content from db. It's faster, and these
+            // are read-only teaser views.
+            try database.execute(
+                sql: """
+                SELECT slug, body
+                FROM entry_search
+                ORDER BY modified DESC
+                LIMIT 200
+                """
+            ).compactMap({ row in
+                if
+                    let slug: String = row.get(0),
+                    let content: String = row.get(1)
+                {
+                    return SubtextFile(
+                        url: documentUrl.appendingFilename(
+                            name: slug, ext: "subtext"
+                        ),
+                        content: content
+                    )
+                }
+                return nil
+            })
+        }
+    }
+
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
         let results: [Stub] = try database.execute(
             sql: """
@@ -346,9 +375,10 @@ struct DatabaseService {
         )
     }
 
-    /// Get entry and backlinks from slug
+    /// Get entry and backlinks from slug.
     /// We trust caller to slugify the string, if necessary.
-    /// Allowing any string allows us to retreive files that don't have a clean slug.
+    /// Allowing any string allows us to retreive files that don't have a
+    /// clean slug.
     func search(
         query: String,
         slug: String
@@ -358,26 +388,36 @@ struct DatabaseService {
                 return ResultSet()
             }
 
+            // Get backlinks.
+            // Use content indexed in database, even though it might be stale.
             let backlinks: [SubtextFile] = try database.execute(
                 sql: """
-                SELECT slug
+                SELECT slug, body
                 FROM entry_search
-                WHERE entry_search.body MATCH ?
+                WHERE slug != ? AND entry_search.body MATCH ?
                 ORDER BY rank
                 LIMIT 200
                 """,
                 parameters: [
+                    .text(slug),
                     .queryFTS5(slug)
                 ]
             ).compactMap({ row in
-                if let matchSlug: String = row.get(0) {
-                    if matchSlug != slug {
-                        return getEntry(slug: matchSlug)
-                    }
+                if
+                    let slug: String = row.get(0),
+                    let content: String = row.get(1)
+                {
+                    return SubtextFile(
+                        url: documentUrl.appendingFilename(
+                            name: slug, ext: "subtext"
+                        ),
+                        content: content
+                    )
                 }
                 return nil
             })
 
+            // Retreive top entry from file system to ensure it is fresh.
             let entry = getEntry(slug: slug)
 
             return ResultSet(

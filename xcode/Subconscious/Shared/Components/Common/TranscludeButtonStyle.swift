@@ -5,7 +5,6 @@
 //  Created by Gordon Brander on 9/27/21.
 //
 
-import Foundation
 import SwiftUI
 
 struct TranscludeButtonStyle: ButtonStyle {
@@ -14,14 +13,15 @@ struct TranscludeButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
-            .padding(AppTheme.padding)
+            .padding(.horizontal, AppTheme.unit4)
+            .padding(.vertical, AppTheme.unit3)
             .contentShape(Rectangle())
             .background(
                 configuration.isPressed ?
-                Color.secondaryBackground.opacity(0.5) :
+                Color.secondaryBackgroundPressed :
                 Color.secondaryBackground
             )
-            .foregroundColor(!isEnabled ? Color.disabledText : Color.text)
+            .foregroundColor(!isEnabled ? Color.textDisabled : Color.text)
             .cornerRadius(AppTheme.cornerRadius)
             .animation(
                 .easeOut(duration: Duration.fast),

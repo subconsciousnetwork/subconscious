@@ -1,10 +1,10 @@
 //
-//  GrowableTextViewRepresentable.swift
+//  GrowableAttributedTextViewRepresentable.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 7/6/21.
 //
-//  Note: GrowableTextViewRepresentable used to expose a way to set the
+//  Note: GrowableAttributedTextViewRepresentable used to expose a way to set the
 //  `UITextView.font` property.
 //
 //  DO NOT SET `UITextView.font` property when using attributedText!
@@ -27,7 +27,7 @@
 import SwiftUI
 
 /// A textview that grows to the height of its content
-struct GrowableTextViewRepresentable: UIViewRepresentable {
+struct GrowableAttributedTextViewRepresentable: UIViewRepresentable {
     /// Extends UITTextView to provide an intrinsicContentSize given a fixed width.
     class FixedWidthTextView: UITextView {
         var fixedWidth: CGFloat = 0
@@ -46,9 +46,9 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
         /// Used to avoid sending up events that would cause feedback cycles where an update triggers
         /// an event, which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
-        var representable: GrowableTextViewRepresentable
+        var representable: GrowableAttributedTextViewRepresentable
 
-        init(_ representable: GrowableTextViewRepresentable) {
+        init(_ representable: GrowableAttributedTextViewRepresentable) {
             self.isUIViewUpdating = false
             self.representable = representable
         }
@@ -219,7 +219,7 @@ struct GrowableTextViewRepresentable: UIViewRepresentable {
         }
     }
 
-    func makeCoordinator() -> GrowableTextViewRepresentable.Coordinator {
+    func makeCoordinator() -> GrowableAttributedTextViewRepresentable.Coordinator {
         Coordinator(self)
     }
 

@@ -217,12 +217,23 @@ extension Subtext {
     func renderMarkup(url: (String) -> String?) -> NSAttributedString {
         let attributedString = NSMutableAttributedString(string: base)
         let baseNSRange = NSRange(base.startIndex..<base.endIndex, in: base)
-        // Set default styles for entire string
+        // Set default font for entire string
         attributedString.addAttribute(
             .font,
-            value: UIFont.appText,
+            value: UIFont.appTextMono,
             range: baseNSRange
         )
+
+        // Set line-spacing for entire string
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = AppTheme.lineSpacing
+        attributedString.addAttribute(
+            .paragraphStyle,
+            value: paragraphStyle,
+            range: baseNSRange
+        )
+
+        // Set text color
         attributedString.addAttribute(
             .foregroundColor,
             value: UIColor(Color.text),
@@ -235,7 +246,7 @@ extension Subtext {
                 let nsRange = NSRange(line.range, in: attributedString.string)
                 attributedString.addAttribute(
                     .font,
-                    value: UIFont.appTextBold,
+                    value: UIFont.appTextMonoBold,
                     range: nsRange
                 )
             case

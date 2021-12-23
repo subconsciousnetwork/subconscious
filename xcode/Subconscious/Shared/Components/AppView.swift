@@ -26,6 +26,8 @@ enum AppAction {
 
     // Search
     case setSearch(String)
+    case showSearch
+    case hideSearch
     // Commit a search with query and slug (typically via suggestion)
     case commit(query: String, slug: String)
 
@@ -76,14 +78,20 @@ struct AppModel: Updatable {
     var isDatabaseReady = false
     // Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
+
     // Live search bar text
-    var searchBarText = ""
+    var searchText = ""
+    var isSearchFocused = false
+    var isSearchShowing = false
+
     // Committed search bar query text
     var query = ""
     // Slug committed during search
     var slug = ""
+
     // Main search suggestions
     var suggestions: [Suggestion] = []
+
     var isEditorFocused = false
     var editorAttributedText = NSAttributedString("")
     // Editor selection corresponds with `editorAttributedText`
@@ -182,8 +190,11 @@ struct AppModel: Updatable {
                 Just(.syncFailure(error.localizedDescription))
             })
             let suggestions = Just(AppAction.setSearch(""))
-            let fx = Publishers.Merge(
-                suggestions, sync
+            let linkSuggestions = Just(AppAction.setLinkSearchText(""))
+            let fx = Publishers.Merge3(
+                suggestions,
+                linkSuggestions,
+                sync
             ).eraseToAnyPublisher()
             if success.from != success.to {
                 AppEnvironment.logger.log(
@@ -249,7 +260,7 @@ struct AppModel: Updatable {
             return (model, Empty().eraseToAnyPublisher())
         case let .setSearch(text):
             var model = self
-            model.searchBarText = text
+            model.searchText = text
             let fx = AppEnvironment.database.searchSuggestions(
                 query: text
             ).map({ suggestions in
@@ -258,6 +269,18 @@ struct AppModel: Updatable {
                 Just(.suggestionsFailure(error.localizedDescription))
             }).eraseToAnyPublisher()
             return (model, fx)
+        case .showSearch:
+            var model = self
+            model.isSearchShowing = true
+            model.searchText = ""
+            model.isSearchFocused = true
+            return (model, Empty().eraseToAnyPublisher())
+        case .hideSearch:
+            var model = self
+            model.isSearchShowing = false
+            model.searchText = ""
+            model.isSearchFocused = false
+            return (model, Empty().eraseToAnyPublisher())
         case let .setSuggestions(suggestions):
             var model = self
             model.suggestions = suggestions
@@ -271,7 +294,8 @@ struct AppModel: Updatable {
             var model = self
             Self.resetEditor(&model)
             model.entryURL = nil
-            model.searchBarText = ""
+            model.searchText = ""
+            model.isSearchShowing = false
             model.isDetailShowing = true
 
             let suggest = Just(AppAction.setSearch(""))
@@ -421,15 +445,83 @@ struct AppView: View {
     @ObservedObject var store: Store<AppModel>
 
     var body: some View {
-        VStack {
+        // Give each element in this ZStack an explicit z-index.
+        // This keeps transitions working correctly.
+        // SwiftUI will dynamically generate z-indexes when no explicit
+        // z-index is given. This can cause transitions to layer incorrectly.
+        // Adding an explicit z-index fixed problems with the
+        // out-transition for the search view.
+        // See https://stackoverflow.com/a/58512696
+        // 2021-12-16 Gordon Brander
+        ZStack(alignment: .bottomTrailing) {
+            Color.background.edgesIgnoringSafeArea(.all)
             if store.state.isDatabaseReady {
-                AppNavigationView(store: store)
+                AppNavigationView(store: store).zIndex(1)
+                Button(
+                    action: {
+                        withAnimation(.easeOut(duration: Duration.fast)) {
+                            store.send(action: .showSearch)
+                        }
+                    },
+                    label: {
+                        Image(systemName: "plus")
+                    }
+                )
+                .buttonStyle(FABButtonStyle())
+                .padding()
+                .zIndex(2)
+                if store.state.isSearchShowing {
+                    SearchView(
+                        text: store.binding(
+                            get: \.searchText,
+                            tag: AppAction.setSearch
+                        ),
+                        suggestions: store.binding(
+                            get: \.suggestions,
+                            tag: AppAction.setSuggestions
+                        ),
+                        placeholder: "Search or create...",
+                        onCommit: { query, slug in
+                            if let slug = slug {
+                                store.send(
+                                    action: .commit(
+                                        query: query,
+                                        slug: slug
+                                    )
+                                )
+                            } else {
+                                store.send(
+                                    action: .commitSearch(query: query)
+                                )
+                            }
+                        },
+                        onCancel: {
+                            withAnimation(.easeOut(duration: Duration.fast)) {
+                                store.send(
+                                    action: .hideSearch
+                                )
+                            }
+                        }
+                    )
+                    .transition(
+                        .asymmetric(
+                            insertion:
+                                .move(edge: .bottom)
+                                .combined(with: .opacity),
+                            removal: .opacity
+                        )
+                    )
+                    .zIndex(3)
+                }
             } else {
-                Spacer()
-                ProgressView()
-                Spacer()
+                VStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                }
             }
         }
+        .font(Font.appText)
         .onAppear {
             store.send(action: .appear)
         }

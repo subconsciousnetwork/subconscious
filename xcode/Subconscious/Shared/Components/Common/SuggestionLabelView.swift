@@ -7,6 +7,23 @@
 
 import SwiftUI
 
+struct SuggestionTitleGroup: View {
+    var title: String
+    var subtitle: String
+    var lineHeight: CGFloat = AppTheme.icon
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title)
+                .foregroundColor(Color.text)
+                .frame(height: AppTheme.icon)
+            Text(subtitle)
+                .foregroundColor(Color.secondaryText)
+                .frame(height: AppTheme.icon)
+        }
+    }
+}
+
 struct SuggestionLabelView: View {
     var suggestion: Suggestion
     var body: some View {
@@ -14,68 +31,27 @@ struct SuggestionLabelView: View {
         case let .entry(stub):
             Label(
                 title: {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(stub.title)
-                            .foregroundColor(Color.text)
-                        Text(Slashlink.addLeadingSlash(stub.slug))
-                            .foregroundColor(Color.secondaryText)
-                    }
+                    SuggestionTitleGroup(
+                        title: stub.title,
+                        subtitle: Slashlink.removeLeadingSlash(stub.slug)
+                    )
                 },
                 icon: {
                     Image(systemName: "doc")
                 }
-            ).lineLimit(1)
+            ).labelStyle(SuggestionLabelStyle())
         case let .search(stub):
             Label(
                 title: {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(stub.title)
-                            .foregroundColor(Color.text)
-                        Text("New note")
-                            .foregroundColor(Color.secondaryText)
-                    }
+                    SuggestionTitleGroup(
+                        title: stub.title,
+                        subtitle: "New idea"
+                    )
                 },
                 icon: {
                     Image(systemName: "doc.badge.plus")
                 }
-            ).lineLimit(1)
-        }
-    }
-}
-
-// A second label view that does not include the action label
-struct SuggestionLabelView2: View {
-    var suggestion: Suggestion
-    var body: some View {
-        switch suggestion {
-        case let .entry(stub):
-            Label(
-                title: {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(stub.title)
-                            .foregroundColor(Color.text)
-                        Text(Slashlink.addLeadingSlash(stub.slug))
-                            .foregroundColor(Color.secondaryText)
-                    }
-                },
-                icon: {
-                    Image(systemName: "doc")
-                }
-            ).lineLimit(1)
-        case let .search(stub):
-            Label(
-                title: {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(stub.title)
-                            .foregroundColor(Color.text)
-                        Text(Slashlink.addLeadingSlash(stub.slug))
-                            .foregroundColor(Color.secondaryText)
-                    }
-                },
-                icon: {
-                    Image(systemName: "magnifyingglass")
-                }
-            ).lineLimit(1)
+            ).labelStyle(SuggestionLabelStyle())
         }
     }
 }

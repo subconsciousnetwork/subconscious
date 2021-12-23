@@ -13,6 +13,17 @@ struct BacklinksView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
+            HStack {
+                Text(
+                    "Backlinks"
+                ).font(
+                    Font.appCaption
+                )
+                Spacer()
+            }.padding(
+                .horizontal,
+                AppTheme.unit4
+            )
             ForEach(backlinks) { entry in
                 Button(
                     action: {
@@ -23,7 +34,9 @@ struct BacklinksView: View {
                     }
                 ).buttonStyle(TranscludeButtonStyle())
             }
-        }.padding(AppTheme.padding)
+        }.padding(
+            AppTheme.margin
+        )
     }
 }
 
