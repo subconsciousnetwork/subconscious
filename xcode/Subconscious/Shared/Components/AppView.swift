@@ -50,7 +50,6 @@ enum AppAction {
 
     // Link suggestions
     case setLinkSheetPresented(Bool)
-    case setLinkSearchFocus(Bool)
     case setLinkSearchText(String)
     case commitLinkSearch(String)
     case setLinkSuggestions([Suggestion])
@@ -82,7 +81,7 @@ struct AppModel: Updatable {
     /// modeling this state as an enum.
     /// See https://github.com/gordonbrander/subconscious/wiki/SwiftUI-FocusedState
     /// 2021-12-23 Gordon Brander
-    enum Focus {
+    enum Focus: Hashable {
         case search
         case linkSearch
         case editor
@@ -354,10 +353,6 @@ struct AppModel: Updatable {
         case let .setLinkSheetPresented(isPresented):
             var model = self
             model.isLinkSheetPresented = isPresented
-            return (model, Empty().eraseToAnyPublisher())
-        case let .setLinkSearchFocus(isFocused):
-            var model = self
-            model.isLinkSearchFocused = isFocused
             return (model, Empty().eraseToAnyPublisher())
         case let .setLinkSearchText(text):
             var model = self
