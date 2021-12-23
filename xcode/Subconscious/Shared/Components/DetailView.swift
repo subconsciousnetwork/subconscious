@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct DetailView: View {
+    @Binding var focus: AppModel.Focus?
     @Binding var editorAttributedText: NSAttributedString
     @Binding var isEditorFocused: Bool
     @Binding var editorSelection: NSRange
     @Binding var isLinkSheetPresented: Bool
-    @Binding var isLinkSearchFocused: Bool
     @Binding var linkSearchText: String
     @Binding var linkSuggestions: [Suggestion]
     var backlinks: [SubtextFile]
@@ -88,6 +88,7 @@ struct DetailView: View {
             LinkSearchView(
                 placeholder: "Search or create...",
                 text: $linkSearchText,
+                focus: $focus,
                 suggestions: $linkSuggestions,
                 onCancel: {
                     isLinkSheetPresented = false

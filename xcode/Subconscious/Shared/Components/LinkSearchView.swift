@@ -10,6 +10,7 @@ import SwiftUI
 struct LinkSearchView: View {
     var placeholder: String
     @Binding var text: String
+    @Binding var focus: AppModel.Focus?
     @Binding var suggestions: [Suggestion]
     var onCancel: () -> Void
     var onCommitLinkSearch: (String) -> Void
@@ -19,7 +20,9 @@ struct LinkSearchView: View {
             HStack {
                 SearchTextField(
                     placeholder: "Search links",
-                    text: $text
+                    text: $text,
+                    focus: $focus,
+                    field: .linkSearch
                 )
                 Button(
                     action: onCancel,
@@ -59,6 +62,7 @@ struct LinkSearchView_Previews: PreviewProvider {
         LinkSearchView(
             placeholder: "Search or create...",
             text: .constant(""),
+            focus: .constant(nil),
             suggestions: .constant([]),
             onCancel: {},
             onCommitLinkSearch: { slug in }

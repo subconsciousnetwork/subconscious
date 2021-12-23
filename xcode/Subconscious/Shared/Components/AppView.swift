@@ -17,6 +17,9 @@ enum AppAction {
     case openURL(URL)
     case openEditorURL(url: URL, range: NSRange)
 
+    // Focus state for TextFields, TextViews, etc
+    case setFocus(AppModel.Focus?)
+
     // Database
     case databaseReady(SQLite3Migrations.MigrationSuccess)
     case rebuildDatabase
@@ -74,6 +77,20 @@ enum AppAction {
 
 //  MARK: Model
 struct AppModel: Updatable {
+    /// Enum describing which view is currently focused.
+    /// Focus is mutually exclusive, and SwiftUI's FocusedState requires
+    /// modeling this state as an enum.
+    /// See https://github.com/gordonbrander/subconscious/wiki/SwiftUI-FocusedState
+    /// 2021-12-23 Gordon Brander
+    enum Focus {
+        case search
+        case linkSearch
+        case editor
+    }
+
+    /// What is focused? (nil means nothing is focused)
+    var focus: Focus? = nil
+
     // Is database connected and migrated?
     var isDatabaseReady = false
     // Is the detail view (edit and details for an entry) showing?
@@ -181,6 +198,10 @@ struct AppModel: Updatable {
                     return (self, fx)
                 }
             }
+        case let .setFocus(focus):
+            var model = self
+            model.focus = focus
+            return (model, Empty().eraseToAnyPublisher())
         case let .databaseReady(success):
             var model = self
             model.isDatabaseReady = true
@@ -472,15 +493,19 @@ struct AppView: View {
                 .zIndex(2)
                 if store.state.isSearchShowing {
                     SearchView(
+                        placeholder: "Search or create...",
                         text: store.binding(
                             get: \.searchText,
                             tag: AppAction.setSearch
+                        ),
+                        focus: store.binding(
+                            get: \.focus,
+                            tag: AppAction.setFocus
                         ),
                         suggestions: store.binding(
                             get: \.suggestions,
                             tag: AppAction.setSuggestions
                         ),
-                        placeholder: "Search or create...",
                         onCommit: { query, slug in
                             if let slug = slug {
                                 store.send(

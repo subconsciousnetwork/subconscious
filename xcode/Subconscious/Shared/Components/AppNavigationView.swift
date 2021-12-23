@@ -37,6 +37,10 @@ struct AppNavigationView: View {
                                 }
                             } else {
                                 DetailView(
+                                    focus: store.binding(
+                                        get: \.focus,
+                                        tag: AppAction.setFocus
+                                    ),
                                     editorAttributedText: store.binding(
                                         get: \.editorAttributedText,
                                         tag: AppAction.setEditorAttributedText
@@ -52,10 +56,6 @@ struct AppNavigationView: View {
                                     isLinkSheetPresented: store.binding(
                                         get: \.isLinkSheetPresented,
                                         tag: AppAction.setLinkSheetPresented
-                                    ),
-                                    isLinkSearchFocused: store.binding(
-                                        get: \.isLinkSearchFocused,
-                                        tag: AppAction.setLinkSearchFocus
                                     ),
                                     linkSearchText: store.binding(
                                         get: \.linkSearchText,
