@@ -9,7 +9,6 @@ import SwiftUI
 
 struct AppNavigationView: View {
     @ObservedObject var store: Store<AppModel>
-    @State var isSearchFocused = false
 
     var body: some View {
         NavigationView {
