@@ -18,7 +18,7 @@ struct LinkSearchView: View {
         VStack(spacing: 0) {
             HStack {
                 SearchTextField(
-                    placeholder: "Search or create...",
+                    placeholder: "Search links",
                     text: $text
                 )
                 Button(

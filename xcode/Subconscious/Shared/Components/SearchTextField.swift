@@ -12,7 +12,7 @@ struct SearchTextField: View {
     @Binding var text: String
 
     var body: some View {
-        TextField("Search or create...", text: $text)
+        TextField(placeholder, text: $text)
             .textInputAutocapitalization(.sentences)
             .textFieldStyle(.plain)
             .modifier(RoundedTextFieldViewModifier())
