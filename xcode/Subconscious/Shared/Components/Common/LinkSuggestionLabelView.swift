@@ -16,10 +16,12 @@ struct LinkSuggestionLabelView: View {
             Label(
                 title: {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(Slashlink.removeLeadingSlash(stub.slug))
+                        Text(stub.title)
+                            .lineLimit(1)
                             .foregroundColor(Color.text)
                             .frame(height: AppTheme.icon)
-                        Text(#"Link to "\#(stub.title)""#)
+                        Text(#"Link to "\#(Slashlink.removeLeadingSlash(stub.slug))""#)
+                            .lineLimit(1)
                             .foregroundColor(Color.secondaryText)
                             .frame(height: AppTheme.icon)
                     }
@@ -32,10 +34,12 @@ struct LinkSuggestionLabelView: View {
             Label(
                 title: {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(Slashlink.removeLeadingSlash(stub.slug))
+                        Text(stub.title)
+                            .lineLimit(1)
                             .foregroundColor(Color.text)
                             .frame(height: AppTheme.icon)
-                        Text("Link to new idea")
+                        Text(#"Link to "\#(Slashlink.removeLeadingSlash(stub.slug))""#)
+                            .lineLimit(1)
                             .foregroundColor(Color.secondaryText)
                             .frame(height: AppTheme.icon)
                     }
