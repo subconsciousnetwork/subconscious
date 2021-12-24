@@ -78,7 +78,7 @@ struct AppModel: Updatable {
     /// Enum describing which view is currently focused.
     /// Focus is mutually exclusive, and SwiftUI's FocusedState requires
     /// modeling this state as an enum.
-    /// See https://github.com/gordonbrander/subconscious/wiki/SwiftUI-FocusedState
+    /// See https://github.com/gordonbrander/subconscious/wiki/SwiftUI-FocusState
     /// 2021-12-23 Gordon Brander
     enum Focus: Hashable {
         case search
