@@ -46,7 +46,6 @@ enum AppAction {
     // Editor
     case setEditorAttributedText(NSAttributedString)
     case setEditorSelection(NSRange)
-    case setEditorFocus(Bool)
 
     // Link suggestions
     case setLinkSheetPresented(Bool)
@@ -107,10 +106,11 @@ struct AppModel: Updatable {
     // Main search suggestions
     var suggestions: [Suggestion] = []
 
-    var isEditorFocused = false
+    // Editor
     var editorAttributedText = NSAttributedString("")
     // Editor selection corresponds with `editorAttributedText`
     var editorSelection = NSMakeRange(0, 0)
+
     // The URL for the currently active entry
     var entryURL: URL?
     // Backlinks to the currently active entry
@@ -127,7 +127,7 @@ struct AppModel: Updatable {
     static func resetEditor(_ model: inout Self) {
         model.editorAttributedText = NSAttributedString("")
         model.editorSelection = NSMakeRange(0, 0)
-        model.isEditorFocused = false
+        model.focus = nil
     }
 
     static func renderMarkup(
@@ -171,7 +171,7 @@ struct AppModel: Updatable {
             // For now, I think this is the best approach.
             //
             // 2021-09-23 Gordon Brander
-            if self.isEditorFocused {
+            if self.focus == .editor {
                 let fx = Just(
                     AppAction.setEditorSelection(range)
                 ).eraseToAnyPublisher()
@@ -266,15 +266,11 @@ struct AppModel: Updatable {
             var model = self
             model.editorSelection = range
             return (model, Empty().eraseToAnyPublisher())
-        case let .setEditorFocus(isFocused):
-            var model = self
-            model.isEditorFocused = isFocused
-            return (model, Empty().eraseToAnyPublisher())
         case let .setDetailShowing(isShowing):
             var model = self
             model.isDetailShowing = isShowing
             if isShowing == false {
-                model.isEditorFocused = false
+                model.focus = nil
             }
             return (model, Empty().eraseToAnyPublisher())
         case let .setSearch(text):
@@ -410,7 +406,7 @@ struct AppModel: Updatable {
             return (self, Empty().eraseToAnyPublisher())
         case .save:
             var model = self
-            model.isEditorFocused = false
+            model.focus = nil
             if let entryURL = model.entryURL {
                 // Parse editorAttributedText to entry.
                 // TODO refactor model to store entry instead of attributedText.

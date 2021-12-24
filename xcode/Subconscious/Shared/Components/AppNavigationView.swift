@@ -44,10 +44,6 @@ struct AppNavigationView: View {
                                         get: \.editorAttributedText,
                                         tag: AppAction.setEditorAttributedText
                                     ),
-                                    isEditorFocused: store.binding(
-                                        get: \.isEditorFocused,
-                                        tag: AppAction.setEditorFocus
-                                    ),
                                     editorSelection: store.binding(
                                         get: \.editorSelection,
                                         tag: AppAction.setEditorSelection
