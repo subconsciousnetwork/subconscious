@@ -27,7 +27,8 @@
 import SwiftUI
 
 /// A textview that grows to the height of its content
-struct GrowableAttributedTextViewRepresentable: UIViewRepresentable {
+struct GrowableAttributedTextViewRepresentable<Focus>: UIViewRepresentable
+where Focus: Hashable {
     /// Extends UITTextView to provide an intrinsicContentSize given a fixed width.
     class FixedWidthTextView: UITextView {
         var fixedWidth: CGFloat = 0
@@ -96,12 +97,12 @@ struct GrowableAttributedTextViewRepresentable: UIViewRepresentable {
 
         /// Handle editing begin (focus)
         func textViewDidBeginEditing(_ textView: UITextView) {
-            representable.isFocused = true
+            representable.focus = representable.field
         }
 
         /// Handle editing end (blur)
         func textViewDidEndEditing(_ textView: UITextView) {
-            representable.isFocused = false
+            representable.focus = nil
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
@@ -141,8 +142,9 @@ struct GrowableAttributedTextViewRepresentable: UIViewRepresentable {
     }
 
     @Binding var attributedText: NSAttributedString
-    @Binding var isFocused: Bool
     @Binding var selection: NSRange
+    @Binding var focus: Focus?
+    var field: Focus
     /// Called before a text change, to determine if the text should be changed.
     var shouldChange: (
         UITextView, NSRange, String
@@ -158,6 +160,11 @@ struct GrowableAttributedTextViewRepresentable: UIViewRepresentable {
     var fixedWidth: CGFloat
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
+
+    /// Is this field is currently focused?
+    private var isFocused: Bool {
+        focus == field
+    }
 
     func makeUIView(context: Context) -> FixedWidthTextView {
         let view = FixedWidthTextView()
