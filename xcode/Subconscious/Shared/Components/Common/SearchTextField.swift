@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct SearchTextField: View {
-    var placeholder: String
     @FocusState private var focusState: AppModel.Focus?
+    var placeholder: String
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     var field: AppModel.Focus
@@ -21,11 +21,13 @@ struct SearchTextField: View {
             // Replay changes to focus in external focus binding
             // onto local focus state.
             .onChange(of: focus) { value in
+                print("focus changed by model")
                 self.focusState = value
             }
             // Replace changes to local focus onto external
             // focus binding.
             .onChange(of: focusState) { value in
+                print("focus changed by view")
                 self.focus = value
             }
     }
