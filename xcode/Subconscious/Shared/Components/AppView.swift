@@ -80,7 +80,7 @@ struct AppModel: Updatable {
     /// modeling this state as an enum.
     /// See https://github.com/gordonbrander/subconscious/wiki/SwiftUI-FocusState
     /// 2021-12-23 Gordon Brander
-    enum Focus: Hashable {
+    enum Focus: Hashable, Equatable {
         case search
         case linkSearch
         case editor
