@@ -20,13 +20,22 @@ struct SearchTextField: View {
             .focused($focusState, equals: field)
             // Replay changes to focus in external focus binding
             // onto local focus state.
-            .onChange(of: focus) { value in
+            //
+            // FIXME: this is not firing when focus changes
+            // At the moment, we can work around by setting focus via onAppear
+            // but we need to figure out why onChange is not replaying our
+            // change to focus to focusState.
+            // 2021-01-05 Gordon Brander
+            .onChange(of: self.focus) { value in
                 self.focusState = value
             }
             // Replace changes to local focus onto external
             // focus binding.
-            .onChange(of: focusState) { value in
+            .onChange(of: self.focusState) { value in
                 self.focus = value
+            }
+            .onAppear {
+                self.focusState = field
             }
     }
 }
