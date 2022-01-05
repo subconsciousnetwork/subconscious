@@ -25,17 +25,23 @@ struct SearchTextField: View {
             // At the moment, we can work around by setting focus via onAppear
             // but we need to figure out why onChange is not replaying our
             // change to focus to focusState.
+            // onAppear can be used to manually set focusState from view.
+            // However, this does not always work (e.g. in sheets).
+            // We need a general solution.
             // 2021-01-05 Gordon Brander
             .onChange(of: self.focus) { value in
-                self.focusState = value
+                // Check before setting to prevent feedback loop
+                if self.focusState != value {
+                    self.focusState = value
+                }
             }
             // Replace changes to local focus onto external
             // focus binding.
             .onChange(of: self.focusState) { value in
-                self.focus = value
-            }
-            .onAppear {
-                self.focusState = field
+                // Check before setting to prevent feedback loop
+                if self.focus != value {
+                    self.focus = value
+                }
             }
     }
 }
