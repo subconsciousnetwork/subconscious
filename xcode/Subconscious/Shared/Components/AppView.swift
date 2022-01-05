@@ -347,6 +347,7 @@ struct AppModel: Updatable {
             return (self, Empty().eraseToAnyPublisher())
         case let .setLinkSheetPresented(isPresented):
             var model = self
+            model.focus = isPresented ? .linkSearch : nil
             model.isLinkSheetPresented = isPresented
             return (model, Empty().eraseToAnyPublisher())
         case let .setLinkSearchText(text):
