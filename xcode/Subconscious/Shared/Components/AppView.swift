@@ -118,7 +118,6 @@ struct AppModel: Updatable {
 
     // Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
-    var isLinkSearchFocused = false
     var linkSearchText = ""
     var linkSearchQuery = ""
     var linkSuggestions: [Suggestion] = []
@@ -392,7 +391,7 @@ struct AppModel: Updatable {
             }
             model.linkSearchQuery = text
             model.linkSearchText = ""
-            model.isLinkSearchFocused = false
+            model.focus = nil
             model.isLinkSheetPresented = false
             return (model, Empty().eraseToAnyPublisher())
         case let .setLinkSuggestions(suggestions):
