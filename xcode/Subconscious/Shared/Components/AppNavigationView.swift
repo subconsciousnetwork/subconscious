@@ -9,7 +9,6 @@ import SwiftUI
 
 struct AppNavigationView: View {
     @ObservedObject var store: Store<AppModel>
-    @State var isSearchFocused = false
 
     var body: some View {
         NavigationView {
@@ -37,13 +36,13 @@ struct AppNavigationView: View {
                                 }
                             } else {
                                 DetailView(
+                                    focus: store.binding(
+                                        get: \.focus,
+                                        tag: AppAction.setFocus
+                                    ),
                                     editorAttributedText: store.binding(
                                         get: \.editorAttributedText,
                                         tag: AppAction.setEditorAttributedText
-                                    ),
-                                    isEditorFocused: store.binding(
-                                        get: \.isEditorFocused,
-                                        tag: AppAction.setEditorFocus
                                     ),
                                     editorSelection: store.binding(
                                         get: \.editorSelection,
@@ -52,10 +51,6 @@ struct AppNavigationView: View {
                                     isLinkSheetPresented: store.binding(
                                         get: \.isLinkSheetPresented,
                                         tag: AppAction.setLinkSheetPresented
-                                    ),
-                                    isLinkSearchFocused: store.binding(
-                                        get: \.isLinkSearchFocused,
-                                        tag: AppAction.setLinkSearchFocus
                                     ),
                                     linkSearchText: store.binding(
                                         get: \.linkSearchText,

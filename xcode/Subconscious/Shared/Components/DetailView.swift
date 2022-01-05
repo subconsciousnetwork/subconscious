@@ -8,11 +8,10 @@
 import SwiftUI
 
 struct DetailView: View {
+    @Binding var focus: AppModel.Focus?
     @Binding var editorAttributedText: NSAttributedString
-    @Binding var isEditorFocused: Bool
     @Binding var editorSelection: NSRange
     @Binding var isLinkSheetPresented: Bool
-    @Binding var isLinkSearchFocused: Bool
     @Binding var linkSearchText: String
     @Binding var linkSuggestions: [Suggestion]
     var backlinks: [SubtextFile]
@@ -29,14 +28,15 @@ struct DetailView: View {
     var body: some View {
         GeometryReader { geometry in
             PseudoKeyboardToolbarView(
-                isKeyboardUp: isEditorFocused,
+                isKeyboardUp: focus == .editor,
                 content: {
                     ScrollView(.vertical) {
                         VStack(spacing: 0) {
                             GrowableAttributedTextViewRepresentable(
                                 attributedText: $editorAttributedText,
-                                isFocused: $isEditorFocused,
                                 selection: $editorSelection,
+                                focus: $focus,
+                                field: .editor,
                                 onLink: onEditorLink,
                                 fixedWidth: geometry.size.width
                             ).insets(
@@ -70,7 +70,7 @@ struct DetailView: View {
             Color.background
         ).toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                if isEditorFocused {
+                if focus == .editor {
                     Button(
                         action: onDone,
                         label: {
@@ -88,6 +88,7 @@ struct DetailView: View {
             LinkSearchView(
                 placeholder: "Search or create...",
                 text: $linkSearchText,
+                focus: $focus,
                 suggestions: $linkSuggestions,
                 onCancel: {
                     isLinkSheetPresented = false

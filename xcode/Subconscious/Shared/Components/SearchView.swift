@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct SearchView: View {
-    @Binding var text: String
-    @Binding var suggestions: [Suggestion]
     var placeholder: String
+    @Binding var text: String
+    @Binding var focus: AppModel.Focus?
+    @Binding var suggestions: [Suggestion]
     var onCommit: (String, String?) -> Void
     var onCancel: () -> Void
 
@@ -19,7 +20,9 @@ struct SearchView: View {
             HStack {
                 SearchTextField(
                     placeholder: "Search or create...",
-                    text: $text
+                    text: $text,
+                    focus: $focus,
+                    field: .search
                 )
                 .submitLabel(.go)
                 .onSubmit {
@@ -71,11 +74,11 @@ struct SearchView: View {
 struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
         SearchView(
-            text: .constant(""),
-            suggestions: .constant([]),
             placeholder: "",
-            onCommit: { title, slug in
-            },
+            text: .constant(""),
+            focus: .constant(nil),
+            suggestions: .constant([]),
+            onCommit: { title, slug in },
             onCancel: {}
         )
     }

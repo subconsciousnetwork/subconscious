@@ -17,6 +17,9 @@ enum AppAction {
     case openURL(URL)
     case openEditorURL(url: URL, range: NSRange)
 
+    // Focus state for TextFields, TextViews, etc
+    case setFocus(AppModel.Focus?)
+
     // Database
     case databaseReady(SQLite3Migrations.MigrationSuccess)
     case rebuildDatabase
@@ -43,11 +46,9 @@ enum AppAction {
     // Editor
     case setEditorAttributedText(NSAttributedString)
     case setEditorSelection(NSRange)
-    case setEditorFocus(Bool)
 
     // Link suggestions
     case setLinkSheetPresented(Bool)
-    case setLinkSearchFocus(Bool)
     case setLinkSearchText(String)
     case commitLinkSearch(String)
     case setLinkSuggestions([Suggestion])
@@ -74,6 +75,20 @@ enum AppAction {
 
 //  MARK: Model
 struct AppModel: Updatable {
+    /// Enum describing which view is currently focused.
+    /// Focus is mutually exclusive, and SwiftUI's FocusedState requires
+    /// modeling this state as an enum.
+    /// See https://github.com/gordonbrander/subconscious/wiki/SwiftUI-FocusState
+    /// 2021-12-23 Gordon Brander
+    enum Focus: Hashable, Equatable {
+        case search
+        case linkSearch
+        case editor
+    }
+
+    /// What is focused? (nil means nothing is focused)
+    var focus: Focus? = nil
+
     // Is database connected and migrated?
     var isDatabaseReady = false
     // Is the detail view (edit and details for an entry) showing?
@@ -81,7 +96,6 @@ struct AppModel: Updatable {
 
     // Live search bar text
     var searchText = ""
-    var isSearchFocused = false
     var isSearchShowing = false
 
     // Committed search bar query text
@@ -92,10 +106,11 @@ struct AppModel: Updatable {
     // Main search suggestions
     var suggestions: [Suggestion] = []
 
-    var isEditorFocused = false
+    // Editor
     var editorAttributedText = NSAttributedString("")
     // Editor selection corresponds with `editorAttributedText`
     var editorSelection = NSMakeRange(0, 0)
+
     // The URL for the currently active entry
     var entryURL: URL?
     // Backlinks to the currently active entry
@@ -103,7 +118,6 @@ struct AppModel: Updatable {
 
     // Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
-    var isLinkSearchFocused = false
     var linkSearchText = ""
     var linkSearchQuery = ""
     var linkSuggestions: [Suggestion] = []
@@ -112,7 +126,7 @@ struct AppModel: Updatable {
     static func resetEditor(_ model: inout Self) {
         model.editorAttributedText = NSAttributedString("")
         model.editorSelection = NSMakeRange(0, 0)
-        model.isEditorFocused = false
+        model.focus = nil
     }
 
     static func renderMarkup(
@@ -156,7 +170,7 @@ struct AppModel: Updatable {
             // For now, I think this is the best approach.
             //
             // 2021-09-23 Gordon Brander
-            if self.isEditorFocused {
+            if self.focus == .editor {
                 let fx = Just(
                     AppAction.setEditorSelection(range)
                 ).eraseToAnyPublisher()
@@ -181,6 +195,10 @@ struct AppModel: Updatable {
                     return (self, fx)
                 }
             }
+        case let .setFocus(focus):
+            var model = self
+            model.focus = focus
+            return (model, Empty().eraseToAnyPublisher())
         case let .databaseReady(success):
             var model = self
             model.isDatabaseReady = true
@@ -247,15 +265,11 @@ struct AppModel: Updatable {
             var model = self
             model.editorSelection = range
             return (model, Empty().eraseToAnyPublisher())
-        case let .setEditorFocus(isFocused):
-            var model = self
-            model.isEditorFocused = isFocused
-            return (model, Empty().eraseToAnyPublisher())
         case let .setDetailShowing(isShowing):
             var model = self
             model.isDetailShowing = isShowing
             if isShowing == false {
-                model.isEditorFocused = false
+                model.focus = nil
             }
             return (model, Empty().eraseToAnyPublisher())
         case let .setSearch(text):
@@ -273,13 +287,13 @@ struct AppModel: Updatable {
             var model = self
             model.isSearchShowing = true
             model.searchText = ""
-            model.isSearchFocused = true
+            model.focus = .search
             return (model, Empty().eraseToAnyPublisher())
         case .hideSearch:
             var model = self
             model.isSearchShowing = false
             model.searchText = ""
-            model.isSearchFocused = false
+            model.focus = nil
             return (model, Empty().eraseToAnyPublisher())
         case let .setSuggestions(suggestions):
             var model = self
@@ -333,11 +347,8 @@ struct AppModel: Updatable {
             return (self, Empty().eraseToAnyPublisher())
         case let .setLinkSheetPresented(isPresented):
             var model = self
+            model.focus = isPresented ? .linkSearch : nil
             model.isLinkSheetPresented = isPresented
-            return (model, Empty().eraseToAnyPublisher())
-        case let .setLinkSearchFocus(isFocused):
-            var model = self
-            model.isLinkSearchFocused = isFocused
             return (model, Empty().eraseToAnyPublisher())
         case let .setLinkSearchText(text):
             var model = self
@@ -381,7 +392,7 @@ struct AppModel: Updatable {
             }
             model.linkSearchQuery = text
             model.linkSearchText = ""
-            model.isLinkSearchFocused = false
+            model.focus = nil
             model.isLinkSheetPresented = false
             return (model, Empty().eraseToAnyPublisher())
         case let .setLinkSuggestions(suggestions):
@@ -395,7 +406,7 @@ struct AppModel: Updatable {
             return (self, Empty().eraseToAnyPublisher())
         case .save:
             var model = self
-            model.isEditorFocused = false
+            model.focus = nil
             if let entryURL = model.entryURL {
                 // Parse editorAttributedText to entry.
                 // TODO refactor model to store entry instead of attributedText.
@@ -472,15 +483,19 @@ struct AppView: View {
                 .zIndex(2)
                 if store.state.isSearchShowing {
                     SearchView(
+                        placeholder: "Search or create...",
                         text: store.binding(
                             get: \.searchText,
                             tag: AppAction.setSearch
+                        ),
+                        focus: store.binding(
+                            get: \.focus,
+                            tag: AppAction.setFocus
                         ),
                         suggestions: store.binding(
                             get: \.suggestions,
                             tag: AppAction.setSuggestions
                         ),
-                        placeholder: "Search or create...",
                         onCommit: { query, slug in
                             if let slug = slug {
                                 store.send(

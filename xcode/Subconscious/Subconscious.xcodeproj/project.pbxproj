@@ -371,7 +371,6 @@
 				B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */,
 				B864598626F97B81007969E3 /* KeyboardToolbarView.swift */,
 				B8AE34BB276AB3D400777FF0 /* SearchView.swift */,
-				B8AE34C7276BF77000777FF0 /* SearchTextField.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -404,6 +403,7 @@
 		B8EC568426F41A2C00AC64E5 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				B8AE34C7276BF77000777FF0 /* SearchTextField.swift */,
 				B82FD4552730A62C002CB641 /* EntryItemView.swift */,
 				B8E4B6F126F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift */,
 				B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */,
