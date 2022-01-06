@@ -216,7 +216,10 @@ extension Subtext {
     /// Render markup verbatim with syntax highlighting and links
     func renderMarkup(url: (String) -> String?) -> NSAttributedString {
         let attributedString = NSMutableAttributedString(string: base)
-        let baseNSRange = NSRange(base.startIndex..<base.endIndex, in: base)
+        let baseNSRange = NSRange(
+            base.startIndex...,
+            in: base
+        )
         // Set default font for entire string
         attributedString.addAttribute(
             .font,
@@ -243,7 +246,7 @@ extension Subtext {
         for block in blocks {
             switch block {
             case let .heading(line):
-                let nsRange = NSRange(line.range, in: attributedString.string)
+                let nsRange = NSRange(line.range, in: base)
                 attributedString.addAttribute(
                     .font,
                     value: UIFont.appTextMonoBold,
@@ -261,7 +264,7 @@ extension Subtext {
                             value: link.span,
                             range: NSRange(
                                 link.span.range,
-                                in: attributedString.string
+                                in: base
                             )
                         )
                     case let .bracketlink(bracketlink):
@@ -270,7 +273,7 @@ extension Subtext {
                             value: bracketlink.body(),
                             range: NSRange(
                                 bracketlink.body().range,
-                                in: attributedString.string
+                                in: base
                             )
                         )
                     case let .slashlink(slashlink):
@@ -280,7 +283,7 @@ extension Subtext {
                                 value: url,
                                 range: NSRange(
                                     slashlink.span.range,
-                                    in: attributedString.string
+                                    in: base
                                 )
                             )
                         }
