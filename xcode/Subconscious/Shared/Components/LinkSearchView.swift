@@ -29,7 +29,7 @@ struct LinkSearchView: View {
                     label: {
                         Text("Cancel")
                     }
-                )
+                ).buttonStyle(.plain)
             }
             .frame(height: AppTheme.unit * 10)
             .padding()
