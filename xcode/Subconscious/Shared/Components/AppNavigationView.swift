@@ -38,7 +38,8 @@ struct AppNavigationView: View {
                                 DetailView(
                                     focus: store.binding(
                                         get: \.focus,
-                                        tag: AppAction.setFocus
+                                        tag: AppAction.setFocus,
+                                        animation: .easeOut(duration: .normal)
                                     ),
                                     editorAttributedText: store.binding(
                                         get: \.editorAttributedText,
