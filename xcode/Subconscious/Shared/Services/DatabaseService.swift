@@ -199,7 +199,7 @@ struct DatabaseService {
                 SELECT slug, body
                 FROM entry_search
                 ORDER BY modified DESC
-                LIMIT 200
+                LIMIT 1000
                 """
             ).compactMap({ row in
                 if
