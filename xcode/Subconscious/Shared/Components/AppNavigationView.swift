@@ -13,14 +13,13 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                ScrollView {
-                    VStack {
-                        HStack {
-                            Text("Todo")
-                            Spacer()
-                        }
-                    }.padding()
-                }.background(Color.background)
+                VStack {
+                    List(store.state.recent) { entry in
+                        EntryItemView(entry: entry)
+                    }
+                }
+                .padding()
+                .background(Color.background)
                 NavigationLink(
                     isActive: store.binding(
                         get: \.isDetailShowing,

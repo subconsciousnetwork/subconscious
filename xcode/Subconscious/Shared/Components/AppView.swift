@@ -27,6 +27,11 @@ enum AppAction {
     case syncSuccess([FileSync.Change])
     case syncFailure(String)
 
+    // List entries
+    case listRecent
+    case setRecent([SubtextFile])
+    case listRecentFailure(String)
+
     // Search
     case setSearch(String)
     case showSearch
@@ -93,6 +98,9 @@ struct AppModel: Updatable {
     var isDatabaseReady = false
     // Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
+
+    // Recent entries
+    var recent: [SubtextFile] = []
 
     // Live search bar text
     var searchText = ""
@@ -202,16 +210,20 @@ struct AppModel: Updatable {
         case let .databaseReady(success):
             var model = self
             model.isDatabaseReady = true
-            let sync = AppEnvironment.database.syncDatabase().map({ changes in
-                AppAction.syncSuccess(changes)
-            }).catch({ error in
-                Just(.syncFailure(error.localizedDescription))
-            })
+            let sync = AppEnvironment.database.syncDatabase()
+                .map({ changes in
+                    AppAction.syncSuccess(changes)
+                })
+                .catch({ error in
+                    Just(.syncFailure(error.localizedDescription))
+                })
             let suggestions = Just(AppAction.setSearch(""))
             let linkSuggestions = Just(AppAction.setLinkSearchText(""))
-            let fx = Publishers.Merge3(
+            let recent = Just(AppAction.listRecent)
+            let fx = Publishers.Merge4(
                 suggestions,
                 linkSuggestions,
+                recent,
                 sync
             ).eraseToAnyPublisher()
             if success.from != success.to {
@@ -248,6 +260,30 @@ struct AppModel: Updatable {
         case let .syncFailure(message):
             AppEnvironment.logger.warning(
                 "File sync failed: \(message)"
+            )
+            return (self, Empty().eraseToAnyPublisher())
+
+        case .listRecent:
+            let fx = AppEnvironment.database.listRecentEntries()
+                .map({ entries in
+                    AppAction.setRecent(entries)
+                })
+                .catch({ error in
+                    Just(
+                        .listRecentFailure(
+                            error.localizedDescription
+                        )
+                    )
+                })
+                .eraseToAnyPublisher()
+            return (self, fx)
+        case let .setRecent(entries):
+            var model = self
+            model.recent = entries
+            return (model, Empty().eraseToAnyPublisher())
+        case let .listRecentFailure(error):
+            AppEnvironment.logger.warning(
+                "Failed to list recent entries: \(error)"
             )
             return (self, Empty().eraseToAnyPublisher())
         case let .setEditorAttributedText(attributedText):
