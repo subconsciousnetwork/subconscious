@@ -529,9 +529,13 @@ struct AppView: View {
                     .zIndex(3)
                 }
             } else {
-                VStack {
+                VStack(alignment: .center) {
                     Spacer()
-                    ProgressView()
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    }
                     Spacer()
                 }
             }
