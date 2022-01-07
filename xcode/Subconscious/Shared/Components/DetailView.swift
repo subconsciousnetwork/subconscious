@@ -29,7 +29,12 @@ struct DetailView: View {
         GeometryReader { geometry in
             PseudoKeyboardToolbarView(
                 isKeyboardUp: focus == .editor,
-                content: {
+                toolbarHeight: 48,
+                toolbar: KeyboardToolbarView(
+                    isSheetPresented: $isLinkSheetPresented,
+                    suggestions: .constant([])
+                ),
+                content: { size in
                     ScrollView(.vertical) {
                         VStack(spacing: 0) {
                             GrowableAttributedTextViewRepresentable(
@@ -38,16 +43,18 @@ struct DetailView: View {
                                 focus: $focus,
                                 field: .editor,
                                 onLink: onEditorLink,
-                                fixedWidth: geometry.size.width
-                            ).insets(
+                                fixedWidth: size.width
+                            )
+                            .insets(
                                 EdgeInsets(
                                     top: AppTheme.margin,
                                     leading: AppTheme.margin,
                                     bottom: AppTheme.margin,
                                     trailing: AppTheme.margin
                                 )
-                            ).frame(
-                                minHeight: geometry.size.height / 2
+                            )
+                            .frame(
+                                minHeight: size.height
                             )
                             Divider()
                             if backlinks.count > 0 {
@@ -58,30 +65,28 @@ struct DetailView: View {
                             }
                         }
                     }
-                },
-                toolbar: {
-                    KeyboardToolbarView(
-                        isSheetPresented: $isLinkSheetPresented,
-                        suggestions: .constant([])
-                    )
                 }
             )
-        }.background(
+        }
+        .background(
             Color.background
-        ).toolbar {
+        )
+        .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 if focus == .editor {
                     Button(
                         action: onDone,
                         label: {
-                            Text("Done")
+                            Text("Save").bold()
                         }
                     )
+                    .buttonStyle(.plain)
                 } else {
                     EmptyView()
                 }
             }
-        }.sheet(
+        }
+        .sheet(
             isPresented: $isLinkSheetPresented,
             onDismiss: {}
         ) {

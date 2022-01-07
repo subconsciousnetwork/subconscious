@@ -7,23 +7,15 @@
 
 import SwiftUI
 
+/// A view with a toolbar at the bottom, and a corresponding
+/// area up top that is the height of the area minus the toolbar.
 struct PseudoKeyboardToolbarView<Content, Toolbar>: View
 where Content: View, Toolbar: View
 {
     var isKeyboardUp: Bool
-    var content: Content
+    var toolbarHeight: CGFloat
     var toolbar: Toolbar
-    var toolbarHeight: CGFloat = 48
-
-    init(
-        isKeyboardUp: Bool,
-        @ViewBuilder content: () -> Content,
-        @ViewBuilder toolbar: () -> Toolbar
-    ) {
-        self.isKeyboardUp = isKeyboardUp
-        self.content = content()
-        self.toolbar = toolbar()
-    }
+    var content: (CGSize) -> Content
 
     /// Set fixed toolbar height for view.
     /// Defaults to 48pt.
@@ -34,21 +26,32 @@ where Content: View, Toolbar: View
     }
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                content
-            }
-            .padding(.bottom, isKeyboardUp ? toolbarHeight : 0)
-            VStack(spacing: 0) {
-                Spacer()
-                toolbar
-                    .frame(height: toolbarHeight)
-                    .opacity(isKeyboardUp ? 1 : 0)
-                    .offset(
-                        x: 0,
-                        y: isKeyboardUp ? 0 : toolbarHeight
+        GeometryReader { geometry in
+            ZStack {
+                VStack(spacing: 0) {
+                    content(
+                        (
+                            isKeyboardUp ?
+                            CGSize(
+                                width: geometry.size.width,
+                                height: geometry.size.height - toolbarHeight
+                            ) :
+                            geometry.size
+                         )
                     )
-                    .animation(.default, value: isKeyboardUp)
+                }
+                .padding(.bottom, isKeyboardUp ? toolbarHeight : 0)
+                VStack(spacing: 0) {
+                    Spacer()
+                    toolbar
+                        .frame(height: toolbarHeight)
+                        .opacity(isKeyboardUp ? 1 : 0)
+                        .offset(
+                            x: 0,
+                            y: isKeyboardUp ? 0 : toolbarHeight
+                        )
+                        .animation(.default, value: isKeyboardUp)
+                }
             }
         }
     }
