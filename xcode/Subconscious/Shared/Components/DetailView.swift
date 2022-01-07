@@ -34,7 +34,7 @@ struct DetailView: View {
                     isSheetPresented: $isLinkSheetPresented,
                     suggestions: .constant([])
                 ),
-                content: { size in
+                content: { isKeyboardUp, size in
                     ScrollView(.vertical) {
                         VStack(spacing: 0) {
                             GrowableAttributedTextViewRepresentable(
@@ -56,8 +56,8 @@ struct DetailView: View {
                             .frame(
                                 minHeight: size.height
                             )
-                            Divider()
-                            if backlinks.count > 0 {
+                            if !isKeyboardUp && backlinks.count > 0 {
+                                Divider()
                                 BacklinksView(
                                     backlinks: backlinks,
                                     onActivateBacklink: onCommitSearch

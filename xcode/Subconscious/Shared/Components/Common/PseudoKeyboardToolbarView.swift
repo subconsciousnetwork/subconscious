@@ -15,7 +15,7 @@ where Content: View, Toolbar: View
     var isKeyboardUp: Bool
     var toolbarHeight: CGFloat
     var toolbar: Toolbar
-    var content: (CGSize) -> Content
+    var content: (Bool, CGSize) -> Content
 
     /// Set fixed toolbar height for view.
     /// Defaults to 48pt.
@@ -27,30 +27,22 @@ where Content: View, Toolbar: View
 
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                VStack(spacing: 0) {
-                    content(
-                        (
-                            isKeyboardUp ?
-                            CGSize(
-                                width: geometry.size.width,
-                                height: geometry.size.height - toolbarHeight
-                            ) :
-                            geometry.size
-                         )
-                    )
-                }
-                .padding(.bottom, isKeyboardUp ? toolbarHeight : 0)
-                VStack(spacing: 0) {
-                    Spacer()
+            VStack(spacing: 0) {
+                content(
+                    isKeyboardUp,
+                    (
+                        isKeyboardUp ?
+                        CGSize(
+                            width: geometry.size.width,
+                            height: geometry.size.height - toolbarHeight
+                        ) :
+                        geometry.size
+                     )
+                )
+                if isKeyboardUp {
                     toolbar
                         .frame(height: toolbarHeight)
-                        .opacity(isKeyboardUp ? 1 : 0)
-                        .offset(
-                            x: 0,
-                            y: isKeyboardUp ? 0 : toolbarHeight
-                        )
-                        .animation(.default, value: isKeyboardUp)
+                        .transition(.opacity)
                 }
             }
         }
