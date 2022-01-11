@@ -15,8 +15,20 @@ struct AppNavigationView: View {
             VStack(spacing: 0) {
                 VStack {
                     List(store.state.recent) { entry in
-                        EntryItemView(entry: entry)
+                        Button(
+                            action: {
+                                store.send(
+                                    action: .commit(
+                                        query: entry.title,
+                                        slug: entry.slug
+                                    )
+                                )
+                            }
+                        ) {
+                            EntryItemView(entry: entry)
+                        }
                     }
+                    .listStyle(.plain)
                 }
                 .padding()
                 .background(Color.background)
