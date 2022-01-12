@@ -68,9 +68,6 @@ struct DetailView: View {
                 }
             )
         }
-        .background(
-            Color.background
-        )
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 if focus == .editor {
