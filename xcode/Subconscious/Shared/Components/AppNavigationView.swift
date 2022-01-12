@@ -13,14 +13,22 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                ScrollView {
-                    VStack {
-                        HStack {
-                            Text("Todo")
-                            Spacer()
+                List(store.state.recent) { entry in
+                    Button(
+                        action: {
+                            store.send(
+                                action: .commit(
+                                    query: entry.title,
+                                    slug: entry.slug
+                                )
+                            )
                         }
-                    }.padding()
-                }.background(Color.background)
+                    ) {
+                        EntryRow(entry: entry)
+                            .padding(.vertical, AppTheme.unit2)
+                    }
+                }
+                .listStyle(.plain)
                 NavigationLink(
                     isActive: store.binding(
                         get: \.isDetailShowing,
@@ -96,7 +104,12 @@ struct AppNavigationView: View {
                 )
             }
             .navigationTitle("Ideas")
-            .background(Color.background)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItemGroup(placement: .principal) {
+                    Text("Ideas").bold()
+                }
+            }
         }
     }
 }

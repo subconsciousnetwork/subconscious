@@ -14,7 +14,7 @@ struct DetailView: View {
     @Binding var isLinkSheetPresented: Bool
     @Binding var linkSearchText: String
     @Binding var linkSuggestions: [Suggestion]
-    var backlinks: [SubtextFile]
+    var backlinks: [EntryStub]
     var onDone: () -> Void
     var onEditorLink: (
         URL,
@@ -68,9 +68,6 @@ struct DetailView: View {
                 }
             )
         }
-        .background(
-            Color.background
-        )
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 if focus == .editor {
@@ -80,6 +77,7 @@ struct DetailView: View {
                             Text("Save").bold()
                         }
                     )
+                    .foregroundColor(.buttonText)
                     .buttonStyle(.plain)
                 } else {
                     EmptyView()

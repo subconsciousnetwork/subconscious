@@ -8,10 +8,10 @@
 import Foundation
 
 enum Suggestion: Hashable, CustomStringConvertible {
-    case entry(Stub)
-    case search(Stub)
+    case entry(EntryLink)
+    case search(EntryLink)
 
-    var stub: Stub {
+    var stub: EntryLink {
         switch self {
         case let .entry(stub):
             return stub

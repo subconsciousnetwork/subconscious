@@ -1,5 +1,5 @@
 //
-//  Stub.swift
+//  EntryLink.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 10/19/21.
@@ -7,9 +7,9 @@
 
 import Foundation
 
-/// A Stub is a model that contains a short description of a note
+/// A EntryLink is a model that contains a title and slug description of a note
 /// suitable for list views.
-struct Stub: Hashable, Identifiable {
+struct EntryLink: Hashable, Identifiable {
     var slug: String
     var title: String
 
