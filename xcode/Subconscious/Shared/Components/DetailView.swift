@@ -87,27 +87,28 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button(
-                    action: {
-                        dismiss()
+                if focus != .editor {
+                    Button(
+                        action: {
+                            dismiss()
+                        }
+                    ) {
+                        Label("Ideas", systemImage: "chevron.backward")
+                            .labelStyle(BackLabelStyle())
                     }
-                ) {
-                    Label("Ideas", systemImage: "chevron.backward")
-                        .labelStyle(BackLabelStyle())
+                    .transition(.opacity)
                 }
             }
             ToolbarItem(placement: .confirmationAction) {
                 if focus == .editor {
                     Button(
-                        action: onDone,
-                        label: {
-                            Text("Save").bold()
-                        }
-                    )
+                        action: onDone
+                    ) {
+                        Text("Save").bold()
+                    }
                     .foregroundColor(.buttonText)
                     .buttonStyle(.plain)
-                } else {
-                    EmptyView()
+                    .transition(.opacity)
                 }
             }
         }
