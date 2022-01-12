@@ -11,8 +11,16 @@ struct DetailView: View {
     /// Access dismiss function from environment. This lets us drive the custom
     /// back button behavior.
     /// See https://developer.apple.com/documentation/swiftui/dismissaction.
-    /// 2021-01-12 Gordon Brander
+    /// 2022-01-12 Gordon Brander
     @Environment(\.dismiss) var dismiss
+    /// Track gesture state.
+    //  NOTE: It's unclear if we can easily integrate this with app state.
+    //  For now, we'll stick to the happy path of keeping it internal
+    //  to the view.
+    //  2022-01-12 Gordon Brander
+    //  TODO: figure out how to bring back swipe animation
+    //  2022-01-12 Gordon Brander
+    @GestureState private var dismissDragOffset = CGSize.zero
     /// If we have an entryURL, we're ready to edit.
     /// If we don't, we have nothing to edit.
     var entryURL: URL?
@@ -82,6 +90,16 @@ struct DetailView: View {
                 }
             }
         }
+        .gesture(
+            DragGesture(minimumDistance: 100)
+                .updating(
+                    $dismissDragOffset
+                ) { current, gesture, transaction in
+                    if focus != .editor && current.startLocation.x < 20 {
+                        dismiss()
+                    }
+                }
+        )
         .navigationTitle("")
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
