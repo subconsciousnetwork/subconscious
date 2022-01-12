@@ -77,6 +77,7 @@ struct DetailView: View {
                             Text("Save").bold()
                         }
                     )
+                    .foregroundColor(.buttonText)
                     .buttonStyle(.plain)
                 } else {
                     EmptyView()

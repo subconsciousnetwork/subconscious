@@ -105,6 +105,12 @@ struct AppNavigationView: View {
                 )
             }
             .navigationTitle("Ideas")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItemGroup(placement: .principal) {
+                    Text("Ideas").bold()
+                }
+            }
         }
     }
 }
