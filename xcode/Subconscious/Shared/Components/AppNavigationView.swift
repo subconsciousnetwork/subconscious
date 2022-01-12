@@ -13,8 +13,8 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                VStack {
-                    List(store.state.recent) { entry in
+                List(store.state.recent) { entry in
+                    VStack {
                         Button(
                             action: {
                                 store.send(
@@ -28,10 +28,8 @@ struct AppNavigationView: View {
                             EntryItemView(entry: entry)
                         }
                     }
-                    .listStyle(.plain)
                 }
-                .padding()
-                .background(Color.background)
+                .listStyle(.plain)
                 NavigationLink(
                     isActive: store.binding(
                         get: \.isDetailShowing,
@@ -107,7 +105,6 @@ struct AppNavigationView: View {
                 )
             }
             .navigationTitle("Ideas")
-            .background(Color.background)
         }
     }
 }
