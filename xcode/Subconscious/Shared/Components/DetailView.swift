@@ -92,7 +92,8 @@ struct DetailView: View {
                         dismiss()
                     }
                 ) {
-                    Text("Back")
+                    Label("Ideas", systemImage: "chevron.backward")
+                        .labelStyle(BackLabelStyle())
                 }
             }
             ToolbarItem(placement: .confirmationAction) {

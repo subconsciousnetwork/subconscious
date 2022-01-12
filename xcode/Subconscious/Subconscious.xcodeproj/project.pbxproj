@@ -78,6 +78,8 @@
 		B8AC648A278F53920099E96B /* EntryStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC6489278F53920099E96B /* EntryStub.swift */; };
 		B8AC648C278F757B0099E96B /* ProgressScrim.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC648B278F757B0099E96B /* ProgressScrim.swift */; };
 		B8AC648D278F757B0099E96B /* ProgressScrim.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC648B278F757B0099E96B /* ProgressScrim.swift */; };
+		B8AC648F278F7E7B0099E96B /* BackLabelStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */; };
+		B8AC6490278F7E7B0099E96B /* BackLabelStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */; };
 		B8AE34A7276A885300777FF0 /* TextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */; };
 		B8AE34A8276A885300777FF0 /* TextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */; };
 		B8AE34AA276A986000777FF0 /* PlaceholderTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */; };
@@ -184,6 +186,7 @@
 		B88C97A12764270000B27DF0 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		B8AC6489278F53920099E96B /* EntryStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryStub.swift; sourceTree = "<group>"; };
 		B8AC648B278F757B0099E96B /* ProgressScrim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressScrim.swift; sourceTree = "<group>"; };
+		B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackLabelStyle.swift; sourceTree = "<group>"; };
 		B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderTextView.swift; sourceTree = "<group>"; };
 		B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButtonStyle.swift; sourceTree = "<group>"; };
@@ -408,6 +411,7 @@
 		B8EC568426F41A2C00AC64E5 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B82FD4552730A62C002CB641 /* EntryRow.swift */,
 				B83E91D627692EC600045C6A /* FABButtonStyle.swift */,
 				B8E4B6F126F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift */,
@@ -659,6 +663,7 @@
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */,
+				B8AC648F278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
 				B83E91D727692EC600045C6A /* FABButtonStyle.swift in Sources */,
 				B8EC568C26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
 				B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
@@ -671,6 +676,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B82C3A6626F5796300833CC8 /* OptionalUtilities.swift in Sources */,
+				B8AC6490278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
 				B8EDB807270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
 				B81EBB0A27025C1500B87594 /* TranscludeButtonStyle.swift in Sources */,
 				B82C3A6326F576FC00833CC8 /* URLUtilities.swift in Sources */,
