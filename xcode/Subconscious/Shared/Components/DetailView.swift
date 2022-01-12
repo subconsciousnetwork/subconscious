@@ -104,7 +104,7 @@ struct DetailView: View {
                     Button(
                         action: onDone
                     ) {
-                        Text("Save").bold()
+                        Text("Done").bold()
                     }
                     .foregroundColor(.buttonText)
                     .buttonStyle(.plain)
