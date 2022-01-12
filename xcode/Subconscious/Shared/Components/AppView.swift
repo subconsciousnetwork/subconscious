@@ -565,15 +565,7 @@ struct AppView: View {
                     .zIndex(3)
                 }
             } else {
-                VStack(alignment: .center) {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                        Spacer()
-                    }
-                    Spacer()
-                }
+                ProgressScrim()
             }
         }
         .font(Font.appText)
