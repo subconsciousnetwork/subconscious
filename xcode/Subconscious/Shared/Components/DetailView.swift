@@ -14,7 +14,7 @@ struct DetailView: View {
     @Binding var isLinkSheetPresented: Bool
     @Binding var linkSearchText: String
     @Binding var linkSuggestions: [Suggestion]
-    var backlinks: [SubtextFile]
+    var backlinks: [EntryStub]
     var onDone: () -> Void
     var onEditorLink: (
         URL,

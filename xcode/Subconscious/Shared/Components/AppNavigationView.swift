@@ -24,7 +24,7 @@ struct AppNavigationView: View {
                             )
                         }
                     ) {
-                        EntryItemView(entry: entry)
+                        EntryRow(entry: entry)
                             .padding(.vertical, AppTheme.unit2)
                     }
                 }

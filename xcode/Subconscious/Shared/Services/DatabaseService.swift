@@ -190,13 +190,13 @@ struct DatabaseService {
     }
 
     /// List recent entries
-    func listRecentEntries() -> AnyPublisher<[SubtextFile], Error> {
+    func listRecentEntries() -> AnyPublisher<[EntryStub], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             // Use stale body content from db. It's faster, and these
             // are read-only teaser views.
             try database.execute(
                 sql: """
-                SELECT slug, body
+                SELECT slug, title, body
                 FROM entry_search
                 ORDER BY modified DESC
                 LIMIT 1000
@@ -204,13 +204,14 @@ struct DatabaseService {
             ).compactMap({ row in
                 if
                     let slug: String = row.get(0),
-                    let content: String = row.get(1)
+                    let title: String = row.get(1),
+                    let content: String = row.get(2)
                 {
-                    return SubtextFile(
-                        url: documentUrl.appendingFilename(
-                            name: slug, ext: "subtext"
-                        ),
-                        content: content
+                    let subtext = Subtext(markup: content)
+                    return EntryStub(
+                        slug: slug,
+                        title: title,
+                        excerpt: subtext.excerpt()
                     )
                 }
                 return nil
@@ -219,7 +220,7 @@ struct DatabaseService {
     }
 
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
-        let results: [Stub] = try database.execute(
+        let results: [EntryLink] = try database.execute(
             sql: """
             SELECT slug, title
             FROM entry
@@ -231,7 +232,7 @@ struct DatabaseService {
                 let slug: String = row.get(0),
                 let title: String = row.get(1)
             {
-                return Stub(
+                return EntryLink(
                     slug: slug,
                     title: title
                 )
@@ -239,7 +240,7 @@ struct DatabaseService {
             return nil
         })
 
-        let queries: [Stub] = try database.execute(
+        let queries: [EntryLink] = try database.execute(
             sql: """
             SELECT DISTINCT search_history.query
             FROM search_history
@@ -248,7 +249,7 @@ struct DatabaseService {
             """
         ).compactMap({ row in
             if let title: String = row.get(0) {
-                return Stub(title: title)
+                return EntryLink(title: title)
             }
             return nil
         })
@@ -268,7 +269,7 @@ struct DatabaseService {
 
         // Select the first 560 characters of the body.
         // We'll use this excerpted text to derive a title.
-        let results: [Stub] = try database.execute(
+        let results: [EntryLink] = try database.execute(
             sql: """
             SELECT slug, title
             FROM entry_search
@@ -284,7 +285,7 @@ struct DatabaseService {
                 let slug: String = row.get(0),
                 let title: String = row.get(1)
             {
-                return Stub(
+                return EntryLink(
                     slug: slug,
                     title: title
                 )
@@ -294,7 +295,7 @@ struct DatabaseService {
 
         let resultSlugs = Set(results.map(\.slug))
 
-        let queries: [Stub] = try database.execute(
+        let queries: [EntryLink] = try database.execute(
             sql: """
             SELECT DISTINCT query
             FROM search_history
@@ -307,7 +308,7 @@ struct DatabaseService {
             ]
         ).compactMap({ row in
             if let title: String = row.get(0) {
-                return Stub(title: title)
+                return EntryLink(title: title)
             }
             return nil
         }).filter({ stub in
@@ -319,7 +320,7 @@ struct DatabaseService {
         if !resultSlugs.contains(slug) {
             suggestions.append(
                 .search(
-                    Stub(title: query)
+                    EntryLink(title: query)
                 )
             )
         }
@@ -390,9 +391,9 @@ struct DatabaseService {
 
             // Get backlinks.
             // Use content indexed in database, even though it might be stale.
-            let backlinks: [SubtextFile] = try database.execute(
+            let backlinks: [EntryStub] = try database.execute(
                 sql: """
-                SELECT slug, body
+                SELECT slug, title, body
                 FROM entry_search
                 WHERE slug != ? AND entry_search.body MATCH ?
                 ORDER BY rank
@@ -405,13 +406,14 @@ struct DatabaseService {
             ).compactMap({ row in
                 if
                     let slug: String = row.get(0),
-                    let content: String = row.get(1)
+                    let title: String = row.get(1),
+                    let content: String = row.get(2)
                 {
-                    return SubtextFile(
-                        url: documentUrl.appendingFilename(
-                            name: slug, ext: "subtext"
-                        ),
-                        content: content
+                    let subtext = Subtext(markup: content)
+                    return EntryStub(
+                        slug: slug,
+                        title: title,
+                        excerpt: subtext.excerpt()
                     )
                 }
                 return nil

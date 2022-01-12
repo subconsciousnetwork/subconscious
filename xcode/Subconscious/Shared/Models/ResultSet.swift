@@ -11,5 +11,5 @@ struct ResultSet {
     var query: String = ""
     var slug: String = ""
     var entry: SubtextFile? = nil
-    var backlinks: [SubtextFile] = []
+    var backlinks: [EntryStub] = []
 }

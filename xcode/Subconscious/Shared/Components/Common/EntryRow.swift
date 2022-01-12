@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-/// An entryview suitable for use in lists.
+/// An EntryRow suitable for use in lists.
 /// Provides a preview/excerpt of the entry.
-struct EntryItemView: View {
-    var entry: SubtextFile
+struct EntryRow: View {
+    var entry: EntryStub
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {

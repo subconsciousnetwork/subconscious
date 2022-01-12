@@ -29,7 +29,7 @@ enum AppAction {
 
     // List entries
     case listRecent
-    case setRecent([SubtextFile])
+    case setRecent([EntryStub])
     case listRecentFailure(String)
 
     // Search
@@ -100,7 +100,7 @@ struct AppModel: Updatable {
     var isDetailShowing = false
 
     // Recent entries
-    var recent: [SubtextFile] = []
+    var recent: [EntryStub] = []
 
     // Live search bar text
     var searchText = ""
@@ -122,7 +122,7 @@ struct AppModel: Updatable {
     // The URL for the currently active entry
     var entryURL: URL?
     // Backlinks to the currently active entry
-    var backlinks: [SubtextFile] = []
+    var backlinks: [EntryStub] = []
 
     // Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
