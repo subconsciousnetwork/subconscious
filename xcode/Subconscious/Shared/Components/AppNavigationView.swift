@@ -13,19 +13,23 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                List(store.state.recent) { entry in
-                    Button(
-                        action: {
-                            store.send(
-                                action: .commit(
-                                    query: entry.title,
-                                    slug: entry.slug
+                List {
+                    ForEach(store.state.recent) { entry in
+                        Button(
+                            action: {
+                                store.send(
+                                    action: .commit(
+                                        query: entry.title,
+                                        slug: entry.slug
+                                    )
                                 )
-                            )
+                            }
+                        ) {
+                            EntryRow(entry: entry)
+                                .padding(.vertical, AppTheme.unit2)
                         }
-                    ) {
-                        EntryRow(entry: entry)
-                            .padding(.vertical, AppTheme.unit2)
+                    }.onDelete { item in
+                        print("Deleted \(item)")
                     }
                 }
                 .listStyle(.plain)
