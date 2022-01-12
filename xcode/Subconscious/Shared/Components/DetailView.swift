@@ -107,7 +107,8 @@ struct DetailView: View {
                         Text("Done").bold()
                     }
                     .foregroundColor(.buttonText)
-                    .buttonStyle(.plain)
+                    .buttonStyle(.bordered)
+                    .buttonBorderShape(.capsule)
                     .transition(.opacity)
                 }
             }
