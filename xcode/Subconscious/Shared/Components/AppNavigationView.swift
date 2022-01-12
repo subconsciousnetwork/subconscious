@@ -14,19 +14,18 @@ struct AppNavigationView: View {
         NavigationView {
             VStack(spacing: 0) {
                 List(store.state.recent) { entry in
-                    VStack {
-                        Button(
-                            action: {
-                                store.send(
-                                    action: .commit(
-                                        query: entry.title,
-                                        slug: entry.slug
-                                    )
+                    Button(
+                        action: {
+                            store.send(
+                                action: .commit(
+                                    query: entry.title,
+                                    slug: entry.slug
                                 )
-                            }
-                        ) {
-                            EntryItemView(entry: entry)
+                            )
                         }
+                    ) {
+                        EntryItemView(entry: entry)
+                            .padding(.vertical, AppTheme.unit2)
                     }
                 }
                 .listStyle(.plain)
