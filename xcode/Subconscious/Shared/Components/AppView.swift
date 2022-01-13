@@ -32,6 +32,13 @@ enum AppAction {
     case setRecent([EntryStub])
     case listRecentFailure(String)
 
+    // Delete entries
+    case confirmDelete(String)
+    case setConfirmDeleteShowing(Bool)
+    case deleteEntry(String)
+    case deleteEntrySuccess(String)
+    case deleteEntryFailure(String)
+
     // Search
     case setSearch(String)
     case showSearch
@@ -54,7 +61,7 @@ enum AppAction {
 
     // Link suggestions
     case setLinkSheetPresented(Bool)
-    case setLinkSearchText(String)
+    case setLinkSearch(String)
     case commitLinkSearch(String)
     case setLinkSuggestions([Suggestion])
     case linkSuggestionsFailure(String)
@@ -94,43 +101,49 @@ struct AppModel: Updatable {
     /// What is focused? (nil means nothing is focused)
     var focus: Focus? = nil
 
-    // Is database connected and migrated?
+    /// Is database connected and migrated?
     var isDatabaseReady = false
-    // Is the detail view (edit and details for an entry) showing?
+    /// Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
 
-    // Recent entries
+    //  Recent entries
     var recent: [EntryStub] = []
 
-    // Live search bar text
+    //  Note deletion action sheet
+    /// Delete confirmation action sheet
+    var entryToDelete: String? = nil
+    /// Delete confirmation action sheet
+    var isConfirmDeleteShowing = false
+
+    /// Live search bar text
     var searchText = ""
     var isSearchShowing = false
 
-    // Committed search bar query text
+    /// Committed search bar query text
     var query = ""
-    // Slug committed during search
+    /// Slug committed during search
     var slug = ""
 
-    // Main search suggestions
+    /// Main search suggestions
     var suggestions: [Suggestion] = []
 
     // Editor
     var editorAttributedText = NSAttributedString("")
-    // Editor selection corresponds with `editorAttributedText`
+    /// Editor selection corresponds with `editorAttributedText`
     var editorSelection = NSMakeRange(0, 0)
 
-    // The URL for the currently active entry
+    /// The URL for the currently active entry
     var entryURL: URL?
-    // Backlinks to the currently active entry
+    /// Backlinks to the currently active entry
     var backlinks: [EntryStub] = []
 
-    // Link suggestions for modal and bar in edit mode
+    /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
     var linkSearchText = ""
     var linkSearchQuery = ""
     var linkSuggestions: [Suggestion] = []
 
-    // Set all editor properties to initial values
+    /// Set all editor properties to initial values
     static func resetEditor(_ model: inout Self) {
         model.editorAttributedText = NSAttributedString("")
         model.editorSelection = NSMakeRange(0, 0)
@@ -218,7 +231,7 @@ struct AppModel: Updatable {
                     Just(.syncFailure(error.localizedDescription))
                 })
             let suggestions = Just(AppAction.setSearch(""))
-            let linkSuggestions = Just(AppAction.setLinkSearchText(""))
+            let linkSuggestions = Just(AppAction.setLinkSearch(""))
             let recent = Just(AppAction.listRecent)
             let fx = Publishers.Merge4(
                 suggestions,
@@ -286,6 +299,57 @@ struct AppModel: Updatable {
                 "Failed to list recent entries: \(error)"
             )
             return (self, Empty().eraseToAnyPublisher())
+        case let .confirmDelete(slug):
+            var model = self
+            model.entryToDelete = slug
+            model.isConfirmDeleteShowing = true
+            return (model, Empty().eraseToAnyPublisher())
+        case let .setConfirmDeleteShowing(isShowing):
+            var model = self
+            model.isConfirmDeleteShowing = isShowing
+            // Reset entry to delete if we're dismissing the confirmation
+            // dialog.
+            if isShowing == false {
+                model.entryToDelete = nil
+            }
+            return (model, Empty().eraseToAnyPublisher())
+        case let .deleteEntry(slug):
+            var model = self
+            if let index = model.recent.firstIndex(
+                where: { stub in stub.id == slug }
+            ) {
+                model.recent.remove(at: index)
+                let fx = AppEnvironment.database.deleteEntry(slug: slug)
+                    .map({ _ in
+                        AppAction.deleteEntrySuccess(slug)
+                    })
+                    .catch({ error in
+                        Just(
+                            AppAction.deleteEntryFailure(
+                                error.localizedDescription
+                            )
+                        )
+                    })
+                    .eraseToAnyPublisher()
+                return (model, fx)
+            } else {
+                AppEnvironment.logger.log(
+                    "Failed to delete entry. No such id: \(slug)"
+                )
+                return (model, Empty().eraseToAnyPublisher())
+            }
+        case let .deleteEntrySuccess(slug):
+            AppEnvironment.logger.log("Deleted entry: \(slug)")
+            //  Refresh lists in search fields after delete.
+            //  This ensures they don't show the deleted entry.
+            let fx = Publishers.Merge(
+                Just(AppAction.setSearch("")),
+                Just(AppAction.setLinkSearch(""))
+            ).eraseToAnyPublisher()
+            return (self, fx)
+        case let .deleteEntryFailure(error):
+            AppEnvironment.logger.log("Failed to delete entry: \(error)")
+            return (self, Empty().eraseToAnyPublisher())
         case let .setEditorAttributedText(attributedText):
             var model = self
             // Render attributes from markup if text has changed
@@ -311,13 +375,15 @@ struct AppModel: Updatable {
         case let .setSearch(text):
             var model = self
             model.searchText = text
-            let fx = AppEnvironment.database.searchSuggestions(
-                query: text
-            ).map({ suggestions in
-                AppAction.setSuggestions(suggestions)
-            }).catch({ error in
-                Just(.suggestionsFailure(error.localizedDescription))
-            }).eraseToAnyPublisher()
+            let fx = AppEnvironment.database
+                .searchSuggestions(query: text)
+                .map({ suggestions in
+                    AppAction.setSuggestions(suggestions)
+                })
+                .catch({ error in
+                    Just(.suggestionsFailure(error.localizedDescription))
+                })
+                .eraseToAnyPublisher()
             return (model, fx)
         case .showSearch:
             var model = self
@@ -386,7 +452,7 @@ struct AppModel: Updatable {
             model.focus = isPresented ? .linkSearch : nil
             model.isLinkSheetPresented = isPresented
             return (model, Empty().eraseToAnyPublisher())
-        case let .setLinkSearchText(text):
+        case let .setLinkSearch(text):
             var model = self
             model.linkSearchText = text
 

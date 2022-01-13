@@ -13,22 +13,60 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                List(store.state.recent) { entry in
-                    Button(
-                        action: {
-                            store.send(
-                                action: .commit(
-                                    query: entry.title,
-                                    slug: entry.slug
+                List {
+                    ForEach(store.state.recent) { entry in
+                        Button(
+                            action: {
+                                store.send(
+                                    action: .commit(
+                                        query: entry.title,
+                                        slug: entry.slug
+                                    )
                                 )
-                            )
+                            }
+                        ) {
+                            EntryRow(entry: entry)
+                                .padding(.vertical, AppTheme.unit2)
                         }
-                    ) {
-                        EntryRow(entry: entry)
-                            .padding(.vertical, AppTheme.unit2)
+                        .swipeActions(
+                            edge: .trailing,
+                            allowsFullSwipe: false
+                        ) {
+                            Button(
+                                role: .destructive,
+                                action: {
+                                    store.send(
+                                        action: .confirmDelete(entry.slug)
+                                    )
+                                }
+                            ) {
+                                Text("Delete")
+                            }
+                        }
                     }
                 }
                 .listStyle(.plain)
+                .confirmationDialog(
+                    "Are you sure?",
+                    isPresented: store.binding(
+                        get: \.isConfirmDeleteShowing,
+                        tag: AppAction.setConfirmDeleteShowing
+                    ),
+                    presenting: store.state.entryToDelete
+                ) { slug in
+                    Button(
+                        role: .destructive,
+                        action: {
+                            withAnimation {
+                                store.send(
+                                    action: .deleteEntry(slug)
+                                )
+                            }
+                        }
+                    ) {
+                        Text("Delete Immediately")
+                    }
+                }
                 NavigationLink(
                     isActive: store.binding(
                         get: \.isDetailShowing,
@@ -57,7 +95,7 @@ struct AppNavigationView: View {
                             ),
                             linkSearchText: store.binding(
                                 get: \.linkSearchText,
-                                tag: AppAction.setLinkSearchText
+                                tag: AppAction.setLinkSearch
                             ),
                             linkSuggestions: store.binding(
                                 get: \.linkSuggestions,
