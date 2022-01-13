@@ -102,12 +102,8 @@ struct DatabaseService {
                     }
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly:
-                    if
-                        let right = change.right,
-                        let slug = right.url.relativizingPath(
-                            relativeTo: documentUrl
-                        )
-                    {
+                    if let right = change.right {
+                        let slug = right.url.stem
                         try deleteEntryFromDatabase(slug: slug)
                     }
                 // .same = no change. Do nothing.
