@@ -33,7 +33,7 @@ enum AppAction {
     case listRecentFailure(String)
 
     // Delete entries
-    case deleteMany(IndexSet)
+    case deleteEntry(String)
 
     // Search
     case setSearch(String)
@@ -289,11 +289,22 @@ struct AppModel: Updatable {
                 "Failed to list recent entries: \(error)"
             )
             return (self, Empty().eraseToAnyPublisher())
-        case let .deleteMany(indexes):
-            AppEnvironment.logger.log("Deleting \(indexes)")
+        case let .deleteEntry(id):
             var model = self
-            model.recent.remove(atOffsets: indexes)
-            return (model, Empty().eraseToAnyPublisher())
+            if let index = model.recent.firstIndex(where: { stub in
+                stub.id == id
+            }) {
+                AppEnvironment.logger.log(
+                    "Delete entry: \(id)"
+                )
+                model.recent.remove(at: index)
+                return (model, Empty().eraseToAnyPublisher())
+            } else {
+                AppEnvironment.logger.log(
+                    "Failed to delete entry. No such id: \(id)"
+                )
+                return (model, Empty().eraseToAnyPublisher())
+            }
         case let .setEditorAttributedText(attributedText):
             var model = self
             // Render attributes from markup if text has changed

@@ -28,9 +28,20 @@ struct AppNavigationView: View {
                             EntryRow(entry: entry)
                                 .padding(.vertical, AppTheme.unit2)
                         }
-                    }
-                    .onDelete { indexes in
-                        store.send(action: .deleteMany(indexes))
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(
+                                role: .destructive,
+                                action: {
+                                    withAnimation {
+                                        store.send(
+                                            action: .deleteEntry(entry.slug)
+                                        )
+                                    }
+                                }
+                            ) {
+                                Text("Delete")
+                            }
+                        }
                     }
                 }
                 .listStyle(.plain)
