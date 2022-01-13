@@ -34,6 +34,8 @@ enum AppAction {
 
     // Delete entries
     case deleteEntry(String)
+    case deleteEntrySuccess(String)
+    case deleteEntryFailure(String)
 
     // Search
     case setSearch(String)
@@ -289,22 +291,37 @@ struct AppModel: Updatable {
                 "Failed to list recent entries: \(error)"
             )
             return (self, Empty().eraseToAnyPublisher())
-        case let .deleteEntry(id):
+        case let .deleteEntry(slug):
             var model = self
-            if let index = model.recent.firstIndex(where: { stub in
-                stub.id == id
-            }) {
-                AppEnvironment.logger.log(
-                    "Delete entry: \(id)"
-                )
+            if let index = model.recent.firstIndex(
+                where: { stub in stub.id == slug }
+            ) {
                 model.recent.remove(at: index)
-                return (model, Empty().eraseToAnyPublisher())
+                let fx = AppEnvironment.database.deleteEntry(slug: slug)
+                    .map({ _ in
+                        AppAction.deleteEntrySuccess(slug)
+                    })
+                    .catch({ error in
+                        Just(
+                            AppAction.deleteEntryFailure(
+                                error.localizedDescription
+                            )
+                        )
+                    })
+                    .eraseToAnyPublisher()
+                return (model, fx)
             } else {
                 AppEnvironment.logger.log(
-                    "Failed to delete entry. No such id: \(id)"
+                    "Failed to delete entry. No such id: \(slug)"
                 )
                 return (model, Empty().eraseToAnyPublisher())
             }
+        case let .deleteEntrySuccess(slug):
+            AppEnvironment.logger.log("Deleted entry: \(slug)")
+            return (self, Empty().eraseToAnyPublisher())
+        case let .deleteEntryFailure(error):
+            AppEnvironment.logger.log("Failed to delete entry: \(error)")
+            return (self, Empty().eraseToAnyPublisher())
         case let .setEditorAttributedText(attributedText):
             var model = self
             // Render attributes from markup if text has changed
