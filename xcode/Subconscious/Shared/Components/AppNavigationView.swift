@@ -28,8 +28,9 @@ struct AppNavigationView: View {
                             EntryRow(entry: entry)
                                 .padding(.vertical, AppTheme.unit2)
                         }
-                    }.onDelete { item in
-                        print("Deleted \(item)")
+                    }
+                    .onDelete { indexes in
+                        store.send(action: .deleteMany(indexes))
                     }
                 }
                 .listStyle(.plain)
