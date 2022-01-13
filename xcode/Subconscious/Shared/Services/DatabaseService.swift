@@ -102,8 +102,13 @@ struct DatabaseService {
                     }
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly:
-                    if let right = change.right {
-                        try deleteEntryFromDatabase(url: right.url)
+                    if
+                        let right = change.right,
+                        let slug = right.url.relativizingPath(
+                            relativeTo: documentUrl
+                        )
+                    {
+                        try deleteEntryFromDatabase(slug: slug)
                     }
                 // .same = no change. Do nothing.
                 case .same:
@@ -176,17 +181,30 @@ struct DatabaseService {
         }
     }
 
-    private func deleteEntryFromDatabase(url: URL) throws {
-        let path = try url.relativizingPath(relativeTo: documentUrl)
-            .unwrap(or: DatabaseServiceError.pathNotInFilePath)
+    /// Delete entry from database
+    private func deleteEntryFromDatabase(slug: String) throws {
         try database.execute(
             sql: """
-            DELETE FROM entry WHERE path = ?
+            DELETE FROM entry WHERE slug = ?
             """,
             parameters: [
-                .text(path)
+                .text(slug)
             ]
         )
+    }
+
+    /// Delete entry from file system
+    private func deleteEntryFile(slug: String) throws {
+        let url = documentUrl.appendingFilename(name: slug, ext: "subtext")
+        try FileManager.default.removeItem(at: url)
+    }
+
+    /// Delete entry from file system and database
+    func deleteEntry(slug: String) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async(qos: .background) {
+            try deleteEntryFile(slug: slug)
+            try deleteEntryFromDatabase(slug: slug)
+        }
     }
 
     /// List recent entries
