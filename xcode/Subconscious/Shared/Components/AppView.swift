@@ -570,19 +570,22 @@ struct AppView: View {
             Color.background.edgesIgnoringSafeArea(.all)
             if store.state.isDatabaseReady {
                 AppNavigationView(store: store).zIndex(1)
-                Button(
-                    action: {
-                        withAnimation(.easeOut(duration: Duration.fast)) {
-                            store.send(action: .showSearch)
+                if store.state.focus == nil {
+                    Button(
+                        action: {
+                            withAnimation(.easeOut(duration: Duration.fast)) {
+                                store.send(action: .showSearch)
+                            }
+                        },
+                        label: {
+                            Image(systemName: "plus")
                         }
-                    },
-                    label: {
-                        Image(systemName: "plus")
-                    }
-                )
-                .buttonStyle(FABButtonStyle())
-                .padding()
-                .zIndex(2)
+                    )
+                    .buttonStyle(FABButtonStyle())
+                    .padding()
+                    .transition(.opacity)
+                    .zIndex(2)
+                }
                 if store.state.isSearchShowing {
                     SearchView(
                         placeholder: "Search or create...",
