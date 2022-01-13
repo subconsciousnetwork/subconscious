@@ -59,7 +59,7 @@ enum AppAction {
 
     // Link suggestions
     case setLinkSheetPresented(Bool)
-    case setLinkSearchText(String)
+    case setLinkSearch(String)
     case commitLinkSearch(String)
     case setLinkSuggestions([Suggestion])
     case linkSuggestionsFailure(String)
@@ -223,7 +223,7 @@ struct AppModel: Updatable {
                     Just(.syncFailure(error.localizedDescription))
                 })
             let suggestions = Just(AppAction.setSearch(""))
-            let linkSuggestions = Just(AppAction.setLinkSearchText(""))
+            let linkSuggestions = Just(AppAction.setLinkSearch(""))
             let recent = Just(AppAction.listRecent)
             let fx = Publishers.Merge4(
                 suggestions,
@@ -318,7 +318,13 @@ struct AppModel: Updatable {
             }
         case let .deleteEntrySuccess(slug):
             AppEnvironment.logger.log("Deleted entry: \(slug)")
-            return (self, Empty().eraseToAnyPublisher())
+            //  Refresh lists in search fields after delete.
+            //  This ensures they don't show the deleted entry.
+            let fx = Publishers.Merge(
+                Just(AppAction.setSearch("")),
+                Just(AppAction.setLinkSearch(""))
+            ).eraseToAnyPublisher()
+            return (self, fx)
         case let .deleteEntryFailure(error):
             AppEnvironment.logger.log("Failed to delete entry: \(error)")
             return (self, Empty().eraseToAnyPublisher())
@@ -347,13 +353,15 @@ struct AppModel: Updatable {
         case let .setSearch(text):
             var model = self
             model.searchText = text
-            let fx = AppEnvironment.database.searchSuggestions(
-                query: text
-            ).map({ suggestions in
-                AppAction.setSuggestions(suggestions)
-            }).catch({ error in
-                Just(.suggestionsFailure(error.localizedDescription))
-            }).eraseToAnyPublisher()
+            let fx = AppEnvironment.database
+                .searchSuggestions(query: text)
+                .map({ suggestions in
+                    AppAction.setSuggestions(suggestions)
+                })
+                .catch({ error in
+                    Just(.suggestionsFailure(error.localizedDescription))
+                })
+                .eraseToAnyPublisher()
             return (model, fx)
         case .showSearch:
             var model = self
@@ -422,7 +430,7 @@ struct AppModel: Updatable {
             model.focus = isPresented ? .linkSearch : nil
             model.isLinkSheetPresented = isPresented
             return (model, Empty().eraseToAnyPublisher())
-        case let .setLinkSearchText(text):
+        case let .setLinkSearch(text):
             var model = self
             model.linkSearchText = text
 

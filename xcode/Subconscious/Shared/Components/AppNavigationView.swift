@@ -73,7 +73,7 @@ struct AppNavigationView: View {
                             ),
                             linkSearchText: store.binding(
                                 get: \.linkSearchText,
-                                tag: AppAction.setLinkSearchText
+                                tag: AppAction.setLinkSearch
                             ),
                             linkSuggestions: store.binding(
                                 get: \.linkSuggestions,
