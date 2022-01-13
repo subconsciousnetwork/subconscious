@@ -28,15 +28,16 @@ struct AppNavigationView: View {
                             EntryRow(entry: entry)
                                 .padding(.vertical, AppTheme.unit2)
                         }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        .swipeActions(
+                            edge: .trailing,
+                            allowsFullSwipe: false
+                        ) {
                             Button(
                                 role: .destructive,
                                 action: {
-                                    withAnimation {
-                                        store.send(
-                                            action: .deleteEntry(entry.slug)
-                                        )
-                                    }
+                                    store.send(
+                                        action: .confirmDelete(entry.slug)
+                                    )
                                 }
                             ) {
                                 Text("Delete")
@@ -45,6 +46,27 @@ struct AppNavigationView: View {
                     }
                 }
                 .listStyle(.plain)
+                .confirmationDialog(
+                    "Are you sure?",
+                    isPresented: store.binding(
+                        get: \.isConfirmDeleteShowing,
+                        tag: AppAction.setConfirmDeleteShowing
+                    ),
+                    presenting: store.state.entryToDelete
+                ) { slug in
+                    Button(
+                        role: .destructive,
+                        action: {
+                            withAnimation {
+                                store.send(
+                                    action: .deleteEntry(slug)
+                                )
+                            }
+                        }
+                    ) {
+                        Text("Delete Immediately")
+                    }
+                }
                 NavigationLink(
                     isActive: store.binding(
                         get: \.isDetailShowing,
