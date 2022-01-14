@@ -29,7 +29,9 @@ import Combine
 import SwiftUI
 import os
 
-/// An Updatable is a type that knows how create updates and effects in response to actions.
+/// An Updatable is a type that knows how create updates and optional effects
+/// in response to actions.
+///
 /// Effects are Combine Publishers that produce Actions and never fail.
 public protocol Updatable {
     associatedtype Action
@@ -38,22 +40,25 @@ public protocol Updatable {
 
 /// Store is a source of truth for a state.
 ///
-/// Store is an `ObservableObject`. You can use it in a view via `@ObservedObject`
-/// or `@StateObject` to power view rendering.
+/// Store is an `ObservableObject`. You can use it in a view via
+/// `@ObservedObject` or `@StateObject` to power view rendering.
 ///
-/// Store has a `@Published` `state` that conforms to`Updatable` (typically a struct).
-/// All updates and effects to this state happen through actions sent to `store.send`.
+/// Store has a `@Published` `state` that conforms to`Updatable`
+/// (typically a struct). All updates and effects to this state happen through
+/// actions sent to `store.send`.
 ///
-/// Store is meant to be used as part of a single app-wide, or major-view-wide component.
-/// Store deliberately does not solve for nested components or nested stores. Following Elm,
-/// deeply nested components are avoided. Instead, an app should use a single store,
-/// or perhaps one store per major view. Components should not have to communicate with
-/// each other. If nested components do have to communicate, it is probably a sign they
-/// should be the same component with a shared store.
+/// Store is meant to be used as part of a single app-wide, or
+/// major-view-wide component. Store deliberately does not solve for nested
+/// components or nested stores. Following Elm, deeply nested components
+/// are avoided. Instead, an app should use a single store, or perhaps one
+/// store per major view. Components should not have to communicate with
+/// each other. If nested components do have to communicate, it is
+/// probably a sign they should be the same component with a shared store.
 ///
-/// Instead of decomposing an app into components, we decompose the app into views that share the
-/// same store and actions. Sub-views should be either stateless, consuming bare properties
-/// of `store.state`, or take bindings, which can be created with `store.binding`.
+/// Instead of decomposing an app into components, we decompose the app into
+/// views that share the same store and actions. Sub-views should be either
+/// stateless, consuming bare properties of `store.state`, or take bindings,
+/// which can be created with `store.binding`.
 ///
 /// See https://guide.elm-lang.org/architecture/
 /// and https://guide.elm-lang.org/webapps/structure.html
@@ -83,7 +88,8 @@ where State: Updatable
 
     /// Create a binding that can update the store.
     /// Sets send actions to the store, rather than setting values directly.
-    /// Optional `animation` parameter allows you to trigger an animation for binding sets.
+    /// Optional `animation` parameter allows you to trigger an animation
+    /// for binding sets.
     public func binding<Value>(
         get: @escaping (State) -> Value,
         tag: @escaping (Value) -> State.Action,
