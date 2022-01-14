@@ -116,6 +116,303 @@ struct AppUpdate {
         return Change(state: state, fx: fx)
     }
 
+    private static func openEditorURL(
+        state: AppModel,
+        url: URL,
+        range: NSRange
+    ) -> Change<AppModel, AppAction> {
+        // Don't follow links while editing. Instead, select the link.
+        //
+        // When editing, you usually don't want to follow a link, you
+        // want to tap into it to edit it. Also, we don't want to follow a
+        // link in the middle of an edit and lose changes.
+        //
+        // Other approaches we could take in future:
+        // - Save before following
+        // - Have a disclosure step before following (like Google Docs)
+        // For now, I think this is the best approach.
+        //
+        // 2021-09-23 Gordon Brander
+        if state.focus == .editor {
+            let fx: AnyPublisher<AppAction, Never> = Just(
+                AppAction.setEditorSelection(range)
+            ).eraseToAnyPublisher()
+            return Change(state: state, fx: fx)
+        } else {
+            if Slashlink.isSlashlinkURL(url) {
+                // If this is a Subtext URL, then commit a search for the
+                // corresponding query
+                let fx: AnyPublisher<AppAction, Never> = Just(
+                    AppAction.commitSearch(
+                        query: Slashlink.urlToProse(url)
+                    )
+                ).eraseToAnyPublisher()
+                return Change(state: state, fx: fx)
+            } else {
+                UIApplication.shared.open(url)
+                return Change(state: state)
+            }
+        }
+    }
+
+    private static func databaseReady(
+        state: AppModel,
+        success: SQLite3Migrations.MigrationSuccess
+    ) -> Change<AppModel, AppAction> {
+        var model = state
+        model.isDatabaseReady = true
+        let sync = AppEnvironment.database.syncDatabase()
+            .map({ changes in
+                AppAction.syncSuccess(changes)
+            })
+            .catch({ error in
+                Just(.syncFailure(error.localizedDescription))
+            })
+        let suggestions = Just(AppAction.setSearch(""))
+        let linkSuggestions = Just(AppAction.setLinkSearch(""))
+        let recent = Just(AppAction.listRecent)
+        let fx: AnyPublisher<AppAction, Never> = Publishers.Merge4(
+            suggestions,
+            linkSuggestions,
+            recent,
+            sync
+        ).eraseToAnyPublisher()
+        if success.from != success.to {
+            AppEnvironment.logger.log(
+                "Migrated database: \(success.from)->\(success.to)"
+            )
+        }
+        AppEnvironment.logger.log("File sync started")
+        return Change(state: model, fx: fx)
+    }
+
+    private static func rebuildDatabase(
+        state: AppModel
+    ) -> Change<AppModel, AppAction> {
+        AppEnvironment.logger.warning(
+            "Database is broken or has wrong schema. Attempting to rebuild."
+        )
+        let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+            .delete()
+            .flatMap({ _ in
+                AppEnvironment.database.migrate()
+            })
+            .map({ success in
+                AppAction.databaseReady(success)
+            })
+            .catch({ error in
+                Just(AppAction.rebuildDatabaseFailure(
+                    error.localizedDescription)
+                )
+            })
+            .eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
+    }
+
+    private static func listRecent(
+        state: AppModel
+    ) -> Change<AppModel, AppAction> {
+        let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+            .listRecentEntries()
+            .map({ entries in
+                AppAction.setRecent(entries)
+            })
+            .catch({ error in
+                Just(
+                    .listRecentFailure(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
+    }
+
+    private static func deleteEntry(
+        state: AppModel,
+        slug: String
+    ) -> Change<AppModel, AppAction> {
+        var model = state
+        if let index = model.recent.firstIndex(
+            where: { stub in stub.id == slug }
+        ) {
+            model.recent.remove(at: index)
+            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+                .deleteEntry(slug: slug)
+                .map({ _ in
+                    AppAction.deleteEntrySuccess(slug)
+                })
+                .catch({ error in
+                    Just(
+                        AppAction.deleteEntryFailure(
+                            error.localizedDescription
+                        )
+                    )
+                })
+                .eraseToAnyPublisher()
+            return Change(state: model, fx: fx)
+        } else {
+            AppEnvironment.logger.log(
+                "Failed to delete entry. No such id: \(slug)"
+            )
+            return Change(state: model)
+        }
+    }
+
+    private static func deleteEntrySuccess(
+        state: AppModel,
+        slug: String
+    ) -> Change<AppModel, AppAction> {
+        AppEnvironment.logger.log("Deleted entry: \(slug)")
+        //  Refresh lists in search fields after delete.
+        //  This ensures they don't show the deleted entry.
+        let fx: AnyPublisher<AppAction, Never> = Publishers.Merge(
+            Just(AppAction.setSearch("")),
+            Just(AppAction.setLinkSearch(""))
+        ).eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
+    }
+
+    private static func setSearch(
+        state: AppModel,
+        text: String
+    ) -> Change<AppModel, AppAction> {
+        var model = state
+        model.searchText = text
+        let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+            .searchSuggestions(query: text)
+            .map({ suggestions in
+                AppAction.setSuggestions(suggestions)
+            })
+            .catch({ error in
+                Just(.suggestionsFailure(error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+        return Change(state: model, fx: fx)
+    }
+
+    private static func commit(state: AppModel, query: String, slug: String) -> Change<AppModel, AppAction> {
+        var model = state
+        resetEditor(&model)
+        model.entryURL = nil
+        model.searchText = ""
+        model.isSearchShowing = false
+        model.isDetailShowing = true
+
+        let suggest = Just(AppAction.setSearch(""))
+        let search = AppEnvironment.database.search(
+            query: query,
+            slug: slug
+        ).map({ results in
+            AppAction.setDetail(results)
+        }).catch({ error in
+            Just(AppAction.detailFailure(error.localizedDescription))
+        })
+        let fx: AnyPublisher<AppAction, Never> = Publishers.Merge(
+            suggest,
+            search
+        ).eraseToAnyPublisher()
+
+        return Change(state: model, fx: fx)
+    }
+
+    private static func setLinkSearch(
+        state: AppModel,
+        text: String
+    ) -> Change<AppModel, AppAction> {
+        var model = state
+        model.linkSearchText = text
+
+        let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+            .searchSuggestions(
+                query: text
+            )
+            .map({ suggestions in
+                AppAction.setLinkSuggestions(suggestions)
+            })
+            .catch({ error in
+                Just(.linkSuggestionsFailure(error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+
+        return Change(state: model, fx: fx)
+    }
+
+    private static func commitLinkSearch(state: AppModel, text: String) -> Change<AppModel, AppAction> {
+        var model = state
+        if let range = Range(
+            model.editorSelection,
+            in: state.editorAttributedText.string
+        ) {
+            // Replace selected range with committed link search text.
+            let markup = state.editorAttributedText.string
+                .replacingCharacters(
+                    in: range,
+                    with: text
+                )
+            // Re-render and assign
+            model.editorAttributedText = renderMarkup(markup: markup)
+            // Find inserted range by searching for our inserted text
+            // AFTER the cursor position.
+            if let insertedRange = markup.range(
+                of: text,
+                range: range.lowerBound..<markup.endIndex
+            ) {
+                // Convert Range to NSRange of editorAttributedText,
+                // assign to editorSelection.
+                model.editorSelection = NSRange(
+                    insertedRange,
+                    in: markup
+                )
+            }
+        }
+        model.linkSearchQuery = text
+        model.linkSearchText = ""
+        model.focus = nil
+        model.isLinkSheetPresented = false
+        return Change(state: model)
+    }
+
+    private static func save(
+        state: AppModel
+    ) -> Change<AppModel, AppAction> {
+        var model = state
+        model.focus = nil
+        if let entryURL = model.entryURL {
+            // Parse editorAttributedText to entry.
+            // TODO refactor model to store entry instead of attributedText.
+            let entry = SubtextFile(
+                url: entryURL,
+                content: model.editorAttributedText.string
+            )
+            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+                .writeEntry(
+                    entry: entry
+                )
+                .map({ _ in
+                    AppAction.saveSuccess(entryURL)
+                })
+                .catch({ error in
+                    Just(
+                        AppAction.saveFailure(
+                            url: entryURL,
+                            message: error.localizedDescription
+                        )
+                    )
+                })
+                .eraseToAnyPublisher()
+            return Change(state: model, fx: fx)
+        } else {
+            AppEnvironment.logger.warning(
+                """
+                Could not save. No URL set for entry.
+                It should not be possible to reach this state.
+                """
+            )
+            return Change(state: model)
+        }
+    }
+
     //  MARK: Update
     static func update(
         state: AppModel,
@@ -130,87 +427,15 @@ struct AppUpdate {
             UIApplication.shared.open(url)
             return Change(state: state)
         case let .openEditorURL(url, range):
-            // Don't follow links while editing. Instead, select the link.
-            //
-            // When editing, you usually don't want to follow a link, you
-            // want to tap into it to edit it. Also, we don't want to follow a
-            // link in the middle of an edit and lose changes.
-            //
-            // Other approaches we could take in future:
-            // - Save before following
-            // - Have a disclosure step before following (like Google Docs)
-            // For now, I think this is the best approach.
-            //
-            // 2021-09-23 Gordon Brander
-            if state.focus == .editor {
-                let fx: AnyPublisher<AppAction, Never> = Just(
-                    AppAction.setEditorSelection(range)
-                ).eraseToAnyPublisher()
-                return Change(state: state, fx: fx)
-            } else {
-                if Slashlink.isSlashlinkURL(url) {
-                    // If this is a Subtext URL, then commit a search for the
-                    // corresponding query
-                    let fx: AnyPublisher<AppAction, Never> = Just(
-                        AppAction.commitSearch(
-                            query: Slashlink.urlToProse(url)
-                        )
-                    ).eraseToAnyPublisher()
-                    return Change(state: state, fx: fx)
-                } else {
-                    UIApplication.shared.open(url)
-                    return Change(state: state)
-                }
-            }
+            return openEditorURL(state: state, url: url, range: range)
         case let .setFocus(focus):
             var model = state
             model.focus = focus
             return Change(state: model)
         case let .databaseReady(success):
-            var model = state
-            model.isDatabaseReady = true
-            let sync = AppEnvironment.database.syncDatabase()
-                .map({ changes in
-                    AppAction.syncSuccess(changes)
-                })
-                .catch({ error in
-                    Just(.syncFailure(error.localizedDescription))
-                })
-            let suggestions = Just(AppAction.setSearch(""))
-            let linkSuggestions = Just(AppAction.setLinkSearch(""))
-            let recent = Just(AppAction.listRecent)
-            let fx: AnyPublisher<AppAction, Never> = Publishers.Merge4(
-                suggestions,
-                linkSuggestions,
-                recent,
-                sync
-            ).eraseToAnyPublisher()
-            if success.from != success.to {
-                AppEnvironment.logger.log(
-                    "Migrated database: \(success.from)->\(success.to)"
-                )
-            }
-            AppEnvironment.logger.log("File sync started")
-            return Change(state: model, fx: fx)
+            return databaseReady(state: state, success: success)
         case .rebuildDatabase:
-            AppEnvironment.logger.warning(
-                "Database is broken or has wrong schema. Attempting to rebuild."
-            )
-            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
-                .delete()
-                .flatMap({ _ in
-                    AppEnvironment.database.migrate()
-                })
-                .map({ success in
-                    AppAction.databaseReady(success)
-                })
-                .catch({ error in
-                    Just(AppAction.rebuildDatabaseFailure(
-                        error.localizedDescription)
-                    )
-                })
-                .eraseToAnyPublisher()
-            return Change(state: state, fx: fx)
+            return rebuildDatabase(state: state)
         case let .rebuildDatabaseFailure(error):
             AppEnvironment.logger.warning(
                 "Could not rebuild database: \(error)"
@@ -226,22 +451,8 @@ struct AppUpdate {
                 "File sync failed: \(message)"
             )
             return Change(state: state)
-
         case .listRecent:
-            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
-                .listRecentEntries()
-                .map({ entries in
-                    AppAction.setRecent(entries)
-                })
-                .catch({ error in
-                    Just(
-                        .listRecentFailure(
-                            error.localizedDescription
-                        )
-                    )
-                })
-                .eraseToAnyPublisher()
-            return Change(state: state, fx: fx)
+            return listRecent(state: state)
         case let .setRecent(entries):
             var model = state
             model.recent = entries
@@ -266,40 +477,9 @@ struct AppUpdate {
             }
             return Change(state: model)
         case let .deleteEntry(slug):
-            var model = state
-            if let index = model.recent.firstIndex(
-                where: { stub in stub.id == slug }
-            ) {
-                model.recent.remove(at: index)
-                let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
-                    .deleteEntry(slug: slug)
-                    .map({ _ in
-                        AppAction.deleteEntrySuccess(slug)
-                    })
-                    .catch({ error in
-                        Just(
-                            AppAction.deleteEntryFailure(
-                                error.localizedDescription
-                            )
-                        )
-                    })
-                    .eraseToAnyPublisher()
-                return Change(state: model, fx: fx)
-            } else {
-                AppEnvironment.logger.log(
-                    "Failed to delete entry. No such id: \(slug)"
-                )
-                return Change(state: model)
-            }
+            return deleteEntry(state: state, slug: slug)
         case let .deleteEntrySuccess(slug):
-            AppEnvironment.logger.log("Deleted entry: \(slug)")
-            //  Refresh lists in search fields after delete.
-            //  This ensures they don't show the deleted entry.
-            let fx: AnyPublisher<AppAction, Never> = Publishers.Merge(
-                Just(AppAction.setSearch("")),
-                Just(AppAction.setLinkSearch(""))
-            ).eraseToAnyPublisher()
-            return Change(state: state, fx: fx)
+            return deleteEntrySuccess(state: state, slug: slug)
         case let .deleteEntryFailure(error):
             AppEnvironment.logger.log("Failed to delete entry: \(error)")
             return Change(state: state)
@@ -309,7 +489,7 @@ struct AppUpdate {
             if !state.editorAttributedText.isEqual(to: attributedText) {
                 // Rerender attributes from markup, then assign to
                 // model.
-                model.editorAttributedText = Self.renderMarkup(
+                model.editorAttributedText = renderMarkup(
                     markup: attributedText.string
                 )
             }
@@ -326,18 +506,7 @@ struct AppUpdate {
             }
             return Change(state: model)
         case let .setSearch(text):
-            var model = state
-            model.searchText = text
-            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
-                .searchSuggestions(query: text)
-                .map({ suggestions in
-                    AppAction.setSuggestions(suggestions)
-                })
-                .catch({ error in
-                    Just(.suggestionsFailure(error.localizedDescription))
-                })
-                .eraseToAnyPublisher()
-            return Change(state: model, fx: fx)
+            return setSearch(state: state, text: text)
         case .showSearch:
             var model = state
             model.isSearchShowing = true
@@ -360,28 +529,7 @@ struct AppUpdate {
             )
             return Change(state: state)
         case let .commit(query, slug):
-            var model = state
-            Self.resetEditor(&model)
-            model.entryURL = nil
-            model.searchText = ""
-            model.isSearchShowing = false
-            model.isDetailShowing = true
-
-            let suggest = Just(AppAction.setSearch(""))
-            let search = AppEnvironment.database.search(
-                query: query,
-                slug: slug
-            ).map({ results in
-                AppAction.setDetail(results)
-            }).catch({ error in
-                Just(AppAction.detailFailure(error.localizedDescription))
-            })
-            let fx: AnyPublisher<AppAction, Never> = Publishers.Merge(
-                suggest,
-                search
-            ).eraseToAnyPublisher()
-
-            return Change(state: model, fx: fx)
+            return commit(state: state, query: query, slug: slug)
         case let .setDetail(results):
             var model = state
             model.query = results.query
@@ -391,7 +539,7 @@ struct AppUpdate {
             model.entryURL = entryURL ?? AppEnvironment.database.findUniqueURL(
                 name: results.slug
             )
-            model.editorAttributedText = Self.renderMarkup(
+            model.editorAttributedText = renderMarkup(
                 markup: results.entry?.content ?? results.query
             )
             return Change(state: model)
@@ -406,55 +554,9 @@ struct AppUpdate {
             model.isLinkSheetPresented = isPresented
             return Change(state: model)
         case let .setLinkSearch(text):
-            var model = state
-            model.linkSearchText = text
-
-            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
-                .searchSuggestions(
-                    query: text
-                )
-                .map({ suggestions in
-                    AppAction.setLinkSuggestions(suggestions)
-                })
-                .catch({ error in
-                    Just(.linkSuggestionsFailure(error.localizedDescription))
-                })
-                .eraseToAnyPublisher()
-
-            return Change(state: model, fx: fx)
+            return setLinkSearch(state: state, text: text)
         case let .commitLinkSearch(text):
-            var model = state
-            if let range = Range(
-                model.editorSelection,
-                in: state.editorAttributedText.string
-            ) {
-                // Replace selected range with committed link search text.
-                let markup = state.editorAttributedText.string
-                    .replacingCharacters(
-                        in: range,
-                        with: text
-                    )
-                // Re-render and assign
-                model.editorAttributedText = Self.renderMarkup(markup: markup)
-                // Find inserted range by searching for our inserted text
-                // AFTER the cursor position.
-                if let insertedRange = markup.range(
-                    of: text,
-                    range: range.lowerBound..<markup.endIndex
-                ) {
-                    // Convert Range to NSRange of editorAttributedText,
-                    // assign to editorSelection.
-                    model.editorSelection = NSRange(
-                        insertedRange,
-                        in: markup
-                    )
-                }
-            }
-            model.linkSearchQuery = text
-            model.linkSearchText = ""
-            model.focus = nil
-            model.isLinkSheetPresented = false
-            return Change(state: model)
+            return commitLinkSearch(state: state, text: text)
         case let .setLinkSuggestions(suggestions):
             var model = state
             model.linkSuggestions = suggestions
@@ -465,41 +567,7 @@ struct AppUpdate {
             )
             return Change(state: state)
         case .save:
-            var model = state
-            model.focus = nil
-            if let entryURL = model.entryURL {
-                // Parse editorAttributedText to entry.
-                // TODO refactor model to store entry instead of attributedText.
-                let entry = SubtextFile(
-                    url: entryURL,
-                    content: model.editorAttributedText.string
-                )
-                let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
-                    .writeEntry(
-                        entry: entry
-                    )
-                    .map({ _ in
-                        AppAction.saveSuccess(entryURL)
-                    })
-                    .catch({ error in
-                        Just(
-                            AppAction.saveFailure(
-                                url: entryURL,
-                                message: error.localizedDescription
-                            )
-                        )
-                    })
-                    .eraseToAnyPublisher()
-                return Change(state: model, fx: fx)
-            } else {
-                AppEnvironment.logger.warning(
-                    """
-                    Could not save. No URL set for entry.
-                    It should not be possible to reach this state.
-                    """
-                )
-                return Change(state: model)
-            }
+            return save(state: state)
         case let .saveSuccess(url):
             AppEnvironment.logger.debug(
                 "Saved entry \(url)"

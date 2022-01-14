@@ -34,23 +34,14 @@ public struct Change<State, Action> {
     var fx: AnyPublisher<Action, Never>?
 }
 
-/// An Updatable is a type that knows how create updates and optional effects
-/// in response to actions.
-///
-/// Effects are Combine Publishers that produce Actions and never fail.
-public protocol Updatable {
-    associatedtype Action
-    func update(action: Action) -> Change<Self, Action>
-}
-
 /// Store is a source of truth for a state.
 ///
 /// Store is an `ObservableObject`. You can use it in a view via
 /// `@ObservedObject` or `@StateObject` to power view rendering.
 ///
-/// Store has a `@Published` `state` that conforms to`Updatable`
-/// (typically a struct). All updates and effects to this state happen through
-/// actions sent to `store.send`.
+/// Store has a `@Published` `state` (typically a struct).
+/// All updates and effects to this state happen through actions
+/// sent to `store.send`.
 ///
 /// Store is meant to be used as part of a single app-wide, or
 /// major-view-wide component. Store deliberately does not solve for nested
