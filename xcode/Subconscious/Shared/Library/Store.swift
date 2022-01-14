@@ -29,13 +29,18 @@ import Combine
 import SwiftUI
 import os
 
+public struct Change<State, Action> {
+    var state: State
+    var fx: AnyPublisher<Action, Never>?
+}
+
 /// An Updatable is a type that knows how create updates and optional effects
 /// in response to actions.
 ///
 /// Effects are Combine Publishers that produce Actions and never fail.
 public protocol Updatable {
     associatedtype Action
-    func update(action: Action) -> (Self, AnyPublisher<Action, Never>?)
+    func update(action: Action) -> Change<Self, Action>
 }
 
 /// Store is a source of truth for a state.
@@ -63,24 +68,26 @@ public protocol Updatable {
 /// See https://guide.elm-lang.org/architecture/
 /// and https://guide.elm-lang.org/webapps/structure.html
 /// for more about this approach.
-public final class Store<State>: ObservableObject
-where State: Updatable
-{
+public final class Store<State, Action>: ObservableObject {
     /// Logger, used when in debug mode
     private var logger: Logger
     /// Toggle debug mode
     public private(set) var debug: Bool
     /// Stores cancellables by ID
     private var cancellables: [UUID: AnyCancellable] = [:]
+    /// Update function for state
+    public private(set) var update: (State, Action) -> Change<State, Action>
     /// Current state.
     /// All writes to state happen through actions sent to `Store.send`.
     @Published public private(set) var state: State
 
     init(
+        update: @escaping (State, Action) -> Change<State, Action>,
         state: State,
         logger: Logger,
         debug: Bool = false
     ) {
+        self.update = update
         self.state = state
         self.logger = logger
         self.debug = debug
@@ -92,7 +99,7 @@ where State: Updatable
     /// for binding sets.
     public func binding<Value>(
         get: @escaping (State) -> Value,
-        tag: @escaping (Value) -> State.Action,
+        tag: @escaping (Value) -> Action,
         animation: Animation? = nil
     ) -> Binding<Value> {
         Binding(
@@ -107,19 +114,19 @@ where State: Updatable
 
     /// Send an action to the store to update state and generate effects.
     /// Any effects generated are fed back into the store.
-    public func send(action: State.Action) {
+    public func send(action: Action) {
         // Generate next state and effect
-        let (next, effect) = state.update(action: action)
+        let change = update(state, action)
         if debug {
             logger.debug("Action: \(String(reflecting: action))")
-            logger.debug("State: \(String(reflecting: next))")
+            logger.debug("State: \(String(reflecting: change.state))")
         }
         // Set state. This mutates published property, firing objectWillChange.
-        self.state = next
+        self.state = change.state
         // Run effect
-        if let effect = effect {
+        if let fx = change.fx {
             sink(
-                publisher: effect.receive(
+                publisher: fx.receive(
                     on: DispatchQueue.main,
                     options: .init(qos: .userInitiated)
                 ).eraseToAnyPublisher(),
@@ -131,8 +138,8 @@ where State: Updatable
     /// Subscribe to a publisher until it completes.
     /// Retains the cancellable reference until the cancellable is complete.
     private func sink(
-        publisher: AnyPublisher<State.Action, Never>,
-        receiveValue: @escaping (State.Action) -> Void
+        publisher: AnyPublisher<Action, Never>,
+        receiveValue: @escaping (Action) -> Void
     ) {
         // Create a UUID for the cancellable.
         // Store cancellable in dictionary by UUID.
