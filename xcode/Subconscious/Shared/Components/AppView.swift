@@ -158,26 +158,27 @@ struct AppModel: Updatable {
     }
 
     //  MARK: Update
-    func update(action: AppAction) -> (Self, AnyPublisher<AppAction, Never>) {
+    func update(action: AppAction) -> (Self, AnyPublisher<AppAction, Never>?) {
         switch action {
         case .noop:
-            return (self, Empty().eraseToAnyPublisher())
+            return (self, nil)
         case .appear:
             AppEnvironment.logger.debug(
                 "Documents: \(AppEnvironment.documentURL)"
             )
-            let fx = AppEnvironment.database.migrate().map({ success in
-                AppAction.databaseReady(success)
-            }).catch({ _ in
-                Just(AppAction.rebuildDatabase)
-            }).eraseToAnyPublisher()
+            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+                .migrate()
+                .map({ success in
+                    AppAction.databaseReady(success)
+                })
+                .catch({ _ in
+                    Just(AppAction.rebuildDatabase)
+                })
+                .eraseToAnyPublisher()
             return (self, fx)
         case let .openURL(url):
-            let fx = Deferred<Just<AppAction>>(createPublisher: {
-                UIApplication.shared.open(url)
-                return Just(.noop)
-            }).eraseToAnyPublisher()
-            return (self, fx)
+            UIApplication.shared.open(url)
+            return (self, nil)
         case let .openEditorURL(url, range):
             // Don't follow links while editing. Instead, select the link.
             //
@@ -192,7 +193,7 @@ struct AppModel: Updatable {
             //
             // 2021-09-23 Gordon Brander
             if self.focus == .editor {
-                let fx = Just(
+                let fx: AnyPublisher<AppAction, Never> = Just(
                     AppAction.setEditorSelection(range)
                 ).eraseToAnyPublisher()
                 return (self, fx)
@@ -200,26 +201,21 @@ struct AppModel: Updatable {
                 if Slashlink.isSlashlinkURL(url) {
                     // If this is a Subtext URL, then commit a search for the
                     // corresponding query
-                    let fx = Just(
+                    let fx: AnyPublisher<AppAction, Never> = Just(
                         AppAction.commitSearch(
                             query: Slashlink.urlToProse(url)
                         )
                     ).eraseToAnyPublisher()
                     return (self, fx)
                 } else {
-                    // Otherwise open the URL using the shared system
-                    // open function.
-                    let fx = Deferred<Just<AppAction>>(createPublisher: {
-                        UIApplication.shared.open(url)
-                        return Just(.noop)
-                    }).eraseToAnyPublisher()
-                    return (self, fx)
+                    UIApplication.shared.open(url)
+                    return (self, nil)
                 }
             }
         case let .setFocus(focus):
             var model = self
             model.focus = focus
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .databaseReady(success):
             var model = self
             model.isDatabaseReady = true
@@ -233,7 +229,7 @@ struct AppModel: Updatable {
             let suggestions = Just(AppAction.setSearch(""))
             let linkSuggestions = Just(AppAction.setLinkSearch(""))
             let recent = Just(AppAction.listRecent)
-            let fx = Publishers.Merge4(
+            let fx: AnyPublisher<AppAction, Never> = Publishers.Merge4(
                 suggestions,
                 linkSuggestions,
                 recent,
@@ -250,34 +246,40 @@ struct AppModel: Updatable {
             AppEnvironment.logger.warning(
                 "Database is broken or has wrong schema. Attempting to rebuild."
             )
-            let fx = AppEnvironment.database.delete().flatMap({ _ in
-                AppEnvironment.database.migrate()
-            }).map({ success in
-                AppAction.databaseReady(success)
-            }).catch({ error in
-                Just(AppAction.rebuildDatabaseFailure(
-                    error.localizedDescription)
-                )
-            }).eraseToAnyPublisher()
+            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+                .delete()
+                .flatMap({ _ in
+                    AppEnvironment.database.migrate()
+                })
+                .map({ success in
+                    AppAction.databaseReady(success)
+                })
+                .catch({ error in
+                    Just(AppAction.rebuildDatabaseFailure(
+                        error.localizedDescription)
+                    )
+                })
+                .eraseToAnyPublisher()
             return (self, fx)
         case let .rebuildDatabaseFailure(error):
             AppEnvironment.logger.warning(
                 "Could not rebuild database: \(error)"
             )
-            return (self, Empty().eraseToAnyPublisher())
+            return (self, nil)
         case let .syncSuccess(changes):
             AppEnvironment.logger.debug(
                 "File sync finished: \(changes)"
             )
-            return (self, Empty().eraseToAnyPublisher())
+            return (self, nil)
         case let .syncFailure(message):
             AppEnvironment.logger.warning(
                 "File sync failed: \(message)"
             )
-            return (self, Empty().eraseToAnyPublisher())
+            return (self, nil)
 
         case .listRecent:
-            let fx = AppEnvironment.database.listRecentEntries()
+            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+                .listRecentEntries()
                 .map({ entries in
                     AppAction.setRecent(entries)
                 })
@@ -293,17 +295,17 @@ struct AppModel: Updatable {
         case let .setRecent(entries):
             var model = self
             model.recent = entries
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .listRecentFailure(error):
             AppEnvironment.logger.warning(
                 "Failed to list recent entries: \(error)"
             )
-            return (self, Empty().eraseToAnyPublisher())
+            return (self, nil)
         case let .confirmDelete(slug):
             var model = self
             model.entryToDelete = slug
             model.isConfirmDeleteShowing = true
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .setConfirmDeleteShowing(isShowing):
             var model = self
             model.isConfirmDeleteShowing = isShowing
@@ -312,14 +314,15 @@ struct AppModel: Updatable {
             if isShowing == false {
                 model.entryToDelete = nil
             }
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .deleteEntry(slug):
             var model = self
             if let index = model.recent.firstIndex(
                 where: { stub in stub.id == slug }
             ) {
                 model.recent.remove(at: index)
-                let fx = AppEnvironment.database.deleteEntry(slug: slug)
+                let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+                    .deleteEntry(slug: slug)
                     .map({ _ in
                         AppAction.deleteEntrySuccess(slug)
                     })
@@ -336,20 +339,20 @@ struct AppModel: Updatable {
                 AppEnvironment.logger.log(
                     "Failed to delete entry. No such id: \(slug)"
                 )
-                return (model, Empty().eraseToAnyPublisher())
+                return (model, nil)
             }
         case let .deleteEntrySuccess(slug):
             AppEnvironment.logger.log("Deleted entry: \(slug)")
             //  Refresh lists in search fields after delete.
             //  This ensures they don't show the deleted entry.
-            let fx = Publishers.Merge(
+            let fx: AnyPublisher<AppAction, Never> = Publishers.Merge(
                 Just(AppAction.setSearch("")),
                 Just(AppAction.setLinkSearch(""))
             ).eraseToAnyPublisher()
             return (self, fx)
         case let .deleteEntryFailure(error):
             AppEnvironment.logger.log("Failed to delete entry: \(error)")
-            return (self, Empty().eraseToAnyPublisher())
+            return (self, nil)
         case let .setEditorAttributedText(attributedText):
             var model = self
             // Render attributes from markup if text has changed
@@ -360,22 +363,22 @@ struct AppModel: Updatable {
                     markup: attributedText.string
                 )
             }
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .setEditorSelection(range):
             var model = self
             model.editorSelection = range
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .setDetailShowing(isShowing):
             var model = self
             model.isDetailShowing = isShowing
             if isShowing == false {
                 model.focus = nil
             }
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .setSearch(text):
             var model = self
             model.searchText = text
-            let fx = AppEnvironment.database
+            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
                 .searchSuggestions(query: text)
                 .map({ suggestions in
                     AppAction.setSuggestions(suggestions)
@@ -390,22 +393,22 @@ struct AppModel: Updatable {
             model.isSearchShowing = true
             model.searchText = ""
             model.focus = .search
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case .hideSearch:
             var model = self
             model.isSearchShowing = false
             model.searchText = ""
             model.focus = nil
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .setSuggestions(suggestions):
             var model = self
             model.suggestions = suggestions
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .suggestionsFailure(message):
             AppEnvironment.logger.debug(
                 "Suggest failed: \(message)"
             )
-            return (self, Empty().eraseToAnyPublisher())
+            return (self, nil)
         case let .commit(query, slug):
             var model = self
             Self.resetEditor(&model)
@@ -423,7 +426,7 @@ struct AppModel: Updatable {
             }).catch({ error in
                 Just(AppAction.detailFailure(error.localizedDescription))
             })
-            let fx = Publishers.Merge(
+            let fx: AnyPublisher<AppAction, Never> = Publishers.Merge(
                 suggest,
                 search
             ).eraseToAnyPublisher()
@@ -441,28 +444,32 @@ struct AppModel: Updatable {
             model.editorAttributedText = Self.renderMarkup(
                 markup: results.entry?.content ?? results.query
             )
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .detailFailure(message):
             AppEnvironment.logger.log(
                 "Failed to get details for search: \(message)"
             )
-            return (self, Empty().eraseToAnyPublisher())
+            return (self, nil)
         case let .setLinkSheetPresented(isPresented):
             var model = self
             model.focus = isPresented ? .linkSearch : nil
             model.isLinkSheetPresented = isPresented
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .setLinkSearch(text):
             var model = self
             model.linkSearchText = text
 
-            let fx = AppEnvironment.database.searchSuggestions(
-                query: text
-            ).map({ suggestions in
-                AppAction.setLinkSuggestions(suggestions)
-            }).catch({ error in
-                Just(.linkSuggestionsFailure(error.localizedDescription))
-            }).eraseToAnyPublisher()
+            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+                .searchSuggestions(
+                    query: text
+                )
+                .map({ suggestions in
+                    AppAction.setLinkSuggestions(suggestions)
+                })
+                .catch({ error in
+                    Just(.linkSuggestionsFailure(error.localizedDescription))
+                })
+                .eraseToAnyPublisher()
 
             return (model, fx)
         case let .commitLinkSearch(text):
@@ -496,16 +503,16 @@ struct AppModel: Updatable {
             model.linkSearchText = ""
             model.focus = nil
             model.isLinkSheetPresented = false
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .setLinkSuggestions(suggestions):
             var model = self
             model.linkSuggestions = suggestions
-            return (model, Empty().eraseToAnyPublisher())
+            return (model, nil)
         case let .linkSuggestionsFailure(message):
             AppEnvironment.logger.debug(
                 "Link suggest failed: \(message)"
             )
-            return (self, Empty().eraseToAnyPublisher())
+            return (self, nil)
         case .save:
             var model = self
             model.focus = nil
@@ -516,18 +523,22 @@ struct AppModel: Updatable {
                     url: entryURL,
                     content: model.editorAttributedText.string
                 )
-                let fx = AppEnvironment.database.writeEntry(
-                    entry: entry
-                ).map({ _ in
-                    AppAction.saveSuccess(entryURL)
-                }).catch({ error in
-                    Just(
-                        AppAction.saveFailure(
-                            url: entryURL,
-                            message: error.localizedDescription
-                        )
+                let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+                    .writeEntry(
+                        entry: entry
                     )
-                }).eraseToAnyPublisher()
+                    .map({ _ in
+                        AppAction.saveSuccess(entryURL)
+                    })
+                    .catch({ error in
+                        Just(
+                            AppAction.saveFailure(
+                                url: entryURL,
+                                message: error.localizedDescription
+                            )
+                        )
+                    })
+                    .eraseToAnyPublisher()
                 return (model, fx)
             } else {
                 AppEnvironment.logger.warning(
@@ -536,19 +547,19 @@ struct AppModel: Updatable {
                     It should not be possible to reach this state.
                     """
                 )
-                return (model, Empty().eraseToAnyPublisher())
+                return (model, nil)
             }
         case let .saveSuccess(url):
             AppEnvironment.logger.debug(
                 "Saved entry \(url)"
             )
-            return (self, Empty().eraseToAnyPublisher())
+            return (self, nil)
         case let .saveFailure(url, message):
             //  TODO: show user a "try again" banner
             AppEnvironment.logger.warning(
                 "Save failed for entry (\(url)) with error: \(message)"
             )
-            return (self, Empty().eraseToAnyPublisher())
+            return (self, nil)
         }
     }
 }

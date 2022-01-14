@@ -33,7 +33,7 @@ import os
 /// Effects are Combine Publishers that produce Actions and never fail.
 public protocol Updatable {
     associatedtype Action
-    func update(action: Action) -> (Self, AnyPublisher<Action, Never>)
+    func update(action: Action) -> (Self, AnyPublisher<Action, Never>?)
 }
 
 /// Store is a source of truth for a state.
@@ -111,13 +111,15 @@ where State: Updatable
         // Set state. This mutates published property, firing objectWillChange.
         self.state = next
         // Run effect
-        sink(
-            publisher: effect.receive(
-                on: DispatchQueue.main,
-                options: .init(qos: .userInitiated)
-            ).eraseToAnyPublisher(),
-            receiveValue: self.send
-        )
+        if let effect = effect {
+            sink(
+                publisher: effect.receive(
+                    on: DispatchQueue.main,
+                    options: .init(qos: .userInitiated)
+                ).eraseToAnyPublisher(),
+                receiveValue: self.send
+            )
+        }
     }
 
     /// Subscribe to a publisher until it completes.
