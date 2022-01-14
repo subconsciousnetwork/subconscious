@@ -77,36 +77,6 @@
 		B88C97A32764270000B27DF0 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = B88C97A12764270000B27DF0 /* LICENSE.txt */; };
 		B8979F6C2792255F0011C990 /* AppUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F6B2792255F0011C990 /* AppUpdate.swift */; };
 		B8979F6D2792255F0011C990 /* AppUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F6B2792255F0011C990 /* AppUpdate.swift */; };
-		B8979F72279227E70011C990 /* AppUpdate+resetEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F71279227E70011C990 /* AppUpdate+resetEditor.swift */; };
-		B8979F73279227E70011C990 /* AppUpdate+resetEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F71279227E70011C990 /* AppUpdate+resetEditor.swift */; };
-		B8979F752792280F0011C990 /* AppUpdate+renderMarkup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F742792280F0011C990 /* AppUpdate+renderMarkup.swift */; };
-		B8979F762792280F0011C990 /* AppUpdate+renderMarkup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F742792280F0011C990 /* AppUpdate+renderMarkup.swift */; };
-		B8979F78279228250011C990 /* AppUpdate+Appear.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F77279228250011C990 /* AppUpdate+Appear.swift */; };
-		B8979F79279228250011C990 /* AppUpdate+Appear.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F77279228250011C990 /* AppUpdate+Appear.swift */; };
-		B8979F7B279228770011C990 /* AppUpdate+openEditorURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F7A279228770011C990 /* AppUpdate+openEditorURL.swift */; };
-		B8979F7C279228770011C990 /* AppUpdate+openEditorURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F7A279228770011C990 /* AppUpdate+openEditorURL.swift */; };
-		B8979F7E279228B80011C990 /* AppUpdate+databaseReady.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F7D279228B80011C990 /* AppUpdate+databaseReady.swift */; };
-		B8979F7F279228B80011C990 /* AppUpdate+databaseReady.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F7D279228B80011C990 /* AppUpdate+databaseReady.swift */; };
-		B8979F81279228E40011C990 /* AppUpdate+Template.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F80279228E40011C990 /* AppUpdate+Template.swift */; };
-		B8979F82279228E40011C990 /* AppUpdate+Template.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F80279228E40011C990 /* AppUpdate+Template.swift */; };
-		B8979F84279228FC0011C990 /* AppUpdate+rebuildDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F83279228FC0011C990 /* AppUpdate+rebuildDatabase.swift */; };
-		B8979F85279228FC0011C990 /* AppUpdate+rebuildDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F83279228FC0011C990 /* AppUpdate+rebuildDatabase.swift */; };
-		B8979F872792292B0011C990 /* AppUpdate+listRecent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F862792292B0011C990 /* AppUpdate+listRecent.swift */; };
-		B8979F882792292B0011C990 /* AppUpdate+listRecent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F862792292B0011C990 /* AppUpdate+listRecent.swift */; };
-		B8979F8A279229890011C990 /* AppUpdate+deleteEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F89279229890011C990 /* AppUpdate+deleteEntry.swift */; };
-		B8979F8B279229890011C990 /* AppUpdate+deleteEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F89279229890011C990 /* AppUpdate+deleteEntry.swift */; };
-		B8979F8D279229AF0011C990 /* AppUpdate+deleteEntrySuccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F8C279229AF0011C990 /* AppUpdate+deleteEntrySuccess.swift */; };
-		B8979F8E279229AF0011C990 /* AppUpdate+deleteEntrySuccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F8C279229AF0011C990 /* AppUpdate+deleteEntrySuccess.swift */; };
-		B8979F90279229D40011C990 /* AppUpdate+setSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F8F279229D40011C990 /* AppUpdate+setSearch.swift */; };
-		B8979F91279229D40011C990 /* AppUpdate+setSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F8F279229D40011C990 /* AppUpdate+setSearch.swift */; };
-		B8979F93279229EF0011C990 /* AppUpdate+Commit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F92279229EF0011C990 /* AppUpdate+Commit.swift */; };
-		B8979F94279229EF0011C990 /* AppUpdate+Commit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F92279229EF0011C990 /* AppUpdate+Commit.swift */; };
-		B8979F9627922A0A0011C990 /* AppUpdate+setLinkSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F9527922A0A0011C990 /* AppUpdate+setLinkSearch.swift */; };
-		B8979F9727922A0A0011C990 /* AppUpdate+setLinkSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F9527922A0A0011C990 /* AppUpdate+setLinkSearch.swift */; };
-		B8979F9927922A2A0011C990 /* AppUpdate+commitLinkSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F9827922A2A0011C990 /* AppUpdate+commitLinkSearch.swift */; };
-		B8979F9A27922A2A0011C990 /* AppUpdate+commitLinkSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F9827922A2A0011C990 /* AppUpdate+commitLinkSearch.swift */; };
-		B8979F9C27922A500011C990 /* AppUpdate+save.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F9B27922A500011C990 /* AppUpdate+save.swift */; };
-		B8979F9D27922A500011C990 /* AppUpdate+save.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8979F9B27922A500011C990 /* AppUpdate+save.swift */; };
 		B8AC648A278F53920099E96B /* EntryStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC6489278F53920099E96B /* EntryStub.swift */; };
 		B8AC648C278F757B0099E96B /* ProgressScrim.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC648B278F757B0099E96B /* ProgressScrim.swift */; };
 		B8AC648D278F757B0099E96B /* ProgressScrim.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC648B278F757B0099E96B /* ProgressScrim.swift */; };
@@ -217,21 +187,6 @@
 		B88C979C2764266A00B27DF0 /* IBMPlexSans-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexSans-Medium.ttf"; sourceTree = "<group>"; };
 		B88C97A12764270000B27DF0 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		B8979F6B2792255F0011C990 /* AppUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdate.swift; sourceTree = "<group>"; };
-		B8979F71279227E70011C990 /* AppUpdate+resetEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+resetEditor.swift"; sourceTree = "<group>"; };
-		B8979F742792280F0011C990 /* AppUpdate+renderMarkup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+renderMarkup.swift"; sourceTree = "<group>"; };
-		B8979F77279228250011C990 /* AppUpdate+Appear.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+Appear.swift"; sourceTree = "<group>"; };
-		B8979F7A279228770011C990 /* AppUpdate+openEditorURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+openEditorURL.swift"; sourceTree = "<group>"; };
-		B8979F7D279228B80011C990 /* AppUpdate+databaseReady.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+databaseReady.swift"; sourceTree = "<group>"; };
-		B8979F80279228E40011C990 /* AppUpdate+Template.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+Template.swift"; sourceTree = "<group>"; };
-		B8979F83279228FC0011C990 /* AppUpdate+rebuildDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+rebuildDatabase.swift"; sourceTree = "<group>"; };
-		B8979F862792292B0011C990 /* AppUpdate+listRecent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+listRecent.swift"; sourceTree = "<group>"; };
-		B8979F89279229890011C990 /* AppUpdate+deleteEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+deleteEntry.swift"; sourceTree = "<group>"; };
-		B8979F8C279229AF0011C990 /* AppUpdate+deleteEntrySuccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+deleteEntrySuccess.swift"; sourceTree = "<group>"; };
-		B8979F8F279229D40011C990 /* AppUpdate+setSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+setSearch.swift"; sourceTree = "<group>"; };
-		B8979F92279229EF0011C990 /* AppUpdate+Commit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+Commit.swift"; sourceTree = "<group>"; };
-		B8979F9527922A0A0011C990 /* AppUpdate+setLinkSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+setLinkSearch.swift"; sourceTree = "<group>"; };
-		B8979F9827922A2A0011C990 /* AppUpdate+commitLinkSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+commitLinkSearch.swift"; sourceTree = "<group>"; };
-		B8979F9B27922A500011C990 /* AppUpdate+save.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppUpdate+save.swift"; sourceTree = "<group>"; };
 		B8AC6489278F53920099E96B /* EntryStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryStub.swift; sourceTree = "<group>"; };
 		B8AC648B278F757B0099E96B /* ProgressScrim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressScrim.swift; sourceTree = "<group>"; };
 		B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackLabelStyle.swift; sourceTree = "<group>"; };
@@ -422,21 +377,6 @@
 			children = (
 				B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */,
 				B8979F6B2792255F0011C990 /* AppUpdate.swift */,
-				B8979F77279228250011C990 /* AppUpdate+Appear.swift */,
-				B8979F92279229EF0011C990 /* AppUpdate+Commit.swift */,
-				B8979F9827922A2A0011C990 /* AppUpdate+commitLinkSearch.swift */,
-				B8979F7D279228B80011C990 /* AppUpdate+databaseReady.swift */,
-				B8979F89279229890011C990 /* AppUpdate+deleteEntry.swift */,
-				B8979F8C279229AF0011C990 /* AppUpdate+deleteEntrySuccess.swift */,
-				B8979F862792292B0011C990 /* AppUpdate+listRecent.swift */,
-				B8979F7A279228770011C990 /* AppUpdate+openEditorURL.swift */,
-				B8979F83279228FC0011C990 /* AppUpdate+rebuildDatabase.swift */,
-				B8979F742792280F0011C990 /* AppUpdate+renderMarkup.swift */,
-				B8979F71279227E70011C990 /* AppUpdate+resetEditor.swift */,
-				B8979F9B27922A500011C990 /* AppUpdate+save.swift */,
-				B8979F9527922A0A0011C990 /* AppUpdate+setLinkSearch.swift */,
-				B8979F8F279229D40011C990 /* AppUpdate+setSearch.swift */,
-				B8979F80279228E40011C990 /* AppUpdate+Template.swift */,
 				B8EB29F526F27794006E97C3 /* AppView.swift */,
 				B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */,
 				B8EC568426F41A2C00AC64E5 /* Common */,
@@ -684,40 +624,28 @@
 			buildActionMask = 2147483647;
 			files = (
 				B82FD4562730A62C002CB641 /* EntryRow.swift in Sources */,
-				B8979F78279228250011C990 /* AppUpdate+Appear.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
-				B8979F84279228FC0011C990 /* AppUpdate+rebuildDatabase.swift in Sources */,
-				B8979F9927922A2A0011C990 /* AppUpdate+commitLinkSearch.swift in Sources */,
-				B8979F752792280F0011C990 /* AppUpdate+renderMarkup.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
-				B8979F81279228E40011C990 /* AppUpdate+Template.swift in Sources */,
 				B81EBB0927025C1500B87594 /* TranscludeButtonStyle.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B81A535F272751EE001A6268 /* Subtext.swift in Sources */,
 				B8E63EA6270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */,
-				B8979F8A279229890011C990 /* AppUpdate+deleteEntry.swift in Sources */,
 				B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
-				B8979F9C27922A500011C990 /* AppUpdate+save.swift in Sources */,
-				B8979F7B279228770011C990 /* AppUpdate+openEditorURL.swift in Sources */,
 				B8AE34BC276AB3D500777FF0 /* SearchView.swift in Sources */,
-				B8979F7E279228B80011C990 /* AppUpdate+databaseReady.swift in Sources */,
 				B8082AAA26F3B43A004B10BB /* Store.swift in Sources */,
 				B8879EA626F9348600A0B4FF /* Slashlink.swift in Sources */,
-				B8979F9627922A0A0011C990 /* AppUpdate+setLinkSearch.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* DetailView.swift in Sources */,
 				B82C3A7626F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B8EB2A1F26F27797006E97C3 /* SubconsciousApp.swift in Sources */,
 				B864598726F97B81007969E3 /* KeyboardToolbarView.swift in Sources */,
-				B8979F8D279229AF0011C990 /* AppUpdate+deleteEntrySuccess.swift in Sources */,
 				B824FDD126FA98F300B81BBD /* ResultSet.swift in Sources */,
 				B8AE34AA276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
-				B8979F93279229EF0011C990 /* AppUpdate+Commit.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
 				B824FDCE26FA662200B81BBD /* SubtextFile.swift in Sources */,
@@ -728,7 +656,6 @@
 				B8AE34C5276BF72500777FF0 /* LinkSearchView.swift in Sources */,
 				B82C3A7326F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */,
 				B8AE34CB276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
-				B8979F872792292B0011C990 /* AppUpdate+listRecent.swift in Sources */,
 				B8AC648C278F757B0099E96B /* ProgressScrim.swift in Sources */,
 				B82C3A5326F528B000833CC8 /* DatabaseService.swift in Sources */,
 				B878C9822703F47A0042DF72 /* SuggestionLabelView.swift in Sources */,
@@ -738,7 +665,6 @@
 				B8AE34A7276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
 				B8AE34BF276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
-				B8979F72279227E70011C990 /* AppUpdate+resetEditor.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */,
 				B8979F6C2792255F0011C990 /* AppUpdate.swift in Sources */,
@@ -747,7 +673,6 @@
 				B8EC568C26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
 				B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
 				B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
-				B8979F90279229D40011C990 /* AppUpdate+setSearch.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -758,20 +683,13 @@
 				B82C3A6626F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8AC6490278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
 				B8EDB807270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
-				B8979F7F279228B80011C990 /* AppUpdate+databaseReady.swift in Sources */,
 				B81EBB0A27025C1500B87594 /* TranscludeButtonStyle.swift in Sources */,
-				B8979F9727922A0A0011C990 /* AppUpdate+setLinkSearch.swift in Sources */,
 				B82C3A6326F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B8E63EA7270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */,
 				B83E91D827692EC600045C6A /* FABButtonStyle.swift in Sources */,
 				B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
-				B8979F91279229D40011C990 /* AppUpdate+setSearch.swift in Sources */,
-				B8979F79279228250011C990 /* AppUpdate+Appear.swift in Sources */,
-				B8979F8E279229AF0011C990 /* AppUpdate+deleteEntrySuccess.swift in Sources */,
 				B824FDD526FAB1BC00B81BBD /* Truncate.swift in Sources */,
-				B8979F9A27922A2A0011C990 /* AppUpdate+commitLinkSearch.swift in Sources */,
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
-				B8979F9D27922A500011C990 /* AppUpdate+save.swift in Sources */,
 				B8AE34A8276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
 				B8082AAB26F3B43A004B10BB /* Store.swift in Sources */,
 				B82FD4572730A62C002CB641 /* EntryRow.swift in Sources */,
@@ -797,24 +715,16 @@
 				B81A5360272751EE001A6268 /* Subtext.swift in Sources */,
 				B82C3A7426F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */,
 				B8AC648D278F757B0099E96B /* ProgressScrim.swift in Sources */,
-				B8979F85279228FC0011C990 /* AppUpdate+rebuildDatabase.swift in Sources */,
 				B8AE34C6276BF72500777FF0 /* LinkSearchView.swift in Sources */,
 				B82C3A5426F528B000833CC8 /* DatabaseService.swift in Sources */,
-				B8979F94279229EF0011C990 /* AppUpdate+Commit.swift in Sources */,
-				B8979F762792280F0011C990 /* AppUpdate+renderMarkup.swift in Sources */,
 				B878C9832703F47A0042DF72 /* SuggestionLabelView.swift in Sources */,
 				B8E4B6F326F28BA700B9BE21 /* GrowableAttributedTextViewRepresentable.swift in Sources */,
 				B8879EA126F90C5100A0B4FF /* AppNavigationView.swift in Sources */,
 				B8EB2A2426F27797006E97C3 /* AppView.swift in Sources */,
 				B82C3A6026F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
-				B8979F882792292B0011C990 /* AppUpdate+listRecent.swift in Sources */,
-				B8979F82279228E40011C990 /* AppUpdate+Template.swift in Sources */,
-				B8979F7C279228770011C990 /* AppUpdate+openEditorURL.swift in Sources */,
 				B8EC568D26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
 				B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 				B8979F6D2792255F0011C990 /* AppUpdate.swift in Sources */,
-				B8979F73279227E70011C990 /* AppUpdate+resetEditor.swift in Sources */,
-				B8979F8B279229890011C990 /* AppUpdate+deleteEntry.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
