@@ -116,36 +116,24 @@ public final class Store<State, Action>: ObservableObject {
         self.state = change.state
         // Run effect
         if let fx = change.fx {
-            sink(
-                publisher: fx.receive(
-                    on: DispatchQueue.main,
-                    options: .init(qos: .userInitiated)
-                ).eraseToAnyPublisher(),
-                receiveValue: self.send
-            )
-        }
-    }
-
-    /// Subscribe to a publisher until it completes.
-    /// Retains the cancellable reference until the cancellable is complete.
-    private func sink(
-        publisher: AnyPublisher<Action, Never>,
-        receiveValue: @escaping (Action) -> Void
-    ) {
-        // Create a UUID for the cancellable.
-        // Store cancellable in dictionary by UUID.
-        // Remove cancellable from dictionary upon effect completion.
-        // This retains the effect pipeline for as long as it takes to complete
-        // the effect, and then removes it, so we don't have a cancellables
-        // memory leak.
-        let id = UUID()
-        let cancellable = publisher
-            .sink(
+            let publisher = fx.receive(
+                on: DispatchQueue.main,
+                options: .init(qos: .userInitiated)
+            ).eraseToAnyPublisher()
+            // Create a UUID for the cancellable.
+            // Store cancellable in dictionary by UUID.
+            // Remove cancellable from dictionary upon effect completion.
+            // This retains the effect pipeline for as long as it takes to complete
+            // the effect, and then removes it, so we don't have a cancellables
+            // memory leak.
+            let id = UUID()
+            let cancellable = publisher.sink(
                 receiveCompletion: { [weak self] _ in
                     self?.cancellables.removeValue(forKey: id)
                 },
-                receiveValue: receiveValue
+                receiveValue: self.send
             )
-        self.cancellables[id] = cancellable
+            self.cancellables[id] = cancellable
+        }
     }
 }
