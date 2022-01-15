@@ -86,7 +86,7 @@ enum AppAction {
 }
 
 //  MARK: Model
-struct AppModel {
+struct AppModel: Equatable {
     /// Enum describing which view is currently focused.
     /// Focus is mutually exclusive, and SwiftUI's FocusedState requires
     /// modeling this state as an enum.

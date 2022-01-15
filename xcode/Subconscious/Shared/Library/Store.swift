@@ -59,7 +59,8 @@ public struct Change<State, Action> {
 /// See https://guide.elm-lang.org/architecture/
 /// and https://guide.elm-lang.org/webapps/structure.html
 /// for more about this approach.
-public final class Store<State, Action>: ObservableObject {
+public final class Store<State, Action>: ObservableObject
+where State: Equatable {
     /// Logger, used when in debug mode
     private var logger: Logger
     /// Toggle debug mode
@@ -112,9 +113,12 @@ public final class Store<State, Action>: ObservableObject {
             logger.debug("Action: \(String(reflecting: action))")
             logger.debug("State: \(String(reflecting: change.state))")
         }
-        // Set state. This mutates published property, firing objectWillChange.
-        self.state = change.state
-        // Run effect
+        // Set state if changed.
+        // This mutates published property, firing objectWillChange.
+        if self.state != change.state {
+            self.state = change.state
+        }
+        // Run effects, if any
         if let fx = change.fx {
             let publisher = fx.receive(
                 on: DispatchQueue.main,
