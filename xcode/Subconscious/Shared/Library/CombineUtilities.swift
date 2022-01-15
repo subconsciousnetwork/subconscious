@@ -16,8 +16,8 @@ struct CombineUtilities {
     ) -> AnyPublisher<T, Never> {
         Future({ promise in
             DispatchQueue.global(qos: qos).async(execute: {
-                let success = execute()
-                promise(.success(success))
+                let result: T = execute()
+                promise(.success(result))
             })
         }).eraseToAnyPublisher()
     }
@@ -30,7 +30,7 @@ struct CombineUtilities {
         Future({ promise in
             DispatchQueue.global(qos: qos).async(execute: {
                 do {
-                    let success = try execute()
+                    let success: T = try execute()
                     promise(.success(success))
                 } catch {
                     promise(.failure(error))

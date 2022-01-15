@@ -20,12 +20,11 @@ struct KeyboardToolbarView: View {
                         isSheetPresented = true
                     },
                     label: {
-                        Image(
-                            systemName: "magnifyingglass"
-                        ).frame(
-                            width: AppTheme.icon,
-                            height: AppTheme.icon
-                        )
+                        Image(systemName: "magnifyingglass")
+                            .frame(
+                                width: AppTheme.icon,
+                                height: AppTheme.icon
+                            )
                     }
                 )
                 Divider()

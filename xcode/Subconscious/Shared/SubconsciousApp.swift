@@ -13,8 +13,9 @@ struct SubconsciousApp: App {
     var body: some Scene {
         WindowGroup {
             AppView(
-                store: Store(
-                    state: .init(),
+                store: Store<AppModel, AppAction>(
+                    update: AppUpdate.update,
+                    state: AppModel(),
                     logger: Logger.init(
                         subsystem: "com.subconscious",
                         category: "store"

@@ -29,53 +29,56 @@ import Combine
 import SwiftUI
 import os
 
-/// An Updatable is a type that knows how create updates and effects in response to actions.
-/// Effects are Combine Publishers that produce Actions and never fail.
-public protocol Updatable {
-    associatedtype Action
-    func update(action: Action) -> (Self, AnyPublisher<Action, Never>)
+public struct Change<State, Action> {
+    var state: State
+    var fx: AnyPublisher<Action, Never>?
 }
 
 /// Store is a source of truth for a state.
 ///
-/// Store is an `ObservableObject`. You can use it in a view via `@ObservedObject`
-/// or `@StateObject` to power view rendering.
+/// Store is an `ObservableObject`. You can use it in a view via
+/// `@ObservedObject` or `@StateObject` to power view rendering.
 ///
-/// Store has a `@Published` `state` that conforms to`Updatable` (typically a struct).
-/// All updates and effects to this state happen through actions sent to `store.send`.
+/// Store has a `@Published` `state` (typically a struct).
+/// All updates and effects to this state happen through actions
+/// sent to `store.send`.
 ///
-/// Store is meant to be used as part of a single app-wide, or major-view-wide component.
-/// Store deliberately does not solve for nested components or nested stores. Following Elm,
-/// deeply nested components are avoided. Instead, an app should use a single store,
-/// or perhaps one store per major view. Components should not have to communicate with
-/// each other. If nested components do have to communicate, it is probably a sign they
-/// should be the same component with a shared store.
+/// Store is meant to be used as part of a single app-wide, or
+/// major-view-wide component. Store deliberately does not solve for nested
+/// components or nested stores. Following Elm, deeply nested components
+/// are avoided. Instead, an app should use a single store, or perhaps one
+/// store per major view. Components should not have to communicate with
+/// each other. If nested components do have to communicate, it is
+/// probably a sign they should be the same component with a shared store.
 ///
-/// Instead of decomposing an app into components, we decompose the app into views that share the
-/// same store and actions. Sub-views should be either stateless, consuming bare properties
-/// of `store.state`, or take bindings, which can be created with `store.binding`.
+/// Instead of decomposing an app into components, we decompose the app into
+/// views that share the same store and actions. Sub-views should be either
+/// stateless, consuming bare properties of `store.state`, or take bindings,
+/// which can be created with `store.binding`.
 ///
 /// See https://guide.elm-lang.org/architecture/
 /// and https://guide.elm-lang.org/webapps/structure.html
 /// for more about this approach.
-public final class Store<State>: ObservableObject
-where State: Updatable
-{
+public final class Store<State, Action>: ObservableObject {
     /// Logger, used when in debug mode
     private var logger: Logger
     /// Toggle debug mode
     public private(set) var debug: Bool
     /// Stores cancellables by ID
     private var cancellables: [UUID: AnyCancellable] = [:]
+    /// Update function for state
+    public private(set) var update: (State, Action) -> Change<State, Action>
     /// Current state.
     /// All writes to state happen through actions sent to `Store.send`.
     @Published public private(set) var state: State
 
     init(
+        update: @escaping (State, Action) -> Change<State, Action>,
         state: State,
         logger: Logger,
         debug: Bool = false
     ) {
+        self.update = update
         self.state = state
         self.logger = logger
         self.debug = debug
@@ -83,10 +86,11 @@ where State: Updatable
 
     /// Create a binding that can update the store.
     /// Sets send actions to the store, rather than setting values directly.
-    /// Optional `animation` parameter allows you to trigger an animation for binding sets.
+    /// Optional `animation` parameter allows you to trigger an animation
+    /// for binding sets.
     public func binding<Value>(
         get: @escaping (State) -> Value,
-        tag: @escaping (Value) -> State.Action,
+        tag: @escaping (Value) -> Action,
         animation: Animation? = nil
     ) -> Binding<Value> {
         Binding(
@@ -101,45 +105,35 @@ where State: Updatable
 
     /// Send an action to the store to update state and generate effects.
     /// Any effects generated are fed back into the store.
-    public func send(action: State.Action) {
+    public func send(action: Action) {
         // Generate next state and effect
-        let (next, effect) = state.update(action: action)
+        let change = update(state, action)
         if debug {
             logger.debug("Action: \(String(reflecting: action))")
-            logger.debug("State: \(String(reflecting: next))")
+            logger.debug("State: \(String(reflecting: change.state))")
         }
         // Set state. This mutates published property, firing objectWillChange.
-        self.state = next
+        self.state = change.state
         // Run effect
-        sink(
-            publisher: effect.receive(
+        if let fx = change.fx {
+            let publisher = fx.receive(
                 on: DispatchQueue.main,
                 options: .init(qos: .userInitiated)
-            ).eraseToAnyPublisher(),
-            receiveValue: self.send
-        )
-    }
-
-    /// Subscribe to a publisher until it completes.
-    /// Retains the cancellable reference until the cancellable is complete.
-    private func sink(
-        publisher: AnyPublisher<State.Action, Never>,
-        receiveValue: @escaping (State.Action) -> Void
-    ) {
-        // Create a UUID for the cancellable.
-        // Store cancellable in dictionary by UUID.
-        // Remove cancellable from dictionary upon effect completion.
-        // This retains the effect pipeline for as long as it takes to complete
-        // the effect, and then removes it, so we don't have a cancellables
-        // memory leak.
-        let id = UUID()
-        let cancellable = publisher
-            .sink(
+            ).eraseToAnyPublisher()
+            // Create a UUID for the cancellable.
+            // Store cancellable in dictionary by UUID.
+            // Remove cancellable from dictionary upon effect completion.
+            // This retains the effect pipeline for as long as it takes to complete
+            // the effect, and then removes it, so we don't have a cancellables
+            // memory leak.
+            let id = UUID()
+            let cancellable = publisher.sink(
                 receiveCompletion: { [weak self] _ in
                     self?.cancellables.removeValue(forKey: id)
                 },
-                receiveValue: receiveValue
+                receiveValue: self.send
             )
-        self.cancellables[id] = cancellable
+            self.cancellables[id] = cancellable
+        }
     }
 }

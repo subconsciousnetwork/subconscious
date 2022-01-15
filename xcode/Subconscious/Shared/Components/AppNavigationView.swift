@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AppNavigationView: View {
-    @ObservedObject var store: Store<AppModel>
+    @ObservedObject var store: Store<AppModel, AppAction>
 
     var body: some View {
         NavigationView {
