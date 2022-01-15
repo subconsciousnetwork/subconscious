@@ -145,6 +145,20 @@ struct AppModel {
 }
 
 //  MARK: Update
+//  !!!: Combine publishers can cause segfaults in Swift compiler
+//  Combine publishers have complex types and must be marked up carefully
+//  to avoid frequent segfaults in Swift compiler due to type inference
+//  (as of 2022-01-14).
+//
+//  We found the following mitigation/solution:
+//  - Mark publisher variables with explicit type annotations.
+//  - Beware Publishers.Merge and variants. Use publisher.merge instead.
+//    Publishers.Merge produces a more complex type signature, and this seems
+//    to be what was crashing the Swift compiler.
+//
+//  2022-01-14 Gordon Brander
+/// AppUpdate is a namespace where we keep the main app update function,
+/// as well as the sub-update functions it calls out to.
 struct AppUpdate {
     static func update(
         state: AppModel,
