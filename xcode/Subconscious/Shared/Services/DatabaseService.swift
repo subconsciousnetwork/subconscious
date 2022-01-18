@@ -234,7 +234,7 @@ struct DatabaseService {
     }
 
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
-        let results: [EntryLink] = try database.execute(
+        let entries: [EntryLink] = try database.execute(
             sql: """
             SELECT slug, title
             FROM entry
@@ -254,6 +254,8 @@ struct DatabaseService {
             return nil
         })
 
+        let entrySlugs = Set(entries.map({ entry in entry.slug }))
+
         let queries: [EntryLink] = try database.execute(
             sql: """
             SELECT DISTINCT search_history.query
@@ -269,8 +271,16 @@ struct DatabaseService {
         })
 
         var suggestions: [Suggestion] = []
-        suggestions.append(contentsOf: results.map(Suggestion.entry))
-        suggestions.append(contentsOf: queries.map(Suggestion.search))
+        suggestions.append(contentsOf: entries.map(Suggestion.entry))
+
+        // Append queries, except those which would have the same slug as
+        // an existing entry.
+        for query in queries {
+            if !entrySlugs.contains(query.slug) {
+                suggestions.append(Suggestion.search(query))
+            }
+        }
+
         return suggestions
     }
 
@@ -360,7 +370,7 @@ struct DatabaseService {
     }
 
     /// Log a search query in search history db
-    func insertSearchHistory(query: String) -> AnyPublisher<Void, Error> {
+    func createSearchHistoryItem(query: String) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
             guard !query.isWhitespace else {
                 return
@@ -382,7 +392,7 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
-    private func getEntry(
+    private func readEntry(
         slug: String
     ) -> SubtextFile? {
         try? SubtextFile(
@@ -434,7 +444,7 @@ struct DatabaseService {
             })
 
             // Retreive top entry from file system to ensure it is fresh.
-            let entry = getEntry(slug: slug)
+            let entry = readEntry(slug: slug)
 
             return ResultSet(
                 query: query,
