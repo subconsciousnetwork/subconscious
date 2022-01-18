@@ -47,7 +47,7 @@ struct SearchView: View {
             Divider()
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(suggestions, id: \.self) { suggestion in
+                    ForEach(suggestions) { suggestion in
                         Button(
                             action: {
                                 withAnimation(
