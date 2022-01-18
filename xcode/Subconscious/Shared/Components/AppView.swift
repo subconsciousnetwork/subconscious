@@ -49,6 +49,9 @@ enum AppAction {
     case deleteEntrySuccess(String)
     case deleteEntryFailure(String)
 
+    // Rename
+    case setRenameShowing(Bool)
+
     // Search
     case setSearch(String)
     case showSearch
@@ -124,6 +127,10 @@ struct AppModel {
     var entryToDelete: String? = nil
     /// Delete confirmation action sheet
     var isConfirmDeleteShowing = false
+
+    //  Note renaming
+    /// Note rename alert showing?
+    var isRenameShowing = false
 
     /// Live search bar text
     var searchText = ""
@@ -256,6 +263,8 @@ struct AppUpdate {
         case let .deleteEntryFailure(error):
             AppEnvironment.logger.log("Failed to delete entry: \(error)")
             return Change(state: state)
+        case let .setRenameShowing(isShowing):
+            return setRenameShowing(state: state, isShowing: isShowing)
         case let .setEditorAttributedText(attributedText):
             var model = state
             // Render attributes from markup if text has changed
@@ -590,6 +599,15 @@ struct AppUpdate {
             state: state,
             fx: fx
         )
+    }
+
+    static func setRenameShowing(
+        state: AppModel,
+        isShowing: Bool
+    ) -> Change<AppModel, AppAction> {
+        var model = state
+        model.isRenameShowing = isShowing
+        return Change(state: state)
     }
 
     static func setSearch(

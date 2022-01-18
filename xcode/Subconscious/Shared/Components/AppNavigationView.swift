@@ -89,6 +89,10 @@ struct AppNavigationView: View {
                                 get: \.editorSelection,
                                 tag: AppAction.setEditorSelection
                             ),
+                            isRenamePresented: store.binding(
+                                get: \.isRenameShowing,
+                                tag: AppAction.setRenameShowing
+                            ),
                             isLinkSheetPresented: store.binding(
                                 get: \.isLinkSheetPresented,
                                 tag: AppAction.setLinkSheetPresented

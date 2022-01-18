@@ -28,6 +28,7 @@ struct DetailView: View {
     @Binding var focus: AppModel.Focus?
     @Binding var editorAttributedText: NSAttributedString
     @Binding var editorSelection: NSRange
+    @Binding var isRenamePresented: Bool
     @Binding var isLinkSheetPresented: Bool
     @Binding var linkSearchText: String
     @Binding var linkSuggestions: [Suggestion]
@@ -133,7 +134,7 @@ struct DetailView: View {
         }
         .alert(
             "Rename",
-            isPresented: .constant(false),
+            isPresented: $isRenamePresented,
             actions: {
                 Button(
                     role: .cancel,
