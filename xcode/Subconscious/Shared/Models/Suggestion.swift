@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Suggestion: Hashable, CustomStringConvertible {
+enum Suggestion: Hashable, Identifiable, CustomStringConvertible {
     case entry(EntryLink)
     case search(EntryLink)
 
@@ -17,6 +17,15 @@ enum Suggestion: Hashable, CustomStringConvertible {
             return stub
         case let .search(stub):
             return stub
+        }
+    }
+
+    var id: String {
+        switch self {
+        case let .entry(link):
+            return "entry/\(link.id)"
+        case let .search(link):
+            return "search/\(link.id)"
         }
     }
 
