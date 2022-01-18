@@ -27,6 +27,10 @@ enum AppAction {
     case syncSuccess([FileSync.Change])
     case syncFailure(String)
 
+    /// Refresh the state of all lists by reloading from database.
+    /// This also sets searches to their zero-query state.
+    case refreshAll
+
     // List entries
     case listRecent
     case setRecent([EntryStub])
@@ -197,6 +201,8 @@ struct AppUpdate {
                 "File sync failed: \(message)"
             )
             return Change(state: state)
+        case .refreshAll:
+            return refreshAll(state: state)
         case .listRecent:
             return listRecent(state: state)
         case let .setRecent(entries):
@@ -315,10 +321,7 @@ struct AppUpdate {
         case .save:
             return save(state: state)
         case let .saveSuccess(url):
-            AppEnvironment.logger.debug(
-                "Saved entry \(url)"
-            )
-            return Change(state: state)
+            return saveSuccess(state: state, url: url)
         case let .saveFailure(url, message):
             //  TODO: show user a "try again" banner
             AppEnvironment.logger.warning(
@@ -413,11 +416,7 @@ struct AppUpdate {
             .catch({ error in
                 Just(AppAction.syncFailure(error.localizedDescription))
             })
-            .merge(
-                with: Just(AppAction.setSearch("")),
-                Just(AppAction.setLinkSearch("")),
-                Just(AppAction.listRecent)
-            )
+            .merge(with: Just(.refreshAll))
             .eraseToAnyPublisher()
         if success.from != success.to {
             AppEnvironment.logger.log(
@@ -447,6 +446,19 @@ struct AppUpdate {
                     error.localizedDescription)
                 )
             })
+            .eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
+    }
+
+    /// Refresh all lists in the app from database
+    /// Typically invoked after creating/deleting an entry, or performing
+    /// some other action that would invalidate the state of various lists.
+    static func refreshAll(state: AppModel) -> Change<AppModel, AppAction> {
+        let fx: AnyPublisher<AppAction, Never> = Just(AppAction.listRecent)
+            .merge(
+                with: Just(AppAction.setSearch("")),
+                Just(AppAction.setLinkSearch(""))
+            )
             .eraseToAnyPublisher()
         return Change(state: state, fx: fx)
     }
@@ -508,8 +520,7 @@ struct AppUpdate {
         AppEnvironment.logger.log("Deleted entry: \(slug)")
         //  Refresh lists in search fields after delete.
         //  This ensures they don't show the deleted entry.
-        let fx: AnyPublisher<AppAction, Never> = Just(AppAction.setSearch(""))
-            .merge(with: Just(AppAction.setLinkSearch("")))
+        let fx: AnyPublisher<AppAction, Never> = Just(AppAction.refreshAll)
             .eraseToAnyPublisher()
         return Change(
             state: state,
@@ -622,6 +633,7 @@ struct AppUpdate {
         return Change(state: model)
     }
 
+    /// Save entry to database
     static func save(
         state: AppModel
     ) -> Change<AppModel, AppAction> {
@@ -660,6 +672,19 @@ struct AppUpdate {
             )
             return Change(state: model)
         }
+    }
+
+    /// Log save success and perform refresh of various lists.
+    static func saveSuccess(
+        state: AppModel,
+        url: URL
+    ) -> Change<AppModel, AppAction> {
+        AppEnvironment.logger.debug(
+            "Saved entry \(url)"
+        )
+        let fx = Just(AppAction.refreshAll)
+            .eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
     }
 }
 
