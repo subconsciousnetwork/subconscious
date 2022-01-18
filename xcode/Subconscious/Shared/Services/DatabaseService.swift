@@ -233,7 +233,10 @@ struct DatabaseService {
         }
     }
 
-    private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
+    private func searchSuggestionsForZeroQuery(
+    ) throws -> OrderedDictionary<String, Suggestion> {
+        var suggestions: OrderedDictionary<String, Suggestion> = [:]
+
         let entries: [EntryLink] = try database.execute(
             sql: """
             SELECT slug, title
@@ -241,7 +244,8 @@ struct DatabaseService {
             ORDER BY modified DESC
             LIMIT 5
             """
-        ).compactMap({ row in
+        )
+        .compactMap({ row in
             if
                 let slug: String = row.get(0),
                 let title: String = row.get(1)
@@ -254,7 +258,9 @@ struct DatabaseService {
             return nil
         })
 
-        let entrySlugs = Set(entries.map({ entry in entry.slug }))
+        for entry in entries {
+            suggestions.updateValue(.entry(entry), forKey: entry.slug)
+        }
 
         let queries: [EntryLink] = try database.execute(
             sql: """
@@ -263,21 +269,19 @@ struct DatabaseService {
             ORDER BY search_history.created DESC
             LIMIT 5
             """
-        ).compactMap({ row in
+        )
+        .compactMap({ row in
             if let title: String = row.get(0) {
                 return EntryLink(title: title)
             }
             return nil
         })
 
-        var suggestions: [Suggestion] = []
-        suggestions.append(contentsOf: entries.map(Suggestion.entry))
-
         // Append queries, except those which would have the same slug as
         // an existing entry.
         for query in queries {
-            if !entrySlugs.contains(query.slug) {
-                suggestions.append(Suggestion.search(query))
+            if suggestions[query.slug] == nil {
+                suggestions.updateValue(.search(query), forKey: query.slug)
             }
         }
 
@@ -286,14 +290,20 @@ struct DatabaseService {
 
     private func searchSuggestionsForQuery(
         query: String
-    ) throws -> [Suggestion] {
+    ) throws -> OrderedDictionary<String, Suggestion> {
         guard !query.isWhitespace else {
-            return []
+            return OrderedDictionary<String, Suggestion>()
         }
 
-        // Select the first 560 characters of the body.
-        // We'll use this excerpted text to derive a title.
-        let results: [EntryLink] = try database.execute(
+        var suggestions: OrderedDictionary<String, Suggestion> = [:]
+
+        /// Create a suggestion for the literal query
+        let querySlug = Slashlink.slugify(query)
+        suggestions[querySlug] = .search(
+            EntryLink(title: query)
+        )
+
+        let entries: [EntryLink] = try database.execute(
             sql: """
             SELECT slug, title
             FROM entry_search
@@ -304,7 +314,8 @@ struct DatabaseService {
             parameters: [
                 .prefixQueryFTS5(query)
             ]
-        ).compactMap({ row in
+        )
+        .compactMap({ row in
             if
                 let slug: String = row.get(0),
                 let title: String = row.get(1)
@@ -317,8 +328,15 @@ struct DatabaseService {
             return nil
         })
 
-        let resultSlugs = Set(results.map(\.slug))
+        // Insert entries into suggestions.
+        // If literal query and an entry have the same slug,
+        // entry will overwrite query.
+        for entry in entries {
+            suggestions.updateValue(.entry(entry), forKey: entry.slug)
+        }
 
+        // Append queries, except those which would have the same slug as
+        // an existing entry.
         let queries: [EntryLink] = try database.execute(
             sql: """
             SELECT DISTINCT query
@@ -330,26 +348,20 @@ struct DatabaseService {
             parameters: [
                 .prefixQueryLike(query)
             ]
-        ).compactMap({ row in
+        )
+        .compactMap({ row in
             if let title: String = row.get(0) {
                 return EntryLink(title: title)
             }
             return nil
-        }).filter({ stub in
-            !resultSlugs.contains(stub.slug)
         })
 
-        var suggestions: [Suggestion] = []
-        let slug = Slashlink.slugify(query)
-        if !resultSlugs.contains(slug) {
-            suggestions.append(
-                .search(
-                    EntryLink(title: query)
-                )
-            )
+        for query in queries {
+            if suggestions[query.slug] == nil {
+                suggestions.updateValue(.search(query), forKey: query.slug)
+            }
         }
-        suggestions.append(contentsOf: results.map(Suggestion.entry))
-        suggestions.append(contentsOf: queries.map(Suggestion.search))
+
         return suggestions
     }
 
@@ -360,9 +372,11 @@ struct DatabaseService {
     ) -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             if query.isWhitespace {
-                return try searchSuggestionsForZeroQuery()
+                let suggestions = try searchSuggestionsForZeroQuery()
+                return Array(suggestions.values)
             } else {
-                return try searchSuggestionsForQuery(query: query)
+                let suggestions = try searchSuggestionsForQuery(query: query)
+                return Array(suggestions.values)
             }
         }
         .receive(on: DispatchQueue.main)
