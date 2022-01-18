@@ -131,6 +131,28 @@ struct DetailView: View {
                 }
             }
         }
+        .alert(
+            "Rename",
+            isPresented: .constant(false),
+            actions: {
+                Button(
+                    role: .cancel,
+                    action: {}
+                ) {
+                    Text("Cancel")
+                }
+                .keyboardShortcut(.cancelAction)
+                Button(
+                    action: {}
+                ) {
+                    Text("Rename")
+                }
+                .keyboardShortcut(.defaultAction)
+            },
+            message: {
+                Text("Enter a new slug for this entry")
+            }
+        )
         .sheet(
             isPresented: $isLinkSheetPresented,
             onDismiss: {}
