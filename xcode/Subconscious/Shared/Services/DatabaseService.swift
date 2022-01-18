@@ -360,7 +360,7 @@ struct DatabaseService {
     }
 
     /// Log a search query in search history db
-    func insertSearchHistory(query: String) -> AnyPublisher<Void, Error> {
+    func createSearchHistoryItem(query: String) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
             guard !query.isWhitespace else {
                 return
@@ -382,7 +382,7 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
-    private func getEntry(
+    private func readEntry(
         slug: String
     ) -> SubtextFile? {
         try? SubtextFile(
@@ -434,7 +434,7 @@ struct DatabaseService {
             })
 
             // Retreive top entry from file system to ensure it is fresh.
-            let entry = getEntry(slug: slug)
+            let entry = readEntry(slug: slug)
 
             return ResultSet(
                 query: query,

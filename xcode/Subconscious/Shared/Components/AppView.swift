@@ -31,6 +31,12 @@ enum AppAction {
     /// This also sets searches to their zero-query state.
     case refreshAll
 
+    //  Search history
+    /// Write a search history event to the database
+    case createSearchHistoryItem(String)
+    case createSearchHistoryItemSuccess(String)
+    case createSearchHistoryItemFailure(String)
+
     // List entries
     case listRecent
     case setRecent([EntryStub])
@@ -203,6 +209,21 @@ struct AppUpdate {
             return Change(state: state)
         case .refreshAll:
             return refreshAll(state: state)
+        case let .createSearchHistoryItem(query):
+            return createSearchHistoryItem(
+                state: state,
+                query: query
+            )
+        case let .createSearchHistoryItemSuccess(query):
+            return createSearchHistoryItemSuccess(
+                state: state,
+                query: query
+            )
+        case let .createSearchHistoryItemFailure(error):
+            return createSearchHistoryItemFailure(
+                state: state,
+                error: error
+            )
         case .listRecent:
             return listRecent(state: state)
         case let .setRecent(entries):
@@ -463,6 +484,49 @@ struct AppUpdate {
         return Change(state: state, fx: fx)
     }
 
+    /// Insert search history event into database
+    static func createSearchHistoryItem(
+        state: AppModel,
+        query: String
+    ) -> Change<AppModel, AppAction> {
+        let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+            .createSearchHistoryItem(query: query)
+            .map({ result in
+                AppAction.noop
+            })
+            .catch({ error in
+                Just(
+                    AppAction.createSearchHistoryItemFailure(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
+    }
+
+    /// Handle success case for search history item creation
+    static func createSearchHistoryItemSuccess(
+        state: AppModel,
+        query: String
+    ) -> Change<AppModel, AppAction> {
+        AppEnvironment.logger.log(
+            "Created search history entry: \(query)"
+        )
+        return Change(state: state)
+    }
+
+    /// Handle failure case for search history item creation
+    static func createSearchHistoryItemFailure(
+        state: AppModel,
+        error: String
+    ) -> Change<AppModel, AppAction> {
+        AppEnvironment.logger.warning(
+            "Failed to create search history entry: \(error)"
+        )
+        return Change(state: state)
+    }
+
     static func listRecent(
         state: AppModel
     ) -> Change<AppModel, AppAction> {
@@ -568,7 +632,10 @@ struct AppUpdate {
             .catch({ error in
                 Just(AppAction.detailFailure(error.localizedDescription))
             })
-            .merge(with: Just(AppAction.setSearch("")))
+            .merge(
+                with: Just(AppAction.setSearch("")),
+                Just(AppAction.createSearchHistoryItem(query))
+            )
             .eraseToAnyPublisher()
 
         return Change(state: model, fx: fx)
