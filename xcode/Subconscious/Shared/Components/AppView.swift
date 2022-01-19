@@ -51,7 +51,9 @@ enum AppAction {
 
     // Rename
     case setRenameShowing(Bool)
-    case setSlugField(String)
+    case setRenameSlugField(String)
+    case setRenameSuggestions([Suggestion])
+    case renameSuggestionsError(String)
 
     // Search
     case setSearch(String)
@@ -94,7 +96,7 @@ enum AppAction {
         AppAction.commit(
             query: query,
             // Since we don't have a slug, derive slug from query
-            slug: Slashlink.slugify(query)
+            slug: query.slugify()
         )
     }
 }
@@ -136,7 +138,9 @@ struct AppModel {
     /// Text for slug rename TextField.
     /// Note this may be different from the actual slug, e.g. when in process
     /// of renaming an entry.
-    var slugField: String = ""
+    var renameSlugField: String = ""
+    /// Suggestions for renaming note.
+    var renameSuggestions: [Suggestion] = []
 
     /// Live search bar text
     var searchText = ""
@@ -269,8 +273,12 @@ struct AppUpdate {
             return Change(state: state)
         case let .setRenameShowing(isShowing):
             return setRenameShowing(state: state, isShowing: isShowing)
-        case let .setSlugField(text):
-            return setSlugField(state: state, text: text)
+        case let .setRenameSlugField(text):
+            return setRenameSlugField(state: state, text: text)
+        case let .setRenameSuggestions(suggestions):
+            return setRenameSuggestions(state: state, suggestions: suggestions)
+        case let .renameSuggestionsError(error):
+            return renameSuggestionsError(state: state, error: error)
         case let .setEditorAttributedText(attributedText):
             var model = state
             // Render attributes from markup if text has changed
@@ -613,15 +621,48 @@ struct AppUpdate {
     }
 
     /// Set text of slug field
-    static func setSlugField(
+    static func setRenameSlugField(
         state: AppModel,
         text: String
     ) -> Change<AppModel, AppAction> {
         var model = state
-        model.slugField = text
+        model.renameSlugField = text
+        let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+            .searchRenameSuggestions(query: text)
+            .map({ suggestions in
+                AppAction.setRenameSuggestions(suggestions)
+            })
+            .catch({ error in
+                Just(
+                    AppAction.renameSuggestionsError(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Change(state: model, fx: fx)
+    }
+
+    /// Set rename suggestions
+    static func setRenameSuggestions(
+        state: AppModel,
+        suggestions: [Suggestion]
+    ) -> Change<AppModel, AppAction> {
+        var model = state
+        model.renameSuggestions = suggestions
         return Change(state: model)
     }
 
+    static func renameSuggestionsError(
+        state: AppModel,
+        error: String
+    ) -> Change<AppModel, AppAction> {
+        AppEnvironment.logger.warning(
+            "Failed to read suggestions from database: \(error)"
+        )
+        return Change(state: state)
+    }
+    
     static func setSearch(
         state: AppModel,
         text: String

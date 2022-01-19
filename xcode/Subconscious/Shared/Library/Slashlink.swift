@@ -28,28 +28,6 @@ extension Slashlink {
         return slug
     }
 
-    /// Given a string, returns a slashlink slug *without* the slash prefix.
-    static func slugify(_ text: String) -> Slug {
-        text
-            .lowercased()
-            // Replace runs of one or more space with a single dash
-            .replacingOccurrences(
-                of: #"\s+"#,
-                with: "-",
-                options: .regularExpression,
-                range: nil
-            )
-            // Remove all non-slug characters
-            .replacingOccurrences(
-                of: #"[^a-zA-Z0-9_\-\/]"#,
-                with: "",
-                options: .regularExpression,
-                range: nil
-            )
-            .truncatingSafeFileNameLength()
-            .ltrim(prefix: "/")
-    }
-
     /// Given a slug, returns a string that is close-enough to prose text
     static func unslugify(_ slug: Slug) -> String {
         removeLeadingSlash(slug)
@@ -62,7 +40,7 @@ extension Slashlink {
     }
 
     static func slashlinkToURLString(_ text: String) -> String? {
-        let slashlink = slugify(text)
+        let slashlink = text.slugifyString()
         if let url = URL(string: "sub://slashlink/\(slashlink)") {
             return url.absoluteString
         }
@@ -86,7 +64,7 @@ extension Slashlink {
         name: String,
         ext: String
     ) -> URL {
-        let slug = slugify(name)
+        let slug = name.slugifyString()
         let url = base.appendingFilename(name: slug, ext: ext)
         if !FileManager.default.fileExists(atPath: url.path) {
             return url
