@@ -110,6 +110,7 @@ struct AppModel {
         case search
         case linkSearch
         case editor
+        case rename
     }
 
     /// What is focused? (nil means nothing is focused)
