@@ -300,7 +300,7 @@ struct DatabaseService {
         var suggestions: OrderedDictionary<String, Suggestion> = [:]
 
         /// Create a suggestion for the literal query
-        let querySlug = Slashlink.slugify(query)
+        let querySlug = query.slugifyString()
         suggestions[querySlug] = .search(
             EntryLink(title: query)
         )
@@ -380,6 +380,77 @@ struct DatabaseService {
                 let suggestions = try searchSuggestionsForQuery(query: query)
                 return Array(suggestions.values)
             }
+        }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
+    }
+
+    func searchRenameSuggestions(
+        query: String
+    ) -> AnyPublisher<[Suggestion], Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            guard !query.isWhitespace else {
+                return []
+            }
+
+            var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
+
+            let querySuggestion = Suggestion.search(EntryLink(title: query))
+            suggestions[querySuggestion.id] = querySuggestion
+
+            let searches: [EntryLink] = try database.execute(
+                sql: """
+                SELECT DISTINCT query
+                FROM search_history
+                WHERE query LIKE ?
+                ORDER BY created DESC
+                LIMIT 3
+                """,
+                parameters: [
+                    .prefixQueryLike(query)
+                ]
+            )
+            .compactMap({ row in
+                if let title: String = row.get(0) {
+                    return EntryLink(title: title)
+                }
+                return nil
+            })
+
+            for search in searches {
+                suggestions.updateValue(.search(search), forKey: search.id)
+            }
+
+            let entries: [EntryLink] = try database.execute(
+                sql: """
+                SELECT slug, title
+                FROM entry_search
+                WHERE entry_search MATCH ?
+                ORDER BY rank
+                LIMIT 5
+                """,
+                parameters: [
+                    .prefixQueryFTS5(query)
+                ]
+            )
+            .compactMap({ row in
+                if
+                    let slug: String = row.get(0),
+                    let title: String = row.get(1)
+                {
+                    return EntryLink(
+                        slug: slug,
+                        title: title
+                    )
+                }
+                return nil
+            })
+
+            for entry in entries {
+                suggestions.updateValue(.entry(entry), forKey: entry.id)
+            }
+
+            return Array(suggestions.values)
         }
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
