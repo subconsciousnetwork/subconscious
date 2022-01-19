@@ -20,7 +20,7 @@ struct EntryLink: Hashable, Identifiable {
 
     init(title: String) {
         self.title = title
-        self.slug = Slashlink.slugify(title)
+        self.slug = title.slugify()
     }
 
     var id: Slug { slug }
