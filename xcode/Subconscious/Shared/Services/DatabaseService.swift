@@ -98,12 +98,12 @@ struct DatabaseService {
                 // .conflict. Leader wins.
                 case .leftOnly, .leftNewer, .rightNewer, .conflict:
                     if let left = change.left {
-                        try writeEntryToDatabase(url: left.url)
+                        try writeEntryToDatabase(slug: left.url.toSlug())
                     }
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly:
                     if let right = change.right {
-                        let slug = right.url.stem
+                        let slug = right.url.toSlug()
                         try deleteEntryFromDatabase(slug: slug)
                     }
                 // .same = no change. Do nothing.
@@ -151,9 +151,11 @@ struct DatabaseService {
         )
     }
 
-    private func writeEntryToDatabase(url: URL) throws {
-        let entry = try SubtextFile(url: url)
-        let fingerprint = try FileFingerprint.Attributes(url: url).unwrap()
+    private func writeEntryToDatabase(slug: Slug) throws {
+        let entry = try SubtextFile(slug: slug, directory: documentUrl).unwrap()
+        let fingerprint = try FileFingerprint.Attributes(
+            url: entry.url(directory: documentUrl)
+        ).unwrap()
         return try writeEntryToDatabase(
             entry: entry,
             modified: fingerprint.modifiedDate,
@@ -164,10 +166,10 @@ struct DatabaseService {
     func writeEntry(entry: SubtextFile) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             // Write contents to file
-            try entry.write()
+            try entry.write(directory: documentUrl)
             // Read fingerprint after writing to get updated time
             let fingerprint = try FileFingerprint.Attributes(
-                url: entry.url
+                url: entry.url(directory: documentUrl)
             ).unwrap()
             return try writeEntryToDatabase(
                 entry: entry,
@@ -407,10 +409,11 @@ struct DatabaseService {
     }
 
     private func readEntry(
-        slug: String
+        slug: Slug
     ) -> SubtextFile? {
-        try? SubtextFile(
-            url: documentUrl.appendingFilename(name: slug, ext: "subtext")
+        SubtextFile(
+            slug: slug,
+            directory: documentUrl
         )
     }
 
@@ -459,7 +462,6 @@ struct DatabaseService {
 
             // Retreive top entry from file system to ensure it is fresh.
             let entry = readEntry(slug: slug)
-
             return ResultSet(
                 query: query,
                 slug: slug,

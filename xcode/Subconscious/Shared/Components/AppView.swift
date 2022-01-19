@@ -81,9 +81,9 @@ enum AppAction {
 
     // Saving entries
     case save
-    case saveSuccess(URL)
+    case saveSuccess(Slug)
     case saveFailure(
-        url: URL,
+        slug: Slug,
         message: String
     )
 
@@ -138,8 +138,8 @@ struct AppModel {
 
     /// Committed search bar query text
     var query = ""
-    /// Slug committed during search
-    var slug: Slug = ""
+    /// Slug for the currently selected entry
+    var slug: Slug? = nil
 
     /// Main search suggestions
     var suggestions: [Suggestion] = []
@@ -149,8 +149,6 @@ struct AppModel {
     /// Editor selection corresponds with `editorAttributedText`
     var editorSelection = NSMakeRange(0, 0)
 
-    /// The URL for the currently active entry
-    var entryURL: URL?
     /// Backlinks to the currently active entry
     var backlinks: [EntryStub] = []
 
@@ -317,10 +315,6 @@ struct AppUpdate {
             model.query = results.query
             model.slug = results.slug
             model.backlinks = results.backlinks
-            let entryURL = results.entry?.url
-            model.entryURL = entryURL ?? AppEnvironment.database.findUniqueURL(
-                name: results.slug
-            )
             model.editorAttributedText = renderMarkup(
                 markup: results.entry?.content ?? results.query
             )
@@ -350,8 +344,8 @@ struct AppUpdate {
             return Change(state: state)
         case .save:
             return save(state: state)
-        case let .saveSuccess(url):
-            return saveSuccess(state: state, url: url)
+        case let .saveSuccess(slug):
+            return saveSuccess(state: state, slug: slug)
         case let .saveFailure(url, message):
             //  TODO: show user a "try again" banner
             AppEnvironment.logger.warning(
@@ -634,7 +628,7 @@ struct AppUpdate {
         slug: Slug
     ) -> Change<AppModel, AppAction> {
         var model = resetEditor(state: state)
-        model.entryURL = nil
+        model.slug = nil
         model.searchText = ""
         model.isSearchShowing = false
         model.isDetailShowing = true
@@ -724,11 +718,11 @@ struct AppUpdate {
     ) -> Change<AppModel, AppAction> {
         var model = state
         model.focus = nil
-        if let entryURL = model.entryURL {
+        if let slug = model.slug {
             // Parse editorAttributedText to entry.
             // TODO refactor model to store entry instead of attributedText.
             let entry = SubtextFile(
-                url: entryURL,
+                slug: slug,
                 content: model.editorAttributedText.string
             )
             let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
@@ -736,12 +730,12 @@ struct AppUpdate {
                     entry: entry
                 )
                 .map({ _ in
-                    AppAction.saveSuccess(entryURL)
+                    AppAction.saveSuccess(slug)
                 })
                 .catch({ error in
                     Just(
                         AppAction.saveFailure(
-                            url: entryURL,
+                            slug: slug,
                             message: error.localizedDescription
                         )
                     )
@@ -762,10 +756,10 @@ struct AppUpdate {
     /// Log save success and perform refresh of various lists.
     static func saveSuccess(
         state: AppModel,
-        url: URL
+        slug: Slug
     ) -> Change<AppModel, AppAction> {
         AppEnvironment.logger.debug(
-            "Saved entry \(url)"
+            "Saved entry: \(slug)"
         )
         let fx = Just(AppAction.refreshAll)
             .eraseToAnyPublisher()

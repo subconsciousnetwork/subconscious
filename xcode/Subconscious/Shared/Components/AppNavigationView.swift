@@ -74,7 +74,7 @@ struct AppNavigationView: View {
                     ),
                     destination: {
                         DetailView(
-                            entryURL: store.state.entryURL,
+                            slug: store.state.slug,
                             backlinks: store.state.backlinks,
                             focus: store.binding(
                                 get: \.focus,

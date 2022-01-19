@@ -8,11 +8,6 @@
 import Foundation
 
 extension URL {
-    /// The stem of a URL, e.g. the file name without extension.
-    var stem: String {
-        self.deletingPathExtension().lastPathComponent
-    }
-
     /// Add file name component to URL with extension
     /// - Returns: new URL
     func appendingFilename(name: String, ext: String) -> URL {

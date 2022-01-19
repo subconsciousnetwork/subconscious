@@ -21,9 +21,9 @@ struct DetailView: View {
     //  TODO: figure out how to bring back swipe animation
     //  2022-01-12 Gordon Brander
     @GestureState private var dismissDragOffset = CGSize.zero
-    /// If we have an entryURL, we're ready to edit.
+    /// If we have a Slug, we're ready to edit.
     /// If we don't, we have nothing to edit.
-    var entryURL: URL?
+    var slug: Slug?
     var backlinks: [EntryStub]
     @Binding var focus: AppModel.Focus?
     @Binding var editorAttributedText: NSAttributedString
@@ -44,7 +44,7 @@ struct DetailView: View {
 
     var body: some View {
         VStack {
-            if entryURL == nil {
+            if slug == nil {
                 ProgressScrim()
             } else {
                 GeometryReader { geometry in
