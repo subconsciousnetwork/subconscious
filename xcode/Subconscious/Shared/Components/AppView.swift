@@ -601,7 +601,7 @@ struct AppUpdate {
     ) -> Change<AppModel, AppAction> {
         var model = state
         model.isRenameShowing = isShowing
-        return Change(state: state)
+        return Change(state: model)
     }
 
     static func setSearch(
