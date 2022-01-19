@@ -13,6 +13,7 @@ struct DetailView: View {
     var slug: Slug?
     var backlinks: [EntryStub]
     @Binding var focus: AppModel.Focus?
+    @Binding var slugField: String
     @Binding var editorAttributedText: NSAttributedString
     @Binding var editorSelection: NSRange
     @Binding var isRenamePresented: Bool
@@ -83,13 +84,14 @@ struct DetailView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 if focus != .editor {
-                    VStack {
+                    Button(
+                        action: {
+                            self.isRenamePresented = true
+                        }
+                    ) {
                         Text(slug ?? "Untitled")
-                            .lineLimit(1)
-                            .font(Font.appCaption)
                     }
-                    .frame(maxWidth: .infinity)
-                    .background(Color.secondaryBackground)
+                    .buttonStyle(MicroFieldButtonStyle())
                 }
             }
             ToolbarItem(placement: .primaryAction) {
@@ -114,28 +116,40 @@ struct DetailView: View {
                 }
             }
         }
-        .alert(
-            "Rename",
+        .sheet(
             isPresented: $isRenamePresented,
-            actions: {
-                Button(
-                    role: .cancel,
-                    action: {}
-                ) {
-                    Text("Cancel")
-                }
-                .keyboardShortcut(.cancelAction)
-                Button(
-                    action: {}
-                ) {
-                    Text("Rename")
-                }
-                .keyboardShortcut(.defaultAction)
-            },
-            message: {
-                Text("Enter a new slug for this entry")
+            onDismiss: {}
+        ) {
+            VStack {
+                NavigationToolbar(
+                    principal: {
+                        Text("Rename")
+                    },
+                    leading: {
+                        Button(
+                            action: {
+                                isRenamePresented = false
+                            }
+                        ) {
+                            Text("Cancel")
+                        }
+                        .buttonStyle(.plain)
+                        .lineLimit(1)
+                    },
+                    trailing: {
+                        EmptyView()
+                    }
+                )
+                SearchTextField(
+                    placeholder: "Enter path for idea",
+                    text: $slugField,
+                    focus: $focus,
+                    field: .rename
+                )
+                Spacer()
             }
-        )
+            .padding()
+        }
         .sheet(
             isPresented: $isLinkSheetPresented,
             onDismiss: {}

@@ -81,6 +81,10 @@ struct AppNavigationView: View {
                                 tag: AppAction.setFocus,
                                 animation: .easeOut(duration: .normal)
                             ),
+                            slugField: store.binding(
+                                get: \.slugField,
+                                tag: AppAction.setSlugField
+                            ),
                             editorAttributedText: store.binding(
                                 get: \.editorAttributedText,
                                 tag: AppAction.setEditorAttributedText
