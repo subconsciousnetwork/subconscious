@@ -51,6 +51,7 @@ enum AppAction {
 
     // Rename
     case setRenameShowing(Bool)
+    case setSlugField(String)
 
     // Search
     case setSearch(String)
@@ -131,6 +132,10 @@ struct AppModel {
     //  Note renaming
     /// Note rename alert showing?
     var isRenameShowing = false
+    /// Text for slug rename TextField.
+    /// Note this may be different from the actual slug, e.g. when in process
+    /// of renaming an entry.
+    var slugField: String = ""
 
     /// Live search bar text
     var searchText = ""
@@ -263,6 +268,8 @@ struct AppUpdate {
             return Change(state: state)
         case let .setRenameShowing(isShowing):
             return setRenameShowing(state: state, isShowing: isShowing)
+        case let .setSlugField(text):
+            return setSlugField(state: state, text: text)
         case let .setEditorAttributedText(attributedText):
             var model = state
             // Render attributes from markup if text has changed
@@ -604,6 +611,16 @@ struct AppUpdate {
         return Change(state: model)
     }
 
+    /// Set text of slug field
+    static func setSlugField(
+        state: AppModel,
+        text: String
+    ) -> Change<AppModel, AppAction> {
+        var model = state
+        model.slugField = text
+        return Change(state: model)
+    }
+
     static func setSearch(
         state: AppModel,
         text: String
@@ -783,7 +800,8 @@ struct AppView: View {
         ZStack(alignment: .bottomTrailing) {
             Color.background.edgesIgnoringSafeArea(.all)
             if store.state.isDatabaseReady {
-                AppNavigationView(store: store).zIndex(1)
+                AppNavigationView(store: store)
+                    .zIndex(1)
                 if store.state.focus == nil {
                     Button(
                         action: {
