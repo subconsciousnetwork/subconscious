@@ -13,7 +13,7 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
     var id: URL { url }
     var title: String { dom.title() }
     var excerpt: String { dom.excerpt() }
-    var slug: String { url.stem }
+    var slug: Slug { url.stem }
 
     init(
         url: URL,

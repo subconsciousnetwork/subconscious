@@ -29,7 +29,7 @@ extension Slashlink {
     }
 
     /// Given a string, returns a slashlink slug *without* the slash prefix.
-    static func slugify(_ text: String) -> String {
+    static func slugify(_ text: String) -> Slug {
         text
             .lowercased()
             // Replace runs of one or more space with a single dash
@@ -51,7 +51,7 @@ extension Slashlink {
     }
 
     /// Given a slug, returns a string that is close-enough to prose text
-    static func unslugify(_ slug: String) -> String {
+    static func unslugify(_ slug: Slug) -> String {
         removeLeadingSlash(slug)
             // Replace dash with space
             .replacingOccurrences(

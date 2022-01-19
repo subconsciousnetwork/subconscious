@@ -45,8 +45,8 @@ enum AppAction {
     // Delete entries
     case confirmDelete(String)
     case setConfirmDeleteShowing(Bool)
-    case deleteEntry(String)
-    case deleteEntrySuccess(String)
+    case deleteEntry(Slug)
+    case deleteEntrySuccess(Slug)
     case deleteEntryFailure(String)
 
     // Rename
@@ -57,7 +57,7 @@ enum AppAction {
     case showSearch
     case hideSearch
     // Commit a search with query and slug (typically via suggestion)
-    case commit(query: String, slug: String)
+    case commit(query: String, slug: Slug)
 
     // Search suggestions
     case setSuggestions([Suggestion])
@@ -124,7 +124,7 @@ struct AppModel {
 
     //  Note deletion action sheet
     /// Delete confirmation action sheet
-    var entryToDelete: String? = nil
+    var entryToDelete: Slug? = nil
     /// Delete confirmation action sheet
     var isConfirmDeleteShowing = false
 
@@ -139,7 +139,7 @@ struct AppModel {
     /// Committed search bar query text
     var query = ""
     /// Slug committed during search
-    var slug = ""
+    var slug: Slug = ""
 
     /// Main search suggestions
     var suggestions: [Suggestion] = []
@@ -557,7 +557,7 @@ struct AppUpdate {
 
     static func deleteEntry(
         state: AppModel,
-        slug: String
+        slug: Slug
     ) -> Change<AppModel, AppAction> {
         var model = state
         if let index = model.recent.firstIndex(
@@ -588,7 +588,7 @@ struct AppUpdate {
 
     static func deleteEntrySuccess(
         state: AppModel,
-        slug: String
+        slug: Slug
     ) -> Change<AppModel, AppAction> {
         AppEnvironment.logger.log("Deleted entry: \(slug)")
         //  Refresh lists in search fields after delete.
@@ -631,7 +631,7 @@ struct AppUpdate {
     static func commit(
         state: AppModel,
         query: String,
-        slug: String
+        slug: Slug
     ) -> Change<AppModel, AppAction> {
         var model = resetEditor(state: state)
         model.entryURL = nil

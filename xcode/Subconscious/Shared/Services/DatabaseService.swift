@@ -178,7 +178,7 @@ struct DatabaseService {
     }
 
     /// Delete entry from database
-    private func deleteEntryFromDatabase(slug: String) throws {
+    private func deleteEntryFromDatabase(slug: Slug) throws {
         try database.execute(
             sql: """
             DELETE FROM entry WHERE slug = ?
@@ -190,13 +190,13 @@ struct DatabaseService {
     }
 
     /// Delete entry from file system
-    private func deleteEntryFile(slug: String) throws {
+    private func deleteEntryFile(slug: Slug) throws {
         let url = documentUrl.appendingFilename(name: slug, ext: "subtext")
         try FileManager.default.removeItem(at: url)
     }
 
     /// Delete entry from file system and database
-    func deleteEntry(slug: String) -> AnyPublisher<Void, Error> {
+    func deleteEntry(slug: Slug) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .background) {
             try deleteEntryFile(slug: slug)
             try deleteEntryFromDatabase(slug: slug)
@@ -420,7 +420,7 @@ struct DatabaseService {
     /// clean slug.
     func search(
         query: String,
-        slug: String
+        slug: Slug
     ) -> AnyPublisher<ResultSet, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             guard !slug.isWhitespace else {

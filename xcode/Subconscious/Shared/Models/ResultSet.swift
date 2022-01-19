@@ -9,7 +9,7 @@ import Foundation
 
 struct ResultSet {
     var query: String = ""
-    var slug: String = ""
+    var slug: Slug = ""
     var entry: SubtextFile? = nil
     var backlinks: [EntryStub] = []
 }
