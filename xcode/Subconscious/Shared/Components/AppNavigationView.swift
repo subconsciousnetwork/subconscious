@@ -134,7 +134,7 @@ struct AppNavigationView: View {
                     }
                 )
             }
-            .navigationTitle("Ideas")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .principal) {
