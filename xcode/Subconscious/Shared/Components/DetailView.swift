@@ -16,7 +16,6 @@ struct DetailView: View {
     @Binding var focus: AppModel.Focus?
     @Binding var editorAttributedText: NSAttributedString
     @Binding var editorSelection: NSRange
-    @Binding var isRenamePresented: Bool
     @Binding var isLinkSheetPresented: Bool
     @Binding var linkSearchText: String
     var onDone: () -> Void
@@ -28,6 +27,7 @@ struct DetailView: View {
     ) -> Bool
     var onCommitSearch: (String) -> Void
     var onCommitLinkSearch: (String) -> Void
+    var onRename: (Slug?) -> Void
 
     var body: some View {
         VStack {
@@ -85,7 +85,7 @@ struct DetailView: View {
                 if focus != .editor {
                     Button(
                         action: {
-                            self.isRenamePresented = true
+                            onRename(slug)
                         }
                     ) {
                         Text(slug ?? "Untitled")

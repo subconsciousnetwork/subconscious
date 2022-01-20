@@ -90,10 +90,6 @@ struct AppNavigationView: View {
                                 get: \.editorSelection,
                                 tag: AppAction.setEditorSelection
                             ),
-                            isRenamePresented: store.binding(
-                                get: \.isRenameShowing,
-                                tag: AppAction.setRenameShowing
-                            ),
                             isLinkSheetPresented: store.binding(
                                 get: \.isLinkSheetPresented,
                                 tag: AppAction.setLinkSheetPresented
@@ -123,6 +119,9 @@ struct AppNavigationView: View {
                                 store.send(
                                     action: .commitLinkSearch(query)
                                 )
+                            },
+                            onRename: { slug in
+                                store.send(action: .showRenameSheet(slug))
                             }
                         )
                     },
@@ -141,10 +140,12 @@ struct AppNavigationView: View {
         }
         .sheet(
             isPresented: store.binding(
-                get: \.isRenameShowing,
-                tag: AppAction.setRenameShowing
+                get: \.isRenameSheetShowing,
+                tag: { _ in AppAction.hideRenameSheet }
             ),
-            onDismiss: {}
+            onDismiss: {
+                store.send(action: .hideRenameSheet)
+            }
         ) {
             RenameSearchView(
                 slug: store.state.slug,
@@ -159,7 +160,7 @@ struct AppNavigationView: View {
                     animation: .easeOut(duration: .normal)
                 ),
                 onCancel: {
-                    store.send(action: .setRenameShowing(false))
+                    store.send(action: .hideRenameSheet)
                 },
                 onCommit: { curr, next in
                     store.send(action: .renameEntry(from: curr, to: next))

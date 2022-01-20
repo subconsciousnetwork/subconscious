@@ -50,7 +50,8 @@ enum AppAction {
     case deleteEntryFailure(String)
 
     // Rename
-    case setRenameShowing(Bool)
+    case showRenameSheet(Slug?)
+    case hideRenameSheet
     case setRenameSlugField(String)
     case setRenameSuggestions([Suggestion])
     case renameSuggestionsFailure(String)
@@ -139,11 +140,13 @@ struct AppModel {
     var isConfirmDeleteShowing = false
 
     //  Note renaming
-    /// Note rename alert showing?
-    var isRenameShowing = false
+    /// Is rename sheet showing?
+    var isRenameSheetShowing = false
+    /// Slug of the candidate for renaming
+    var slugToRename: Slug? = nil
     /// Text for slug rename TextField.
-    /// Note this may be different from the actual slug, e.g. when in process
-    /// of renaming an entry.
+    /// Note this is the contents of the search text field, which
+    /// is different from the actual candidate slug to be renamed.
     var renameSlugField: String = ""
     /// Suggestions for renaming note.
     var renameSuggestions: [Suggestion] = []
@@ -277,8 +280,10 @@ struct AppUpdate {
         case let .deleteEntryFailure(error):
             AppEnvironment.logger.log("Failed to delete entry: \(error)")
             return Change(state: state)
-        case let .setRenameShowing(isShowing):
-            return setRenameShowing(state: state, isShowing: isShowing)
+        case let .showRenameSheet(slug):
+            return showRenameSheet(state: state, slug: slug)
+        case .hideRenameSheet:
+            return hideRenameSheet(state: state)
         case let .setRenameSlugField(text):
             return setRenameSlugField(state: state, text: text)
         case let .setRenameSuggestions(suggestions):
@@ -623,13 +628,44 @@ struct AppUpdate {
         )
     }
 
-    static func setRenameShowing(
+    /// Show rename sheet.
+    /// Do rename-flow-related setup.
+    static func showRenameSheet(
         state: AppModel,
-        isShowing: Bool
+        slug: Slug?
     ) -> Change<AppModel, AppAction> {
+        if let slug = slug {
+            let fx: AnyPublisher<AppAction, Never> = Just(
+                AppAction.setRenameSlugField(slug)
+            ).eraseToAnyPublisher()
+
+            var model = state
+            model.isRenameSheetShowing = true
+            model.slugToRename = slug
+
+            return Change(state: model, fx: fx)
+        } else {
+            AppEnvironment.logger.warning(
+                "Rename sheet invoked with nil slug"
+            )
+            return Change(state: state)
+        }
+    }
+
+    /// Hide rename sheet.
+    /// Do rename-flow-related teardown.
+    static func hideRenameSheet(
+        state: AppModel
+    ) -> Change<AppModel, AppAction> {
+        let fx: AnyPublisher<AppAction, Never> = Just(
+            AppAction.setRenameSlugField("")
+        ).eraseToAnyPublisher()
+
         var model = state
-        model.isRenameShowing = isShowing
-        return Change(state: model)
+        model.isRenameSheetShowing = false
+        model.slugToRename = nil
+
+        return Change(state: model, fx: fx)
     }
 
     /// Set text of slug field
@@ -699,6 +735,7 @@ struct AppUpdate {
                         )
                     )
                 })
+                .merge(with: Just(AppAction.hideRenameSheet))
                 .eraseToAnyPublisher()
             return Change(state: state, fx: fx)
         } else {
