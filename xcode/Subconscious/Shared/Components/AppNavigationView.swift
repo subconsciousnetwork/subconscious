@@ -76,7 +76,6 @@ struct AppNavigationView: View {
                         DetailView(
                             slug: store.state.slug,
                             backlinks: store.state.backlinks,
-                            renameSuggestions: store.state.renameSuggestions,
                             linkSuggestions: store.state.linkSuggestions,
                             focus: store.binding(
                                 get: \.focus,
@@ -94,10 +93,6 @@ struct AppNavigationView: View {
                             isRenamePresented: store.binding(
                                 get: \.isRenameShowing,
                                 tag: AppAction.setRenameShowing
-                            ),
-                            renameSlugField: store.binding(
-                                get: \.renameSlugField,
-                                tag: AppAction.setRenameSlugField
                             ),
                             isLinkSheetPresented: store.binding(
                                 get: \.isLinkSheetPresented,
@@ -143,6 +138,33 @@ struct AppNavigationView: View {
                     Text("Ideas").bold()
                 }
             }
+        }
+        .sheet(
+            isPresented: store.binding(
+                get: \.isRenameShowing,
+                tag: AppAction.setRenameShowing
+            ),
+            onDismiss: {}
+        ) {
+            RenameSearchView(
+                slug: store.state.slug,
+                suggestions: store.state.renameSuggestions,
+                text: store.binding(
+                    get: \.renameSlugField,
+                    tag: AppAction.setRenameSlugField
+                ),
+                focus: store.binding(
+                    get: \.focus,
+                    tag: AppAction.setFocus,
+                    animation: .easeOut(duration: .normal)
+                ),
+                onCancel: {
+                    store.send(action: .setRenameShowing(false))
+                },
+                onCommit: { curr, next in
+                    store.send(action: .renameEntry(from: curr, to: next))
+                }
+            )
         }
     }
 }

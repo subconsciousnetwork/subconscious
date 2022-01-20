@@ -12,13 +12,11 @@ struct DetailView: View {
     /// If we don't, we have nothing to edit.
     var slug: Slug?
     var backlinks: [EntryStub]
-    var renameSuggestions: [Suggestion]
     var linkSuggestions: [Suggestion]
     @Binding var focus: AppModel.Focus?
     @Binding var editorAttributedText: NSAttributedString
     @Binding var editorSelection: NSRange
     @Binding var isRenamePresented: Bool
-    @Binding var renameSlugField: String
     @Binding var isLinkSheetPresented: Bool
     @Binding var linkSearchText: String
     var onDone: () -> Void
@@ -116,21 +114,6 @@ struct DetailView: View {
                     .frame(width: 24, height: 24)
                 }
             }
-        }
-        .sheet(
-            isPresented: $isRenamePresented,
-            onDismiss: {}
-        ) {
-            RenameSearchView(
-                slug: slug,
-                suggestions: renameSuggestions,
-                text: $renameSlugField,
-                focus: $focus,
-                onCancel: {
-                    isRenamePresented = false
-                },
-                onCommit: { curr, next in }
-            )
         }
         .sheet(
             isPresented: $isLinkSheetPresented,
