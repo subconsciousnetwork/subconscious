@@ -53,7 +53,13 @@ enum AppAction {
     case setRenameShowing(Bool)
     case setRenameSlugField(String)
     case setRenameSuggestions([Suggestion])
-    case renameSuggestionsError(String)
+    case renameSuggestionsFailure(String)
+    /// Issue a rename action for an entry.
+    case renameEntry(from: Slug?, to: Slug)
+    /// Rename entry succeeded. Lifecycle action.
+    case renameEntrySuccess(from: Slug, to: Slug)
+    /// Rename entry failed. Lifecycle action.
+    case renameEntryFailure(String)
 
     // Search
     case setSearch(String)
@@ -277,8 +283,14 @@ struct AppUpdate {
             return setRenameSlugField(state: state, text: text)
         case let .setRenameSuggestions(suggestions):
             return setRenameSuggestions(state: state, suggestions: suggestions)
-        case let .renameSuggestionsError(error):
+        case let .renameSuggestionsFailure(error):
             return renameSuggestionsError(state: state, error: error)
+        case let .renameEntry(from, to):
+            return renameEntry(state: state, from: from, to: to)
+        case let .renameEntrySuccess(from, to):
+            return renameEntrySuccess(state: state, from: from, to: to)
+        case let .renameEntryFailure(error):
+            return renameEntryFailure(state: state, error: error)
         case let .setEditorAttributedText(attributedText):
             var model = state
             // Render attributes from markup if text has changed
@@ -634,7 +646,7 @@ struct AppUpdate {
             })
             .catch({ error in
                 Just(
-                    AppAction.renameSuggestionsError(
+                    AppAction.renameSuggestionsFailure(
                         error.localizedDescription
                     )
                 )
@@ -653,6 +665,8 @@ struct AppUpdate {
         return Change(state: model)
     }
 
+    /// Handle rename suggestions error.
+    /// This case can happen e.g. if the database fails to respond.
     static func renameSuggestionsError(
         state: AppModel,
         error: String
@@ -662,7 +676,63 @@ struct AppUpdate {
         )
         return Change(state: state)
     }
-    
+
+    /// Rename an entry (change its slug).
+    /// If `next` does not already exist, this will change the slug
+    /// and move the file.
+    /// If next exists, this will merge documents.
+    static func renameEntry(
+        state: AppModel,
+        from: Slug?,
+        to: Slug
+    ) -> Change<AppModel, AppAction> {
+        if let from = from {
+            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+                .renameEntry(from: from, to: to)
+                .map({ _ in
+                    AppAction.renameEntrySuccess(from: from, to: to)
+                })
+                .catch({ error in
+                    Just(
+                        AppAction.renameEntryFailure(
+                            error.localizedDescription
+                        )
+                    )
+                })
+                .eraseToAnyPublisher()
+            return Change(state: state, fx: fx)
+        } else {
+            AppEnvironment.logger.warning(
+                "Tried to rename entry but no slug was given. Current: nil. Next: \(to)"
+            )
+            return Change(state: state)
+        }
+    }
+
+    /// Rename success lifecycle handler.
+    /// Updates UI in response.
+    static func renameEntrySuccess(
+        state: AppModel,
+        from: Slug,
+        to: Slug
+    ) -> Change<AppModel, AppAction> {
+        AppEnvironment.logger.log("Renamed entry from \(from) to \(to)")
+        // TODO: figure out what FX to generate
+        // TODO: figure out what state to change
+        return Change(state: state)
+    }
+
+    static func renameEntryFailure(
+        state: AppModel,
+        error: String
+    ) -> Change<AppModel, AppAction> {
+        AppEnvironment.logger.warning(
+            "Failed to rename entry with error: \(error)"
+        )
+        // TODO: figure out what FX to generate
+        return Change(state: state)
+    }
+
     static func setSearch(
         state: AppModel,
         text: String

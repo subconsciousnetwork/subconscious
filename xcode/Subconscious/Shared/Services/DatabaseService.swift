@@ -205,6 +205,15 @@ struct DatabaseService {
         }
     }
 
+    /// Rename or merge entry.
+    /// Updates both database and file system.
+    func renameEntry(from: Slug, to: Slug) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            print("TODO implement renameEntry")
+            return
+        }
+    }
+
     /// List recent entries
     func listRecentEntries() -> AnyPublisher<[EntryStub], Error> {
         CombineUtilities.async(qos: .userInitiated) {
