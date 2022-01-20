@@ -205,10 +205,23 @@ struct DatabaseService {
         }
     }
 
+    private func renameEntryInDatabase(from: Slug, to: Slug) throws {}
+
+    /// Rename file in file system
+    private func renameEntryFile(from: Slug, to: Slug) throws {
+        let fromURL = documentUrl.appendingFilename(name: from, ext: "subtext")
+        let toURL = documentUrl.appendingFilename(name: to, ext: "subtext")
+        try FileManager.default.moveItem(at: fromURL, to: toURL)
+    }
+
     /// Rename or merge entry.
     /// Updates both database and file system.
     func renameEntry(from: Slug, to: Slug) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .userInitiated) {
+            // Succeed and do nothing if `from` and `to` are the same.
+            guard from != to else {
+                return
+            }
             print("TODO implement renameEntry")
             return
         }
