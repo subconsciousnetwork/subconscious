@@ -394,8 +394,11 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
+    /// Given a query and a `current` slug, produce an array of suggestions
+    /// for renaming the note.
     func searchRenameSuggestions(
-        query: String
+        query: String,
+        current: Slug?
     ) -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             guard !query.isWhitespace else {
@@ -405,7 +408,11 @@ struct DatabaseService {
             var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
 
             let querySuggestion = Suggestion.search(EntryLink(title: query))
-            suggestions[querySuggestion.id] = querySuggestion
+            //  If slug of literal query would be different from current slug
+            //  make this the first suggestion.
+            if querySuggestion.stub.slug != current {
+                suggestions[querySuggestion.id] = querySuggestion
+            }
 
             let searches: [EntryLink] = try database.execute(
                 sql: """
@@ -427,7 +434,10 @@ struct DatabaseService {
             })
 
             for search in searches {
-                suggestions.updateValue(.search(search), forKey: search.id)
+                //  Do not suggest current slug
+                if search.slug != current {
+                    suggestions.updateValue(.search(search), forKey: search.id)
+                }
             }
 
             let entries: [EntryLink] = try database.execute(
@@ -456,7 +466,10 @@ struct DatabaseService {
             })
 
             for entry in entries {
-                suggestions.updateValue(.entry(entry), forKey: entry.id)
+                //  Do not suggest renaming to same name
+                if entry.slug != current {
+                    suggestions.updateValue(.entry(entry), forKey: entry.id)
+                }
             }
 
             return Array(suggestions.values)
