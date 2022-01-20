@@ -637,7 +637,9 @@ struct AppUpdate {
         if let slug = slug {
             let fx: AnyPublisher<AppAction, Never> = Just(
                 AppAction.setRenameSlugField(slug)
-            ).eraseToAnyPublisher()
+            )
+            .merge(with: Just(AppAction.setFocus(.rename)))
+            .eraseToAnyPublisher()
 
             var model = state
             model.isRenameSheetShowing = true
