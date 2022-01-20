@@ -43,6 +43,7 @@ struct RenameSearchView: View {
                 focus: $focus,
                 field: .rename
             )
+            .submitLabel(.done)
             .padding(.bottom)
             .padding(.horizontal)
             Divider()
