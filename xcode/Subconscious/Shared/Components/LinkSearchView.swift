@@ -13,7 +13,7 @@ struct LinkSearchView: View {
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     var onCancel: () -> Void
-    var onCommitLinkSearch: (String) -> Void
+    var onCommit: (String) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -42,7 +42,7 @@ struct LinkSearchView: View {
                                 withAnimation(
                                     .easeOut(duration: Duration.fast)
                                 ) {
-                                    onCommitLinkSearch(suggestion.stub.slug)
+                                    onCommit(suggestion.stub.slug)
                                 }
                             }
                         ) {
@@ -65,7 +65,7 @@ struct LinkSearchView_Previews: PreviewProvider {
             text: .constant(""),
             focus: .constant(nil),
             onCancel: {},
-            onCommitLinkSearch: { slug in }
+            onCommit: { slug in }
         )
     }
 }

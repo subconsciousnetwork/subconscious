@@ -122,13 +122,14 @@ struct DetailView: View {
             onDismiss: {}
         ) {
             RenameSearchView(
+                slug: slug,
                 suggestions: renameSuggestions,
                 text: $renameSlugField,
                 focus: $focus,
                 onCancel: {
                     isRenamePresented = false
                 },
-                onCommit: { query in }
+                onCommit: { curr, next in }
             )
         }
         .sheet(
@@ -143,7 +144,7 @@ struct DetailView: View {
                 onCancel: {
                     isLinkSheetPresented = false
                 },
-                onCommitLinkSearch: { slug in
+                onCommit: { slug in
                     onCommitLinkSearch(slug)
                 }
             )

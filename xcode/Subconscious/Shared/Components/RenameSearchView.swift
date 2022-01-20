@@ -8,12 +8,14 @@
 import SwiftUI
 
 struct RenameSearchView: View {
+    /// Slug of the note we are renaming
+    var slug: String?
     var placeholder: String = "Enter name for idea"
     var suggestions: [Suggestion]
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     var onCancel: () -> Void
-    var onCommit: (String) -> Void
+    var onCommit: (String?, String) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -52,7 +54,10 @@ struct RenameSearchView: View {
                                 withAnimation(
                                     .easeOut(duration: Duration.fast)
                                 ) {
-                                    onCommit(suggestion.stub.slug)
+                                    onCommit(
+                                        slug,
+                                        suggestion.stub.slug
+                                    )
                                 }
                             }
                         ) {
@@ -71,6 +76,7 @@ struct RenameSearchView: View {
 struct RenameSearchView_Previews: PreviewProvider {
     static var previews: some View {
         RenameSearchView(
+            slug: "floop",
             suggestions: [
                 .search(EntryLink(title: "Floop")),
                 .entry(EntryLink(title: "Card wars"))
@@ -78,7 +84,7 @@ struct RenameSearchView_Previews: PreviewProvider {
             text: .constant(""),
             focus: .constant(nil),
             onCancel: {},
-            onCommit: { slug in }
+            onCommit: { current, next in }
         )
     }
 }
