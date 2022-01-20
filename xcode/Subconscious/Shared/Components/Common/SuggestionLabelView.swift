@@ -7,23 +7,6 @@
 
 import SwiftUI
 
-struct SuggestionTitleGroup: View {
-    var title: String
-    var subtitle: String
-    var lineHeight: CGFloat = AppTheme.icon
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(title)
-                .foregroundColor(Color.text)
-                .frame(height: AppTheme.icon)
-            Text(subtitle)
-                .foregroundColor(Color.secondaryText)
-                .frame(height: AppTheme.icon)
-        }
-    }
-}
-
 struct SuggestionLabelView: View {
     var suggestion: Suggestion
     var body: some View {
@@ -31,7 +14,7 @@ struct SuggestionLabelView: View {
         case let .entry(stub):
             Label(
                 title: {
-                    SuggestionTitleGroup(
+                    TitleGroup(
                         title: stub.title,
                         subtitle: Slashlink.removeLeadingSlash(stub.slug)
                     )
@@ -43,7 +26,7 @@ struct SuggestionLabelView: View {
         case let .search(stub):
             Label(
                 title: {
-                    SuggestionTitleGroup(
+                    TitleGroup(
                         title: stub.title,
                         subtitle: "New idea"
                     )
