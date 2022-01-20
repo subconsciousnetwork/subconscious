@@ -676,7 +676,7 @@ struct AppUpdate {
         var model = state
         model.renameSlugField = text
         let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
-            .searchRenameSuggestions(query: text)
+            .searchRenameSuggestions(query: text, current: state.slugToRename)
             .map({ suggestions in
                 AppAction.setRenameSuggestions(suggestions)
             })
