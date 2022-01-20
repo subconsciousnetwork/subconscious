@@ -17,6 +17,7 @@ extension String {
     /// Slugify a string, returning a slug.
     func slugify() -> Slug {
         self
+            .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
             // Replace runs of one or more space with a single dash
             .replacingOccurrences(
