@@ -44,6 +44,9 @@ struct RenameSearchView: View {
                 field: .rename
             )
             .submitLabel(.done)
+            .onSubmit {
+                onCommit(slug, text)
+            }
             .padding(.bottom)
             .padding(.horizontal)
             Divider()
