@@ -16,7 +16,7 @@ struct SuggestionLabelView: View {
                 title: {
                     TitleGroup(
                         title: stub.title,
-                        subtitle: Slashlink.removeLeadingSlash(stub.slug)
+                        subtitle: stub.slug
                     )
                 },
                 icon: {

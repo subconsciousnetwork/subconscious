@@ -76,14 +76,12 @@ struct AppNavigationView: View {
                         DetailView(
                             slug: store.state.slug,
                             backlinks: store.state.backlinks,
+                            renameSuggestions: store.state.renameSuggestions,
+                            linkSuggestions: store.state.linkSuggestions,
                             focus: store.binding(
                                 get: \.focus,
                                 tag: AppAction.setFocus,
                                 animation: .easeOut(duration: .normal)
-                            ),
-                            slugField: store.binding(
-                                get: \.renameSlugField,
-                                tag: AppAction.setRenameSlugField
                             ),
                             editorAttributedText: store.binding(
                                 get: \.editorAttributedText,
@@ -97,6 +95,10 @@ struct AppNavigationView: View {
                                 get: \.isRenameShowing,
                                 tag: AppAction.setRenameShowing
                             ),
+                            renameSlugField: store.binding(
+                                get: \.renameSlugField,
+                                tag: AppAction.setRenameSlugField
+                            ),
                             isLinkSheetPresented: store.binding(
                                 get: \.isLinkSheetPresented,
                                 tag: AppAction.setLinkSheetPresented
@@ -104,10 +106,6 @@ struct AppNavigationView: View {
                             linkSearchText: store.binding(
                                 get: \.linkSearchText,
                                 tag: AppAction.setLinkSearch
-                            ),
-                            linkSuggestions: store.binding(
-                                get: \.linkSuggestions,
-                                tag: AppAction.setLinkSuggestions
                             ),
                             onDone: {
                                 store.send(action: .save)

@@ -9,9 +9,9 @@ import SwiftUI
 
 struct LinkSearchView: View {
     var placeholder: String
+    var suggestions: [Suggestion]
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
-    @Binding var suggestions: [Suggestion]
     var onCancel: () -> Void
     var onCommitLinkSearch: (String) -> Void
 
@@ -61,9 +61,9 @@ struct LinkSearchView_Previews: PreviewProvider {
     static var previews: some View {
         LinkSearchView(
             placeholder: "Search or create...",
+            suggestions: [],
             text: .constant(""),
             focus: .constant(nil),
-            suggestions: .constant([]),
             onCancel: {},
             onCommitLinkSearch: { slug in }
         )

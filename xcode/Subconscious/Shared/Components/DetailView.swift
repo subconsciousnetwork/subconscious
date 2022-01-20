@@ -12,14 +12,15 @@ struct DetailView: View {
     /// If we don't, we have nothing to edit.
     var slug: Slug?
     var backlinks: [EntryStub]
+    var renameSuggestions: [Suggestion]
+    var linkSuggestions: [Suggestion]
     @Binding var focus: AppModel.Focus?
-    @Binding var slugField: String
     @Binding var editorAttributedText: NSAttributedString
     @Binding var editorSelection: NSRange
     @Binding var isRenamePresented: Bool
+    @Binding var renameSlugField: String
     @Binding var isLinkSheetPresented: Bool
     @Binding var linkSearchText: String
-    @Binding var linkSuggestions: [Suggestion]
     var onDone: () -> Void
     var onEditorLink: (
         URL,
@@ -120,35 +121,15 @@ struct DetailView: View {
             isPresented: $isRenamePresented,
             onDismiss: {}
         ) {
-            VStack {
-                NavigationToolbar(
-                    principal: {
-                        Text("Rename")
-                    },
-                    leading: {
-                        Button(
-                            action: {
-                                isRenamePresented = false
-                            }
-                        ) {
-                            Text("Cancel")
-                        }
-                        .buttonStyle(.plain)
-                        .lineLimit(1)
-                    },
-                    trailing: {
-                        EmptyView()
-                    }
-                )
-                SearchTextField(
-                    placeholder: "Enter path for idea",
-                    text: $slugField,
-                    focus: $focus,
-                    field: .rename
-                )
-                Spacer()
-            }
-            .padding()
+            RenameSearchView(
+                suggestions: renameSuggestions,
+                text: $renameSlugField,
+                focus: $focus,
+                onCancel: {
+                    isRenamePresented = false
+                },
+                onCommit: { query in }
+            )
         }
         .sheet(
             isPresented: $isLinkSheetPresented,
@@ -156,9 +137,9 @@ struct DetailView: View {
         ) {
             LinkSearchView(
                 placeholder: "Search or create...",
+                suggestions: linkSuggestions,
                 text: $linkSearchText,
                 focus: $focus,
-                suggestions: $linkSuggestions,
                 onCancel: {
                     isLinkSheetPresented = false
                 },
