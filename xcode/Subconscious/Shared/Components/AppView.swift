@@ -722,28 +722,40 @@ struct AppUpdate {
         from: Slug?,
         to: Slug
     ) -> Change<AppModel, AppAction> {
-        if let from = from {
-            let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
-                .renameEntry(from: from, to: to)
-                .map({ _ in
-                    AppAction.renameEntrySuccess(from: from, to: to)
-                })
-                .catch({ error in
-                    Just(
-                        AppAction.renameEntryFailure(
-                            error.localizedDescription
-                        )
-                    )
-                })
-                .merge(with: Just(AppAction.hideRenameSheet))
+        guard !to.isWhitespace else {
+            let fx: AnyPublisher<AppAction, Never> = Just(.hideRenameSheet)
                 .eraseToAnyPublisher()
+            AppEnvironment.logger.log(
+                "Rename invoked with whitespace name. Cancelling."
+            )
             return Change(state: state, fx: fx)
-        } else {
+        }
+
+        guard from != nil else {
+            let fx: AnyPublisher<AppAction, Never> = Just(.hideRenameSheet)
+                .eraseToAnyPublisher()
             AppEnvironment.logger.warning(
                 "Tried to rename entry but no slug was given. Current: nil. Next: \(to)"
             )
-            return Change(state: state)
+            return Change(state: state, fx: fx)
         }
+
+        let from = from!
+        let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+            .renameEntry(from: from, to: to)
+            .map({ _ in
+                AppAction.renameEntrySuccess(from: from, to: to)
+            })
+            .catch({ error in
+                Just(
+                    AppAction.renameEntryFailure(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .merge(with: Just(AppAction.hideRenameSheet))
+            .eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
     }
 
     /// Rename success lifecycle handler.
