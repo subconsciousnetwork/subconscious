@@ -742,6 +742,15 @@ struct AppUpdate {
             return Change(state: state, fx: fx)
         }
 
+        guard from != to else {
+            let fx: AnyPublisher<AppAction, Never> = Just(.hideRenameSheet)
+                .eraseToAnyPublisher()
+            AppEnvironment.logger.log(
+                "Rename invoked with same name. Cancelling."
+            )
+            return Change(state: state, fx: fx)
+        }
+
         let from = from!
         let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
             .renameEntry(from: from, to: to)
