@@ -15,7 +15,7 @@ struct RenameSearchView: View {
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     var onCancel: () -> Void
-    var onCommit: (String?, String) -> Void
+    var onCommit: (Slug?, Slug) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -45,7 +45,9 @@ struct RenameSearchView: View {
             )
             .submitLabel(.done)
             .onSubmit {
-                onCommit(slug, text)
+                // On submit, slugify contents of searchfield
+                // and commit.
+                onCommit(slug, text.slugify())
             }
             .padding(.bottom)
             .padding(.horizontal)
