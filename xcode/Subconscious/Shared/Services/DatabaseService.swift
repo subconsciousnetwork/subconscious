@@ -205,10 +205,22 @@ struct DatabaseService {
         }
     }
 
-    private func renameEntryInDatabase(from: Slug, to: Slug) throws {}
+    private func updateEntrySlugInDatabase(from: Slug, to: Slug) throws {
+        try database.execute(
+            sql: """
+            UPDATE entry
+            SET slug = ?
+            WHERE slug = ?
+            """,
+            parameters: [
+                .text(to),
+                .text(from)
+            ]
+        )
+    }
 
     /// Rename file in file system
-    private func renameEntryFile(from: Slug, to: Slug) throws {
+    private func moveEntryFile(from: Slug, to: Slug) throws {
         let fromURL = documentUrl.appendingFilename(name: from, ext: "subtext")
         let toURL = documentUrl.appendingFilename(name: to, ext: "subtext")
         try FileManager.default.moveItem(at: fromURL, to: toURL)
@@ -222,6 +234,19 @@ struct DatabaseService {
             guard from != to else {
                 return
             }
+
+            let toURL = documentUrl.appendingFilename(
+                name: to,
+                ext: "subtext"
+            )
+
+            if FileManager.default.fileExists(atPath: toURL.absoluteString) {
+
+            } else {
+                try moveEntryFile(from: from, to: to)
+                try updateEntrySlugInDatabase(from: from, to: to)
+            }
+
             print("TODO implement renameEntry")
             return
         }
