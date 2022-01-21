@@ -315,3 +315,10 @@ extension Subtext {
             .joined(separator: " ")
     }
 }
+
+extension Subtext {
+    /// Append another Subtext document
+    func append(_ other: Subtext) -> Subtext {
+        Subtext(markup: "\(self.base)\n\n\(other.base)")
+    }
+}
