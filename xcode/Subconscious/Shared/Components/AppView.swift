@@ -60,9 +60,9 @@ enum AppAction {
     /// Issue a rename action for an entry.
     case renameEntry(from: Slug?, to: Slug)
     /// Rename entry succeeded. Lifecycle action.
-    case renameEntrySuccess(from: Slug, to: Slug)
+    case succeedRenameEntry(from: Slug, to: Slug)
     /// Rename entry failed. Lifecycle action.
-    case renameEntryFailure(String)
+    case failRenameEntry(String)
 
     // Search
     case setSearch(String)
@@ -280,10 +280,10 @@ struct AppUpdate {
             return renameSuggestionsError(state: state, error: error)
         case let .renameEntry(from, to):
             return renameEntry(state: state, from: from, to: to)
-        case let .renameEntrySuccess(from, to):
-            return renameEntrySuccess(state: state, from: from, to: to)
-        case let .renameEntryFailure(error):
-            return renameEntryFailure(state: state, error: error)
+        case let .succeedRenameEntry(from, to):
+            return succeedRenameEntry(state: state, from: from, to: to)
+        case let .failRenameEntry(error):
+            return failRenameEntry(state: state, error: error)
         case let .setEditorAttributedText(attributedText):
             var model = state
             // Render attributes from markup if text has changed
@@ -747,11 +747,11 @@ struct AppUpdate {
         let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
             .renameOrMergeEntry(from: from, to: to)
             .map({ _ in
-                AppAction.renameEntrySuccess(from: from, to: to)
+                AppAction.succeedRenameEntry(from: from, to: to)
             })
             .catch({ error in
                 Just(
-                    AppAction.renameEntryFailure(
+                    AppAction.failRenameEntry(
                         error.localizedDescription
                     )
                 )
@@ -763,21 +763,21 @@ struct AppUpdate {
 
     /// Rename success lifecycle handler.
     /// Updates UI in response.
-    static func renameEntrySuccess(
+    static func succeedRenameEntry(
         state: AppModel,
         from: Slug,
         to: Slug
     ) -> Change<AppModel, AppAction> {
         AppEnvironment.logger.log("Renamed entry from \(from) to \(to)")
         let fx: AnyPublisher<AppAction, Never> = Just(
-            AppAction.noop
+            AppAction.requestDetail(slug: to, fallback: "")
         ).eraseToAnyPublisher()
         return Change(state: state, fx: fx)
     }
 
     /// Rename failure lifecycle handler.
     //  TODO: in future consider triggering an alert.
-    static func renameEntryFailure(
+    static func failRenameEntry(
         state: AppModel,
         error: String
     ) -> Change<AppModel, AppAction> {

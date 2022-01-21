@@ -260,7 +260,11 @@ struct DatabaseService {
 
             //  If file already exists, perform a merge.
             //  Otherwise, perform a rename.
-            if FileManager.default.fileExists(atPath: toURL.absoluteString) {
+            //  NOTE: It's important to use `.path` and not `.absolutePath`.
+            //  For whatever reason, `.fileExists` will not find the file
+            //  at its `.absolutePath`.
+            //  2022-01-21 Gordon Brander
+            if FileManager.default.fileExists(atPath: toURL.path) {
                 try mergeEntryFile(from: from, to: to)
                 try writeEntryToDatabase(slug: to)
                 try deleteEntryFromDatabase(slug: from)
