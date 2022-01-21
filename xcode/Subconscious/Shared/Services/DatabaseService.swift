@@ -475,7 +475,10 @@ struct DatabaseService {
             //  If slug of literal query would be different from current slug
             //  make this the first suggestion.
             if querySuggestion.stub.slug != current {
-                suggestions[querySuggestion.id] = querySuggestion
+                suggestions.updateValue(
+                    querySuggestion,
+                    forKey: querySuggestion.stub.slug
+                )
             }
 
             let searches: [EntryLink] = try database.execute(
@@ -500,7 +503,10 @@ struct DatabaseService {
             for search in searches {
                 //  Do not suggest current slug
                 if search.slug != current {
-                    suggestions.updateValue(.search(search), forKey: search.id)
+                    suggestions.updateValue(
+                        .search(search),
+                        forKey: search.slug
+                    )
                 }
             }
 
@@ -532,10 +538,12 @@ struct DatabaseService {
             for entry in entries {
                 //  Do not suggest renaming to same name
                 if entry.slug != current {
-                    suggestions.updateValue(.entry(entry), forKey: entry.id)
+                    suggestions.updateValue(
+                        .entry(entry),
+                        forKey: entry.slug
+                    )
                 }
             }
-
             return Array(suggestions.values)
         }
         .receive(on: DispatchQueue.main)
