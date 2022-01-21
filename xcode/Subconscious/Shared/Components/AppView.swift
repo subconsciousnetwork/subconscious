@@ -627,10 +627,16 @@ struct AppUpdate {
         slug: Slug?
     ) -> Change<AppModel, AppAction> {
         if let slug = slug {
+            //  Set rename slug field text
+            //  Set focus on rename field
+            //  Save entry in preperation for any merge/move.
             let fx: AnyPublisher<AppAction, Never> = Just(
                 AppAction.setRenameSlugField(slug)
             )
-            .merge(with: Just(AppAction.setFocus(.rename)))
+            .merge(
+                with: Just(AppAction.setFocus(.rename)),
+                Just(AppAction.save)
+            )
             .eraseToAnyPublisher()
 
             var model = state
