@@ -18,9 +18,9 @@ struct AppNavigationView: View {
                         Button(
                             action: {
                                 store.send(
-                                    action: .commit(
-                                        query: entry.title,
-                                        slug: entry.slug
+                                    action: .requestDetail(
+                                        slug: entry.slug,
+                                        fallback: entry.title
                                     )
                                 )
                             }
@@ -70,7 +70,7 @@ struct AppNavigationView: View {
                 NavigationLink(
                     isActive: store.binding(
                         get: \.isDetailShowing,
-                        tag: AppAction.setDetailShowing
+                        tag: AppAction.showDetail
                     ),
                     destination: {
                         DetailView(
@@ -112,7 +112,10 @@ struct AppNavigationView: View {
                             },
                             onCommitSearch: { query in
                                 store.send(
-                                    action: .commitSearch(query: query)
+                                    action: .requestDetail(
+                                        slug: query.slugify(),
+                                        fallback: query
+                                    )
                                 )
                             },
                             onCommitLinkSearch: { query in

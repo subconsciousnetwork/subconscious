@@ -12,7 +12,7 @@ struct SearchView: View {
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     @Binding var suggestions: [Suggestion]
-    var onCommit: (String, String?) -> Void
+    var onCommit: (Slug, String) -> Void
     var onCancel: () -> Void
 
     var body: some View {
@@ -30,8 +30,8 @@ struct SearchView: View {
                         .easeOut(duration: Duration.fast)
                     ) {
                         onCommit(
-                            text,
-                            nil
+                            text.slugify(),
+                            text
                         )
                     }
                 }
@@ -54,8 +54,8 @@ struct SearchView: View {
                                     .easeOut(duration: Duration.fast)
                                 ) {
                                     onCommit(
-                                        suggestion.stub.title,
-                                        suggestion.stub.slug
+                                        suggestion.stub.slug,
+                                        suggestion.stub.title
                                     )
                                 }
                             }
@@ -78,7 +78,7 @@ struct SearchView_Previews: PreviewProvider {
             text: .constant(""),
             focus: .constant(nil),
             suggestions: .constant([]),
-            onCommit: { title, slug in },
+            onCommit: { slug, title in },
             onCancel: {}
         )
     }
