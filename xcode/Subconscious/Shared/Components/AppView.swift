@@ -771,7 +771,9 @@ struct AppUpdate {
         AppEnvironment.logger.log("Renamed entry from \(from) to \(to)")
         let fx: AnyPublisher<AppAction, Never> = Just(
             AppAction.requestDetail(slug: to, fallback: "")
-        ).eraseToAnyPublisher()
+        )
+        .merge(with: Just(AppAction.refreshAll))
+        .eraseToAnyPublisher()
         return Change(state: state, fx: fx)
     }
 
