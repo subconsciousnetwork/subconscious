@@ -13,6 +13,7 @@ import OrderedCollections
 struct DatabaseService {
     enum DatabaseServiceError: Error {
         case pathNotInFilePath
+        case invalidSlug(String)
     }
 
     private var documentUrl: URL
@@ -205,20 +206,6 @@ struct DatabaseService {
         }
     }
 
-    private func updateEntrySlugInDatabase(from: Slug, to: Slug) throws {
-        try database.execute(
-            sql: """
-            UPDATE entry
-            SET slug = ?
-            WHERE slug = ?
-            """,
-            parameters: [
-                .text(to),
-                .text(from)
-            ]
-        )
-    }
-
     /// Rename file in file system
     private func moveEntryFile(from: Slug, to: Slug) throws {
         let fromURL = documentUrl.appendingFilename(name: from, ext: "subtext")
@@ -226,23 +213,40 @@ struct DatabaseService {
         try FileManager.default.moveItem(at: fromURL, to: toURL)
     }
 
+    /// Merge two files together
+    /// - Appends `from` to `to`
+    /// - Writes the combined content to `to`
+    /// - Deletes `from`
     private func mergeEntryFile(from: Slug, to: Slug) throws {
-        let fromSubtext = try SubtextFile(
+        let fromFile = try SubtextFile(
             slug: from,
             directory: documentUrl
         )
         .unwrap()
-        let toSubtext = try SubtextFile(
+
+        let toFile = try SubtextFile(
             slug: to,
             directory: documentUrl
         )
         .unwrap()
-        .append(fromSubtext.dom)
+        .append(fromFile.dom)
+
+        //  First write the merged file to "to" location
+        try toFile.write(directory: documentUrl)
+        //  Then remove the file at "from" location.
+        //  We delete AFTER writing so that data loss cannot occur in
+        //  case of failure.
+        try FileManager.default.removeItem(
+            at: fromFile.url(directory: documentUrl)
+        )
     }
 
     /// Rename or merge entry.
     /// Updates both database and file system.
-    func renameEntry(from: Slug, to: Slug) -> AnyPublisher<Void, Error> {
+    func renameOrMergeEntry(
+        from: Slug,
+        to: Slug
+    ) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             // Succeed and do nothing if `from` and `to` are the same.
             guard from != to else {
@@ -254,15 +258,19 @@ struct DatabaseService {
                 ext: "subtext"
             )
 
+            //  If file already exists, perform a merge.
+            //  Otherwise, perform a rename.
             if FileManager.default.fileExists(atPath: toURL.absoluteString) {
-
+                try mergeEntryFile(from: from, to: to)
+                try writeEntryToDatabase(slug: to)
+                try deleteEntryFromDatabase(slug: from)
+                return
             } else {
                 try moveEntryFile(from: from, to: to)
-                try updateEntrySlugInDatabase(from: from, to: to)
+                try writeEntryToDatabase(slug: to)
+                try deleteEntryFromDatabase(slug: from)
+                return
             }
-
-            print("TODO implement renameEntry")
-            return
         }
     }
 
@@ -566,13 +574,13 @@ struct DatabaseService {
     /// We trust caller to slugify the string, if necessary.
     /// Allowing any string allows us to retreive files that don't have a
     /// clean slug.
-    func search(
-        query: String,
-        slug: Slug
-    ) -> AnyPublisher<ResultSet, Error> {
+    func readEntryDetail(
+        slug: Slug,
+        fallback: String
+    ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             guard !slug.isWhitespace else {
-                return ResultSet()
+                throw DatabaseServiceError.invalidSlug("Slug is whitespace")
             }
 
             // Get backlinks.
@@ -606,9 +614,12 @@ struct DatabaseService {
             })
 
             // Retreive top entry from file system to ensure it is fresh.
-            let entry = readEntry(slug: slug)
-            return ResultSet(
-                query: query,
+            // If no file exists, then construct one using fallback content.
+            let entry = readEntry(slug: slug) ?? SubtextFile(
+                slug: slug,
+                content: fallback
+            )
+            return EntryDetail(
                 slug: slug,
                 entry: entry,
                 backlinks: backlinks
