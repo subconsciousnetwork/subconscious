@@ -226,6 +226,20 @@ struct DatabaseService {
         try FileManager.default.moveItem(at: fromURL, to: toURL)
     }
 
+    private func mergeEntryFile(from: Slug, to: Slug) throws {
+        let fromSubtext = try SubtextFile(
+            slug: from,
+            directory: documentUrl
+        )
+        .unwrap()
+        let toSubtext = try SubtextFile(
+            slug: to,
+            directory: documentUrl
+        )
+        .unwrap()
+        .append(fromSubtext.dom)
+    }
+
     /// Rename or merge entry.
     /// Updates both database and file system.
     func renameEntry(from: Slug, to: Slug) -> AnyPublisher<Void, Error> {
