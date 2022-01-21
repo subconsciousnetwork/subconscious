@@ -22,6 +22,14 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
         self.dom = Subtext(markup: content)
     }
 
+    init(
+        slug: Slug,
+        dom: Subtext
+    ) {
+        self.slug = slug
+        self.dom = dom
+    }
+
     /// Open existing document
     init?(slug: Slug, directory: URL) {
         let url = directory.appendingFilename(name: slug, ext: "subtext")
@@ -37,6 +45,14 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
 
     func url(directory: URL) -> URL {
         directory.appendingFilename(name: slug, ext: "subtext")
+    }
+
+    /// Append additional Subtext to this file
+    /// Returns a new instance
+    func append(_ dom: Subtext) -> Self {
+        var file = self
+        file.dom = self.dom.append(dom)
+        return file
     }
 
     func write(directory: URL) throws {
