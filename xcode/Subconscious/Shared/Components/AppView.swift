@@ -910,7 +910,6 @@ struct AppUpdate {
         model.focus = nil
         if let slug = model.slug {
             // Parse editorAttributedText to entry.
-            // TODO refactor model to store entry instead of attributedText.
             let entry = SubtextFile(
                 slug: slug,
                 content: model.editorAttributedText.string
