@@ -7,34 +7,57 @@ import Foundation
 
 /// A SubtextDocument together with a location for that document
 struct SubtextFile: Hashable, Equatable, Identifiable {
-    var url: URL
+    var slug: Slug
     var dom: Subtext
     var content: String { dom.base }
-    var id: URL { url }
+    var id: Slug { slug }
     var title: String { dom.title() }
     var excerpt: String { dom.excerpt() }
-    var slug: String { url.stem }
 
     init(
-        url: URL,
+        slug: Slug,
         content: String
     ) {
-        // Absolutize URL in order to allow it to function as an ID
-        self.url = url.absoluteURL
+        self.slug = slug
         self.dom = Subtext(markup: content)
     }
 
-    /// Open existing document
-    init(url: URL) throws {
-        self.init(
-            url: url,
-            content: try String(contentsOf: url, encoding: .utf8)
-        )
+    init(
+        slug: Slug,
+        dom: Subtext
+    ) {
+        self.slug = slug
+        self.dom = dom
     }
 
-    func write() throws {
+    /// Open existing document
+    init?(slug: Slug, directory: URL) {
+        let url = directory.appendingFilename(name: slug, ext: "subtext")
+        if let content = try? String(contentsOf: url, encoding: .utf8) {
+            self.init(
+                slug: slug,
+                content: content
+            )
+        } else {
+            return nil
+        }
+    }
+
+    func url(directory: URL) -> URL {
+        directory.appendingFilename(name: slug, ext: "subtext")
+    }
+
+    /// Append additional Subtext to this file
+    /// Returns a new instance
+    func append(_ dom: Subtext) -> Self {
+        var file = self
+        file.dom = self.dom.append(dom)
+        return file
+    }
+
+    func write(directory: URL) throws {
         try content.write(
-            to: url,
+            to: url(directory: directory),
             atomically: true,
             encoding: .utf8
         )

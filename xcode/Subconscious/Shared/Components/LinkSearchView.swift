@@ -9,11 +9,11 @@ import SwiftUI
 
 struct LinkSearchView: View {
     var placeholder: String
+    var suggestions: [Suggestion]
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
-    @Binding var suggestions: [Suggestion]
     var onCancel: () -> Void
-    var onCommitLinkSearch: (String) -> Void
+    var onCommit: (String) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -42,7 +42,7 @@ struct LinkSearchView: View {
                                 withAnimation(
                                     .easeOut(duration: Duration.fast)
                                 ) {
-                                    onCommitLinkSearch(suggestion.stub.slug)
+                                    onCommit(suggestion.stub.slug)
                                 }
                             }
                         ) {
@@ -61,11 +61,11 @@ struct LinkSearchView_Previews: PreviewProvider {
     static var previews: some View {
         LinkSearchView(
             placeholder: "Search or create...",
+            suggestions: [],
             text: .constant(""),
             focus: .constant(nil),
-            suggestions: .constant([]),
             onCancel: {},
-            onCommitLinkSearch: { slug in }
+            onCommit: { slug in }
         )
     }
 }

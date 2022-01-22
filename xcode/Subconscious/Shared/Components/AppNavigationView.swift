@@ -18,9 +18,9 @@ struct AppNavigationView: View {
                         Button(
                             action: {
                                 store.send(
-                                    action: .commit(
-                                        query: entry.title,
-                                        slug: entry.slug
+                                    action: .requestDetail(
+                                        slug: entry.slug,
+                                        fallback: entry.title
                                     )
                                 )
                             }
@@ -70,12 +70,13 @@ struct AppNavigationView: View {
                 NavigationLink(
                     isActive: store.binding(
                         get: \.isDetailShowing,
-                        tag: AppAction.setDetailShowing
+                        tag: AppAction.showDetail
                     ),
                     destination: {
                         DetailView(
-                            entryURL: store.state.entryURL,
+                            slug: store.state.slug,
                             backlinks: store.state.backlinks,
+                            linkSuggestions: store.state.linkSuggestions,
                             focus: store.binding(
                                 get: \.focus,
                                 tag: AppAction.setFocus,
@@ -97,10 +98,6 @@ struct AppNavigationView: View {
                                 get: \.linkSearchText,
                                 tag: AppAction.setLinkSearch
                             ),
-                            linkSuggestions: store.binding(
-                                get: \.linkSuggestions,
-                                tag: AppAction.setLinkSuggestions
-                            ),
                             onDone: {
                                 store.send(action: .save)
                             },
@@ -115,13 +112,19 @@ struct AppNavigationView: View {
                             },
                             onCommitSearch: { query in
                                 store.send(
-                                    action: .commitSearch(query: query)
+                                    action: .requestDetail(
+                                        slug: query.slugify(),
+                                        fallback: query
+                                    )
                                 )
                             },
                             onCommitLinkSearch: { query in
                                 store.send(
                                     action: .commitLinkSearch(query)
                                 )
+                            },
+                            onRename: { slug in
+                                store.send(action: .showRenameSheet(slug))
                             }
                         )
                     },
@@ -130,13 +133,42 @@ struct AppNavigationView: View {
                     }
                 )
             }
-            .navigationTitle("Ideas")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .principal) {
                     Text("Ideas").bold()
                 }
             }
+        }
+        .sheet(
+            isPresented: store.binding(
+                get: \.isRenameSheetShowing,
+                tag: { _ in AppAction.hideRenameSheet }
+            ),
+            onDismiss: {
+                store.send(action: .hideRenameSheet)
+            }
+        ) {
+            RenameSearchView(
+                slug: store.state.slug,
+                suggestions: store.state.renameSuggestions,
+                text: store.binding(
+                    get: \.renameSlugField,
+                    tag: AppAction.setRenameSlugField
+                ),
+                focus: store.binding(
+                    get: \.focus,
+                    tag: AppAction.setFocus,
+                    animation: .easeOut(duration: .normal)
+                ),
+                onCancel: {
+                    store.send(action: .hideRenameSheet)
+                },
+                onCommit: { curr, next in
+                    store.send(action: .renameEntry(from: curr, to: next))
+                }
+            )
         }
     }
 }

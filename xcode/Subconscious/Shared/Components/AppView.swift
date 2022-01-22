@@ -11,6 +11,8 @@ import Combine
 
 //  MARK: Actions
 /// Actions for modifying state
+/// For action naming convention, see
+/// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
 enum AppAction {
     case noop
     case appear
@@ -45,25 +47,37 @@ enum AppAction {
     // Delete entries
     case confirmDelete(String)
     case setConfirmDeleteShowing(Bool)
-    case deleteEntry(String)
-    case deleteEntrySuccess(String)
+    case deleteEntry(Slug)
+    case deleteEntrySuccess(Slug)
     case deleteEntryFailure(String)
+
+    // Rename
+    case showRenameSheet(Slug?)
+    case hideRenameSheet
+    case setRenameSlugField(String)
+    case setRenameSuggestions([Suggestion])
+    case renameSuggestionsFailure(String)
+    /// Issue a rename action for an entry.
+    case renameEntry(from: Slug?, to: Slug)
+    /// Rename entry succeeded. Lifecycle action.
+    case succeedRenameEntry(from: Slug, to: Slug)
+    /// Rename entry failed. Lifecycle action.
+    case failRenameEntry(String)
 
     // Search
     case setSearch(String)
     case showSearch
     case hideSearch
-    // Commit a search with query and slug (typically via suggestion)
-    case commit(query: String, slug: String)
 
     // Search suggestions
     case setSuggestions([Suggestion])
     case suggestionsFailure(String)
 
     // Detail
-    case setDetail(ResultSet)
-    case detailFailure(String)
-    case setDetailShowing(Bool)
+    case requestDetail(slug: Slug, fallback: String)
+    case updateDetail(EntryDetail)
+    case failDetail(String)
+    case showDetail(Bool)
 
     // Editor
     case setEditorAttributedText(NSAttributedString)
@@ -78,21 +92,11 @@ enum AppAction {
 
     // Saving entries
     case save
-    case saveSuccess(URL)
+    case saveSuccess(Slug)
     case saveFailure(
-        url: URL,
+        slug: Slug,
         message: String
     )
-
-    /// Create a "commit" action with only a query and no slug.
-    /// Used as a shorthand for search commits that aren't issued from suggestions.
-    static func commitSearch(query: String) -> Self {
-        AppAction.commit(
-            query: query,
-            // Since we don't have a slug, derive slug from query
-            slug: Slashlink.slugify(query)
-        )
-    }
 }
 
 //  MARK: Model
@@ -106,6 +110,7 @@ struct AppModel {
         case search
         case linkSearch
         case editor
+        case rename
     }
 
     /// What is focused? (nil means nothing is focused)
@@ -121,18 +126,28 @@ struct AppModel {
 
     //  Note deletion action sheet
     /// Delete confirmation action sheet
-    var entryToDelete: String? = nil
+    var entryToDelete: Slug? = nil
     /// Delete confirmation action sheet
     var isConfirmDeleteShowing = false
+
+    //  Note renaming
+    /// Is rename sheet showing?
+    var isRenameSheetShowing = false
+    /// Slug of the candidate for renaming
+    var slugToRename: Slug? = nil
+    /// Text for slug rename TextField.
+    /// Note this is the contents of the search text field, which
+    /// is different from the actual candidate slug to be renamed.
+    var renameSlugField: String = ""
+    /// Suggestions for renaming note.
+    var renameSuggestions: [Suggestion] = []
 
     /// Live search bar text
     var searchText = ""
     var isSearchShowing = false
 
-    /// Committed search bar query text
-    var query = ""
-    /// Slug committed during search
-    var slug = ""
+    /// Slug for the currently selected entry
+    var slug: Slug? = nil
 
     /// Main search suggestions
     var suggestions: [Suggestion] = []
@@ -142,15 +157,12 @@ struct AppModel {
     /// Editor selection corresponds with `editorAttributedText`
     var editorSelection = NSMakeRange(0, 0)
 
-    /// The URL for the currently active entry
-    var entryURL: URL?
     /// Backlinks to the currently active entry
     var backlinks: [EntryStub] = []
 
     /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
     var linkSearchText = ""
-    var linkSearchQuery = ""
     var linkSuggestions: [Suggestion] = []
 }
 
@@ -256,6 +268,22 @@ struct AppUpdate {
         case let .deleteEntryFailure(error):
             AppEnvironment.logger.log("Failed to delete entry: \(error)")
             return Change(state: state)
+        case let .showRenameSheet(slug):
+            return showRenameSheet(state: state, slug: slug)
+        case .hideRenameSheet:
+            return hideRenameSheet(state: state)
+        case let .setRenameSlugField(text):
+            return setRenameSlugField(state: state, text: text)
+        case let .setRenameSuggestions(suggestions):
+            return setRenameSuggestions(state: state, suggestions: suggestions)
+        case let .renameSuggestionsFailure(error):
+            return renameSuggestionsError(state: state, error: error)
+        case let .renameEntry(from, to):
+            return renameEntry(state: state, from: from, to: to)
+        case let .succeedRenameEntry(from, to):
+            return succeedRenameEntry(state: state, from: from, to: to)
+        case let .failRenameEntry(error):
+            return failRenameEntry(state: state, error: error)
         case let .setEditorAttributedText(attributedText):
             var model = state
             // Render attributes from markup if text has changed
@@ -271,7 +299,7 @@ struct AppUpdate {
             var model = state
             model.editorSelection = range
             return Change(state: model)
-        case let .setDetailShowing(isShowing):
+        case let .showDetail(isShowing):
             var model = state
             model.isDetailShowing = isShowing
             if isShowing == false {
@@ -301,22 +329,21 @@ struct AppUpdate {
                 "Suggest failed: \(message)"
             )
             return Change(state: state)
-        case let .commit(query, slug):
-            return commit(state: state, query: query, slug: slug)
-        case let .setDetail(results):
+        case let .requestDetail(slug, fallback):
+            return requestDetail(
+                state: state,
+                slug: slug,
+                fallback: fallback
+            )
+        case let .updateDetail(results):
             var model = state
-            model.query = results.query
             model.slug = results.slug
             model.backlinks = results.backlinks
-            let entryURL = results.entry?.url
-            model.entryURL = entryURL ?? AppEnvironment.database.findUniqueURL(
-                name: results.slug
-            )
             model.editorAttributedText = renderMarkup(
-                markup: results.entry?.content ?? results.query
+                markup: results.entry.content
             )
             return Change(state: model)
-        case let .detailFailure(message):
+        case let .failDetail(message):
             AppEnvironment.logger.log(
                 "Failed to get details for search: \(message)"
             )
@@ -341,8 +368,8 @@ struct AppUpdate {
             return Change(state: state)
         case .save:
             return save(state: state)
-        case let .saveSuccess(url):
-            return saveSuccess(state: state, url: url)
+        case let .saveSuccess(slug):
+            return saveSuccess(state: state, slug: slug)
         case let .saveFailure(url, message):
             //  TODO: show user a "try again" banner
             AppEnvironment.logger.warning(
@@ -411,8 +438,9 @@ struct AppUpdate {
                 // If this is a Subtext URL, then commit a search for the
                 // corresponding query
                 let fx: AnyPublisher<AppAction, Never> = Just(
-                    AppAction.commitSearch(
-                        query: Slashlink.urlToProse(url)
+                    AppAction.requestDetail(
+                        slug: Slashlink.urlToSlug(url),
+                        fallback: ""
                     )
                 ).eraseToAnyPublisher()
                 return Change(state: state, fx: fx)
@@ -548,7 +576,7 @@ struct AppUpdate {
 
     static func deleteEntry(
         state: AppModel,
-        slug: String
+        slug: Slug
     ) -> Change<AppModel, AppAction> {
         var model = state
         if let index = model.recent.firstIndex(
@@ -579,7 +607,7 @@ struct AppUpdate {
 
     static func deleteEntrySuccess(
         state: AppModel,
-        slug: String
+        slug: Slug
     ) -> Change<AppModel, AppAction> {
         AppEnvironment.logger.log("Deleted entry: \(slug)")
         //  Refresh lists in search fields after delete.
@@ -590,6 +618,181 @@ struct AppUpdate {
             state: state,
             fx: fx
         )
+    }
+
+    /// Show rename sheet.
+    /// Do rename-flow-related setup.
+    static func showRenameSheet(
+        state: AppModel,
+        slug: Slug?
+    ) -> Change<AppModel, AppAction> {
+        if let slug = slug {
+            //  Set rename slug field text
+            //  Set focus on rename field
+            //  Save entry in preperation for any merge/move.
+            let fx: AnyPublisher<AppAction, Never> = Just(
+                AppAction.setRenameSlugField(slug)
+            )
+            .merge(
+                with: Just(AppAction.setFocus(.rename)),
+                Just(AppAction.save)
+            )
+            .eraseToAnyPublisher()
+
+            var model = state
+            model.isRenameSheetShowing = true
+            model.slugToRename = slug
+
+            return Change(state: model, fx: fx)
+        } else {
+            AppEnvironment.logger.warning(
+                "Rename sheet invoked with nil slug"
+            )
+            return Change(state: state)
+        }
+    }
+
+    /// Hide rename sheet.
+    /// Do rename-flow-related teardown.
+    static func hideRenameSheet(
+        state: AppModel
+    ) -> Change<AppModel, AppAction> {
+        let fx: AnyPublisher<AppAction, Never> = Just(
+            AppAction.setRenameSlugField("")
+        ).eraseToAnyPublisher()
+
+        var model = state
+        model.isRenameSheetShowing = false
+        model.slugToRename = nil
+
+        return Change(state: model, fx: fx)
+    }
+
+    /// Set text of slug field
+    static func setRenameSlugField(
+        state: AppModel,
+        text: String
+    ) -> Change<AppModel, AppAction> {
+        var model = state
+        model.renameSlugField = text
+        let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+            .searchRenameSuggestions(query: text, current: state.slugToRename)
+            .map({ suggestions in
+                AppAction.setRenameSuggestions(suggestions)
+            })
+            .catch({ error in
+                Just(
+                    AppAction.renameSuggestionsFailure(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Change(state: model, fx: fx)
+    }
+
+    /// Set rename suggestions
+    static func setRenameSuggestions(
+        state: AppModel,
+        suggestions: [Suggestion]
+    ) -> Change<AppModel, AppAction> {
+        var model = state
+        model.renameSuggestions = suggestions
+        return Change(state: model)
+    }
+
+    /// Handle rename suggestions error.
+    /// This case can happen e.g. if the database fails to respond.
+    static func renameSuggestionsError(
+        state: AppModel,
+        error: String
+    ) -> Change<AppModel, AppAction> {
+        AppEnvironment.logger.warning(
+            "Failed to read suggestions from database: \(error)"
+        )
+        return Change(state: state)
+    }
+
+    /// Rename an entry (change its slug).
+    /// If `next` does not already exist, this will change the slug
+    /// and move the file.
+    /// If next exists, this will merge documents.
+    static func renameEntry(
+        state: AppModel,
+        from: Slug?,
+        to: Slug
+    ) -> Change<AppModel, AppAction> {
+        guard !to.isWhitespace else {
+            let fx: AnyPublisher<AppAction, Never> = Just(.hideRenameSheet)
+                .eraseToAnyPublisher()
+            AppEnvironment.logger.log(
+                "Rename invoked with whitespace name. Doing nothing."
+            )
+            return Change(state: state, fx: fx)
+        }
+
+        guard from != nil else {
+            let fx: AnyPublisher<AppAction, Never> = Just(.hideRenameSheet)
+                .eraseToAnyPublisher()
+            AppEnvironment.logger.warning(
+                "Rename invoked without original slug. Doing nothing. Current: nil. Next: \(to)."
+            )
+            return Change(state: state, fx: fx)
+        }
+
+        guard from != to else {
+            let fx: AnyPublisher<AppAction, Never> = Just(.hideRenameSheet)
+                .eraseToAnyPublisher()
+            AppEnvironment.logger.log(
+                "Rename invoked with same name. Doing nothing."
+            )
+            return Change(state: state, fx: fx)
+        }
+
+        let from = from!
+        let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
+            .renameOrMergeEntry(from: from, to: to)
+            .map({ _ in
+                AppAction.succeedRenameEntry(from: from, to: to)
+            })
+            .catch({ error in
+                Just(
+                    AppAction.failRenameEntry(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .merge(with: Just(AppAction.hideRenameSheet))
+            .eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
+    }
+
+    /// Rename success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedRenameEntry(
+        state: AppModel,
+        from: Slug,
+        to: Slug
+    ) -> Change<AppModel, AppAction> {
+        AppEnvironment.logger.log("Renamed entry from \(from) to \(to)")
+        let fx: AnyPublisher<AppAction, Never> = Just(
+            AppAction.requestDetail(slug: to, fallback: "")
+        )
+        .merge(with: Just(AppAction.refreshAll))
+        .eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
+    }
+
+    /// Rename failure lifecycle handler.
+    //  TODO: in future consider triggering an alert.
+    static func failRenameEntry(
+        state: AppModel,
+        error: String
+    ) -> Change<AppModel, AppAction> {
+        AppEnvironment.logger.warning(
+            "Failed to rename entry with error: \(error)"
+        )
+        return Change(state: state)
     }
 
     static func setSearch(
@@ -610,31 +813,28 @@ struct AppUpdate {
         return Change(state: model, fx: fx)
     }
 
-    static func commit(
+    static func requestDetail(
         state: AppModel,
-        query: String,
-        slug: String
+        slug: Slug,
+        fallback: String
     ) -> Change<AppModel, AppAction> {
         var model = resetEditor(state: state)
-        model.entryURL = nil
+        model.slug = nil
         model.searchText = ""
         model.isSearchShowing = false
         model.isDetailShowing = true
 
         let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
-            .search(
-                query: query,
-                slug: slug
-            )
+            .readEntryDetail(slug: slug, fallback: fallback)
             .map({ results in
-                AppAction.setDetail(results)
+                AppAction.updateDetail(results)
             })
             .catch({ error in
-                Just(AppAction.detailFailure(error.localizedDescription))
+                Just(AppAction.failDetail(error.localizedDescription))
             })
             .merge(
                 with: Just(AppAction.setSearch("")),
-                Just(AppAction.createSearchHistoryItem(query))
+                Just(AppAction.createSearchHistoryItem(fallback))
             )
             .eraseToAnyPublisher()
 
@@ -665,7 +865,10 @@ struct AppUpdate {
         return Change(state: model, fx: fx)
     }
 
-    static func commitLinkSearch(state: AppModel, text: String) -> Change<AppModel, AppAction> {
+    static func commitLinkSearch(
+        state: AppModel,
+        text: String
+    ) -> Change<AppModel, AppAction> {
         var model = state
         if let range = Range(
             model.editorSelection,
@@ -693,7 +896,6 @@ struct AppUpdate {
                 )
             }
         }
-        model.linkSearchQuery = text
         model.linkSearchText = ""
         model.focus = nil
         model.isLinkSheetPresented = false
@@ -706,11 +908,10 @@ struct AppUpdate {
     ) -> Change<AppModel, AppAction> {
         var model = state
         model.focus = nil
-        if let entryURL = model.entryURL {
+        if let slug = model.slug {
             // Parse editorAttributedText to entry.
-            // TODO refactor model to store entry instead of attributedText.
             let entry = SubtextFile(
-                url: entryURL,
+                slug: slug,
                 content: model.editorAttributedText.string
             )
             let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
@@ -718,12 +919,12 @@ struct AppUpdate {
                     entry: entry
                 )
                 .map({ _ in
-                    AppAction.saveSuccess(entryURL)
+                    AppAction.saveSuccess(slug)
                 })
                 .catch({ error in
                     Just(
                         AppAction.saveFailure(
-                            url: entryURL,
+                            slug: slug,
                             message: error.localizedDescription
                         )
                     )
@@ -744,10 +945,10 @@ struct AppUpdate {
     /// Log save success and perform refresh of various lists.
     static func saveSuccess(
         state: AppModel,
-        url: URL
+        slug: Slug
     ) -> Change<AppModel, AppAction> {
         AppEnvironment.logger.debug(
-            "Saved entry \(url)"
+            "Saved entry: \(slug)"
         )
         let fx = Just(AppAction.refreshAll)
             .eraseToAnyPublisher()
@@ -771,7 +972,8 @@ struct AppView: View {
         ZStack(alignment: .bottomTrailing) {
             Color.background.edgesIgnoringSafeArea(.all)
             if store.state.isDatabaseReady {
-                AppNavigationView(store: store).zIndex(1)
+                AppNavigationView(store: store)
+                    .zIndex(1)
                 if store.state.focus == nil {
                     Button(
                         action: {
@@ -803,19 +1005,13 @@ struct AppView: View {
                             get: \.suggestions,
                             tag: AppAction.setSuggestions
                         ),
-                        onCommit: { query, slug in
-                            if let slug = slug {
-                                store.send(
-                                    action: .commit(
-                                        query: query,
-                                        slug: slug
-                                    )
+                        onCommit: { slug, query in
+                            store.send(
+                                action: .requestDetail(
+                                    slug: slug,
+                                    fallback: query
                                 )
-                            } else {
-                                store.send(
-                                    action: .commitSearch(query: query)
-                                )
-                            }
+                            )
                         },
                         onCancel: {
                             withAnimation(.easeOut(duration: Duration.fast)) {

@@ -20,7 +20,7 @@ struct LinkSuggestionLabelView: View {
                             .lineLimit(1)
                             .foregroundColor(Color.text)
                             .frame(height: AppTheme.icon)
-                        Text(#"Link to "\#(Slashlink.removeLeadingSlash(stub.slug))""#)
+                        Text(#"Link to "\#(stub.slug)""#)
                             .lineLimit(1)
                             .foregroundColor(Color.secondaryText)
                             .frame(height: AppTheme.icon)
@@ -33,21 +33,25 @@ struct LinkSuggestionLabelView: View {
         case let .search(stub):
             Label(
                 title: {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(stub.title)
-                            .lineLimit(1)
-                            .foregroundColor(Color.text)
-                            .frame(height: AppTheme.icon)
-                        Text(#"Link to "\#(Slashlink.removeLeadingSlash(stub.slug))""#)
-                            .lineLimit(1)
-                            .foregroundColor(Color.secondaryText)
-                            .frame(height: AppTheme.icon)
-                    }
+                    TitleGroup(
+                        title: stub.title,
+                        subtitle: #"Link to "\#(stub.slug)""#
+                    )
                 },
                 icon: {
                     Image(systemName: "link.badge.plus")
                 }
             ).labelStyle(SuggestionLabelStyle())
         }
+    }
+}
+
+struct LinkSuggestionLabel_Previews: PreviewProvider {
+    static var previews: some View {
+        LinkSuggestionLabelView(
+            suggestion: .search(
+                EntryLink(title: "Floop the pig")
+            )
+        )
     }
 }

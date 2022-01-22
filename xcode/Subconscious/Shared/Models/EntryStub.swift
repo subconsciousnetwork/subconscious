@@ -10,8 +10,8 @@ import Foundation
 /// A EntryLink is a model that contains a title and slug description of a note
 /// suitable for list views.
 struct EntryStub: Hashable, Identifiable {
-    var slug: String
+    var slug: Slug
     var title: String
     var excerpt: String
-    var id: String { slug }
+    var id: Slug { slug }
 }

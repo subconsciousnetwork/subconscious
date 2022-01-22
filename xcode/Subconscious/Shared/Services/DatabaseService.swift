@@ -13,6 +13,7 @@ import OrderedCollections
 struct DatabaseService {
     enum DatabaseServiceError: Error {
         case pathNotInFilePath
+        case invalidSlug(String)
     }
 
     private var documentUrl: URL
@@ -98,12 +99,12 @@ struct DatabaseService {
                 // .conflict. Leader wins.
                 case .leftOnly, .leftNewer, .rightNewer, .conflict:
                     if let left = change.left {
-                        try writeEntryToDatabase(url: left.url)
+                        try writeEntryToDatabase(slug: left.url.toSlug())
                     }
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly:
                     if let right = change.right {
-                        let slug = right.url.stem
+                        let slug = right.url.toSlug()
                         try deleteEntryFromDatabase(slug: slug)
                     }
                 // .same = no change. Do nothing.
@@ -151,9 +152,11 @@ struct DatabaseService {
         )
     }
 
-    private func writeEntryToDatabase(url: URL) throws {
-        let entry = try SubtextFile(url: url)
-        let fingerprint = try FileFingerprint.Attributes(url: url).unwrap()
+    private func writeEntryToDatabase(slug: Slug) throws {
+        let entry = try SubtextFile(slug: slug, directory: documentUrl).unwrap()
+        let fingerprint = try FileFingerprint.Attributes(
+            url: entry.url(directory: documentUrl)
+        ).unwrap()
         return try writeEntryToDatabase(
             entry: entry,
             modified: fingerprint.modifiedDate,
@@ -164,10 +167,10 @@ struct DatabaseService {
     func writeEntry(entry: SubtextFile) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             // Write contents to file
-            try entry.write()
+            try entry.write(directory: documentUrl)
             // Read fingerprint after writing to get updated time
             let fingerprint = try FileFingerprint.Attributes(
-                url: entry.url
+                url: entry.url(directory: documentUrl)
             ).unwrap()
             return try writeEntryToDatabase(
                 entry: entry,
@@ -178,7 +181,7 @@ struct DatabaseService {
     }
 
     /// Delete entry from database
-    private func deleteEntryFromDatabase(slug: String) throws {
+    private func deleteEntryFromDatabase(slug: Slug) throws {
         try database.execute(
             sql: """
             DELETE FROM entry WHERE slug = ?
@@ -190,16 +193,88 @@ struct DatabaseService {
     }
 
     /// Delete entry from file system
-    private func deleteEntryFile(slug: String) throws {
+    private func deleteEntryFile(slug: Slug) throws {
         let url = documentUrl.appendingFilename(name: slug, ext: "subtext")
         try FileManager.default.removeItem(at: url)
     }
 
     /// Delete entry from file system and database
-    func deleteEntry(slug: String) -> AnyPublisher<Void, Error> {
+    func deleteEntry(slug: Slug) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .background) {
             try deleteEntryFile(slug: slug)
             try deleteEntryFromDatabase(slug: slug)
+        }
+    }
+
+    /// Rename file in file system
+    private func moveEntryFile(from: Slug, to: Slug) throws {
+        let fromURL = documentUrl.appendingFilename(name: from, ext: "subtext")
+        let toURL = documentUrl.appendingFilename(name: to, ext: "subtext")
+        try FileManager.default.moveItem(at: fromURL, to: toURL)
+    }
+
+    /// Merge two files together
+    /// - Appends `from` to `to`
+    /// - Writes the combined content to `to`
+    /// - Deletes `from`
+    private func mergeEntryFile(from: Slug, to: Slug) throws {
+        let fromFile = try SubtextFile(
+            slug: from,
+            directory: documentUrl
+        )
+        .unwrap()
+
+        let toFile = try SubtextFile(
+            slug: to,
+            directory: documentUrl
+        )
+        .unwrap()
+        .append(fromFile.dom)
+
+        //  First write the merged file to "to" location
+        try toFile.write(directory: documentUrl)
+        //  Then remove the file at "from" location.
+        //  We delete AFTER writing so that data loss cannot occur in
+        //  case of failure.
+        try FileManager.default.removeItem(
+            at: fromFile.url(directory: documentUrl)
+        )
+    }
+
+    /// Rename or merge entry.
+    /// Updates both database and file system.
+    func renameOrMergeEntry(
+        from: Slug,
+        to: Slug
+    ) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            // Succeed and do nothing if `from` and `to` are the same.
+            guard from != to else {
+                return
+            }
+
+            let toURL = documentUrl.appendingFilename(
+                name: to,
+                ext: "subtext"
+            )
+
+            //  If file already exists, perform a merge.
+            //  Otherwise, perform a rename.
+            //  NOTE: It's important to use `.path` and not `.absolutePath`.
+            //  For whatever reason, `.fileExists` will not find the file
+            //  at its `.absolutePath`.
+            //  2022-01-21 Gordon Brander
+            if FileManager.default.fileExists(atPath: toURL.path) {
+                try mergeEntryFile(from: from, to: to)
+                try writeEntryToDatabase(slug: to)
+                try deleteEntryFromDatabase(slug: from)
+                return
+            } else {
+                try moveEntryFile(from: from, to: to)
+                try writeEntryToDatabase(slug: to)
+                try deleteEntryFromDatabase(slug: from)
+                return
+            }
         }
     }
 
@@ -298,7 +373,7 @@ struct DatabaseService {
         var suggestions: OrderedDictionary<String, Suggestion> = [:]
 
         /// Create a suggestion for the literal query
-        let querySlug = Slashlink.slugify(query)
+        let querySlug = query.slugifyString()
         suggestions[querySlug] = .search(
             EntryLink(title: query)
         )
@@ -383,6 +458,98 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
+    /// Given a query and a `current` slug, produce an array of suggestions
+    /// for renaming the note.
+    func searchRenameSuggestions(
+        query: String,
+        current: Slug?
+    ) -> AnyPublisher<[Suggestion], Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            guard !query.isWhitespace else {
+                return []
+            }
+
+            var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
+
+            let querySuggestion = Suggestion.search(EntryLink(title: query))
+            //  If slug of literal query would be different from current slug
+            //  make this the first suggestion.
+            if querySuggestion.stub.slug != current {
+                suggestions.updateValue(
+                    querySuggestion,
+                    forKey: querySuggestion.stub.slug
+                )
+            }
+
+            let searches: [EntryLink] = try database.execute(
+                sql: """
+                SELECT DISTINCT query
+                FROM search_history
+                WHERE query LIKE ?
+                ORDER BY created DESC
+                LIMIT 3
+                """,
+                parameters: [
+                    .prefixQueryLike(query)
+                ]
+            )
+            .compactMap({ row in
+                if let title: String = row.get(0) {
+                    return EntryLink(title: title)
+                }
+                return nil
+            })
+
+            for search in searches {
+                //  Do not suggest current slug
+                if search.slug != current {
+                    suggestions.updateValue(
+                        .search(search),
+                        forKey: search.slug
+                    )
+                }
+            }
+
+            let entries: [EntryLink] = try database.execute(
+                sql: """
+                SELECT slug, title
+                FROM entry_search
+                WHERE entry_search MATCH ?
+                ORDER BY rank
+                LIMIT 5
+                """,
+                parameters: [
+                    .prefixQueryFTS5(query)
+                ]
+            )
+            .compactMap({ row in
+                if
+                    let slug: String = row.get(0),
+                    let title: String = row.get(1)
+                {
+                    return EntryLink(
+                        slug: slug,
+                        title: title
+                    )
+                }
+                return nil
+            })
+
+            for entry in entries {
+                //  Do not suggest renaming to same name
+                if entry.slug != current {
+                    suggestions.updateValue(
+                        .entry(entry),
+                        forKey: entry.slug
+                    )
+                }
+            }
+            return Array(suggestions.values)
+        }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
+    }
+
     /// Log a search query in search history db
     func createSearchHistoryItem(query: String) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
@@ -407,10 +574,11 @@ struct DatabaseService {
     }
 
     private func readEntry(
-        slug: String
+        slug: Slug
     ) -> SubtextFile? {
-        try? SubtextFile(
-            url: documentUrl.appendingFilename(name: slug, ext: "subtext")
+        SubtextFile(
+            slug: slug,
+            directory: documentUrl
         )
     }
 
@@ -418,13 +586,13 @@ struct DatabaseService {
     /// We trust caller to slugify the string, if necessary.
     /// Allowing any string allows us to retreive files that don't have a
     /// clean slug.
-    func search(
-        query: String,
-        slug: String
-    ) -> AnyPublisher<ResultSet, Error> {
+    func readEntryDetail(
+        slug: Slug,
+        fallback: String
+    ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             guard !slug.isWhitespace else {
-                return ResultSet()
+                throw DatabaseServiceError.invalidSlug("Slug is whitespace")
             }
 
             // Get backlinks.
@@ -458,10 +626,12 @@ struct DatabaseService {
             })
 
             // Retreive top entry from file system to ensure it is fresh.
-            let entry = readEntry(slug: slug)
-
-            return ResultSet(
-                query: query,
+            // If no file exists, then construct one using fallback content.
+            let entry = readEntry(slug: slug) ?? SubtextFile(
+                slug: slug,
+                content: fallback
+            )
+            return EntryDetail(
                 slug: slug,
                 entry: entry,
                 backlinks: backlinks

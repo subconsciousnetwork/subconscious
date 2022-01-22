@@ -16,7 +16,7 @@
 		B81EBB0927025C1500B87594 /* TranscludeButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81EBB0827025C1500B87594 /* TranscludeButtonStyle.swift */; };
 		B81EBB0A27025C1500B87594 /* TranscludeButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81EBB0827025C1500B87594 /* TranscludeButtonStyle.swift */; };
 		B824FDCE26FA662200B81BBD /* SubtextFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDCD26FA662200B81BBD /* SubtextFile.swift */; };
-		B824FDD126FA98F300B81BBD /* ResultSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD026FA98F300B81BBD /* ResultSet.swift */; };
+		B824FDD126FA98F300B81BBD /* EntryDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD026FA98F300B81BBD /* EntryDetail.swift */; };
 		B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD326FAB1BC00B81BBD /* Truncate.swift */; };
 		B824FDD526FAB1BC00B81BBD /* Truncate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD326FAB1BC00B81BBD /* Truncate.swift */; };
 		B82C3A5326F528B000833CC8 /* DatabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A5226F528B000833CC8 /* DatabaseService.swift */; };
@@ -75,6 +75,7 @@
 		B88C97A02764266A00B27DF0 /* IBMPlexSans-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C979C2764266A00B27DF0 /* IBMPlexSans-Medium.ttf */; };
 		B88C97A22764270000B27DF0 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = B88C97A12764270000B27DF0 /* LICENSE.txt */; };
 		B88C97A32764270000B27DF0 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = B88C97A12764270000B27DF0 /* LICENSE.txt */; };
+		B8901CF327978FDE007C9021 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8901CF227978FDE007C9021 /* Slug.swift */; };
 		B8AC648A278F53920099E96B /* EntryStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC6489278F53920099E96B /* EntryStub.swift */; };
 		B8AC648C278F757B0099E96B /* ProgressScrim.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC648B278F757B0099E96B /* ProgressScrim.swift */; };
 		B8AC648D278F757B0099E96B /* ProgressScrim.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC648B278F757B0099E96B /* ProgressScrim.swift */; };
@@ -104,6 +105,16 @@
 		B8AE34CC276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */; };
 		B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3A271F6C8400B9B507 /* EntryLink.swift */; };
 		B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */; };
+		B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */; };
+		B8DEBF1A2798B6A8007CB528 /* NavigationToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */; };
+		B8DEBF1C2798CA8D007CB528 /* MicroFieldButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF1B2798CA8D007CB528 /* MicroFieldButtonStyle.swift */; };
+		B8DEBF1D2798CA8D007CB528 /* MicroFieldButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF1B2798CA8D007CB528 /* MicroFieldButtonStyle.swift */; };
+		B8DEBF1F2798EC23007CB528 /* TitleGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF1E2798EC23007CB528 /* TitleGroup.swift */; };
+		B8DEBF202798EC23007CB528 /* TitleGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF1E2798EC23007CB528 /* TitleGroup.swift */; };
+		B8DEBF222798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */; };
+		B8DEBF232798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */; };
+		B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */; };
+		B8DEBF262798EF6A007CB528 /* RenameSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */; };
 		B8E4B6F226F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4B6F126F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift */; };
 		B8E4B6F326F28BA700B9BE21 /* GrowableAttributedTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4B6F126F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift */; };
 		B8E63EA6270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E63EA5270F9DD000545719 /* StringRandomAlphanumeric.swift */; };
@@ -155,7 +166,7 @@
 		B81A535E272751EE001A6268 /* Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext.swift; sourceTree = "<group>"; };
 		B81EBB0827025C1500B87594 /* TranscludeButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeButtonStyle.swift; sourceTree = "<group>"; };
 		B824FDCD26FA662200B81BBD /* SubtextFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextFile.swift; sourceTree = "<group>"; };
-		B824FDD026FA98F300B81BBD /* ResultSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultSet.swift; sourceTree = "<group>"; };
+		B824FDD026FA98F300B81BBD /* EntryDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryDetail.swift; sourceTree = "<group>"; };
 		B824FDD326FAB1BC00B81BBD /* Truncate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Truncate.swift; sourceTree = "<group>"; };
 		B82C3A5226F528B000833CC8 /* DatabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseService.swift; sourceTree = "<group>"; };
 		B82C3A5526F529EF00833CC8 /* CombineUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombineUtilities.swift; sourceTree = "<group>"; };
@@ -184,6 +195,7 @@
 		B88C979B2764266A00B27DF0 /* IBMPlexSans-Light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexSans-Light.ttf"; sourceTree = "<group>"; };
 		B88C979C2764266A00B27DF0 /* IBMPlexSans-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexSans-Medium.ttf"; sourceTree = "<group>"; };
 		B88C97A12764270000B27DF0 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		B8901CF227978FDE007C9021 /* Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
 		B8AC6489278F53920099E96B /* EntryStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryStub.swift; sourceTree = "<group>"; };
 		B8AC648B278F757B0099E96B /* ProgressScrim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressScrim.swift; sourceTree = "<group>"; };
 		B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackLabelStyle.swift; sourceTree = "<group>"; };
@@ -200,6 +212,11 @@
 		B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkSuggestionLabelView.swift; sourceTree = "<group>"; };
 		B8B54F3A271F6C8400B9B507 /* EntryLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryLink.swift; sourceTree = "<group>"; };
 		B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestion.swift; sourceTree = "<group>"; };
+		B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationToolbar.swift; sourceTree = "<group>"; };
+		B8DEBF1B2798CA8D007CB528 /* MicroFieldButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroFieldButtonStyle.swift; sourceTree = "<group>"; };
+		B8DEBF1E2798EC23007CB528 /* TitleGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleGroup.swift; sourceTree = "<group>"; };
+		B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSuggestionLabelView.swift; sourceTree = "<group>"; };
+		B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSearchView.swift; sourceTree = "<group>"; };
 		B8E4B6F126F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrowableAttributedTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8E63EA5270F9DD000545719 /* StringRandomAlphanumeric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringRandomAlphanumeric.swift; sourceTree = "<group>"; };
 		B8EB29F326F27794006E97C3 /* SubconsciousApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubconsciousApp.swift; sourceTree = "<group>"; };
@@ -289,9 +306,10 @@
 			children = (
 				B8B54F3A271F6C8400B9B507 /* EntryLink.swift */,
 				B8AC6489278F53920099E96B /* EntryStub.swift */,
-				B824FDD026FA98F300B81BBD /* ResultSet.swift */,
+				B824FDD026FA98F300B81BBD /* EntryDetail.swift */,
 				B824FDCD26FA662200B81BBD /* SubtextFile.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
+				B8901CF227978FDE007C9021 /* Slug.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -379,6 +397,7 @@
 				B8879EAB26F944DA00A0B4FF /* DetailView.swift */,
 				B864598626F97B81007969E3 /* KeyboardToolbarView.swift */,
 				B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */,
+				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 				B8AE34BB276AB3D400777FF0 /* SearchView.swift */,
 			);
 			path = Components;
@@ -422,12 +441,16 @@
 				B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */,
 				B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */,
 				B8AE34BE276BD61400777FF0 /* RowButtonStyle.swift */,
+				B8DEBF1B2798CA8D007CB528 /* MicroFieldButtonStyle.swift */,
 				B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */,
 				B8AE34C7276BF77000777FF0 /* SearchTextField.swift */,
 				B8AE34C1276BD77C00777FF0 /* SuggestionLabelStyle.swift */,
 				B878C9812703F47A0042DF72 /* SuggestionLabelView.swift */,
+				B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */,
+				B8DEBF1E2798EC23007CB528 /* TitleGroup.swift */,
 				B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */,
 				B81EBB0827025C1500B87594 /* TranscludeButtonStyle.swift */,
+				B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -620,6 +643,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B82FD4562730A62C002CB641 /* EntryRow.swift in Sources */,
+				B8DEBF1C2798CA8D007CB528 /* MicroFieldButtonStyle.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
@@ -631,16 +655,19 @@
 				B8E63EA6270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */,
 				B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */,
+				B8901CF327978FDE007C9021 /* Slug.swift in Sources */,
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8AE34BC276AB3D500777FF0 /* SearchView.swift in Sources */,
 				B8082AAA26F3B43A004B10BB /* Store.swift in Sources */,
 				B8879EA626F9348600A0B4FF /* Slashlink.swift in Sources */,
+				B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* DetailView.swift in Sources */,
 				B82C3A7626F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B8EB2A1F26F27797006E97C3 /* SubconsciousApp.swift in Sources */,
 				B864598726F97B81007969E3 /* KeyboardToolbarView.swift in Sources */,
-				B824FDD126FA98F300B81BBD /* ResultSet.swift in Sources */,
+				B824FDD126FA98F300B81BBD /* EntryDetail.swift in Sources */,
 				B8AE34AA276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
+				B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */,
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
@@ -659,6 +686,8 @@
 				B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */,
 				B8EB2A2326F27797006E97C3 /* AppView.swift in Sources */,
 				B8AE34A7276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
+				B8DEBF222798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
+				B8DEBF1F2798EC23007CB528 /* TitleGroup.swift in Sources */,
 				B8AE34BF276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
@@ -678,6 +707,7 @@
 				B82C3A6626F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8AC6490278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
 				B8EDB807270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
+				B8DEBF202798EC23007CB528 /* TitleGroup.swift in Sources */,
 				B81EBB0A27025C1500B87594 /* TranscludeButtonStyle.swift in Sources */,
 				B82C3A6326F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B8E63EA7270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */,
@@ -701,15 +731,18 @@
 				B8AE34C9276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
+				B8DEBF1A2798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B8AE34CC276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
 				B8AE34AE276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8EC568326F415C800AC64E5 /* PublisherBag.swift in Sources */,
 				B8AE34C0276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
 				B8EC569026F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
 				B8AE34AB276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
+				B8DEBF262798EF6A007CB528 /* RenameSearchView.swift in Sources */,
 				B81A5360272751EE001A6268 /* Subtext.swift in Sources */,
 				B82C3A7426F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */,
 				B8AC648D278F757B0099E96B /* ProgressScrim.swift in Sources */,
+				B8DEBF232798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
 				B8AE34C6276BF72500777FF0 /* LinkSearchView.swift in Sources */,
 				B82C3A5426F528B000833CC8 /* DatabaseService.swift in Sources */,
 				B878C9832703F47A0042DF72 /* SuggestionLabelView.swift in Sources */,
@@ -719,6 +752,7 @@
 				B82C3A6026F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8EC568D26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
 				B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
+				B8DEBF1D2798CA8D007CB528 /* MicroFieldButtonStyle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
