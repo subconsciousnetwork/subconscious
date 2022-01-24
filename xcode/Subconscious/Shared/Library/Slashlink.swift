@@ -40,8 +40,10 @@ extension Slashlink {
     }
 
     static func slashlinkToURLString(_ text: String) -> String? {
-        let slashlink = text.slugifyString()
-        if let url = URL(string: "sub://slashlink/\(slashlink)") {
+        if
+            let slashlink = text.slugifyString(),
+            let url = URL(string: "sub://slashlink/\(slashlink)")
+        {
             return url.absoluteString
         }
         return nil
@@ -63,8 +65,10 @@ extension Slashlink {
         at base: URL,
         name: String,
         ext: String
-    ) -> URL {
-        let slug = name.slugifyString()
+    ) -> URL? {
+        guard let slug = name.slugifyString() else {
+            return nil
+        }
         let url = base.appendingFilename(name: slug, ext: ext)
         if !FileManager.default.fileExists(atPath: url.path) {
             return url

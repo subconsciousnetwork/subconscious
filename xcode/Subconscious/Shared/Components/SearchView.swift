@@ -12,7 +12,7 @@ struct SearchView: View {
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     @Binding var suggestions: [Suggestion]
-    var onCommit: (Slug, String) -> Void
+    var onCommit: (Slug?, String) -> Void
     var onCancel: () -> Void
 
     var body: some View {

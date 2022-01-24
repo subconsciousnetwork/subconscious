@@ -15,7 +15,7 @@ struct RenameSearchView: View {
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     var onCancel: () -> Void
-    var onCommit: (Slug?, Slug) -> Void
+    var onCommit: (Slug?, Slug?) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -84,8 +84,18 @@ struct RenameSearchView_Previews: PreviewProvider {
         RenameSearchView(
             slug: "floop",
             suggestions: [
-                .search(EntryLink(title: "Floop")),
-                .entry(EntryLink(title: "Card wars"))
+                .search(
+                    EntryLink(
+                        slug: "floop",
+                        title: "Floop"
+                    )
+                ),
+                .entry(
+                    EntryLink(
+                        slug: "card-wars",
+                        title: "Card wars"
+                    )
+                )
             ],
             text: .constant(""),
             focus: .constant(nil),

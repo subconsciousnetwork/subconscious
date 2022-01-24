@@ -15,7 +15,7 @@ struct RenameSuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroup(
-                        title: stub.title.slugifyString(),
+                        title: stub.slug,
                         subtitle: "Merge ideas"
                     )
                 },
@@ -27,7 +27,7 @@ struct RenameSuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroup(
-                        title: stub.title.slugifyString(),
+                        title: stub.slug,
                         subtitle: "Rename idea"
                     )
                 },
@@ -43,7 +43,10 @@ struct RenameSuggestionLabel_Previews: PreviewProvider {
     static var previews: some View {
         RenameSuggestionLabelView(
             suggestion: .search(
-                EntryLink(title: "Floop the pig")
+                EntryLink(
+                    slug: "floop",
+                    title: "Floop the pig"
+                )
             )
         )
     }

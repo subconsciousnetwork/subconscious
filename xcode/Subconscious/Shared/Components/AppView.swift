@@ -58,14 +58,17 @@ enum AppAction {
     case setRenameSuggestions([Suggestion])
     case renameSuggestionsFailure(String)
     /// Issue a rename action for an entry.
-    case renameEntry(from: Slug?, to: Slug)
+    case renameEntry(from: Slug?, to: Slug?)
     /// Rename entry succeeded. Lifecycle action.
     case succeedRenameEntry(from: Slug, to: Slug)
     /// Rename entry failed. Lifecycle action.
     case failRenameEntry(String)
 
-    // Search
+    //  Search
+    /// Set search text (updated live as you type)
     case setSearch(String)
+    /// Submit search query (e.g. by hitting enter)
+    case submitSearch(slug: Slug?, query: String)
     case showSearch
     case hideSearch
 
@@ -308,6 +311,8 @@ struct AppUpdate {
             return Change(state: model)
         case let .setSearch(text):
             return setSearch(state: state, text: text)
+        case let .submitSearch(slug, query):
+            return submitSearch(state: state, slug: slug, query: query)
         case .showSearch:
             var model = state
             model.isSearchShowing = true
@@ -720,9 +725,9 @@ struct AppUpdate {
     static func renameEntry(
         state: AppModel,
         from: Slug?,
-        to: Slug
+        to: Slug?
     ) -> Change<AppModel, AppAction> {
-        guard !to.isWhitespace else {
+        guard let to = to else {
             let fx: AnyPublisher<AppAction, Never> = Just(.hideRenameSheet)
                 .eraseToAnyPublisher()
             AppEnvironment.logger.log(
@@ -731,7 +736,7 @@ struct AppUpdate {
             return Change(state: state, fx: fx)
         }
 
-        guard from != nil else {
+        guard let from = from else {
             let fx: AnyPublisher<AppAction, Never> = Just(.hideRenameSheet)
                 .eraseToAnyPublisher()
             AppEnvironment.logger.warning(
@@ -749,7 +754,6 @@ struct AppUpdate {
             return Change(state: state, fx: fx)
         }
 
-        let from = from!
         let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
             .renameOrMergeEntry(from: from, to: to)
             .map({ _ in
@@ -795,6 +799,7 @@ struct AppUpdate {
         return Change(state: state)
     }
 
+    /// Set search text for main search input
     static func setSearch(
         state: AppModel,
         text: String
@@ -813,6 +818,26 @@ struct AppUpdate {
         return Change(state: model, fx: fx)
     }
 
+    /// Submit search from main search input
+    static func submitSearch(
+        state: AppModel,
+        slug: Slug?,
+        query: String
+    ) -> Change<AppModel, AppAction> {
+        guard let slug = slug else {
+            return Change(state: state)
+        }
+        // If we have been passed a valid slug, request a detail view.
+        let fx: AnyPublisher<AppAction, Never> = Just(
+            AppAction.requestDetail(
+                slug: slug,
+                fallback: query
+            )
+        ).eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
+    }
+
+    /// Request that entry detail view be shown
     static func requestDetail(
         state: AppModel,
         slug: Slug,
@@ -1007,9 +1032,9 @@ struct AppView: View {
                         ),
                         onCommit: { slug, query in
                             store.send(
-                                action: .requestDetail(
+                                action: .submitSearch(
                                     slug: slug,
-                                    fallback: query
+                                    query: query
                                 )
                             )
                         },

@@ -18,9 +18,13 @@ struct EntryLink: Hashable, Identifiable {
         self.title = title
     }
 
-    init(title: String) {
-        self.title = title
-        self.slug = title.slugify()
+    init?(title: String) {
+        if let slug = title.slugify() {
+            self.title = title
+            self.slug = slug
+        } else {
+            return nil
+        }
     }
 
     var id: Slug { slug }
