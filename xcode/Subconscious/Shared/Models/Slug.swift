@@ -15,9 +15,12 @@ typealias Slug = String
 
 extension String {
     /// Slugify a string, returning a slug.
-    func slugify() -> Slug {
-        self
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+    func slugify() -> Slug? {
+        let trimmed = self.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
             .lowercased()
             // Replace runs of one or more space with a single dash
             .replacingOccurrences(
@@ -39,13 +42,14 @@ extension String {
 
     /// Slugify a string, returning a string.
     /// For now, this is just a proxy to toSlug.
-    func slugifyString() -> String {
+    func slugifyString() -> String? {
         self.slugify()
     }
 }
 
 extension URL {
-    /// Convert URL to slug
+    /// Convert URL to a slug.
+    /// In other words, return the last path component without the extension.
     func toSlug() -> Slug {
         self.deletingPathExtension().lastPathComponent
     }

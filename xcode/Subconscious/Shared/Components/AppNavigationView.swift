@@ -112,9 +112,9 @@ struct AppNavigationView: View {
                             },
                             onCommitSearch: { query in
                                 store.send(
-                                    action: .requestDetail(
+                                    action: .submitSearch(
                                         slug: query.slugify(),
-                                        fallback: query
+                                        query: query
                                     )
                                 )
                             },

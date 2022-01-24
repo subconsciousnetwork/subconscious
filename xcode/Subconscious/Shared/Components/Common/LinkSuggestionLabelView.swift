@@ -50,7 +50,10 @@ struct LinkSuggestionLabel_Previews: PreviewProvider {
     static var previews: some View {
         LinkSuggestionLabelView(
             suggestion: .search(
-                EntryLink(title: "Floop the pig")
+                EntryLink(
+                    slug: "floop",
+                    title: "Floop the pig"
+                )
             )
         )
     }

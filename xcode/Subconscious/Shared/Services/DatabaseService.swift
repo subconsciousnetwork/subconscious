@@ -36,7 +36,7 @@ struct DatabaseService {
     }
 
     /// Helper function for generating draft URLs
-    func findUniqueURL(name: String) -> URL {
+    func findUniqueURL(name: String) -> URL? {
         Slashlink.findUniqueURL(
             at: documentUrl,
             name: name,
@@ -366,17 +366,18 @@ struct DatabaseService {
     private func searchSuggestionsForQuery(
         query: String
     ) throws -> OrderedDictionary<String, Suggestion> {
-        guard !query.isWhitespace else {
-            return OrderedDictionary<String, Suggestion>()
-        }
-
         var suggestions: OrderedDictionary<String, Suggestion> = [:]
 
-        /// Create a suggestion for the literal query
-        let querySlug = query.slugifyString()
-        suggestions[querySlug] = .search(
-            EntryLink(title: query)
-        )
+        // If slug is invalid, return empty suggestions
+        guard
+            let querySlug = query.slugifyString(),
+            let queryEntryLink = EntryLink(title: query)
+        else {
+            return suggestions
+        }
+
+        // Create a suggestion for the literal query
+        suggestions[querySlug] = .search(queryEntryLink)
 
         let entries: [EntryLink] = try database.execute(
             sql: """
@@ -465,13 +466,13 @@ struct DatabaseService {
         current: Slug?
     ) -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            guard !query.isWhitespace else {
+            guard let queryEntryLink = EntryLink(title: query) else {
                 return []
             }
 
             var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
 
-            let querySuggestion = Suggestion.search(EntryLink(title: query))
+            let querySuggestion = Suggestion.search(queryEntryLink)
             //  If slug of literal query would be different from current slug
             //  make this the first suggestion.
             if querySuggestion.stub.slug != current {
