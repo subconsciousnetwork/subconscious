@@ -59,8 +59,10 @@ where T: Collection,
     /// Move forward one element
     @discardableResult mutating func consume() -> T.SubSequence {
         let subsequence = collection[currentIndex...currentIndex]
-        self.collection.formIndex(
-            after: &self.currentIndex
+        _ = self.collection.formIndex(
+            &self.currentIndex,
+            offsetBy: 1,
+            limitedBy: collection.endIndex
         )
         return subsequence
     }
@@ -76,6 +78,16 @@ where T: Collection,
                 self.currentIndex = endIndex
                 return true
             }
+        }
+        return false
+    }
+
+    /// Peek forward at next `Collection.Item` and consume if it matches
+    /// predicate function
+    mutating func consumeMatch(where predicate: (T.Element) -> Bool) -> Bool {
+        if predicate(collection[currentIndex]) {
+            self.consume()
+            return true
         }
         return false
     }

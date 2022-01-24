@@ -65,44 +65,79 @@ struct Subtext: Hashable, Equatable {
         return nil
     }
 
-    /// Check if substring contains a word-ending sequence.
-    /// Generally, a space, or else a punctuation character followed by a space, newline, or end of input.
-    private static func isWordEnding(_ substring: Substring) -> Bool {
+    /// Determine if character can be part of a slashlink
+    /// See https://github.com/gordonbrander/subtext/blob/main/specification.md#slashlinks
+    private static func isURLCharacter(
+        character: Character
+    ) -> Bool {
+        guard character.isASCII else {
+            return false
+        }
         return (
-            substring.hasPrefix(" ") ||
-            substring.hasPrefix("\n") ||
-            substring.hasPrefix(".") && substring.count == 1 ||
-            substring.hasPrefix(".") && substring.hasSuffix(" ") ||
-            substring.hasPrefix(".") && substring.hasSuffix("\n") ||
-            substring.hasPrefix("?") && substring.count == 1 ||
-            substring.hasPrefix("?") && substring.hasSuffix(" ") ||
-            substring.hasPrefix("?") && substring.hasSuffix("\n") ||
-            substring.hasPrefix("!") && substring.count == 1 ||
-            substring.hasPrefix("!") && substring.hasSuffix(" ") ||
-            substring.hasPrefix("!") && substring.hasSuffix("\n") ||
-            substring.hasPrefix(",") && substring.count == 1 ||
-            substring.hasPrefix(",") && substring.hasSuffix(" ") ||
-            substring.hasPrefix(",") && substring.hasSuffix("\n") ||
-            substring.hasPrefix(";") && substring.count == 1 ||
-            substring.hasPrefix(";") && substring.hasSuffix(" ") ||
-            substring.hasPrefix(";") && substring.hasSuffix("\n") ||
-            substring.hasPrefix(":") && substring.count == 1 ||
-            substring.hasPrefix(":") && substring.hasSuffix(" ") ||
-            substring.hasPrefix(":") && substring.hasSuffix("\n")
+            character.isLetter ||
+            character.isNumber ||
+            character == "/" ||
+            character == "-" ||
+            character == "_" ||
+            character == "~" ||
+            character == "." ||
+            character == "?" ||
+            character == "=" ||
+            character == "&" ||
+            character == "%" ||
+            character == "," ||
+            character == ";" ||
+            character == "+" ||
+            character == "'" ||
+            character == "!" ||
+            character == "$" ||
+            character == "#"
         )
     }
 
-    /// Consume tape until the next word-ending sequence.
-    /// Cuts tape before word ending.
+    /// Determine if character can be part of a slashlink
+    /// See https://github.com/gordonbrander/subtext/blob/main/specification.md#slashlinks
+    private static func isSlashlinkCharacter(
+        character: Character
+    ) -> Bool {
+        (
+            character.isLetter ||
+            character.isNumber ||
+            character == "-" ||
+            character == "/"
+        )
+    }
+
+    /// Consume tape until the end of the slashlink body.
     /// Returns Substring.
-    private static func consumeUntilWordEnding(
+    private static func consumeSlashlinkBody(
         tape: inout Tape<Substring>
     ) -> Substring {
         while !tape.isExhausted() {
-            if isWordEnding(tape.peek(next: 2)) {
+            // Consume slashlink body characters.
+            // If character is not a slashlink body character,
+            // that marks the end of the slashlink body.
+            // We cut the tape and return.
+            if !tape.consumeMatch(where: isSlashlinkCharacter) {
                 return tape.cut()
             }
-            tape.consume()
+        }
+        return tape.cut()
+    }
+
+    /// Consume tape until the end of the URL body.
+    /// Returns Substring.
+    private static func consumeURLBody(
+        tape: inout Tape<Substring>
+    ) -> Substring {
+        while !tape.isExhausted() {
+            // Consume URL body characters.
+            // If character is not a URL body character,
+            // that marks the end of the URl body.
+            // We cut the tape and return.
+            if !tape.consumeMatch(where: isURLCharacter) {
+                return tape.cut()
+            }
         }
         return tape.cut()
     }
@@ -121,13 +156,13 @@ struct Subtext: Hashable, Equatable {
                 return nil
             }
         } else if tape.consumeMatch("https://") {
-            let span = consumeUntilWordEnding(tape: &tape)
+            let span = consumeURLBody(tape: &tape)
             return .link(Link(span: span))
         } else if tape.consumeMatch("http://") {
-            let span = consumeUntilWordEnding(tape: &tape)
+            let span = consumeURLBody(tape: &tape)
             return .link(Link(span: span))
         } else if tape.consumeMatch("/") {
-            let span = consumeUntilWordEnding(tape: &tape)
+            let span = consumeSlashlinkBody(tape: &tape)
             return .slashlink(Slashlink(span: span))
         } else {
             return nil
