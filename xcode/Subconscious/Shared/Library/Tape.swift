@@ -56,13 +56,21 @@ where T: Collection,
         currentIndex = savedIndex
     }
 
-    /// Move forward one element
-    @discardableResult mutating func consume() -> T.SubSequence {
-        let subsequence = collection[currentIndex...currentIndex]
-        self.collection.formIndex(
-            after: &self.currentIndex
+    /// Move tape index forward by one
+    mutating func advance() {
+        _ = self.collection.formIndex(
+            &self.currentIndex,
+            offsetBy: 1,
+            limitedBy: collection.endIndex
         )
-        return subsequence
+    }
+
+    /// Move forward one element.
+    /// Returns `Element` at the `currentIndex` before advancing.
+    mutating func consume() -> T.Element {
+        let element = collection[currentIndex]
+        self.advance()
+        return element
     }
 
     /// Peek forward, and consume if match
@@ -80,29 +88,37 @@ where T: Collection,
         return false
     }
 
-    /// Get a single-item SubSequence offset by `offset` of the `currentStartIndex`.
-    /// Returns a single-item SubSequence, or nil if `offset` is invalid.
-    func peek(_ offset: Int = 0) -> T.SubSequence? {
+    /// Peek forward at next `Collection.Item` and consume if it matches
+    /// predicate function
+    mutating func consumeMatch(where predicate: (T.Element) -> Bool) -> Bool {
+        if predicate(collection[currentIndex]) {
+            self.advance()
+            return true
+        }
+        return false
+    }
+
+    /// Get an item offset by `offset` from the `currentIndex`.
+    /// Returns a `Collection.Element`, or nil if `offset` is invalid.
+    func peek(offset: Int = 0) -> T.Element? {
         if
-            let startIndex = collection.index(
+            let i = collection.index(
                 currentIndex,
                 offsetBy: offset,
                 limitedBy: collection.endIndex
-            ),
-            let endIndex = collection.index(
-                currentIndex,
-                offsetBy: offset + 1,
-                limitedBy: collection.endIndex
             )
         {
-            return collection[startIndex..<endIndex]
+            if i < collection.endIndex {
+                return collection[i]
+            }
         }
         return nil
     }
 
-    /// Peek forward by `offset`, returning a subsequence from `position` through `offset`,
-    /// or from `position` through `endIndex`, whichever is smaller.
-    func peek(next offset: Int) -> T.SubSequence {
+    /// Peek forward by `offset`, returning a subsequence
+    /// from `position` through `offset`.
+    /// If offset would be out of range, returns nil.
+    func peek(next offset: Int) -> T.SubSequence? {
         if let endIndex = collection.index(
             currentIndex,
             offsetBy: offset,
@@ -110,7 +126,7 @@ where T: Collection,
         ) {
             return collection[currentIndex..<endIndex]
         } else {
-            return collection[currentIndex..<collection.endIndex]
+            return nil
         }
     }
 }
