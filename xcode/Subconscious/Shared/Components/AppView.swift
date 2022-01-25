@@ -1015,8 +1015,13 @@ struct AppView: View {
                     .transition(.opacity)
                     .zIndex(2)
                 }
-                if store.state.isSearchShowing {
-                    SearchView(
+                ModalView(
+                    isPresented: store.binding(
+                        get: \.isSearchShowing,
+                        tag: { _ in AppAction.hideSearch },
+                        animation: .easeOut(duration: Duration.fast)
+                    ),
+                    content: SearchView(
                         placeholder: "Search or create...",
                         text: store.binding(
                             get: \.searchText,
@@ -1046,16 +1051,8 @@ struct AppView: View {
                             }
                         }
                     )
-                    .transition(
-                        .asymmetric(
-                            insertion:
-                                .move(edge: .bottom)
-                                .combined(with: .opacity),
-                            removal: .opacity
-                        )
-                    )
-                    .zIndex(3)
-                }
+                )
+                .zIndex(3)
             } else {
                 ProgressScrim()
             }

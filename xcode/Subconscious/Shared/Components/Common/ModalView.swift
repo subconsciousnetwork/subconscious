@@ -15,12 +15,14 @@ where Content: View {
         if isPresented {
             ZStack {
                 ScrimView()
+                    .edgesIgnoringSafeArea(.all)
                     .onTapGesture {
                         isPresented = false
                     }
                     .zIndex(1)
                 VStack {
                     DialogView(content: content)
+                    Spacer()
                 }
                 .zIndex(2)
                 .padding()
