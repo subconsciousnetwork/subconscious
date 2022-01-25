@@ -150,7 +150,6 @@ extension AppTheme {
     static let unit2 = unit * 2
     static let unit3 = unit * 3
     static let unit4 = unit * 4
-    static let cornerRadius: Double = 8
     static let padding = unit * 4
     static let margin = unit * 4
     static let tightPadding = unit * 3
@@ -166,6 +165,8 @@ extension AppTheme {
     static let lineSpacing: CGFloat = 4
     static let lineHeight: CGFloat = 24
     static let fabSize: CGFloat = 56
+    static let cornerRadius: Double = 8
+    static let cornerRadiusLg: Double = 16
 }
 
 //  MARK: UIFonts

@@ -20,8 +20,14 @@ where Content: View {
         .background(Color.background)
         .clipShape(
             RoundedRectangle(
-                cornerRadius: AppTheme.cornerRadius
+                cornerRadius: AppTheme.cornerRadiusLg
             )
+        )
+        .shadow(
+            color: .black.opacity(0.05),
+            radius: 8,
+            x: 0,
+            y: 2
         )
     }
 }
