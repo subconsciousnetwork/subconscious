@@ -107,6 +107,8 @@
 		B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */; };
 		B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433C27A07CE10079D2F9 /* ScrimView.swift */; };
 		B8CC433E27A07CE10079D2F9 /* ScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433C27A07CE10079D2F9 /* ScrimView.swift */; };
+		B8CC434027A07DF10079D2F9 /* ModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433F27A07DF10079D2F9 /* ModalView.swift */; };
+		B8CC434127A07DF10079D2F9 /* ModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433F27A07DF10079D2F9 /* ModalView.swift */; };
 		B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */; };
 		B8DEBF1A2798B6A8007CB528 /* NavigationToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */; };
 		B8DEBF1C2798CA8D007CB528 /* MicroFieldButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF1B2798CA8D007CB528 /* MicroFieldButtonStyle.swift */; };
@@ -213,6 +215,7 @@
 		B8B54F3A271F6C8400B9B507 /* EntryLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryLink.swift; sourceTree = "<group>"; };
 		B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestion.swift; sourceTree = "<group>"; };
 		B8CC433C27A07CE10079D2F9 /* ScrimView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrimView.swift; sourceTree = "<group>"; };
+		B8CC433F27A07DF10079D2F9 /* ModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalView.swift; sourceTree = "<group>"; };
 		B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationToolbar.swift; sourceTree = "<group>"; };
 		B8DEBF1B2798CA8D007CB528 /* MicroFieldButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroFieldButtonStyle.swift; sourceTree = "<group>"; };
 		B8DEBF1E2798EC23007CB528 /* TitleGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleGroup.swift; sourceTree = "<group>"; };
@@ -435,6 +438,7 @@
 				B8E4B6F126F28BA600B9BE21 /* GrowableAttributedTextViewRepresentable.swift */,
 				B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */,
 				B8DEBF1B2798CA8D007CB528 /* MicroFieldButtonStyle.swift */,
+				B8CC433F27A07DF10079D2F9 /* ModalView.swift */,
 				B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */,
 				B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */,
 				B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */,
@@ -660,6 +664,7 @@
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8AE34BC276AB3D500777FF0 /* SearchView.swift in Sources */,
 				B8082AAA26F3B43A004B10BB /* Store.swift in Sources */,
+				B8CC434027A07DF10079D2F9 /* ModalView.swift in Sources */,
 				B8879EA626F9348600A0B4FF /* Slashlink.swift in Sources */,
 				B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* DetailView.swift in Sources */,
@@ -728,6 +733,7 @@
 				B81A535D27275138001A6268 /* Tape.swift in Sources */,
 				B864598826F97B81007969E3 /* KeyboardToolbarView.swift in Sources */,
 				B8AE34BD276AB3D500777FF0 /* SearchView.swift in Sources */,
+				B8CC434127A07DF10079D2F9 /* ModalView.swift in Sources */,
 				B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8AE34C9276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
