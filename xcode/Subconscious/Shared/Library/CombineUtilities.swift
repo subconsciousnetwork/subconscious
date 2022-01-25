@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 struct CombineUtilities {
-    /// Run a throwing function asyncronously on the global DispatchQueue.
+    /// Run a function asyncronously on the global DispatchQueue.
     static func async<T>(
         qos: DispatchQoS.QoSClass = .default,
         execute: @escaping () -> T
