@@ -52,7 +52,9 @@ struct DatabaseService {
                 database.close()
                 try FileManager.default.removeItem(at: databaseURL)
             }
-        ).receive(on: DispatchQueue.main).eraseToAnyPublisher()
+        )
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     func migrate() -> AnyPublisher<SQLite3Migrations.MigrationSuccess, Error> {
@@ -61,7 +63,9 @@ struct DatabaseService {
             execute: {
                 try migrations.migrate(database: database)
             }
-        ).receive(on: DispatchQueue.main).eraseToAnyPublisher()
+        )
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     func syncDatabase() -> AnyPublisher<[FileSync.Change], Error> {
@@ -178,6 +182,8 @@ struct DatabaseService {
                 size: fingerprint.size
             )
         }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     /// Delete entry from database
@@ -204,6 +210,8 @@ struct DatabaseService {
             try deleteEntryFile(slug: slug)
             try deleteEntryFromDatabase(slug: slug)
         }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     /// Rename file in file system
@@ -276,6 +284,8 @@ struct DatabaseService {
                 return
             }
         }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     /// List recent entries
@@ -306,6 +316,8 @@ struct DatabaseService {
                 return nil
             })
         }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 
     private func searchSuggestionsForZeroQuery(

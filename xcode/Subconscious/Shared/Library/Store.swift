@@ -105,6 +105,14 @@ public final class Store<State, Action>: ObservableObject {
 
     /// Send an action to the store to update state and generate effects.
     /// Any effects generated are fed back into the store.
+    ///
+    /// Note: SwiftUI requires that all UI changes happen on main thread.
+    /// We run effects as-given, without forcing them on to main thread.
+    /// This means that main-thread effects will be run immediately, enabling
+    /// you to drive things like withAnimation via actions.
+    /// However it also means that publishers which run off-main-thread MUST
+    /// make sure that they join the main thread (e.g. with
+    /// `.receive(on: DispatchQueue.main)`).
     public func send(action: Action) {
         // Generate next state and effect
         let change = update(state, action)
@@ -116,10 +124,6 @@ public final class Store<State, Action>: ObservableObject {
         self.state = change.state
         // Run effect
         if let fx = change.fx {
-            let publisher = fx.receive(
-                on: DispatchQueue.main,
-                options: .init(qos: .userInitiated)
-            ).eraseToAnyPublisher()
             // Create a UUID for the cancellable.
             // Store cancellable in dictionary by UUID.
             // Remove cancellable from dictionary upon effect completion.
@@ -127,7 +131,7 @@ public final class Store<State, Action>: ObservableObject {
             // the effect, and then removes it, so we don't have a cancellables
             // memory leak.
             let id = UUID()
-            let cancellable = publisher.sink(
+            let cancellable = fx.sink(
                 receiveCompletion: { [weak self] _ in
                     self?.cancellables.removeValue(forKey: id)
                 },
