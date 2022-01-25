@@ -13,13 +13,13 @@ where Content: View {
     var content: Content
     var body: some View {
         if isPresented {
-            ZStack {
+            ZStack(alignment: .top) {
                 ScrimView()
                     .edgesIgnoringSafeArea(.all)
+                    .zIndex(1)
                     .onTapGesture {
                         isPresented = false
                     }
-                    .zIndex(1)
                 VStack {
                     DialogView(content: content)
                     Spacer()
@@ -34,11 +34,9 @@ where Content: View {
 
 struct ModalView_Previews: PreviewProvider {
     static var previews: some View {
-        ScrollView {
-            ModalView(
-                isPresented: .constant(true),
-                content: Text("Floop")
-            )
-        }
+        ModalView(
+            isPresented: .constant(true),
+            content: Text("Floop")
+        )
     }
 }
