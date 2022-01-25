@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SearchTextField: View {
-    @FocusState private var focusState: AppModel.Focus?
+    @FocusState private var viewFocus: AppModel.Focus?
     var placeholder: String
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
@@ -16,8 +16,15 @@ struct SearchTextField: View {
 
     var body: some View {
         TextField(placeholder, text: $text)
-            .modifier(RoundedTextFieldViewModifier())
-            .focused($focusState, equals: field)
+            .focused($viewFocus, equals: field)
+            // Replace changes to local focus onto external
+            // focus binding.
+            .onChange(of: self.viewFocus) { value in
+                // Check before setting to prevent feedback loop
+                if self.focus != value {
+                    self.focus = value
+                }
+            }
             // Replay changes to focus in external focus binding
             // onto local focus state.
             //
@@ -31,18 +38,14 @@ struct SearchTextField: View {
             // 2021-01-05 Gordon Brander
             .onChange(of: self.focus) { value in
                 // Check before setting to prevent feedback loop
-                if self.focusState != value {
-                    self.focusState = value
+                if self.viewFocus != value {
+                    self.viewFocus = value
                 }
             }
-            // Replace changes to local focus onto external
-            // focus binding.
-            .onChange(of: self.focusState) { value in
-                // Check before setting to prevent feedback loop
-                if self.focus != value {
-                    self.focus = value
-                }
+            .onAppear {
+                self.viewFocus = self.focus
             }
+            .modifier(RoundedTextFieldViewModifier())
     }
 }
 
