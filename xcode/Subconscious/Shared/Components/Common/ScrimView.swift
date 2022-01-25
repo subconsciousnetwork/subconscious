@@ -11,7 +11,7 @@ import SwiftUI
 struct ScrimView: View {
     var body: some View {
         Rectangle()
-            .background(Color.scrim)
+            .foregroundColor(Color.scrim)
     }
 }
 

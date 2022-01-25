@@ -7,30 +7,34 @@
 
 import SwiftUI
 
-/// Modal window
 struct ModalView<Content>: View
 where Content: View {
+    @Binding var isPresented: Bool
     var content: Content
-
     var body: some View {
-        VStack {
-            content
+        if isPresented {
+            ZStack {
+                ScrimView()
+                    .onTapGesture {
+                        isPresented = false
+                    }
+                    .zIndex(1)
+                VStack {
+                    DialogView(content: content)
+                }
+                .zIndex(2)
+                .padding()
+            }
+            .transition(.opacity)
         }
-        .frame(maxWidth: .infinity)
-        .background(Color.background)
-        .clipShape(
-            RoundedRectangle(
-                cornerRadius: AppTheme.cornerRadius
-            )
-        )
     }
 }
 
 struct ModalView_Previews: PreviewProvider {
     static var previews: some View {
-        ZStack {
-            Rectangle().background(.black)
+        ScrollView {
             ModalView(
+                isPresented: .constant(true),
                 content: Text("Floop")
             )
         }
