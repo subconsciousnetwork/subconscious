@@ -129,8 +129,6 @@
 		B8EB2A2426F27797006E97C3 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EB29F526F27794006E97C3 /* AppView.swift */; };
 		B8EB2A2526F27797006E97C3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B8EB29F626F27797006E97C3 /* Assets.xcassets */; };
 		B8EB2A2626F27797006E97C3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B8EB29F626F27797006E97C3 /* Assets.xcassets */; };
-		B8EC568226F415C800AC64E5 /* PublisherBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568126F415C800AC64E5 /* PublisherBag.swift */; };
-		B8EC568326F415C800AC64E5 /* PublisherBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568126F415C800AC64E5 /* PublisherBag.swift */; };
 		B8EC568626F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */; };
 		B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */; };
 		B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */; };
@@ -233,7 +231,6 @@
 		B8EB2A1726F27797006E97C3 /* Tests macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Tests macOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8EB2A1B26F27797006E97C3 /* Tests_macOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_macOS.swift; sourceTree = "<group>"; };
 		B8EB2A1D26F27797006E97C3 /* Tests_macOSLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_macOSLaunchTests.swift; sourceTree = "<group>"; };
-		B8EC568126F415C800AC64E5 /* PublisherBag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherBag.swift; sourceTree = "<group>"; };
 		B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchbarRepresentable.swift; sourceTree = "<group>"; };
 		B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Database.swift; sourceTree = "<group>"; };
 		B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Migrations.swift; sourceTree = "<group>"; };
@@ -411,7 +408,6 @@
 				B82C3A5826F5761700833CC8 /* FileSync.swift */,
 				B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */,
 				B82C3A7226F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift */,
-				B8EC568126F415C800AC64E5 /* PublisherBag.swift */,
 				B8879EA526F9348600A0B4FF /* Slashlink.swift */,
 				B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */,
 				B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */,
@@ -673,7 +669,6 @@
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
 				B824FDCE26FA662200B81BBD /* SubtextFile.swift in Sources */,
 				B8EC568626F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
-				B8EC568226F415C800AC64E5 /* PublisherBag.swift in Sources */,
 				B8EC568F26F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
 				B8AC648A278F53920099E96B /* EntryStub.swift in Sources */,
 				B8AE34C5276BF72500777FF0 /* LinkSearchView.swift in Sources */,
@@ -734,7 +729,6 @@
 				B8DEBF1A2798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B8AE34CC276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
 				B8AE34AE276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
-				B8EC568326F415C800AC64E5 /* PublisherBag.swift in Sources */,
 				B8AE34C0276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
 				B8EC569026F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
 				B8AE34AB276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
