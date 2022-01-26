@@ -9,22 +9,23 @@ import SwiftUI
 import UIKit
 import Combine
 
+/// Enum representing the current state of the keyboard
+enum KeyboardState {
+    case willShow(size: CGSize)
+    case didShow(size: CGSize)
+    case didChangeFrame(size: CGSize)
+    case willHide
+    case didHide
+}
+
 /// Provides a publisher for keyboard state changes.
 /// Typically used as a long-lived service.
 final class KeyboardService {
-    enum KeyboardState {
-        case willShow(size: CGSize)
-        case didShow(size: CGSize)
-        case willHide(size: CGSize)
-        case didHide(size: CGSize)
-        case didChangeFrame(size: CGSize)
-    }
-
     /// Publisher for keyboard state
     let state: CurrentValueSubject<KeyboardState, Never>
 
     init() {
-        self.state = CurrentValueSubject(.didHide(size: .zero))
+        self.state = CurrentValueSubject(KeyboardState.didHide)
         //  NOTE: we add observers on init, but do not need to remove them.
         //  From Apple docs:
         //  https://developer.apple.com/documentation/foundation/notificationcenter/1413994-removeobserver
@@ -96,13 +97,13 @@ final class KeyboardService {
     @objc private func handle(
         keyboardWillHideNotification notification: Notification
     ) {
-        self.state.send(.willHide(size: .zero))
+        self.state.send(.willHide)
     }
 
     @objc private func handle(
         keyboardDidHideNotification notification: Notification
     ) {
-        self.state.send(.didHide(size: .zero))
+        self.state.send(.didHide)
     }
 
     @objc private func handle(
