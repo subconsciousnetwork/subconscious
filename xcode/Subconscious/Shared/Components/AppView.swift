@@ -1002,7 +1002,9 @@ struct AppView: View {
                 if store.state.focus == nil {
                     Button(
                         action: {
-                            withAnimation(.easeOut(duration: Duration.fast)) {
+                            withAnimation(
+                                .easeOutCubic(duration: Duration.fast)
+                            ) {
                                 store.send(action: .showSearch)
                             }
                         },
@@ -1018,8 +1020,7 @@ struct AppView: View {
                 ModalView(
                     isPresented: store.binding(
                         get: \.isSearchShowing,
-                        tag: { _ in AppAction.hideSearch },
-                        animation: .easeOut(duration: Duration.fast)
+                        tag: { _ in AppAction.hideSearch }
                     ),
                     content: SearchView(
                         placeholder: "Search or create...",
@@ -1044,7 +1045,9 @@ struct AppView: View {
                             )
                         },
                         onCancel: {
-                            withAnimation(.easeOut(duration: Duration.fast)) {
+                            withAnimation(
+                                .easeOutCubic(duration: Duration.fast)
+                            ) {
                                 store.send(
                                     action: .hideSearch
                                 )
