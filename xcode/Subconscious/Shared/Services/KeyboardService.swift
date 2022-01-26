@@ -7,23 +7,24 @@
 
 import SwiftUI
 import UIKit
+import Combine
 
+/// Provides a publisher for keyboard state changes.
+/// Typically used as a long-lived service.
 final class KeyboardService {
     enum KeyboardState {
-        case willShow
-        case didShow
-        case willHide
-        case didHide
+        case willShow(size: CGSize)
+        case didShow(size: CGSize)
+        case willHide(size: CGSize)
+        case didHide(size: CGSize)
+        case didChangeFrame(size: CGSize)
     }
 
-    /// Current keyboard state
-    var keyboardState = KeyboardState.didHide
-    /// The height of the keyboard, before animation is complete.
-    var keyboardSize: CGSize = .zero
-    /// Duration of keyboard animation.
-    var keyboardAnimationDuration: Double = 0
+    /// Publisher for keyboard state
+    let state: CurrentValueSubject<KeyboardState, Never>
 
     init() {
+        self.state = CurrentValueSubject(.didHide(size: .zero))
         //  NOTE: we add observers on init, but do not need to remove them.
         //  From Apple docs:
         //  https://developer.apple.com/documentation/foundation/notificationcenter/1413994-removeobserver
@@ -33,7 +34,6 @@ final class KeyboardService {
         //  remove the observer, the system cleans up the next time it
         //  would have posted to it.
         //  2022-01-26 Gordon Brander
-
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(self.handle(keyboardWillShowNotification:)),
@@ -66,52 +66,43 @@ final class KeyboardService {
         )
     }
 
+    deinit {
+        state.send(completion: .finished)
+    }
+
     @objc private func handle(
         keyboardWillShowNotification notification: Notification
     ) {
-        self.keyboardState = .willShow
         if let frame = notification.userInfo?[
             UIResponder.keyboardFrameEndUserInfoKey
         ] as? CGRect {
-            self.keyboardSize = frame.size
-        }
-        if let duration = notification.userInfo?[
-            UIResponder.keyboardAnimationDurationUserInfoKey
-        ] as? Double {
-            self.keyboardAnimationDuration = duration
+            self.state.send(.willShow(size: frame.size))
         }
     }
 
     @objc private func handle(
         keyboardDidShowNotification notification: Notification
     ) {
-        self.keyboardState = .didShow
         if
             let userInfo = notification.userInfo,
             let frame = userInfo[
                 UIResponder.keyboardFrameEndUserInfoKey
             ] as? CGRect
         {
-            self.keyboardSize = frame.size
+            self.state.send(.didShow(size: frame.size))
         }
     }
 
     @objc private func handle(
         keyboardWillHideNotification notification: Notification
     ) {
-        self.keyboardState = .willHide
-        if let duration = notification.userInfo?[
-            UIResponder.keyboardAnimationDurationUserInfoKey
-        ] as? Double {
-            self.keyboardAnimationDuration = duration
-        }
+        self.state.send(.willHide(size: .zero))
     }
 
     @objc private func handle(
         keyboardDidHideNotification notification: Notification
     ) {
-        self.keyboardState = .didHide
-        self.keyboardSize = .zero
+        self.state.send(.didHide(size: .zero))
     }
 
     @objc private func handle(
@@ -123,7 +114,7 @@ final class KeyboardService {
                 UIResponder.keyboardFrameEndUserInfoKey
             ] as? CGRect
         {
-            self.keyboardSize = frame.size
+            self.state.send(.didChangeFrame(size: frame.size))
         }
     }
 }
