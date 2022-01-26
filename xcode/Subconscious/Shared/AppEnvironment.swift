@@ -251,12 +251,3 @@ extension Color {
     static let fabTextDisabled = primaryButtonTextDisabled
     static let scrim = SwiftUI.Color("ScrimColor")
 }
-
-//  MARK: Animation durations
-typealias Duration = Double
-
-extension Duration {
-    static let fast: Double = 0.18
-    // iOS default
-    static let normal: Double = 0.2
-}

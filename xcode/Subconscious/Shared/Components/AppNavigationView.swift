@@ -80,7 +80,7 @@ struct AppNavigationView: View {
                             focus: store.binding(
                                 get: \.focus,
                                 tag: AppAction.setFocus,
-                                animation: .easeOut(duration: .normal)
+                                animation: .easeOut(duration: Duration.normal)
                             ),
                             editorAttributedText: store.binding(
                                 get: \.editorAttributedText,
@@ -160,7 +160,7 @@ struct AppNavigationView: View {
                 focus: store.binding(
                     get: \.focus,
                     tag: AppAction.setFocus,
-                    animation: .easeOut(duration: .normal)
+                    animation: .easeOut(duration: Duration.normal)
                 ),
                 onCancel: {
                     store.send(action: .hideRenameSheet)
