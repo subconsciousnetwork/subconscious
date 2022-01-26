@@ -12,22 +12,27 @@ where Content: View {
     @Binding var isPresented: Bool
     var content: Content
     var body: some View {
-        if isPresented {
-            ZStack(alignment: .top) {
+        ZStack(alignment: .top) {
+            if isPresented {
                 ScrimView()
                     .edgesIgnoringSafeArea(.all)
                     .zIndex(1)
+                    .transition(.opacity)
                     .onTapGesture {
                         isPresented = false
                     }
+            }
+            if isPresented {
                 VStack {
                     DialogView(content: content)
                     Spacer()
                 }
                 .zIndex(2)
                 .padding()
+                .transition(
+                    .opacity.combined(with: .scale(scale: 0.9))
+                )
             }
-            .transition(.opacity)
         }
     }
 }
