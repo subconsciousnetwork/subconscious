@@ -45,8 +45,6 @@
 		B864598826F97B81007969E3 /* KeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B864598626F97B81007969E3 /* KeyboardToolbarView.swift */; };
 		B877A6E527A1C2BC00F11A90 /* KeyboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */; };
 		B877A6E627A1C2BC00F11A90 /* KeyboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */; };
-		B877A6E927A205DB00F11A90 /* EnvironmentValuesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877A6E827A205DB00F11A90 /* EnvironmentValuesScreen.swift */; };
-		B877A6EA27A205DB00F11A90 /* EnvironmentValuesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877A6E827A205DB00F11A90 /* EnvironmentValuesScreen.swift */; };
 		B878C9822703F47A0042DF72 /* SuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B878C9812703F47A0042DF72 /* SuggestionLabelView.swift */; };
 		B878C9832703F47A0042DF72 /* SuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B878C9812703F47A0042DF72 /* SuggestionLabelView.swift */; };
 		B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */; };
@@ -190,7 +188,6 @@
 		B83E91D627692EC600045C6A /* FABButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FABButtonStyle.swift; sourceTree = "<group>"; };
 		B864598626F97B81007969E3 /* KeyboardToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardToolbarView.swift; sourceTree = "<group>"; };
 		B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardService.swift; sourceTree = "<group>"; };
-		B877A6E827A205DB00F11A90 /* EnvironmentValuesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentValuesScreen.swift; sourceTree = "<group>"; };
 		B878C9812703F47A0042DF72 /* SuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionLabelView.swift; sourceTree = "<group>"; };
 		B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigationView.swift; sourceTree = "<group>"; };
 		B8879EA526F9348600A0B4FF /* Slashlink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slashlink.swift; sourceTree = "<group>"; };
@@ -290,14 +287,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		B877A6E727A205B500F11A90 /* Environment */ = {
-			isa = PBXGroup;
-			children = (
-				B877A6E827A205DB00F11A90 /* EnvironmentValuesScreen.swift */,
-			);
-			path = Environment;
-			sourceTree = "<group>";
-		};
 		B8879E9B26F8F3BD00A0B4FF /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -356,7 +345,6 @@
 				B8EC568E26F4233B00AC64E5 /* AppEnvironment.swift */,
 				B8EB29F626F27797006E97C3 /* Assets.xcassets */,
 				B8EB2A3826F27CD1006E97C3 /* Components */,
-				B877A6E727A205B500F11A90 /* Environment */,
 				B88C977C276425C100B27DF0 /* Fonts */,
 				B8EC568026F4156F00AC64E5 /* Library */,
 				B8B54F39271F6C6800B9B507 /* Models */,
@@ -705,7 +693,6 @@
 				B824FDCE26FA662200B81BBD /* SubtextFile.swift in Sources */,
 				B8EC568626F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
 				B8EC568F26F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
-				B877A6E927A205DB00F11A90 /* EnvironmentValuesScreen.swift in Sources */,
 				B8AC648A278F53920099E96B /* EntryStub.swift in Sources */,
 				B8AE34C5276BF72500777FF0 /* LinkSearchView.swift in Sources */,
 				B82C3A7326F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */,
@@ -742,7 +729,6 @@
 				B8EDB807270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
 				B8DEBF202798EC23007CB528 /* TitleGroup.swift in Sources */,
 				B81EBB0A27025C1500B87594 /* TranscludeButtonStyle.swift in Sources */,
-				B877A6EA27A205DB00F11A90 /* EnvironmentValuesScreen.swift in Sources */,
 				B82C3A6326F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B8E63EA7270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */,
 				B83E91D827692EC600045C6A /* FABButtonStyle.swift in Sources */,
