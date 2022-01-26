@@ -7,21 +7,37 @@
 
 import SwiftUI
 import os
+import Combine
 
 @main
 struct SubconsciousApp: App {
+    var store: Store<AppModel, AppAction>
+    var keyboardService: KeyboardService
+
+    init() {
+        self.keyboardService = KeyboardService()
+
+        let services: AnyPublisher<AppAction, Never> = self.keyboardService
+            .state
+            .map(AppAction.changeKeyboardState)
+            .eraseToAnyPublisher()
+
+        self.store = Store(
+            update: AppUpdate.update,
+            state: AppModel(),
+            services: services,
+            logger: Logger.init(
+                subsystem: "com.subconscious",
+                category: "store"
+            ),
+            debug: false
+        )
+    }
+
     var body: some Scene {
         WindowGroup {
             AppView(
-                store: Store<AppModel, AppAction>(
-                    update: AppUpdate.update,
-                    state: AppModel(),
-                    logger: Logger.init(
-                        subsystem: "com.subconscious",
-                        category: "store"
-                    ),
-                    debug: false
-                )
+                store: self.store
             )
         }
     }

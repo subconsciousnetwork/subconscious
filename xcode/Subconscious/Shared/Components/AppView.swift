@@ -15,7 +15,14 @@ import Combine
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
 enum AppAction {
     case noop
+
+    //  KeyboardService
+    case changeKeyboardState(KeyboardState)
+
+    //  Lifecycle events
     case appear
+
+    //  URL handlers
     case openURL(URL)
     case openEditorURL(url: URL, range: NSRange)
 
@@ -103,7 +110,7 @@ enum AppAction {
 }
 
 //  MARK: Model
-struct AppModel {
+struct AppModel: Hashable, Equatable {
     /// Enum describing which view is currently focused.
     /// Focus is mutually exclusive, and SwiftUI's FocusedState requires
     /// modeling this state as an enum.
@@ -115,6 +122,10 @@ struct AppModel {
         case editor
         case rename
     }
+
+    /// Current state of keyboard
+    var keyboardWillShow = false
+    var keyboardHeight: CGFloat = 0
 
     /// What is focused? (nil means nothing is focused)
     var focus: Focus? = nil
@@ -192,6 +203,8 @@ struct AppUpdate {
         switch action {
         case .noop:
             return Change(state: state)
+        case let .changeKeyboardState(keyboard):
+            return changeKeyboardState(state: state, keyboard: keyboard)
         case .appear:
             return appear(state: state)
         case let .openURL(url):
@@ -398,6 +411,28 @@ struct AppUpdate {
         model.editorSelection = NSMakeRange(0, 0)
         model.focus = nil
         return model
+    }
+
+    /// Change state of keyboard
+    /// Actions come from `KeyboardService`
+    static func changeKeyboardState(
+        state: AppModel,
+        keyboard: KeyboardState
+    ) -> Change<AppModel, AppAction> {
+        switch keyboard {
+        case .willShow(let size), .didShow(let size), .didChangeFrame(let size):
+            var model = state
+            model.keyboardWillShow = true
+            model.keyboardHeight = size.height
+            return Change(state: model)
+        case .willHide:
+            return Change(state: state)
+        case .didHide:
+            var model = state
+            model.keyboardWillShow = false
+            model.keyboardHeight = 0
+            return Change(state: model)
+        }
     }
 
     static func appear(state: AppModel) -> Change<AppModel, AppAction> {
