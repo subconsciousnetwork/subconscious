@@ -11,6 +11,7 @@ struct ModalView<Content>: View
 where Content: View {
     @Binding var isPresented: Bool
     var content: Content
+    var size: CGSize
     var body: some View {
         ZStack(alignment: .top) {
             if isPresented {
@@ -27,8 +28,12 @@ where Content: View {
                     DialogView(content: content)
                     Spacer()
                 }
-                .zIndex(2)
+                .frame(
+                    maxWidth: size.width,
+                    maxHeight: size.height
+                )
                 .padding()
+                .zIndex(2)
                 .transition(
                     .opacity.combined(with: .scale(scale: 0.9))
                 )
@@ -41,7 +46,8 @@ struct ModalView_Previews: PreviewProvider {
     static var previews: some View {
         ModalView(
             isPresented: .constant(true),
-            content: Text("Floop")
+            content: Text("Floop"),
+            size: CGSize(width: 100, height: 100)
         )
     }
 }

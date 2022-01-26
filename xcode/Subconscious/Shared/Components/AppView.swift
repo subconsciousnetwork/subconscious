@@ -1052,44 +1052,57 @@ struct AppView: View {
                     .transition(.opacity)
                     .zIndex(2)
                 }
-                ModalView(
-                    isPresented: store.binding(
-                        get: \.isSearchShowing,
-                        tag: { _ in AppAction.hideSearch }
-                    ),
-                    content: SearchView(
-                        placeholder: "Search or create...",
-                        text: store.binding(
-                            get: \.searchText,
-                            tag: AppAction.setSearch
-                        ),
-                        focus: store.binding(
-                            get: \.focus,
-                            tag: AppAction.setFocus
-                        ),
-                        suggestions: store.binding(
-                            get: \.suggestions,
-                            tag: AppAction.setSuggestions
-                        ),
-                        onCommit: { slug, query in
-                            store.send(
-                                action: .submitSearch(
-                                    slug: slug,
-                                    query: query
-                                )
+                GeometryReader { geometry in
+                    ModalView(
+                        isPresented: store.binding(
+                            get: \.isSearchShowing,
+                            tag: { _ in AppAction.hideSearch },
+                            animation: Animation.easeOutCubic(
+                                duration: Duration.normal
                             )
-                        },
-                        onCancel: {
-                            withAnimation(
-                                .easeOutCubic(duration: Duration.fast)
-                            ) {
+                        ),
+                        content: SearchView(
+                            placeholder: "Search or create...",
+                            text: store.binding(
+                                get: \.searchText,
+                                tag: AppAction.setSearch
+                            ),
+                            focus: store.binding(
+                                get: \.focus,
+                                tag: AppAction.setFocus
+                            ),
+                            suggestions: store.binding(
+                                get: \.suggestions,
+                                tag: AppAction.setSuggestions
+                            ),
+                            onCommit: { slug, query in
                                 store.send(
-                                    action: .hideSearch
+                                    action: .submitSearch(
+                                        slug: slug,
+                                        query: query
+                                    )
                                 )
+                            },
+                            onCancel: {
+                                withAnimation(
+                                    .easeOutCubic(duration: Duration.fast)
+                                ) {
+                                    store.send(
+                                        action: .hideSearch
+                                    )
+                                }
                             }
-                        }
+                        ),
+                        size: CGSize(
+                            width: geometry.size.width,
+                            height: (
+                                geometry.size.height -
+                                store.state.keyboardHeight
+                            )
+                        )
                     )
-                )
+                }
+                .ignoresSafeArea(.keyboard)
                 .zIndex(3)
             } else {
                 ProgressScrim()
