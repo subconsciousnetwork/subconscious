@@ -126,7 +126,6 @@ struct AppModel: Hashable, Equatable {
     /// Current state of keyboard
     var keyboardWillShow = false
     var keyboardEventualHeight: CGFloat = 0
-    var keyboardAnimationDuration: Double = 0
 
     /// What is focused? (nil means nothing is focused)
     var focus: Focus? = nil
@@ -421,20 +420,16 @@ struct AppUpdate {
         keyboard: KeyboardState
     ) -> Change<AppModel, AppAction> {
         switch keyboard {
-        case let .willShow(size, duration):
+        case
+            .willShow(let size, _),
+            .didShow(let size),
+            .didChangeFrame(let size):
             var model = state
             model.keyboardWillShow = true
             model.keyboardEventualHeight = size.height
-            model.keyboardAnimationDuration = duration
             return Change(state: model)
-        case .didShow(let size), .didChangeFrame(let size):
-            var model = state
-            model.keyboardEventualHeight = size.height
-            return Change(state: model)
-        case let .willHide(_, duration):
-            var model = state
-            model.keyboardAnimationDuration = duration
-            return Change(state: model)
+        case .willHide:
+            return Change(state: state)
         case .didHide:
             var model = state
             model.keyboardWillShow = false
@@ -1046,7 +1041,7 @@ struct AppView: View {
                     Button(
                         action: {
                             withAnimation(
-                                .easeOutCubic(duration: Duration.fast)
+                                .easeOutCubic(duration: Duration.keyboard)
                             ) {
                                 store.send(action: .showSearch)
                             }
@@ -1064,9 +1059,7 @@ struct AppView: View {
                     isPresented: store.binding(
                         get: \.isSearchShowing,
                         tag: { _ in AppAction.hideSearch },
-                        animation: Animation.easeOutCubic(
-                            duration: Duration.normal
-                        )
+                        animation: .easeOutCubic(duration: Duration.keyboard)
                     ),
                     content: SearchView(
                         placeholder: "Search or create...",
@@ -1092,7 +1085,7 @@ struct AppView: View {
                         },
                         onCancel: {
                             withAnimation(
-                                .easeOutCubic(duration: Duration.fast)
+                                .easeOutCubic(duration: Duration.keyboard)
                             ) {
                                 store.send(
                                     action: .hideSearch
