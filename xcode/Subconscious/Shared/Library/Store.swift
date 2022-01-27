@@ -75,7 +75,7 @@ public final class Store<State, Action>: ObservableObject {
     init(
         update: @escaping (State, Action) -> Change<State, Action>,
         state: State,
-        services: AnyPublisher<Action, Never>? = nil,
+        subscription: AnyPublisher<Action, Never>? = nil,
         logger: Logger,
         debug: Bool = false
     ) {
@@ -85,7 +85,7 @@ public final class Store<State, Action>: ObservableObject {
         self.debug = debug
 
         // Subscribe to services effects, if any.
-        if let fx = services {
+        if let fx = subscription {
             self.subscribe(fx: fx)
         }
     }

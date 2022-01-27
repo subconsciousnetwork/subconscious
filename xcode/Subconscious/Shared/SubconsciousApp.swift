@@ -25,7 +25,7 @@ struct SubconsciousApp: App {
         self.store = Store(
             update: AppUpdate.update,
             state: AppModel(),
-            services: services,
+            subscription: services,
             logger: Logger.init(
                 subsystem: "com.subconscious",
                 category: "store"
