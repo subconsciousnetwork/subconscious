@@ -11,12 +11,12 @@ struct ModalView<Content>: View
 where Content: View {
     @Binding var isPresented: Bool
     var content: Content
-    var size: CGSize
+    var keyboardHeight: CGFloat
     var body: some View {
-        ZStack(alignment: .top) {
+        GeometryReader { geometry in
             if isPresented {
                 ScrimView()
-                    .edgesIgnoringSafeArea(.all)
+                    .ignoresSafeArea(.all)
                     .zIndex(1)
                     .transition(.opacity)
                     .onTapGesture {
@@ -24,21 +24,24 @@ where Content: View {
                     }
             }
             if isPresented {
-                VStack {
-                    DialogView(content: content)
-                    Spacer()
-                }
-                .frame(
-                    maxWidth: size.width,
-                    maxHeight: size.height
+                DialogView(
+                    content: content
                 )
                 .padding()
+                .frame(
+                    maxHeight: (
+                        geometry.size.height -
+                        keyboardHeight +
+                        geometry.safeAreaInsets.bottom
+                    )
+                )
                 .zIndex(2)
                 .transition(
                     .opacity.combined(with: .scale(scale: 0.9))
                 )
             }
         }
+        .ignoresSafeArea(.keyboard)
     }
 }
 
@@ -47,7 +50,7 @@ struct ModalView_Previews: PreviewProvider {
         ModalView(
             isPresented: .constant(true),
             content: Text("Floop"),
-            size: CGSize(width: 100, height: 100)
+            keyboardHeight: 350
         )
     }
 }

@@ -1052,57 +1052,48 @@ struct AppView: View {
                     .transition(.opacity)
                     .zIndex(2)
                 }
-                GeometryReader { geometry in
-                    ModalView(
-                        isPresented: store.binding(
-                            get: \.isSearchShowing,
-                            tag: { _ in AppAction.hideSearch },
-                            animation: Animation.easeOutCubic(
-                                duration: Duration.normal
-                            )
-                        ),
-                        content: SearchView(
-                            placeholder: "Search or create...",
-                            text: store.binding(
-                                get: \.searchText,
-                                tag: AppAction.setSearch
-                            ),
-                            focus: store.binding(
-                                get: \.focus,
-                                tag: AppAction.setFocus
-                            ),
-                            suggestions: store.binding(
-                                get: \.suggestions,
-                                tag: AppAction.setSuggestions
-                            ),
-                            onCommit: { slug, query in
-                                store.send(
-                                    action: .submitSearch(
-                                        slug: slug,
-                                        query: query
-                                    )
-                                )
-                            },
-                            onCancel: {
-                                withAnimation(
-                                    .easeOutCubic(duration: Duration.fast)
-                                ) {
-                                    store.send(
-                                        action: .hideSearch
-                                    )
-                                }
-                            }
-                        ),
-                        size: CGSize(
-                            width: geometry.size.width,
-                            height: (
-                                geometry.size.height -
-                                store.state.keyboardHeight
-                            )
+                ModalView(
+                    isPresented: store.binding(
+                        get: \.isSearchShowing,
+                        tag: { _ in AppAction.hideSearch },
+                        animation: Animation.easeOutCubic(
+                            duration: Duration.normal
                         )
-                    )
-                }
-                .ignoresSafeArea(.keyboard)
+                    ),
+                    content: SearchView(
+                        placeholder: "Search or create...",
+                        text: store.binding(
+                            get: \.searchText,
+                            tag: AppAction.setSearch
+                        ),
+                        focus: store.binding(
+                            get: \.focus,
+                            tag: AppAction.setFocus
+                        ),
+                        suggestions: store.binding(
+                            get: \.suggestions,
+                            tag: AppAction.setSuggestions
+                        ),
+                        onCommit: { slug, query in
+                            store.send(
+                                action: .submitSearch(
+                                    slug: slug,
+                                    query: query
+                                )
+                            )
+                        },
+                        onCancel: {
+                            withAnimation(
+                                .easeOutCubic(duration: Duration.fast)
+                            ) {
+                                store.send(
+                                    action: .hideSearch
+                                )
+                            }
+                        }
+                    ),
+                    keyboardHeight: store.state.keyboardHeight
+                )
                 .zIndex(3)
             } else {
                 ProgressScrim()
