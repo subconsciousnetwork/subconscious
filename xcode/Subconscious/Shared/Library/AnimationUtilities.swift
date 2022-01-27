@@ -12,8 +12,15 @@ enum Duration {}
 
 extension Duration {
     static let fast: Double = 0.18
-    // iOS default
+
+    /// iOS default animation duration
     static let normal: Double = 0.2
+
+    //  NOTE: this could change in future, but for now, a hard-coded value
+    //  is good enough.
+    //  2022-01-27 Gordon Brander
+    /// Duration of keyboard animation, as measured in iOS 15.2
+    static let keyboard: Double = 0.25
 }
 
 extension Animation {
