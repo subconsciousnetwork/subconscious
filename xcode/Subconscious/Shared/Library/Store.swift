@@ -75,6 +75,7 @@ public final class Store<State, Action>: ObservableObject {
     init(
         update: @escaping (State, Action) -> Change<State, Action>,
         state: State,
+        subscription: AnyPublisher<Action, Never>? = nil,
         logger: Logger,
         debug: Bool = false
     ) {
@@ -82,6 +83,11 @@ public final class Store<State, Action>: ObservableObject {
         self.state = state
         self.logger = logger
         self.debug = debug
+
+        // Subscribe to services effects, if any.
+        if let fx = subscription {
+            self.subscribe(fx: fx)
+        }
     }
 
     /// Create a binding that can update the store.
@@ -101,6 +107,28 @@ public final class Store<State, Action>: ObservableObject {
                 }
             }
         )
+    }
+
+    /// Subscribe to a publisher of actions, piping them through to
+    /// the store.
+    ///
+    /// Holds on to the cancellable until publisher completes.
+    /// When publisher completes, removes cancellable.
+    public func subscribe(fx: AnyPublisher<Action, Never>) {
+        // Create a UUID for the cancellable.
+        // Store cancellable in dictionary by UUID.
+        // Remove cancellable from dictionary upon effect completion.
+        // This retains the effect pipeline for as long as it takes to complete
+        // the effect, and then removes it, so we don't have a cancellables
+        // memory leak.
+        let id = UUID()
+        let cancellable = fx.sink(
+            receiveCompletion: { [weak self] _ in
+                self?.cancellables.removeValue(forKey: id)
+            },
+            receiveValue: self.send
+        )
+        self.cancellables[id] = cancellable
     }
 
     /// Send an action to the store to update state and generate effects.
@@ -124,20 +152,7 @@ public final class Store<State, Action>: ObservableObject {
         self.state = change.state
         // Run effect
         if let fx = change.fx {
-            // Create a UUID for the cancellable.
-            // Store cancellable in dictionary by UUID.
-            // Remove cancellable from dictionary upon effect completion.
-            // This retains the effect pipeline for as long as it takes to complete
-            // the effect, and then removes it, so we don't have a cancellables
-            // memory leak.
-            let id = UUID()
-            let cancellable = fx.sink(
-                receiveCompletion: { [weak self] _ in
-                    self?.cancellables.removeValue(forKey: id)
-                },
-                receiveValue: self.send
-            )
-            self.cancellables[id] = cancellable
+            self.subscribe(fx: fx)
         }
     }
 }
