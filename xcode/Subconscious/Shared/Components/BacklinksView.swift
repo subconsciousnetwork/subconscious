@@ -27,7 +27,7 @@ struct BacklinksView: View {
             ForEach(backlinks) { entry in
                 Button(
                     action: {
-                        onActivateBacklink(entry.slug)
+                        onActivateBacklink(entry.slug.description)
                     },
                     label: {
                         EntryRow(entry: entry)
@@ -45,7 +45,7 @@ struct BacklinksView_Previews: PreviewProvider {
         BacklinksView(
             backlinks: [
                 EntryStub(
-                    slug: "floop",
+                    slug: Slug("floop")!,
                     title: "Floop",
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
                 )

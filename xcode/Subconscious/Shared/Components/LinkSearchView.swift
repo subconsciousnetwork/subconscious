@@ -13,7 +13,7 @@ struct LinkSearchView: View {
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     var onCancel: () -> Void
-    var onCommit: (String) -> Void
+    var onCommit: (Slug) -> Void
 
     var body: some View {
         VStack(spacing: 0) {

@@ -30,7 +30,7 @@ struct EntryRow: View {
                 Spacer()
             }
             HStack {
-                Text(Slashlink.removeLeadingSlash(entry.slug))
+                Text(entry.slug.description)
                     .lineLimit(1)
                     .foregroundColor(Color.secondaryText)
                     .multilineTextAlignment(.leading)

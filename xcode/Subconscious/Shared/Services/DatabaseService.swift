@@ -103,12 +103,17 @@ struct DatabaseService {
                 // .conflict. Leader wins.
                 case .leftOnly, .leftNewer, .rightNewer, .conflict:
                     if let left = change.left {
-                        try writeEntryToDatabase(slug: left.url.toSlug())
+                        let slug = try left.url
+                            .toSlug(relativeTo: documentUrl)
+                            .unwrap()
+                        try writeEntryToDatabase(slug: slug)
                     }
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly:
                     if let right = change.right {
-                        let slug = right.url.toSlug()
+                        let slug = try right.url
+                            .toSlug(relativeTo: documentUrl)
+                            .unwrap()
                         try deleteEntryFromDatabase(slug: slug)
                     }
                 // .same = no change. Do nothing.
@@ -147,7 +152,7 @@ struct DatabaseService {
                 size=excluded.size
             """,
             parameters: [
-                .text(entry.slug),
+                .text(entry.slug.description),
                 .text(entry.title),
                 .text(entry.content),
                 .date(modified),
@@ -193,14 +198,14 @@ struct DatabaseService {
             DELETE FROM entry WHERE slug = ?
             """,
             parameters: [
-                .text(slug)
+                .text(slug.description)
             ]
         )
     }
 
     /// Delete entry from file system
     private func deleteEntryFile(slug: Slug) throws {
-        let url = documentUrl.appendingFilename(name: slug, ext: "subtext")
+        let url = slug.toURL(directory: documentUrl, ext: "subtext")
         try FileManager.default.removeItem(at: url)
     }
 
@@ -216,8 +221,8 @@ struct DatabaseService {
 
     /// Rename file in file system
     private func moveEntryFile(from: Slug, to: Slug) throws {
-        let fromURL = documentUrl.appendingFilename(name: from, ext: "subtext")
-        let toURL = documentUrl.appendingFilename(name: to, ext: "subtext")
+        let fromURL = from.toURL(directory: documentUrl, ext: "subtext")
+        let toURL = to.toURL(directory: documentUrl, ext: "subtext")
         try FileManager.default.moveItem(at: fromURL, to: toURL)
     }
 
@@ -261,10 +266,7 @@ struct DatabaseService {
                 return
             }
 
-            let toURL = documentUrl.appendingFilename(
-                name: to,
-                ext: "subtext"
-            )
+            let toURL = to.toURL(directory: documentUrl, ext: "subtext")
 
             //  If file already exists, perform a merge.
             //  Otherwise, perform a rename.
@@ -302,7 +304,8 @@ struct DatabaseService {
                 """
             ).compactMap({ row in
                 if
-                    let slug: String = row.get(0),
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
                     let title: String = row.get(1),
                     let content: String = row.get(2)
                 {
@@ -321,8 +324,8 @@ struct DatabaseService {
     }
 
     private func searchSuggestionsForZeroQuery(
-    ) throws -> OrderedDictionary<String, Suggestion> {
-        var suggestions: OrderedDictionary<String, Suggestion> = [:]
+    ) throws -> OrderedDictionary<Slug, Suggestion> {
+        var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
 
         let entries: [EntryLink] = try database.execute(
             sql: """
@@ -334,7 +337,8 @@ struct DatabaseService {
         )
         .compactMap({ row in
             if
-                let slug: String = row.get(0),
+                let slugString: String = row.get(0),
+                let slug = Slug(slugString),
                 let title: String = row.get(1)
             {
                 return EntryLink(
@@ -346,7 +350,10 @@ struct DatabaseService {
         })
 
         for entry in entries {
-            suggestions.updateValue(.entry(entry), forKey: entry.slug)
+            suggestions.updateValue(
+                .entry(entry),
+                forKey: entry.slug
+            )
         }
 
         let queries: [EntryLink] = try database.execute(
@@ -377,12 +384,12 @@ struct DatabaseService {
 
     private func searchSuggestionsForQuery(
         query: String
-    ) throws -> OrderedDictionary<String, Suggestion> {
-        var suggestions: OrderedDictionary<String, Suggestion> = [:]
+    ) throws -> OrderedDictionary<Slug, Suggestion> {
+        var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
 
         // If slug is invalid, return empty suggestions
         guard
-            let querySlug = query.slugifyString(),
+            let querySlug = Slug(query),
             let queryEntryLink = EntryLink(title: query)
         else {
             return suggestions
@@ -405,7 +412,8 @@ struct DatabaseService {
         )
         .compactMap({ row in
             if
-                let slug: String = row.get(0),
+                let slugString: String = row.get(0),
+                let slug = Slug(slugString),
                 let title: String = row.get(1)
             {
                 return EntryLink(
@@ -537,7 +545,8 @@ struct DatabaseService {
             )
             .compactMap({ row in
                 if
-                    let slug: String = row.get(0),
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
                     let title: String = row.get(1)
                 {
                     return EntryLink(
@@ -604,10 +613,6 @@ struct DatabaseService {
         fallback: String
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            guard !slug.isWhitespace else {
-                throw DatabaseServiceError.invalidSlug("Slug is whitespace")
-            }
-
             // Get backlinks.
             // Use content indexed in database, even though it might be stale.
             let backlinks: [EntryStub] = try database.execute(
@@ -619,12 +624,13 @@ struct DatabaseService {
                 LIMIT 200
                 """,
                 parameters: [
-                    .text(slug),
-                    .queryFTS5(slug)
+                    .text(slug.description),
+                    .queryFTS5(slug.description)
                 ]
             ).compactMap({ row in
                 if
-                    let slug: String = row.get(0),
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
                     let title: String = row.get(1),
                     let content: String = row.get(2)
                 {

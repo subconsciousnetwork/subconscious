@@ -20,7 +20,7 @@ struct LinkSuggestionLabelView: View {
                             .lineLimit(1)
                             .foregroundColor(Color.text)
                             .frame(height: AppTheme.icon)
-                        Text(#"Link to "\#(stub.slug)""#)
+                        Text(#"Link to "\#(stub.slug.description)""#)
                             .lineLimit(1)
                             .foregroundColor(Color.secondaryText)
                             .frame(height: AppTheme.icon)
@@ -51,7 +51,7 @@ struct LinkSuggestionLabel_Previews: PreviewProvider {
         LinkSuggestionLabelView(
             suggestion: .search(
                 EntryLink(
-                    slug: "floop",
+                    slug: Slug("floop")!,
                     title: "Floop the pig"
                 )
             )

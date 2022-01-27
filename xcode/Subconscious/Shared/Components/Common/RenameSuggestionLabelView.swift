@@ -15,7 +15,7 @@ struct RenameSuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroup(
-                        title: stub.slug,
+                        title: stub.slug.description,
                         subtitle: "Merge ideas"
                     )
                 },
@@ -27,7 +27,7 @@ struct RenameSuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroup(
-                        title: stub.slug,
+                        title: stub.slug.description,
                         subtitle: "Rename idea"
                     )
                 },
@@ -44,7 +44,7 @@ struct RenameSuggestionLabel_Previews: PreviewProvider {
         RenameSuggestionLabelView(
             suggestion: .search(
                 EntryLink(
-                    slug: "floop",
+                    slug: Slug("floop")!,
                     title: "Floop the pig"
                 )
             )
