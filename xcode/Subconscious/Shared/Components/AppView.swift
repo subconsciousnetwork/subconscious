@@ -125,7 +125,8 @@ struct AppModel: Hashable, Equatable {
 
     /// Current state of keyboard
     var keyboardWillShow = false
-    var keyboardHeight: CGFloat = 0
+    var keyboardEventualHeight: CGFloat = 0
+    var keyboardAnimationDuration: Double = 0
 
     /// What is focused? (nil means nothing is focused)
     var focus: Focus? = nil
@@ -420,17 +421,24 @@ struct AppUpdate {
         keyboard: KeyboardState
     ) -> Change<AppModel, AppAction> {
         switch keyboard {
-        case .willShow(let size), .didShow(let size), .didChangeFrame(let size):
+        case let .willShow(size, duration):
             var model = state
             model.keyboardWillShow = true
-            model.keyboardHeight = size.height
+            model.keyboardEventualHeight = size.height
+            model.keyboardAnimationDuration = duration
             return Change(state: model)
-        case .willHide:
-            return Change(state: state)
+        case .didShow(let size), .didChangeFrame(let size):
+            var model = state
+            model.keyboardEventualHeight = size.height
+            return Change(state: model)
+        case let .willHide(_, duration):
+            var model = state
+            model.keyboardAnimationDuration = duration
+            return Change(state: model)
         case .didHide:
             var model = state
             model.keyboardWillShow = false
-            model.keyboardHeight = 0
+            model.keyboardEventualHeight = 0
             return Change(state: model)
         }
     }
@@ -1092,7 +1100,7 @@ struct AppView: View {
                             }
                         }
                     ),
-                    keyboardHeight: store.state.keyboardHeight
+                    keyboardHeight: store.state.keyboardEventualHeight
                 )
                 .zIndex(3)
             } else {

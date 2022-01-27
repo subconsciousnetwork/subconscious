@@ -11,10 +11,16 @@ import Combine
 
 /// Enum representing the current state of the keyboard
 enum KeyboardState {
-    case willShow(size: CGSize)
+    case willShow(
+        size: CGSize,
+        duration: Double
+    )
     case didShow(size: CGSize)
     case didChangeFrame(size: CGSize)
-    case willHide
+    case willHide(
+        size: CGSize,
+        duration: Double
+    )
     case didHide
 }
 
@@ -74,22 +80,29 @@ final class KeyboardService {
     @objc private func handle(
         keyboardWillShowNotification notification: Notification
     ) {
-        if let frame = notification.userInfo?[
-            UIResponder.keyboardFrameEndUserInfoKey
-        ] as? CGRect {
-            self.state.send(.willShow(size: frame.size))
+        let info = notification.userInfo
+        let frameEndKey = UIResponder.keyboardFrameEndUserInfoKey
+        let durationKey =
+            UIResponder.keyboardAnimationDurationUserInfoKey
+        if
+            let frame = info?[frameEndKey] as? CGRect,
+            let duration = info?[durationKey] as? NSNumber
+        {
+            self.state.send(
+                .willShow(
+                    size: frame.size,
+                    duration: duration.doubleValue
+                )
+            )
         }
     }
 
     @objc private func handle(
         keyboardDidShowNotification notification: Notification
     ) {
-        if
-            let userInfo = notification.userInfo,
-            let frame = userInfo[
-                UIResponder.keyboardFrameEndUserInfoKey
-            ] as? CGRect
-        {
+        let info = notification.userInfo
+        let frameEndKey = UIResponder.keyboardFrameEndUserInfoKey
+        if let frame = info?[frameEndKey] as? CGRect {
             self.state.send(.didShow(size: frame.size))
         }
     }
@@ -97,7 +110,21 @@ final class KeyboardService {
     @objc private func handle(
         keyboardWillHideNotification notification: Notification
     ) {
-        self.state.send(.willHide)
+        let info = notification.userInfo
+        let frameEndKey = UIResponder.keyboardFrameEndUserInfoKey
+        let durationKey =
+            UIResponder.keyboardAnimationDurationUserInfoKey
+        if
+            let frame = info?[frameEndKey] as? CGRect,
+            let duration = info?[durationKey] as? NSNumber
+        {
+            self.state.send(
+                .willHide(
+                    size: frame.size,
+                    duration: duration.doubleValue
+                )
+            )
+        }
     }
 
     @objc private func handle(
@@ -109,12 +136,9 @@ final class KeyboardService {
     @objc private func handle(
         keyboardDidChangeFrameNotification notification: Notification
     ) {
-        if
-            let userInfo = notification.userInfo,
-            let frame = userInfo[
-                UIResponder.keyboardFrameEndUserInfoKey
-            ] as? CGRect
-        {
+        let info = notification.userInfo
+        let frameEndKey = UIResponder.keyboardFrameEndUserInfoKey
+        if let frame = info?[frameEndKey] as? CGRect {
             self.state.send(.didChangeFrame(size: frame.size))
         }
     }
