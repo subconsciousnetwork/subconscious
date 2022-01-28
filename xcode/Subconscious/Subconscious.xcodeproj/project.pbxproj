@@ -466,11 +466,11 @@
 				B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */,
 				B8AE34C7276BF77000777FF0 /* SearchTextField.swift */,
 				B8AE34C1276BD77C00777FF0 /* SuggestionLabelStyle.swift */,
+				B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */,
 				B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */,
 				B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */,
 				B8DEBF1E2798EC23007CB528 /* TitleGroup.swift */,
 				B81EBB0827025C1500B87594 /* TranscludeButtonStyle.swift */,
-				B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
