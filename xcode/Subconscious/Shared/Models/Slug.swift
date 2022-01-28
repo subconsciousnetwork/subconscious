@@ -45,13 +45,24 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
     /// In other words, you can create a slug from a URL, but round-trip
     /// creating a URL from a slug may not result in the same URL.
     init?(url: URL, relativeTo base: URL) {
-        guard let path = url
-            .deletingPathExtension()
-            .relativizingPath(relativeTo: base)
-        else {
+        // NOTE: it is extremely important that we call relativizingPath
+        // WITHOUT calling `url.deletePathExtension()`.
+        // This is because `url.relativizingPath()` calls
+        // `.standardizedFileURL` to resolve symlinks.
+        // However, if there is not a file extension, `.standardizedFileURL`
+        // will not recognize the URL as a file URL and will not
+        // resolve symlinks.
+        //
+        // Instead, we relativize the path, get back a string, and then
+        // use our custom String extension to remove the file extension.
+        //
+        // Issue: https://github.com/gordonbrander/subconscious/issues/57
+        //
+        // 2022-01-27 Gordon Brander
+        guard let path = url.relativizingPath(relativeTo: base) else {
             return nil
         }
-        self.init(path)
+        self.init(path.deletingPathExtension())
     }
 
     /// Create a URL from this slug

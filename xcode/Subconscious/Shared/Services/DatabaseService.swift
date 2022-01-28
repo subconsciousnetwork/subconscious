@@ -68,14 +68,15 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
+    /// Sync file system with database.
+    /// Note file system is source-of-truth (leader).
+    /// Syncing will never delete files on the file system.
     func syncDatabase() -> AnyPublisher<[FileSync.Change], Error> {
         CombineUtilities.async(qos: .utility) {
-            let fileUrls = try listEntries()
-
             // Left = Leader (files)
             let left = try FileSync.readFileFingerprints(
-                urls: fileUrls,
-                relativeTo: documentURL
+                directory: documentURL,
+                ext: "subtext"
             )
 
             // Right = Follower (search index)
@@ -134,14 +135,6 @@ struct DatabaseService {
         }
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
-    }
-
-    private func listEntries() throws -> [URL] {
-        try FileManager.default.contentsOfDirectory(
-            at: documentURL,
-            includingPropertiesForKeys: nil,
-            options: .skipsHiddenFiles
-        ).withPathExtension("subtext")
     }
 
     /// Write entry syncronously

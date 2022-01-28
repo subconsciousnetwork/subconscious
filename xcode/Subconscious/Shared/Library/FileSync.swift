@@ -42,9 +42,10 @@ struct FileFingerprint: Hashable, Equatable, Identifiable {
             self.size = size
         }
 
-        init?(url: URL, manager: FileManager = .default) {
+        init?(url: URL) {
             guard
-                let attr = try? manager.attributesOfItem(atPath: url.path),
+                let attr = try? FileManager.default
+                    .attributesOfItem(atPath: url.path),
                 let modified = attr[FileAttributeKey.modificationDate] as? Date,
                 let size = attr[FileAttributeKey.size] as? Int
             else {
@@ -95,11 +96,17 @@ struct FileSync {
     /// Given an array of URLs, get an array of FileFingerprints.
     /// If we can't read a fingerprint for the file, we filter it out of the list.
     static func readFileFingerprints(
-        urls: [URL],
-        relativeTo base: URL
+        directory: URL,
+        ext: String
     ) throws -> [FileFingerprint] {
-        urls.compactMap({ url in
-            FileFingerprint(url: url, relativeTo: base)
+        try FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil,
+            options: .skipsHiddenFiles
+        )
+        .withPathExtension(ext)
+        .compactMap({ url in
+            FileFingerprint(url: url, relativeTo: directory)
         })
     }
 

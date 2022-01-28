@@ -20,12 +20,26 @@ extension URL {
     /// Return path relative to some base
     /// If URL does not start with base, returns nil.
     func relativizingPath(relativeTo base: URL) -> String? {
+        // NOTE: it is important that you call `.relativizingPath`
+        // WITHOUT first calling `url.deletePathExtension()`.
+        // This is because `url.relativizingPath()` calls
+        // `.standardizedFileURL` to resolve symlinks.
+        // However, if there is not a file extension, `.standardizedFileURL`
+        // will not recognize the URL as a file URL and will not
+        // resolve symlinks.
+        //
+        // Instead, we relativize the path, get back a string, and then
+        // use our custom String extension to remove the file extension.
+        //
+        // Issue: https://github.com/gordonbrander/subconscious/issues/57
+        //
+        // 2022-01-27 Gordon Brander
         // Standardize and absolutize paths to normalize them
         let path = self.standardizedFileURL.absoluteString
         let basePath = base.standardizedFileURL.absoluteString
         if path.hasPrefix(basePath) {
             // Return path without standardized percent encoding.
-            return path.ltrim(prefix: basePath).removingPercentEncoding
+            return path.trimming(prefix: basePath).removingPercentEncoding
         }
         return nil
     }
