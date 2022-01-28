@@ -10,23 +10,20 @@ import SwiftUI
 /// Creates label style analogous to a default list label
 /// However, this version gives us more control over the styling, allowing us to create hanging icons.
 struct SuggestionLabelStyle: LabelStyle {
+    var spacing: CGFloat? = nil
+
     func makeBody(configuration: Configuration) -> some View {
-        HStack(alignment: .top) {
+        HStack(alignment: .top, spacing: spacing) {
             configuration.icon
                 .frame(
                     width: AppTheme.icon,
                     height: AppTheme.icon
                 )
+                .foregroundColor(Color.icon)
+            configuration.title
                 .foregroundColor(Color.text)
-            VStack(alignment: .leading, spacing: AppTheme.unit * 3) {
-                configuration.title
-                    .foregroundColor(Color.text)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(1)
-                Divider()
-            }
+                .multilineTextAlignment(.leading)
+                .lineLimit(1)
         }
-        .padding(.top, AppTheme.unit * 3)
-        .padding(.leading)
     }
 }

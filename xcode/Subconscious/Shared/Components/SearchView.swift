@@ -43,31 +43,37 @@ struct SearchView: View {
                 ).buttonStyle(.plain)
             }
             .frame(height: AppTheme.unit * 10)
-            .padding()
-            Divider()
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(suggestions) { suggestion in
-                        Button(
-                            action: {
-                                withAnimation(
-                                    .easeOut(duration: Duration.fast)
-                                ) {
-                                    onCommit(
-                                        suggestion.stub.slug,
-                                        suggestion.stub.title
-                                    )
-                                }
-                            }
+            .padding(AppTheme.tightPadding)
+            List(suggestions) { suggestion in
+                Button(
+                    action: {
+                        withAnimation(
+                            .easeOutCubic(duration: Duration.keyboard)
                         ) {
-                            SuggestionLabelView(
-                                suggestion: suggestion
+                            onCommit(
+                                suggestion.stub.slug,
+                                suggestion.stub.title
                             )
-                        }.buttonStyle(RowButtonStyle())
-                    }.background(Color.background)
-                }
+                        }
+                    },
+                    label: {
+                        SuggestionLabelView(suggestion: suggestion)
+                    }
+                )
+                .modifier(
+                    SuggestionViewModifier(
+                        insets: EdgeInsets(
+                            top: AppTheme.unit2,
+                            leading: AppTheme.tightPadding,
+                            bottom: AppTheme.unit2,
+                            trailing: AppTheme.tightPadding
+                        )
+                    )
+                )
             }
-        }.background(Color.background)
+            .listStyle(.plain)
+        }
+        .background(Color.background)
     }
 }
 

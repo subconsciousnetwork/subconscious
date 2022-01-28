@@ -1,5 +1,5 @@
 //
-//  SuggestionLabelView.swift
+//  SuggestionViewModifier.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 9/28/21.

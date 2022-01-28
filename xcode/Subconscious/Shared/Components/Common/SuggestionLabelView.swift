@@ -8,13 +8,46 @@
 import SwiftUI
 
 struct SuggestionLabelView: View {
+    var suggestion: Suggestion
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        switch suggestion {
+        case .entry(let entryLink):
+            Label(
+                title: {
+                    TitleGroup(
+                        title: entryLink.title,
+                        subtitle: entryLink.slug.description
+                    )
+                },
+                icon: {
+                    Image(systemName: "doc")
+                }
+            )
+        case .search(let entryLink):
+            Label(
+                title: {
+                    TitleGroup(
+                        title: entryLink.title,
+                        subtitle: entryLink.slug.description
+                    )
+                },
+                icon: {
+                    Image(systemName: "doc.badge.plus")
+                }
+            )
+        }
     }
 }
 
 struct SuggestionLabelView_Previews: PreviewProvider {
     static var previews: some View {
-        SuggestionLabelView()
+        SuggestionLabelView(
+            suggestion: .search(
+                EntryLink(
+                    slug: Slug("floop")!,
+                    title: "Floop the pig"
+                )
+            )
+        )
     }
 }
