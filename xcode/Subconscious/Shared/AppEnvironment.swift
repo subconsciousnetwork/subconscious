@@ -151,10 +151,11 @@ extension AppTheme {
     static let unit3 = unit * 3
     static let unit4 = unit * 4
     static let padding = unit * 4
-    static let margin = unit * 4
     static let tightPadding = unit * 3
+    static let margin = unit * 4
     static let icon: CGFloat = unit * 6
     static let textSize: CGFloat = 16
+    static let captionSize: CGFloat = 12
     // Unlike in CSS, line-spacing is not described as the total height of a
     // line. Instead, it is is measured as leading,
     // from bottom of one line to top of the next.
@@ -198,7 +199,7 @@ extension UIFont {
 
     static let appCaption = UIFont(
         name: "IBMPlexSans",
-        size: 12
+        size: AppTheme.captionSize
     )!
 }
 
