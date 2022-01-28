@@ -368,7 +368,7 @@ struct AppUpdate {
             return Change(state: state)
         case let .setLinkSheetPresented(isPresented):
             var model = state
-            model.focus = isPresented ? .linkSearch : nil
+            model.focus = isPresented ? .linkSearch : .editor
             model.isLinkSheetPresented = isPresented
             return Change(state: model)
         case let .setLinkSearch(text):
@@ -937,6 +937,10 @@ struct AppUpdate {
         state: AppModel,
         slug: Slug
     ) -> Change<AppModel, AppAction> {
+        let fx: AnyPublisher<AppAction, Never> = Just(
+            AppAction.setLinkSheetPresented(false)
+        ).eraseToAnyPublisher()
+
         var model = state
         if let range = Range(
             model.editorSelection,
@@ -966,9 +970,8 @@ struct AppUpdate {
             }
         }
         model.linkSearchText = ""
-        model.focus = nil
-        model.isLinkSheetPresented = false
-        return Change(state: model)
+
+        return Change(state: model, fx: fx)
     }
 
     /// Save entry to database
