@@ -52,7 +52,7 @@ enum AppAction {
     case listRecentFailure(String)
 
     // Delete entries
-    case confirmDelete(String)
+    case confirmDelete(Slug)
     case setConfirmDeleteShowing(Bool)
     case deleteEntry(Slug)
     case deleteEntrySuccess(Slug)
@@ -84,7 +84,7 @@ enum AppAction {
     case suggestionsFailure(String)
 
     // Detail
-    case requestDetail(slug: Slug, fallback: String)
+    case requestDetail(slug: Slug?, fallback: String)
     case updateDetail(EntryDetail)
     case failDetail(String)
     case showDetail(Bool)
@@ -96,7 +96,7 @@ enum AppAction {
     // Link suggestions
     case setLinkSheetPresented(Bool)
     case setLinkSearch(String)
-    case commitLinkSearch(String)
+    case commitLinkSearch(Slug)
     case setLinkSuggestions([Suggestion])
     case linkSuggestionsFailure(String)
 
@@ -373,8 +373,8 @@ struct AppUpdate {
             return Change(state: model)
         case let .setLinkSearch(text):
             return setLinkSearch(state: state, text: text)
-        case let .commitLinkSearch(text):
-            return commitLinkSearch(state: state, text: text)
+        case let .commitLinkSearch(slug):
+            return commitLinkSearch(state: state, slug: slug)
         case let .setLinkSuggestions(suggestions):
             var model = state
             model.linkSuggestions = suggestions
@@ -482,7 +482,7 @@ struct AppUpdate {
                 // corresponding query
                 let fx: AnyPublisher<AppAction, Never> = Just(
                     AppAction.requestDetail(
-                        slug: Slashlink.urlToSlug(url),
+                        slug: Slashlink.slashlinkURLToSlug(url),
                         fallback: ""
                     )
                 ).eraseToAnyPublisher()
@@ -674,7 +674,7 @@ struct AppUpdate {
             //  Set focus on rename field
             //  Save entry in preperation for any merge/move.
             let fx: AnyPublisher<AppAction, Never> = Just(
-                AppAction.setRenameSlugField(slug)
+                AppAction.setRenameSlugField(slug.description)
             )
             .merge(
                 with: Just(AppAction.setFocus(.rename)),
@@ -878,9 +878,14 @@ struct AppUpdate {
     /// Request that entry detail view be shown
     static func requestDetail(
         state: AppModel,
-        slug: Slug,
+        slug: Slug?,
         fallback: String
     ) -> Change<AppModel, AppAction> {
+        /// If nil slug was requested, do nothing
+        guard let slug = slug else {
+            return Change(state: state)
+        }
+
         var model = resetEditor(state: state)
         model.slug = nil
         model.searchText = ""
@@ -930,7 +935,7 @@ struct AppUpdate {
 
     static func commitLinkSearch(
         state: AppModel,
-        text: String
+        slug: Slug
     ) -> Change<AppModel, AppAction> {
         var model = state
         if let range = Range(
@@ -941,14 +946,14 @@ struct AppUpdate {
             let markup = state.editorAttributedText.string
                 .replacingCharacters(
                     in: range,
-                    with: text
+                    with: slug.description
                 )
             // Re-render and assign
             model.editorAttributedText = renderMarkup(markup: markup)
             // Find inserted range by searching for our inserted text
             // AFTER the cursor position.
             if let insertedRange = markup.range(
-                of: text,
+                of: slug.description,
                 range: range.lowerBound..<markup.endIndex
             ) {
                 // Convert Range to NSRange of editorAttributedText,

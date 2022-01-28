@@ -42,9 +42,10 @@ struct FileFingerprint: Hashable, Equatable, Identifiable {
             self.size = size
         }
 
-        init?(url: URL, manager: FileManager = .default) {
+        init?(url: URL) {
             guard
-                let attr = try? manager.attributesOfItem(atPath: url.path),
+                let attr = try? FileManager.default
+                    .attributesOfItem(atPath: url.path),
                 let modified = attr[FileAttributeKey.modificationDate] as? Date,
                 let size = attr[FileAttributeKey.size] as? Int
             else {
@@ -54,18 +55,18 @@ struct FileFingerprint: Hashable, Equatable, Identifiable {
         }
     }
 
-    var id: String { self.url.path }
-    let url: URL
+    var id: Slug { self.slug }
+    let slug: Slug
     let attributes: Attributes
 
-    init(url: URL, attributes: Attributes) {
-        self.url = url.standardized.absoluteURL
+    init(slug: Slug, attributes: Attributes) {
+        self.slug = slug
         self.attributes = attributes
     }
 
-    init(url: URL, modified: Date, size: Int) {
+    init(slug: Slug, modified: Date, size: Int) {
         self.init(
-            url: url,
+            slug: slug,
             attributes: Attributes(
                 modified: modified,
                 size: size
@@ -75,11 +76,14 @@ struct FileFingerprint: Hashable, Equatable, Identifiable {
     
     init?(
         url: URL,
-        with manager: FileManager = FileManager.default
+        relativeTo base: URL
     ) {
-        if let attributes = Attributes(url: url, manager: manager) {
+        if
+            let slug = Slug(url: url, relativeTo: base),
+            let attributes = Attributes(url: url)
+        {
             self.init(
-                url: url,
+                slug: slug,
                 attributes: attributes
             )
         } else {
@@ -92,70 +96,67 @@ struct FileSync {
     /// Given an array of URLs, get an array of FileFingerprints.
     /// If we can't read a fingerprint for the file, we filter it out of the list.
     static func readFileFingerprints(
-        urls: [URL],
-        with manager: FileManager = FileManager.default
+        directory: URL,
+        ext: String
     ) throws -> [FileFingerprint] {
-        urls.compactMap({ url in
-            FileFingerprint(url: url, with: manager)
+        try FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil,
+            options: .skipsHiddenFiles
+        )
+        .withPathExtension(ext)
+        .compactMap({ url in
+            FileFingerprint(url: url, relativeTo: directory)
         })
     }
 
     /// Given a set of FileFingerprints, return a dictionary, indexed by key
     static private func indexFileFingerprints(
         _ fingerprints: [FileFingerprint]
-    ) -> Dictionary<URL, FileFingerprint> {
+    ) -> Dictionary<Slug, FileFingerprint> {
         Dictionary(
-            fingerprints.map({ fingerprint in (fingerprint.url, fingerprint)}),
+            fingerprints.map({ fingerprint in (fingerprint.id, fingerprint)}),
             uniquingKeysWith: { a, b in b }
         )
     }
 
-    /// Changes are a left and right FileFingerprint?, zipped by id (file path).
-    struct Change: Hashable, Equatable {
-        /// Possible change statuses
-        enum Status {
-            case leftOnly
-            case rightOnly
-            case leftNewer
-            case rightNewer
-            case same
-            case conflict
-        }
+    enum Change: Hashable, Equatable {
+        case leftOnly(`left`: FileFingerprint)
+        case rightOnly(`right`: FileFingerprint)
+        case leftNewer(`left`: FileFingerprint, `right`: FileFingerprint)
+        case rightNewer(`left`: FileFingerprint, `right`: FileFingerprint)
+        case same(`left`: FileFingerprint, `right`: FileFingerprint)
+        case conflict(`left`: FileFingerprint, `right`: FileFingerprint)
 
-        var status: Status {
-            if let left = self.left, let right = self.right {
-                if left == right {
-                    return .same
+        static func create(
+            left: FileFingerprint?,
+            right: FileFingerprint?
+        ) -> Self? {
+            if
+                let left = left,
+                let right = right
+            {
+                if left.id != right.id {
+                    return nil
+                } else if left == right {
+                    return .same(left: left, right: right)
                 } else if left.attributes.modified > right.attributes.modified {
-                    return .leftNewer
+                    return .leftNewer(left: left, right: right)
                 } else if left.attributes.modified < right.attributes.modified {
-                    return .rightNewer
+                    return .rightNewer(left: left, right: right)
                 /// Left and right have the same modified time, but a different size
                 } else {
-                    return .conflict
+                    return .conflict(left: left, right: right)
                 }
-            } else if left != nil {
-                return .leftOnly
-            } else {
-                return .rightOnly
+            } else if let left = left {
+                return .leftOnly(left: left)
+            } else if let right = right {
+                return .rightOnly(right: right)
             }
-        }
-
-        let left: FileFingerprint?
-        let right: FileFingerprint?
-
-        init?(left: FileFingerprint?, right: FileFingerprint?) {
-            /// If we have a left and right fingerprint, but their IDs don't match, throw.
-            if let l = left, let r = right {
-                guard l.id == r.id else {
-                    return nil
-                }
-            }
-            self.left = left
-            self.right = right
+            return nil
         }
     }
-    
+
     /// Given a left and right set of FileFingerprints, returns a set of Changes.
     static func calcChanges(
         left: [FileFingerprint],
@@ -167,7 +168,7 @@ struct FileSync {
 
         var changes: [Change] = []
         for key in allKeys {
-            if let change = Change(
+            if let change = Change.create(
                 left: leftIndex[key],
                 right: rightIndex[key]
             ) {
@@ -176,35 +177,5 @@ struct FileSync {
         }
 
         return changes
-    }
-}
-
-extension FileSync.Change: CustomStringConvertible {
-    var description: String {
-        let url = (
-            self.left?.url.absoluteString ??
-            self.right?.url.absoluteString ??
-            "nil"
-        )
-        return "Change(url: \(url), status: \(self.status))"
-    }
-}
-
-extension FileSync.Change.Status: CustomStringConvertible {
-    var description: String {
-        switch self {
-        case .leftOnly:
-            return "leftOnly"
-        case .leftNewer:
-            return "leftNewer"
-        case .rightOnly:
-            return "rightOnly"
-        case .rightNewer:
-            return "rightNewer"
-        case .conflict:
-            return "conflict"
-        case .same:
-            return "same"
-        }
     }
 }

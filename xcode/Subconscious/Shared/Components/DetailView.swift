@@ -26,7 +26,7 @@ struct DetailView: View {
         UITextItemInteraction
     ) -> Bool
     var onCommitSearch: (String) -> Void
-    var onCommitLinkSearch: (String) -> Void
+    var onCommitLinkSearch: (Slug) -> Void
     var onRename: (Slug?) -> Void
 
     var body: some View {
@@ -88,7 +88,7 @@ struct DetailView: View {
                             onRename(slug)
                         }
                     ) {
-                        Text(slug ?? "Untitled")
+                        Text(slug?.description ?? "Untitled")
                     }
                     .buttonStyle(MicroFieldButtonStyle())
                 }

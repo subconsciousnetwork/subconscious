@@ -9,7 +9,7 @@ import SwiftUI
 
 struct RenameSearchView: View {
     /// Slug of the note we are renaming
-    var slug: String?
+    var slug: Slug?
     var placeholder: String = "Enter name for idea"
     var suggestions: [Suggestion]
     @Binding var text: String
@@ -82,17 +82,17 @@ struct RenameSearchView: View {
 struct RenameSearchView_Previews: PreviewProvider {
     static var previews: some View {
         RenameSearchView(
-            slug: "floop",
+            slug: Slug("floop")!,
             suggestions: [
                 .search(
                     EntryLink(
-                        slug: "floop",
+                        slug: Slug("floop")!,
                         title: "Floop"
                     )
                 ),
                 .entry(
                     EntryLink(
-                        slug: "card-wars",
+                        slug: Slug("card-wars")!,
                         title: "Card wars"
                     )
                 )

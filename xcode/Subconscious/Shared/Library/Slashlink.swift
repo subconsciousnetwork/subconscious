@@ -28,17 +28,6 @@ extension Slashlink {
         return slug
     }
 
-    /// Given a slug, returns a string that is close-enough to prose text
-    static func unslugify(_ slug: Slug) -> String {
-        removeLeadingSlash(slug)
-            // Replace dash with space
-            .replacingOccurrences(
-                of: "-",
-                with: " "
-            )
-            .firstUppercased()
-    }
-
     static func slashlinkToURLString(_ text: String) -> String? {
         if
             let slashlink = text.slugifyString(),
@@ -49,13 +38,11 @@ extension Slashlink {
         return nil
     }
 
-    static func urlToSlug(_ url: URL) -> String {
-        return removeLeadingSlash(url.path)
-    }
-
-    /// Given a URL, extract a string that is close-enough to prose.
-    static func urlToProse(_ url: URL) -> String {
-        return unslugify(url.path)
+    static func slashlinkURLToSlug(_ url: URL) -> Slug? {
+        guard isSlashlinkURL(url) else {
+            return nil
+        }
+        return Slug(url.path)
     }
 
     /// Find unique slashlink slug

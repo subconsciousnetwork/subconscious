@@ -32,7 +32,7 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
 
     /// Open existing document
     init?(slug: Slug, directory: URL) {
-        let url = directory.appendingFilename(name: slug, ext: "subtext")
+        let url = slug.toURL(directory: directory, ext: "subtext")
         if let content = try? String(contentsOf: url, encoding: .utf8) {
             self.init(
                 slug: slug,
@@ -44,7 +44,7 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
     }
 
     func url(directory: URL) -> URL {
-        directory.appendingFilename(name: slug, ext: "subtext")
+        self.slug.toURL(directory: directory, ext: "subtext")
     }
 
     /// Append additional Subtext to this file

@@ -16,7 +16,7 @@ struct DatabaseService {
         case invalidSlug(String)
     }
 
-    private var documentUrl: URL
+    private var documentURL: URL
     private var databaseURL: URL
     private var database: SQLite3Database
     private var migrations: SQLite3Migrations
@@ -26,7 +26,7 @@ struct DatabaseService {
         databaseURL: URL,
         migrations: SQLite3Migrations
     ) {
-        self.documentUrl = documentURL
+        self.documentURL = documentURL
         self.databaseURL = databaseURL
         self.database = .init(
             path: databaseURL.absoluteString,
@@ -38,7 +38,7 @@ struct DatabaseService {
     /// Helper function for generating draft URLs
     func findUniqueURL(name: String) -> URL? {
         Slashlink.findUniqueURL(
-            at: documentUrl,
+            at: documentURL,
             name: name,
             ext: "subtext"
         )
@@ -68,49 +68,64 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
+    /// Sync file system with database.
+    /// Note file system is source-of-truth (leader).
+    /// Syncing will never delete files on the file system.
     func syncDatabase() -> AnyPublisher<[FileSync.Change], Error> {
         CombineUtilities.async(qos: .utility) {
-            let fileUrls = try listEntries()
-
             // Left = Leader (files)
-            let left = try FileSync.readFileFingerprints(urls: fileUrls)
+            let left = try FileSync.readFileFingerprints(
+                directory: documentURL,
+                ext: "subtext"
+            )
 
             // Right = Follower (search index)
-            let right = try database.execute(
+            let right: [FileFingerprint] = try database.execute(
                 sql: "SELECT slug, modified, size FROM entry"
-            ).map({ row in
-                FileFingerprint(
-                    url: documentUrl.appendingFilename(
-                        name: try row.get(0).unwrap(),
-                        ext: "subtext"
-                    ),
-                    modified: try row.get(1).unwrap(),
-                    size: try row.get(2).unwrap()
-                )
+            ).compactMap({ row in
+                if
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
+                    let modified: Date = row.get(1),
+                    let size: Int = row.get(2)
+                {
+                    return FileFingerprint(
+                        slug: slug,
+                        modified: modified,
+                        size: size
+                    )
+                }
+                return nil
             })
             
             let changes = FileSync.calcChanges(
                 left: left,
                 right: right
-            ).filter({ change in change.status != .same })
+            ).filter({ change in
+                switch change {
+                case .same:
+                    return false
+                default:
+                    return true
+                }
+            })
             
             for change in changes {
-                switch change.status {
+                switch change {
                 // .leftOnly = create.
                 // .leftNewer = update.
                 // .rightNewer = Follower shouldn't be ahead.
                 //               Leader wins.
                 // .conflict. Leader wins.
-                case .leftOnly, .leftNewer, .rightNewer, .conflict:
-                    if let left = change.left {
-                        try writeEntryToDatabase(slug: left.url.toSlug())
-                    }
+                case
+                    .leftOnly(let left),
+                    .leftNewer(let left, _),
+                    .rightNewer(let left, _),
+                    .conflict(let left, _):
+                    try writeEntryToDatabase(slug: left.slug)
                 // .rightOnly = delete. Remove from search index
-                case .rightOnly:
-                    if let right = change.right {
-                        let slug = right.url.toSlug()
-                        try deleteEntryFromDatabase(slug: slug)
-                    }
+                case .rightOnly(let right):
+                    try deleteEntryFromDatabase(slug: right.slug)
                 // .same = no change. Do nothing.
                 case .same:
                     break
@@ -120,14 +135,6 @@ struct DatabaseService {
         }
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
-    }
-
-    private func listEntries() throws -> [URL] {
-        try FileManager.default.contentsOfDirectory(
-            at: documentUrl,
-            includingPropertiesForKeys: nil,
-            options: .skipsHiddenFiles
-        ).withPathExtension("subtext")
     }
 
     /// Write entry syncronously
@@ -147,7 +154,7 @@ struct DatabaseService {
                 size=excluded.size
             """,
             parameters: [
-                .text(entry.slug),
+                .text(entry.slug.description),
                 .text(entry.title),
                 .text(entry.content),
                 .date(modified),
@@ -157,9 +164,9 @@ struct DatabaseService {
     }
 
     private func writeEntryToDatabase(slug: Slug) throws {
-        let entry = try SubtextFile(slug: slug, directory: documentUrl).unwrap()
+        let entry = try SubtextFile(slug: slug, directory: documentURL).unwrap()
         let fingerprint = try FileFingerprint.Attributes(
-            url: entry.url(directory: documentUrl)
+            url: entry.url(directory: documentURL)
         ).unwrap()
         return try writeEntryToDatabase(
             entry: entry,
@@ -171,10 +178,10 @@ struct DatabaseService {
     func writeEntry(entry: SubtextFile) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             // Write contents to file
-            try entry.write(directory: documentUrl)
+            try entry.write(directory: documentURL)
             // Read fingerprint after writing to get updated time
             let fingerprint = try FileFingerprint.Attributes(
-                url: entry.url(directory: documentUrl)
+                url: entry.url(directory: documentURL)
             ).unwrap()
             return try writeEntryToDatabase(
                 entry: entry,
@@ -193,14 +200,14 @@ struct DatabaseService {
             DELETE FROM entry WHERE slug = ?
             """,
             parameters: [
-                .text(slug)
+                .text(slug.description)
             ]
         )
     }
 
     /// Delete entry from file system
     private func deleteEntryFile(slug: Slug) throws {
-        let url = documentUrl.appendingFilename(name: slug, ext: "subtext")
+        let url = slug.toURL(directory: documentURL, ext: "subtext")
         try FileManager.default.removeItem(at: url)
     }
 
@@ -216,8 +223,8 @@ struct DatabaseService {
 
     /// Rename file in file system
     private func moveEntryFile(from: Slug, to: Slug) throws {
-        let fromURL = documentUrl.appendingFilename(name: from, ext: "subtext")
-        let toURL = documentUrl.appendingFilename(name: to, ext: "subtext")
+        let fromURL = from.toURL(directory: documentURL, ext: "subtext")
+        let toURL = to.toURL(directory: documentURL, ext: "subtext")
         try FileManager.default.moveItem(at: fromURL, to: toURL)
     }
 
@@ -228,24 +235,24 @@ struct DatabaseService {
     private func mergeEntryFile(from: Slug, to: Slug) throws {
         let fromFile = try SubtextFile(
             slug: from,
-            directory: documentUrl
+            directory: documentURL
         )
         .unwrap()
 
         let toFile = try SubtextFile(
             slug: to,
-            directory: documentUrl
+            directory: documentURL
         )
         .unwrap()
         .append(fromFile.dom)
 
         //  First write the merged file to "to" location
-        try toFile.write(directory: documentUrl)
+        try toFile.write(directory: documentURL)
         //  Then remove the file at "from" location.
         //  We delete AFTER writing so that data loss cannot occur in
         //  case of failure.
         try FileManager.default.removeItem(
-            at: fromFile.url(directory: documentUrl)
+            at: fromFile.url(directory: documentURL)
         )
     }
 
@@ -261,10 +268,7 @@ struct DatabaseService {
                 return
             }
 
-            let toURL = documentUrl.appendingFilename(
-                name: to,
-                ext: "subtext"
-            )
+            let toURL = to.toURL(directory: documentURL, ext: "subtext")
 
             //  If file already exists, perform a merge.
             //  Otherwise, perform a rename.
@@ -302,7 +306,8 @@ struct DatabaseService {
                 """
             ).compactMap({ row in
                 if
-                    let slug: String = row.get(0),
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
                     let title: String = row.get(1),
                     let content: String = row.get(2)
                 {
@@ -321,8 +326,8 @@ struct DatabaseService {
     }
 
     private func searchSuggestionsForZeroQuery(
-    ) throws -> OrderedDictionary<String, Suggestion> {
-        var suggestions: OrderedDictionary<String, Suggestion> = [:]
+    ) throws -> OrderedDictionary<Slug, Suggestion> {
+        var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
 
         let entries: [EntryLink] = try database.execute(
             sql: """
@@ -334,7 +339,8 @@ struct DatabaseService {
         )
         .compactMap({ row in
             if
-                let slug: String = row.get(0),
+                let slugString: String = row.get(0),
+                let slug = Slug(slugString),
                 let title: String = row.get(1)
             {
                 return EntryLink(
@@ -346,7 +352,10 @@ struct DatabaseService {
         })
 
         for entry in entries {
-            suggestions.updateValue(.entry(entry), forKey: entry.slug)
+            suggestions.updateValue(
+                .entry(entry),
+                forKey: entry.slug
+            )
         }
 
         let queries: [EntryLink] = try database.execute(
@@ -377,12 +386,12 @@ struct DatabaseService {
 
     private func searchSuggestionsForQuery(
         query: String
-    ) throws -> OrderedDictionary<String, Suggestion> {
-        var suggestions: OrderedDictionary<String, Suggestion> = [:]
+    ) throws -> OrderedDictionary<Slug, Suggestion> {
+        var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
 
         // If slug is invalid, return empty suggestions
         guard
-            let querySlug = query.slugifyString(),
+            let querySlug = Slug(query),
             let queryEntryLink = EntryLink(title: query)
         else {
             return suggestions
@@ -405,7 +414,8 @@ struct DatabaseService {
         )
         .compactMap({ row in
             if
-                let slug: String = row.get(0),
+                let slugString: String = row.get(0),
+                let slug = Slug(slugString),
                 let title: String = row.get(1)
             {
                 return EntryLink(
@@ -537,7 +547,8 @@ struct DatabaseService {
             )
             .compactMap({ row in
                 if
-                    let slug: String = row.get(0),
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
                     let title: String = row.get(1)
                 {
                     return EntryLink(
@@ -591,7 +602,7 @@ struct DatabaseService {
     ) -> SubtextFile? {
         SubtextFile(
             slug: slug,
-            directory: documentUrl
+            directory: documentURL
         )
     }
 
@@ -604,10 +615,6 @@ struct DatabaseService {
         fallback: String
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            guard !slug.isWhitespace else {
-                throw DatabaseServiceError.invalidSlug("Slug is whitespace")
-            }
-
             // Get backlinks.
             // Use content indexed in database, even though it might be stale.
             let backlinks: [EntryStub] = try database.execute(
@@ -619,12 +626,13 @@ struct DatabaseService {
                 LIMIT 200
                 """,
                 parameters: [
-                    .text(slug),
-                    .queryFTS5(slug)
+                    .text(slug.description),
+                    .queryFTS5(slug.description)
                 ]
             ).compactMap({ row in
                 if
-                    let slug: String = row.get(0),
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
                     let title: String = row.get(1),
                     let content: String = row.get(2)
                 {

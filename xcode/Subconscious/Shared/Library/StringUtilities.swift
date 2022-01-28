@@ -9,11 +9,21 @@
 import Foundation
 
 extension String {
-    /// Remove leading `prefix` from `value` if it exists.
+    /// Remove leading `prefix` from string if it exists.
     /// - Returns: new  string without prefix
-    func ltrim(prefix: String) -> String {
+    func trimming(prefix: String) -> String {
         if self.hasPrefix(prefix) {
             return String(self.dropFirst(prefix.count))
+        } else {
+            return self
+        }
+    }
+
+    /// Remove trailing `suffix` from string if it exists.
+    /// - Returns: new  string without prefix
+    func trimming(suffix: String) -> String {
+        if self.hasSuffix(suffix) {
+            return String(self.dropLast(suffix.count))
         } else {
             return self
         }
@@ -58,12 +68,13 @@ extension Substring {
 }
 
 extension String {
-    func replacingNewlineWithSpace() -> String {
-        self.replacingOccurrences(
-            of: "\\s",
-            with: " ",
-            options: .regularExpression
-        )
+    /// Returns a string path with the path extension removed, if any.
+    /// Extension is anything after the first `.`.
+    func deletingPathExtension() -> String {
+        if let stem = self.split(separator: ".").first {
+            return String(stem)
+        }
+        return self
     }
 }
 

@@ -55,7 +55,7 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
             suggestions: .constant([
                 .search(
                     EntryLink(
-                        slug: "an-organism-is-a-living-system",
+                        slug: Slug("an-organism-is-a-living-system")!,
                         title: "An organism is a living system maintaining both a higher level of internal cooperation"
                     )
                 )

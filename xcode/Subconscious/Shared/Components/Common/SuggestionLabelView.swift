@@ -16,7 +16,7 @@ struct SuggestionLabelView: View {
                 title: {
                     TitleGroup(
                         title: stub.title,
-                        subtitle: stub.slug
+                        subtitle: stub.slug.description
                     )
                 },
                 icon: {
@@ -44,7 +44,7 @@ struct SuggestionLabel_Previews: PreviewProvider {
         SuggestionLabelView(
             suggestion: .search(
                 EntryLink(
-                    slug: "floop",
+                    slug: Slug("floop")!,
                     title: "Floop the pig"
                 )
             )
