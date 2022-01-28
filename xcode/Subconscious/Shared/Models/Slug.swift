@@ -71,6 +71,14 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
     }
 }
 
+extension Slug {
+    /// Create a slashlink (markup string) from slug
+    /// https://github.com/gordonbrander/subtext
+    func toSlashlink() -> String {
+        "/\(self.description)"
+    }
+}
+
 extension String {
     /// Slugify a string, returning a slug.
     func slugify() -> Slug? {

@@ -368,7 +368,7 @@ struct AppUpdate {
             return Change(state: state)
         case let .setLinkSheetPresented(isPresented):
             var model = state
-            model.focus = isPresented ? .linkSearch : nil
+            model.focus = isPresented ? .linkSearch : .editor
             model.isLinkSheetPresented = isPresented
             return Change(state: model)
         case let .setLinkSearch(text):
@@ -937,23 +937,28 @@ struct AppUpdate {
         state: AppModel,
         slug: Slug
     ) -> Change<AppModel, AppAction> {
+        let fx: AnyPublisher<AppAction, Never> = Just(
+            AppAction.setLinkSheetPresented(false)
+        ).eraseToAnyPublisher()
+
         var model = state
         if let range = Range(
             model.editorSelection,
             in: state.editorAttributedText.string
         ) {
+            let slashlink = slug.toSlashlink()
             // Replace selected range with committed link search text.
             let markup = state.editorAttributedText.string
                 .replacingCharacters(
                     in: range,
-                    with: slug.description
+                    with: slashlink
                 )
             // Re-render and assign
             model.editorAttributedText = renderMarkup(markup: markup)
             // Find inserted range by searching for our inserted text
             // AFTER the cursor position.
             if let insertedRange = markup.range(
-                of: slug.description,
+                of: slashlink,
                 range: range.lowerBound..<markup.endIndex
             ) {
                 // Convert Range to NSRange of editorAttributedText,
@@ -965,9 +970,8 @@ struct AppUpdate {
             }
         }
         model.linkSearchText = ""
-        model.focus = nil
-        model.isLinkSheetPresented = false
-        return Change(state: model)
+
+        return Change(state: model, fx: fx)
     }
 
     /// Save entry to database
