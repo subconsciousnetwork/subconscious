@@ -942,18 +942,19 @@ struct AppUpdate {
             model.editorSelection,
             in: state.editorAttributedText.string
         ) {
+            let slashlink = slug.toSlashlink()
             // Replace selected range with committed link search text.
             let markup = state.editorAttributedText.string
                 .replacingCharacters(
                     in: range,
-                    with: slug.description
+                    with: slashlink
                 )
             // Re-render and assign
             model.editorAttributedText = renderMarkup(markup: markup)
             // Find inserted range by searching for our inserted text
             // AFTER the cursor position.
             if let insertedRange = markup.range(
-                of: slug.description,
+                of: slashlink,
                 range: range.lowerBound..<markup.endIndex
             ) {
                 // Convert Range to NSRange of editorAttributedText,
