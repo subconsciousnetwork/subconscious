@@ -27,8 +27,8 @@ where Content: View {
                 DialogView(
                     content: content
                 )
-                .padding(.bottom, AppTheme.unit2)
                 .padding(.horizontal, AppTheme.unit2)
+                .padding(.bottom, AppTheme.unit * 8)
                 .frame(
                     maxHeight: (
                         geometry.size.height -
