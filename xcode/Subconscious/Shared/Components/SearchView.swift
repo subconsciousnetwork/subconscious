@@ -9,6 +9,13 @@ import SwiftUI
 
 struct SearchView: View {
     var placeholder: String
+    //  NOTE: suggestionHeight is title height plus subtitle height
+    //  plus top and bottom padding.
+    /// Row height is a fixed height we apply to suggestions in order
+    /// to calculate the height of the `List` that contains them.
+    /// This allows us to shrink the modal when only a few results are
+    /// present.
+    var suggestionHeight: CGFloat = (24 + 12 + 8 + 8)
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     @Binding var suggestions: [Suggestion]
@@ -60,17 +67,37 @@ struct SearchView: View {
                         SuggestionLabelView(suggestion: suggestion)
                     }
                 )
+                .frame(height: suggestionHeight)
                 .modifier(
+                    // Because we fix the height of the suggestions (see below)
+                    // we do not set edge insets on the suggestion, as
+                    // this is unneccessary and would increase the height
+                    // of our suggestion (frame + inset), throwing off
+                    // height calculations below.
+                    // 2022-01-28 Gordon Brander
                     SuggestionViewModifier(
                         insets: EdgeInsets(
-                            top: AppTheme.unit2,
+                            top: 0,
                             leading: AppTheme.tightPadding,
-                            bottom: AppTheme.unit2,
+                            bottom: 0,
                             trailing: AppTheme.tightPadding
                         )
                     )
                 )
             }
+            // Fix the height of the scrollview based on the number of
+            // elements present.
+            //
+            // This allows us to shrink the modal when there are only a
+            // few elements to show.
+            //
+            // 2022-01-28 Gordon Brander
+            .frame(
+                maxHeight: AppTheme.tightPadding + CGFloat.minimum(
+                    suggestionHeight * CGFloat(suggestions.count),
+                    suggestionHeight * 6
+                )
+            )
             .listStyle(.plain)
         }
         .background(Color.background)
