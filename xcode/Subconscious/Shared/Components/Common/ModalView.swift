@@ -24,9 +24,12 @@ where Content: View {
                     }
             }
             if isPresented {
-                DialogView(
-                    content: content
-                )
+                VStack {
+                    DialogView(
+                        content: content
+                    )
+                    Spacer()
+                }
                 .padding(.horizontal, AppTheme.unit2)
                 .padding(.bottom, AppTheme.unit * 8)
                 .frame(
