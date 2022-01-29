@@ -18,15 +18,19 @@ struct TitleGroup: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text(title).foregroundColor(Color.text)
+                Text(title)
+                    .font(Font(UIFont.appText))
+                    .foregroundColor(Color.text)
                 Spacer()
             }
-            .frame(minHeight: lineHeight)
+            .frame(minHeight: AppTheme.icon)
             HStack {
-                Text(subtitle).foregroundColor(Color.secondaryText)
+                Text(subtitle)
+                    .font(Font(UIFont.appCaption))
+                    .foregroundColor(Color.secondaryText)
                 Spacer()
             }
-            .frame(minHeight: lineHeight)
+            .frame(minHeight: AppTheme.captionSize)
         }
     }
 }

@@ -32,27 +32,32 @@ struct LinkSearchView: View {
                 ).buttonStyle(.plain)
             }
             .frame(height: AppTheme.unit * 10)
-            .padding()
-            Divider()
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(suggestions) { suggestion in
-                        Button(
-                            action: {
-                                withAnimation(
-                                    .easeOut(duration: Duration.fast)
-                                ) {
-                                    onCommit(suggestion.stub.slug)
-                                }
-                            }
+            .padding(AppTheme.padding)
+            List(suggestions) { suggestion in
+                Button(
+                    action: {
+                        withAnimation(
+                            .easeOutCubic(duration: Duration.keyboard)
                         ) {
-                            LinkSuggestionLabelView(
-                                suggestion: suggestion
-                            )
-                        }.buttonStyle(RowButtonStyle())
+                            onCommit(suggestion.stub.slug)
+                        }
+                    },
+                    label: {
+                        LinkSuggestionLabelView(suggestion: suggestion)
                     }
-                }
+                )
+                .modifier(
+                    SuggestionViewModifier(
+                        insets: EdgeInsets(
+                            top: AppTheme.unit2,
+                            leading: AppTheme.padding,
+                            bottom: AppTheme.unit2,
+                            trailing: AppTheme.padding
+                        )
+                    )
+                )
             }
+            .listStyle(.plain)
         }.background(Color.background)
     }
 }

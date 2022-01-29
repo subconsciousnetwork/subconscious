@@ -49,31 +49,33 @@ struct RenameSearchView: View {
                 // and commit.
                 onCommit(slug, text.slugify())
             }
-            .padding(.bottom)
-            .padding(.horizontal)
-            Divider()
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(suggestions) { suggestion in
-                        Button(
-                            action: {
-                                withAnimation(
-                                    .easeOut(duration: Duration.fast)
-                                ) {
-                                    onCommit(
-                                        slug,
-                                        suggestion.stub.slug
-                                    )
-                                }
-                            }
+            .padding(.bottom, AppTheme.padding)
+            .padding(.horizontal, AppTheme.padding)
+            List(suggestions) { suggestion in
+                Button(
+                    action: {
+                        withAnimation(
+                            .easeOutCubic(duration: Duration.keyboard)
                         ) {
-                            RenameSuggestionLabelView(
-                                suggestion: suggestion
-                            )
-                        }.buttonStyle(RowButtonStyle())
+                            onCommit(slug, suggestion.stub.slug)
+                        }
+                    },
+                    label: {
+                        RenameSuggestionLabelView(suggestion: suggestion)
                     }
-                }
+                )
+                .modifier(
+                    SuggestionViewModifier(
+                        insets: EdgeInsets(
+                            top: AppTheme.unit2,
+                            leading: AppTheme.padding,
+                            bottom: AppTheme.unit2,
+                            trailing: AppTheme.padding
+                        )
+                    )
+                )
             }
+            .listStyle(.plain)
         }
         .background(Color.background)
     }

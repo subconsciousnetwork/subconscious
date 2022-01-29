@@ -2,7 +2,7 @@
 //  SuggestionLabelView.swift
 //  Subconscious
 //
-//  Created by Gordon Brander on 9/28/21.
+//  Created by Gordon Brander on 1/28/22.
 //
 
 import SwiftUI
@@ -11,35 +11,35 @@ struct SuggestionLabelView: View {
     var suggestion: Suggestion
     var body: some View {
         switch suggestion {
-        case let .entry(stub):
+        case .entry(let entryLink):
             Label(
                 title: {
                     TitleGroup(
-                        title: stub.title,
-                        subtitle: stub.slug.description
+                        title: entryLink.title,
+                        subtitle: entryLink.slug.description
                     )
                 },
                 icon: {
                     Image(systemName: "doc")
                 }
-            ).labelStyle(SuggestionLabelStyle())
-        case let .search(stub):
+            )
+        case .search(let entryLink):
             Label(
                 title: {
                     TitleGroup(
-                        title: stub.title,
-                        subtitle: "New idea"
+                        title: entryLink.title,
+                        subtitle: entryLink.slug.description
                     )
                 },
                 icon: {
                     Image(systemName: "doc.badge.plus")
                 }
-            ).labelStyle(SuggestionLabelStyle())
+            )
         }
     }
 }
 
-struct SuggestionLabel_Previews: PreviewProvider {
+struct SuggestionLabelView_Previews: PreviewProvider {
     static var previews: some View {
         SuggestionLabelView(
             suggestion: .search(

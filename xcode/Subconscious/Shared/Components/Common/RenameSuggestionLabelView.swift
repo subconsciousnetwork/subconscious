@@ -11,30 +11,30 @@ struct RenameSuggestionLabelView: View {
     var suggestion: Suggestion
     var body: some View {
         switch suggestion {
-        case let .entry(stub):
+        case .entry(let entryLink):
             Label(
                 title: {
                     TitleGroup(
-                        title: stub.slug.description,
+                        title: entryLink.title,
                         subtitle: "Merge ideas"
                     )
                 },
                 icon: {
                     Image(systemName: "arrow.triangle.merge")
                 }
-            ).labelStyle(SuggestionLabelStyle())
-        case let .search(stub):
+            )
+        case .search(let entryLink):
             Label(
                 title: {
                     TitleGroup(
-                        title: stub.slug.description,
+                        title: entryLink.title,
                         subtitle: "Rename idea"
                     )
                 },
                 icon: {
                     Image(systemName: "pencil")
                 }
-            ).labelStyle(SuggestionLabelStyle())
+            )
         }
     }
 }
