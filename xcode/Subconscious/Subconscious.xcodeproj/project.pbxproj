@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		B8082AAA26F3B43A004B10BB /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8082AA926F3B43A004B10BB /* Store.swift */; };
 		B8082AAB26F3B43A004B10BB /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8082AA926F3B43A004B10BB /* Store.swift */; };
+		B8109C2827A8879C00CD2B6D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8109C2727A8879C00CD2B6D /* AppTheme.swift */; };
+		B8109C2927A8879C00CD2B6D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8109C2727A8879C00CD2B6D /* AppTheme.swift */; };
 		B81A535C27275138001A6268 /* Tape.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A535B27275138001A6268 /* Tape.swift */; };
 		B81A535D27275138001A6268 /* Tape.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A535B27275138001A6268 /* Tape.swift */; };
 		B81A535F272751EE001A6268 /* Subtext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A535E272751EE001A6268 /* Subtext.swift */; };
@@ -172,6 +174,7 @@
 
 /* Begin PBXFileReference section */
 		B8082AA926F3B43A004B10BB /* Store.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		B8109C2727A8879C00CD2B6D /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		B81A535B27275138001A6268 /* Tape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tape.swift; sourceTree = "<group>"; };
 		B81A535E272751EE001A6268 /* Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext.swift; sourceTree = "<group>"; };
 		B81EBB0827025C1500B87594 /* TranscludeButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeButtonStyle.swift; sourceTree = "<group>"; };
@@ -293,6 +296,7 @@
 		B8879E9B26F8F3BD00A0B4FF /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				B8EC568E26F4233B00AC64E5 /* AppEnvironment.swift */,
 				B82C3A5226F528B000833CC8 /* DatabaseService.swift */,
 				B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */,
 			);
@@ -345,7 +349,6 @@
 		B8EB29F226F27794006E97C3 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				B8EC568E26F4233B00AC64E5 /* AppEnvironment.swift */,
 				B8EB29F626F27797006E97C3 /* Assets.xcassets */,
 				B8EB2A3826F27CD1006E97C3 /* Components */,
 				B88C977C276425C100B27DF0 /* Fonts */,
@@ -353,6 +356,7 @@
 				B8B54F39271F6C6800B9B507 /* Models */,
 				B8879E9B26F8F3BD00A0B4FF /* Services */,
 				B8EB29F326F27794006E97C3 /* SubconsciousApp.swift */,
+				B8109C2727A8879C00CD2B6D /* AppTheme.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -673,6 +677,7 @@
 				B81EBB0927025C1500B87594 /* TranscludeButtonStyle.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B81A535F272751EE001A6268 /* Subtext.swift in Sources */,
+				B8109C2827A8879C00CD2B6D /* AppTheme.swift in Sources */,
 				B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
 				B8E63EA6270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */,
 				B8CC434327A0815E0079D2F9 /* ModalView.swift in Sources */,
@@ -763,6 +768,7 @@
 				B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
 				B8DEBF1A2798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B8AE34CC276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
+				B8109C2927A8879C00CD2B6D /* AppTheme.swift in Sources */,
 				B8AE34AE276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8AE34C0276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
 				B8EC569026F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
