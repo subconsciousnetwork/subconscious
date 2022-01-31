@@ -30,8 +30,8 @@ extension Slashlink {
 
     static func slashlinkToURLString(_ text: String) -> String? {
         if
-            let slashlink = text.slugifyString(),
-            let url = URL(string: "sub://slashlink/\(slashlink)")
+            let slashlink = text.toSlug(),
+            let url = URL(string: "sub://slashlink/\(slashlink.description)")
         {
             return url.absoluteString
         }
@@ -53,16 +53,16 @@ extension Slashlink {
         name: String,
         ext: String
     ) -> URL? {
-        guard let slug = name.slugifyString() else {
+        guard let slug = name.toSlug() else {
             return nil
         }
-        let url = base.appendingFilename(name: slug, ext: ext)
+        let url = base.appendingFilename(name: slug.description, ext: ext)
         if !FileManager.default.fileExists(atPath: url.path) {
             return url
         }
         while true {
             let rand = String.randomAlphanumeric(length: 8)
-            let slug = "\(slug)-\(rand)"
+            let slug = "\(slug.description)-\(rand)"
             let url = base.appendingFilename(name: slug, ext: ext)
             if !FileManager.default.fileExists(atPath: url.path) {
                 return url

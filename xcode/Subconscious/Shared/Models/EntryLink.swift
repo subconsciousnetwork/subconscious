@@ -19,7 +19,7 @@ struct EntryLink: Hashable, Identifiable {
     }
 
     init?(title: String) {
-        if let slug = title.slugify() {
+        if let slug = title.toSlug() {
             self.title = title
             self.slug = slug
         } else {
