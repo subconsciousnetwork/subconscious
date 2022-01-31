@@ -717,9 +717,13 @@ struct AppUpdate {
         text: String
     ) -> Change<AppModel, AppAction> {
         var model = state
-        model.renameSlugField = text
+        let sluglike = Slug.toSluglikeString(text)
+        model.renameSlugField = sluglike
         let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
-            .searchRenameSuggestions(query: text, current: state.slugToRename)
+            .searchRenameSuggestions(
+                query: sluglike,
+                current: state.slugToRename
+            )
             .map({ suggestions in
                 AppAction.setRenameSuggestions(suggestions)
             })

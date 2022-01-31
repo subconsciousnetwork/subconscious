@@ -9,19 +9,20 @@ import Foundation
 
 /// A slug is a normalized identifier (basically "words-and-dashes")
 struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
-    let id: String
-    var description: String { id }
-
-    /// Create a slug from a string.
-    init?(_ string: String) {
-        // Trim whitespace and leading/trailing slashes
-        let trimmed = string
+    /// Transform a string, making it a candidate for
+    /// becoming a slug.
+    ///
+    /// Note that this function will reformat a string to become "sluglike"
+    /// but may return an empty string, which is not a valid slug.
+    /// This is useful for e.g. representing slugs in TextFields.
+    ///
+    /// If you need a value to truly be a slug, use the Slug constructor.
+    static func toSluglikeString(_ string: String) -> String {
+        string
+            // Trim whitespace and leading/trailing slashes
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard !trimmed.isEmpty else {
-            return nil
-        }
-        self.id = trimmed.lowercased()
+            .lowercased()
             // Replace runs of one or more space with a single dash
             .replacingOccurrences(
                 of: #"\s+"#,
@@ -37,6 +38,20 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
                 range: nil
             )
             .truncatingSafeFileNameLength()
+    }
+
+    let id: String
+    var description: String { id }
+
+    /// Create a slug from a string.
+    init?(_ string: String) {
+        let id = Self.toSluglikeString(string)
+        // If id is empty after all of these transformations,
+        // return nil.
+        guard !id.isEmpty else {
+            return nil
+        }
+        self.id = id
     }
 
     /// Create a slug from a URL.
@@ -81,14 +96,8 @@ extension Slug {
 
 extension String {
     /// Slugify a string, returning a slug.
-    func slugify() -> Slug? {
+    func toSlug() -> Slug? {
         Slug(self)
-    }
-
-    /// Slugify a string, returning a string.
-    /// For now, this is just a proxy to toSlug.
-    func slugifyString() -> String? {
-        self.slugify()?.description
     }
 }
 

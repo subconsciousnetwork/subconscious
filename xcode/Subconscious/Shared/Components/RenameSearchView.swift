@@ -47,7 +47,7 @@ struct RenameSearchView: View {
             .onSubmit {
                 // On submit, slugify contents of searchfield
                 // and commit.
-                onCommit(slug, text.slugify())
+                onCommit(slug, text.toSlug())
             }
             .padding(.bottom, AppTheme.padding)
             .padding(.horizontal, AppTheme.padding)

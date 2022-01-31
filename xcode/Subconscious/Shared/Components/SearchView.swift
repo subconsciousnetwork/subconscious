@@ -37,7 +37,7 @@ struct SearchView: View {
                         .easeOut(duration: Duration.fast)
                     ) {
                         onCommit(
-                            text.slugify(),
+                            text.toSlug(),
                             text
                         )
                     }
