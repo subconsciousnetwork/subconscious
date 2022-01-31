@@ -207,7 +207,7 @@ struct AppUpdate {
         case let .changeKeyboardState(keyboard):
             return changeKeyboardState(state: state, keyboard: keyboard)
         case .appear:
-            return appear(state: state)
+            return appear(state: state, environment: environment)
         case let .openURL(url):
             UIApplication.shared.open(url)
             return Change(state: state)
@@ -439,10 +439,22 @@ struct AppUpdate {
         }
     }
 
-    static func appear(state: AppModel) -> Change<AppModel, AppAction> {
+    static func appear(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
         AppEnvironment.logger.debug(
             "Documents: \(AppEnvironment.documentURL)"
         )
+
+        // Subscribe to keyboard events
+        let keyboardFx: AnyPublisher<AppAction, Never> = environment
+            .keyboardService.state
+            .map({ value in
+                AppAction.changeKeyboardState(value)
+            })
+            .eraseToAnyPublisher()
+
         let fx: AnyPublisher<AppAction, Never> = AppEnvironment.database
             .migrate()
             .map({ success in
@@ -451,6 +463,7 @@ struct AppUpdate {
             .catch({ _ in
                 Just(AppAction.rebuildDatabase)
             })
+            .merge(with: keyboardFx)
             .eraseToAnyPublisher()
         return Change(state: state, fx: fx)
     }
