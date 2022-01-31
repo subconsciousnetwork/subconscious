@@ -59,35 +59,54 @@ public struct Change<State, Action> {
 /// See https://guide.elm-lang.org/architecture/
 /// and https://guide.elm-lang.org/webapps/structure.html
 /// for more about this approach.
-public final class Store<State, Action>: ObservableObject {
-    /// Logger, used when in debug mode
-    private var logger: Logger
-    /// Toggle debug mode
-    public private(set) var debug: Bool
+public final class Store<State, Action, Environment>: ObservableObject {
     /// Stores cancellables by ID
     private var cancellables: [UUID: AnyCancellable] = [:]
-    /// Update function for state
-    public private(set) var update: (State, Action) -> Change<State, Action>
     /// Current state.
     /// All writes to state happen through actions sent to `Store.send`.
     @Published public private(set) var state: State
+    /// Update function for state
+    public private(set) var update: (
+        State,
+        Action,
+        Environment
+    ) -> Change<State, Action>
+    /// Environment, which typically holds references to outside information,
+    /// such as API methods.
+    ///
+    /// This is also a good place to put long-lived services, such as keyboard
+    /// listeners, since its lifetime will match the lifetime of the Store.
+    ///
+    /// Tip: if you need to publish external events to the store, such as
+    /// keyboard events, consider publishing them via a Combine Publisher on
+    /// the environment. You can subscribe to the publisher in `update`, for
+    /// example, by firing an action `onAppear`, then mapping the environment
+    /// publisher to an `fx` and returning it as part of a `Change`.
+    /// Store will hold on to the resulting `fx` publisher until it completes,
+    /// which in the case of long-lived services, could be until the
+    /// app is stopped.
+    public var environment: Environment
+    /// Logger, used when in debug mode
+    public var logger: Logger
+    /// Toggle debug mode
+    public var debug: Bool
 
     init(
-        update: @escaping (State, Action) -> Change<State, Action>,
+        update: @escaping (
+            State,
+            Action,
+            Environment
+        ) -> Change<State, Action>,
         state: State,
-        subscription: AnyPublisher<Action, Never>? = nil,
+        environment: Environment,
         logger: Logger,
         debug: Bool = false
     ) {
         self.update = update
         self.state = state
+        self.environment = environment
         self.logger = logger
         self.debug = debug
-
-        // Subscribe to services effects, if any.
-        if let fx = subscription {
-            self.subscribe(fx: fx)
-        }
     }
 
     /// Create a binding that can update the store.
@@ -143,7 +162,7 @@ public final class Store<State, Action>: ObservableObject {
     /// `.receive(on: DispatchQueue.main)`).
     public func send(action: Action) {
         // Generate next state and effect
-        let change = update(state, action)
+        let change = update(self.state, action, self.environment)
         if debug {
             logger.debug("Action: \(String(reflecting: action))")
             logger.debug("State: \(String(reflecting: change.state))")
