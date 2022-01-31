@@ -198,7 +198,8 @@ struct AppModel: Hashable, Equatable {
 struct AppUpdate {
     static func update(
         state: AppModel,
-        action: AppAction
+        action: AppAction,
+        environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
         switch action {
         case .noop:
@@ -1034,7 +1035,7 @@ struct AppUpdate {
 
 //  MARK: View
 struct AppView: View {
-    @ObservedObject var store: Store<AppModel, AppAction>
+    @ObservedObject var store: SubconsciousStore
 
     var body: some View {
         // Give each element in this ZStack an explicit z-index.

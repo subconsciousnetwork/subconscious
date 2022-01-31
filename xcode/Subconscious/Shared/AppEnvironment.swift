@@ -10,7 +10,9 @@ import SwiftUI
 import os
 
 /// A place for constants and services
-enum AppEnvironment {}
+struct AppEnvironment {
+    let keyboardService = KeyboardService()
+}
 
 //  MARK: Basics
 extension AppEnvironment {
