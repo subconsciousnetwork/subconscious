@@ -98,12 +98,12 @@ struct FileSync {
     static func readFileFingerprints(
         directory: URL,
         ext: String
-    ) throws -> [FileFingerprint] {
-        try FileManager.default.contentsOfDirectory(
+    ) -> [FileFingerprint]? {
+        FileManager.default.listFilesDeep(
             at: directory,
             includingPropertiesForKeys: nil,
             options: .skipsHiddenFiles
-        )
+        )?
         .withPathExtension(ext)
         .compactMap({ url in
             FileFingerprint(url: url, relativeTo: directory)

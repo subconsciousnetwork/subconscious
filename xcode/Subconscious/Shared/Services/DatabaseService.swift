@@ -77,7 +77,7 @@ struct DatabaseService {
             let left = try FileSync.readFileFingerprints(
                 directory: documentURL,
                 ext: "subtext"
-            )
+            ).unwrap()
 
             // Right = Follower (search index)
             let right: [FileFingerprint] = try database.execute(
