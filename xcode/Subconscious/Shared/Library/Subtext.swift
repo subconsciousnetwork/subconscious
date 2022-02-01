@@ -407,3 +407,46 @@ extension Subtext {
         Subtext(markup: "\(self.base)\n\n\(other.base)")
     }
 }
+
+extension Sequence where Iterator.Element == Subtext.Inline {
+    var slashlinks: [Subtext.Slashlink] {
+        self.compactMap({ inline in
+            switch inline {
+            case .slashlink(let slashlink):
+                return slashlink
+            default:
+                return nil
+            }
+        })
+    }
+}
+
+extension Subtext.Block {
+    var inline: [Subtext.Inline] {
+        switch self {
+        case
+            .text(_, let inline),
+            .list(_, let inline),
+            .quote(_, let inline):
+            return inline
+        default:
+            return []
+        }
+    }
+}
+
+extension Subtext {
+    func slashlinkForPosition(_ i: String.Index) -> Subtext.Slashlink? {
+        let slashlinks: [Subtext.Slashlink] = self.blocks.flatMap({ block in
+            block.inline.slashlinks
+        })
+
+        for slashlink in slashlinks {
+            if slashlink.span.range.upperBound == i {
+                return slashlink
+            }
+        }
+
+        return nil
+    }
+}
