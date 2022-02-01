@@ -16,7 +16,7 @@ struct EntryRow: View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
             HStack {
                 Text(entry.title)
-                    .font(Font.appTitle)
+                    .font(Font.appText)
                     .lineLimit(2)
                     .foregroundColor(Color.text)
                     .multilineTextAlignment(.leading)
@@ -24,14 +24,8 @@ struct EntryRow: View {
             }
             HStack {
                 Text(entry.excerpt)
+                    .font(Font.appText)
                     .lineLimit(3)
-                    .foregroundColor(Color.text)
-                    .multilineTextAlignment(.leading)
-                Spacer()
-            }
-            HStack {
-                Text(entry.slug.description)
-                    .lineLimit(1)
                     .foregroundColor(Color.secondaryText)
                     .multilineTextAlignment(.leading)
                 Spacer()

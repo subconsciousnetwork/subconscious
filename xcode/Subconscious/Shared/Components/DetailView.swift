@@ -8,6 +8,18 @@
 import SwiftUI
 
 struct DetailView: View {
+    private static func calcTextFieldHeight(
+        containerHeight: CGFloat,
+        isKeyboardUp: Bool,
+        hasBacklinks: Bool
+    ) -> CGFloat {
+        if !isKeyboardUp && hasBacklinks {
+            return containerHeight - (AppTheme.unit * 24)
+        } else {
+            return containerHeight
+        }
+    }
+
     /// If we have a Slug, we're ready to edit.
     /// If we don't, we have nothing to edit.
     var slug: Slug?
@@ -34,48 +46,49 @@ struct DetailView: View {
             if slug == nil {
                 ProgressScrim()
             } else {
-                GeometryReader { geometry in
-                    PseudoKeyboardToolbarView(
-                        isKeyboardUp: focus == .editor,
-                        toolbarHeight: 48,
-                        toolbar: KeyboardToolbarView(
-                            isSheetPresented: $isLinkSheetPresented,
-                            suggestions: .constant([])
-                        ),
-                        content: { isKeyboardUp, size in
-                            ScrollView(.vertical) {
-                                VStack(spacing: 0) {
-                                    GrowableAttributedTextViewRepresentable(
-                                        attributedText: $editorAttributedText,
-                                        selection: $editorSelection,
-                                        focus: $focus,
-                                        field: .editor,
-                                        onLink: onEditorLink,
-                                        fixedWidth: size.width
+                PseudoKeyboardToolbarView(
+                    isKeyboardUp: focus == .editor,
+                    toolbarHeight: 48,
+                    toolbar: KeyboardToolbarView(
+                        isSheetPresented: $isLinkSheetPresented,
+                        suggestions: .constant([])
+                    ),
+                    content: { isKeyboardUp, size in
+                        ScrollView(.vertical) {
+                            VStack(spacing: 0) {
+                                GrowableAttributedTextViewRepresentable(
+                                    attributedText: $editorAttributedText,
+                                    selection: $editorSelection,
+                                    focus: $focus,
+                                    field: .editor,
+                                    onLink: onEditorLink,
+                                    fixedWidth: size.width
+                                )
+                                .insets(
+                                    EdgeInsets(
+                                        top: AppTheme.padding,
+                                        leading: AppTheme.padding,
+                                        bottom: AppTheme.padding,
+                                        trailing: AppTheme.padding
                                     )
-                                    .insets(
-                                        EdgeInsets(
-                                            top: AppTheme.margin,
-                                            leading: AppTheme.margin,
-                                            bottom: AppTheme.margin,
-                                            trailing: AppTheme.margin
-                                        )
+                                )
+                                .frame(
+                                    minHeight: Self.calcTextFieldHeight(
+                                        containerHeight: size.height,
+                                        isKeyboardUp: isKeyboardUp,
+                                        hasBacklinks: backlinks.count > 0
                                     )
-                                    .frame(
-                                        minHeight: size.height
+                                )
+                                if !isKeyboardUp && backlinks.count > 0 {
+                                    BacklinksView(
+                                        backlinks: backlinks,
+                                        onActivateBacklink: onCommitSearch
                                     )
-                                    if !isKeyboardUp && backlinks.count > 0 {
-                                        Divider()
-                                        BacklinksView(
-                                            backlinks: backlinks,
-                                            onActivateBacklink: onCommitSearch
-                                        )
-                                    }
                                 }
                             }
                         }
-                    )
-                }
+                    }
+                )
             }
         }
         .navigationTitle("")
