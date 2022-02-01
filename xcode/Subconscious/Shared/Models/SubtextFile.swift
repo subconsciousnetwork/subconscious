@@ -56,8 +56,15 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
     }
 
     func write(directory: URL) throws {
+        let fileURL = self.url(directory: directory)
+        let directory = fileURL.deletingLastPathComponent()
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true,
+            attributes: nil
+        )
         try content.write(
-            to: url(directory: directory),
+            to: fileURL,
             atomically: true,
             encoding: .utf8
         )
