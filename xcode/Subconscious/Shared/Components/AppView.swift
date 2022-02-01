@@ -237,7 +237,16 @@ struct AppUpdate {
             environment.logger.debug(
                 "File sync finished: \(changes)"
             )
-            return Change(state: state)
+
+            // Refresh lists after completing sync.
+            // This ensures that files which were deleted outside the app
+            // are removed from lists once sync is complete.
+            let fx: AnyPublisher<AppAction, Never> = Just(
+                AppAction.refreshAll
+            )
+            .eraseToAnyPublisher()
+
+            return Change(state: state, fx: fx)
         case let .syncFailure(message):
             environment.logger.warning(
                 "File sync failed: \(message)"
