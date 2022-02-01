@@ -13,30 +13,34 @@ struct BacklinksView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            HStack {
-                Text(
-                    "Backlinks"
-                ).font(
-                    Font.appCaption
-                )
-                Spacer()
-            }.padding(
-                .horizontal,
-                AppTheme.unit4
-            )
-            ForEach(backlinks) { entry in
-                Button(
-                    action: {
-                        onActivateBacklink(entry.slug.description)
-                    },
-                    label: {
-                        EntryRow(entry: entry)
-                    }
-                ).buttonStyle(TranscludeButtonStyle())
+            VStack(spacing: 0) {
+                HStack {
+                    Text(
+                        "Backlinks"
+                    )
+                    .font(Font.appCaption)
+                    Spacer()
+                }
+                .padding(.horizontal, AppTheme.unit4)
+                .padding(.vertical, AppTheme.unit2)
+                .background(Color.secondaryBackground)
+                ForEach(backlinks) { entry in
+                    Divider()
+                    Button(
+                        action: {
+                            onActivateBacklink(entry.slug.description)
+                        },
+                        label: {
+                            EntryRow(entry: entry)
+                        }
+                    )
+                    .buttonStyle(BacklinkButtonStyle())
+                }
             }
-        }.padding(
-            AppTheme.margin
-        )
+            .background(Color.secondaryBackground)
+            .cornerRadius(AppTheme.cornerRadiusLg)
+        }
+        .padding(AppTheme.padding)
     }
 }
 

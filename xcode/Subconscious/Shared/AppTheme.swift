@@ -18,7 +18,6 @@ extension AppTheme {
     static let unit4 = unit * 4
     static let padding = unit * 4
     static let tightPadding = unit * 3
-    static let margin = unit * 4
     static let icon: CGFloat = unit * 6
     static let textSize: CGFloat = 16
     static let captionSize: CGFloat = 12

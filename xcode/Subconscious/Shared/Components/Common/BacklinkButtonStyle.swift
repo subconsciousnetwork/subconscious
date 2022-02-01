@@ -1,5 +1,5 @@
 //
-//  TranscludeButtonStyle.swift
+//  BacklinkButtonStyle.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 9/27/21.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TranscludeButtonStyle: ButtonStyle {
+struct BacklinkButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
@@ -18,13 +18,12 @@ struct TranscludeButtonStyle: ButtonStyle {
             .contentShape(Rectangle())
             .background(
                 configuration.isPressed ?
-                Color.secondaryBackgroundPressed :
-                Color.secondaryBackground
+                Color.backgroundPressed :
+                Color.clear
             )
             .foregroundColor(!isEnabled ? Color.textDisabled : Color.text)
-            .cornerRadius(AppTheme.cornerRadius)
             .animation(
-                .easeOut(duration: Duration.fast),
+                .easeOutCubic(duration: Duration.fast),
                 value: configuration.isPressed
             )
     }
