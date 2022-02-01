@@ -37,6 +37,14 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
                 options: .regularExpression,
                 range: nil
             )
+            // Replace all instances of two or more consecutive slashes
+            // with a single slash.
+            .replacingOccurrences(
+                of: #"/+"#,
+                with: "/",
+                options: .regularExpression,
+                range: nil
+            )
             .truncatingSafeFileNameLength()
     }
 
