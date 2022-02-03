@@ -26,20 +26,24 @@
 
 import SwiftUI
 
-protocol Renderable {
+protocol MarkupRenderable {
     func render() -> NSAttributedString
 }
 
-protocol Parseable {
+protocol MarkupParseable {
     init(markup: String)
 }
 
 /// A textview that grows to the height of its content
 struct MarkupTextViewRepresenable<Focus, Dom>: UIViewRepresentable
-where Focus: Hashable, Dom: Equatable, Dom: Renderable, Dom: Parseable {
+where
+    Focus: Hashable,
+    Dom: Equatable,
+    Dom: MarkupRenderable,
+    Dom: MarkupParseable
+{
     class FixedWidthTextView: UITextView {
         var fixedWidth: CGFloat = 0
-
         override var intrinsicContentSize: CGSize {
             sizeThatFits(
                 CGSize(
@@ -77,20 +81,20 @@ where Focus: Hashable, Dom: Equatable, Dom: Renderable, Dom: Parseable {
             )
         }
 
-        /// Intercept changes to textview, parse and render them
-        func textView(
-            _ textView: UITextView,
-            shouldChangeTextIn range: NSRange,
-            replacementText text: String
-        ) -> Bool {
-            let text = (textView.attributedText.string as NSString)
-                .replacingCharacters(in: range, with: text)
-            let dom = Dom(markup: text)
+        /// Render user changes to textview
+        func textViewDidChange(_ view: UITextView) {
+            // Return early if view is updating.
+            guard !isUIViewUpdating else {
+                return
+            }
+            let dom = Dom(markup: view.attributedText.string)
             if representable.dom != dom {
-                textView.attributedText = dom.render()
+                let selectedRange = view.selectedRange
+                view.attributedText = dom.render()
+                view.selectedRange = selectedRange
+                view.invalidateIntrinsicContentSize()
                 representable.dom = dom
             }
-            return false
         }
 
         /// Handle editing begin (focus)
