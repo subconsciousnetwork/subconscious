@@ -531,6 +531,10 @@ struct AppUpdate {
                 AppAction.setLinkSearch(slashlink.description)
             )
             .eraseToAnyPublisher()
+
+            // Set slashlink on model
+            model.editorSelectedSlashlink = slashlink
+
             return Change(state: model, fx: fx)
         }
 
@@ -549,21 +553,11 @@ struct AppUpdate {
     }
 
     /// Set editor selection.
-    /// If range is invalid, logs and does nothing.
     static func setEditorSelection(
         state: AppModel,
         range nsRange: NSRange,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
-        // Check if range is valid
-        guard nsRange.isValidRange(
-            for: state.editorAttributedText.string
-        ) else {
-            environment.logger.log(
-                "Invalid editor selection range: \(nsRange)"
-            )
-            return Change(state: state)
-        }
         var model = state
         model.editorSelection = nsRange
         return Change(state: model)
@@ -1166,13 +1160,24 @@ struct AppUpdate {
         state: AppModel,
         slug: Slug
     ) -> Change<AppModel, AppAction> {
+        var range = state.editorSelection
+        // If there is a selected slashlink, use that range
+        // instead of selection
+        if let slashlink = state.editorSelectedSlashlink
+        {
+            range = NSRange(
+                slashlink.span.range,
+                in: state.editorAttributedText.string
+            )
+        }
+
         let fx: AnyPublisher<AppAction, Never> = Just(
             AppAction.setLinkSheetPresented(false)
         )
         .merge(
             with: Just(
                 AppAction.insertEditorText(
-                    range: state.editorSelection,
+                    range: range,
                     text: slug.toSlashlink()
                 )
             )
