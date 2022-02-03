@@ -51,7 +51,7 @@ struct DetailView: View {
                     toolbarHeight: 48,
                     toolbar: KeyboardToolbarView(
                         isSheetPresented: $isLinkSheetPresented,
-                        suggestions: .constant([])
+                        suggestions: linkSuggestions
                     ),
                     content: { isKeyboardUp, size in
                         ScrollView(.vertical) {
