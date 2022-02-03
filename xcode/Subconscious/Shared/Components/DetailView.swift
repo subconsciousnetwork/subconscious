@@ -49,7 +49,8 @@ struct DetailView: View {
                 PseudoKeyboardToolbarView(
                     isKeyboardUp: focus == .editor,
                     toolbarHeight: 48,
-                    toolbar: KeyboardToolbarView(
+                    toolbar: DetailKeyboardToolbarView(
+                        onCommit: onCommitLinkSearch,
                         isSheetPresented: $isLinkSheetPresented,
                         suggestions: linkSuggestions
                     ),

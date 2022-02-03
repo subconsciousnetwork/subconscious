@@ -1,5 +1,5 @@
 //
-//  KeyboardToolbarView.swift
+//  DetailKeyboardToolbarView.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 9/20/21.
@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-struct KeyboardToolbarView: View {
+struct DetailKeyboardToolbarView: View {
+    var onCommit: (Slug) -> Void
     @Binding var isSheetPresented: Bool
     var suggestions: [Suggestion]
 
@@ -31,9 +32,10 @@ struct KeyboardToolbarView: View {
                 if let suggestion = suggestions.first {
                     Button(
                         action: {
+                            onCommit(suggestion.stub.slug)
                         },
                         label: {
-                            Text(suggestion.description)
+                            Text(suggestion.stub.slug.description)
                                 .lineLimit(1)
                         }
                     )
@@ -50,7 +52,8 @@ struct KeyboardToolbarView: View {
 
 struct KeyboardToolbarView_Previews: PreviewProvider {
     static var previews: some View {
-        KeyboardToolbarView(
+        DetailKeyboardToolbarView(
+            onCommit: { slug in },
             isSheetPresented: .constant(false),
             suggestions: [
                 .search(
