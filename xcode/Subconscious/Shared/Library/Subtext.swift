@@ -9,6 +9,15 @@ import Foundation
 import SwiftUI
 
 struct Subtext: Hashable, Equatable {
+    /// Implement custom equatable for Subtext.
+    /// Since parsing is deterministic, we can simply compare base strings.
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.base == rhs.base
+    }
+
+    /// Empty document
+    static let empty = Self(markup: "")
+
     enum Block: Hashable, Equatable {
         case text(span: Substring, inline: [Inline])
         case list(span: Substring, inline: [Inline])
@@ -307,7 +316,7 @@ struct Subtext: Hashable, Equatable {
 
 extension Subtext {
     /// Render markup verbatim with syntax highlighting and links
-    func renderMarkup(url: (String) -> String?) -> NSAttributedString {
+    func render(url: (String) -> String?) -> NSAttributedString {
         let attributedString = NSMutableAttributedString(string: base)
         let baseNSRange = NSRange(
             base.startIndex...,
