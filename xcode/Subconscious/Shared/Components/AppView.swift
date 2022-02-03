@@ -90,6 +90,7 @@ enum AppAction {
     case showDetail(Bool)
 
     // Editor
+    case renderEditorMarkup(String)
     case setEditorAttributedText(NSAttributedString)
     case setEditorSelection(NSRange)
     case insertEditorText(
@@ -364,16 +365,21 @@ struct AppUpdate {
                 error: error,
                 environment: environment
             )
+        case let .renderEditorMarkup(markup):
+            return renderEditorMarkup(
+                state: state,
+                markup: markup
+            )
         case let .setEditorAttributedText(attributedText):
-            // Render attributes from markup if text has changed
+            // `setEditorAttributedText` comes from changes
+            // in the editor UITextView.
+            // We want to make sure any text typed gets rendered.
+            // Render attributes from markup if text has changed.
             if !state.editorAttributedText.isEqual(to: attributedText) {
-                // Rerender attributes from markup, then assign to
-                // model.
-                let model = renderEditorMarkup(
+                return renderEditorMarkup(
                     state: state,
                     markup: attributedText.string
                 )
-                return Change(state: model)
             }
             return Change(state: state)
         case let .setEditorSelection(range):
@@ -431,13 +437,14 @@ struct AppUpdate {
                 environment: environment
             )
         case let .updateDetail(results):
-            var model = renderEditorMarkup(
-                state: state,
-                markup: results.entry.content
+            let fx: AnyPublisher<AppAction, Never> = Just(
+                AppAction.renderEditorMarkup(results.entry.content)
             )
+            .eraseToAnyPublisher()
+            var model = state
             model.slug = results.slug
             model.backlinks = results.backlinks
-            return Change(state: model)
+            return Change(state: model, fx: fx)
         case let .failDetail(message):
             environment.logger.log(
                 "Failed to get details for search: \(message)"
@@ -490,7 +497,7 @@ struct AppUpdate {
     static func renderEditorMarkup(
         state: AppModel,
         markup: String
-    ) -> AppModel {
+    ) -> Change<AppModel, AppAction> {
         var model = state
 
         let subtext = Subtext(markup: markup)
@@ -499,6 +506,8 @@ struct AppUpdate {
             url: Slashlink.slashlinkToURLString
         )
 
+        // If there is a slashlink at cursor, change state and
+        // issue a link search.
         if
             let range = Range(
                 state.editorSelection,
@@ -508,10 +517,15 @@ struct AppUpdate {
                 range.upperBound
             )
         {
-            model.editorSelectedSlashlink = slashlink
+            let fx: AnyPublisher<AppAction, Never> = Just(
+                AppAction.setLinkSearch(slashlink.description)
+            )
+            .eraseToAnyPublisher()
+            return Change(state: model, fx: fx)
         }
 
-        return model
+        // ...Otherwise just change state.
+        return Change(state: model)
     }
 
     /// Set all editor properties to initial values
@@ -545,26 +559,8 @@ struct AppUpdate {
             in: range,
             with: text
         )
-        // Render editor markup
-        var model = renderEditorMarkup(
-            state: state,
-            markup: markup
-        )
 
-        // Find inserted range by searching for our inserted text
-        // AFTER the cursor position.
-        if let insertedRange = markup.range(
-            of: text,
-            range: range.lowerBound..<markup.endIndex
-        ) {
-            // Convert Range to NSRange of editorAttributedText,
-            // assign to editorSelection.
-            model.editorSelection = NSRange(
-                insertedRange,
-                in: markup
-            )
-        }
-        return Change(state: model)
+        return renderEditorMarkup(state: state, markup: markup)
     }
 
     /// Change state of keyboard
@@ -1102,10 +1098,11 @@ struct AppUpdate {
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
         var model = state
-        model.linkSearchText = text
+        let sluglike = Slug.toSluglikeString(text)
+        model.linkSearchText = sluglike
 
         let fx: AnyPublisher<AppAction, Never> = environment.database
-            .searchSuggestions(query: text)
+            .searchSuggestions(query: sluglike)
             .map({ suggestions in
                 AppAction.setLinkSuggestions(suggestions)
             })
