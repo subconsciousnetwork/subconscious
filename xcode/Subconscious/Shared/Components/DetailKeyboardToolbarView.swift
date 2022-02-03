@@ -28,8 +28,8 @@ struct DetailKeyboardToolbarView: View {
                             )
                     }
                 )
-                Divider()
-                if let suggestion = suggestions.first {
+                ForEach(suggestions.prefix(2)) { suggestion in
+                    Divider()
                     Button(
                         action: {
                             onCommit(suggestion.stub.slug)
