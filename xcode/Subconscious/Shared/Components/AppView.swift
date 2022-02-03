@@ -496,7 +496,8 @@ struct AppUpdate {
     /// Given a model and a markup string, return an updated model.
     static func renderEditorMarkup(
         state: AppModel,
-        markup: String
+        markup: String,
+        selection: Range<String.Index>? = nil
     ) -> Change<AppModel, AppAction> {
         var model = state
 
@@ -505,6 +506,14 @@ struct AppUpdate {
         model.editorAttributedText = subtext.renderMarkup(
             url: Slashlink.slashlinkToURLString
         )
+
+        // If a selection was given with the text, set it
+        if let selection = selection {
+            model.editorSelection = NSRange(
+                selection,
+                in: model.editorAttributedText.string
+            )
+        }
 
         // If there is a slashlink at cursor, change state and
         // issue a link search.
@@ -559,6 +568,19 @@ struct AppUpdate {
             in: range,
             with: text
         )
+
+        // Find new cursor position
+        if let cursor = markup.index(
+            range.lowerBound,
+            offsetBy: text.count,
+            limitedBy: markup.endIndex
+        ) {
+            return renderEditorMarkup(
+                state: state,
+                markup: markup,
+                selection: cursor..<cursor
+            )
+        }
 
         return renderEditorMarkup(state: state, markup: markup)
     }
