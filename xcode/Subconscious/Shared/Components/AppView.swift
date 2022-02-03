@@ -383,9 +383,11 @@ struct AppUpdate {
             }
             return Change(state: state)
         case let .setEditorSelection(range):
-            var model = state
-            model.editorSelection = range
-            return Change(state: model)
+            return setEditorSelection(
+                state: state,
+                range: range,
+                environment: environment
+            )
         case let .insertEditorText(range, text):
             return insertEditorText(
                 state: state,
@@ -497,7 +499,7 @@ struct AppUpdate {
     static func renderEditorMarkup(
         state: AppModel,
         markup: String,
-        selection: Range<String.Index>? = nil
+        selection: NSRange? = nil
     ) -> Change<AppModel, AppAction> {
         var model = state
 
@@ -507,12 +509,11 @@ struct AppUpdate {
             url: Slashlink.slashlinkToURLString
         )
 
-        // If a selection was given with the text, set it
+        // If a selection was given with the text, and it is valid, set it.
         if let selection = selection {
-            model.editorSelection = NSRange(
-                selection,
-                in: model.editorAttributedText.string
-            )
+            if selection.isValidRange(for: model.editorAttributedText.string) {
+                model.editorSelection = selection
+            }
         }
 
         // If there is a slashlink at cursor, change state and
@@ -547,6 +548,27 @@ struct AppUpdate {
         return model
     }
 
+    /// Set editor selection.
+    /// If range is invalid, logs and does nothing.
+    static func setEditorSelection(
+        state: AppModel,
+        range nsRange: NSRange,
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
+        // Check if range is valid
+        guard nsRange.isValidRange(
+            for: state.editorAttributedText.string
+        ) else {
+            environment.logger.log(
+                "Invalid editor selection range: \(nsRange)"
+            )
+            return Change(state: state)
+        }
+        var model = state
+        model.editorSelection = nsRange
+        return Change(state: model)
+    }
+
     static func insertEditorText(
         state: AppModel,
         range nsRange: NSRange,
@@ -578,7 +600,7 @@ struct AppUpdate {
             return renderEditorMarkup(
                 state: state,
                 markup: markup,
-                selection: cursor..<cursor
+                selection: NSRange(cursor..<cursor, in: markup)
             )
         }
 
