@@ -70,3 +70,20 @@ extension Slashlink {
         }
     }
 }
+
+// Implement renderable for Subtext
+extension Subtext: MarkupParseable, MarkupRenderable {
+    func render() -> NSAttributedString {
+        self.render(url: { text in
+            if
+                let slashlink = text.toSlug(),
+                let url = URL(
+                    string: "sub://slashlink/\(slashlink.description)"
+                )
+            {
+                return url.absoluteString
+            }
+            return nil
+        })
+    }
+}
