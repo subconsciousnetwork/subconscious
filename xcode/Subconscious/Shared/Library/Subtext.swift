@@ -26,20 +26,28 @@ struct Subtext: Hashable, Equatable {
         }
     }
 
-    struct Link: Hashable, Equatable {
+    struct Link: Hashable, Equatable, CustomStringConvertible {
         var span: Substring
+        var description: String {
+            String(span)
+        }
     }
 
-    struct Bracketlink: Hashable, Equatable {
+    struct Bracketlink: Hashable, Equatable, CustomStringConvertible {
         var span: Substring
-
+        var description: String {
+            String(span)
+        }
         func body() -> Substring {
             span.dropFirst().dropLast()
         }
     }
 
-    struct Slashlink: Hashable, Equatable {
+    struct Slashlink: Hashable, Equatable, CustomStringConvertible {
         var span: Substring
+        var description: String {
+            String(span)
+        }
     }
 
     enum Inline: Hashable, Equatable {
