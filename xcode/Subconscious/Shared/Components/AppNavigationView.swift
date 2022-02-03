@@ -80,9 +80,9 @@ struct AppNavigationView: View {
                                 tag: AppAction.setFocus,
                                 animation: .easeOut(duration: Duration.normal)
                             ),
-                            editorAttributedText: store.binding(
-                                get: \.editorAttributedText,
-                                tag: AppAction.setEditorAttributedText
+                            editorDom: store.binding(
+                                get: \.editorDom,
+                                tag: AppAction.setEditorDom
                             ),
                             editorSelection: store.binding(
                                 get: \.editorSelection,

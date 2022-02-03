@@ -90,8 +90,7 @@ enum AppAction {
     case showDetail(Bool)
 
     // Editor
-    case renderEditorMarkup(String)
-    case setEditorAttributedText(NSAttributedString)
+    case setEditorDom(Subtext)
     case setEditorSelection(NSRange)
     case insertEditorText(
         range: NSRange,
@@ -172,8 +171,8 @@ struct AppModel: Hashable, Equatable {
     var suggestions: [Suggestion] = []
 
     // Editor
-    /// Attributed text assigned to the editor UITextView
-    var editorAttributedText = NSAttributedString("")
+    /// Subtext object model
+    var editorDom: Subtext = .empty
     /// Editor selection corresponds with `editorAttributedText`
     var editorSelection = NSMakeRange(0, 0)
     /// Slashlink currently being written (if any)
@@ -365,23 +364,17 @@ struct AppUpdate {
                 error: error,
                 environment: environment
             )
-        case let .renderEditorMarkup(markup):
-            return renderEditorMarkup(
-                state: state,
-                markup: markup
-            )
-        case let .setEditorAttributedText(attributedText):
+        case let .setEditorDom(dom):
             // `setEditorAttributedText` comes from changes
             // in the editor UITextView.
             // We want to make sure any text typed gets rendered.
             // Render attributes from markup if text has changed.
-            if !state.editorAttributedText.isEqual(to: attributedText) {
-                return renderEditorMarkup(
-                    state: state,
-                    markup: attributedText.string
-                )
+            guard state.editorDom != dom else {
+                return Change(state: state)
             }
-            return Change(state: state)
+            var model = state
+            model.editorDom = dom
+            return Change(state: model)
         case let .setEditorSelection(range):
             return setEditorSelection(
                 state: state,
@@ -440,7 +433,7 @@ struct AppUpdate {
             )
         case let .updateDetail(results):
             let fx: AnyPublisher<AppAction, Never> = Just(
-                AppAction.renderEditorMarkup(results.entry.content)
+                AppAction.setEditorDom(results.entry.dom)
             )
             .eraseToAnyPublisher()
             var model = state
@@ -494,58 +487,10 @@ struct AppUpdate {
         }
     }
 
-    /// Renders markup, assigning it to editor text in a model.
-    /// Given a model and a markup string, return an updated model.
-    static func renderEditorMarkup(
-        state: AppModel,
-        markup: String,
-        selection: NSRange? = nil
-    ) -> Change<AppModel, AppAction> {
-        var model = state
-
-        let subtext = Subtext(markup: markup)
-
-        model.editorAttributedText = subtext.renderMarkup(
-            url: Slashlink.slashlinkToURLString
-        )
-
-        // If a selection was given with the text, and it is valid, set it.
-        if let selection = selection {
-            if selection.isValidRange(for: model.editorAttributedText.string) {
-                model.editorSelection = selection
-            }
-        }
-
-        // If there is a slashlink at cursor, change state and
-        // issue a link search.
-        if
-            let range = Range(
-                state.editorSelection,
-                in: subtext.base
-            ),
-            let slashlink = subtext.slashlinkForPosition(
-                range.upperBound
-            )
-        {
-            let fx: AnyPublisher<AppAction, Never> = Just(
-                AppAction.setLinkSearch(slashlink.description)
-            )
-            .eraseToAnyPublisher()
-
-            // Set slashlink on model
-            model.editorSelectedSlashlink = slashlink
-
-            return Change(state: model, fx: fx)
-        }
-
-        // ...Otherwise just change state.
-        return Change(state: model)
-    }
-
     /// Set all editor properties to initial values
     static func resetEditor(state: AppModel) -> AppModel {
         var model = state
-        model.editorAttributedText = NSAttributedString("")
+        model.editorDom = .empty
         model.editorSelection = NSMakeRange(0, 0)
         model.editorSelectedSlashlink = nil
         model.focus = nil
@@ -569,36 +514,37 @@ struct AppUpdate {
         text: String,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
-        guard let range = Range(
-            nsRange,
-            in: state.editorAttributedText.string
-        ) else {
-            environment.logger.log(
-                "Cannot replace text. Invalid range: \(nsRange))"
-            )
-            return Change(state: state)
-        }
-
-        // Replace selected range with committed link search text.
-        let markup = state.editorAttributedText.string.replacingCharacters(
-            in: range,
-            with: text
-        )
-
-        // Find new cursor position
-        if let cursor = markup.index(
-            range.lowerBound,
-            offsetBy: text.count,
-            limitedBy: markup.endIndex
-        ) {
-            return renderEditorMarkup(
-                state: state,
-                markup: markup,
-                selection: NSRange(cursor..<cursor, in: markup)
-            )
-        }
-
-        return renderEditorMarkup(state: state, markup: markup)
+// FIXME: editorAttributedText
+//        guard let range = Range(
+//            nsRange,
+//            in: state.editorAttributedText.string
+//        ) else {
+//            environment.logger.log(
+//                "Cannot replace text. Invalid range: \(nsRange))"
+//            )
+//            return Change(state: state)
+//        }
+        return Change(state: state)
+//        // Replace selected range with committed link search text.
+//        let markup = state.editorAttributedText.string.replacingCharacters(
+//            in: range,
+//            with: text
+//        )
+//
+//        // Find new cursor position
+//        if let cursor = markup.index(
+//            range.lowerBound,
+//            offsetBy: text.count,
+//            limitedBy: markup.endIndex
+//        ) {
+//            return renderEditorMarkup(
+//                state: state,
+//                markup: markup,
+//                selection: NSRange(cursor..<cursor, in: markup)
+//            )
+//        }
+//
+//        return renderEditorMarkup(state: state, markup: markup)
     }
 
     /// Change state of keyboard
@@ -1160,34 +1106,36 @@ struct AppUpdate {
         state: AppModel,
         slug: Slug
     ) -> Change<AppModel, AppAction> {
-        var range = state.editorSelection
-        // If there is a selected slashlink, use that range
-        // instead of selection
-        if let slashlink = state.editorSelectedSlashlink
-        {
-            range = NSRange(
-                slashlink.span.range,
-                in: state.editorAttributedText.string
-            )
-        }
-
-        let fx: AnyPublisher<AppAction, Never> = Just(
-            AppAction.setLinkSheetPresented(false)
-        )
-        .merge(
-            with: Just(
-                AppAction.insertEditorText(
-                    range: range,
-                    text: slug.toSlashlink()
-                )
-            )
-        )
-        .eraseToAnyPublisher()
-
-        var model = state
-        model.linkSearchText = ""
-
-        return Change(state: model, fx: fx)
+        return Change(state: state)
+        // FIXME: editorAttributedText
+//        var range = state.editorSelection
+//        // If there is a selected slashlink, use that range
+//        // instead of selection
+//        if let slashlink = state.editorSelectedSlashlink
+//        {
+//            range = NSRange(
+//                slashlink.span.range,
+//                in: state.editorAttributedText.string
+//            )
+//        }
+//
+//        let fx: AnyPublisher<AppAction, Never> = Just(
+//            AppAction.setLinkSheetPresented(false)
+//        )
+//        .merge(
+//            with: Just(
+//                AppAction.insertEditorText(
+//                    range: range,
+//                    text: slug.toSlashlink()
+//                )
+//            )
+//        )
+//        .eraseToAnyPublisher()
+//
+//        var model = state
+//        model.linkSearchText = ""
+//
+//        return Change(state: model, fx: fx)
     }
 
     /// Save entry to database
@@ -1201,7 +1149,7 @@ struct AppUpdate {
             // Parse editorAttributedText to entry.
             let entry = SubtextFile(
                 slug: slug,
-                content: model.editorAttributedText.string
+                dom: model.editorDom
             )
             let fx: AnyPublisher<AppAction, Never> = environment.database
                 .writeEntry(
