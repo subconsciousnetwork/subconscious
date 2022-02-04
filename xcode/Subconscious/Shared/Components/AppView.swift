@@ -101,7 +101,7 @@ enum AppAction {
     case setLinkSheetPresented(Bool)
     case setLinkSearch(String)
     case commitLinkSearch(Slug)
-    case setLinkSuggestions([Suggestion])
+    case setLinkSuggestions(Suggestions)
     case linkSuggestionsFailure(String)
 
     // Saving entries
@@ -184,7 +184,7 @@ struct AppModel: Hashable, Equatable {
     /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
     var linkSearchText = ""
-    var linkSuggestions: [Suggestion] = []
+    var linkSuggestions: Suggestions = .empty
 }
 
 //  MARK: Update
@@ -1132,7 +1132,7 @@ struct AppUpdate {
         model.linkSearchText = sluglike
 
         let fx: AnyPublisher<AppAction, Never> = environment.database
-            .searchSuggestions(query: sluglike)
+            .searchLinkSuggestions(query: text)
             .map({ suggestions in
                 AppAction.setLinkSuggestions(suggestions)
             })

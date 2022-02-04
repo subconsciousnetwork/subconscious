@@ -24,7 +24,7 @@ struct DetailView: View {
     /// If we don't, we have nothing to edit.
     var slug: Slug?
     var backlinks: [EntryStub]
-    var linkSuggestions: [Suggestion]
+    var linkSuggestions: Suggestions
     @Binding var focus: AppModel.Focus?
     @Binding var editorDom: Subtext
     @Binding var editorSelection: NSRange

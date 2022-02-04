@@ -9,7 +9,7 @@ import SwiftUI
 
 struct LinkSearchView: View {
     var placeholder: String
-    var suggestions: [Suggestion]
+    var suggestions: Suggestions
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     var onCancel: () -> Void
@@ -33,29 +33,37 @@ struct LinkSearchView: View {
             }
             .frame(height: AppTheme.unit * 10)
             .padding(AppTheme.padding)
-            List(suggestions) { suggestion in
-                Button(
-                    action: {
-                        withAnimation(
-                            .easeOutCubic(duration: Duration.keyboard)
-                        ) {
-                            onCommit(suggestion.stub.slug)
-                        }
-                    },
-                    label: {
-                        LinkSuggestionLabelView(suggestion: suggestion)
-                    }
-                )
-                .modifier(
-                    SuggestionViewModifier(
-                        insets: EdgeInsets(
-                            top: AppTheme.unit2,
-                            leading: AppTheme.padding,
-                            bottom: AppTheme.unit2,
-                            trailing: AppTheme.padding
+            List {
+                Section(header: Text("Entries")) {
+                    ForEach(suggestions.entries) { suggestion in
+                        Button(
+                            action: {
+                                withAnimation(
+                                    .easeOutCubic(duration: Duration.keyboard)
+                                ) {
+                                    onCommit(suggestion.slug)
+                                }
+                            },
+                            label: {
+                                StubLabelView(
+                                    icon: Image(systemName: "doc"),
+                                    title: suggestion.slug.description,
+                                    subtitle: #"Link to "\#(suggestion.title)""#
+                                )
+                            }
                         )
-                    )
-                )
+                        .modifier(
+                            SuggestionViewModifier(
+                                insets: EdgeInsets(
+                                    top: AppTheme.unit2,
+                                    leading: AppTheme.padding,
+                                    bottom: AppTheme.unit2,
+                                    trailing: AppTheme.padding
+                                )
+                            )
+                        )
+                    }
+                }
             }
             .listStyle(.plain)
         }.background(Color.background)
@@ -66,7 +74,7 @@ struct LinkSearchView_Previews: PreviewProvider {
     static var previews: some View {
         LinkSearchView(
             placeholder: "Search or create...",
-            suggestions: [],
+            suggestions: .empty,
             text: .constant(""),
             focus: .constant(nil),
             onCancel: {},
