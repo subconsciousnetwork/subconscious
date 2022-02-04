@@ -90,7 +90,11 @@ enum AppAction {
     case showDetail(Bool)
 
     // Editor
-    case setEditorDom(Subtext)
+    case setEditorDom(dom: Subtext)
+    case setEditorDomAndSelection(
+        dom: Subtext,
+        selection: Range<String.Index>
+    )
     case setEditorSelection(NSRange)
     case insertEditorText(
         range: NSRange,
@@ -365,16 +369,16 @@ struct AppUpdate {
                 environment: environment
             )
         case let .setEditorDom(dom):
-            // `setEditorAttributedText` comes from changes
-            // in the editor UITextView.
-            // We want to make sure any text typed gets rendered.
-            // Render attributes from markup if text has changed.
-            guard state.editorDom != dom else {
-                return Change(state: state)
-            }
-            var model = state
-            model.editorDom = dom
-            return Change(state: model)
+            return setEditorDom(
+                state: state,
+                dom: dom
+            )
+        case let .setEditorDomAndSelection(dom, selection):
+            return setEditorDom(
+                state: state,
+                dom: dom,
+                selection: selection
+            )
         case let .setEditorSelection(range):
             return setEditorSelection(
                 state: state,
@@ -433,7 +437,7 @@ struct AppUpdate {
             )
         case let .updateDetail(results):
             let fx: AnyPublisher<AppAction, Never> = Just(
-                AppAction.setEditorDom(results.entry.dom)
+                AppAction.setEditorDom(dom: results.entry.dom)
             )
             .eraseToAnyPublisher()
             var model = state
@@ -497,6 +501,32 @@ struct AppUpdate {
         return model
     }
 
+    static func setEditorDom(
+        state: AppModel,
+        dom: Subtext,
+        selection: Range<String.Index>? = nil
+    ) -> Change<AppModel, AppAction> {
+        // `setEditorAttributedText` comes from changes
+        // in the editor UITextView.
+        // We want to make sure any text typed gets rendered.
+        // Render attributes from markup if text has changed.
+        guard state.editorDom != dom else {
+            return Change(state: state)
+        }
+        var model = state
+        model.editorDom = dom
+
+        // Set selection, if passed
+        if let selection = selection {
+            model.editorSelection = NSRange(
+                selection,
+                in: model.editorDom.base
+            )
+        }
+
+        return Change(state: model)
+    }
+
     /// Set editor selection.
     static func setEditorSelection(
         state: AppModel,
@@ -514,37 +544,42 @@ struct AppUpdate {
         text: String,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
-// FIXME: editorAttributedText
-//        guard let range = Range(
-//            nsRange,
-//            in: state.editorAttributedText.string
-//        ) else {
-//            environment.logger.log(
-//                "Cannot replace text. Invalid range: \(nsRange))"
-//            )
-//            return Change(state: state)
-//        }
-        return Change(state: state)
-//        // Replace selected range with committed link search text.
-//        let markup = state.editorAttributedText.string.replacingCharacters(
-//            in: range,
-//            with: text
-//        )
-//
-//        // Find new cursor position
-//        if let cursor = markup.index(
-//            range.lowerBound,
-//            offsetBy: text.count,
-//            limitedBy: markup.endIndex
-//        ) {
-//            return renderEditorMarkup(
-//                state: state,
-//                markup: markup,
-//                selection: NSRange(cursor..<cursor, in: markup)
-//            )
-//        }
-//
-//        return renderEditorMarkup(state: state, markup: markup)
+        guard let range = Range(
+            nsRange,
+            in: state.editorDom.base
+        ) else {
+            environment.logger.log(
+                "Cannot replace text. Invalid range: \(nsRange))"
+            )
+            return Change(state: state)
+        }
+
+        // Replace selected range with committed link search text.
+        let markup = state.editorDom.base.replacingCharacters(
+            in: range,
+            with: text
+        )
+
+        // Parse new markup
+        let dom = Subtext(markup: markup)
+
+        // Find new cursor position
+        if let cursor = markup.index(
+            range.lowerBound,
+            offsetBy: text.count,
+            limitedBy: markup.endIndex
+        ) {
+            return setEditorDom(
+                state: state,
+                dom: dom,
+                selection: cursor..<cursor
+            )
+        }
+
+        return setEditorDom(
+            state: state,
+            dom: dom
+        )
     }
 
     /// Change state of keyboard
