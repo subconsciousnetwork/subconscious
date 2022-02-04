@@ -466,4 +466,11 @@ extension Subtext {
 
         return nil
     }
+
+    func slashlinkFor(range nsRange: NSRange) -> Subtext.Slashlink? {
+        guard let range = Range(nsRange, in: base) else {
+            return nil
+        }
+        return slashlinkForPosition(range.lowerBound)
+    }
 }
