@@ -4,8 +4,7 @@
 //
 //  Created by Gordon Brander on 7/6/21.
 //
-//  Note: GrowableAttributedTextViewRepresentable used to expose a way to set the
-//  `UITextView.font` property.
+//  Note: we used to expose a way to set the `UITextView.font` property.
 //
 //  DO NOT SET `UITextView.font` property when using attributedText!
 //  It is meant for when you use `UITextView.text` without attributes.
@@ -26,12 +25,11 @@
 
 import SwiftUI
 
-protocol MarkupRenderable {
-    func render() -> NSAttributedString
-}
-
-protocol MarkupParseable {
+/// A type that can be parsed from string via `init(markup: String)`,
+/// and rendered to an NSAttributedString via `render()`.
+protocol MarkupConvertable {
     init(markup: String)
+    func render() -> NSAttributedString
 }
 
 /// A textview that grows to the height of its content
@@ -39,8 +37,7 @@ struct MarkupTextViewRepresenable<Focus, Dom>: UIViewRepresentable
 where
     Focus: Hashable,
     Dom: Equatable,
-    Dom: MarkupRenderable,
-    Dom: MarkupParseable
+    Dom: MarkupConvertable
 {
     class FixedWidthTextView: UITextView {
         var fixedWidth: CGFloat = 0

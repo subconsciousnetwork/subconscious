@@ -72,7 +72,7 @@ extension Slashlink {
 }
 
 // Implement renderable for Subtext
-extension Subtext: MarkupParseable, MarkupRenderable {
+extension Subtext: MarkupConvertable {
     func render() -> NSAttributedString {
         self.render(url: { text in
             if
