@@ -1141,36 +1141,34 @@ struct AppUpdate {
         state: AppModel,
         slug: Slug
     ) -> Change<AppModel, AppAction> {
-        return Change(state: state)
-        // FIXME: editorAttributedText
-//        var range = state.editorSelection
-//        // If there is a selected slashlink, use that range
-//        // instead of selection
-//        if let slashlink = state.editorSelectedSlashlink
-//        {
-//            range = NSRange(
-//                slashlink.span.range,
-//                in: state.editorAttributedText.string
-//            )
-//        }
-//
-//        let fx: AnyPublisher<AppAction, Never> = Just(
-//            AppAction.setLinkSheetPresented(false)
-//        )
-//        .merge(
-//            with: Just(
-//                AppAction.insertEditorText(
-//                    range: range,
-//                    text: slug.toSlashlink()
-//                )
-//            )
-//        )
-//        .eraseToAnyPublisher()
-//
-//        var model = state
-//        model.linkSearchText = ""
-//
-//        return Change(state: model, fx: fx)
+        var range = state.editorSelection
+        // If there is a selected slashlink, use that range
+        // instead of selection
+        if let slashlink = state.editorSelectedSlashlink
+        {
+            range = NSRange(
+                slashlink.span.range,
+                in: state.editorDom.base
+            )
+        }
+
+        let fx: AnyPublisher<AppAction, Never> = Just(
+            AppAction.setLinkSheetPresented(false)
+        )
+        .merge(
+            with: Just(
+                AppAction.insertEditorText(
+                    range: range,
+                    text: slug.toSlashlink()
+                )
+            )
+        )
+        .eraseToAnyPublisher()
+
+        var model = state
+        model.linkSearchText = ""
+
+        return Change(state: model, fx: fx)
     }
 
     /// Save entry to database
