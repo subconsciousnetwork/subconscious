@@ -9,7 +9,9 @@ import Foundation
 
 /// A collection of search suggestions of different types.
 /// Typically returned from a query.
-struct Suggestions {
+struct Suggestions: Hashable, Equatable {
+    static let empty = Self()
+
     /// The literal query
     var literal: EntryLink?
     /// The top result
