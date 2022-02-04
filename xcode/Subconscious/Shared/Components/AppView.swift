@@ -502,9 +502,23 @@ struct AppUpdate {
         guard state.editorDom != dom else {
             return Change(state: state)
         }
+
         var model = state
         model.editorDom = dom
-        return Change(state: model)
+
+        var fx: AnyPublisher<AppAction, Never>? = nil
+        // Find out if our selection touches a slashlink.
+        // If it does, search for links.
+        if let slashlink = dom.slashlinkFor(range: state.editorSelection) {
+            fx = Just(
+                AppAction.setLinkSearch(slashlink.description)
+            )
+            .eraseToAnyPublisher()
+
+            model.editorSelectedSlashlink = slashlink
+        }
+
+        return Change(state: model, fx: fx)
     }
 
     /// Set editor selection.
@@ -516,21 +530,18 @@ struct AppUpdate {
         var model = state
         model.editorSelection = nsRange
 
-        if
-            let range = Range(model.editorSelection, in: model.editorDom.base),
-            let slashlink = model.editorDom.slashlinkForPosition(
-                range.lowerBound
-            )
-        {
-            let fx: AnyPublisher<AppAction, Never> = Just(
+        var fx: AnyPublisher<AppAction, Never>? = nil
+        if let slashlink = model.editorDom.slashlinkFor(
+            range: model.editorSelection
+        ){
+            fx = Just(
                 AppAction.setLinkSearch(slashlink.description)
             ).eraseToAnyPublisher()
 
             model.editorSelectedSlashlink = slashlink
-            return Change(state: model, fx: fx)
         }
 
-        return Change(state: model)
+        return Change(state: model, fx: fx)
     }
 
     static func insertEditorText(
