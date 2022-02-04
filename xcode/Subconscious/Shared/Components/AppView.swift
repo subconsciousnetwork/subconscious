@@ -506,16 +506,17 @@ struct AppUpdate {
         var model = state
         model.editorDom = dom
 
+        let slashlink = dom.slashlinkFor(range: state.editorSelection)
+        model.editorSelectedSlashlink = slashlink
+
         var fx: AnyPublisher<AppAction, Never>? = nil
         // Find out if our selection touches a slashlink.
         // If it does, search for links.
-        if let slashlink = dom.slashlinkFor(range: state.editorSelection) {
+        if let slashlink = slashlink {
             fx = Just(
                 AppAction.setLinkSearch(slashlink.description)
             )
             .eraseToAnyPublisher()
-
-            model.editorSelectedSlashlink = slashlink
         }
 
         return Change(state: model, fx: fx)
@@ -530,16 +531,17 @@ struct AppUpdate {
         var model = state
         model.editorSelection = nsRange
 
-        var fx: AnyPublisher<AppAction, Never>? = nil
-        if let slashlink = model.editorDom.slashlinkFor(
+        let slashlink = model.editorDom.slashlinkFor(
             range: model.editorSelection
-        ){
+        )
+        model.editorSelectedSlashlink = slashlink
+
+        var fx: AnyPublisher<AppAction, Never>? = nil
+        if let slashlink = slashlink {
             fx = Just(
                 AppAction.setLinkSearch(slashlink.description)
             ).eraseToAnyPublisher()
-
-            model.editorSelectedSlashlink = slashlink
-        }
+       }
 
         return Change(state: model, fx: fx)
     }
@@ -550,10 +552,7 @@ struct AppUpdate {
         range nsRange: NSRange,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
-        guard let range = Range(
-            nsRange,
-            in: state.editorDom.base
-        ) else {
+        guard let range = Range(nsRange, in: state.editorDom.base) else {
             environment.logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
