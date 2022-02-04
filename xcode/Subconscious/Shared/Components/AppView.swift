@@ -91,14 +91,10 @@ enum AppAction {
 
     // Editor
     case setEditorDom(dom: Subtext)
-    case setEditorDomAndSelection(
-        dom: Subtext,
-        selection: Range<String.Index>
-    )
     case setEditorSelection(NSRange)
     case insertEditorText(
-        range: NSRange,
-        text: String
+        text: String,
+        range: NSRange
     )
 
     // Link suggestions
@@ -373,23 +369,17 @@ struct AppUpdate {
                 state: state,
                 dom: dom
             )
-        case let .setEditorDomAndSelection(dom, selection):
-            return setEditorDom(
-                state: state,
-                dom: dom,
-                selection: selection
-            )
         case let .setEditorSelection(range):
             return setEditorSelection(
                 state: state,
                 range: range,
                 environment: environment
             )
-        case let .insertEditorText(range, text):
+        case let .insertEditorText(text, range):
             return insertEditorText(
                 state: state,
-                range: range,
                 text: text,
+                range: range,
                 environment: environment
             )
         case let .showDetail(isShowing):
@@ -503,8 +493,7 @@ struct AppUpdate {
 
     static func setEditorDom(
         state: AppModel,
-        dom: Subtext,
-        selection: Range<String.Index>? = nil
+        dom: Subtext
     ) -> Change<AppModel, AppAction> {
         // `setEditorAttributedText` comes from changes
         // in the editor UITextView.
@@ -515,15 +504,6 @@ struct AppUpdate {
         }
         var model = state
         model.editorDom = dom
-
-        // Set selection, if passed
-        if let selection = selection {
-            model.editorSelection = NSRange(
-                selection,
-                in: model.editorDom.base
-            )
-        }
-
         return Change(state: model)
     }
 
@@ -535,13 +515,28 @@ struct AppUpdate {
     ) -> Change<AppModel, AppAction> {
         var model = state
         model.editorSelection = nsRange
+
+        if
+            let range = Range(model.editorSelection, in: model.editorDom.base),
+            let slashlink = model.editorDom.slashlinkForPosition(
+                range.lowerBound
+            )
+        {
+            let fx: AnyPublisher<AppAction, Never> = Just(
+                AppAction.setLinkSearch(slashlink.description)
+            ).eraseToAnyPublisher()
+
+            model.editorSelectedSlashlink = slashlink
+            return Change(state: model, fx: fx)
+        }
+
         return Change(state: model)
     }
 
     static func insertEditorText(
         state: AppModel,
-        range nsRange: NSRange,
         text: String,
+        range nsRange: NSRange,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
         guard let range = Range(
@@ -560,26 +555,32 @@ struct AppUpdate {
             with: text
         )
 
-        // Parse new markup
-        let dom = Subtext(markup: markup)
-
         // Find new cursor position
-        if let cursor = markup.index(
+        guard let cursor = markup.index(
             range.lowerBound,
             offsetBy: text.count,
             limitedBy: markup.endIndex
-        ) {
-            return setEditorDom(
-                state: state,
-                dom: dom,
-                selection: cursor..<cursor
+        ) else {
+            environment.logger.log(
+                "Could not find new cursor position. Aborting text insert."
             )
+            return Change(state: state)
         }
 
-        return setEditorDom(
-            state: state,
-            dom: dom
+        // Parse new markup
+        let dom = Subtext(markup: markup)
+
+        let fx: AnyPublisher<AppAction, Never> = Publishers.Sequence(
+            sequence: [
+                AppAction.setEditorDom(dom: dom),
+                AppAction.setEditorSelection(
+                    NSRange(cursor..<cursor, in: dom.base)
+                )
+            ]
         )
+        .eraseToAnyPublisher()
+
+        return Change(state: state, fx: fx)
     }
 
     /// Change state of keyboard
@@ -1158,8 +1159,8 @@ struct AppUpdate {
         .merge(
             with: Just(
                 AppAction.insertEditorText(
-                    range: range,
-                    text: slug.toSlashlink()
+                    text: slug.toSlashlink(),
+                    range: range
                 )
             )
         )
