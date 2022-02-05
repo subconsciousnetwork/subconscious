@@ -35,8 +35,6 @@
 		B82C3A6626F5796300833CC8 /* OptionalUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */; };
 		B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = B82C3A6E26F6B1C000833CC8 /* Collections */; };
 		B82C3A7126F6B1C000833CC8 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = B82C3A7026F6B1C000833CC8 /* OrderedCollections */; };
-		B82C3A7326F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A7226F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift */; };
-		B82C3A7426F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A7226F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift */; };
 		B82C3A7626F6B5BF00833CC8 /* StringUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */; };
 		B82C3A7726F6B5BF00833CC8 /* StringUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */; };
 		B82FD4562730A62C002CB641 /* EntryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82FD4552730A62C002CB641 /* EntryRow.swift */; };
@@ -49,7 +47,6 @@
 		B866868B27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */; };
 		B866868D27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868C27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift */; };
 		B866868E27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868C27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift */; };
-		B8756FB527ADB47D00A32361 /* Suggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8756FB427ADB47D00A32361 /* Suggestions.swift */; };
 		B8756FBB27ADBCCE00A32361 /* StubLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8756FBA27ADBCCE00A32361 /* StubLabelView.swift */; };
 		B877A6E527A1C2BC00F11A90 /* KeyboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */; };
 		B877A6E627A1C2BC00F11A90 /* KeyboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */; };
@@ -191,14 +188,12 @@
 		B82C3A5E26F576C600833CC8 /* FileManagerUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileManagerUtilities.swift; sourceTree = "<group>"; };
 		B82C3A6126F576FB00833CC8 /* URLUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URLUtilities.swift; sourceTree = "<group>"; };
 		B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionalUtilities.swift; sourceTree = "<group>"; };
-		B82C3A7226F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrdereredDictionaryUtilities.swift; sourceTree = "<group>"; };
 		B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringUtilities.swift; sourceTree = "<group>"; };
 		B82FD4552730A62C002CB641 /* EntryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRow.swift; sourceTree = "<group>"; };
 		B83E91D627692EC600045C6A /* FABButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FABButtonStyle.swift; sourceTree = "<group>"; };
 		B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSRangeUtilities.swift; sourceTree = "<group>"; };
 		B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailKeyboardToolbarView.swift; sourceTree = "<group>"; };
 		B866868C27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MarkupTextViewRepresentable.swift; sourceTree = "<group>"; };
-		B8756FB427ADB47D00A32361 /* Suggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestions.swift; sourceTree = "<group>"; };
 		B8756FBA27ADBCCE00A32361 /* StubLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubLabelView.swift; sourceTree = "<group>"; };
 		B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardService.swift; sourceTree = "<group>"; };
 		B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigationView.swift; sourceTree = "<group>"; };
@@ -337,7 +332,6 @@
 				B8901CF227978FDE007C9021 /* Slug.swift */,
 				B824FDCD26FA662200B81BBD /* SubtextFile.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
-				B8756FB427ADB47D00A32361 /* Suggestions.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -434,11 +428,13 @@
 		B8EC568026F4156F00AC64E5 /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */,
+				B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */,
 				B82C3A5526F529EF00833CC8 /* CombineUtilities.swift */,
 				B82C3A5E26F576C600833CC8 /* FileManagerUtilities.swift */,
 				B82C3A5826F5761700833CC8 /* FileSync.swift */,
+				B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */,
 				B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */,
-				B82C3A7226F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift */,
 				B8879EA526F9348600A0B4FF /* Slashlink.swift */,
 				B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */,
 				B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */,
@@ -449,9 +445,6 @@
 				B81A535B27275138001A6268 /* Tape.swift */,
 				B824FDD326FAB1BC00B81BBD /* Truncate.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
-				B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */,
-				B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */,
-				B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -684,7 +677,6 @@
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */,
 				B8756FBB27ADBCCE00A32361 /* StubLabelView.swift in Sources */,
-				B8756FB527ADB47D00A32361 /* Suggestions.swift in Sources */,
 				B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
 				B81EBB0927025C1500B87594 /* BacklinkButtonStyle.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
@@ -720,7 +712,6 @@
 				B8EC568F26F4233B00AC64E5 /* AppEnvironment.swift in Sources */,
 				B8AC648A278F53920099E96B /* EntryStub.swift in Sources */,
 				B8AE34C5276BF72500777FF0 /* LinkSearchView.swift in Sources */,
-				B82C3A7326F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */,
 				B8AE34CB276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
 				B8AC648C278F757B0099E96B /* ProgressScrim.swift in Sources */,
 				B82C3A5326F528B000833CC8 /* DatabaseService.swift in Sources */,
@@ -790,7 +781,6 @@
 				B8AE34AB276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
 				B8DEBF262798EF6A007CB528 /* RenameSearchView.swift in Sources */,
 				B81A5360272751EE001A6268 /* Subtext.swift in Sources */,
-				B82C3A7426F6B5B200833CC8 /* OrdereredDictionaryUtilities.swift in Sources */,
 				B8AC648D278F757B0099E96B /* ProgressScrim.swift in Sources */,
 				B8DEBF232798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
 				B866868B27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */,

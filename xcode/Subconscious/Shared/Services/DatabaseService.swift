@@ -578,46 +578,55 @@ struct DatabaseService {
     /// A whitespace query string will fetch zero-query suggestions.
     func searchLinkSuggestions(
         query: String
-    ) -> AnyPublisher<Suggestions, Error> {
+    ) -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             let sluglike = Slug.toSluglikeString(query)
             if sluglike.isEmpty {
-                return Suggestions.empty
+                return []
             }
 
-            let entries: [EntryLink] = try database.execute(
-                sql: """
-                SELECT slug, title
-                FROM entry
-                WHERE slug LIKE ?
-                ORDER BY length(slug)
-                LIMIT 5
-                """,
-                parameters: [
-                    .prefixQueryLike(sluglike)
-                ]
-            )
-            .compactMap({ row in
-                if
-                    let slugString: String = row.get(0),
-                    let slug = Slug(slugString),
-                    let title: String = row.get(1)
-                {
-                    return EntryLink(
-                        slug: slug,
-                        title: title
-                    )
-                }
-                return nil
-            })
+            var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
 
-            let literal = EntryLink(title: query)
+            // Append literal
+            if let literal = EntryLink(title: query) {
+                suggestions[literal.slug] = .search(literal)
+            }
 
-            return Suggestions(
-                literal: literal,
-                top: entries.first,
-                entries: entries
-            )
+            let entries: [EntryLink] = try database
+                .execute(
+                    sql: """
+                    SELECT slug, title
+                    FROM entry
+                    WHERE slug LIKE ?
+                    ORDER BY length(slug)
+                    LIMIT 5
+                    """,
+                    parameters: [
+                        .prefixQueryLike(sluglike)
+                    ]
+                )
+                .compactMap({ row in
+                    if
+                        let slugString: String = row.get(0),
+                        let slug = Slug(slugString),
+                        let title: String = row.get(1)
+                    {
+                        return EntryLink(
+                            slug: slug,
+                            title: title
+                        )
+                    }
+                    return nil
+                })
+
+            // Insert entries into suggestions.
+            // If literal query and an entry have the same slug,
+            // entry will overwrite query.
+            for entry in entries {
+                suggestions.updateValue(.entry(entry), forKey: entry.slug)
+            }
+
+            return Array(suggestions.values)
         }
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()

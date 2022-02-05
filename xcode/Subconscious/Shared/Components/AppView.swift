@@ -101,7 +101,7 @@ enum AppAction {
     case setLinkSheetPresented(Bool)
     case setLinkSearch(String)
     case commitLinkSearch(Slug)
-    case setLinkSuggestions(Suggestions)
+    case setLinkSuggestions([Suggestion])
     case linkSuggestionsFailure(String)
 
     // Saving entries
@@ -184,7 +184,7 @@ struct AppModel: Hashable, Equatable {
     /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
     var linkSearchText = ""
-    var linkSuggestions: Suggestions = .empty
+    var linkSuggestions: [Suggestion] = []
 }
 
 //  MARK: Update

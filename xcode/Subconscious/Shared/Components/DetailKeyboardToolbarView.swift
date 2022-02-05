@@ -10,7 +10,20 @@ import SwiftUI
 struct DetailKeyboardToolbarView: View {
     var onCommit: (Slug) -> Void
     @Binding var isSheetPresented: Bool
-    var suggestions: Suggestions
+    var suggestions: [Suggestion]
+
+    private func barSuggestions() -> ArraySlice<EntryLink> {
+        self.suggestions
+            .compactMap({ suggestion in
+                switch suggestion {
+                case let .entry(link):
+                    return link
+                default:
+                    return nil
+                }
+            })
+            .prefix(2)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -28,7 +41,7 @@ struct DetailKeyboardToolbarView: View {
                             )
                     }
                 )
-                ForEach(suggestions.entries.prefix(2)) { suggestion in
+                ForEach(self.barSuggestions()) { suggestion in
                     Divider()
                     Button(
                         action: {
@@ -55,17 +68,14 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
         DetailKeyboardToolbarView(
             onCommit: { slug in },
             isSheetPresented: .constant(false),
-            suggestions: Suggestions(
-                literal: nil,
-                top: nil,
-                entries: [
+            suggestions: [
+                .entry(
                     EntryLink(
                         slug: Slug("an-organism-is-a-living-system")!,
                         title: "An organism is a living system maintaining both a higher level of internal cooperation"
                     )
-                ],
-                searches: []
-            )
+                )
+            ]
         )
     }
 }
