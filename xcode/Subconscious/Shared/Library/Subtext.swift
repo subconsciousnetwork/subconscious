@@ -9,6 +9,15 @@ import Foundation
 import SwiftUI
 
 struct Subtext: Hashable, Equatable {
+    /// Implement custom equatable for Subtext.
+    /// Since parsing is deterministic, we can simply compare base strings.
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.base == rhs.base
+    }
+
+    /// Empty document
+    static let empty = Self(markup: "")
+
     enum Block: Hashable, Equatable {
         case text(span: Substring, inline: [Inline])
         case list(span: Substring, inline: [Inline])
@@ -26,20 +35,28 @@ struct Subtext: Hashable, Equatable {
         }
     }
 
-    struct Link: Hashable, Equatable {
+    struct Link: Hashable, Equatable, CustomStringConvertible {
         var span: Substring
+        var description: String {
+            String(span)
+        }
     }
 
-    struct Bracketlink: Hashable, Equatable {
+    struct Bracketlink: Hashable, Equatable, CustomStringConvertible {
         var span: Substring
-
+        var description: String {
+            String(span)
+        }
         func body() -> Substring {
             span.dropFirst().dropLast()
         }
     }
 
-    struct Slashlink: Hashable, Equatable {
+    struct Slashlink: Hashable, Equatable, CustomStringConvertible {
         var span: Substring
+        var description: String {
+            String(span)
+        }
     }
 
     enum Inline: Hashable, Equatable {
@@ -299,7 +316,7 @@ struct Subtext: Hashable, Equatable {
 
 extension Subtext {
     /// Render markup verbatim with syntax highlighting and links
-    func renderMarkup(url: (String) -> String?) -> NSAttributedString {
+    func render(url: (String) -> String?) -> NSAttributedString {
         let attributedString = NSMutableAttributedString(string: base)
         let baseNSRange = NSRange(
             base.startIndex...,
@@ -405,5 +422,55 @@ extension Subtext {
     /// Append another Subtext document
     func append(_ other: Subtext) -> Subtext {
         Subtext(markup: "\(self.base)\n\n\(other.base)")
+    }
+}
+
+extension Sequence where Iterator.Element == Subtext.Inline {
+    var slashlinks: [Subtext.Slashlink] {
+        self.compactMap({ inline in
+            switch inline {
+            case .slashlink(let slashlink):
+                return slashlink
+            default:
+                return nil
+            }
+        })
+    }
+}
+
+extension Subtext.Block {
+    var inline: [Subtext.Inline] {
+        switch self {
+        case
+            .text(_, let inline),
+            .list(_, let inline),
+            .quote(_, let inline):
+            return inline
+        default:
+            return []
+        }
+    }
+}
+
+extension Subtext {
+    func slashlinkForPosition(_ i: String.Index) -> Subtext.Slashlink? {
+        let slashlinks: [Subtext.Slashlink] = self.blocks.flatMap({ block in
+            block.inline.slashlinks
+        })
+
+        for slashlink in slashlinks {
+            if slashlink.span.range.upperBound == i {
+                return slashlink
+            }
+        }
+
+        return nil
+    }
+
+    func slashlinkFor(range nsRange: NSRange) -> Subtext.Slashlink? {
+        guard let range = Range(nsRange, in: base) else {
+            return nil
+        }
+        return slashlinkForPosition(range.lowerBound)
     }
 }

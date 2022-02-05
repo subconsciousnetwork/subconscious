@@ -37,9 +37,11 @@ struct LinkSearchView: View {
                 Button(
                     action: {
                         withAnimation(
-                            .easeOutCubic(duration: Duration.keyboard)
+                            .easeOutCubic(
+                                duration: Duration.keyboard
+                            )
                         ) {
-                            onCommit(suggestion.stub.slug)
+                            onCommit(suggestion.slug)
                         }
                     },
                     label: {

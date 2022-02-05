@@ -15,8 +15,8 @@ struct LinkSuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroup(
-                        title: entryLink.title,
-                        subtitle: #"Link to "\#(entryLink.slug.description)""#
+                        title: entryLink.slug.description,
+                        subtitle: #"Link to "\#(entryLink.title)""#
                     )
                 },
                 icon: {
@@ -27,8 +27,8 @@ struct LinkSuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroup(
-                        title: entryLink.title,
-                        subtitle: #"Link to "\#(entryLink.slug.description)""#
+                        title: entryLink.slug.description,
+                        subtitle: #"Link to new idea"#
                     )
                 },
                 icon: {

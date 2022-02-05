@@ -9,7 +9,6 @@ import SwiftUI
 
 enum AppTheme {}
 
-
 //  MARK: Theme units
 extension AppTheme {
     static let unit: CGFloat = 4
@@ -36,6 +35,9 @@ extension AppTheme {
 }
 
 //  MARK: UIFonts
+//  Note you can convert from UIFont to Font easily, but you can't yet convert
+//  from Font to UIFont. So, we define our fonts as UIFonts.
+//  2021-12-15 Gordon Brander
 extension UIFont {
     static let appText = UIFont(
         name: "IBMPlexSans",
@@ -45,6 +47,11 @@ extension UIFont {
     static let appTextMedium = UIFont(
         name: "IBMPlexSans-Medium",
         size: AppTheme.textSize
+    )!
+
+    static let appHeadline = UIFont(
+        name: "IBMPlexSans-Medium",
+        size: 14
     )!
 
     static let appTextMono = UIFont(
@@ -69,10 +76,6 @@ extension UIFont {
 }
 
 //  MARK: Fonts
-//  Note you can convert from UIFont to Font easily, but you can't yet convert
-//  from Font to UIFont. So, we define our fonts as UIFonts and then provide
-//  helpful proxies here.
-//  2021-12-15 Gordon Brander
 extension Font {
     static let appText = Font(UIFont.appText)
     static let appTextMono = Font(UIFont.appTextMono)

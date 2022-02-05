@@ -20,6 +20,15 @@ enum Suggestion: Hashable, Identifiable, CustomStringConvertible {
         }
     }
 
+    var slug: Slug {
+        switch self {
+        case let .entry(stub):
+            return stub.slug
+        case let .search(stub):
+            return stub.slug
+        }
+    }
+
     var id: String {
         switch self {
         case let .entry(link):

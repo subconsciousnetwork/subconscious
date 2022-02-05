@@ -1,11 +1,10 @@
 //
-//  GrowableAttributedTextViewRepresentable.swift
+//  MarkupTextViewRepresenable.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 7/6/21.
 //
-//  Note: GrowableAttributedTextViewRepresentable used to expose a way to set the
-//  `UITextView.font` property.
+//  Note: we used to expose a way to set the `UITextView.font` property.
 //
 //  DO NOT SET `UITextView.font` property when using attributedText!
 //  It is meant for when you use `UITextView.text` without attributes.
@@ -26,10 +25,20 @@
 
 import SwiftUI
 
+/// A type that can be parsed from string via `init(markup: String)`,
+/// and rendered to an NSAttributedString via `render()`.
+protocol MarkupConvertable {
+    init(markup: String)
+    func render() -> NSAttributedString
+}
+
 /// A textview that grows to the height of its content
-struct GrowableAttributedTextViewRepresentable<Focus>: UIViewRepresentable
-where Focus: Hashable {
-    /// Extends UITTextView to provide an intrinsicContentSize given a fixed width.
+struct MarkupTextViewRepresenable<Focus, Dom>: UIViewRepresentable
+where
+    Focus: Hashable,
+    Dom: Equatable,
+    Dom: MarkupConvertable
+{
     class FixedWidthTextView: UITextView {
         var fixedWidth: CGFloat = 0
         override var intrinsicContentSize: CGSize {
@@ -47,25 +56,11 @@ where Focus: Hashable {
         /// Used to avoid sending up events that would cause feedback cycles where an update triggers
         /// an event, which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
-        var representable: GrowableAttributedTextViewRepresentable
+        var representable: MarkupTextViewRepresenable
 
-        init(_ representable: GrowableAttributedTextViewRepresentable) {
+        init(_ representable: MarkupTextViewRepresenable) {
             self.isUIViewUpdating = false
             self.representable = representable
-        }
-
-        /// Intercept text changes before they happen, and accept or reject them.
-        /// See  <https://developer.apple.com/documentation/uikit/uitextviewdelegate/1618630-textview>
-        func textView(
-            _ textView: UITextView,
-            shouldChangeTextIn range: NSRange,
-            replacementText text: String
-        ) -> Bool {
-            representable.shouldChange(
-                textView,
-                range,
-                text
-            )
         }
 
         /// Handle link taps
@@ -83,15 +78,19 @@ where Focus: Hashable {
             )
         }
 
-        /// Handle changes to textview
+        /// Render user changes to textview
         func textViewDidChange(_ view: UITextView) {
             // Return early if view is updating.
             guard !isUIViewUpdating else {
                 return
             }
-            if !representable.attributedText.isEqual(to: view.attributedText) {
-                representable.attributedText = view.attributedText
+            let dom = Dom(markup: view.attributedText.string)
+            if representable.dom != dom {
+                let selectedRange = view.selectedRange
+                view.attributedText = dom.render()
+                view.selectedRange = selectedRange
                 view.invalidateIntrinsicContentSize()
+                representable.dom = dom
             }
         }
 
@@ -122,15 +121,6 @@ where Focus: Hashable {
         }
     }
 
-    /// Defalult no-op event handlers
-    private static func shouldChangeDefault(
-        view: UITextView,
-        selection: NSRange,
-        text: String
-    ) -> Bool {
-        return true
-    }
-
     /// Default handler for link clicks. Always defers to OS-level handler.
     private static func onLinkDefault(
         url: URL,
@@ -141,14 +131,6 @@ where Focus: Hashable {
         return true
     }
 
-    @Binding var attributedText: NSAttributedString
-    @Binding var selection: NSRange
-    @Binding var focus: Focus?
-    var field: Focus
-    /// Called before a text change, to determine if the text should be changed.
-    var shouldChange: (
-        UITextView, NSRange, String
-    ) -> Bool = shouldChangeDefault
     /// Fixed width of textview container, needed to determine textview height.
     /// Use `GeometryView` to find container width.
     var onLink: (
@@ -157,6 +139,10 @@ where Focus: Hashable {
         NSRange,
         UITextItemInteraction
     ) -> Bool = onLinkDefault
+    @Binding var dom: Dom
+    @Binding var selection: NSRange
+    @Binding var focus: Focus?
+    var field: Focus
     var fixedWidth: CGFloat
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
@@ -169,7 +155,7 @@ where Focus: Hashable {
     func makeUIView(context: Context) -> FixedWidthTextView {
         let view = FixedWidthTextView()
         view.delegate = context.coordinator
-        view.fixedWidth = fixedWidth
+        view.fixedWidth = context.coordinator.representable.fixedWidth
         // Remove that extra bit of inner padding.
         // Text in view should now be flush with view edge.
         // This puts you in full control of view padding.
@@ -188,10 +174,11 @@ where Focus: Hashable {
             context.coordinator.isUIViewUpdating = false
         }
 
-        if !view.attributedText.isEqual(to: self.attributedText) {
+        let attributedText = self.dom.render()
+        if !view.attributedText.isEqual(to: attributedText) {
             // Save selected range (cursor position).
             let selectedRange = view.selectedRange
-            view.attributedText = self.attributedText
+            view.attributedText = attributedText
             // Restore selected range (cursor position) after setting text.
             view.selectedRange = selectedRange
             view.invalidateIntrinsicContentSize()
@@ -226,7 +213,7 @@ where Focus: Hashable {
         }
     }
 
-    func makeCoordinator() -> GrowableAttributedTextViewRepresentable.Coordinator {
+    func makeCoordinator() -> Self.Coordinator {
         Coordinator(self)
     }
 

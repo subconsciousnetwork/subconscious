@@ -26,7 +26,7 @@ struct DetailView: View {
     var backlinks: [EntryStub]
     var linkSuggestions: [Suggestion]
     @Binding var focus: AppModel.Focus?
-    @Binding var editorAttributedText: NSAttributedString
+    @Binding var editorDom: Subtext
     @Binding var editorSelection: NSRange
     @Binding var isLinkSheetPresented: Bool
     @Binding var linkSearchText: String
@@ -49,19 +49,20 @@ struct DetailView: View {
                 PseudoKeyboardToolbarView(
                     isKeyboardUp: focus == .editor,
                     toolbarHeight: 48,
-                    toolbar: KeyboardToolbarView(
+                    toolbar: DetailKeyboardToolbarView(
+                        onCommit: onCommitLinkSearch,
                         isSheetPresented: $isLinkSheetPresented,
-                        suggestions: .constant([])
+                        suggestions: linkSuggestions
                     ),
                     content: { isKeyboardUp, size in
                         ScrollView(.vertical) {
                             VStack(spacing: 0) {
-                                GrowableAttributedTextViewRepresentable(
-                                    attributedText: $editorAttributedText,
+                                MarkupTextViewRepresenable(
+                                    onLink: onEditorLink,
+                                    dom: $editorDom,
                                     selection: $editorSelection,
                                     focus: $focus,
                                     field: .editor,
-                                    onLink: onEditorLink,
                                     fixedWidth: size.width
                                 )
                                 .insets(
