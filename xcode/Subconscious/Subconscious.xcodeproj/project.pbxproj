@@ -47,7 +47,6 @@
 		B866868B27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */; };
 		B866868D27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868C27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift */; };
 		B866868E27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868C27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift */; };
-		B8756FBB27ADBCCE00A32361 /* StubLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8756FBA27ADBCCE00A32361 /* StubLabelView.swift */; };
 		B877A6E527A1C2BC00F11A90 /* KeyboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */; };
 		B877A6E627A1C2BC00F11A90 /* KeyboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */; };
 		B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */; };
@@ -194,7 +193,6 @@
 		B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSRangeUtilities.swift; sourceTree = "<group>"; };
 		B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailKeyboardToolbarView.swift; sourceTree = "<group>"; };
 		B866868C27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MarkupTextViewRepresentable.swift; sourceTree = "<group>"; };
-		B8756FBA27ADBCCE00A32361 /* StubLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubLabelView.swift; sourceTree = "<group>"; };
 		B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardService.swift; sourceTree = "<group>"; };
 		B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigationView.swift; sourceTree = "<group>"; };
 		B8879EA526F9348600A0B4FF /* Slashlink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slashlink.swift; sourceTree = "<group>"; };
@@ -477,7 +475,6 @@
 				B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */,
 				B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */,
 				B8DEBF1E2798EC23007CB528 /* TitleGroup.swift */,
-				B8756FBA27ADBCCE00A32361 /* StubLabelView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -676,7 +673,6 @@
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */,
-				B8756FBB27ADBCCE00A32361 /* StubLabelView.swift in Sources */,
 				B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
 				B81EBB0927025C1500B87594 /* BacklinkButtonStyle.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
