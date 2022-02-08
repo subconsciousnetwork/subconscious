@@ -20,6 +20,9 @@ enum AppAction {
     case changeKeyboardState(KeyboardState)
 
     //  Lifecycle events
+    /// When scene phase changes.
+    /// E.g. when app is foregrounded, backgrounded, etc.
+    case scenePhaseChange(ScenePhase)
     case appear
 
     //  URL handlers
@@ -211,10 +214,12 @@ struct AppUpdate {
         switch action {
         case .noop:
             return Change(state: state)
-        case let .changeKeyboardState(keyboard):
-            return changeKeyboardState(state: state, keyboard: keyboard)
+        case let .scenePhaseChange:
+            return Change(state: state)
         case .appear:
             return appear(state: state, environment: environment)
+        case let .changeKeyboardState(keyboard):
+            return changeKeyboardState(state: state, keyboard: keyboard)
         case let .openURL(url):
             UIApplication.shared.open(url)
             return Change(state: state)
@@ -1241,6 +1246,7 @@ struct AppUpdate {
 //  MARK: View
 struct AppView: View {
     @ObservedObject var store: SubconsciousStore
+    @Environment(\.scenePhase) var scenePhase: ScenePhase
 
     var body: some View {
         // Give each element in this ZStack an explicit z-index.
@@ -1320,6 +1326,13 @@ struct AppView: View {
             }
         }
         .font(Font.appText)
+        // Track changes to scene phase so we know when app gets
+        // foregrounded/backgrounded.
+        // See https://developer.apple.com/documentation/swiftui/scenephase
+        // 2022-02-08 Gordon Brander
+        .onChange(of: self.scenePhase) { phase in
+            store.send(action: AppAction.scenePhaseChange(phase))
+        }
         .onAppear {
             store.send(action: .appear)
         }
