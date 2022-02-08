@@ -78,20 +78,43 @@ where
             )
         }
 
-        /// Render user changes to textview
-        func textViewDidChange(_ view: UITextView) {
-            // Return early if view is updating.
-            guard !isUIViewUpdating else {
-                return
-            }
-            let dom = Dom(markup: view.attributedText.string)
+        func textView(
+            _ textView: UITextView,
+            shouldChangeTextIn range: NSRange,
+            replacementText text: String
+        ) -> Bool {
+            // Construct the text that would have been typed
+            let next = (textView.attributedText!.string as NSString)
+                .replacingCharacters(in: range, with: text)
+            // Parse it into a dom
+            let dom = Dom(markup: next)
+            // Check for equivalence
             if representable.dom != dom {
-                let selectedRange = view.selectedRange
-                view.attributedText = dom.render()
-                view.selectedRange = selectedRange
-                view.invalidateIntrinsicContentSize()
+                // An Apple bug in iOS 13 causes words to be falsely
+                // autocapitalized when in `.sentences` and sometimes `.words`
+                // mode. Setting the `attributedText` to `nil` first resolves
+                // the issue.
+                // See https://developer.apple.com/forums/thread/124270
+                // 2022-01-08 Gordon Brander
+                textView.attributedText = nil
+                textView.attributedText = dom.render()
                 representable.dom = dom
+
+                // Find the new cursor position and set it
+                // after setting the attributedText.
+                if let cursor = textView.position(
+                    from: textView.beginningOfDocument,
+                    offset: range.location + text.lengthOfBytes(using: .utf8)
+                ) {
+                    textView.selectedTextRange = textView.textRange(
+                        from: cursor,
+                        to: cursor
+                    )
+                }
+
+                textView.invalidateIntrinsicContentSize()
             }
+            return false
         }
 
         /// Handle editing begin (focus)
