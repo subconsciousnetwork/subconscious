@@ -20,6 +20,9 @@ enum AppAction {
     case changeKeyboardState(KeyboardState)
 
     //  Lifecycle events
+    /// When scene phase changes.
+    /// E.g. when app is foregrounded, backgrounded, etc.
+    case scenePhaseChange(ScenePhase)
     case appear
 
     //  URL handlers
@@ -30,9 +33,13 @@ enum AppAction {
     case setFocus(AppModel.Focus?)
 
     // Database
-    case databaseReady(SQLite3Migrations.MigrationSuccess)
+    /// Get database ready for interaction
+    case readyDatabase
+    case migrateDatabaseSuccess(SQLite3Migrations.MigrationSuccess)
     case rebuildDatabase
     case rebuildDatabaseFailure(String)
+    /// Sync database with file system
+    case sync
     case syncSuccess([FileSync.Change])
     case syncFailure(String)
 
@@ -127,6 +134,13 @@ struct AppModel: Hashable, Equatable {
         case rename
     }
 
+    enum DatabaseState {
+        case initial
+        case migrating
+        case broken
+        case ready
+    }
+
     /// Current state of keyboard
     var keyboardWillShow = false
     var keyboardEventualHeight: CGFloat = 0
@@ -135,7 +149,7 @@ struct AppModel: Hashable, Equatable {
     var focus: Focus? = nil
 
     /// Is database connected and migrated?
-    var isDatabaseReady = false
+    var databaseState = DatabaseState.initial
     /// Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
 
@@ -211,10 +225,16 @@ struct AppUpdate {
         switch action {
         case .noop:
             return Change(state: state)
-        case let .changeKeyboardState(keyboard):
-            return changeKeyboardState(state: state, keyboard: keyboard)
+        case let .scenePhaseChange(phase):
+            return scenePhaseChange(
+                state: state,
+                phase: phase,
+                environment: environment
+            )
         case .appear:
             return appear(state: state, environment: environment)
+        case let .changeKeyboardState(keyboard):
+            return changeKeyboardState(state: state, keyboard: keyboard)
         case let .openURL(url):
             UIApplication.shared.open(url)
             return Change(state: state)
@@ -224,8 +244,10 @@ struct AppUpdate {
             var model = state
             model.focus = focus
             return Change(state: model)
-        case let .databaseReady(success):
-            return databaseReady(
+        case .readyDatabase:
+            return readyDatabase(state: state, environment: environment)
+        case let .migrateDatabaseSuccess(success):
+            return migrateDatabaseSuccess(
                 state: state,
                 success: success,
                 environment: environment
@@ -239,21 +261,20 @@ struct AppUpdate {
             environment.logger.warning(
                 "Could not rebuild database: \(error)"
             )
-            return Change(state: state)
+            var model = state
+            model.databaseState = .broken
+            return Change(state: model)
+        case .sync:
+            return sync(
+                state: state,
+                environment: environment
+            )
         case let .syncSuccess(changes):
-            environment.logger.debug(
-                "File sync finished: \(changes)"
+            return syncSuccess(
+                state: state,
+                changes: changes,
+                environment: environment
             )
-
-            // Refresh lists after completing sync.
-            // This ensures that files which were deleted outside the app
-            // are removed from lists once sync is complete.
-            let fx: AnyPublisher<AppAction, Never> = Just(
-                AppAction.refreshAll
-            )
-            .eraseToAnyPublisher()
-
-            return Change(state: state, fx: fx)
         case let .syncFailure(message):
             environment.logger.warning(
                 "File sync failed: \(message)"
@@ -618,6 +639,24 @@ struct AppUpdate {
         }
     }
 
+    /// Handle scene phase change
+    static func scenePhaseChange(
+        state: AppModel,
+        phase: ScenePhase,
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
+        switch phase {
+        case .active:
+            let fx: AnyPublisher<AppAction, Never> = Just(
+                AppAction.readyDatabase
+            )
+            .eraseToAnyPublisher()
+            return Change(state: state, fx: fx)
+        default:
+            return Change(state: state)
+        }
+    }
+
     static func appear(
         state: AppModel,
         environment: AppEnvironment
@@ -627,23 +666,13 @@ struct AppUpdate {
         )
 
         // Subscribe to keyboard events
-        let keyboardFx: AnyPublisher<AppAction, Never> = environment
+        let fx: AnyPublisher<AppAction, Never> = environment
             .keyboard.state
             .map({ value in
                 AppAction.changeKeyboardState(value)
             })
             .eraseToAnyPublisher()
 
-        let fx: AnyPublisher<AppAction, Never> = environment.database
-            .migrate()
-            .map({ success in
-                AppAction.databaseReady(success)
-            })
-            .catch({ _ in
-                Just(AppAction.rebuildDatabase)
-            })
-            .merge(with: keyboardFx)
-            .eraseToAnyPublisher()
         return Change(state: state, fx: fx)
     }
 
@@ -687,29 +716,65 @@ struct AppUpdate {
         }
     }
 
-    static func databaseReady(
+    /// Make database ready.
+    /// This will kick off a migration IF a successful migration
+    /// has not already occurred.
+    static func readyDatabase(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
+        switch state.databaseState {
+        case .initial:
+            environment.logger.log("Readying database")
+            let fx: AnyPublisher<AppAction, Never> = environment.database
+                .migrate()
+                .map({ success in
+                    AppAction.migrateDatabaseSuccess(success)
+                })
+                .catch({ _ in
+                    Just(AppAction.rebuildDatabase)
+                })
+                .eraseToAnyPublisher()
+            var model = state
+            model.databaseState = .migrating
+            return Change(state: model, fx: fx)
+        case .ready:
+            environment.logger.log("Database ready. Syncing.")
+            let fx: AnyPublisher<AppAction, Never> = Just(
+                AppAction.sync
+            )
+            .eraseToAnyPublisher()
+            return Change(state: state, fx: fx)
+        case .migrating:
+            environment.logger.log(
+                "Database already migrating. Doing nothing."
+            )
+            return Change(state: state)
+        case .broken:
+            environment.logger.log(
+                "Database broken. Doing nothing."
+            )
+            return Change(state: state)
+        }
+    }
+
+    static func migrateDatabaseSuccess(
         state: AppModel,
         success: SQLite3Migrations.MigrationSuccess,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
         var model = state
-        model.isDatabaseReady = true
-        let fx: AnyPublisher<AppAction, Never> = environment.database
-            .syncDatabase()
-            .map({ changes in
-                AppAction.syncSuccess(changes)
-            })
-            .catch({ error in
-                Just(AppAction.syncFailure(error.localizedDescription))
-            })
-            .merge(with: Just(.refreshAll))
-            .eraseToAnyPublisher()
+        model.databaseState = .ready
+        let fx: AnyPublisher<AppAction, Never> = Just(
+            AppAction.sync
+        )
+        .merge(with: Just(.refreshAll))
+        .eraseToAnyPublisher()
         if success.from != success.to {
             environment.logger.log(
                 "Migrated database: \(success.from)->\(success.to)"
             )
         }
-        environment.logger.log("File sync started")
         return Change(state: model, fx: fx)
     }
 
@@ -726,7 +791,7 @@ struct AppUpdate {
                 environment.database.migrate()
             })
             .map({ success in
-                AppAction.databaseReady(success)
+                AppAction.migrateDatabaseSuccess(success)
             })
             .catch({ error in
                 Just(AppAction.rebuildDatabaseFailure(
@@ -734,6 +799,45 @@ struct AppUpdate {
                 )
             })
             .eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
+    }
+
+    /// Start file sync
+    static func sync(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
+        environment.logger.log("File sync started")
+        let fx: AnyPublisher<AppAction, Never> = environment.database
+            .syncDatabase()
+            .map({ changes in
+                AppAction.syncSuccess(changes)
+            })
+            .catch({ error in
+                Just(AppAction.syncFailure(error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
+    }
+
+    /// Handle successful sync
+    static func syncSuccess(
+        state: AppModel,
+        changes: [FileSync.Change],
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
+        environment.logger.debug(
+            "File sync finished: \(changes)"
+        )
+
+        // Refresh lists after completing sync.
+        // This ensures that files which were deleted outside the app
+        // are removed from lists once sync is complete.
+        let fx: AnyPublisher<AppAction, Never> = Just(
+            AppAction.refreshAll
+        )
+        .eraseToAnyPublisher()
+
         return Change(state: state, fx: fx)
     }
 
@@ -1241,6 +1345,7 @@ struct AppUpdate {
 //  MARK: View
 struct AppView: View {
     @ObservedObject var store: SubconsciousStore
+    @Environment(\.scenePhase) var scenePhase: ScenePhase
 
     var body: some View {
         // Give each element in this ZStack an explicit z-index.
@@ -1253,7 +1358,7 @@ struct AppView: View {
         // 2021-12-16 Gordon Brander
         ZStack(alignment: .bottomTrailing) {
             Color.background.edgesIgnoringSafeArea(.all)
-            if store.state.isDatabaseReady {
+            if store.state.databaseState == .ready {
                 AppNavigationView(store: store)
                     .zIndex(1)
                 if store.state.focus == nil {
@@ -1320,6 +1425,13 @@ struct AppView: View {
             }
         }
         .font(Font.appText)
+        // Track changes to scene phase so we know when app gets
+        // foregrounded/backgrounded.
+        // See https://developer.apple.com/documentation/swiftui/scenephase
+        // 2022-02-08 Gordon Brander
+        .onChange(of: self.scenePhase) { phase in
+            store.send(action: AppAction.scenePhaseChange(phase))
+        }
         .onAppear {
             store.send(action: .appear)
         }
