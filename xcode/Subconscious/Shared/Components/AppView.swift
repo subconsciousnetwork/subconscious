@@ -116,7 +116,7 @@ enum AppAction {
 
     // Saving entries
     case save
-    case saveSuccess(Slug)
+    case saveSuccess(SubtextFile)
     case saveFailure(
         slug: Slug,
         message: String
@@ -190,6 +190,8 @@ struct AppModel: Hashable, Equatable {
     // Editor
     /// Subtext object model
     var editorDom: Subtext = .empty
+    /// Are all changes to editor saved?
+    var isEditorDomSaved = true
     /// Editor selection corresponds with `editorAttributedText`
     var editorSelection = NSMakeRange(0, 0)
     /// Slashlink currently being written (if any)
@@ -202,6 +204,13 @@ struct AppModel: Hashable, Equatable {
     var isLinkSheetPresented = false
     var linkSearchText = ""
     var linkSuggestions: [Suggestion] = []
+
+    /// Given a particular entry value, does the editor's state
+    /// currently match it, such that we could say the editor is
+    /// displaying that entry?
+    func isEditorStateMatching(entry: SubtextFile) -> Bool {
+        self.slug == entry.slug && self.editorDom == entry.dom
+    }
 }
 
 //  MARK: Update
@@ -238,9 +247,13 @@ struct AppUpdate {
             return appear(state: state, environment: environment)
         case let .changeKeyboardState(keyboard):
             return changeKeyboardState(state: state, keyboard: keyboard)
-        case let .poll(date):
-            environment.logger.log("Poll: \(date)")
-            return Change(state: state)
+        case .poll:
+            // Auto-save entry currently being edited, if any.
+            let fx: AnyPublisher<AppAction, Never> = Just(
+                AppAction.save
+            )
+            .eraseToAnyPublisher()
+            return Change(state: state, fx: fx)
         case let .openURL(url):
             UIApplication.shared.open(url)
             return Change(state: state)
@@ -493,10 +506,10 @@ struct AppUpdate {
                 state: state,
                 environment: environment
             )
-        case let .saveSuccess(slug):
+        case let .saveSuccess(entry):
             return saveSuccess(
                 state: state,
-                slug: slug,
+                entry: entry,
                 environment: environment
             )
         case let .saveFailure(url, message):
@@ -532,6 +545,8 @@ struct AppUpdate {
 
         var model = state
         model.editorDom = dom
+        // Mark model as unsaved
+        model.isEditorDomSaved = false
 
         let slashlink = dom.slashlinkFor(range: state.editorSelection)
         model.editorSelectedSlashlink = slashlink
@@ -1304,54 +1319,66 @@ struct AppUpdate {
         state: AppModel,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
-        var model = state
-        model.focus = nil
-        if let slug = model.slug {
-            // Parse editorAttributedText to entry.
-            let entry = SubtextFile(
-                slug: slug,
-                dom: model.editorDom
-            )
-            let fx: AnyPublisher<AppAction, Never> = environment.database
-                .writeEntry(
-                    entry: entry
-                )
-                .map({ _ in
-                    AppAction.saveSuccess(slug)
-                })
-                .catch({ error in
-                    Just(
-                        AppAction.saveFailure(
-                            slug: slug,
-                            message: error.localizedDescription
-                        )
-                    )
-                })
-                .eraseToAnyPublisher()
-            return Change(state: model, fx: fx)
-        } else {
-            environment.logger.warning(
-                """
-                Could not save. No URL set for entry.
-                It should not be possible to reach this state.
-                """
-            )
-            return Change(state: model)
+        // If there is no entry currently being edited, noop.
+        guard let slug = state.slug else {
+            return Change(state: state)
         }
+
+        // If editor dom is already saved, noop
+        guard !state.isEditorDomSaved else {
+            return Change(state: state)
+        }
+
+        // Parse editorAttributedText to entry.
+        let entry = SubtextFile(
+            slug: slug,
+            dom: state.editorDom
+        )
+        let fx: AnyPublisher<AppAction, Never> = environment.database
+            .writeEntry(
+                entry: entry
+            )
+            .map({ _ in
+                AppAction.saveSuccess(entry)
+            })
+            .catch({ error in
+                Just(
+                    AppAction.saveFailure(
+                        slug: slug,
+                        message: error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
     }
 
     /// Log save success and perform refresh of various lists.
     static func saveSuccess(
         state: AppModel,
-        slug: Slug,
+        entry: SubtextFile,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
         environment.logger.debug(
-            "Saved entry: \(slug)"
+            "Saved entry: \(entry.slug)"
         )
         let fx = Just(AppAction.refreshAll)
             .eraseToAnyPublisher()
-        return Change(state: state, fx: fx)
+
+        var model = state
+        // If editor state is still the state we invoked save with,
+        // then mark the current editor state as "saved".
+        // We check before setting in case changes happened between the
+        // time we invoked save and the time it completed.
+        // If changes did happen in that time, we want to leave the
+        // state of the model alone, giving other processes a chance
+        // to save the new changes.
+        // 2022-02-09 Gordon Brander
+        if model.isEditorStateMatching(entry: entry) {
+            model.isEditorDomSaved = true
+        }
+
+        return Change(state: model, fx: fx)
     }
 }
 
