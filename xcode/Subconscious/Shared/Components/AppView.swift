@@ -16,8 +16,11 @@ import Combine
 enum AppAction {
     case noop
 
-    //  KeyboardService
+    ///  KeyboardService state change
     case changeKeyboardState(KeyboardState)
+
+    /// Poll service
+    case poll(Date)
 
     //  Lifecycle events
     /// When scene phase changes.
@@ -235,6 +238,9 @@ struct AppUpdate {
             return appear(state: state, environment: environment)
         case let .changeKeyboardState(keyboard):
             return changeKeyboardState(state: state, keyboard: keyboard)
+        case let .poll(date):
+            environment.logger.log("Poll: \(date)")
+            return Change(state: state)
         case let .openURL(url):
             UIApplication.shared.open(url)
             return Change(state: state)
@@ -665,12 +671,19 @@ struct AppUpdate {
             "Documents: \(environment.documentURL)"
         )
 
+        let pollFx: AnyPublisher<AppAction, Never> = environment.poll
+            .map({ date in
+                AppAction.poll(date)
+            })
+            .eraseToAnyPublisher()
+
         // Subscribe to keyboard events
         let fx: AnyPublisher<AppAction, Never> = environment
             .keyboard.state
             .map({ value in
                 AppAction.changeKeyboardState(value)
             })
+            .merge(with: pollFx)
             .eraseToAnyPublisher()
 
         return Change(state: state, fx: fx)
