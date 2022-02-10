@@ -102,7 +102,8 @@ enum AppAction {
     // Editor
     /// Invokes save and blurs editor
     case selectDoneEditing
-    case setEditorDom(dom: Subtext)
+    /// Update editor dom and mark if this state is saved or not
+    case setEditorDom(dom: Subtext, isSaved: Bool = false)
     case setEditorSelection(NSRange)
     case insertEditorText(
         text: String,
@@ -126,6 +127,11 @@ enum AppAction {
         slug: Slug,
         message: String
     )
+
+    /// Update editor dom and always mark unsaved
+    static func updateEditorDom(dom: Subtext) -> Self {
+        Self.setEditorDom(dom: dom, isSaved: false)
+    }
 }
 
 //  MARK: Model
@@ -422,10 +428,11 @@ struct AppUpdate {
                 state: state,
                 environment: environment
             )
-        case let .setEditorDom(dom):
+        case let .setEditorDom(dom, isSaved):
             return setEditorDom(
                 state: state,
-                dom: dom
+                dom: dom,
+                isSaved: isSaved
             )
         case let .setEditorSelection(range):
             return setEditorSelection(
@@ -441,12 +448,11 @@ struct AppUpdate {
                 environment: environment
             )
         case let .showDetail(isShowing):
-            var model = state
-            model.isDetailShowing = isShowing
-            if isShowing == false {
-                model.focus = nil
-            }
-            return Change(state: model)
+            return showDetail(
+                state: state,
+                isShowing: isShowing,
+                environment: environment
+            )
         case let .setSearch(text):
             return setSearch(
                 state: state,
@@ -554,9 +560,21 @@ struct AppUpdate {
         return model
     }
 
+    /// Set the contents of the editor.
+    ///
+    /// if `isSaved` is `false`, the editor state will be flagged as unsaved,
+    /// allowing other processes to save it to disk later.
+    /// When setting a `dom` that represents the current saved-to-disk state
+    /// mark `isSaved` true.
+    ///
+    /// - Parameters:
+    ///   - state: the state of the app
+    ///   - dom: the Subtext DOM that should be rendered and set
+    ///   - isSaved: is this text state saved already?
     static func setEditorDom(
         state: AppModel,
-        dom: Subtext
+        dom: Subtext,
+        isSaved: Bool = false
     ) -> Change<AppModel, AppAction> {
         // `setEditorAttributedText` comes from changes
         // in the editor UITextView.
@@ -568,8 +586,8 @@ struct AppUpdate {
 
         var model = state
         model.editorDom = dom
-        // Mark model as unsaved
-        model.isEditorDomSaved = false
+        // Mark save state
+        model.isEditorDomSaved = isSaved
 
         let slashlink = dom.slashlinkFor(range: state.editorSelection)
         model.editorSelectedSlashlink = slashlink
@@ -656,6 +674,30 @@ struct AppUpdate {
         .eraseToAnyPublisher()
 
         return Change(state: state, fx: fx)
+    }
+
+    /// Toggle detail view showing or hiding
+    static func showDetail(
+        state: AppModel,
+        isShowing: Bool,
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
+        var model = state
+        var fx: AnyPublisher<AppAction, Never>? = nil
+
+        if isShowing == false {
+            model.isDetailShowing = isShowing
+            model.focus = nil
+
+            /// Save entry before dismissing, if it is unsaved.
+            if !model.isEditorDomSaved {
+                fx = model.snapshotEditorAsEntry().map({ entry in
+                    Just(AppAction.save(entry)).eraseToAnyPublisher()
+                })
+            }
+        }
+
+        return Change(state: model, fx: fx)
     }
 
     /// Change state of keyboard
@@ -1321,8 +1363,10 @@ struct AppUpdate {
         detail: EntryDetail,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
+        // Update editor DOM and mark this state as already saved,
+        // since we just loaded it from disk.
         let fx: AnyPublisher<AppAction, Never> = Just(
-            AppAction.setEditorDom(dom: detail.entry.dom)
+            AppAction.setEditorDom(dom: detail.entry.dom, isSaved: true)
         )
         .eraseToAnyPublisher()
 
@@ -1398,16 +1442,10 @@ struct AppUpdate {
         state: AppModel,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
-        // If editor dom is already saved, noop
-        guard !state.isEditorDomSaved else {
-            return Change(state: state)
-        }
-
         // If there is no entry currently being edited, noop.
         guard let entry = state.snapshotEditorAsEntry() else {
             return Change(state: state)
         }
-
         return save(state: state, entry: entry, environment: environment)
     }
 
@@ -1417,6 +1455,11 @@ struct AppUpdate {
         entry: SubtextFile,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
+        // If editor dom is already saved, noop
+        guard !state.isEditorDomSaved else {
+            return Change(state: state)
+        }
+
         let fx: AnyPublisher<AppAction, Never> = environment.database
             .writeEntry(
                 entry: entry
