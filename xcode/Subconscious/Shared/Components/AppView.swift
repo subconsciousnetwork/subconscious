@@ -103,7 +103,7 @@ enum AppAction {
     /// Invokes save and blurs editor
     case selectDoneEditing
     /// Update editor dom and mark if this state is saved or not
-    case setEditorDom(dom: Subtext, isSaved: Bool = false)
+    case setEditorDom(dom: Subtext, saveState: SaveState = .unsaved)
     case setEditorSelection(NSRange)
     case insertEditorText(
         text: String,
@@ -122,15 +122,15 @@ enum AppAction {
     case autosave
     /// Save an entry at a particular snapshot value
     case save(SubtextFile)
-    case saveSuccess(SubtextFile)
-    case saveFailure(
+    case succeedSave(SubtextFile)
+    case failSave(
         slug: Slug,
         message: String
     )
 
     /// Update editor dom and always mark unsaved
     static func updateEditorDom(dom: Subtext) -> Self {
-        Self.setEditorDom(dom: dom, isSaved: false)
+        Self.setEditorDom(dom: dom, saveState: .unsaved)
     }
 }
 
@@ -202,7 +202,7 @@ struct AppModel: Hashable, Equatable {
     /// Subtext object model
     var editorDom: Subtext = .empty
     /// Are all changes to editor saved?
-    var isEditorDomSaved = true
+    var editorSaveState = SaveState.saved
     /// Editor selection corresponds with `editorAttributedText`
     var editorSelection = NSMakeRange(0, 0)
     /// Slashlink currently being written (if any)
@@ -428,11 +428,11 @@ struct AppUpdate {
                 state: state,
                 environment: environment
             )
-        case let .setEditorDom(dom, isSaved):
+        case let .setEditorDom(dom, saveState):
             return setEditorDom(
                 state: state,
                 dom: dom,
-                isSaved: isSaved
+                saveState: saveState
             )
         case let .setEditorSelection(range):
             return setEditorSelection(
@@ -533,18 +533,19 @@ struct AppUpdate {
                 state: state,
                 environment: environment
             )
-        case let .saveSuccess(entry):
-            return saveSuccess(
+        case let .succeedSave(entry):
+            return succeedSave(
                 state: state,
                 entry: entry,
                 environment: environment
             )
-        case let .saveFailure(url, message):
-            //  TODO: show user a "try again" banner
-            environment.logger.warning(
-                "Save failed for entry (\(url)) with error: \(message)"
+        case let .failSave(slug, message):
+            return failSave(
+                state: state,
+                slug: slug,
+                message: message,
+                environment: environment
             )
-            return Change(state: state)
         }
     }
 
@@ -553,7 +554,7 @@ struct AppUpdate {
         var model = state
         model.slug = nil
         model.editorDom = .empty
-        model.isEditorDomSaved = true
+        model.editorSaveState = .saved
         model.editorSelection = NSMakeRange(0, 0)
         model.editorSelectedSlashlink = nil
         model.focus = nil
@@ -574,7 +575,7 @@ struct AppUpdate {
     static func setEditorDom(
         state: AppModel,
         dom: Subtext,
-        isSaved: Bool = false
+        saveState: SaveState = .unsaved
     ) -> Change<AppModel, AppAction> {
         // `setEditorAttributedText` comes from changes
         // in the editor UITextView.
@@ -587,7 +588,7 @@ struct AppUpdate {
         var model = state
         model.editorDom = dom
         // Mark save state
-        model.isEditorDomSaved = isSaved
+        model.editorSaveState = saveState
 
         let slashlink = dom.slashlinkFor(range: state.editorSelection)
         model.editorSelectedSlashlink = slashlink
@@ -690,7 +691,7 @@ struct AppUpdate {
             model.focus = nil
 
             /// Save entry before dismissing, if it is unsaved.
-            if !model.isEditorDomSaved {
+            if model.editorSaveState != .saved {
                 fx = model.snapshotEditorAsEntry().map({ entry in
                     Just(AppAction.save(entry)).eraseToAnyPublisher()
                 })
@@ -1324,7 +1325,7 @@ struct AppUpdate {
 
         /// If we were editing another detail view,
         /// snapshot and save it, if it is unsaved.
-        if !state.isEditorDomSaved {
+        if state.editorSaveState != .saved {
             if let snapshot = state.snapshotEditorAsEntry() {
                 saveFx = Just(
                     AppAction.save(snapshot)
@@ -1366,7 +1367,10 @@ struct AppUpdate {
         // Update editor DOM and mark this state as already saved,
         // since we just loaded it from disk.
         let fx: AnyPublisher<AppAction, Never> = Just(
-            AppAction.setEditorDom(dom: detail.entry.dom, isSaved: true)
+            AppAction.setEditorDom(
+                dom: detail.entry.dom,
+                saveState: .unsaved
+            )
         )
         .eraseToAnyPublisher()
 
@@ -1456,31 +1460,35 @@ struct AppUpdate {
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
         // If editor dom is already saved, noop
-        guard !state.isEditorDomSaved else {
+        guard state.editorSaveState != .saved else {
             return Change(state: state)
         }
+
+        var model = state
+        // Mark saving in-progress
+        model.editorSaveState = .saving
 
         let fx: AnyPublisher<AppAction, Never> = environment.database
             .writeEntry(
                 entry: entry
             )
             .map({ _ in
-                AppAction.saveSuccess(entry)
+                AppAction.succeedSave(entry)
             })
             .catch({ error in
                 Just(
-                    AppAction.saveFailure(
+                    AppAction.failSave(
                         slug: entry.slug,
                         message: error.localizedDescription
                     )
                 )
             })
             .eraseToAnyPublisher()
-        return Change(state: state, fx: fx)
+        return Change(state: model, fx: fx)
     }
 
     /// Log save success and perform refresh of various lists.
-    static func saveSuccess(
+    static func succeedSave(
         state: AppModel,
         entry: SubtextFile,
         environment: AppEnvironment
@@ -1492,19 +1500,39 @@ struct AppUpdate {
             .eraseToAnyPublisher()
 
         var model = state
+
         // If editor state is still the state we invoked save with,
         // then mark the current editor state as "saved".
         // We check before setting in case changes happened between the
         // time we invoked save and the time it completed.
-        // If changes did happen in that time, we want to leave the
-        // state of the model alone, giving other processes a chance
-        // to save the new changes.
+        // If changes did happen in that time, we want to mark the current
+        // state unsaved, giving other processes a chance to save the
+        // new changes.
         // 2022-02-09 Gordon Brander
-        if model.isEditorMatchingEntry(entry) {
-            model.isEditorDomSaved = true
+        if
+            model.editorSaveState == .saving &&
+            model.isEditorMatchingEntry(entry)
+        {
+            model.editorSaveState = .saved
         }
 
         return Change(state: model, fx: fx)
+    }
+
+    static func failSave(
+        state: AppModel,
+        slug: Slug,
+        message: String,
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
+        //  TODO: show user a "try again" banner
+        environment.logger.warning(
+            "Save failed for entry (\(slug)) with error: \(message)"
+        )
+        // Mark unsaved, since we failed to save
+        var model = state
+        model.editorSaveState = .unsaved
+        return Change(state: model)
     }
 }
 
