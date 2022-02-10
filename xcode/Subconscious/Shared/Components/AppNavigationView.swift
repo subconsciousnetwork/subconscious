@@ -43,6 +43,8 @@ struct AppNavigationView: View {
                         }
                     }
                 }
+                .transition(.opacity)
+                .animation(.easeOutCubic(), value: store.state.recent)
                 .listStyle(.plain)
                 .confirmationDialog(
                     "Are you sure?",
