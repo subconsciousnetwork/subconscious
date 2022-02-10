@@ -86,7 +86,7 @@ struct AppNavigationView: View {
                             ),
                             editorDom: store.binding(
                                 get: \.editorDom,
-                                tag: AppAction.setEditorDom
+                                tag: AppAction.updateEditorDom
                             ),
                             editorSelection: store.binding(
                                 get: \.editorSelection,
@@ -139,7 +139,8 @@ struct AppNavigationView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .principal) {
-                    Text("Ideas").bold()
+                    Text("Ideas")
+                        .font(Font(UIFont.appTextMedium))
                 }
             }
         }
