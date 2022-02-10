@@ -16,8 +16,11 @@ import Combine
 enum AppAction {
     case noop
 
-    //  KeyboardService
+    ///  KeyboardService state change
     case changeKeyboardState(KeyboardState)
+
+    /// Poll service
+    case poll(Date)
 
     //  Lifecycle events
     /// When scene phase changes.
@@ -97,7 +100,10 @@ enum AppAction {
     case showDetail(Bool)
 
     // Editor
-    case setEditorDom(dom: Subtext)
+    /// Invokes save and blurs editor
+    case selectDoneEditing
+    /// Update editor dom and mark if this state is saved or not
+    case setEditorDom(dom: Subtext, saveState: SaveState = .unsaved)
     case setEditorSelection(NSRange)
     case insertEditorText(
         text: String,
@@ -111,13 +117,21 @@ enum AppAction {
     case setLinkSuggestions([Suggestion])
     case linkSuggestionsFailure(String)
 
-    // Saving entries
-    case save
-    case saveSuccess(Slug)
-    case saveFailure(
+    //  Saving entries
+    /// Autosave the current entry
+    case autosave
+    /// Save an entry at a particular snapshot value
+    case save(SubtextFile)
+    case succeedSave(SubtextFile)
+    case failSave(
         slug: Slug,
         message: String
     )
+
+    /// Update editor dom and always mark unsaved
+    static func updateEditorDom(dom: Subtext) -> Self {
+        Self.setEditorDom(dom: dom, saveState: .unsaved)
+    }
 }
 
 //  MARK: Model
@@ -187,6 +201,8 @@ struct AppModel: Hashable, Equatable {
     // Editor
     /// Subtext object model
     var editorDom: Subtext = .empty
+    /// Are all changes to editor saved?
+    var editorSaveState = SaveState.saved
     /// Editor selection corresponds with `editorAttributedText`
     var editorSelection = NSMakeRange(0, 0)
     /// Slashlink currently being written (if any)
@@ -199,6 +215,21 @@ struct AppModel: Hashable, Equatable {
     var isLinkSheetPresented = false
     var linkSearchText = ""
     var linkSuggestions: [Suggestion] = []
+
+    /// Given a particular entry value, does the editor's state
+    /// currently match it, such that we could say the editor is
+    /// displaying that entry?
+    func isEditorMatchingEntry(_ entry: SubtextFile) -> Bool {
+        self.slug == entry.slug && self.editorDom == entry.dom
+    }
+
+    /// Get a Subtext file snapshot for the current editor state
+    func snapshotEditorAsEntry() -> SubtextFile? {
+        guard let slug = self.slug else {
+            return nil
+        }
+        return SubtextFile(slug: slug, dom: self.editorDom)
+    }
 }
 
 //  MARK: Update
@@ -235,6 +266,13 @@ struct AppUpdate {
             return appear(state: state, environment: environment)
         case let .changeKeyboardState(keyboard):
             return changeKeyboardState(state: state, keyboard: keyboard)
+        case .poll:
+            // Auto-save entry currently being edited, if any.
+            let fx: AnyPublisher<AppAction, Never> = Just(
+                AppAction.autosave
+            )
+            .eraseToAnyPublisher()
+            return Change(state: state, fx: fx)
         case let .openURL(url):
             UIApplication.shared.open(url)
             return Change(state: state)
@@ -385,10 +423,16 @@ struct AppUpdate {
                 error: error,
                 environment: environment
             )
-        case let .setEditorDom(dom):
+        case .selectDoneEditing:
+            return selectDoneEditing(
+                state: state,
+                environment: environment
+            )
+        case let .setEditorDom(dom, saveState):
             return setEditorDom(
                 state: state,
-                dom: dom
+                dom: dom,
+                saveState: saveState
             )
         case let .setEditorSelection(range):
             return setEditorSelection(
@@ -404,12 +448,11 @@ struct AppUpdate {
                 environment: environment
             )
         case let .showDetail(isShowing):
-            var model = state
-            model.isDetailShowing = isShowing
-            if isShowing == false {
-                model.focus = nil
-            }
-            return Change(state: model)
+            return showDetail(
+                state: state,
+                isShowing: isShowing,
+                environment: environment
+            )
         case let .setSearch(text):
             return setSearch(
                 state: state,
@@ -447,14 +490,11 @@ struct AppUpdate {
                 environment: environment
             )
         case let .updateDetail(results):
-            let fx: AnyPublisher<AppAction, Never> = Just(
-                AppAction.setEditorDom(dom: results.entry.dom)
+            return updateDetail(
+                state: state,
+                detail: results,
+                environment: environment
             )
-            .eraseToAnyPublisher()
-            var model = state
-            model.slug = results.slug
-            model.backlinks = results.backlinks
-            return Change(state: model, fx: fx)
         case let .failDetail(message):
             environment.logger.log(
                 "Failed to get details for search: \(message)"
@@ -482,39 +522,60 @@ struct AppUpdate {
                 "Link suggest failed: \(message)"
             )
             return Change(state: state)
-        case .save:
+        case let .save(entry):
             return save(
                 state: state,
+                entry: entry,
                 environment: environment
             )
-        case let .saveSuccess(slug):
-            return saveSuccess(
+        case .autosave:
+            return autosave(
+                state: state,
+                environment: environment
+            )
+        case let .succeedSave(entry):
+            return succeedSave(
+                state: state,
+                entry: entry,
+                environment: environment
+            )
+        case let .failSave(slug, message):
+            return failSave(
                 state: state,
                 slug: slug,
+                message: message,
                 environment: environment
             )
-        case let .saveFailure(url, message):
-            //  TODO: show user a "try again" banner
-            environment.logger.warning(
-                "Save failed for entry (\(url)) with error: \(message)"
-            )
-            return Change(state: state)
         }
     }
 
     /// Set all editor properties to initial values
     static func resetEditor(state: AppModel) -> AppModel {
         var model = state
+        model.slug = nil
         model.editorDom = .empty
+        model.editorSaveState = .saved
         model.editorSelection = NSMakeRange(0, 0)
         model.editorSelectedSlashlink = nil
         model.focus = nil
         return model
     }
 
+    /// Set the contents of the editor.
+    ///
+    /// if `isSaved` is `false`, the editor state will be flagged as unsaved,
+    /// allowing other processes to save it to disk later.
+    /// When setting a `dom` that represents the current saved-to-disk state
+    /// mark `isSaved` true.
+    ///
+    /// - Parameters:
+    ///   - state: the state of the app
+    ///   - dom: the Subtext DOM that should be rendered and set
+    ///   - isSaved: is this text state saved already?
     static func setEditorDom(
         state: AppModel,
-        dom: Subtext
+        dom: Subtext,
+        saveState: SaveState = .unsaved
     ) -> Change<AppModel, AppAction> {
         // `setEditorAttributedText` comes from changes
         // in the editor UITextView.
@@ -526,6 +587,8 @@ struct AppUpdate {
 
         var model = state
         model.editorDom = dom
+        // Mark save state
+        model.editorSaveState = saveState
 
         let slashlink = dom.slashlinkFor(range: state.editorSelection)
         model.editorSelectedSlashlink = slashlink
@@ -614,6 +677,30 @@ struct AppUpdate {
         return Change(state: state, fx: fx)
     }
 
+    /// Toggle detail view showing or hiding
+    static func showDetail(
+        state: AppModel,
+        isShowing: Bool,
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
+        var model = state
+        var fx: AnyPublisher<AppAction, Never>? = nil
+
+        if isShowing == false {
+            model.isDetailShowing = isShowing
+            model.focus = nil
+
+            /// Save entry before dismissing, if it is unsaved.
+            if model.editorSaveState != .saved {
+                fx = model.snapshotEditorAsEntry().map({ entry in
+                    Just(AppAction.save(entry)).eraseToAnyPublisher()
+                })
+            }
+        }
+
+        return Change(state: model, fx: fx)
+    }
+
     /// Change state of keyboard
     /// Actions come from `KeyboardService`
     static func changeKeyboardState(
@@ -665,12 +752,19 @@ struct AppUpdate {
             "Documents: \(environment.documentURL)"
         )
 
+        let pollFx: AnyPublisher<AppAction, Never> = environment.poll
+            .map({ date in
+                AppAction.poll(date)
+            })
+            .eraseToAnyPublisher()
+
         // Subscribe to keyboard events
         let fx: AnyPublisher<AppAction, Never> = environment
             .keyboard.state
             .map({ value in
                 AppAction.changeKeyboardState(value)
             })
+            .merge(with: pollFx)
             .eraseToAnyPublisher()
 
         return Change(state: state, fx: fx)
@@ -952,6 +1046,7 @@ struct AppUpdate {
         }
     }
 
+    /// Handle completion of entry delete
     static func deleteEntrySuccess(
         state: AppModel,
         slug: Slug,
@@ -962,8 +1057,17 @@ struct AppUpdate {
         //  This ensures they don't show the deleted entry.
         let fx: AnyPublisher<AppAction, Never> = Just(AppAction.refreshAll)
             .eraseToAnyPublisher()
+
+        var model = state
+        // If we just deleted the entry currently being edited,
+        // reset the editor to initial state (nothing is being edited).
+        if state.slug == slug {
+            model = resetEditor(state: model)
+            model.isDetailShowing = false
+        }
+
         return Change(
-            state: state,
+            state: model,
             fx: fx
         )
     }
@@ -984,7 +1088,7 @@ struct AppUpdate {
             )
             .merge(
                 with: Just(AppAction.setFocus(.rename)),
-                Just(AppAction.save)
+                Just(AppAction.autosave)
             )
             .eraseToAnyPublisher()
 
@@ -1152,6 +1256,19 @@ struct AppUpdate {
         return Change(state: state)
     }
 
+    /// Unfocus editor and save current state
+    static func selectDoneEditing(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
+        let fx: AnyPublisher<AppAction, Never> = Just(
+            AppAction.autosave
+        )
+        .merge(with: Just(AppAction.setFocus(nil)))
+        .eraseToAnyPublisher()
+        return Change(state: state, fx: fx)
+    }
+
     /// Set search text for main search input
     static func setSearch(
         state: AppModel,
@@ -1203,26 +1320,63 @@ struct AppUpdate {
             return Change(state: state)
         }
 
+        var saveFx: AnyPublisher<AppAction, Never> = Empty()
+            .eraseToAnyPublisher()
+
+        /// If we were editing another detail view,
+        /// snapshot and save it, if it is unsaved.
+        if state.editorSaveState != .saved {
+            if let snapshot = state.snapshotEditorAsEntry() {
+                saveFx = Just(
+                    AppAction.save(snapshot)
+                )
+                .eraseToAnyPublisher()
+            }
+        }
+
         var model = resetEditor(state: state)
-        model.slug = nil
         model.searchText = ""
         model.isSearchShowing = false
         model.isDetailShowing = true
 
         let fx: AnyPublisher<AppAction, Never> = environment.database
             .readEntryDetail(slug: slug, fallback: fallback)
-            .map({ results in
-                AppAction.updateDetail(results)
+            .map({ detail in
+                AppAction.updateDetail(detail)
             })
             .catch({ error in
                 Just(AppAction.failDetail(error.localizedDescription))
             })
             .merge(
-                with: Just(AppAction.setSearch("")),
+                with: saveFx,
+                Just(AppAction.setSearch("")),
                 Just(AppAction.createSearchHistoryItem(fallback))
             )
             .eraseToAnyPublisher()
 
+        return Change(state: model, fx: fx)
+    }
+
+    /// Update entry detail.
+    /// This case gets hit after requesting detail for an entry.
+    static func updateDetail(
+        state: AppModel,
+        detail: EntryDetail,
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
+        // Update editor DOM and mark this state as already saved,
+        // since we just loaded it from disk.
+        let fx: AnyPublisher<AppAction, Never> = Just(
+            AppAction.setEditorDom(
+                dom: detail.entry.dom,
+                saveState: .unsaved
+            )
+        )
+        .eraseToAnyPublisher()
+
+        var model = state
+        model.slug = detail.slug
+        model.backlinks = detail.backlinks
         return Change(state: model, fx: fx)
     }
 
@@ -1286,59 +1440,99 @@ struct AppUpdate {
         return Change(state: model, fx: fx)
     }
 
-    /// Save entry to database
-    static func save(
+    /// Autosave entry currently being edited (if any).
+    /// This is safe to call at any time.
+    static func autosave(
         state: AppModel,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
-        var model = state
-        model.focus = nil
-        if let slug = model.slug {
-            // Parse editorAttributedText to entry.
-            let entry = SubtextFile(
-                slug: slug,
-                dom: model.editorDom
-            )
-            let fx: AnyPublisher<AppAction, Never> = environment.database
-                .writeEntry(
-                    entry: entry
-                )
-                .map({ _ in
-                    AppAction.saveSuccess(slug)
-                })
-                .catch({ error in
-                    Just(
-                        AppAction.saveFailure(
-                            slug: slug,
-                            message: error.localizedDescription
-                        )
-                    )
-                })
-                .eraseToAnyPublisher()
-            return Change(state: model, fx: fx)
-        } else {
-            environment.logger.warning(
-                """
-                Could not save. No URL set for entry.
-                It should not be possible to reach this state.
-                """
-            )
-            return Change(state: model)
+        // If there is no entry currently being edited, noop.
+        guard let entry = state.snapshotEditorAsEntry() else {
+            return Change(state: state)
         }
+        return save(state: state, entry: entry, environment: environment)
+    }
+
+    /// Save snapshot of entry
+    static func save(
+        state: AppModel,
+        entry: SubtextFile,
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
+        // If editor dom is already saved, noop
+        guard state.editorSaveState != .saved else {
+            return Change(state: state)
+        }
+
+        var model = state
+        // Mark saving in-progress
+        model.editorSaveState = .saving
+
+        let fx: AnyPublisher<AppAction, Never> = environment.database
+            .writeEntry(
+                entry: entry
+            )
+            .map({ _ in
+                AppAction.succeedSave(entry)
+            })
+            .catch({ error in
+                Just(
+                    AppAction.failSave(
+                        slug: entry.slug,
+                        message: error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Change(state: model, fx: fx)
     }
 
     /// Log save success and perform refresh of various lists.
-    static func saveSuccess(
+    static func succeedSave(
         state: AppModel,
-        slug: Slug,
+        entry: SubtextFile,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
         environment.logger.debug(
-            "Saved entry: \(slug)"
+            "Saved entry: \(entry.slug)"
         )
         let fx = Just(AppAction.refreshAll)
             .eraseToAnyPublisher()
-        return Change(state: state, fx: fx)
+
+        var model = state
+
+        // If editor state is still the state we invoked save with,
+        // then mark the current editor state as "saved".
+        // We check before setting in case changes happened between the
+        // time we invoked save and the time it completed.
+        // If changes did happen in that time, we want to mark the current
+        // state unsaved, giving other processes a chance to save the
+        // new changes.
+        // 2022-02-09 Gordon Brander
+        if
+            model.editorSaveState == .saving &&
+            model.isEditorMatchingEntry(entry)
+        {
+            model.editorSaveState = .saved
+        }
+
+        return Change(state: model, fx: fx)
+    }
+
+    static func failSave(
+        state: AppModel,
+        slug: Slug,
+        message: String,
+        environment: AppEnvironment
+    ) -> Change<AppModel, AppAction> {
+        //  TODO: show user a "try again" banner
+        environment.logger.warning(
+            "Save failed for entry (\(slug)) with error: \(message)"
+        )
+        // Mark unsaved, since we failed to save
+        var model = state
+        model.editorSaveState = .unsaved
+        return Change(state: model)
     }
 }
 

@@ -59,7 +59,8 @@ public struct Change<State, Action> {
 /// See https://guide.elm-lang.org/architecture/
 /// and https://guide.elm-lang.org/webapps/structure.html
 /// for more about this approach.
-public final class Store<State, Action, Environment>: ObservableObject {
+public final class Store<State, Action, Environment>: ObservableObject
+where State: Equatable {
     /// Stores cancellables by ID
     private var cancellables: [UUID: AnyCancellable] = [:]
     /// Current state.
@@ -161,14 +162,25 @@ public final class Store<State, Action, Environment>: ObservableObject {
     /// make sure that they join the main thread (e.g. with
     /// `.receive(on: DispatchQueue.main)`).
     public func send(action: Action) {
+        if debug {
+            logger.debug("Action: \(String(reflecting: action))")
+        }
         // Generate next state and effect
         let change = update(self.state, action, self.environment)
         if debug {
-            logger.debug("Action: \(String(reflecting: action))")
             logger.debug("State: \(String(reflecting: change.state))")
         }
-        // Set state. This mutates published property, firing objectWillChange.
-        self.state = change.state
+        // Set `state` if changed.
+        //
+        // Mutating state (a `@Published` property) will fire `objectWillChange`
+        // and cause any views that subscribe to store to re-evaluate
+        // their body property.
+        //
+        // If no change has occurred, we avoid setting the property
+        // so that body does not need to be reevaluated.
+        if self.state != change.state {
+            self.state = change.state
+        }
         // Run effect
         if let fx = change.fx {
             self.subscribe(fx: fx)

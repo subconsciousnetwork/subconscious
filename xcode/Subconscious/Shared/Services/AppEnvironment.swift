@@ -6,11 +6,13 @@
 //
 
 import Foundation
+import Combine
 import os
 
 /// A place for constants and services
 struct AppEnvironment {
     static let rdns = "com.subconscious.Subconscious"
+    static let pollingInterval: Double = 15
 
     var documentURL: URL
     var applicationSupportURL: URL
@@ -18,6 +20,8 @@ struct AppEnvironment {
     var logger: Logger
     var keyboard: KeyboardService
     var database: DatabaseService
+    /// Issues periodic polls
+    var poll: AnyPublisher<Date, Never>
 
     init() {
         self.documentURL = FileManager.default.urls(
@@ -45,6 +49,14 @@ struct AppEnvironment {
         )
 
         self.keyboard = KeyboardService()
+
+        self.poll = Timer.publish(
+            every: Self.pollingInterval,
+            on: .main,
+            in: .default
+        )
+        .autoconnect()
+        .eraseToAnyPublisher()
     }
 }
 
