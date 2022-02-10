@@ -97,7 +97,7 @@ struct AppNavigationView: View {
                                 tag: AppAction.setLinkSearch
                             ),
                             onDone: {
-                                store.send(action: .save)
+                                store.send(action: .selectDoneEditing)
                             },
                             onEditorLink: { url, _, range, _ in
                                 store.send(
