@@ -17,7 +17,7 @@ struct EntryRow: View {
             HStack {
                 Text(entry.title)
                     .font(Font.appText)
-                    .lineLimit(2)
+                    .lineLimit(1)
                     .foregroundColor(Color.text)
                     .multilineTextAlignment(.leading)
                 Spacer()
@@ -25,7 +25,7 @@ struct EntryRow: View {
             HStack {
                 Text(entry.excerpt)
                     .font(Font.appText)
-                    .lineLimit(3)
+                    .lineLimit(2)
                     .foregroundColor(Color.secondaryText)
                     .multilineTextAlignment(.leading)
                 Spacer()
