@@ -14,7 +14,7 @@ struct DetailView: View {
         hasBacklinks: Bool
     ) -> CGFloat {
         if !isKeyboardUp && hasBacklinks {
-            return containerHeight - (AppTheme.unit * 24)
+            return containerHeight - (AppTheme.unit * 32)
         } else {
             return containerHeight
         }
@@ -81,6 +81,8 @@ struct DetailView: View {
                                     )
                                 )
                                 if !isKeyboardUp && backlinks.count > 0 {
+                                    ThickDividerView()
+                                        .padding(.bottom, AppTheme.unit4)
                                     BacklinksView(
                                         backlinks: backlinks,
                                         onActivateBacklink: onCommitSearch
