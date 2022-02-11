@@ -1369,7 +1369,7 @@ struct AppUpdate {
         let fx: AnyPublisher<AppAction, Never> = Just(
             AppAction.setEditorDom(
                 dom: detail.entry.dom,
-                saveState: .unsaved
+                saveState: .saved
             )
         )
         .eraseToAnyPublisher()
