@@ -75,14 +75,7 @@ struct SearchView: View {
                     // of our suggestion (frame + inset), throwing off
                     // height calculations below.
                     // 2022-01-28 Gordon Brander
-                    SuggestionViewModifier(
-                        insets: EdgeInsets(
-                            top: 0,
-                            leading: AppTheme.tightPadding,
-                            bottom: 0,
-                            trailing: AppTheme.tightPadding
-                        )
-                    )
+                    SuggestionViewModifier()
                 )
             }
             // Fix the height of the scrollview based on the number of

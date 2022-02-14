@@ -25,9 +25,17 @@ struct AppNavigationView: View {
                                 )
                             }
                         ) {
-                            EntryRow(entry: entry)
-                                .padding(.vertical, AppTheme.unit2)
+                            Label(
+                                title: {
+                                    EntryRow(entry: entry)
+                                },
+                                icon: {
+                                    Image(systemName: "doc")
+                                }
+                            )
                         }
+                        .labelStyle(RowLabelStyle())
+                        .modifier(ResetRowViewModifier())
                         .swipeActions(
                             edge: .trailing,
                             allowsFullSwipe: false

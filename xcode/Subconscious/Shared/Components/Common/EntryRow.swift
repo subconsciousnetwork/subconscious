@@ -13,13 +13,16 @@ struct EntryRow: View {
     var entry: EntryStub
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(entry.title)
                     .font(Font.appText)
                     .lineLimit(1)
                     .foregroundColor(Color.text)
                     .multilineTextAlignment(.leading)
+                    // Aligns this text's vertical center to icon vertical
+                    // center in a label.
+                    .frame(minHeight: AppTheme.icon)
                 Spacer()
             }
             HStack {
