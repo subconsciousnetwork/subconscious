@@ -2,6 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.example.plain-text</string>
+			</array>
+			<key>NSUbiquitousDocumentUserActivityType</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER).example-document</string>
+		</dict>
+	</array>
 	<key>UIAppFonts</key>
 	<array>
 		<string>IBMPlexMono-Bold.ttf</string>
@@ -14,17 +25,6 @@
 		<string>IBMPlexSans-Light.ttf</string>
 		<string>IBMPlexSans-Medium.ttf</string>
 		<string>IBMPlexSans-Regular.ttf</string>
-	</array>
-	<key>CFBundleDocumentTypes</key>
-	<array>
-		<dict>
-			<key>LSItemContentTypes</key>
-			<array>
-				<string>com.example.plain-text</string>
-			</array>
-			<key>NSUbiquitousDocumentUserActivityType</key>
-			<string>$(PRODUCT_BUNDLE_IDENTIFIER).example-document</string>
-		</dict>
 	</array>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
