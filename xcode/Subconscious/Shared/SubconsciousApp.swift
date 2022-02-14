@@ -18,7 +18,7 @@ struct SubconsciousApp: App {
         state: AppModel(),
         environment: AppEnvironment(),
         logger: Logger.init(
-            subsystem: "com.subconscious",
+            subsystem: AppEnvironment.rdns,
             category: "store"
         ),
         debug: false
