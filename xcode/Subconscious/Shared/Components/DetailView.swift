@@ -43,6 +43,7 @@ struct DetailView: View {
 
     var body: some View {
         VStack {
+            Divider()
             if slug == nil {
                 ProgressScrim()
             } else {
@@ -104,9 +105,11 @@ struct DetailView: View {
                             onRename(slug)
                         }
                     ) {
-                        Text(slug?.description ?? "Untitled")
+                        DetailTitleGroupView(
+                            title: editorDom.title(),
+                            slug: slug
+                        )
                     }
-                    .buttonStyle(MicroFieldButtonStyle())
                 }
             }
             ToolbarItem(placement: .primaryAction) {
