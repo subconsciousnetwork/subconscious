@@ -1565,7 +1565,8 @@ struct AppView: View {
                             }
                         },
                         label: {
-                            Image(systemName: "plus")
+                            Image(systemName: "doc.text.magnifyingglass")
+                                .font(.system(size: 20))
                         }
                     )
                     .buttonStyle(FABButtonStyle())
