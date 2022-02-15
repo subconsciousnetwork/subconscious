@@ -12,6 +12,7 @@ import SwiftUI
 /// Creates label style analogous to a default list label
 /// However, this version gives us more control over the styling, allowing us to create hanging icons.
 struct RowLabelStyle: LabelStyle {
+    var iconColor = Color.secondaryIcon
     var insets = EdgeInsets(
         top: AppTheme.unit3,
         leading: AppTheme.tightPadding,
@@ -25,7 +26,7 @@ struct RowLabelStyle: LabelStyle {
                     width: AppTheme.icon,
                     height: AppTheme.icon
                 )
-                .foregroundColor(Color.icon)
+                .foregroundColor(iconColor)
             VStack(spacing: insets.bottom) {
                 configuration.title
                     .foregroundColor(Color.text)
