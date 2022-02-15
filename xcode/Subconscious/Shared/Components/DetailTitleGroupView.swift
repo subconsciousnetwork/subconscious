@@ -16,10 +16,12 @@ struct DetailTitleGroupView: View {
                 .font(Font(UIFont.appText))
                 .foregroundColor(Color.text)
                 .frame(height: AppTheme.textSize)
+                .lineLimit(1)
             Text(slug?.description ?? "untitled")
                 .font(Font(UIFont.appCaption))
                 .frame(height: AppTheme.captionSize)
                 .foregroundColor(Color.secondaryText)
+                .lineLimit(1)
         }
     }
 }
