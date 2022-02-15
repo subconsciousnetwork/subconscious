@@ -99,7 +99,7 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             DetailToolbarContent(
-                focus: focus,
+                isEditing: (focus == .editor),
                 title: editorDom.title(),
                 slug: slug,
                 onRename: onRename,

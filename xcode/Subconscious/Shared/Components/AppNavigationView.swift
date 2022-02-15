@@ -109,7 +109,11 @@ struct AppNavigationView: View {
                                 tag: AppAction.setLinkSearch
                             ),
                             onDone: {
-                                store.send(action: .selectDoneEditing)
+                                withAnimation(
+                                    .easeOutCubic(duration: Duration.fast)
+                                ) {
+                                    store.send(action: .selectDoneEditing)
+                                }
                             },
                             onEditorLink: { url, _, range, _ in
                                 store.send(
