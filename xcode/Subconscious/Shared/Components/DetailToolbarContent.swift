@@ -79,7 +79,6 @@ struct DetailToolbarContent: ToolbarContent {
                     },
                     label: {
                         Image(systemName: "ellipsis.circle")
-                            .frame(width: 24, height: 24)
                     }
                 )
             }
