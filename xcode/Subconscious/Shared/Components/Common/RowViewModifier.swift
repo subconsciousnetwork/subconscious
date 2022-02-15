@@ -6,7 +6,7 @@
 //
 import SwiftUI
 
-struct ResetRowViewModifier: ViewModifier {
+struct RowViewModifier: ViewModifier {
     var insets: EdgeInsets? = EdgeInsets(
         top: 0,
         leading: 0,
@@ -15,6 +15,7 @@ struct ResetRowViewModifier: ViewModifier {
     )
     func body(content: Content) -> some View {
         content
+            .labelStyle(RowLabelStyle())
             .listRowInsets(insets)
             .listRowSeparator(.hidden, edges: .all)
     }

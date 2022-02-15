@@ -35,8 +35,7 @@ struct AppNavigationView: View {
                                 }
                             )
                         }
-                        .labelStyle(RowLabelStyle())
-                        .modifier(ResetRowViewModifier())
+                        .modifier(RowViewModifier())
                         .swipeActions(
                             edge: .trailing,
                             allowsFullSwipe: false
