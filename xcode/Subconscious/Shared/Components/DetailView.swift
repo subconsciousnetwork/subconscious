@@ -14,7 +14,7 @@ struct DetailView: View {
         hasBacklinks: Bool
     ) -> CGFloat {
         if !isKeyboardUp && hasBacklinks {
-            return containerHeight - (AppTheme.unit * 32)
+            return UIFont.appTextMono.lineHeight * 8
         } else {
             return containerHeight
         }
