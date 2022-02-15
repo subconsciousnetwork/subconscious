@@ -55,10 +55,28 @@ struct DetailToolbarContent: ToolbarContent {
                     .transition(.opacity)
                 }
             } else {
-                HStack{
-                    EmptyView()
-                }
-                .frame(width: 24, height: 24)
+                Menu(
+                    content: {
+                        Section {
+                            Button(
+                                action: {}
+                            ) {
+                                Label("Rename", systemImage: "pencil")
+                            }
+                        }
+                        Section {
+                            Button(
+                                action: {}
+                            ) {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    },
+                    label: {
+                        Image(systemName: "ellipsis.circle")
+                            .frame(width: 24, height: 24)
+                    }
+                )
             }
         }
     }
