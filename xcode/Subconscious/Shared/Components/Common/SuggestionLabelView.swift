@@ -9,13 +9,18 @@ import SwiftUI
 
 struct SuggestionLabelView: View {
     var suggestion: Suggestion
+
+    private func readTitle(_ text: String) -> String {
+        text.isEmpty ? "Untitled" : text
+    }
+
     var body: some View {
         switch suggestion {
         case .entry(let entryLink):
             Label(
                 title: {
                     TitleGroup(
-                        title: entryLink.title,
+                        title: readTitle(entryLink.title),
                         subtitle: entryLink.slug.description
                     )
                 },
@@ -27,7 +32,7 @@ struct SuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroup(
-                        title: entryLink.title,
+                        title: readTitle(entryLink.title),
                         subtitle: entryLink.slug.description
                     )
                 },
