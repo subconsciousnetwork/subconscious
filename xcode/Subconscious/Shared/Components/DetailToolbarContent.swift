@@ -13,6 +13,7 @@ struct DetailToolbarContent: ToolbarContent {
     var title: String
     var slug: Slug?
     var onRename: (Slug?) -> Void
+    var onDelete: (Slug?) -> Void
     var onDone: () -> Void
 
     //  The Toolbar `.principal` position does not limit its own width.
@@ -59,14 +60,18 @@ struct DetailToolbarContent: ToolbarContent {
                     content: {
                         Section {
                             Button(
-                                action: {}
+                                action: {
+                                    onRename(slug)
+                                }
                             ) {
                                 Label("Rename", systemImage: "pencil")
                             }
                         }
                         Section {
                             Button(
-                                action: {}
+                                action: {
+                                    onDelete(slug)
+                                }
                             ) {
                                 Label("Delete", systemImage: "trash")
                             }
