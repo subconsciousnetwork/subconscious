@@ -11,11 +11,12 @@ import SwiftUI
 /// Provides a preview/excerpt of the entry.
 struct EntryRow: View {
     var entry: EntryStub
+    var emptyText = "Empty"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text(entry.title)
+                Text(entry.title.isEmpty ? emptyText : entry.title)
                     .font(Font.appText)
                     .lineLimit(1)
                     .foregroundColor(Color.text)
@@ -26,7 +27,7 @@ struct EntryRow: View {
                 Spacer()
             }
             HStack {
-                Text(entry.excerpt)
+                Text(entry.excerpt.isEmpty ? emptyText : entry.excerpt)
                     .font(Font.appText)
                     .lineLimit(2)
                     .foregroundColor(Color.secondaryText)
