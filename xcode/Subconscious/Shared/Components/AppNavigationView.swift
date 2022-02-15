@@ -147,8 +147,17 @@ struct AppNavigationView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .principal) {
-                    Text("Ideas")
-                        .font(Font(UIFont.appTextMedium))
+                    HStack {
+                        Text("Ideas")
+                            .font(Font(UIFont.appTextMedium))
+                        Text("122")
+                            .font(Font(UIFont.appCaption))
+                            .foregroundColor(Color.secondaryText)
+                            .padding(.vertical, AppTheme.unit)
+                            .padding(.horizontal, AppTheme.unit2)
+                            .background(Color.secondaryBackground)
+                            .clipShape(Capsule())
+                    }
                 }
             }
         }
