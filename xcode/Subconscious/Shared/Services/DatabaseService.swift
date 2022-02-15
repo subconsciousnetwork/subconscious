@@ -596,13 +596,13 @@ struct DatabaseService {
                 .execute(
                     sql: """
                     SELECT slug, title
-                    FROM entry
-                    WHERE slug LIKE ?
-                    ORDER BY length(slug)
+                    FROM entry_search
+                    WHERE entry_search MATCH ?
+                    ORDER BY rank
                     LIMIT 5
                     """,
                     parameters: [
-                        .prefixQueryLike(sluglike)
+                        .queryFTS5(sluglike)
                     ]
                 )
                 .compactMap({ row in
