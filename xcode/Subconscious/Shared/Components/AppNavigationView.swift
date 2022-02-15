@@ -13,6 +13,7 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
+                Divider()
                 if store.state.recent.count > 0 {
                     List(store.state.recent) { entry in
                         Button(
