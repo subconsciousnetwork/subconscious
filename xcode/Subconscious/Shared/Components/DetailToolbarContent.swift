@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Toolbar for detail view
 struct DetailToolbarContent: ToolbarContent {
-    var focus: AppModel.Focus?
+    var isEditing: Bool
     var title: String
     var slug: Slug?
     var onRename: (Slug?) -> Void
@@ -27,7 +27,7 @@ struct DetailToolbarContent: ToolbarContent {
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
-            if focus != .editor {
+            if !isEditing {
                 Button(
                     action: {
                         onRename(slug)
@@ -42,7 +42,7 @@ struct DetailToolbarContent: ToolbarContent {
             }
         }
         ToolbarItem(placement: .navigationBarTrailing) {
-            if focus == .editor {
+            if isEditing {
                 HStack {
                     Button(
                         action: onDone
@@ -54,7 +54,6 @@ struct DetailToolbarContent: ToolbarContent {
                     .buttonBorderShape(.capsule)
                     .transition(.opacity)
                 }
-                .opacity(focus == .editor ? 1 : 0)
             } else {
                 HStack{
                     EmptyView()
