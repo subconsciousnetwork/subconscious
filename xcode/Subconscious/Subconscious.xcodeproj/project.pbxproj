@@ -134,8 +134,6 @@
 		B8D7F04327A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */; };
 		B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */; };
 		B8DEBF1A2798B6A8007CB528 /* NavigationToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */; };
-		B8DEBF1C2798CA8D007CB528 /* MicroFieldButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF1B2798CA8D007CB528 /* MicroFieldButtonStyle.swift */; };
-		B8DEBF1D2798CA8D007CB528 /* MicroFieldButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF1B2798CA8D007CB528 /* MicroFieldButtonStyle.swift */; };
 		B8DEBF1F2798EC23007CB528 /* TitleGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */; };
 		B8DEBF202798EC23007CB528 /* TitleGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */; };
 		B8DEBF222798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */; };
@@ -250,7 +248,6 @@
 		B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionLabelView.swift; sourceTree = "<group>"; };
 		B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionViewModifier.swift; sourceTree = "<group>"; };
 		B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationToolbar.swift; sourceTree = "<group>"; };
-		B8DEBF1B2798CA8D007CB528 /* MicroFieldButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroFieldButtonStyle.swift; sourceTree = "<group>"; };
 		B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleGroupView.swift; sourceTree = "<group>"; };
 		B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSuggestionLabelView.swift; sourceTree = "<group>"; };
 		B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSearchView.swift; sourceTree = "<group>"; };
@@ -470,12 +467,12 @@
 			children = (
 				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B81EBB0827025C1500B87594 /* BacklinkButtonStyle.swift */,
+				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
 				B8CC433F27A07DF10079D2F9 /* DialogView.swift */,
 				B82FD4552730A62C002CB641 /* EntryRow.swift */,
 				B83E91D627692EC600045C6A /* FABButtonStyle.swift */,
 				B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */,
 				B866868C27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift */,
-				B8DEBF1B2798CA8D007CB528 /* MicroFieldButtonStyle.swift */,
 				B8CC434227A0815E0079D2F9 /* ModalView.swift */,
 				B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */,
 				B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */,
@@ -497,7 +494,6 @@
 				B81EACD727B724A000B3B8DC /* ThickDividerView.swift */,
 				B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */,
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
-				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -690,7 +686,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B82FD4562730A62C002CB641 /* EntryRow.swift in Sources */,
-				B8DEBF1C2798CA8D007CB528 /* MicroFieldButtonStyle.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
@@ -822,7 +817,6 @@
 				B82C3A6026F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8EC568D26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
 				B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
-				B8DEBF1D2798CA8D007CB528 /* MicroFieldButtonStyle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
