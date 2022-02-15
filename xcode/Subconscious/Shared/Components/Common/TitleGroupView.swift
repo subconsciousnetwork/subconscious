@@ -1,5 +1,5 @@
 //
-//  TitleGroup.swift
+//  TitleGroupView.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 1/19/22.
@@ -10,7 +10,7 @@ import SwiftUI
 /// A title/subtitle pair.
 /// Often used in list views.
 /// Each line is at least 1 icon in height.
-struct TitleGroup: View {
+struct TitleGroupView: View {
     var title: String
     var subtitle: String
     var lineHeight: CGFloat = AppTheme.icon
@@ -37,7 +37,7 @@ struct TitleGroup: View {
 
 struct TitleGroup_Previews: PreviewProvider {
     static var previews: some View {
-        TitleGroup(
+        TitleGroupView(
             title: "Foo",
             subtitle: "Bar"
         )

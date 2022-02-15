@@ -14,7 +14,7 @@ struct LinkSuggestionLabelView: View {
         case .entry(let entryLink):
             Label(
                 title: {
-                    TitleGroup(
+                    TitleGroupView(
                         title: entryLink.slug.description,
                         subtitle: #"Link to "\#(entryLink.title)""#
                     )
@@ -26,7 +26,7 @@ struct LinkSuggestionLabelView: View {
         case .search(let entryLink):
             Label(
                 title: {
-                    TitleGroup(
+                    TitleGroupView(
                         title: entryLink.slug.description,
                         subtitle: #"Link to new idea"#
                     )

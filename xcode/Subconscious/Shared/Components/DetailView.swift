@@ -98,41 +98,13 @@ struct DetailView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                if focus != .editor {
-                    Button(
-                        action: {
-                            onRename(slug)
-                        }
-                    ) {
-                        DetailTitleGroupView(
-                            title: editorDom.title(),
-                            slug: slug
-                        )
-                    }
-                }
-            }
-            ToolbarItem(placement: .primaryAction) {
-                if focus == .editor {
-                    HStack {
-                        Button(
-                            action: onDone
-                        ) {
-                            Text("Done").bold()
-                        }
-                        .foregroundColor(.buttonText)
-                        .buttonStyle(.bordered)
-                        .buttonBorderShape(.capsule)
-                        .transition(.opacity)
-                    }
-                    .opacity(focus == .editor ? 1 : 0)
-                } else {
-                    HStack{
-                        EmptyView()
-                    }
-                    .frame(width: 24, height: 24)
-                }
-            }
+            DetailToolbarContent(
+                focus: focus,
+                title: editorDom.title(),
+                slug: slug,
+                onRename: onRename,
+                onDone: onDone
+            )
         }
         .sheet(
             isPresented: $isLinkSheetPresented,

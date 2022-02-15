@@ -19,7 +19,7 @@ struct SuggestionLabelView: View {
         case .entry(let entryLink):
             Label(
                 title: {
-                    TitleGroup(
+                    TitleGroupView(
                         title: readTitle(entryLink.title),
                         subtitle: entryLink.slug.description
                     )
@@ -31,7 +31,7 @@ struct SuggestionLabelView: View {
         case .search(let entryLink):
             Label(
                 title: {
-                    TitleGroup(
+                    TitleGroupView(
                         title: readTitle(entryLink.title),
                         subtitle: entryLink.slug.description
                     )
