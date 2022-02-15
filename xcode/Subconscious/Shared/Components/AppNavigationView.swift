@@ -139,6 +139,9 @@ struct AppNavigationView: View {
                             },
                             onRename: { slug in
                                 store.send(action: .showRenameSheet(slug))
+                            },
+                            onDelete: { slug in
+                                store.send(action: .confirmDelete(slug))
                             }
                         )
                     },

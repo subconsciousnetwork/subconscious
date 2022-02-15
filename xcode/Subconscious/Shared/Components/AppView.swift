@@ -62,7 +62,7 @@ enum AppAction {
     case listRecentFailure(String)
 
     // Delete entries
-    case confirmDelete(Slug)
+    case confirmDelete(Slug?)
     case setConfirmDeleteShowing(Bool)
     case deleteEntry(Slug)
     case deleteEntrySuccess(Slug)
@@ -353,6 +353,15 @@ struct AppUpdate {
             )
             return Change(state: state)
         case let .confirmDelete(slug):
+            guard let slug = slug else {
+                environment.logger.log(
+                    "Delete confirmation flow passed nil slug. Doing nothing."
+                )
+                var model = state
+                // Nil out entryToDelete, if any
+                model.entryToDelete = nil
+                return Change(state: model)
+            }
             var model = state
             model.entryToDelete = slug
             model.isConfirmDeleteShowing = true

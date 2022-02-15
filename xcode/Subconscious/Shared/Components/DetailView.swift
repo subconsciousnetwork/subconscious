@@ -40,6 +40,7 @@ struct DetailView: View {
     var onCommitSearch: (String) -> Void
     var onCommitLinkSearch: (Slug) -> Void
     var onRename: (Slug?) -> Void
+    var onDelete: (Slug?) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -103,6 +104,7 @@ struct DetailView: View {
                 title: editorDom.title(),
                 slug: slug,
                 onRename: onRename,
+                onDelete: onDelete,
                 onDone: onDone
             )
         }

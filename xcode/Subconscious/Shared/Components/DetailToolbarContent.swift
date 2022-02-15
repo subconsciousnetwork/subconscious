@@ -13,6 +13,7 @@ struct DetailToolbarContent: ToolbarContent {
     var title: String
     var slug: Slug?
     var onRename: (Slug?) -> Void
+    var onDelete: (Slug?) -> Void
     var onDone: () -> Void
 
     //  The Toolbar `.principal` position does not limit its own width.
@@ -55,10 +56,31 @@ struct DetailToolbarContent: ToolbarContent {
                     .transition(.opacity)
                 }
             } else {
-                HStack{
-                    EmptyView()
-                }
-                .frame(width: 24, height: 24)
+                Menu(
+                    content: {
+                        Section {
+                            Button(
+                                action: {
+                                    onRename(slug)
+                                }
+                            ) {
+                                Label("Rename", systemImage: "pencil")
+                            }
+                        }
+                        Section {
+                            Button(
+                                action: {
+                                    onDelete(slug)
+                                }
+                            ) {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    },
+                    label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                )
             }
         }
     }
