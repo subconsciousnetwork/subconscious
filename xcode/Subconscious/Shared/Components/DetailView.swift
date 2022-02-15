@@ -42,7 +42,7 @@ struct DetailView: View {
     var onRename: (Slug?) -> Void
 
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             Divider()
             if slug == nil {
                 ProgressScrim()

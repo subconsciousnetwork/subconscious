@@ -430,6 +430,7 @@
 				B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */,
 				B8EC568426F41A2C00AC64E5 /* Common */,
 				B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */,
+				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
 				B8879EAB26F944DA00A0B4FF /* DetailView.swift */,
 				B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */,
 				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
@@ -467,7 +468,6 @@
 			children = (
 				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B81EBB0827025C1500B87594 /* BacklinkButtonStyle.swift */,
-				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
 				B8CC433F27A07DF10079D2F9 /* DialogView.swift */,
 				B82FD4552730A62C002CB641 /* EntryRow.swift */,
 				B83E91D627692EC600045C6A /* FABButtonStyle.swift */,
