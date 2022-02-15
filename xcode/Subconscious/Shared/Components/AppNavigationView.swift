@@ -13,6 +13,7 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
+                Divider()
                 if store.state.recent.count > 0 {
                     List(store.state.recent) { entry in
                         Button(
@@ -25,9 +26,16 @@ struct AppNavigationView: View {
                                 )
                             }
                         ) {
-                            EntryRow(entry: entry)
-                                .padding(.vertical, AppTheme.unit2)
+                            Label(
+                                title: {
+                                    EntryRow(entry: entry)
+                                },
+                                icon: {
+                                    Image(systemName: "doc")
+                                }
+                            )
                         }
+                        .modifier(RowViewModifier())
                         .swipeActions(
                             edge: .trailing,
                             allowsFullSwipe: false

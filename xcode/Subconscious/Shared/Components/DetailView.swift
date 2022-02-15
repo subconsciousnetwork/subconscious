@@ -14,7 +14,7 @@ struct DetailView: View {
         hasBacklinks: Bool
     ) -> CGFloat {
         if !isKeyboardUp && hasBacklinks {
-            return containerHeight - (AppTheme.unit * 32)
+            return UIFont.appTextMono.lineHeight * 8
         } else {
             return containerHeight
         }
@@ -43,6 +43,7 @@ struct DetailView: View {
 
     var body: some View {
         VStack {
+            Divider()
             if slug == nil {
                 ProgressScrim()
             } else {
@@ -97,39 +98,13 @@ struct DetailView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                if focus != .editor {
-                    Button(
-                        action: {
-                            onRename(slug)
-                        }
-                    ) {
-                        Text(slug?.description ?? "Untitled")
-                    }
-                    .buttonStyle(MicroFieldButtonStyle())
-                }
-            }
-            ToolbarItem(placement: .primaryAction) {
-                if focus == .editor {
-                    HStack {
-                        Button(
-                            action: onDone
-                        ) {
-                            Text("Done").bold()
-                        }
-                        .foregroundColor(.buttonText)
-                        .buttonStyle(.bordered)
-                        .buttonBorderShape(.capsule)
-                        .transition(.opacity)
-                    }
-                    .opacity(focus == .editor ? 1 : 0)
-                } else {
-                    HStack{
-                        EmptyView()
-                    }
-                    .frame(width: 24, height: 24)
-                }
-            }
+            DetailToolbarContent(
+                focus: focus,
+                title: editorDom.title(),
+                slug: slug,
+                onRename: onRename,
+                onDone: onDone
+            )
         }
         .sheet(
             isPresented: $isLinkSheetPresented,

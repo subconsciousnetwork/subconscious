@@ -12,10 +12,10 @@ import SwiftUI
 /// Apply it to the "row" view which is an immediate child of `List`.
 struct SuggestionViewModifier: ViewModifier {
     var insets: EdgeInsets = EdgeInsets(
-        top: AppTheme.unit2,
-        leading: AppTheme.padding,
-        bottom: AppTheme.unit2,
-        trailing: AppTheme.padding
+        top: 0,
+        leading: AppTheme.tightPadding,
+        bottom: 0,
+        trailing: AppTheme.tightPadding
     )
 
     func body(content: Content) -> some View {

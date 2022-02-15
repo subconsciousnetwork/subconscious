@@ -14,7 +14,7 @@ struct RenameSuggestionLabelView: View {
         case .entry(let entryLink):
             Label(
                 title: {
-                    TitleGroup(
+                    TitleGroupView(
                         title: entryLink.slug.description,
                         subtitle: "Merge ideas"
                     )
@@ -26,7 +26,7 @@ struct RenameSuggestionLabelView: View {
         case .search(let entryLink):
             Label(
                 title: {
-                    TitleGroup(
+                    TitleGroupView(
                         title: entryLink.slug.description,
                         subtitle: "Rename idea"
                     )

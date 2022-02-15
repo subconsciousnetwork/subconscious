@@ -97,11 +97,11 @@ extension Color {
     static let secondaryText = SwiftUI.Color("SecondaryTextColor")
     static let placeholderText = SwiftUI.Color("PlaceholderTextColor")
     static let icon = SwiftUI.Color.accentColor
+    static let secondaryIcon = SwiftUI.Color.secondaryText
     static let buttonText = SwiftUI.Color.accentColor
     static let background = SwiftUI.Color("BackgroundColor")
-    static let backgroundPressed = secondaryBackground
+    static let backgroundPressed = SwiftUI.Color(UIColor.systemFill)
     static let secondaryBackground = SwiftUI.Color("SecondaryBackgroundColor")
-    static let secondaryBackgroundPressed = secondaryBackground.opacity(0.5)
     static let inputBackground = SwiftUI.Color("InputBackgroundColor")
     static let primaryButtonBackground = SwiftUI.Color(
         "PrimaryButtonBackgroundColor"
