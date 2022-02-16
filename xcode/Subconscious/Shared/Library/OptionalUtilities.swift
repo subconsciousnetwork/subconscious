@@ -54,3 +54,33 @@ extension Optional.NilError: LocalizedError {
         """
     }
 }
+
+extension Optional {
+    /// Map an optional value to a different type if it exists,
+    /// or else use a fallback value.
+    func mapOr<T>(
+        _ transform: (Wrapped) -> T,
+        `default`: T
+    ) -> T {
+        switch self {
+        case .none:
+            return `default`
+        case .some(let wrapped):
+            return transform(wrapped)
+        }
+    }
+
+    /// Map an optional value to a different type if it exists,
+    /// or else use a fallback value.
+    func mapOrElse<T>(
+        _ transform: (Wrapped) -> T,
+        `default`: () -> T
+    ) -> T {
+        switch self {
+        case .none:
+            return `default`()
+        case .some(let wrapped):
+            return transform(wrapped)
+        }
+    }
+}
