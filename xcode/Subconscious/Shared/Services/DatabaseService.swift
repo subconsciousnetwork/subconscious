@@ -687,7 +687,8 @@ struct DatabaseService {
                     .text(slug.description),
                     .queryFTS5(slug.description)
                 ]
-            ).compactMap({ row in
+            )
+            .compactMap({ row in
                 if
                     let slugString: String = row.get(0),
                     let slug = Slug(slugString),
@@ -704,12 +705,25 @@ struct DatabaseService {
                 return nil
             })
 
+            // Create draft to use as fallback in event we don't find
+            // a file with this slug.
+            let draft = SaveEnvelope(
+                state: .draft,
+                value: SubtextFile(
+                    slug: slug,
+                    content: fallback
+                )
+            )
+
             // Retreive top entry from file system to ensure it is fresh.
             // If no file exists, then construct one using fallback content.
-            let entry = readEntry(slug: slug) ?? SubtextFile(
-                slug: slug,
-                content: fallback
+            // Wrap in SaveEnvelope envelope to indicate whether it
+            // represents saved state on disk, or is a draft.
+            let entry = readEntry(slug: slug).mapOr(
+                { entry in SaveEnvelope(state: .saved, value: entry) },
+                default: draft
             )
+
             return EntryDetail(
                 slug: slug,
                 entry: entry,

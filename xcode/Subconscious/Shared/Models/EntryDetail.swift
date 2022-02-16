@@ -9,6 +9,6 @@ import Foundation
 
 struct EntryDetail {
     var slug: Slug
-    var entry: SubtextFile
+    var entry: SaveEnvelope<SubtextFile>
     var backlinks: [EntryStub] = []
 }

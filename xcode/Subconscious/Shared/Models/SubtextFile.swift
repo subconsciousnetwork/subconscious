@@ -5,7 +5,7 @@
 //  Created by Gordon Brander on 9/21/21.
 import Foundation
 
-/// A SubtextDocument together with a location for that document
+/// A Subtext DOM together with a location for that document
 struct SubtextFile: Hashable, Equatable, Identifiable {
     var slug: Slug
     var dom: Subtext

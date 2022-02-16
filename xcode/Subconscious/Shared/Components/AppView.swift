@@ -103,7 +103,7 @@ enum AppAction {
     /// Invokes save and blurs editor
     case selectDoneEditing
     /// Update editor dom and mark if this state is saved or not
-    case setEditorDom(dom: Subtext, saveState: SaveState = .unsaved)
+    case setEditorDom(dom: Subtext, saveState: SaveState)
     case setEditorSelection(NSRange)
     case insertEditorText(
         text: String,
@@ -128,14 +128,14 @@ enum AppAction {
         message: String
     )
 
-    /// Update editor dom and always mark unsaved
-    static func updateEditorDom(dom: Subtext) -> Self {
-        Self.setEditorDom(dom: dom, saveState: .unsaved)
+    /// Update editor dom and always mark modified
+    static func modifyEditorDom(dom: Subtext) -> Self {
+        Self.setEditorDom(dom: dom, saveState: .modified)
     }
 }
 
 //  MARK: Model
-struct AppModel: Hashable, Equatable {
+struct AppModel: Equatable {
     /// Enum describing which view is currently focused.
     /// Focus is mutually exclusive, and SwiftUI's FocusedState requires
     /// modeling this state as an enum.
@@ -584,7 +584,7 @@ struct AppUpdate {
     static func setEditorDom(
         state: AppModel,
         dom: Subtext,
-        saveState: SaveState = .unsaved
+        saveState: SaveState = .modified
     ) -> Change<AppModel, AppAction> {
         // `setEditorAttributedText` comes from changes
         // in the editor UITextView.
@@ -675,7 +675,7 @@ struct AppUpdate {
 
         let fx: AnyPublisher<AppAction, Never> = Publishers.Sequence(
             sequence: [
-                AppAction.setEditorDom(dom: dom),
+                AppAction.modifyEditorDom(dom: dom),
                 AppAction.setEditorSelection(
                     NSRange(cursor..<cursor, in: dom.base)
                 )
@@ -1386,8 +1386,8 @@ struct AppUpdate {
         // since we just loaded it from disk.
         let fx: AnyPublisher<AppAction, Never> = Just(
             AppAction.setEditorDom(
-                dom: detail.entry.dom,
-                saveState: .saved
+                dom: detail.entry.value.dom,
+                saveState: detail.entry.state
             )
         )
         .eraseToAnyPublisher()
@@ -1524,7 +1524,7 @@ struct AppUpdate {
         // We check before setting in case changes happened between the
         // time we invoked save and the time it completed.
         // If changes did happen in that time, we want to mark the current
-        // state unsaved, giving other processes a chance to save the
+        // state modified, giving other processes a chance to save the
         // new changes.
         // 2022-02-09 Gordon Brander
         if
@@ -1547,9 +1547,9 @@ struct AppUpdate {
         environment.logger.warning(
             "Save failed for entry (\(slug)) with error: \(message)"
         )
-        // Mark unsaved, since we failed to save
+        // Mark modified, since we failed to save
         var model = state
-        model.editorSaveState = .unsaved
+        model.editorSaveState = .modified
         return Change(state: model)
     }
 }

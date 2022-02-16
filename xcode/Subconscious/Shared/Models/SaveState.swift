@@ -9,7 +9,8 @@ import Foundation
 
 /// A simple enum representing saved state, including in-progress write.
 enum SaveState: Hashable, Equatable {
-    case unsaved
+    case draft
+    case modified
     case saving
     case saved
 }

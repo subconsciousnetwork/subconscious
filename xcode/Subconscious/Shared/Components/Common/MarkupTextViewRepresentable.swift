@@ -131,6 +131,13 @@ where
         return true
     }
 
+    @Binding var dom: Dom
+    @Binding var selection: NSRange
+    @Binding var focus: Focus?
+    var field: Focus
+    var fixedWidth: CGFloat
+    var textColor: UIColor = UIColor(.primary)
+    var textContainerInset: UIEdgeInsets = .zero
     /// Fixed width of textview container, needed to determine textview height.
     /// Use `GeometryView` to find container width.
     var onLink: (
@@ -139,13 +146,6 @@ where
         NSRange,
         UITextItemInteraction
     ) -> Bool = onLinkDefault
-    @Binding var dom: Dom
-    @Binding var selection: NSRange
-    @Binding var focus: Focus?
-    var field: Focus
-    var fixedWidth: CGFloat
-    var textColor: UIColor = UIColor(.primary)
-    var textContainerInset: UIEdgeInsets = .zero
 
     /// Is this field is currently focused?
     private var isFocused: Bool {

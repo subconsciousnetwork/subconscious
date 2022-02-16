@@ -60,12 +60,12 @@ struct DetailView: View {
                         ScrollView(.vertical) {
                             VStack(spacing: 0) {
                                 MarkupTextViewRepresenable(
-                                    onLink: onEditorLink,
                                     dom: $editorDom,
                                     selection: $editorSelection,
                                     focus: $focus,
                                     field: .editor,
-                                    fixedWidth: size.width
+                                    fixedWidth: size.width,
+                                    onLink: onEditorLink
                                 )
                                 .insets(
                                     EdgeInsets(
