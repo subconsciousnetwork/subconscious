@@ -1023,36 +1023,45 @@ struct AppUpdate {
         return Change(state: state, fx: fx)
     }
 
+    /// Delete entry with `slug`
     static func deleteEntry(
         state: AppModel,
         slug: Slug,
         environment: AppEnvironment
     ) -> Change<AppModel, AppAction> {
         var model = state
-        if let index = model.recent.firstIndex(
+
+        guard let index = model.recent.firstIndex(
             where: { stub in stub.id == slug }
-        ) {
-            model.recent.remove(at: index)
-            let fx: AnyPublisher<AppAction, Never> = environment.database
-                .deleteEntry(slug: slug)
-                .map({ _ in
-                    AppAction.deleteEntrySuccess(slug)
-                })
-                .catch({ error in
-                    Just(
-                        AppAction.deleteEntryFailure(
-                            error.localizedDescription
-                        )
-                    )
-                })
-                .eraseToAnyPublisher()
-            return Change(state: model, fx: fx)
-        } else {
+        ) else {
             environment.logger.log(
-                "Failed to delete entry. No such id: \(slug)"
+                "Could not delete entry. No such id: \(slug)"
             )
             return Change(state: model)
         }
+
+        model.recent.remove(at: index)
+        // Hide detail view.
+        // Delete may have been invoked from detail view
+        // in which case, we don't want it showing.
+        // If it was invoked from list view, then setting this to false
+        // is harmless.
+        model.isDetailShowing = false
+
+        let fx: AnyPublisher<AppAction, Never> = environment.database
+            .deleteEntry(slug: slug)
+            .map({ _ in
+                AppAction.deleteEntrySuccess(slug)
+            })
+            .catch({ error in
+                Just(
+                    AppAction.deleteEntryFailure(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Change(state: model, fx: fx)
     }
 
     /// Handle completion of entry delete
