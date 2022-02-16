@@ -94,7 +94,7 @@ struct AppNavigationView: View {
                             ),
                             editorDom: store.binding(
                                 get: \.editorDom,
-                                tag: AppAction.updateEditorDom
+                                tag: AppAction.modifyEditorDom
                             ),
                             editorSelection: store.binding(
                                 get: \.editorSelection,
