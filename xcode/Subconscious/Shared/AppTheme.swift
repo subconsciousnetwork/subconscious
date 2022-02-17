@@ -99,8 +99,9 @@ extension Color {
     static let icon = SwiftUI.Color.accentColor
     static let secondaryIcon = SwiftUI.Color.secondaryText
     static let buttonText = SwiftUI.Color.accentColor
+    /// Fill for pressed-state overlays
+    static let pressedFill = SwiftUI.Color(UIColor.systemFill)
     static let background = SwiftUI.Color("BackgroundColor")
-    static let backgroundPressed = SwiftUI.Color(UIColor.systemFill)
     static let secondaryBackground = SwiftUI.Color("SecondaryBackgroundColor")
     static let inputBackground = SwiftUI.Color("InputBackgroundColor")
     static let primaryButtonBackground = SwiftUI.Color(
