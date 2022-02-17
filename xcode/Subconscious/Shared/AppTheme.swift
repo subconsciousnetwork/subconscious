@@ -118,5 +118,5 @@ extension Color {
     static let fabText = primaryButtonText
     static let fabTextPressed = primaryButtonTextPressed
     static let fabTextDisabled = primaryButtonTextDisabled
-    static let scrim = SwiftUI.Color("ScrimColor")
+    static let scrim = SwiftUI.Color(UIColor.tertiarySystemFill)
 }
