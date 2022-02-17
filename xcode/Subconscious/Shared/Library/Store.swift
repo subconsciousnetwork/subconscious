@@ -101,7 +101,7 @@ where State: Equatable {
     /// keyboard events, consider publishing them via a Combine Publisher on
     /// the environment. You can subscribe to the publisher in `update`, for
     /// example, by firing an action `onAppear`, then mapping the environment
-    /// publisher to an `fx` and returning it as part of a `Change`.
+    /// publisher to an `fx` and returning it as part of an `Update`.
     /// Store will hold on to the resulting `fx` publisher until it completes,
     /// which in the case of long-lived services, could be until the
     /// app is stopped.
