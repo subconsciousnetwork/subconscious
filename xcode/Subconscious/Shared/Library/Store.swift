@@ -153,7 +153,7 @@ where State: Equatable {
     ///
     /// Holds on to the cancellable until publisher completes.
     /// When publisher completes, removes cancellable.
-    public func subscribe(fx: AnyPublisher<Action, Never>) {
+    public func subscribe(fx: Fx<Action>) {
         // Create a UUID for the cancellable.
         // Store cancellable in dictionary by UUID.
         // Remove cancellable from dictionary upon effect completion.
