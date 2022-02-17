@@ -1611,7 +1611,7 @@ struct AppView: View {
                 ProgressScrim()
             }
         }
-        .font(Font.appText)
+        .font(Font(UIFont.appText))
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
         // See https://developer.apple.com/documentation/swiftui/scenephase
