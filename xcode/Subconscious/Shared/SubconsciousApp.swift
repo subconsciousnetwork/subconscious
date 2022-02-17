@@ -9,7 +9,7 @@ import SwiftUI
 import os
 import Combine
 
-typealias SubconsciousStore = Store<AppModel, AppAction, AppEnvironment>
+typealias SubconsciousStore = Store<AppModel, AppEnvironment, AppAction>
 
 @main
 struct SubconsciousApp: App {

@@ -29,9 +29,28 @@ import Combine
 import SwiftUI
 import os
 
-public struct Change<State, Action> {
+/// Fx is a publisher that publishes actions and never fails.
+public typealias Fx<Action> = AnyPublisher<Action, Never>
+
+/// Update represents a `State` change, together with an `Fx` publisher.
+public struct Update<State, Action>
+where State: Equatable {
+    /// `State` for this update
     var state: State
-    var fx: AnyPublisher<Action, Never>?
+    /// `Fx` for this update.
+    /// Default is an `Empty` publisher (no effects)
+    var fx: Fx<Action> = Empty(completeImmediately: true)
+        .eraseToAnyPublisher()
+
+    /// Pipe a state through another update function,
+    /// merging their `Fx`.
+    public func pipe(
+        _ a: (State) -> Update<State, Action>
+    ) -> Update<State, Action> {
+        let up = a(self.state)
+        let fx = self.fx.merge(with: up.fx).eraseToAnyPublisher()
+        return Update(state: up.state, fx: fx)
+    }
 }
 
 /// Store is a source of truth for a state.
@@ -59,7 +78,7 @@ public struct Change<State, Action> {
 /// See https://guide.elm-lang.org/architecture/
 /// and https://guide.elm-lang.org/webapps/structure.html
 /// for more about this approach.
-public final class Store<State, Action, Environment>: ObservableObject
+public final class Store<State, Environment, Action>: ObservableObject
 where State: Equatable {
     /// Stores cancellables by ID
     private var cancellables: [UUID: AnyCancellable] = [:]
@@ -67,11 +86,11 @@ where State: Equatable {
     /// All writes to state happen through actions sent to `Store.send`.
     @Published public private(set) var state: State
     /// Update function for state
-    public private(set) var update: (
+    public var update: (
         State,
-        Action,
-        Environment
-    ) -> Change<State, Action>
+        Environment,
+        Action
+    ) -> Update<State, Action>
     /// Environment, which typically holds references to outside information,
     /// such as API methods.
     ///
@@ -82,7 +101,7 @@ where State: Equatable {
     /// keyboard events, consider publishing them via a Combine Publisher on
     /// the environment. You can subscribe to the publisher in `update`, for
     /// example, by firing an action `onAppear`, then mapping the environment
-    /// publisher to an `fx` and returning it as part of a `Change`.
+    /// publisher to an `fx` and returning it as part of an `Update`.
     /// Store will hold on to the resulting `fx` publisher until it completes,
     /// which in the case of long-lived services, could be until the
     /// app is stopped.
@@ -95,9 +114,9 @@ where State: Equatable {
     init(
         update: @escaping (
             State,
-            Action,
-            Environment
-        ) -> Change<State, Action>,
+            Environment,
+            Action
+        ) -> Update<State, Action>,
         state: State,
         environment: Environment,
         logger: Logger,
@@ -134,7 +153,7 @@ where State: Equatable {
     ///
     /// Holds on to the cancellable until publisher completes.
     /// When publisher completes, removes cancellable.
-    public func subscribe(fx: AnyPublisher<Action, Never>) {
+    public func subscribe(fx: Fx<Action>) {
         // Create a UUID for the cancellable.
         // Store cancellable in dictionary by UUID.
         // Remove cancellable from dictionary upon effect completion.
@@ -166,7 +185,7 @@ where State: Equatable {
             logger.debug("Action: \(String(reflecting: action))")
         }
         // Generate next state and effect
-        let change = update(self.state, action, self.environment)
+        let change = update(self.state, self.environment, action)
         if debug {
             logger.debug("State: \(String(reflecting: change.state))")
         }
@@ -182,8 +201,6 @@ where State: Equatable {
             self.state = change.state
         }
         // Run effect
-        if let fx = change.fx {
-            self.subscribe(fx: fx)
-        }
+        self.subscribe(fx: change.fx)
     }
 }

@@ -250,12 +250,12 @@ struct AppModel: Equatable {
 struct AppUpdate {
     static func update(
         state: AppModel,
-        action: AppAction,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        action: AppAction
+    ) -> Update<AppModel, AppAction> {
         switch action {
         case .noop:
-            return Change(state: state)
+            return Update(state: state)
         case let .scenePhaseChange(phase):
             return scenePhaseChange(
                 state: state,
@@ -268,27 +268,27 @@ struct AppUpdate {
             return changeKeyboardState(state: state, keyboard: keyboard)
         case .poll:
             // Auto-save entry currently being edited, if any.
-            let fx: AnyPublisher<AppAction, Never> = Just(
+            let fx: Fx<AppAction> = Just(
                 AppAction.autosave
             )
             .eraseToAnyPublisher()
-            return Change(state: state, fx: fx)
+            return Update(state: state, fx: fx)
         case let .openURL(url):
             UIApplication.shared.open(url)
-            return Change(state: state)
+            return Update(state: state)
         case let .openEditorURL(url, range):
             return openEditorURL(state: state, url: url, range: range)
         case let .setFocus(focus):
             var model = state
             model.focus = focus
-            return Change(state: model)
+            return Update(state: model)
         case .readyDatabase:
             return readyDatabase(state: state, environment: environment)
         case let .migrateDatabaseSuccess(success):
             return migrateDatabaseSuccess(
                 state: state,
-                success: success,
-                environment: environment
+                environment: environment,
+                success: success
             )
         case .rebuildDatabase:
             return rebuildDatabase(
@@ -301,7 +301,7 @@ struct AppUpdate {
             )
             var model = state
             model.databaseState = .broken
-            return Change(state: model)
+            return Update(state: model)
         case .sync:
             return sync(
                 state: state,
@@ -310,33 +310,33 @@ struct AppUpdate {
         case let .syncSuccess(changes):
             return syncSuccess(
                 state: state,
-                changes: changes,
-                environment: environment
+                environment: environment,
+                changes: changes
             )
         case let .syncFailure(message):
             environment.logger.warning(
                 "File sync failed: \(message)"
             )
-            return Change(state: state)
+            return Update(state: state)
         case .refreshAll:
             return refreshAll(state: state)
         case let .createSearchHistoryItem(query):
             return createSearchHistoryItem(
                 state: state,
-                query: query,
-                environment: environment
+                environment: environment,
+                query: query
             )
         case let .createSearchHistoryItemSuccess(query):
             return createSearchHistoryItemSuccess(
                 state: state,
-                query: query,
-                environment: environment
+                environment: environment,
+                query: query
             )
         case let .createSearchHistoryItemFailure(error):
             return createSearchHistoryItemFailure(
                 state: state,
-                error: error,
-                environment: environment
+                environment: environment,
+                error: error
             )
         case .listRecent:
             return listRecent(
@@ -346,12 +346,12 @@ struct AppUpdate {
         case let .setRecent(entries):
             var model = state
             model.recent = entries
-            return Change(state: model)
+            return Update(state: model)
         case let .listRecentFailure(error):
             environment.logger.warning(
                 "Failed to list recent entries: \(error)"
             )
-            return Change(state: state)
+            return Update(state: state)
         case let .confirmDelete(slug):
             guard let slug = slug else {
                 environment.logger.log(
@@ -360,12 +360,12 @@ struct AppUpdate {
                 var model = state
                 // Nil out entryToDelete, if any
                 model.entryToDelete = nil
-                return Change(state: model)
+                return Update(state: model)
             }
             var model = state
             model.entryToDelete = slug
             model.isConfirmDeleteShowing = true
-            return Change(state: model)
+            return Update(state: model)
         case let .setConfirmDeleteShowing(isShowing):
             var model = state
             model.isConfirmDeleteShowing = isShowing
@@ -374,63 +374,63 @@ struct AppUpdate {
             if isShowing == false {
                 model.entryToDelete = nil
             }
-            return Change(state: model)
+            return Update(state: model)
         case let .deleteEntry(slug):
             return deleteEntry(
                 state: state,
-                slug: slug,
-                environment: environment
+                environment: environment,
+                slug: slug
             )
         case let .deleteEntrySuccess(slug):
             return deleteEntrySuccess(
                 state: state,
-                slug: slug,
-                environment: environment
+                environment: environment,
+                slug: slug
             )
         case let .deleteEntryFailure(error):
             environment.logger.log("Failed to delete entry: \(error)")
-            return Change(state: state)
+            return Update(state: state)
         case let .showRenameSheet(slug):
             return showRenameSheet(
                 state: state,
-                slug: slug,
-                environment: environment
+                environment: environment,
+                slug: slug
             )
         case .hideRenameSheet:
             return hideRenameSheet(state: state)
         case let .setRenameSlugField(text):
             return setRenameSlugField(
                 state: state,
-                text: text,
-                environment: environment
+                environment: environment,
+                text: text
             )
         case let .setRenameSuggestions(suggestions):
             return setRenameSuggestions(state: state, suggestions: suggestions)
         case let .renameSuggestionsFailure(error):
             return renameSuggestionsError(
                 state: state,
-                error: error,
-                environment: environment
+                environment: environment,
+                error: error
             )
         case let .renameEntry(from, to):
             return renameEntry(
                 state: state,
+                environment: environment,
                 from: from,
-                to: to,
-                environment: environment
+                to: to
             )
         case let .succeedRenameEntry(from, to):
             return succeedRenameEntry(
                 state: state,
+                environment: environment,
                 from: from,
-                to: to,
-                environment: environment
+                to: to
             )
         case let .failRenameEntry(error):
             return failRenameEntry(
                 state: state,
-                error: error,
-                environment: environment
+                environment: environment,
+                error: error
             )
         case .selectDoneEditing:
             return selectDoneEditing(
@@ -465,8 +465,8 @@ struct AppUpdate {
         case let .setSearch(text):
             return setSearch(
                 state: state,
-                text: text,
-                environment: environment
+                environment: environment,
+                text: text
             )
         case let .submitSearch(slug, query):
             return submitSearch(state: state, slug: slug, query: query)
@@ -475,67 +475,67 @@ struct AppUpdate {
             model.isSearchShowing = true
             model.searchText = ""
             model.focus = .search
-            return Change(state: model)
+            return Update(state: model)
         case .hideSearch:
             var model = state
             model.isSearchShowing = false
             model.searchText = ""
             model.focus = nil
-            return Change(state: model)
+            return Update(state: model)
         case let .setSuggestions(suggestions):
             var model = state
             model.suggestions = suggestions
-            return Change(state: model)
+            return Update(state: model)
         case let .suggestionsFailure(message):
             environment.logger.debug(
                 "Suggest failed: \(message)"
             )
-            return Change(state: state)
+            return Update(state: state)
         case let .requestDetail(slug, fallback):
             return requestDetail(
                 state: state,
+                environment: environment,
                 slug: slug,
-                fallback: fallback,
-                environment: environment
+                fallback: fallback
             )
         case let .updateDetail(results):
             return updateDetail(
                 state: state,
-                detail: results,
-                environment: environment
+                environment: environment,
+                detail: results
             )
         case let .failDetail(message):
             environment.logger.log(
                 "Failed to get details for search: \(message)"
             )
-            return Change(state: state)
+            return Update(state: state)
         case let .setLinkSheetPresented(isPresented):
             var model = state
             model.focus = isPresented ? .linkSearch : .editor
             model.isLinkSheetPresented = isPresented
-            return Change(state: model)
+            return Update(state: model)
         case let .setLinkSearch(text):
             return setLinkSearch(
                 state: state,
-                text: text,
-                environment: environment
+                environment: environment,
+                text: text
             )
         case let .commitLinkSearch(slug):
             return commitLinkSearch(state: state, slug: slug)
         case let .setLinkSuggestions(suggestions):
             var model = state
             model.linkSuggestions = suggestions
-            return Change(state: model)
+            return Update(state: model)
         case let .linkSuggestionsFailure(message):
             environment.logger.debug(
                 "Link suggest failed: \(message)"
             )
-            return Change(state: state)
+            return Update(state: state)
         case let .save(entry):
             return save(
                 state: state,
-                entry: entry,
-                environment: environment
+                environment: environment,
+                entry: entry
             )
         case .autosave:
             return autosave(
@@ -545,15 +545,15 @@ struct AppUpdate {
         case let .succeedSave(entry):
             return succeedSave(
                 state: state,
-                entry: entry,
-                environment: environment
+                environment: environment,
+                entry: entry
             )
         case let .failSave(slug, message):
             return failSave(
                 state: state,
+                environment: environment,
                 slug: slug,
-                message: message,
-                environment: environment
+                message: message
             )
         }
     }
@@ -585,13 +585,13 @@ struct AppUpdate {
         state: AppModel,
         dom: Subtext,
         saveState: SaveState = .modified
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         // `setEditorAttributedText` comes from changes
         // in the editor UITextView.
         // We want to make sure any text typed gets rendered.
         // Render attributes from markup if text has changed.
         guard state.editorDom != dom else {
-            return Change(state: state)
+            return Update(state: state)
         }
 
         var model = state
@@ -602,17 +602,18 @@ struct AppUpdate {
         let slashlink = dom.slashlinkFor(range: state.editorSelection)
         model.editorSelectedSlashlink = slashlink
 
-        var fx: AnyPublisher<AppAction, Never>? = nil
         // Find out if our selection touches a slashlink.
         // If it does, search for links.
-        if let slashlink = slashlink {
-            fx = Just(
-                AppAction.setLinkSearch(slashlink.description)
-            )
-            .eraseToAnyPublisher()
-        }
-
-        return Change(state: model, fx: fx)
+        let fx: Fx<AppAction> = slashlink.mapOr(
+            { slashlink in
+                Just(
+                    AppAction.setLinkSearch(slashlink.description)
+                )
+                .eraseToAnyPublisher()
+            },
+            default: Empty().eraseToAnyPublisher()
+        )
+        return Update(state: model, fx: fx)
     }
 
     /// Set editor selection.
@@ -620,7 +621,7 @@ struct AppUpdate {
         state: AppModel,
         range nsRange: NSRange,
         environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         var model = state
         model.editorSelection = nsRange
 
@@ -629,14 +630,15 @@ struct AppUpdate {
         )
         model.editorSelectedSlashlink = slashlink
 
-        var fx: AnyPublisher<AppAction, Never>? = nil
-        if let slashlink = slashlink {
-            fx = Just(
-                AppAction.setLinkSearch(slashlink.description)
-            ).eraseToAnyPublisher()
-       }
+        let fx: Fx<AppAction> = slashlink.mapOr(
+            { slashlink in
+                Just(AppAction.setLinkSearch(slashlink.description))
+                    .eraseToAnyPublisher()
+            },
+            default: Empty().eraseToAnyPublisher()
+        )
 
-        return Change(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     static func insertEditorText(
@@ -644,12 +646,12 @@ struct AppUpdate {
         text: String,
         range nsRange: NSRange,
         environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         guard let range = Range(nsRange, in: state.editorDom.base) else {
             environment.logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
-            return Change(state: state)
+            return Update(state: state)
         }
 
         // Replace selected range with committed link search text.
@@ -667,13 +669,13 @@ struct AppUpdate {
             environment.logger.log(
                 "Could not find new cursor position. Aborting text insert."
             )
-            return Change(state: state)
+            return Update(state: state)
         }
 
         // Parse new markup
         let dom = Subtext(markup: markup)
 
-        let fx: AnyPublisher<AppAction, Never> = Publishers.Sequence(
+        let fx: Fx<AppAction> = Publishers.Sequence(
             sequence: [
                 AppAction.modifyEditorDom(dom: dom),
                 AppAction.setEditorSelection(
@@ -683,7 +685,7 @@ struct AppUpdate {
         )
         .eraseToAnyPublisher()
 
-        return Change(state: state, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Toggle detail view showing or hiding
@@ -691,23 +693,24 @@ struct AppUpdate {
         state: AppModel,
         isShowing: Bool,
         environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
+        var fx: Fx<AppAction> = Empty()
+            .eraseToAnyPublisher()
+
         var model = state
-        var fx: AnyPublisher<AppAction, Never>? = nil
+        model.isDetailShowing = isShowing
 
         if isShowing == false {
-            model.isDetailShowing = isShowing
             model.focus = nil
 
             /// Save entry before dismissing, if it is unsaved.
             if model.editorSaveState != .saved {
-                fx = model.snapshotEditorAsEntry().map({ entry in
-                    Just(AppAction.save(entry)).eraseToAnyPublisher()
-                })
+                if let entry = model.snapshotEditorAsEntry() {
+                    fx = Just(AppAction.save(entry)).eraseToAnyPublisher()
+                }
             }
         }
-
-        return Change(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     /// Change state of keyboard
@@ -715,7 +718,7 @@ struct AppUpdate {
     static func changeKeyboardState(
         state: AppModel,
         keyboard: KeyboardState
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         switch keyboard {
         case
             .willShow(let size, _),
@@ -724,14 +727,14 @@ struct AppUpdate {
             var model = state
             model.keyboardWillShow = true
             model.keyboardEventualHeight = size.height
-            return Change(state: model)
+            return Update(state: model)
         case .willHide:
-            return Change(state: state)
+            return Update(state: state)
         case .didHide:
             var model = state
             model.keyboardWillShow = false
             model.keyboardEventualHeight = 0
-            return Change(state: model)
+            return Update(state: model)
         }
     }
 
@@ -740,35 +743,35 @@ struct AppUpdate {
         state: AppModel,
         phase: ScenePhase,
         environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         switch phase {
         case .active:
-            let fx: AnyPublisher<AppAction, Never> = Just(
+            let fx: Fx<AppAction> = Just(
                 AppAction.readyDatabase
             )
             .eraseToAnyPublisher()
-            return Change(state: state, fx: fx)
+            return Update(state: state, fx: fx)
         default:
-            return Change(state: state)
+            return Update(state: state)
         }
     }
 
     static func appear(
         state: AppModel,
         environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         environment.logger.debug(
             "Documents: \(environment.documentURL)"
         )
 
-        let pollFx: AnyPublisher<AppAction, Never> = environment.poll
+        let pollFx: Fx<AppAction> = environment.poll
             .map({ date in
                 AppAction.poll(date)
             })
             .eraseToAnyPublisher()
 
         // Subscribe to keyboard events
-        let fx: AnyPublisher<AppAction, Never> = environment
+        let fx: Fx<AppAction> = environment
             .keyboard.state
             .map({ value in
                 AppAction.changeKeyboardState(value)
@@ -776,14 +779,14 @@ struct AppUpdate {
             .merge(with: pollFx)
             .eraseToAnyPublisher()
 
-        return Change(state: state, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     static func openEditorURL(
         state: AppModel,
         url: URL,
         range: NSRange
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         // Don't follow links while editing. Instead, select the link.
         //
         // When editing, you usually don't want to follow a link, you
@@ -797,24 +800,24 @@ struct AppUpdate {
         //
         // 2021-09-23 Gordon Brander
         if state.focus == .editor {
-            let fx: AnyPublisher<AppAction, Never> = Just(
+            let fx: Fx<AppAction> = Just(
                 AppAction.setEditorSelection(range)
             ).eraseToAnyPublisher()
-            return Change(state: state, fx: fx)
+            return Update(state: state, fx: fx)
         } else {
             if Slashlink.isSlashlinkURL(url) {
                 // If this is a Subtext URL, then commit a search for the
                 // corresponding query
-                let fx: AnyPublisher<AppAction, Never> = Just(
+                let fx: Fx<AppAction> = Just(
                     AppAction.requestDetail(
                         slug: Slashlink.slashlinkURLToSlug(url),
                         fallback: ""
                     )
                 ).eraseToAnyPublisher()
-                return Change(state: state, fx: fx)
+                return Update(state: state, fx: fx)
             } else {
                 UIApplication.shared.open(url)
-                return Change(state: state)
+                return Update(state: state)
             }
         }
     }
@@ -825,11 +828,11 @@ struct AppUpdate {
     static func readyDatabase(
         state: AppModel,
         environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         switch state.databaseState {
         case .initial:
             environment.logger.log("Readying database")
-            let fx: AnyPublisher<AppAction, Never> = environment.database
+            let fx: Fx<AppAction> = environment.database
                 .migrate()
                 .map({ success in
                     AppAction.migrateDatabaseSuccess(success)
@@ -840,35 +843,35 @@ struct AppUpdate {
                 .eraseToAnyPublisher()
             var model = state
             model.databaseState = .migrating
-            return Change(state: model, fx: fx)
+            return Update(state: model, fx: fx)
         case .ready:
             environment.logger.log("Database ready. Syncing.")
-            let fx: AnyPublisher<AppAction, Never> = Just(
+            let fx: Fx<AppAction> = Just(
                 AppAction.sync
             )
             .eraseToAnyPublisher()
-            return Change(state: state, fx: fx)
+            return Update(state: state, fx: fx)
         case .migrating:
             environment.logger.log(
                 "Database already migrating. Doing nothing."
             )
-            return Change(state: state)
+            return Update(state: state)
         case .broken:
             environment.logger.log(
                 "Database broken. Doing nothing."
             )
-            return Change(state: state)
+            return Update(state: state)
         }
     }
 
     static func migrateDatabaseSuccess(
         state: AppModel,
-        success: SQLite3Migrations.MigrationSuccess,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        success: SQLite3Migrations.MigrationSuccess
+    ) -> Update<AppModel, AppAction> {
         var model = state
         model.databaseState = .ready
-        let fx: AnyPublisher<AppAction, Never> = Just(
+        let fx: Fx<AppAction> = Just(
             AppAction.sync
         )
         .merge(with: Just(.refreshAll))
@@ -878,17 +881,17 @@ struct AppUpdate {
                 "Migrated database: \(success.from)->\(success.to)"
             )
         }
-        return Change(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     static func rebuildDatabase(
         state: AppModel,
         environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         environment.logger.warning(
             "Database is broken or has wrong schema. Attempting to rebuild."
         )
-        let fx: AnyPublisher<AppAction, Never> = environment.database
+        let fx: Fx<AppAction> = environment.database
             .delete()
             .flatMap({ _ in
                 environment.database.migrate()
@@ -902,16 +905,16 @@ struct AppUpdate {
                 )
             })
             .eraseToAnyPublisher()
-        return Change(state: state, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Start file sync
     static func sync(
         state: AppModel,
         environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         environment.logger.log("File sync started")
-        let fx: AnyPublisher<AppAction, Never> = environment.database
+        let fx: Fx<AppAction> = environment.database
             .syncDatabase()
             .map({ changes in
                 AppAction.syncSuccess(changes)
@@ -920,15 +923,15 @@ struct AppUpdate {
                 Just(AppAction.syncFailure(error.localizedDescription))
             })
             .eraseToAnyPublisher()
-        return Change(state: state, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Handle successful sync
     static func syncSuccess(
         state: AppModel,
-        changes: [FileSync.Change],
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        changes: [FileSync.Change]
+    ) -> Update<AppModel, AppAction> {
         environment.logger.debug(
             "File sync finished: \(changes)"
         )
@@ -936,34 +939,34 @@ struct AppUpdate {
         // Refresh lists after completing sync.
         // This ensures that files which were deleted outside the app
         // are removed from lists once sync is complete.
-        let fx: AnyPublisher<AppAction, Never> = Just(
+        let fx: Fx<AppAction> = Just(
             AppAction.refreshAll
         )
         .eraseToAnyPublisher()
 
-        return Change(state: state, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Refresh all lists in the app from database
     /// Typically invoked after creating/deleting an entry, or performing
     /// some other action that would invalidate the state of various lists.
-    static func refreshAll(state: AppModel) -> Change<AppModel, AppAction> {
-        let fx: AnyPublisher<AppAction, Never> = Just(AppAction.listRecent)
+    static func refreshAll(state: AppModel) -> Update<AppModel, AppAction> {
+        let fx: Fx<AppAction> = Just(AppAction.listRecent)
             .merge(
                 with: Just(AppAction.setSearch("")),
                 Just(AppAction.setLinkSearch(""))
             )
             .eraseToAnyPublisher()
-        return Change(state: state, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Insert search history event into database
     static func createSearchHistoryItem(
         state: AppModel,
-        query: String,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
-        let fx: AnyPublisher<AppAction, Never> = environment.database
+        environment: AppEnvironment,
+        query: String
+    ) -> Update<AppModel, AppAction> {
+        let fx: Fx<AppAction> = environment.database
             .createSearchHistoryItem(query: query)
             .map({ result in
                 AppAction.noop
@@ -976,38 +979,38 @@ struct AppUpdate {
                 )
             })
             .eraseToAnyPublisher()
-        return Change(state: state, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Handle success case for search history item creation
     static func createSearchHistoryItemSuccess(
         state: AppModel,
-        query: String,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        query: String
+    ) -> Update<AppModel, AppAction> {
         environment.logger.log(
             "Created search history entry: \(query)"
         )
-        return Change(state: state)
+        return Update(state: state)
     }
 
     /// Handle failure case for search history item creation
     static func createSearchHistoryItemFailure(
         state: AppModel,
-        error: String,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel, AppAction> {
         environment.logger.warning(
             "Failed to create search history entry: \(error)"
         )
-        return Change(state: state)
+        return Update(state: state)
     }
 
     static func listRecent(
         state: AppModel,
         environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
-        let fx: AnyPublisher<AppAction, Never> = environment.database
+    ) -> Update<AppModel, AppAction> {
+        let fx: Fx<AppAction> = environment.database
             .listRecentEntries()
             .map({ entries in
                 AppAction.setRecent(entries)
@@ -1020,15 +1023,15 @@ struct AppUpdate {
                 )
             })
             .eraseToAnyPublisher()
-        return Change(state: state, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Delete entry with `slug`
     static func deleteEntry(
         state: AppModel,
-        slug: Slug,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        slug: Slug
+    ) -> Update<AppModel, AppAction> {
         var model = state
 
         guard let index = model.recent.firstIndex(
@@ -1037,7 +1040,7 @@ struct AppUpdate {
             environment.logger.log(
                 "Could not delete entry. No such id: \(slug)"
             )
-            return Change(state: model)
+            return Update(state: model)
         }
 
         model.recent.remove(at: index)
@@ -1048,7 +1051,7 @@ struct AppUpdate {
         // is harmless.
         model.isDetailShowing = false
 
-        let fx: AnyPublisher<AppAction, Never> = environment.database
+        let fx: Fx<AppAction> = environment.database
             .deleteEntry(slug: slug)
             .map({ _ in
                 AppAction.deleteEntrySuccess(slug)
@@ -1061,19 +1064,19 @@ struct AppUpdate {
                 )
             })
             .eraseToAnyPublisher()
-        return Change(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     /// Handle completion of entry delete
     static func deleteEntrySuccess(
         state: AppModel,
-        slug: Slug,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        slug: Slug
+    ) -> Update<AppModel, AppAction> {
         environment.logger.log("Deleted entry: \(slug)")
         //  Refresh lists in search fields after delete.
         //  This ensures they don't show the deleted entry.
-        let fx: AnyPublisher<AppAction, Never> = Just(AppAction.refreshAll)
+        let fx: Fx<AppAction> = Just(AppAction.refreshAll)
             .eraseToAnyPublisher()
 
         var model = state
@@ -1084,7 +1087,7 @@ struct AppUpdate {
             model.isDetailShowing = false
         }
 
-        return Change(
+        return Update(
             state: model,
             fx: fx
         )
@@ -1094,14 +1097,14 @@ struct AppUpdate {
     /// Do rename-flow-related setup.
     static func showRenameSheet(
         state: AppModel,
-        slug: Slug?,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        slug: Slug?
+    ) -> Update<AppModel, AppAction> {
         if let slug = slug {
             //  Set rename slug field text
             //  Set focus on rename field
             //  Save entry in preperation for any merge/move.
-            let fx: AnyPublisher<AppAction, Never> = Just(
+            let fx: Fx<AppAction> = Just(
                 AppAction.setRenameSlugField(slug.description)
             )
             .merge(
@@ -1114,12 +1117,12 @@ struct AppUpdate {
             model.isRenameSheetShowing = true
             model.slugToRename = slug
 
-            return Change(state: model, fx: fx)
+            return Update(state: model, fx: fx)
         } else {
             environment.logger.warning(
                 "Rename sheet invoked with nil slug"
             )
-            return Change(state: state)
+            return Update(state: state)
         }
     }
 
@@ -1127,8 +1130,8 @@ struct AppUpdate {
     /// Do rename-flow-related teardown.
     static func hideRenameSheet(
         state: AppModel
-    ) -> Change<AppModel, AppAction> {
-        let fx: AnyPublisher<AppAction, Never> = Just(
+    ) -> Update<AppModel, AppAction> {
+        let fx: Fx<AppAction> = Just(
             AppAction.setRenameSlugField("")
         ).eraseToAnyPublisher()
 
@@ -1136,19 +1139,19 @@ struct AppUpdate {
         model.isRenameSheetShowing = false
         model.slugToRename = nil
 
-        return Change(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     /// Set text of slug field
     static func setRenameSlugField(
         state: AppModel,
-        text: String,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        text: String
+    ) -> Update<AppModel, AppAction> {
         var model = state
         let sluglike = Slug.toSluglikeString(text)
         model.renameSlugField = sluglike
-        let fx: AnyPublisher<AppAction, Never> = environment.database
+        let fx: Fx<AppAction> = environment.database
             .searchRenameSuggestions(
                 query: sluglike,
                 current: state.slugToRename
@@ -1164,30 +1167,30 @@ struct AppUpdate {
                 )
             })
             .eraseToAnyPublisher()
-        return Change(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     /// Set rename suggestions
     static func setRenameSuggestions(
         state: AppModel,
         suggestions: [Suggestion]
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         var model = state
         model.renameSuggestions = suggestions
-        return Change(state: model)
+        return Update(state: model)
     }
 
     /// Handle rename suggestions error.
     /// This case can happen e.g. if the database fails to respond.
     static func renameSuggestionsError(
         state: AppModel,
-        error: String,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel, AppAction> {
         environment.logger.warning(
             "Failed to read suggestions from database: \(error)"
         )
-        return Change(state: state)
+        return Update(state: state)
     }
 
     /// Rename an entry (change its slug).
@@ -1196,38 +1199,38 @@ struct AppUpdate {
     /// If next exists, this will merge documents.
     static func renameEntry(
         state: AppModel,
+        environment: AppEnvironment,
         from: Slug?,
-        to: Slug?,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        to: Slug?
+    ) -> Update<AppModel, AppAction> {
         guard let to = to else {
-            let fx: AnyPublisher<AppAction, Never> = Just(.hideRenameSheet)
+            let fx: Fx<AppAction> = Just(.hideRenameSheet)
                 .eraseToAnyPublisher()
             environment.logger.log(
                 "Rename invoked with whitespace name. Doing nothing."
             )
-            return Change(state: state, fx: fx)
+            return Update(state: state, fx: fx)
         }
 
         guard let from = from else {
-            let fx: AnyPublisher<AppAction, Never> = Just(.hideRenameSheet)
+            let fx: Fx<AppAction> = Just(.hideRenameSheet)
                 .eraseToAnyPublisher()
             environment.logger.warning(
                 "Rename invoked without original slug. Doing nothing. Current: nil. Next: \(to)."
             )
-            return Change(state: state, fx: fx)
+            return Update(state: state, fx: fx)
         }
 
         guard from != to else {
-            let fx: AnyPublisher<AppAction, Never> = Just(.hideRenameSheet)
+            let fx: Fx<AppAction> = Just(.hideRenameSheet)
                 .eraseToAnyPublisher()
             environment.logger.log(
                 "Rename invoked with same name. Doing nothing."
             )
-            return Change(state: state, fx: fx)
+            return Update(state: state, fx: fx)
         }
 
-        let fx: AnyPublisher<AppAction, Never> = environment.database
+        let fx: Fx<AppAction> = environment.database
             .renameOrMergeEntry(from: from, to: to)
             .map({ _ in
                 AppAction.succeedRenameEntry(from: from, to: to)
@@ -1241,61 +1244,61 @@ struct AppUpdate {
             })
             .merge(with: Just(AppAction.hideRenameSheet))
             .eraseToAnyPublisher()
-        return Change(state: state, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Rename success lifecycle handler.
     /// Updates UI in response.
     static func succeedRenameEntry(
         state: AppModel,
+        environment: AppEnvironment,
         from: Slug,
-        to: Slug,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        to: Slug
+    ) -> Update<AppModel, AppAction> {
         environment.logger.log("Renamed entry from \(from) to \(to)")
-        let fx: AnyPublisher<AppAction, Never> = Just(
+        let fx: Fx<AppAction> = Just(
             AppAction.requestDetail(slug: to, fallback: "")
         )
         .merge(with: Just(AppAction.refreshAll))
         .eraseToAnyPublisher()
-        return Change(state: state, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Rename failure lifecycle handler.
     //  TODO: in future consider triggering an alert.
     static func failRenameEntry(
         state: AppModel,
-        error: String,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel, AppAction> {
         environment.logger.warning(
             "Failed to rename entry with error: \(error)"
         )
-        return Change(state: state)
+        return Update(state: state)
     }
 
     /// Unfocus editor and save current state
     static func selectDoneEditing(
         state: AppModel,
         environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
-        let fx: AnyPublisher<AppAction, Never> = Just(
+    ) -> Update<AppModel, AppAction> {
+        let fx: Fx<AppAction> = Just(
             AppAction.autosave
         )
         .merge(with: Just(AppAction.setFocus(nil)))
         .eraseToAnyPublisher()
-        return Change(state: state, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Set search text for main search input
     static func setSearch(
         state: AppModel,
-        text: String,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        text: String
+    ) -> Update<AppModel, AppAction> {
         var model = state
         model.searchText = text
-        let fx: AnyPublisher<AppAction, Never> = environment.database
+        let fx: Fx<AppAction> = environment.database
             .searchSuggestions(query: text)
             .map({ suggestions in
                 AppAction.setSuggestions(suggestions)
@@ -1304,7 +1307,7 @@ struct AppUpdate {
                 Just(.suggestionsFailure(error.localizedDescription))
             })
             .eraseToAnyPublisher()
-        return Change(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     /// Submit search from main search input
@@ -1312,33 +1315,33 @@ struct AppUpdate {
         state: AppModel,
         slug: Slug?,
         query: String
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         guard let slug = slug else {
-            return Change(state: state)
+            return Update(state: state)
         }
         // If we have been passed a valid slug, request a detail view.
-        let fx: AnyPublisher<AppAction, Never> = Just(
+        let fx: Fx<AppAction> = Just(
             AppAction.requestDetail(
                 slug: slug,
                 fallback: query
             )
         ).eraseToAnyPublisher()
-        return Change(state: state, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Request that entry detail view be shown
     static func requestDetail(
         state: AppModel,
+        environment: AppEnvironment,
         slug: Slug?,
-        fallback: String,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        fallback: String
+    ) -> Update<AppModel, AppAction> {
         /// If nil slug was requested, do nothing
         guard let slug = slug else {
-            return Change(state: state)
+            return Update(state: state)
         }
 
-        var saveFx: AnyPublisher<AppAction, Never> = Empty()
+        var saveFx: Fx<AppAction> = Empty()
             .eraseToAnyPublisher()
 
         /// If we were editing another detail view,
@@ -1357,7 +1360,7 @@ struct AppUpdate {
         model.isSearchShowing = false
         model.isDetailShowing = true
 
-        let fx: AnyPublisher<AppAction, Never> = environment.database
+        let fx: Fx<AppAction> = environment.database
             .readEntryDetail(slug: slug, fallback: fallback)
             .map({ detail in
                 AppAction.updateDetail(detail)
@@ -1372,42 +1375,49 @@ struct AppUpdate {
             )
             .eraseToAnyPublisher()
 
-        return Change(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     /// Update entry detail.
     /// This case gets hit after requesting detail for an entry.
     static func updateDetail(
         state: AppModel,
-        detail: EntryDetail,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
-        // Update editor DOM and mark this state as already saved,
-        // since we just loaded it from disk.
-        let fx: AnyPublisher<AppAction, Never> = Just(
-            AppAction.setEditorDom(
-                dom: detail.entry.value.dom,
-                saveState: detail.entry.state
-            )
-        )
-        .eraseToAnyPublisher()
-
+        environment: AppEnvironment,
+        detail: EntryDetail
+    ) -> Update<AppModel, AppAction> {
         var model = state
         model.slug = detail.slug
         model.backlinks = detail.backlinks
-        return Change(state: model, fx: fx)
+
+        // Set editor and save state.
+        // Then immediately autosave.
+        // This ensures entry is created.
+        return Update(state: model)
+            .pipe({ state in
+                setEditorDom(
+                    state: state,
+                    dom: detail.entry.value.dom,
+                    saveState: detail.entry.state
+                )
+            })
+            .pipe({ state in
+                autosave(
+                    state: state,
+                    environment: environment
+                )
+            })
     }
 
     static func setLinkSearch(
         state: AppModel,
-        text: String,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        text: String
+    ) -> Update<AppModel, AppAction> {
         var model = state
         let sluglike = Slug.toSluglikeString(text)
         model.linkSearchText = sluglike
 
-        let fx: AnyPublisher<AppAction, Never> = environment.database
+        let fx: Fx<AppAction> = environment.database
             .searchLinkSuggestions(query: text)
             .map({ suggestions in
                 AppAction.setLinkSuggestions(suggestions)
@@ -1421,13 +1431,13 @@ struct AppUpdate {
             })
             .eraseToAnyPublisher()
 
-        return Change(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     static func commitLinkSearch(
         state: AppModel,
         slug: Slug
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         var range = state.editorSelection
         // If there is a selected slashlink, use that range
         // instead of selection
@@ -1439,7 +1449,7 @@ struct AppUpdate {
             )
         }
 
-        let fx: AnyPublisher<AppAction, Never> = Just(
+        let fx: Fx<AppAction> = Just(
             AppAction.setLinkSheetPresented(false)
         )
         .merge(
@@ -1455,7 +1465,7 @@ struct AppUpdate {
         var model = state
         model.linkSearchText = ""
 
-        return Change(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     /// Autosave entry currently being edited (if any).
@@ -1463,30 +1473,30 @@ struct AppUpdate {
     static func autosave(
         state: AppModel,
         environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+    ) -> Update<AppModel, AppAction> {
         // If there is no entry currently being edited, noop.
         guard let entry = state.snapshotEditorAsEntry() else {
-            return Change(state: state)
+            return Update(state: state)
         }
-        return save(state: state, entry: entry, environment: environment)
+        return save(state: state, environment: environment, entry: entry)
     }
 
     /// Save snapshot of entry
     static func save(
         state: AppModel,
-        entry: SubtextFile,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        entry: SubtextFile
+    ) -> Update<AppModel, AppAction> {
         // If editor dom is already saved, noop
         guard state.editorSaveState != .saved else {
-            return Change(state: state)
+            return Update(state: state)
         }
 
         var model = state
         // Mark saving in-progress
         model.editorSaveState = .saving
 
-        let fx: AnyPublisher<AppAction, Never> = environment.database
+        let fx: Fx<AppAction> = environment.database
             .writeEntry(
                 entry: entry
             )
@@ -1502,15 +1512,15 @@ struct AppUpdate {
                 )
             })
             .eraseToAnyPublisher()
-        return Change(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     /// Log save success and perform refresh of various lists.
     static func succeedSave(
         state: AppModel,
-        entry: SubtextFile,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        environment: AppEnvironment,
+        entry: SubtextFile
+    ) -> Update<AppModel, AppAction> {
         environment.logger.debug(
             "Saved entry: \(entry.slug)"
         )
@@ -1534,15 +1544,15 @@ struct AppUpdate {
             model.editorSaveState = .saved
         }
 
-        return Change(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     static func failSave(
         state: AppModel,
+        environment: AppEnvironment,
         slug: Slug,
-        message: String,
-        environment: AppEnvironment
-    ) -> Change<AppModel, AppAction> {
+        message: String
+    ) -> Update<AppModel, AppAction> {
         //  TODO: show user a "try again" banner
         environment.logger.warning(
             "Save failed for entry (\(slug)) with error: \(message)"
@@ -1550,7 +1560,7 @@ struct AppUpdate {
         // Mark modified, since we failed to save
         var model = state
         model.editorSaveState = .modified
-        return Change(state: model)
+        return Update(state: model)
     }
 }
 
