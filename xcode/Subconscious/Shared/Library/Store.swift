@@ -29,10 +29,16 @@ import Combine
 import SwiftUI
 import os
 
+/// Fx is a publisher that publishes actions and never fails.
 public typealias Fx<Action> = AnyPublisher<Action, Never>
 
-public struct Update<State, Action> {
+/// Update represents a `State` change, together with an `Fx` publisher.
+public struct Update<State, Action>
+where State: Equatable {
+    /// `State` for this update
     var state: State
+    /// `Fx` for this update.
+    /// Default is an `Empty` publisher (no effects)
     var fx: Fx<Action> = Empty(completeImmediately: true)
         .eraseToAnyPublisher()
 
