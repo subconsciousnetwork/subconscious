@@ -669,10 +669,7 @@ struct AppUpdate {
 
         // Set editor dom and editor selection immediately in same
         // Update.
-        return Update(state: state)
-            .pipe({ state in
-                setEditorDom(state: state, dom: dom, saveState: .modified)
-            })
+        return setEditorDom(state: state, dom: dom, saveState: .modified)
             .pipe({ state in
                 setEditorSelection(
                     state: state,
@@ -943,10 +940,7 @@ struct AppUpdate {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
-        return Update(state: state)
-            .pipe({ state in
-                listRecent(state: state, environment: environment)
-            })
+        return listRecent(state: state, environment: environment)
             .pipe({ state in
                 setSearch(state: state, environment: environment, text: "")
             })
@@ -1380,20 +1374,17 @@ struct AppUpdate {
         // Set editor and save state.
         // Then immediately save.
         // This ensures entry is created.
-        return Update(state: model)
-            .pipe({ state in
-                setEditorDom(
-                    state: state,
-                    dom: detail.entry.value.dom,
-                    saveState: detail.entry.state
-                )
-            })
-            .pipe({ state in
-                save(
-                    state: state,
-                    environment: environment
-                )
-            })
+        return setEditorDom(
+            state: model,
+            dom: detail.entry.value.dom,
+            saveState: detail.entry.state
+        )
+        .pipe({ state in
+            save(
+                state: state,
+                environment: environment
+            )
+        })
     }
 
     static func setLinkSearch(
