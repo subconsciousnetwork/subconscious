@@ -250,8 +250,8 @@ struct AppModel: Equatable {
 struct AppUpdate {
     static func update(
         state: AppModel,
-        action: AppAction,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        action: AppAction
     ) -> Update<AppModel, AppAction> {
         switch action {
         case .noop:
