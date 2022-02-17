@@ -443,35 +443,6 @@ struct DatabaseService {
                 )
             }
 
-            let searches: [EntryLink] = try database.execute(
-                sql: """
-                SELECT DISTINCT query
-                FROM search_history
-                WHERE query LIKE ?
-                ORDER BY created DESC
-                LIMIT 3
-                """,
-                parameters: [
-                    .prefixQueryLike(query)
-                ]
-            )
-            .compactMap({ row in
-                if let title: String = row.get(0) {
-                    return EntryLink(title: title)
-                }
-                return nil
-            })
-
-            for search in searches {
-                //  Do not suggest current slug
-                if search.slug != current {
-                    suggestions.updateValue(
-                        .search(search),
-                        forKey: search.slug
-                    )
-                }
-            }
-
             let entries: [EntryLink] = try database.execute(
                 sql: """
                 SELECT slug, title
