@@ -444,8 +444,8 @@ struct AppUpdate {
         case let .setEditorSelection(range):
             return setEditorSelection(
                 state: state,
-                range: range,
-                environment: environment
+                environment: environment,
+                range: range
             )
         case let .insertEditorText(text, range):
             return insertEditorText(
@@ -611,8 +611,8 @@ struct AppUpdate {
     /// Set editor selection.
     static func setEditorSelection(
         state: AppModel,
-        range nsRange: NSRange,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        range nsRange: NSRange
     ) -> Update<AppModel, AppAction> {
         var model = state
         model.editorSelection = nsRange
@@ -667,17 +667,19 @@ struct AppUpdate {
         // Parse new markup
         let dom = Subtext(markup: markup)
 
-        let fx: Fx<AppAction> = Publishers.Sequence(
-            sequence: [
-                AppAction.modifyEditorDom(dom: dom),
-                AppAction.setEditorSelection(
-                    NSRange(cursor..<cursor, in: dom.base)
+        // Set editor dom and editor selection immediately in same
+        // Update.
+        return Update(state: state)
+            .pipe({ state in
+                setEditorDom(state: state, dom: dom, saveState: .modified)
+            })
+            .pipe({ state in
+                setEditorSelection(
+                    state: state,
+                    environment: environment,
+                    range: NSRange(cursor..<cursor, in: dom.base)
                 )
-            ]
-        )
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
+            })
     }
 
     /// Toggle detail view showing or hiding
