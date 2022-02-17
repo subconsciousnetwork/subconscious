@@ -11,13 +11,14 @@ import SwiftUI
 /// Provides a preview/excerpt of the entry.
 struct EntryRow: View {
     var entry: EntryStub
-    var emptyText = "Empty"
+    var emptyTitle = "Untitled"
+    var emptyExcerpt = "Empty"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text(entry.title.isEmpty ? emptyText : entry.title)
-                    .font(Font.appText)
+                Text(entry.title.isEmpty ? emptyTitle : entry.title)
+                    .font(Font(UIFont.appTextMedium))
                     .lineLimit(1)
                     .foregroundColor(Color.text)
                     .multilineTextAlignment(.leading)
@@ -27,13 +28,17 @@ struct EntryRow: View {
                 Spacer()
             }
             HStack {
-                Text(entry.excerpt.isEmpty ? emptyText : entry.excerpt)
-                    .font(Font.appText)
-                    .lineLimit(2)
-                    .foregroundColor(Color.secondaryText)
+                Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
+                    .font(Font(UIFont.appText))
+                    .lineLimit(1)
                     .multilineTextAlignment(.leading)
                 Spacer()
             }
+            Text(entry.slug.description)
+                .font(Font(UIFont.appText))
+                .lineLimit(1)
+                .foregroundColor(Color.secondaryText)
+                .multilineTextAlignment(.leading)
         }
     }
 }
