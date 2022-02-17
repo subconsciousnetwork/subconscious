@@ -319,7 +319,7 @@ struct AppUpdate {
             )
             return Update(state: state)
         case .refreshAll:
-            return refreshAll(state: state)
+            return refreshAll(state: state, environment: environment)
         case let .createSearchHistoryItem(query):
             return createSearchHistoryItem(
                 state: state,
@@ -950,14 +950,24 @@ struct AppUpdate {
     /// Refresh all lists in the app from database
     /// Typically invoked after creating/deleting an entry, or performing
     /// some other action that would invalidate the state of various lists.
-    static func refreshAll(state: AppModel) -> Update<AppModel, AppAction> {
-        let fx: Fx<AppAction> = Just(AppAction.listRecent)
-            .merge(
-                with: Just(AppAction.setSearch("")),
-                Just(AppAction.setLinkSearch(""))
-            )
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+    static func refreshAll(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel, AppAction> {
+        return Update(state: state)
+            .pipe({ state in
+                listRecent(state: state, environment: environment)
+            })
+            .pipe({ state in
+                setSearch(state: state, environment: environment, text: "")
+            })
+            .pipe({ state in
+                setLinkSearch(
+                    state: state,
+                    environment: environment,
+                    text: ""
+                )
+            })
     }
 
     /// Insert search history event into database
