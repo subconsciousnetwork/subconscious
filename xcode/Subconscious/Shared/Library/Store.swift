@@ -36,60 +36,14 @@ public struct Update<State, Action> {
     var fx: Fx<Action> = Empty(completeImmediately: true)
         .eraseToAnyPublisher()
 
-    /// Pipe a state through a series of update functions,
-    /// merging their Fx.
-    public static func pipe(
-        state: State,
-        a: (State) -> Update<State, Action>,
-        b: (State) -> Update<State, Action>
+    /// Pipe a state through another update function,
+    /// merging their `Fx`.
+    public func pipe(
+        _ a: (State) -> Update<State, Action>
     ) -> Update<State, Action> {
-        let upa = a(state)
-        let upb = b(upa.state)
-        let fx = upa.fx.merge(with: upb.fx).eraseToAnyPublisher()
-        return Update(state: upb.state, fx: fx)
-    }
-
-    /// Pipe a state through a series of update functions,
-    /// merging their Fx.
-    public static func pipe(
-        state: State,
-        a: (State) -> Update<State, Action>,
-        b: (State) -> Update<State, Action>,
-        c: (State) -> Update<State, Action>
-    ) -> Update<State, Action> {
-        let upa = a(state)
-        let upb = b(upa.state)
-        let upc = c(upb.state)
-        let fx = upa.fx
-            .merge(
-                with: upb.fx,
-                upc.fx
-            )
-            .eraseToAnyPublisher()
-        return Update(state: upc.state, fx: fx)
-    }
-
-    /// Pipe a state through a series of update functions,
-    /// merging their Fx.
-    public static func pipe(
-        state: State,
-        a: (State) -> Update<State, Action>,
-        b: (State) -> Update<State, Action>,
-        c: (State) -> Update<State, Action>,
-        d: (State) -> Update<State, Action>
-    ) -> Update<State, Action> {
-        let upa = a(state)
-        let upb = b(upa.state)
-        let upc = c(upb.state)
-        let upd = d(upc.state)
-        let fx = upa.fx
-            .merge(
-                with: upb.fx,
-                upc.fx,
-                upd.fx
-            )
-            .eraseToAnyPublisher()
-        return Update(state: upd.state, fx: fx)
+        let up = a(self.state)
+        let fx = self.fx.merge(with: up.fx).eraseToAnyPublisher()
+        return Update(state: up.state, fx: fx)
     }
 }
 
