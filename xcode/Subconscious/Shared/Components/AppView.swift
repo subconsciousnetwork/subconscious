@@ -35,7 +35,7 @@ enum AppAction {
     // Focus state for TextFields, TextViews, etc
     case setFocus(AppModel.Focus?)
 
-    // Database
+    //  Database
     /// Get database ready for interaction
     case readyDatabase
     case migrateDatabaseSuccess(SQLite3Migrations.MigrationSuccess)
@@ -118,10 +118,8 @@ enum AppAction {
     case linkSuggestionsFailure(String)
 
     //  Saving entries
-    /// Autosave the current entry
-    case autosave
     /// Save an entry at a particular snapshot value
-    case save(SubtextFile)
+    case save
     case succeedSave(SubtextFile)
     case failSave(
         slug: Slug,
@@ -269,7 +267,7 @@ struct AppUpdate {
         case .poll:
             // Auto-save entry currently being edited, if any.
             let fx: Fx<AppAction> = Just(
-                AppAction.autosave
+                AppAction.save
             )
             .eraseToAnyPublisher()
             return Update(state: state, fx: fx)
@@ -531,14 +529,8 @@ struct AppUpdate {
                 "Link suggest failed: \(message)"
             )
             return Update(state: state)
-        case let .save(entry):
+        case .save:
             return save(
-                state: state,
-                environment: environment,
-                entry: entry
-            )
-        case .autosave:
-            return autosave(
                 state: state,
                 environment: environment
             )
@@ -694,23 +686,16 @@ struct AppUpdate {
         isShowing: Bool,
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
-        var fx: Fx<AppAction> = Empty()
-            .eraseToAnyPublisher()
-
-        var model = state
-        model.isDetailShowing = isShowing
-
-        if isShowing == false {
-            model.focus = nil
-
-            /// Save entry before dismissing, if it is unsaved.
-            if model.editorSaveState != .saved {
-                if let entry = model.snapshotEditorAsEntry() {
-                    fx = Just(AppAction.save(entry)).eraseToAnyPublisher()
+        // Save any entry that is currently active before we blow it away
+        return save(state: state, environment: environment)
+            .pipe({ state in
+                var model = state
+                model.isDetailShowing = isShowing
+                if isShowing == false {
+                    model.focus = nil
                 }
-            }
-        }
-        return Update(state: model, fx: fx)
+                return Update(state: model)
+            })
     }
 
     /// Change state of keyboard
@@ -1112,30 +1097,30 @@ struct AppUpdate {
         environment: AppEnvironment,
         slug: Slug?
     ) -> Update<AppModel, AppAction> {
-        if let slug = slug {
-            //  Set rename slug field text
-            //  Set focus on rename field
-            //  Save entry in preperation for any merge/move.
-            let fx: Fx<AppAction> = Just(
-                AppAction.setRenameSlugField(slug.description)
-            )
-            .merge(
-                with: Just(AppAction.setFocus(.rename)),
-                Just(AppAction.autosave)
-            )
-            .eraseToAnyPublisher()
-
-            var model = state
-            model.isRenameSheetShowing = true
-            model.slugToRename = slug
-
-            return Update(state: model, fx: fx)
-        } else {
+        guard let slug = slug else {
             environment.logger.warning(
                 "Rename sheet invoked with nil slug"
             )
             return Update(state: state)
         }
+
+        //  Set rename slug field text
+        //  Set focus on rename field
+        //  Save entry in preperation for any merge/move.
+        let fx: Fx<AppAction> = Just(
+            AppAction.setRenameSlugField(slug.description)
+        )
+        .merge(
+            with: Just(AppAction.setFocus(.rename)),
+            Just(AppAction.save)
+        )
+        .eraseToAnyPublisher()
+
+        var model = state
+        model.isRenameSheetShowing = true
+        model.slugToRename = slug
+
+        return Update(state: model, fx: fx)
     }
 
     /// Hide rename sheet.
@@ -1295,7 +1280,7 @@ struct AppUpdate {
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
         let fx: Fx<AppAction> = Just(
-            AppAction.autosave
+            AppAction.save
         )
         .merge(with: Just(AppAction.setFocus(nil)))
         .eraseToAnyPublisher()
@@ -1348,46 +1333,35 @@ struct AppUpdate {
         slug: Slug?,
         fallback: String
     ) -> Update<AppModel, AppAction> {
-        /// If nil slug was requested, do nothing
+        // If nil slug was requested, do nothing
         guard let slug = slug else {
+            environment.logger.log(
+                "Detail requested for nil slug. Doing nothing."
+            )
             return Update(state: state)
         }
-
-        var saveFx: Fx<AppAction> = Empty()
-            .eraseToAnyPublisher()
-
-        /// If we were editing another detail view,
-        /// snapshot and save it, if it is unsaved.
-        if state.editorSaveState != .saved {
-            if let snapshot = state.snapshotEditorAsEntry() {
-                saveFx = Just(
-                    AppAction.save(snapshot)
-                )
-                .eraseToAnyPublisher()
-            }
-        }
-
-        var model = resetEditor(state: state)
-        model.searchText = ""
-        model.isSearchShowing = false
-        model.isDetailShowing = true
-
-        let fx: Fx<AppAction> = environment.database
-            .readEntryDetail(slug: slug, fallback: fallback)
-            .map({ detail in
-                AppAction.updateDetail(detail)
+        // Save current state before we blow it away
+        return save(state: state, environment: environment)
+            .pipe({ state in
+                var model = resetEditor(state: state)
+                model.searchText = ""
+                model.isSearchShowing = false
+                model.isDetailShowing = true
+                let fx: Fx<AppAction> = environment.database
+                    .readEntryDetail(slug: slug, fallback: fallback)
+                    .map({ detail in
+                        AppAction.updateDetail(detail)
+                    })
+                    .catch({ error in
+                        Just(AppAction.failDetail(error.localizedDescription))
+                    })
+                    .merge(
+                        with: Just(AppAction.setSearch("")),
+                        Just(AppAction.createSearchHistoryItem(fallback))
+                    )
+                    .eraseToAnyPublisher()
+                return Update(state: model, fx: fx)
             })
-            .catch({ error in
-                Just(AppAction.failDetail(error.localizedDescription))
-            })
-            .merge(
-                with: saveFx,
-                Just(AppAction.setSearch("")),
-                Just(AppAction.createSearchHistoryItem(fallback))
-            )
-            .eraseToAnyPublisher()
-
-        return Update(state: model, fx: fx)
     }
 
     /// Update entry detail.
@@ -1402,7 +1376,7 @@ struct AppUpdate {
         model.backlinks = detail.backlinks
 
         // Set editor and save state.
-        // Then immediately autosave.
+        // Then immediately save.
         // This ensures entry is created.
         return Update(state: model)
             .pipe({ state in
@@ -1413,7 +1387,7 @@ struct AppUpdate {
                 )
             })
             .pipe({ state in
-                autosave(
+                save(
                     state: state,
                     environment: environment
                 )
@@ -1480,27 +1454,22 @@ struct AppUpdate {
         return Update(state: model, fx: fx)
     }
 
-    /// Autosave entry currently being edited (if any).
-    /// This is safe to call at any time.
-    static func autosave(
-        state: AppModel,
-        environment: AppEnvironment
-    ) -> Update<AppModel, AppAction> {
-        // If there is no entry currently being edited, noop.
-        guard let entry = state.snapshotEditorAsEntry() else {
-            return Update(state: state)
-        }
-        return save(state: state, environment: environment, entry: entry)
-    }
-
     /// Save snapshot of entry
     static func save(
         state: AppModel,
-        environment: AppEnvironment,
-        entry: SubtextFile
+        environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
         // If editor dom is already saved, noop
         guard state.editorSaveState != .saved else {
+            return Update(state: state)
+        }
+
+        // If there is no entry currently being edited, noop.
+        guard let entry = state.snapshotEditorAsEntry() else {
+            let saveState = String(reflecting: state.editorSaveState)
+            environment.logger.warning(
+                "Entry save state is marked \(saveState) but no entry could be derived for state"
+            )
             return Update(state: state)
         }
 
