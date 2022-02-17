@@ -64,16 +64,7 @@ struct RenameSearchView: View {
                         RenameSuggestionLabelView(suggestion: suggestion)
                     }
                 )
-                .modifier(
-                    SuggestionViewModifier(
-                        insets: EdgeInsets(
-                            top: AppTheme.unit2,
-                            leading: AppTheme.padding,
-                            bottom: AppTheme.unit2,
-                            trailing: AppTheme.padding
-                        )
-                    )
-                )
+                .modifier(SuggestionViewModifier())
             }
             .listStyle(.plain)
         }

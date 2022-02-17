@@ -11,6 +11,7 @@ import SwiftUI
 /// It sets the basic list styles we use for suggestions.
 /// Apply it to the "row" view which is an immediate child of `List`.
 struct SuggestionViewModifier: ViewModifier {
+    var height: CGFloat = 56
     var insets: EdgeInsets = EdgeInsets(
         top: 0,
         leading: AppTheme.tightPadding,
@@ -27,5 +28,6 @@ struct SuggestionViewModifier: ViewModifier {
             )
             .listRowInsets(insets)
             .listRowSeparator(.hidden, edges: .all)
+            .frame(height: height)
     }
 }

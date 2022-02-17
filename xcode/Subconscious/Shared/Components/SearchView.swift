@@ -15,12 +15,22 @@ struct SearchView: View {
     /// to calculate the height of the `List` that contains them.
     /// This allows us to shrink the modal when only a few results are
     /// present.
-    var suggestionHeight: CGFloat = (24 + 12 + 8 + 8)
+    var suggestionHeight: CGFloat = 56
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     @Binding var suggestions: [Suggestion]
     var onCommit: (Slug?, String) -> Void
     var onCancel: () -> Void
+
+    /// Calculate maxHeight given number of suggestions.
+    /// This allows us to adapt the height of the modal to the
+    /// suggestions that are returned.
+    private func calcMaxHeight() -> CGFloat {
+        CGFloat.minimum(
+            suggestionHeight * CGFloat(suggestions.count),
+            suggestionHeight * 6
+        )
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -67,15 +77,14 @@ struct SearchView: View {
                         SuggestionLabelView(suggestion: suggestion)
                     }
                 )
-                .frame(height: suggestionHeight)
                 .modifier(
-                    // Because we fix the height of the suggestions (see below)
-                    // we do not set edge insets on the suggestion, as
-                    // this is unneccessary and would increase the height
-                    // of our suggestion (frame + inset), throwing off
-                    // height calculations below.
-                    // 2022-01-28 Gordon Brander
-                    SuggestionViewModifier()
+                    SuggestionViewModifier(
+                        // Set suggestion height explicitly so we can
+                        // rely on it for our search modal height
+                        // calculations.
+                        // 2022-02-17 Gordon Brander
+                        height: suggestionHeight
+                    )
                 )
             }
             // Fix the height of the scrollview based on the number of
@@ -85,12 +94,7 @@ struct SearchView: View {
             // few elements to show.
             //
             // 2022-01-28 Gordon Brander
-            .frame(
-                maxHeight: AppTheme.tightPadding + CGFloat.minimum(
-                    suggestionHeight * CGFloat(suggestions.count),
-                    suggestionHeight * 6
-                )
-            )
+            .frame(maxHeight: calcMaxHeight())
             .listStyle(.plain)
         }
         .background(Color.background)
