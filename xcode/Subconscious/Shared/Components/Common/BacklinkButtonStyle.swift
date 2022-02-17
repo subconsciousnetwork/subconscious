@@ -18,7 +18,7 @@ struct BacklinkButtonStyle: ButtonStyle {
             .contentShape(Rectangle())
             .background(
                 configuration.isPressed ?
-                Color.backgroundPressed :
+                Color.pressedFill :
                 Color.clear
             )
             .foregroundColor(!isEnabled ? Color.textDisabled : Color.text)
