@@ -12,7 +12,7 @@ import SwiftUI
 struct EntryRow: View {
     var entry: EntryStub
     var emptyTitle = "Untitled"
-    var emptyExcerpt = "Empty"
+    var emptyExcerpt = "No additional text"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
