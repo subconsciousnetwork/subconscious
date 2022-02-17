@@ -29,9 +29,68 @@ import Combine
 import SwiftUI
 import os
 
-public struct Change<State, Action> {
+public typealias Fx<Action> = AnyPublisher<Action, Never>
+
+public struct Update<State, Action> {
     var state: State
-    var fx: AnyPublisher<Action, Never>?
+    var fx: Fx<Action> = Empty(completeImmediately: true)
+        .eraseToAnyPublisher()
+
+    /// Pipe a state through a series of update functions,
+    /// merging their Fx.
+    public static func pipe(
+        state: State,
+        a: (State) -> Update<State, Action>,
+        b: (State) -> Update<State, Action>
+    ) -> Update<State, Action> {
+        let upa = a(state)
+        let upb = b(upa.state)
+        let fx = upa.fx.merge(with: upb.fx).eraseToAnyPublisher()
+        return Update(state: upb.state, fx: fx)
+    }
+
+    /// Pipe a state through a series of update functions,
+    /// merging their Fx.
+    public static func pipe(
+        state: State,
+        a: (State) -> Update<State, Action>,
+        b: (State) -> Update<State, Action>,
+        c: (State) -> Update<State, Action>
+    ) -> Update<State, Action> {
+        let upa = a(state)
+        let upb = b(upa.state)
+        let upc = c(upb.state)
+        let fx = upa.fx
+            .merge(
+                with: upb.fx,
+                upc.fx
+            )
+            .eraseToAnyPublisher()
+        return Update(state: upc.state, fx: fx)
+    }
+
+    /// Pipe a state through a series of update functions,
+    /// merging their Fx.
+    public static func pipe(
+        state: State,
+        a: (State) -> Update<State, Action>,
+        b: (State) -> Update<State, Action>,
+        c: (State) -> Update<State, Action>,
+        d: (State) -> Update<State, Action>
+    ) -> Update<State, Action> {
+        let upa = a(state)
+        let upb = b(upa.state)
+        let upc = c(upb.state)
+        let upd = d(upc.state)
+        let fx = upa.fx
+            .merge(
+                with: upb.fx,
+                upc.fx,
+                upd.fx
+            )
+            .eraseToAnyPublisher()
+        return Update(state: upd.state, fx: fx)
+    }
 }
 
 /// Store is a source of truth for a state.
@@ -71,7 +130,7 @@ where State: Equatable {
         State,
         Action,
         Environment
-    ) -> Change<State, Action>
+    ) -> Update<State, Action>
     /// Environment, which typically holds references to outside information,
     /// such as API methods.
     ///
@@ -97,7 +156,7 @@ where State: Equatable {
             State,
             Action,
             Environment
-        ) -> Change<State, Action>,
+        ) -> Update<State, Action>,
         state: State,
         environment: Environment,
         logger: Logger,
@@ -182,8 +241,6 @@ where State: Equatable {
             self.state = change.state
         }
         // Run effect
-        if let fx = change.fx {
-            self.subscribe(fx: fx)
-        }
+        self.subscribe(fx: change.fx)
     }
 }
