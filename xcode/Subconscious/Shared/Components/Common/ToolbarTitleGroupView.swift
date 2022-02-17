@@ -10,16 +10,17 @@ import SwiftUI
 struct ToolbarTitleGroupView: View {
     var title: String
     var slug: Slug?
+    var untitled = "Empty"
     var body: some View {
         HStack {
             Spacer()
             VStack(spacing: AppTheme.unit) {
-                Text(title.isEmpty ? "Untitled" : title)
+                Text(title.isEmpty ? untitled : title)
                     .font(Font(UIFont.appText))
                     .foregroundColor(Color.text)
                     .frame(height: AppTheme.textSize)
                     .lineLimit(1)
-                Text(slug?.description ?? "untitled")
+                Text(slug?.description ?? untitled)
                     .font(Font(UIFont.appCaption))
                     .frame(height: AppTheme.captionSize)
                     .foregroundColor(Color.secondaryText)

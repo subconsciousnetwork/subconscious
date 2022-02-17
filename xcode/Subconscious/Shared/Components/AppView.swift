@@ -578,14 +578,6 @@ struct AppUpdate {
         dom: Subtext,
         saveState: SaveState = .modified
     ) -> Update<AppModel, AppAction> {
-        // `setEditorAttributedText` comes from changes
-        // in the editor UITextView.
-        // We want to make sure any text typed gets rendered.
-        // Render attributes from markup if text has changed.
-        guard state.editorDom != dom else {
-            return Update(state: state)
-        }
-
         var model = state
         model.editorDom = dom
         // Mark save state
@@ -771,7 +763,7 @@ struct AppUpdate {
         url: URL,
         range: NSRange
     ) -> Update<AppModel, AppAction> {
-        // Don't follow links while editing. Instead, select the link.
+        // Don't follow links while editing.
         //
         // When editing, you usually don't want to follow a link, you
         // want to tap into it to edit it. Also, we don't want to follow a
@@ -783,27 +775,26 @@ struct AppUpdate {
         // For now, I think this is the best approach.
         //
         // 2021-09-23 Gordon Brander
-        if state.focus == .editor {
-            let fx: Fx<AppAction> = Just(
-                AppAction.setEditorSelection(range)
-            ).eraseToAnyPublisher()
-            return Update(state: state, fx: fx)
-        } else {
-            if Slashlink.isSlashlinkURL(url) {
-                // If this is a Subtext URL, then commit a search for the
-                // corresponding query
-                let fx: Fx<AppAction> = Just(
-                    AppAction.requestDetail(
-                        slug: Slashlink.slashlinkURLToSlug(url),
-                        fallback: ""
-                    )
-                ).eraseToAnyPublisher()
-                return Update(state: state, fx: fx)
-            } else {
-                UIApplication.shared.open(url)
-                return Update(state: state)
-            }
+        guard state.focus != .editor else {
+            return Update(state: state)
         }
+
+        // Follow ordinary links when not in edit mode
+        guard Slashlink.isSlashlinkURL(url) else {
+            UIApplication.shared.open(url)
+            return Update(state: state)
+        }
+
+        // If this is a Subtext URL, then commit a search for the
+        // corresponding query
+        let fx: Fx<AppAction> = Just(
+            AppAction.requestDetail(
+                slug: Slashlink.slashlinkURLToSlug(url),
+                fallback: ""
+            )
+        )
+        .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
 
     /// Make database ready.
@@ -1370,7 +1361,6 @@ struct AppUpdate {
         var model = state
         model.slug = detail.slug
         model.backlinks = detail.backlinks
-
         // Set editor and save state.
         // Then immediately save.
         // This ensures entry is created.
