@@ -45,9 +45,9 @@ where State: Equatable {
     /// Pipe a state through another update function,
     /// merging their `Fx`.
     public func pipe(
-        _ a: (State) -> Update<State, Action>
+        _ through: (State) -> Update<State, Action>
     ) -> Update<State, Action> {
-        let up = a(self.state)
+        let up = through(self.state)
         let fx = self.fx.merge(with: up.fx).eraseToAnyPublisher()
         return Update(state: up.state, fx: fx)
     }
