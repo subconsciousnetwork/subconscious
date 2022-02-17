@@ -287,8 +287,8 @@ struct AppUpdate {
         case let .migrateDatabaseSuccess(success):
             return migrateDatabaseSuccess(
                 state: state,
-                success: success,
-                environment: environment
+                environment: environment,
+                success: success
             )
         case .rebuildDatabase:
             return rebuildDatabase(
@@ -310,8 +310,8 @@ struct AppUpdate {
         case let .syncSuccess(changes):
             return syncSuccess(
                 state: state,
-                changes: changes,
-                environment: environment
+                environment: environment,
+                changes: changes
             )
         case let .syncFailure(message):
             environment.logger.warning(
@@ -323,20 +323,20 @@ struct AppUpdate {
         case let .createSearchHistoryItem(query):
             return createSearchHistoryItem(
                 state: state,
-                query: query,
-                environment: environment
+                environment: environment,
+                query: query
             )
         case let .createSearchHistoryItemSuccess(query):
             return createSearchHistoryItemSuccess(
                 state: state,
-                query: query,
-                environment: environment
+                environment: environment,
+                query: query
             )
         case let .createSearchHistoryItemFailure(error):
             return createSearchHistoryItemFailure(
                 state: state,
-                error: error,
-                environment: environment
+                environment: environment,
+                error: error
             )
         case .listRecent:
             return listRecent(
@@ -378,14 +378,14 @@ struct AppUpdate {
         case let .deleteEntry(slug):
             return deleteEntry(
                 state: state,
-                slug: slug,
-                environment: environment
+                environment: environment,
+                slug: slug
             )
         case let .deleteEntrySuccess(slug):
             return deleteEntrySuccess(
                 state: state,
-                slug: slug,
-                environment: environment
+                environment: environment,
+                slug: slug
             )
         case let .deleteEntryFailure(error):
             environment.logger.log("Failed to delete entry: \(error)")
@@ -393,44 +393,44 @@ struct AppUpdate {
         case let .showRenameSheet(slug):
             return showRenameSheet(
                 state: state,
-                slug: slug,
-                environment: environment
+                environment: environment,
+                slug: slug
             )
         case .hideRenameSheet:
             return hideRenameSheet(state: state)
         case let .setRenameSlugField(text):
             return setRenameSlugField(
                 state: state,
-                text: text,
-                environment: environment
+                environment: environment,
+                text: text
             )
         case let .setRenameSuggestions(suggestions):
             return setRenameSuggestions(state: state, suggestions: suggestions)
         case let .renameSuggestionsFailure(error):
             return renameSuggestionsError(
                 state: state,
-                error: error,
-                environment: environment
+                environment: environment,
+                error: error
             )
         case let .renameEntry(from, to):
             return renameEntry(
                 state: state,
+                environment: environment,
                 from: from,
-                to: to,
-                environment: environment
+                to: to
             )
         case let .succeedRenameEntry(from, to):
             return succeedRenameEntry(
                 state: state,
+                environment: environment,
                 from: from,
-                to: to,
-                environment: environment
+                to: to
             )
         case let .failRenameEntry(error):
             return failRenameEntry(
                 state: state,
-                error: error,
-                environment: environment
+                environment: environment,
+                error: error
             )
         case .selectDoneEditing:
             return selectDoneEditing(
@@ -465,8 +465,8 @@ struct AppUpdate {
         case let .setSearch(text):
             return setSearch(
                 state: state,
-                text: text,
-                environment: environment
+                environment: environment,
+                text: text
             )
         case let .submitSearch(slug, query):
             return submitSearch(state: state, slug: slug, query: query)
@@ -494,15 +494,15 @@ struct AppUpdate {
         case let .requestDetail(slug, fallback):
             return requestDetail(
                 state: state,
+                environment: environment,
                 slug: slug,
-                fallback: fallback,
-                environment: environment
+                fallback: fallback
             )
         case let .updateDetail(results):
             return updateDetail(
                 state: state,
-                detail: results,
-                environment: environment
+                environment: environment,
+                detail: results
             )
         case let .failDetail(message):
             environment.logger.log(
@@ -517,8 +517,8 @@ struct AppUpdate {
         case let .setLinkSearch(text):
             return setLinkSearch(
                 state: state,
-                text: text,
-                environment: environment
+                environment: environment,
+                text: text
             )
         case let .commitLinkSearch(slug):
             return commitLinkSearch(state: state, slug: slug)
@@ -534,8 +534,8 @@ struct AppUpdate {
         case let .save(entry):
             return save(
                 state: state,
-                entry: entry,
-                environment: environment
+                environment: environment,
+                entry: entry
             )
         case .autosave:
             return autosave(
@@ -545,15 +545,15 @@ struct AppUpdate {
         case let .succeedSave(entry):
             return succeedSave(
                 state: state,
-                entry: entry,
-                environment: environment
+                environment: environment,
+                entry: entry
             )
         case let .failSave(slug, message):
             return failSave(
                 state: state,
+                environment: environment,
                 slug: slug,
-                message: message,
-                environment: environment
+                message: message
             )
         }
     }
@@ -866,8 +866,8 @@ struct AppUpdate {
 
     static func migrateDatabaseSuccess(
         state: AppModel,
-        success: SQLite3Migrations.MigrationSuccess,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        success: SQLite3Migrations.MigrationSuccess
     ) -> Update<AppModel, AppAction> {
         var model = state
         model.databaseState = .ready
@@ -929,8 +929,8 @@ struct AppUpdate {
     /// Handle successful sync
     static func syncSuccess(
         state: AppModel,
-        changes: [FileSync.Change],
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        changes: [FileSync.Change]
     ) -> Update<AppModel, AppAction> {
         environment.logger.debug(
             "File sync finished: \(changes)"
@@ -963,8 +963,8 @@ struct AppUpdate {
     /// Insert search history event into database
     static func createSearchHistoryItem(
         state: AppModel,
-        query: String,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        query: String
     ) -> Update<AppModel, AppAction> {
         let fx: Fx<AppAction> = environment.database
             .createSearchHistoryItem(query: query)
@@ -985,8 +985,8 @@ struct AppUpdate {
     /// Handle success case for search history item creation
     static func createSearchHistoryItemSuccess(
         state: AppModel,
-        query: String,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        query: String
     ) -> Update<AppModel, AppAction> {
         environment.logger.log(
             "Created search history entry: \(query)"
@@ -997,8 +997,8 @@ struct AppUpdate {
     /// Handle failure case for search history item creation
     static func createSearchHistoryItemFailure(
         state: AppModel,
-        error: String,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        error: String
     ) -> Update<AppModel, AppAction> {
         environment.logger.warning(
             "Failed to create search history entry: \(error)"
@@ -1029,8 +1029,8 @@ struct AppUpdate {
     /// Delete entry with `slug`
     static func deleteEntry(
         state: AppModel,
-        slug: Slug,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        slug: Slug
     ) -> Update<AppModel, AppAction> {
         var model = state
 
@@ -1070,8 +1070,8 @@ struct AppUpdate {
     /// Handle completion of entry delete
     static func deleteEntrySuccess(
         state: AppModel,
-        slug: Slug,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        slug: Slug
     ) -> Update<AppModel, AppAction> {
         environment.logger.log("Deleted entry: \(slug)")
         //  Refresh lists in search fields after delete.
@@ -1097,8 +1097,8 @@ struct AppUpdate {
     /// Do rename-flow-related setup.
     static func showRenameSheet(
         state: AppModel,
-        slug: Slug?,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        slug: Slug?
     ) -> Update<AppModel, AppAction> {
         if let slug = slug {
             //  Set rename slug field text
@@ -1145,8 +1145,8 @@ struct AppUpdate {
     /// Set text of slug field
     static func setRenameSlugField(
         state: AppModel,
-        text: String,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        text: String
     ) -> Update<AppModel, AppAction> {
         var model = state
         let sluglike = Slug.toSluglikeString(text)
@@ -1184,8 +1184,8 @@ struct AppUpdate {
     /// This case can happen e.g. if the database fails to respond.
     static func renameSuggestionsError(
         state: AppModel,
-        error: String,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        error: String
     ) -> Update<AppModel, AppAction> {
         environment.logger.warning(
             "Failed to read suggestions from database: \(error)"
@@ -1199,9 +1199,9 @@ struct AppUpdate {
     /// If next exists, this will merge documents.
     static func renameEntry(
         state: AppModel,
+        environment: AppEnvironment,
         from: Slug?,
-        to: Slug?,
-        environment: AppEnvironment
+        to: Slug?
     ) -> Update<AppModel, AppAction> {
         guard let to = to else {
             let fx: Fx<AppAction> = Just(.hideRenameSheet)
@@ -1251,9 +1251,9 @@ struct AppUpdate {
     /// Updates UI in response.
     static func succeedRenameEntry(
         state: AppModel,
+        environment: AppEnvironment,
         from: Slug,
-        to: Slug,
-        environment: AppEnvironment
+        to: Slug
     ) -> Update<AppModel, AppAction> {
         environment.logger.log("Renamed entry from \(from) to \(to)")
         let fx: Fx<AppAction> = Just(
@@ -1268,8 +1268,8 @@ struct AppUpdate {
     //  TODO: in future consider triggering an alert.
     static func failRenameEntry(
         state: AppModel,
-        error: String,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        error: String
     ) -> Update<AppModel, AppAction> {
         environment.logger.warning(
             "Failed to rename entry with error: \(error)"
@@ -1293,8 +1293,8 @@ struct AppUpdate {
     /// Set search text for main search input
     static func setSearch(
         state: AppModel,
-        text: String,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        text: String
     ) -> Update<AppModel, AppAction> {
         var model = state
         model.searchText = text
@@ -1332,9 +1332,9 @@ struct AppUpdate {
     /// Request that entry detail view be shown
     static func requestDetail(
         state: AppModel,
+        environment: AppEnvironment,
         slug: Slug?,
-        fallback: String,
-        environment: AppEnvironment
+        fallback: String
     ) -> Update<AppModel, AppAction> {
         /// If nil slug was requested, do nothing
         guard let slug = slug else {
@@ -1382,8 +1382,8 @@ struct AppUpdate {
     /// This case gets hit after requesting detail for an entry.
     static func updateDetail(
         state: AppModel,
-        detail: EntryDetail,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        detail: EntryDetail
     ) -> Update<AppModel, AppAction> {
         var model = state
         model.slug = detail.slug
@@ -1410,8 +1410,8 @@ struct AppUpdate {
 
     static func setLinkSearch(
         state: AppModel,
-        text: String,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        text: String
     ) -> Update<AppModel, AppAction> {
         var model = state
         let sluglike = Slug.toSluglikeString(text)
@@ -1478,14 +1478,14 @@ struct AppUpdate {
         guard let entry = state.snapshotEditorAsEntry() else {
             return Update(state: state)
         }
-        return save(state: state, entry: entry, environment: environment)
+        return save(state: state, environment: environment, entry: entry)
     }
 
     /// Save snapshot of entry
     static func save(
         state: AppModel,
-        entry: SubtextFile,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        entry: SubtextFile
     ) -> Update<AppModel, AppAction> {
         // If editor dom is already saved, noop
         guard state.editorSaveState != .saved else {
@@ -1518,8 +1518,8 @@ struct AppUpdate {
     /// Log save success and perform refresh of various lists.
     static func succeedSave(
         state: AppModel,
-        entry: SubtextFile,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        entry: SubtextFile
     ) -> Update<AppModel, AppAction> {
         environment.logger.debug(
             "Saved entry: \(entry.slug)"
@@ -1549,9 +1549,9 @@ struct AppUpdate {
 
     static func failSave(
         state: AppModel,
+        environment: AppEnvironment,
         slug: Slug,
-        message: String,
-        environment: AppEnvironment
+        message: String
     ) -> Update<AppModel, AppAction> {
         //  TODO: show user a "try again" banner
         environment.logger.warning(
