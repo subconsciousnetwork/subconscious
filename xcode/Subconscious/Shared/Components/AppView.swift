@@ -1392,22 +1392,20 @@ struct AppUpdate {
         // Set editor and save state.
         // Then immediately autosave.
         // This ensures entry is created.
-        return Update.pipe(
-            state: model,
-            a: { state in
+        return Update(state: model)
+            .pipe({ state in
                 setEditorDom(
                     state: state,
                     dom: detail.entry.value.dom,
                     saveState: detail.entry.state
                 )
-            },
-            b: { state in
+            })
+            .pipe({ state in
                 autosave(
                     state: state,
                     environment: environment
                 )
-            }
-        )
+            })
     }
 
     static func setLinkSearch(
