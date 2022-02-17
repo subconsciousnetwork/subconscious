@@ -21,7 +21,7 @@ struct SubconsciousApp: App {
             subsystem: AppEnvironment.rdns,
             category: "store"
         ),
-        debug: true
+        debug: false
     )
 
     var body: some Scene {
