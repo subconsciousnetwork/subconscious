@@ -874,6 +874,8 @@ struct AppUpdate {
         let fx: Fx<AppAction> = Just(
             AppAction.sync
         )
+        // Refresh all from database immediately while sync happens
+        // in background.
         .merge(with: Just(.refreshAll))
         .eraseToAnyPublisher()
         if success.from != success.to {
