@@ -325,16 +325,13 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
-    private func searchSuggestionsForZeroQuery(
-    ) throws -> OrderedDictionary<Slug, Suggestion> {
-        var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
-
-        let entries: [EntryLink] = try database.execute(
+    private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
+        return try database.execute(
             sql: """
             SELECT slug, title
             FROM entry
             ORDER BY modified DESC
-            LIMIT 5
+            LIMIT 25
             """
         )
         .compactMap({ row in
@@ -350,52 +347,23 @@ struct DatabaseService {
             }
             return nil
         })
-
-        for entry in entries {
-            suggestions.updateValue(
-                .entry(entry),
-                forKey: entry.slug
-            )
-        }
-
-        let queries: [EntryLink] = try database.execute(
-            sql: """
-            SELECT DISTINCT search_history.query
-            FROM search_history
-            ORDER BY search_history.created DESC
-            LIMIT 5
-            """
-        )
-        .compactMap({ row in
-            if let title: String = row.get(0) {
-                return EntryLink(title: title)
-            }
-            return nil
+        .map({ link in
+            Suggestion.entry(link)
         })
-
-        // Append queries, except those which would have the same slug as
-        // an existing entry.
-        for query in queries {
-            if suggestions[query.slug] == nil {
-                suggestions.updateValue(.search(query), forKey: query.slug)
-            }
-        }
-
-        return suggestions
     }
 
     private func searchSuggestionsForQuery(
         query: String
-    ) throws -> OrderedDictionary<Slug, Suggestion> {
-        var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
-
+    ) throws -> [Suggestion] {
         // If slug is invalid, return empty suggestions
         guard
             let querySlug = Slug(query),
             let queryEntryLink = EntryLink(title: query)
         else {
-            return suggestions
+            return []
         }
+
+        var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
 
         // Create a suggestion for the literal query
         suggestions[querySlug] = .search(queryEntryLink)
@@ -406,7 +374,7 @@ struct DatabaseService {
             FROM entry_search
             WHERE entry_search MATCH ?
             ORDER BY rank
-            LIMIT 5
+            LIMIT 25
             """,
             parameters: [
                 .prefixQueryFTS5(query)
@@ -433,34 +401,7 @@ struct DatabaseService {
             suggestions.updateValue(.entry(entry), forKey: entry.slug)
         }
 
-        // Append queries, except those which would have the same slug as
-        // an existing entry.
-        let queries: [EntryLink] = try database.execute(
-            sql: """
-            SELECT DISTINCT query
-            FROM search_history
-            WHERE query LIKE ?
-            ORDER BY created DESC
-            LIMIT 3
-            """,
-            parameters: [
-                .prefixQueryLike(query)
-            ]
-        )
-        .compactMap({ row in
-            if let title: String = row.get(0) {
-                return EntryLink(title: title)
-            }
-            return nil
-        })
-
-        for query in queries {
-            if suggestions[query.slug] == nil {
-                suggestions.updateValue(.search(query), forKey: query.slug)
-            }
-        }
-
-        return suggestions
+        return Array(suggestions.values)
     }
 
     /// Fetch search suggestions
@@ -470,11 +411,9 @@ struct DatabaseService {
     ) -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             if query.isWhitespace {
-                let suggestions = try searchSuggestionsForZeroQuery()
-                return Array(suggestions.values)
+                return try searchSuggestionsForZeroQuery()
             } else {
-                let suggestions = try searchSuggestionsForQuery(query: query)
-                return Array(suggestions.values)
+                return try searchSuggestionsForQuery(query: query)
             }
         }
         .receive(on: DispatchQueue.main)
@@ -502,35 +441,6 @@ struct DatabaseService {
                     querySuggestion,
                     forKey: querySuggestion.stub.slug
                 )
-            }
-
-            let searches: [EntryLink] = try database.execute(
-                sql: """
-                SELECT DISTINCT query
-                FROM search_history
-                WHERE query LIKE ?
-                ORDER BY created DESC
-                LIMIT 3
-                """,
-                parameters: [
-                    .prefixQueryLike(query)
-                ]
-            )
-            .compactMap({ row in
-                if let title: String = row.get(0) {
-                    return EntryLink(title: title)
-                }
-                return nil
-            })
-
-            for search in searches {
-                //  Do not suggest current slug
-                if search.slug != current {
-                    suggestions.updateValue(
-                        .search(search),
-                        forKey: search.slug
-                    )
-                }
             }
 
             let entries: [EntryLink] = try database.execute(
