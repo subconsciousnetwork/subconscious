@@ -448,7 +448,7 @@ struct DatabaseService {
                 FROM entry_search
                 WHERE entry_search MATCH ?
                 ORDER BY rank
-                LIMIT 5
+                LIMIT 25
                 """,
                 parameters: [
                     .prefixQueryFTS5(query)
