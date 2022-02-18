@@ -66,6 +66,10 @@ struct EntryListView: View {
                         )
                     }
                     .frame(maxWidth: 240)
+                    // Some extra padding to visually center the group.
+                    // The icon is large and rather heavy. This offset
+                    // helps prevent the illusion of being off-center.
+                    .padding(.bottom, AppTheme.unit * 24)
                     .font(Font(UIFont.appCaption))
                     Spacer()
                 }
