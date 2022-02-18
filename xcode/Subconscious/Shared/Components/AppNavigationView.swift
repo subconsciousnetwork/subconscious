@@ -14,67 +14,42 @@ struct AppNavigationView: View {
         NavigationView {
             VStack(spacing: 0) {
                 Divider()
-                if store.state.recent.count > 0 {
-                    List(store.state.recent) { entry in
-                        Button(
-                            action: {
+                EntryListView(
+                    entries: store.state.recent,
+                    onEntryPress: { entry in
+                        store.send(
+                            action: .requestDetail(
+                                slug: entry.slug,
+                                fallback: entry.title
+                            )
+                        )
+                    },
+                    onEntryDelete: { slug in
+                        store.send(
+                            action: .confirmDelete(slug)
+                        )
+                    }
+                )
+                .ignoresSafeArea(.keyboard, edges: .bottom)
+                .confirmationDialog(
+                    "Are you sure?",
+                    isPresented: store.binding(
+                        get: \.isConfirmDeleteShowing,
+                        tag: AppAction.setConfirmDeleteShowing
+                    ),
+                    presenting: store.state.entryToDelete
+                ) { slug in
+                    Button(
+                        role: .destructive,
+                        action: {
+                            withAnimation {
                                 store.send(
-                                    action: .requestDetail(
-                                        slug: entry.slug,
-                                        fallback: entry.title
-                                    )
+                                    action: .deleteEntry(slug)
                                 )
                             }
-                        ) {
-                            Label(
-                                title: {
-                                    EntryRow(entry: entry)
-                                },
-                                icon: {
-                                    Image(systemName: "doc")
-                                }
-                            )
                         }
-                        .modifier(RowViewModifier())
-                        .swipeActions(
-                            edge: .trailing,
-                            allowsFullSwipe: false
-                        ) {
-                            Button(
-                                role: .destructive,
-                                action: {
-                                    store.send(
-                                        action: .confirmDelete(entry.slug)
-                                    )
-                                }
-                            ) {
-                                Text("Delete")
-                            }
-                        }
-                    }
-                    .animation(.easeOutCubic(), value: store.state.recent)
-                    .transition(.opacity)
-                    .listStyle(.plain)
-                    .confirmationDialog(
-                        "Are you sure?",
-                        isPresented: store.binding(
-                            get: \.isConfirmDeleteShowing,
-                            tag: AppAction.setConfirmDeleteShowing
-                        ),
-                        presenting: store.state.entryToDelete
-                    ) { slug in
-                        Button(
-                            role: .destructive,
-                            action: {
-                                withAnimation {
-                                    store.send(
-                                        action: .deleteEntry(slug)
-                                    )
-                                }
-                            }
-                        ) {
-                            Text("Delete Immediately")
-                        }
+                    ) {
+                        Text("Delete Immediately")
                     }
                 }
                 NavigationLink(

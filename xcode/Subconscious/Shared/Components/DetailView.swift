@@ -46,7 +46,7 @@ struct DetailView: View {
         VStack(spacing: 0) {
             Divider()
             if slug == nil {
-                ProgressScrim()
+                ProgressScrimView()
             } else {
                 PseudoKeyboardToolbarView(
                     isKeyboardUp: focus == .editor,

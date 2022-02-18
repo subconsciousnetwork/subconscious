@@ -1,5 +1,5 @@
 //
-//  ProgressScrim.swift
+//  ProgressScrimView.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 1/12/22.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// A progress view that takes up the whole space of its parent
-struct ProgressScrim: View {
+struct ProgressScrimView: View {
     var body: some View {
         VStack(alignment: .center) {
             Spacer()
@@ -24,8 +24,8 @@ struct ProgressScrim: View {
     }
 }
 
-struct ProgressScrim_Previews: PreviewProvider {
+struct ProgressScrimView_Previews: PreviewProvider {
     static var previews: some View {
-        ProgressScrim()
+        ProgressScrimView()
     }
 }
