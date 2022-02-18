@@ -88,8 +88,8 @@ extension String {
 }
 
 extension StringProtocol {
-    /// Upercase first letter in string.
-    func firstUppercased() -> String {
-        prefix(1).uppercased() + dropFirst()
+    /// Capitalize first letter in string.
+    func capitalizingFirst() -> String {
+        self.prefix(1).capitalized + self.dropFirst()
     }
 }
