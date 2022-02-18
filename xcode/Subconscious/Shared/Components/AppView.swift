@@ -165,8 +165,8 @@ struct AppModel: Equatable {
     /// Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
 
-    //  Recent entries
-    var recent: [EntryStub] = []
+    ///  Recent entries (nil means "hasn't been loaded from DB")
+    var recent: [EntryStub]? = nil
 
     //  Note deletion action sheet
     /// Delete confirmation action sheet
@@ -213,6 +213,13 @@ struct AppModel: Equatable {
     var isLinkSheetPresented = false
     var linkSearchText = ""
     var linkSuggestions: [Suggestion] = []
+
+    /// Determine if the interface is ready for user interaction,
+    /// even if all of the data isn't refreshed yet.
+    /// This is the point at which the main interface is ready to be shown.
+    var isReadyForInteraction: Bool {
+        self.databaseState == .ready
+    }
 
     /// Given a particular entry value, does the editor's state
     /// currently match it, such that we could say the editor is
@@ -823,6 +830,16 @@ struct AppUpdate {
             var model = state
             model.databaseState = .migrating
             return Update(state: model, fx: fx)
+        case .migrating:
+            environment.logger.log(
+                "Database already migrating. Doing nothing."
+            )
+            return Update(state: state)
+        case .broken:
+            environment.logger.warning(
+                "Database broken. Doing nothing."
+            )
+            return Update(state: state)
         case .ready:
             environment.logger.log("Database ready. Syncing.")
             let fx: Fx<AppAction> = Just(
@@ -830,16 +847,6 @@ struct AppUpdate {
             )
             .eraseToAnyPublisher()
             return Update(state: state, fx: fx)
-        case .migrating:
-            environment.logger.log(
-                "Database already migrating. Doing nothing."
-            )
-            return Update(state: state)
-        case .broken:
-            environment.logger.log(
-                "Database broken. Doing nothing."
-            )
-            return Update(state: state)
         }
     }
 
@@ -1022,16 +1029,25 @@ struct AppUpdate {
     ) -> Update<AppModel, AppAction> {
         var model = state
 
-        guard let index = model.recent.firstIndex(
+        // If we have recent entries, and can find this slug,
+        // immediately remove it from recent entries without waiting
+        // for database success to come back.
+        // This gives us the desired effect of swiping and having it removed.
+        // It'll come back if database failed somehow.
+        // Note it is possible that the slug exists, but is not in this list
+        // so we don't treat the list as a source of truth.
+        // We're just updating the view ahead of what the source of truth
+        // might tell us.
+        // 2022-02-18 Gordon Brander
+        if
+            var recent = model.recent,
+            let index = recent.firstIndex(
             where: { stub in stub.id == slug }
-        ) else {
-            environment.logger.log(
-                "Could not delete entry. No such id: \(slug)"
-            )
-            return Update(state: model)
+        ) {
+            recent.remove(at: index)
+            model.recent = recent
         }
 
-        model.recent.remove(at: index)
         // Hide detail view.
         // Delete may have been invoked from detail view
         // in which case, we don't want it showing.
@@ -1548,7 +1564,7 @@ struct AppView: View {
         // 2021-12-16 Gordon Brander
         ZStack(alignment: .bottomTrailing) {
             Color.background.edgesIgnoringSafeArea(.all)
-            if store.state.databaseState == .ready {
+            if store.state.isReadyForInteraction {
                 AppNavigationView(store: store)
                     .zIndex(1)
                 if store.state.focus == nil {
@@ -1612,7 +1628,8 @@ struct AppView: View {
                 )
                 .zIndex(3)
             } else {
-                ProgressScrim()
+                ProgressScrimView()
+                    .zIndex(4)
             }
         }
         .font(Font(UIFont.appText))
