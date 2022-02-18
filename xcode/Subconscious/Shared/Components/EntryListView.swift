@@ -65,7 +65,7 @@ struct EntryListView: View {
                             "Shunryū Suzuki"
                         )
                     }
-                    .frame(maxWidth: 280)
+                    .frame(maxWidth: 240)
                     .font(Font(UIFont.appCaption))
                     Spacer()
                 }
