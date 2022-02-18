@@ -30,6 +30,7 @@ struct AppNavigationView: View {
                         )
                     }
                 )
+                .ignoresSafeArea(.keyboard, edges: .bottom)
                 .confirmationDialog(
                     "Are you sure?",
                     isPresented: store.binding(

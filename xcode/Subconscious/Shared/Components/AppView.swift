@@ -1632,6 +1632,7 @@ struct AppView: View {
                     .zIndex(4)
             }
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .font(Font(UIFont.appText))
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
