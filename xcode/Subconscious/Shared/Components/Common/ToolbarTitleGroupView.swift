@@ -10,7 +10,7 @@ import SwiftUI
 struct ToolbarTitleGroupView: View {
     var title: String
     var slug: Slug?
-    var untitled = "Empty"
+    var untitled = "Untitled"
     var body: some View {
         HStack {
             Spacer()

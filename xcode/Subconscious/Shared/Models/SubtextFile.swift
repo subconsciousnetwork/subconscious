@@ -11,8 +11,6 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
     var dom: Subtext
     var content: String { dom.base }
     var id: Slug { slug }
-    var title: String { dom.title() }
-    var excerpt: String { dom.excerpt() }
 
     init(
         slug: Slug,

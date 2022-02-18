@@ -75,16 +75,6 @@ extension UIFont {
     )!
 }
 
-//  MARK: Fonts
-extension Font {
-    static let appText = Font(UIFont.appText)
-    static let appTextMono = Font(UIFont.appTextMono)
-    static let appTextMonoBold = Font(UIFont.appTextMonoBold)
-    static let appLargeTitle = Font(UIFont.appLargeTitle)
-    static let appTitle = Font(UIFont.appTitle)
-    static let appCaption = Font(UIFont.appCaption)
-}
-
 //  MARK: Color
 //  String color names are references to ColorSet assets, and can be found
 //  in Assets.xassets. Each ColorSet contains a light and dark mode, and color

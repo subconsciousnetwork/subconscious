@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SuggestionLabelView: View {
     var suggestion: Suggestion
-    var untitled = "Empty"
+    var untitled = "Untitled"
 
     private func readTitle(_ text: String) -> String {
         text.isEmpty ? untitled : text

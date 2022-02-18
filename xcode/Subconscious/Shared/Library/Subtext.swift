@@ -23,12 +23,15 @@ struct Subtext: Hashable, Equatable {
         case list(span: Substring, inline: [Inline])
         case quote(span: Substring, inline: [Inline])
         case heading(span: Substring)
+        case empty(span: Substring)
 
         /// Returns the body of a block, without the leading sigil
         func body() -> Substring {
             switch self {
             case .text(let span, _):
                 return span.trimming(" ").trimming("\n")
+            case .empty(let span):
+                return span
             case .quote(let span, _), .list(let span, _), .heading(let span):
                 return span.dropFirst().trimming(" ").trimming("\n")
             }
@@ -275,6 +278,8 @@ struct Subtext: Hashable, Equatable {
             tape.advance()
             let inline = parseInline(tape: &tape)
             return Block.list(span: line, inline: inline)
+        } else if line.isWhitespace {
+            return Block.empty(span: line)
         } else {
             var tape = Tape(line)
             let inline = parseInline(tape: &tape)
@@ -347,6 +352,8 @@ extension Subtext {
 
         for block in blocks {
             switch block {
+            case .empty:
+                break
             case let .heading(line):
                 let nsRange = NSRange(line.range, in: base)
                 attributedString.addAttribute(
@@ -399,22 +406,34 @@ extension Subtext {
 }
 
 extension Subtext {
+    /// A summary of a Subtext document, including title and excerpt
+    struct Summary {
+        var title: String?
+        var excerpt: String?
+    }
+
+    /// Derive a short summary of a Subtext document.
+    func summarize() -> Summary {
+        let content = blocks.filter({ block in
+            switch block {
+            case .empty:
+                return false
+            default:
+                return true
+            }
+        })
+        return Summary(
+            title: content.get(0).map({ block in String(block.body()) }),
+            excerpt: content.get(1).map({ block in String(block.body()) })
+        )
+    }
+
     /// Derive a title
     func title() -> String {
         for block in blocks {
             return String(block.body())
         }
         return ""
-    }
-}
-
-extension Subtext {
-    /// Generate a short excerpt
-    func excerpt() -> String {
-        blocks
-            .prefix(3)
-            .map({ block in block.body() })
-            .joined(separator: " ")
     }
 }
 
