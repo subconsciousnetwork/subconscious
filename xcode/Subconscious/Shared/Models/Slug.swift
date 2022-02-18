@@ -92,6 +92,18 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
     func toURL(directory: URL, ext: String) -> URL {
         directory.appendingFilename(name: self.id, ext: ext)
     }
+
+    /// Create a nice sentence-like string from a slug
+    func toSentence() -> String {
+        // Remove all non-slug characters
+        self.description
+            .replacingOccurrences(
+                of: #"-"#,
+                with: " ",
+                range: nil
+            )
+            .capitalizingFirst()
+    }
 }
 
 extension Slug {
