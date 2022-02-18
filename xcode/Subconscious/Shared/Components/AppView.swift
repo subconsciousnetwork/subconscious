@@ -785,12 +785,16 @@ struct AppUpdate {
             return Update(state: state)
         }
 
+        let slug = Slashlink.slashlinkURLToSlug(url)
         // If this is a Subtext URL, then commit a search for the
         // corresponding query
         let fx: Fx<AppAction> = Just(
             AppAction.requestDetail(
-                slug: Slashlink.slashlinkURLToSlug(url),
-                fallback: ""
+                slug: slug,
+                fallback: slug.mapOr(
+                    { slug in slug.toSentence() },
+                    default: ""
+                )
             )
         )
         .eraseToAnyPublisher()
