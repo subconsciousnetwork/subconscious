@@ -351,9 +351,7 @@ struct DatabaseService {
             Suggestion.entry(link)
         })
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale.current
-        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateFormatter = DateFormatter.yyyymmdd()
         let date = dateFormatter.string(from: Date.now)
 
         // Insert journal

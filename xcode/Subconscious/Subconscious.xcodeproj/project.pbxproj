@@ -65,6 +65,7 @@
 		B86DFF3127C06EBC002E57ED /* RenameSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */; };
 		B86DFF3327C072CD002E57ED /* Func.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF3227C072CD002E57ED /* Func.swift */; };
 		B86DFF3527C07438002E57ED /* LinkSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF3427C07438002E57ED /* LinkSuggestion.swift */; };
+		B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF3627C09CA2002E57ED /* DateUtilities.swift */; };
 		B877A6E527A1C2BC00F11A90 /* KeyboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */; };
 		B877A6E627A1C2BC00F11A90 /* KeyboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */; };
 		B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */; };
@@ -221,6 +222,7 @@
 		B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSuggestion.swift; sourceTree = "<group>"; };
 		B86DFF3227C072CD002E57ED /* Func.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Func.swift; sourceTree = "<group>"; };
 		B86DFF3427C07438002E57ED /* LinkSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkSuggestion.swift; sourceTree = "<group>"; };
+		B86DFF3627C09CA2002E57ED /* DateUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateUtilities.swift; sourceTree = "<group>"; };
 		B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardService.swift; sourceTree = "<group>"; };
 		B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigationView.swift; sourceTree = "<group>"; };
 		B8879EA526F9348600A0B4FF /* Slashlink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slashlink.swift; sourceTree = "<group>"; };
@@ -478,6 +480,7 @@
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
 				B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */,
 				B86DFF3227C072CD002E57ED /* Func.swift */,
+				B86DFF3627C09CA2002E57ED /* DateUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -766,6 +769,7 @@
 				B8DEBF222798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
 				B8DEBF1F2798EC23007CB528 /* TitleGroupView.swift in Sources */,
 				B8AE34BF276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
+				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
 				B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
