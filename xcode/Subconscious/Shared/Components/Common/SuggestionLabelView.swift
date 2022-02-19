@@ -38,7 +38,7 @@ struct SuggestionLabelView: View {
                     )
                 },
                 icon: {
-                    Image(systemName: "doc.badge.plus")
+                    Image(systemName: "square.and.pencil")
                 }
             )
         case .journal(let entryLink):
