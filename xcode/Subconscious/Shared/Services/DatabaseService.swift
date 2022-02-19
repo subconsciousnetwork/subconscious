@@ -14,6 +14,7 @@ struct DatabaseService {
     enum DatabaseServiceError: Error {
         case pathNotInFilePath
         case invalidSlug(String)
+        case notFound
     }
 
     private var documentURL: URL
@@ -325,7 +326,7 @@ struct DatabaseService {
     }
 
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
-        return try database.execute(
+        var suggestions = try database.execute(
             sql: """
             SELECT slug, title
             FROM entry
@@ -349,6 +350,11 @@ struct DatabaseService {
         .map({ link in
             Suggestion.entry(link)
         })
+        // Insert an option to load a random idea if there are any ideas.
+        if suggestions.count > 2 {
+            suggestions.append(.random)
+        }
+        return suggestions
     }
 
     private func searchSuggestionsForQuery(
@@ -643,24 +649,23 @@ struct DatabaseService {
     }
 
     /// Choose a random entry and read detailz
-    func readRandomEntryDetail() -> AnyPublisher<EntryDetail, Error> {
-        let slug: Slug? = try? database.execute(
-            sql: """
-            SELECT slug
-            FROM entry
-            ORDER BY RANDOM()
-            LIMIT 1
-            """
-        )
-        .compactMap({ row in
-            row.get(0).flatMap({ string in Slug(string) })
-        })
-        .first
-
-        if let slug = slug {
-            return readEntryDetail(slug: slug, fallback: slug.toSentence())
-        } else {
-            return Empty().eraseToAnyPublisher()
+    func readRandomEntrySlug() -> AnyPublisher<Slug, Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            try database.execute(
+                sql: """
+                SELECT slug
+                FROM entry
+                ORDER BY RANDOM()
+                LIMIT 1
+                """
+            )
+            .compactMap({ row in
+                row.get(0).flatMap({ string in Slug(string) })
+            })
+            .first
+            .unwrap(or: DatabaseServiceError.notFound)
         }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
     }
 }

@@ -97,6 +97,7 @@ enum AppAction {
     case requestDetail(slug: Slug?, fallback: String)
     case updateDetail(EntryDetail)
     case failDetail(String)
+    case failRandomDetail(Error)
     case showDetail(Bool)
 
     // Editor
@@ -518,6 +519,12 @@ struct AppUpdate {
                 "Failed to get details for search: \(message)"
             )
             return Update(state: state)
+        case .failRandomDetail(let error):
+            return warn(
+                state: state,
+                environment: environment,
+                error: error
+            )
         case let .setLinkSheetPresented(isPresented):
             var model = state
             model.focus = isPresented ? .linkSearch : .editor
@@ -559,6 +566,15 @@ struct AppUpdate {
                 message: message
             )
         }
+    }
+
+    static func warn(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: Error
+    ) -> Update<AppModel, AppAction> {
+        environment.logger.warning("\(error.localizedDescription)")
+        return Update(state: state)
     }
 
     /// Set all editor properties to initial values
@@ -1339,6 +1355,11 @@ struct AppUpdate {
                 slug: entryLink.slug,
                 fallback: entryLink.title
             )
+        case .random:
+            return requestRandomDetail(
+                state: state,
+                environment: environment
+            )
         }
     }
 
@@ -1378,6 +1399,25 @@ struct AppUpdate {
                     .eraseToAnyPublisher()
                 return Update(state: model, fx: fx)
             })
+    }
+
+    /// Request detail for a random entry
+    static func requestRandomDetail(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel, AppAction> {
+        let fx: Fx<AppAction> = environment.database.readRandomEntrySlug()
+            .map({ slug in
+                AppAction.requestDetail(
+                    slug: slug,
+                    fallback: slug.toSentence()
+                )
+            })
+            .catch({ error in
+                Just(AppAction.failRandomDetail(error))
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
 
     /// Update entry detail.
