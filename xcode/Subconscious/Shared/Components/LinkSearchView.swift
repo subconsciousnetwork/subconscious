@@ -9,11 +9,11 @@ import SwiftUI
 
 struct LinkSearchView: View {
     var placeholder: String
-    var suggestions: [Suggestion]
+    var suggestions: [LinkSuggestion]
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     var onCancel: () -> Void
-    var onCommit: (Slug) -> Void
+    var onSelect: (LinkSuggestion) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,7 +41,7 @@ struct LinkSearchView: View {
                                 duration: Duration.keyboard
                             )
                         ) {
-                            onCommit(suggestion.slug)
+                            onSelect(suggestion)
                         }
                     },
                     label: {
@@ -63,7 +63,7 @@ struct LinkSearchView_Previews: PreviewProvider {
             text: .constant(""),
             focus: .constant(nil),
             onCancel: {},
-            onCommit: { slug in }
+            onSelect: { slug in }
         )
     }
 }

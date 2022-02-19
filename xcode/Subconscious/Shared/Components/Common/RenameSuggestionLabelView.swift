@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct RenameSuggestionLabelView: View {
-    var suggestion: Suggestion
+    var suggestion: RenameSuggestion
     var body: some View {
         switch suggestion {
-        case .entry(let entryLink):
+        case .merge(let entryLink):
             Label(
                 title: {
                     TitleGroupView(
@@ -20,10 +20,10 @@ struct RenameSuggestionLabelView: View {
                     )
                 },
                 icon: {
-                    Image(systemName: "arrow.triangle.merge")
+                    Image(systemName: "square.and.arrow.down.on.square")
                 }
             )
-        case .search(let entryLink):
+        case .rename(let entryLink):
             Label(
                 title: {
                     TitleGroupView(
@@ -42,7 +42,7 @@ struct RenameSuggestionLabelView: View {
 struct RenameSuggestionLabel_Previews: PreviewProvider {
     static var previews: some View {
         RenameSuggestionLabelView(
-            suggestion: .search(
+            suggestion: .rename(
                 EntryLink(
                     slug: Slug("floop")!,
                     title: "Floop the pig"

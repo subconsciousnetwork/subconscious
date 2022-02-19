@@ -1,22 +1,22 @@
 //
-//  Suggestion.swift
+//  LinkSuggestion.swift
 //  Subconscious (iOS)
 //
-//  Created by Gordon Brander on 10/19/21.
+//  Created by Gordon Brander on 2/18/22.
 //
 
 import Foundation
 
-enum Suggestion: Hashable, Identifiable, CustomStringConvertible {
+enum LinkSuggestion: Hashable, Identifiable, CustomStringConvertible {
     case entry(EntryLink)
-    case search(EntryLink)
+    case new(EntryLink)
 
     var id: String {
         switch self {
         case let .entry(link):
             return "entry/\(link.id)"
-        case let .search(link):
-            return "search/\(link.id)"
+        case let .new(link):
+            return "new/\(link.id)"
         }
     }
 
@@ -24,7 +24,7 @@ enum Suggestion: Hashable, Identifiable, CustomStringConvertible {
         switch self {
         case let .entry(stub):
             return stub.title
-        case let .search(stub):
+        case let .new(stub):
             return stub.title
         }
     }

@@ -69,7 +69,9 @@ extension Optional {
             return transform(wrapped)
         }
     }
+}
 
+extension Optional {
     /// Map an optional value to a different type if it exists,
     /// or else use a fallback value.
     func mapOrElse<T>(

@@ -11,11 +11,11 @@ struct RenameSearchView: View {
     /// Slug of the note we are renaming
     var slug: Slug?
     var placeholder: String = "Enter name for idea"
-    var suggestions: [Suggestion]
+    var suggestions: [RenameSuggestion]
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     var onCancel: () -> Void
-    var onCommit: (Slug?, Slug?) -> Void
+    var onSelect: (Slug?, RenameSuggestion) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -44,11 +44,6 @@ struct RenameSearchView: View {
                 field: .rename
             )
             .submitLabel(.done)
-            .onSubmit {
-                // On submit, slugify contents of searchfield
-                // and commit.
-                onCommit(slug, text.toSlug())
-            }
             .padding(.bottom, AppTheme.padding)
             .padding(.horizontal, AppTheme.padding)
             List(suggestions) { suggestion in
@@ -57,7 +52,7 @@ struct RenameSearchView: View {
                         withAnimation(
                             .easeOutCubic(duration: Duration.keyboard)
                         ) {
-                            onCommit(slug, suggestion.stub.slug)
+                            onSelect(slug, suggestion)
                         }
                     },
                     label: {
@@ -77,13 +72,13 @@ struct RenameSearchView_Previews: PreviewProvider {
         RenameSearchView(
             slug: Slug("floop")!,
             suggestions: [
-                .search(
+                .rename(
                     EntryLink(
                         slug: Slug("floop")!,
                         title: "Floop"
                     )
                 ),
-                .entry(
+                .merge(
                     EntryLink(
                         slug: Slug("card-wars")!,
                         title: "Card wars"
@@ -93,7 +88,9 @@ struct RenameSearchView_Previews: PreviewProvider {
             text: .constant(""),
             focus: .constant(nil),
             onCancel: {},
-            onCommit: { current, next in }
+            onSelect: { slug, suggestion in
+                
+            }
         )
     }
 }

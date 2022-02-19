@@ -72,10 +72,10 @@ enum AppAction {
     case showRenameSheet(Slug?)
     case hideRenameSheet
     case setRenameSlugField(String)
-    case setRenameSuggestions([Suggestion])
+    case setRenameSuggestions([RenameSuggestion])
     case renameSuggestionsFailure(String)
     /// Issue a rename action for an entry.
-    case renameEntry(from: Slug?, to: Slug?)
+    case renameEntry(from: Slug?, to: RenameSuggestion)
     /// Rename entry succeeded. Lifecycle action.
     case succeedRenameEntry(from: Slug, to: Slug)
     /// Rename entry failed. Lifecycle action.
@@ -84,12 +84,12 @@ enum AppAction {
     //  Search
     /// Set search text (updated live as you type)
     case setSearch(String)
-    /// Submit search query (e.g. by hitting enter)
-    case submitSearch(slug: Slug?, query: String)
     case showSearch
     case hideSearch
 
     // Search suggestions
+    /// Submit search suggestion
+    case selectSuggestion(Suggestion)
     case setSuggestions([Suggestion])
     case suggestionsFailure(String)
 
@@ -113,8 +113,8 @@ enum AppAction {
     // Link suggestions
     case setLinkSheetPresented(Bool)
     case setLinkSearch(String)
-    case commitLinkSearch(Slug)
-    case setLinkSuggestions([Suggestion])
+    case selectLinkSuggestion(LinkSuggestion)
+    case setLinkSuggestions([LinkSuggestion])
     case linkSuggestionsFailure(String)
 
     //  Saving entries
@@ -184,7 +184,7 @@ struct AppModel: Equatable {
     /// is different from the actual candidate slug to be renamed.
     var renameSlugField: String = ""
     /// Suggestions for renaming note.
-    var renameSuggestions: [Suggestion] = []
+    var renameSuggestions: [RenameSuggestion] = []
 
     /// Live search bar text
     var searchText = ""
@@ -212,7 +212,7 @@ struct AppModel: Equatable {
     /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
     var linkSearchText = ""
-    var linkSuggestions: [Suggestion] = []
+    var linkSuggestions: [LinkSuggestion] = []
 
     /// Determine if the interface is ready for user interaction,
     /// even if all of the data isn't refreshed yet.
@@ -417,12 +417,12 @@ struct AppUpdate {
                 environment: environment,
                 error: error
             )
-        case let .renameEntry(from, to):
+        case let .renameEntry(from, suggestion):
             return renameEntry(
                 state: state,
                 environment: environment,
                 from: from,
-                to: to
+                suggestion: suggestion
             )
         case let .succeedRenameEntry(from, to):
             return succeedRenameEntry(
@@ -473,8 +473,6 @@ struct AppUpdate {
                 environment: environment,
                 text: text
             )
-        case let .submitSearch(slug, query):
-            return submitSearch(state: state, slug: slug, query: query)
         case .showSearch:
             var model = state
             model.isSearchShowing = true
@@ -487,6 +485,12 @@ struct AppUpdate {
             model.searchText = ""
             model.focus = nil
             return Update(state: model)
+        case let .selectSuggestion(suggestion):
+            return selectSuggestion(
+                state: state,
+                environment: environment,
+                suggestion: suggestion
+            )
         case let .setSuggestions(suggestions):
             var model = state
             model.suggestions = suggestions
@@ -525,8 +529,8 @@ struct AppUpdate {
                 environment: environment,
                 text: text
             )
-        case let .commitLinkSearch(slug):
-            return commitLinkSearch(state: state, slug: slug)
+        case let .selectLinkSuggestion(suggestion):
+            return selectLinkSuggestion(state: state, suggestion: suggestion)
         case let .setLinkSuggestions(suggestions):
             var model = state
             model.linkSuggestions = suggestions
@@ -1177,7 +1181,7 @@ struct AppUpdate {
     /// Set rename suggestions
     static func setRenameSuggestions(
         state: AppModel,
-        suggestions: [Suggestion]
+        suggestions: [RenameSuggestion]
     ) -> Update<AppModel, AppAction> {
         var model = state
         model.renameSuggestions = suggestions
@@ -1205,24 +1209,24 @@ struct AppUpdate {
         state: AppModel,
         environment: AppEnvironment,
         from: Slug?,
-        to: Slug?
+        suggestion: RenameSuggestion
     ) -> Update<AppModel, AppAction> {
-        guard let to = to else {
-            let fx: Fx<AppAction> = Just(.hideRenameSheet)
-                .eraseToAnyPublisher()
-            environment.logger.log(
-                "Rename invoked with whitespace name. Doing nothing."
-            )
-            return Update(state: state, fx: fx)
-        }
-
         guard let from = from else {
             let fx: Fx<AppAction> = Just(.hideRenameSheet)
                 .eraseToAnyPublisher()
             environment.logger.warning(
-                "Rename invoked without original slug. Doing nothing. Current: nil. Next: \(to)."
+                "Rename invoked without original slug. Doing nothing."
             )
             return Update(state: state, fx: fx)
+        }
+
+        let to: Slug = Func.pipe(suggestion) { suggestion in
+            switch suggestion {
+            case .rename(let entryLink):
+                return entryLink.slug
+            case .merge(let entryLink):
+                return entryLink.slug
+            }
         }
 
         guard from != to else {
@@ -1314,23 +1318,28 @@ struct AppUpdate {
         return Update(state: model, fx: fx)
     }
 
-    /// Submit search from main search input
-    static func submitSearch(
+    /// Handle user select search suggestion
+    static func selectSuggestion(
         state: AppModel,
-        slug: Slug?,
-        query: String
+        environment: AppEnvironment,
+        suggestion: Suggestion
     ) -> Update<AppModel, AppAction> {
-        guard let slug = slug else {
-            return Update(state: state)
-        }
-        // If we have been passed a valid slug, request a detail view.
-        let fx: Fx<AppAction> = Just(
-            AppAction.requestDetail(
-                slug: slug,
-                fallback: query
+        switch suggestion {
+        case .entry(let entryLink):
+            return requestDetail(
+                state: state,
+                environment: environment,
+                slug: entryLink.slug,
+                fallback: entryLink.title
             )
-        ).eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+        case .search(let entryLink):
+            return requestDetail(
+                state: state,
+                environment: environment,
+                slug: entryLink.slug,
+                fallback: entryLink.title
+            )
+        }
     }
 
     /// Request that entry detail view be shown
@@ -1423,10 +1432,19 @@ struct AppUpdate {
         return Update(state: model, fx: fx)
     }
 
-    static func commitLinkSearch(
+    static func selectLinkSuggestion(
         state: AppModel,
-        slug: Slug
+        suggestion: LinkSuggestion
     ) -> Update<AppModel, AppAction> {
+        let slug: Slug = Func.pipe(suggestion, { suggestion in
+            switch suggestion {
+            case .entry(let entryLink):
+                return entryLink.slug
+            case .new(let entryLink):
+                return entryLink.slug
+            }
+        })
+
         var range = state.editorSelection
         // If there is a selected slashlink, use that range
         // instead of selection
@@ -1606,11 +1624,16 @@ struct AppView: View {
                             get: \.suggestions,
                             tag: AppAction.setSuggestions
                         ),
-                        onCommit: { slug, query in
+                        onSelect: { suggestion in
                             store.send(
-                                action: .submitSearch(
+                                action: .selectSuggestion(suggestion)
+                            )
+                        },
+                        onSubmit: { slug, query in
+                            store.send(
+                                action: .requestDetail(
                                     slug: slug,
-                                    query: query
+                                    fallback: query
                                 )
                             )
                         },
