@@ -1328,7 +1328,15 @@ struct AppUpdate {
         var model = state
         model.searchText = text
         let fx: Fx<AppAction> = environment.database
-            .searchSuggestions(query: text)
+            .searchSuggestions(
+                query: text,
+                isJournalSuggestionEnabled:
+                    state.config.journalSuggestionEnabled,
+                isScratchSuggestionEnabled:
+                    state.config.scratchSuggestionEnabled,
+                isRandomSuggestionEnabled:
+                    state.config.randomSuggestionEnabled
+            )
             .map({ suggestions in
                 AppAction.setSuggestions(suggestions)
             })
@@ -1366,6 +1374,13 @@ struct AppUpdate {
                 environment: environment,
                 slug: entryLink.slug,
                 template: state.config.journalTemplate
+            )
+        case .scratch(let entryLink):
+            return requestDetail(
+                state: state,
+                environment: environment,
+                slug: entryLink.slug,
+                fallback: entryLink.title
             )
         case .random:
             return requestRandomDetail(

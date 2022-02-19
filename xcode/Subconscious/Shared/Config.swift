@@ -15,10 +15,13 @@ struct Config: Equatable {
     // Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
 
-    // Random suggestion
-    var randomSuggestionEnabled = true
-
     // Journal features
     var journalSuggestionEnabled = true
     var journalTemplate: Slug = Slug("special/template/journal")!
+
+    // Scratch features
+    var scratchSuggestionEnabled = true
+
+    // Random suggestion
+    var randomSuggestionEnabled = true
 }
