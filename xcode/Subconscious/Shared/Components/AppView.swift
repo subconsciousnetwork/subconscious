@@ -1355,6 +1355,13 @@ struct AppUpdate {
                 slug: entryLink.slug,
                 fallback: entryLink.title
             )
+        case .journal(let entryLink):
+            return requestDetail(
+                state: state,
+                environment: environment,
+                slug: entryLink.slug,
+                fallback: entryLink.title
+            )
         case .random:
             return requestRandomDetail(
                 state: state,

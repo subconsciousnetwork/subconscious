@@ -350,6 +350,25 @@ struct DatabaseService {
         .map({ link in
             Suggestion.entry(link)
         })
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale.current
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let date = dateFormatter.string(from: Date.now)
+
+        // Insert journal
+        if let slug = Slug("journal/\(date)") {
+            suggestions.insert(
+                .journal(
+                    EntryLink(
+                        slug: slug,
+                        title: date
+                    )
+                ),
+                at: 0
+            )
+        }
+
         // Insert an option to load a random idea if there are any ideas.
         if suggestions.count > 2 {
             suggestions.append(.random)

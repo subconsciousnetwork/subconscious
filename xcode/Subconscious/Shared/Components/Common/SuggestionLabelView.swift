@@ -41,6 +41,18 @@ struct SuggestionLabelView: View {
                     Image(systemName: "doc.badge.plus")
                 }
             )
+        case .journal(let entryLink):
+            Label(
+                title: {
+                    TitleGroupView(
+                        title: "Daily note",
+                        subtitle: entryLink.slug.description
+                    )
+                },
+                icon: {
+                    Image(systemName: "calendar")
+                }
+            )
         case .random:
             Label(
                 title: {
