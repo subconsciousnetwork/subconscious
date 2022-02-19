@@ -26,3 +26,18 @@ extension DateFormatter {
         return formatter
     }
 }
+
+extension ISO8601DateFormatter {
+    static func internet(
+        timeZone: TimeZone = TimeZone.current
+    ) -> ISO8601DateFormatter {
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = timeZone
+        formatter.formatOptions = [
+            .withFullDate,
+            .withTime,
+            .withDashSeparatorInDate
+        ]
+        return formatter
+    }
+}

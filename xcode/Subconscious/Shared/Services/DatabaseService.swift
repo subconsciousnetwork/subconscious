@@ -351,27 +351,33 @@ struct DatabaseService {
             Suggestion.entry(link)
         })
 
+        let dateTimeFormatter = ISO8601DateFormatter.internet()
+        let dateTime = dateTimeFormatter.string(from: Date.now)
         let dateFormatter = DateFormatter.yyyymmdd()
         let date = dateFormatter.string(from: Date.now)
 
-        // Insert journal
-        if let slug = Slug("journal/\(date)") {
-            suggestions.insert(
+        var special: [Suggestion] = []
+
+        // Insert scratch
+        if let slug = Slug("log/\(dateTime)") {
+            special.append(
                 .journal(
                     EntryLink(
                         slug: slug,
                         title: date
                     )
-                ),
-                at: 0
+                )
             )
         }
 
         // Insert an option to load a random idea if there are any ideas.
         if suggestions.count > 2 {
-            suggestions.append(.random)
+            special.append(.random)
         }
-        return suggestions
+
+        special.append(contentsOf: suggestions)
+
+        return special
     }
 
     private func searchSuggestionsForQuery(
