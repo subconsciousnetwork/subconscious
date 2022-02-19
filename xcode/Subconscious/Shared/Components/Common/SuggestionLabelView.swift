@@ -45,7 +45,7 @@ struct SuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroupView(
-                        title: "Quick note",
+                        title: "Daily Journal",
                         subtitle: entryLink.slug.description
                     )
                 },

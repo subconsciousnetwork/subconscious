@@ -18,10 +18,10 @@ struct SubconsciousApp: App {
         state: AppModel(),
         environment: AppEnvironment(),
         logger: Logger.init(
-            subsystem: AppEnvironment.rdns,
+            subsystem: Config.rdns,
             category: "store"
         ),
-        debug: false
+        debug: Config.debug
     )
 
     var body: some Scene {

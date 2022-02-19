@@ -154,6 +154,9 @@ struct AppModel: Equatable {
         case ready
     }
 
+    /// Feature flags
+    var config = Config()
+
     /// Current state of keyboard
     var keyboardWillShow = false
     var keyboardEventualHeight: CGFloat = 0
@@ -767,11 +770,13 @@ struct AppUpdate {
             "Documents: \(environment.documentURL)"
         )
 
-        let pollFx: Fx<AppAction> = environment.poll
-            .map({ date in
-                AppAction.poll(date)
-            })
-            .eraseToAnyPublisher()
+        let pollFx: Fx<AppAction> = AppEnvironment.poll(
+            every: state.config.pollingInterval
+        )
+        .map({ date in
+            AppAction.poll(date)
+        })
+        .eraseToAnyPublisher()
 
         // Subscribe to keyboard events
         let fx: Fx<AppAction> = environment
@@ -1356,11 +1361,11 @@ struct AppUpdate {
                 fallback: entryLink.title
             )
         case .journal(let entryLink):
-            return requestDetail(
+            return requestTemplateDetail(
                 state: state,
                 environment: environment,
                 slug: entryLink.slug,
-                fallback: entryLink.title
+                template: state.config.journalTemplate
             )
         case .random:
             return requestRandomDetail(
@@ -1406,6 +1411,26 @@ struct AppUpdate {
                     .eraseToAnyPublisher()
                 return Update(state: model, fx: fx)
             })
+    }
+
+    /// Request detail, using contents of template file as fallback content
+    static func requestTemplateDetail(
+        state: AppModel,
+        environment: AppEnvironment,
+        slug: Slug,
+        template: Slug
+    ) -> Update<AppModel, AppAction> {
+        /// Get template contents
+        let fallback = environment.database
+            .readEntry(slug: template)
+            .map({ entry in entry.content })
+            .unwrap(or: "")
+        return requestDetail(
+            state: state,
+            environment: environment,
+            slug: slug,
+            fallback: fallback
+        )
     }
 
     /// Request detail for a random entry

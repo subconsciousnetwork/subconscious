@@ -326,7 +326,7 @@ struct DatabaseService {
     }
 
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
-        var suggestions = try database.execute(
+        let suggestions = try database.execute(
             sql: """
             SELECT slug, title
             FROM entry
@@ -351,15 +351,13 @@ struct DatabaseService {
             Suggestion.entry(link)
         })
 
-        let dateTimeFormatter = ISO8601DateFormatter.internet()
-        let dateTime = dateTimeFormatter.string(from: Date.now)
         let dateFormatter = DateFormatter.yyyymmdd()
         let date = dateFormatter.string(from: Date.now)
 
         var special: [Suggestion] = []
 
         // Insert scratch
-        if let slug = Slug("log/\(dateTime)") {
+        if let slug = Slug("journal/\(date)") {
             special.append(
                 .journal(
                     EntryLink(
@@ -593,7 +591,7 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
-    private func readEntry(
+    func readEntry(
         slug: Slug
     ) -> SubtextFile? {
         SubtextFile(
@@ -686,7 +684,7 @@ struct DatabaseService {
                 row.get(0).flatMap({ string in Slug(string) })
             })
             .first
-            .unwrap(or: DatabaseServiceError.notFound)
+            .unwrap(DatabaseServiceError.notFound)
         }
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
