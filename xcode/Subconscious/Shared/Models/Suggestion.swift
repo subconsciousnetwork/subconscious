@@ -7,27 +7,10 @@
 
 import Foundation
 
-enum Suggestion: Hashable, Identifiable, CustomStringConvertible {
+enum Suggestion: Hashable, Identifiable {
     case entry(EntryLink)
     case search(EntryLink)
-
-    var stub: EntryLink {
-        switch self {
-        case let .entry(stub):
-            return stub
-        case let .search(stub):
-            return stub
-        }
-    }
-
-    var slug: Slug {
-        switch self {
-        case let .entry(stub):
-            return stub.slug
-        case let .search(stub):
-            return stub.slug
-        }
-    }
+    case random
 
     var id: String {
         switch self {
@@ -35,15 +18,8 @@ enum Suggestion: Hashable, Identifiable, CustomStringConvertible {
             return "entry/\(link.id)"
         case let .search(link):
             return "search/\(link.id)"
-        }
-    }
-
-    var description: String {
-        switch self {
-        case let .entry(stub):
-            return stub.title
-        case let .search(stub):
-            return stub.title
+        case .random:
+            return "random"
         }
     }
 }

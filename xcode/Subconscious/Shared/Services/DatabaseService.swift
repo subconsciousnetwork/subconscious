@@ -14,6 +14,7 @@ struct DatabaseService {
     enum DatabaseServiceError: Error {
         case pathNotInFilePath
         case invalidSlug(String)
+        case notFound
     }
 
     private var documentURL: URL
@@ -325,7 +326,7 @@ struct DatabaseService {
     }
 
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
-        return try database.execute(
+        var suggestions = try database.execute(
             sql: """
             SELECT slug, title
             FROM entry
@@ -349,6 +350,11 @@ struct DatabaseService {
         .map({ link in
             Suggestion.entry(link)
         })
+        // Insert an option to load a random idea if there are any ideas.
+        if suggestions.count > 2 {
+            suggestions.append(.random)
+        }
+        return suggestions
     }
 
     private func searchSuggestionsForQuery(
@@ -424,21 +430,21 @@ struct DatabaseService {
     func searchRenameSuggestions(
         query: String,
         current: Slug?
-    ) -> AnyPublisher<[Suggestion], Error> {
+    ) -> AnyPublisher<[RenameSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             guard let queryEntryLink = EntryLink(title: query) else {
                 return []
             }
 
-            var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
+            var suggestions: OrderedDictionary<Slug, RenameSuggestion> = [:]
 
-            let querySuggestion = Suggestion.search(queryEntryLink)
             //  If slug of literal query would be different from current slug
             //  make this the first suggestion.
-            if querySuggestion.stub.slug != current {
+            if queryEntryLink.slug != current {
+                let querySuggestion = RenameSuggestion.rename(queryEntryLink)
                 suggestions.updateValue(
                     querySuggestion,
-                    forKey: querySuggestion.stub.slug
+                    forKey: queryEntryLink.slug
                 )
             }
 
@@ -472,7 +478,7 @@ struct DatabaseService {
                 //  Do not suggest renaming to same name
                 if entry.slug != current {
                     suggestions.updateValue(
-                        .entry(entry),
+                        .merge(entry),
                         forKey: entry.slug
                     )
                 }
@@ -487,18 +493,18 @@ struct DatabaseService {
     /// A whitespace query string will fetch zero-query suggestions.
     func searchLinkSuggestions(
         query: String
-    ) -> AnyPublisher<[Suggestion], Error> {
+    ) -> AnyPublisher<[LinkSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             let sluglike = Slug.toSluglikeString(query)
             if sluglike.isEmpty {
                 return []
             }
 
-            var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
+            var suggestions: OrderedDictionary<Slug, LinkSuggestion> = [:]
 
             // Append literal
             if let literal = EntryLink(title: query) {
-                suggestions[literal.slug] = .search(literal)
+                suggestions[literal.slug] = .new(literal)
             }
 
             let entries: [EntryLink] = try database
@@ -637,6 +643,27 @@ struct DatabaseService {
                 entry: entry,
                 backlinks: backlinks
             )
+        }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
+    }
+
+    /// Choose a random entry and read detailz
+    func readRandomEntrySlug() -> AnyPublisher<Slug, Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            try database.execute(
+                sql: """
+                SELECT slug
+                FROM entry
+                ORDER BY RANDOM()
+                LIMIT 1
+                """
+            )
+            .compactMap({ row in
+                row.get(0).flatMap({ string in Slug(string) })
+            })
+            .first
+            .unwrap(or: DatabaseServiceError.notFound)
         }
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()

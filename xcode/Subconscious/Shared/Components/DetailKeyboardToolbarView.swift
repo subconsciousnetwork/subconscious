@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct DetailKeyboardToolbarView: View {
-    var onCommit: (Slug) -> Void
     @Binding var isSheetPresented: Bool
-    var suggestions: [Suggestion]
+    var suggestions: [LinkSuggestion]
+    var onSelect: (LinkSuggestion) -> Void
 
     private func barSuggestions() -> ArraySlice<EntryLink> {
         self.suggestions
@@ -45,7 +45,7 @@ struct DetailKeyboardToolbarView: View {
                     Divider()
                     Button(
                         action: {
-                            onCommit(suggestion.slug)
+                            onSelect(.entry(suggestion))
                         },
                         label: {
                             Text(suggestion.slug.description)
@@ -66,7 +66,6 @@ struct DetailKeyboardToolbarView: View {
 struct KeyboardToolbarView_Previews: PreviewProvider {
     static var previews: some View {
         DetailKeyboardToolbarView(
-            onCommit: { slug in },
             isSheetPresented: .constant(false),
             suggestions: [
                 .entry(
@@ -75,7 +74,8 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
                         title: "An organism is a living system maintaining both a higher level of internal cooperation"
                     )
                 )
-            ]
+            ],
+            onSelect: { suggestion in }
         )
     }
 }

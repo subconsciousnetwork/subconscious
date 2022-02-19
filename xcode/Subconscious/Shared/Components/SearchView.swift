@@ -19,7 +19,10 @@ struct SearchView: View {
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     @Binding var suggestions: [Suggestion]
-    var onCommit: (Slug?, String) -> Void
+    /// Select suggestion
+    var onSelect: (Suggestion) -> Void
+    /// Commit via keyboard
+    var onSubmit: (Slug?, String) -> Void
     var onCancel: () -> Void
 
     /// Calculate maxHeight given number of suggestions.
@@ -46,7 +49,7 @@ struct SearchView: View {
                     withAnimation(
                         .easeOut(duration: Duration.fast)
                     ) {
-                        onCommit(
+                        onSubmit(
                             text.toSlug(),
                             text
                         )
@@ -67,10 +70,7 @@ struct SearchView: View {
                         withAnimation(
                             .easeOutCubic(duration: Duration.keyboard)
                         ) {
-                            onCommit(
-                                suggestion.stub.slug,
-                                suggestion.stub.title
-                            )
+                            onSelect(suggestion)
                         }
                     },
                     label: {
@@ -96,6 +96,7 @@ struct SearchView: View {
             // 2022-01-28 Gordon Brander
             .frame(maxHeight: calcMaxHeight())
             .listStyle(.plain)
+            .padding(.bottom, AppTheme.tightPadding)
         }
         .background(Color.background)
     }
@@ -108,7 +109,8 @@ struct SearchView_Previews: PreviewProvider {
             text: .constant(""),
             focus: .constant(nil),
             suggestions: .constant([]),
-            onCommit: { slug, title in },
+            onSelect: { suggestion in },
+            onSubmit: { slug, title in },
             onCancel: {}
         )
     }

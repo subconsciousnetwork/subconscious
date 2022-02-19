@@ -24,7 +24,7 @@ struct DetailView: View {
     /// If we don't, we have nothing to edit.
     var slug: Slug?
     var backlinks: [EntryStub]
-    var linkSuggestions: [Suggestion]
+    var linkSuggestions: [LinkSuggestion]
     @Binding var focus: AppModel.Focus?
     @Binding var editorDom: Subtext
     @Binding var editorSelection: NSRange
@@ -38,7 +38,7 @@ struct DetailView: View {
         UITextItemInteraction
     ) -> Bool
     var onCommitSearch: (String) -> Void
-    var onCommitLinkSearch: (Slug) -> Void
+    var onSelectLink: (LinkSuggestion) -> Void
     var onRename: (Slug?) -> Void
     var onDelete: (Slug?) -> Void
 
@@ -52,9 +52,9 @@ struct DetailView: View {
                     isKeyboardUp: focus == .editor,
                     toolbarHeight: 48,
                     toolbar: DetailKeyboardToolbarView(
-                        onCommit: onCommitLinkSearch,
                         isSheetPresented: $isLinkSheetPresented,
-                        suggestions: linkSuggestions
+                        suggestions: linkSuggestions,
+                        onSelect: onSelectLink
                     ),
                     content: { isKeyboardUp, size in
                         ScrollView(.vertical) {
@@ -120,8 +120,8 @@ struct DetailView: View {
                 onCancel: {
                     isLinkSheetPresented = false
                 },
-                onCommit: { slug in
-                    onCommitLinkSearch(slug)
+                onSelect: { suggestion in
+                    onSelectLink(suggestion)
                 }
             )
         }

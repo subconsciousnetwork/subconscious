@@ -101,15 +101,15 @@ struct AppNavigationView: View {
                             },
                             onCommitSearch: { query in
                                 store.send(
-                                    action: .submitSearch(
+                                    action: .requestDetail(
                                         slug: query.toSlug(),
-                                        query: query
+                                        fallback: query
                                     )
                                 )
                             },
-                            onCommitLinkSearch: { query in
+                            onSelectLink: { suggestion in
                                 store.send(
-                                    action: .commitLinkSearch(query)
+                                    action: .selectLinkSuggestion(suggestion)
                                 )
                             },
                             onRename: { slug in
@@ -158,8 +158,8 @@ struct AppNavigationView: View {
                 onCancel: {
                     store.send(action: .hideRenameSheet)
                 },
-                onCommit: { curr, next in
-                    store.send(action: .renameEntry(from: curr, to: next))
+                onSelect: { curr, suggestion in
+                    store.send(action: .renameEntry(from: curr, to: suggestion))
                 }
             )
         }

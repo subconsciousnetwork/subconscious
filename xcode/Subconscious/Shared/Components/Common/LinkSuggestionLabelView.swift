@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LinkSuggestionLabelView: View {
-    var suggestion: Suggestion
+    var suggestion: LinkSuggestion
     var body: some View {
         switch suggestion {
         case .entry(let entryLink):
@@ -23,7 +23,7 @@ struct LinkSuggestionLabelView: View {
                     Image(systemName: "link")
                 }
             )
-        case .search(let entryLink):
+        case .new(let entryLink):
             Label(
                 title: {
                     TitleGroupView(
@@ -43,7 +43,7 @@ struct LinkSuggestionLabelView: View {
 struct LinkSuggestionLabel_Previews: PreviewProvider {
     static var previews: some View {
         LinkSuggestionLabelView(
-            suggestion: .search(
+            suggestion: .new(
                 EntryLink(
                     slug: Slug("floop")!,
                     title: "Floop the pig"

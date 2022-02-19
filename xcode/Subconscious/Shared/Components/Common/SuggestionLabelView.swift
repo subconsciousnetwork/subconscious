@@ -41,6 +41,18 @@ struct SuggestionLabelView: View {
                     Image(systemName: "doc.badge.plus")
                 }
             )
+        case .random:
+            Label(
+                title: {
+                    TitleGroupView(
+                        title: "Random",
+                        subtitle: "Display a random idea"
+                    )
+                },
+                icon: {
+                    Image(systemName: "dice")
+                }
+            )
         }
     }
 }
