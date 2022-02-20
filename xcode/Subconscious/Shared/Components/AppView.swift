@@ -1689,7 +1689,6 @@ struct AppView: View {
                     )
                     .buttonStyle(FABButtonStyle())
                     .padding()
-                    .transition(.opacity)
                     .zIndex(2)
                 }
                 ModalView(
