@@ -13,11 +13,7 @@ struct FABButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         ZStack {
             Circle()
-                .foregroundColor(
-                    configuration.isPressed ?
-                    Color.fabBackgroundPressed :
-                    Color.fabBackground
-                )
+                .foregroundColor(Color.fabBackground)
                 .frame(
                     width: 56,
                     height: 56,
@@ -36,5 +32,15 @@ struct FABButtonStyle: ButtonStyle {
                     Circle()
                 )
         }
+        .scaleEffect(configuration.isPressed ? 0.8 : 1, anchor: .center)
+        .animation(
+            .easeOutCubic(duration: Duration.fast),
+            value: configuration.isPressed
+        )
+        .transition(
+            .opacity.combined(
+                with: .scale(scale: 0.8, anchor: .center)
+            )
+        )
     }
 }
