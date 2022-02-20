@@ -1549,7 +1549,7 @@ struct AppUpdate {
         .merge(
             with: Just(
                 AppAction.insertEditorText(
-                    text: slug.toSlashlink(),
+                    text: "\(slug.toSlashlink()) ",
                     range: range
                 )
             )
