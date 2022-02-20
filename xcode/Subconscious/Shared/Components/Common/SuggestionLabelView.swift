@@ -38,7 +38,31 @@ struct SuggestionLabelView: View {
                     )
                 },
                 icon: {
-                    Image(systemName: "doc.badge.plus")
+                    Image(systemName: "square.and.pencil")
+                }
+            )
+        case .journal(let entryLink):
+            Label(
+                title: {
+                    TitleGroupView(
+                        title: "Daily journal",
+                        subtitle: entryLink.slug.description
+                    )
+                },
+                icon: {
+                    Image(systemName: "calendar")
+                }
+            )
+        case .scratch(let entryLink):
+            Label(
+                title: {
+                    TitleGroupView(
+                        title: "Scratch note",
+                        subtitle: entryLink.slug.description
+                    )
+                },
+                icon: {
+                    Image(systemName: "square.and.pencil")
                 }
             )
         case .random:

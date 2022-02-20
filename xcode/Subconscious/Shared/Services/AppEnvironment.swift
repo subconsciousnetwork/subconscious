@@ -11,9 +11,6 @@ import os
 
 /// A place for constants and services
 struct AppEnvironment {
-    static let rdns = "com.subconscious.Subconscious"
-    static let pollingInterval: Double = 15
-
     var documentURL: URL
     var applicationSupportURL: URL
 
@@ -21,7 +18,17 @@ struct AppEnvironment {
     var keyboard: KeyboardService
     var database: DatabaseService
     /// Issues periodic polls
-    var poll: AnyPublisher<Date, Never>
+
+    /// Create a long polling publisher that never completes
+    static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
+        Timer.publish(
+            every: interval,
+            on: .main,
+            in: .default
+        )
+        .autoconnect()
+        .eraseToAnyPublisher()
+    }
 
     init() {
         self.documentURL = FileManager.default.urls(
@@ -37,7 +44,7 @@ struct AppEnvironment {
         )
 
         self.logger = Logger(
-            subsystem: Self.rdns,
+            subsystem: Config.rdns,
             category: "main"
         )
 
@@ -49,14 +56,6 @@ struct AppEnvironment {
         )
 
         self.keyboard = KeyboardService()
-
-        self.poll = Timer.publish(
-            every: Self.pollingInterval,
-            on: .main,
-            in: .default
-        )
-        .autoconnect()
-        .eraseToAnyPublisher()
     }
 }
 

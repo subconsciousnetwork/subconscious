@@ -14,7 +14,9 @@ extension Optional {
         let column: Int
         let function: String
     }
+}
 
+extension Optional {
     /// Unwrap an optional, throwing a NilError if nil.
     func unwrap(
         file: String = #file,
@@ -23,7 +25,7 @@ extension Optional {
         function: String = #function
     ) throws -> Wrapped {
         return try unwrap(
-            or: NilError(
+            NilError(
                 file: file,
                 line: line,
                 column: column,
@@ -31,14 +33,28 @@ extension Optional {
             )
         )
     }
+}
 
+extension Optional {
     /// Unwrap an optional, throwing an error if nil.
-    func unwrap(or error: @autoclosure () -> Error) throws -> Wrapped {
+    func unwrap(_ error: @autoclosure () -> Error) throws -> Wrapped {
         switch self {
         case .some(let value):
             return value
         case .none:
             throw error()
+        }
+    }
+}
+
+extension Optional {
+    /// Unwrap an optional, returning a fallback value if nil.
+    func unwrap(or fallback: Wrapped) -> Wrapped {
+        switch self {
+        case .some(let value):
+            return value
+        case .none:
+            return fallback
         }
     }
 }

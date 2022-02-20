@@ -10,6 +10,8 @@ import Foundation
 enum Suggestion: Hashable, Identifiable {
     case entry(EntryLink)
     case search(EntryLink)
+    case journal(EntryLink)
+    case scratch(EntryLink)
     case random
 
     var id: String {
@@ -18,6 +20,10 @@ enum Suggestion: Hashable, Identifiable {
             return "entry/\(link.id)"
         case let .search(link):
             return "search/\(link.id)"
+        case let .journal(link):
+            return "journal/\(link.id)"
+        case let .scratch(link):
+            return "scratch/\(link.id)"
         case .random:
             return "random"
         }

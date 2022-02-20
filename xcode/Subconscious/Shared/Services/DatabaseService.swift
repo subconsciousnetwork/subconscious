@@ -325,8 +325,12 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
-    private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
-        var suggestions = try database.execute(
+    private func searchSuggestionsForZeroQuery(
+        isJournalSuggestionEnabled: Bool,
+        isScratchSuggestionEnabled: Bool,
+        isRandomSuggestionEnabled: Bool
+    ) throws -> [Suggestion] {
+        let suggestions = try database.execute(
             sql: """
             SELECT slug, title
             FROM entry
@@ -350,11 +354,53 @@ struct DatabaseService {
         .map({ link in
             Suggestion.entry(link)
         })
-        // Insert an option to load a random idea if there are any ideas.
-        if suggestions.count > 2 {
-            suggestions.append(.random)
+
+        let now = Date.now
+        let dateTimeFormatter = ISO8601DateFormatter.internet()
+        let dateTime = dateTimeFormatter.string(from: now)
+        let dateFormatter = DateFormatter.yyyymmdd()
+        let date = dateFormatter.string(from: now)
+
+        var special: [Suggestion] = []
+
+        // Insert scratch
+        if isScratchSuggestionEnabled {
+            if let slug = Slug("inbox/\(dateTime)") {
+                special.append(
+                    .scratch(
+                        EntryLink(
+                            slug: slug,
+                            title: date
+                        )
+                    )
+                )
+            }
         }
-        return suggestions
+
+        // Insert journal
+        if isJournalSuggestionEnabled {
+            if let slug = Slug("journal/\(date)") {
+                special.append(
+                    .journal(
+                        EntryLink(
+                            slug: slug,
+                            title: date
+                        )
+                    )
+                )
+            }
+        }
+
+        if isRandomSuggestionEnabled {
+            // Insert an option to load a random idea if there are any ideas.
+            if suggestions.count > 2 {
+                special.append(.random)
+            }
+        }
+
+        special.append(contentsOf: suggestions)
+
+        return special
     }
 
     private func searchSuggestionsForQuery(
@@ -412,11 +458,18 @@ struct DatabaseService {
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchSuggestions(
-        query: String
+        query: String,
+        isJournalSuggestionEnabled: Bool,
+        isScratchSuggestionEnabled: Bool,
+        isRandomSuggestionEnabled: Bool
     ) -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             if query.isWhitespace {
-                return try searchSuggestionsForZeroQuery()
+                return try searchSuggestionsForZeroQuery(
+                    isJournalSuggestionEnabled: isJournalSuggestionEnabled,
+                    isScratchSuggestionEnabled: isScratchSuggestionEnabled,
+                    isRandomSuggestionEnabled: isRandomSuggestionEnabled
+                )
             } else {
                 return try searchSuggestionsForQuery(query: query)
             }
@@ -570,7 +623,7 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
-    private func readEntry(
+    func readEntry(
         slug: Slug
     ) -> SubtextFile? {
         SubtextFile(
@@ -663,7 +716,7 @@ struct DatabaseService {
                 row.get(0).flatMap({ string in Slug(string) })
             })
             .first
-            .unwrap(or: DatabaseServiceError.notFound)
+            .unwrap(DatabaseServiceError.notFound)
         }
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
