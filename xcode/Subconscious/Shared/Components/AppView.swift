@@ -649,7 +649,8 @@ struct AppUpdate {
                 Just(AppAction.setLinkSearch(slashlink.description))
                     .eraseToAnyPublisher()
             },
-            default: Empty().eraseToAnyPublisher()
+            default: Just(AppAction.setLinkSearch(""))
+                .eraseToAnyPublisher()
         )
 
         return Update(state: model, fx: fx)
