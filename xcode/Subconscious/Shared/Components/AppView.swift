@@ -649,7 +649,8 @@ struct AppUpdate {
                 Just(AppAction.setLinkSearch(slashlink.description))
                     .eraseToAnyPublisher()
             },
-            default: Empty().eraseToAnyPublisher()
+            default: Just(AppAction.setLinkSearch(""))
+                .eraseToAnyPublisher()
         )
 
         return Update(state: model, fx: fx)
@@ -1549,7 +1550,7 @@ struct AppUpdate {
         .merge(
             with: Just(
                 AppAction.insertEditorText(
-                    text: slug.toSlashlink(),
+                    text: "\(slug.toSlashlink()) ",
                     range: range
                 )
             )
