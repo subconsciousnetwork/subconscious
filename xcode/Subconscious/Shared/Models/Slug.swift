@@ -54,12 +54,14 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
     var description: String { id }
 
     /// Losslessly create a slug from a string.
+    /// This requires that the string already be formatted like a
+    /// sanitized slug, including being lowercased.
     init?(_ string: String) {
         guard let id = Self.sanitizeString(string) else {
             return nil
         }
         // Check that sanitization was lossless.
-        guard id == string.lowercased() else {
+        guard id == string else {
             return nil
         }
         self.id = id
@@ -76,9 +78,8 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
 
     /// Create a slug from a URL.
     ///
-    /// Note this is lossy, since Slugs support a subset of what URLs support.
-    /// In other words, you can create a slug from a URL, but round-trip
-    /// creating a URL from a slug may not result in the same URL.
+    /// Note this is lossless, so it will only support URLs that contain
+    /// valid slug strings as paths.
     init?(url: URL, relativeTo base: URL) {
         // NOTE: it is extremely important that we call relativizingPath
         // WITHOUT calling `url.deletePathExtension()`.
