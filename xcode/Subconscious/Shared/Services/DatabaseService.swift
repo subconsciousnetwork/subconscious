@@ -398,17 +398,14 @@ struct DatabaseService {
         query: String
     ) throws -> [Suggestion] {
         // If slug is invalid, return empty suggestions
-        guard
-            let querySlug = Slug(query),
-            let queryEntryLink = EntryLink(title: query)
-        else {
+        guard let queryEntryLink = EntryLink(title: query) else {
             return []
         }
 
         var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
 
         // Create a suggestion for the literal query
-        suggestions[querySlug] = .search(queryEntryLink)
+        suggestions[queryEntryLink.slug] = .search(queryEntryLink)
 
         let entries: [EntryLink] = try database.execute(
             sql: """
