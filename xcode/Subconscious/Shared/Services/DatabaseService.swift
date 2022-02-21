@@ -36,15 +36,6 @@ struct DatabaseService {
         self.migrations = migrations
     }
 
-    /// Helper function for generating draft URLs
-    func findUniqueURL(name: String) -> URL? {
-        Slashlink.findUniqueURL(
-            at: documentURL,
-            name: name,
-            ext: "subtext"
-        )
-    }
-
     /// Close database connection and delete database file
     func delete() -> AnyPublisher<Void, Error> {
         CombineUtilities.async(
@@ -548,8 +539,7 @@ struct DatabaseService {
         query: String
     ) -> AnyPublisher<[LinkSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            let sluglike = Slug.toSluglikeString(query)
-            if sluglike.isEmpty {
+            guard let sluglike = Slug.sanitizeString(query) else {
                 return []
             }
 

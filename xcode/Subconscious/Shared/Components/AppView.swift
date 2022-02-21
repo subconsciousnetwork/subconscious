@@ -1179,7 +1179,7 @@ struct AppUpdate {
         text: String
     ) -> Update<AppModel, AppAction> {
         var model = state
-        let sluglike = Slug.toSluglikeString(text)
+        let sluglike = Slug.sanitizeString(text).unwrap(or: "")
         model.renameSlugField = sluglike
         let fx: Fx<AppAction> = environment.database
             .searchRenameSuggestions(
@@ -1500,7 +1500,7 @@ struct AppUpdate {
         text: String
     ) -> Update<AppModel, AppAction> {
         var model = state
-        let sluglike = Slug.toSluglikeString(text)
+        let sluglike = Slug.sanitizeString(text).unwrap(or: "")
         model.linkSearchText = sluglike
 
         let fx: Fx<AppAction> = environment.database

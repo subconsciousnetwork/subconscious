@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BacklinksView: View {
     var backlinks: [EntryStub]
-    var onActivateBacklink: (String) -> Void
+    var onSelect: (EntryLink) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -26,7 +26,12 @@ struct BacklinksView: View {
                 Divider()
                 Button(
                     action: {
-                        onActivateBacklink(entry.slug.description)
+                        onSelect(
+                            EntryLink(
+                                slug: entry.slug,
+                                title: entry.title
+                            )
+                        )
                     },
                     label: {
                         EntryRow(entry: entry)
@@ -48,7 +53,7 @@ struct BacklinksView_Previews: PreviewProvider {
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
                 )
             ],
-            onActivateBacklink: { title in }
+            onSelect: { title in }
         )
     }
 }

@@ -99,11 +99,11 @@ struct AppNavigationView: View {
                                 )
                                 return false
                             },
-                            onCommitSearch: { query in
+                            onSelectBacklink: { entryLink in
                                 store.send(
                                     action: .requestDetail(
-                                        slug: query.toSlug(),
-                                        fallback: query
+                                        slug: entryLink.slug,
+                                        fallback: entryLink.title
                                     )
                                 )
                             },

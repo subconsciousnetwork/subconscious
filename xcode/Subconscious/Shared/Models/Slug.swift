@@ -9,16 +9,14 @@ import Foundation
 
 /// A slug is a normalized identifier (basically "words-and-dashes")
 struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
-    /// Transform a string, making it a candidate for
-    /// becoming a slug.
+    /// Sanitize a string into a "slug string"-a string into a string that can
+    /// be losslessly converted to and from a Slug.
     ///
-    /// Note that this function will reformat a string to become "sluglike"
-    /// but may return an empty string, which is not a valid slug.
-    /// This is useful for e.g. representing slugs in TextFields.
+    /// If a valid slug string cannot be produced, returns nil.
     ///
     /// If you need a value to truly be a slug, use the Slug constructor.
-    static func toSluglikeString(_ string: String) -> String {
-        string
+    static func sanitizeString(_ string: String) -> String? {
+        let slugString = string
             // Trim whitespace and leading/trailing slashes
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
@@ -46,17 +44,31 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
                 range: nil
             )
             .truncatingSafeFileNameLength()
+        guard !slugString.isEmpty else {
+            return nil
+        }
+        return slugString
     }
 
     let id: String
     var description: String { id }
 
-    /// Create a slug from a string.
+    /// Losslessly create a slug from a string.
     init?(_ string: String) {
-        let id = Self.toSluglikeString(string)
-        // If id is empty after all of these transformations,
-        // return nil.
-        guard !id.isEmpty else {
+        guard let id = Self.sanitizeString(string) else {
+            return nil
+        }
+        // Check that sanitization was lossless.
+        guard id == string.lowercased() else {
+            return nil
+        }
+        self.id = id
+    }
+
+    /// Convert a string into a slug.
+    /// This will sanitize the string as best it can to create a valid slug.
+    init?(formatting string: String) {
+        guard let id = Self.sanitizeString(string) else {
             return nil
         }
         self.id = id
@@ -111,13 +123,6 @@ extension Slug {
     /// https://github.com/gordonbrander/subtext
     func toSlashlink() -> String {
         "/\(self.description)"
-    }
-}
-
-extension String {
-    /// Slugify a string, returning a slug.
-    func toSlug() -> Slug? {
-        Slug(self)
     }
 }
 
