@@ -356,7 +356,7 @@ struct DatabaseService {
 
         // Insert scratch
         if isScratchSuggestionEnabled {
-            if let slug = Slug("inbox/\(dateTime)") {
+            if let slug = Slug(formatting: "inbox/\(dateTime)") {
                 special.append(
                     .scratch(
                         EntryLink(
@@ -370,7 +370,7 @@ struct DatabaseService {
 
         // Insert journal
         if isJournalSuggestionEnabled {
-            if let slug = Slug("journal/\(date)") {
+            if let slug = Slug(formatting: "journal/\(date)") {
                 special.append(
                     .journal(
                         EntryLink(
