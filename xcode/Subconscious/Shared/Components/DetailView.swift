@@ -37,7 +37,7 @@ struct DetailView: View {
         NSRange,
         UITextItemInteraction
     ) -> Bool
-    var onCommitSearch: (String) -> Void
+    var onSelectBacklink: (EntryLink) -> Void
     var onSelectLink: (LinkSuggestion) -> Void
     var onRename: (Slug?) -> Void
     var onDelete: (Slug?) -> Void
@@ -87,7 +87,7 @@ struct DetailView: View {
                                         .padding(.bottom, AppTheme.unit4)
                                     BacklinksView(
                                         backlinks: backlinks,
-                                        onActivateBacklink: onCommitSearch
+                                        onSelect: onSelectBacklink
                                     )
                                 }
                             }

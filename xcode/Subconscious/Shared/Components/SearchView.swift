@@ -50,7 +50,7 @@ struct SearchView: View {
                         .easeOut(duration: Duration.fast)
                     ) {
                         onSubmit(
-                            text.toSlug(),
+                            Slug(formatting: text),
                             text
                         )
                     }

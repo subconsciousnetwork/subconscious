@@ -18,13 +18,14 @@ struct EntryLink: Hashable, Identifiable {
         self.title = title
     }
 
+    /// Construct an EntryLink from a string.
+    /// Slug is generated for string using lossy approach.
     init?(title: String) {
-        if let slug = title.toSlug() {
-            self.title = title
-            self.slug = slug
-        } else {
+        guard let slug = Slug(formatting: title) else {
             return nil
         }
+        self.title = title
+        self.slug = slug
     }
 
     var id: Slug { slug }

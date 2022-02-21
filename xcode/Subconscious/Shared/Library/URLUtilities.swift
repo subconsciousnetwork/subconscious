@@ -18,6 +18,7 @@ extension URL {
     }
 
     /// Return path relative to some base
+    /// Ensures the path does not have a leading slash.
     /// If URL does not start with base, returns nil.
     func relativizingPath(relativeTo base: URL) -> String? {
         // NOTE: it is important that you call `.relativizingPath`
@@ -37,11 +38,25 @@ extension URL {
         // Standardize and absolutize paths to normalize them
         let path = self.standardizedFileURL.absoluteString
         let basePath = base.standardizedFileURL.absoluteString
-        if path.hasPrefix(basePath) {
-            // Return path without standardized percent encoding.
-            return path.trimming(prefix: basePath).removingPercentEncoding
+        guard path.hasPrefix(basePath) else {
+            return nil
         }
-        return nil
+        // Return path without standardized percent encoding.
+        guard
+            let path = path.trimming(prefix: basePath).removingPercentEncoding
+        else {
+            return nil
+        }
+        return path.removingLeadingSlash()
+    }
+}
+
+extension String {
+    func removingLeadingSlash() -> String {
+        if self.hasPrefix("/") {
+            return String(self.dropFirst())
+        }
+        return self
     }
 }
 
