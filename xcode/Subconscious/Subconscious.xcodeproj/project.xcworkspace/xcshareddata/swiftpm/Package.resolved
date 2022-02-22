@@ -9,6 +9,15 @@
           "revision": "9d8719c8bebdc79740b6969c912ac706eb721d7a",
           "version": "0.0.7"
         }
+      },
+      {
+        "package": "SwiftSubsurface",
+        "repositoryURL": "https://github.com/cdata/SwiftSubsurface",
+        "state": {
+          "branch": "main",
+          "revision": "25c12c0fd0471bd1d89667acd2fbde5c34cd8439",
+          "version": null
+        }
       }
     ]
   },

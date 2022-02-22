@@ -171,6 +171,7 @@
 		B8EC569026F4233B00AC64E5 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568E26F4233B00AC64E5 /* AppEnvironment.swift */; };
 		B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */; };
 		B8EDB807270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */; };
+		C3AE879F27C55E6C00752F99 /* SwiftSubsurface in Frameworks */ = {isa = PBXBuildFile; productRef = C3AE879E27C55E6C00752F99 /* SwiftSubsurface */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -296,6 +297,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B82C3A7126F6B1C000833CC8 /* OrderedCollections in Frameworks */,
+				C3AE879F27C55E6C00752F99 /* SwiftSubsurface in Frameworks */,
 				B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -537,11 +539,15 @@
 			buildRules = (
 			);
 			dependencies = (
+				C3AE87A527C55E9900752F99 /* PBXTargetDependency */,
+				C3AE87A327C55E9600752F99 /* PBXTargetDependency */,
+				C3AE87A127C55E9300752F99 /* PBXTargetDependency */,
 			);
 			name = "Subconscious (iOS)";
 			packageProductDependencies = (
 				B82C3A6E26F6B1C000833CC8 /* Collections */,
 				B82C3A7026F6B1C000833CC8 /* OrderedCollections */,
+				C3AE879E27C55E6C00752F99 /* SwiftSubsurface */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B8EB29FB26F27797006E97C3 /* Subconscious.app */;
@@ -637,6 +643,7 @@
 			mainGroup = B8EB29ED26F27794006E97C3;
 			packageReferences = (
 				B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */,
+				C3AE879D27C55E6C00752F99 /* XCRemoteSwiftPackageReference "SwiftSubsurface" */,
 			);
 			productRefGroup = B8EB29FC26F27797006E97C3 /* Products */;
 			projectDirPath = "";
@@ -884,6 +891,18 @@
 			isa = PBXTargetDependency;
 			target = B8EB2A0226F27797006E97C3 /* Subconscious (macOS) */;
 			targetProxy = B8EB2A1826F27797006E97C3 /* PBXContainerItemProxy */;
+		};
+		C3AE87A127C55E9300752F99 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = C3AE87A027C55E9300752F99 /* Collections */;
+		};
+		C3AE87A327C55E9600752F99 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = C3AE87A227C55E9600752F99 /* OrderedCollections */;
+		};
+		C3AE87A527C55E9900752F99 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = C3AE87A427C55E9900752F99 /* SwiftSubsurface */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1292,6 +1311,14 @@
 				minimumVersion = 0.0.5;
 			};
 		};
+		C3AE879D27C55E6C00752F99 /* XCRemoteSwiftPackageReference "SwiftSubsurface" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/cdata/SwiftSubsurface";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1304,6 +1331,26 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = OrderedCollections;
+		};
+		C3AE879E27C55E6C00752F99 /* SwiftSubsurface */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C3AE879D27C55E6C00752F99 /* XCRemoteSwiftPackageReference "SwiftSubsurface" */;
+			productName = SwiftSubsurface;
+		};
+		C3AE87A027C55E9300752F99 /* Collections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = Collections;
+		};
+		C3AE87A227C55E9600752F99 /* OrderedCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = OrderedCollections;
+		};
+		C3AE87A427C55E9900752F99 /* SwiftSubsurface */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C3AE879D27C55E6C00752F99 /* XCRemoteSwiftPackageReference "SwiftSubsurface" */;
+			productName = SwiftSubsurface;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

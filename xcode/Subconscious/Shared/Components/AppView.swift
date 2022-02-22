@@ -8,6 +8,7 @@
 import SwiftUI
 import os
 import Combine
+import SwiftSubsurface
 
 //  MARK: Actions
 /// Actions for modifying state
@@ -1683,8 +1684,13 @@ struct AppView: View {
                             }
                         },
                         label: {
-                            Image(systemName: "doc.text.magnifyingglass")
-                                .font(.system(size: 20))
+                            ZStack (alignment: .center) {
+                                SubsurfaceView(speed: 0.05, density: 0.25, corner_radius: 64).clipped();
+                                Image(systemName: "doc.text.magnifyingglass")
+                                    .font(.system(size: 20))
+                            }
+                            .clipShape(RoundedRectangle(cornerRadius: 64))
+                            .frame(width: 64, height: 64)
                         }
                     )
                     .buttonStyle(FABButtonStyle())
