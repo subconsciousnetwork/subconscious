@@ -970,13 +970,17 @@ struct AppUpdate {
     ) -> Update<AppModel, AppAction> {
         return listRecent(state: state, environment: environment)
             .pipe({ state in
-                setSearch(state: state, environment: environment, text: "")
+                setSearch(
+                    state: state,
+                    environment: environment,
+                    text: state.searchText
+                )
             })
             .pipe({ state in
                 setLinkSearch(
                     state: state,
                     environment: environment,
-                    text: ""
+                    text: state.linkSearchText
                 )
             })
     }
