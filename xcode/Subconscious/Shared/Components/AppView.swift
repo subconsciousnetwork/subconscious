@@ -1507,8 +1507,17 @@ struct AppUpdate {
         let sluglike = Slug.sanitizeString(text).unwrap(or: "")
         model.linkSearchText = sluglike
 
+        // Omit current slug from results
+        let omitting = state.slug.mapOr(
+            { slug in Set([slug]) },
+            default: Set()
+        )
+
         let fx: Fx<AppAction> = environment.database
-            .searchLinkSuggestions(query: text)
+            .searchLinkSuggestions(
+                query: text,
+                omitting: omitting
+            )
             .map({ suggestions in
                 AppAction.setLinkSuggestions(suggestions)
             })
