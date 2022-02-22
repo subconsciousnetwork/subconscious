@@ -6,24 +6,42 @@
 //
 
 import SwiftUI
+import SwiftSubsurface
 
 struct FABButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
+    var orbShaderEnabled: Bool
 
     func makeBody(configuration: Configuration) -> some View {
         ZStack {
-            Circle()
-                .foregroundColor(Color.fabBackground)
-                .frame(
-                    width: 56,
-                    height: 56,
-                    alignment: .center
-                )
-                .shadow(
-                    radius: 8,
-                    x: 0,
-                    y: 4
-                )
+            if orbShaderEnabled {
+                SubsurfaceView(speed: 0.05, density: 0.25, corner_radius: 64)
+                    .clipped()
+                    .clipShape(Circle())
+                    .frame(
+                        width: AppTheme.fabSize,
+                        height: AppTheme.fabSize,
+                        alignment: .center
+                    )
+                    .shadow(
+                        radius: 8,
+                        x: 0,
+                        y: 4
+                    )
+            } else {
+                Circle()
+                    .foregroundColor(Color.fabBackground)
+                    .frame(
+                        width: AppTheme.fabSize,
+                        height: AppTheme.fabSize,
+                        alignment: .center
+                    )
+                    .shadow(
+                        radius: 8,
+                        x: 0,
+                        y: 4
+                    )
+            }
             configuration.label
                 .foregroundColor(
                     isEnabled ? Color.fabText : Color.fabTextDisabled

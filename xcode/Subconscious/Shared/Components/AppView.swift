@@ -1687,7 +1687,12 @@ struct AppView: View {
                                 .font(.system(size: 20))
                         }
                     )
-                    .buttonStyle(FABButtonStyle())
+                    .buttonStyle(
+                        FABButtonStyle(
+                            orbShaderEnabled:
+                                store.state.config.orbShaderEnabled
+                        )
+                    )
                     .padding()
                     .zIndex(2)
                 }

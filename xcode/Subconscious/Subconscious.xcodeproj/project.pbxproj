@@ -44,6 +44,7 @@
 		B82FD4572730A62C002CB641 /* EntryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82FD4552730A62C002CB641 /* EntryRow.swift */; };
 		B83E91D727692EC600045C6A /* FABButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E91D627692EC600045C6A /* FABButtonStyle.swift */; };
 		B83E91D827692EC600045C6A /* FABButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E91D627692EC600045C6A /* FABButtonStyle.swift */; };
+		B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */ = {isa = PBXBuildFile; productRef = B8579B6427C561E900D8B4BC /* SwiftSubsurface */; };
 		B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */; };
 		B85BF47027BB0FA800F55730 /* RowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */; };
 		B85BF47227BB146400F55730 /* RowLabelStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF47127BB146400F55730 /* RowLabelStyle.swift */; };
@@ -296,6 +297,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B82C3A7126F6B1C000833CC8 /* OrderedCollections in Frameworks */,
+				B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */,
 				B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -537,11 +539,15 @@
 			buildRules = (
 			);
 			dependencies = (
+				B8579B6727C5620800D8B4BC /* PBXTargetDependency */,
+				B8579B6927C5620800D8B4BC /* PBXTargetDependency */,
+				B8579B6B27C5620800D8B4BC /* PBXTargetDependency */,
 			);
 			name = "Subconscious (iOS)";
 			packageProductDependencies = (
 				B82C3A6E26F6B1C000833CC8 /* Collections */,
 				B82C3A7026F6B1C000833CC8 /* OrderedCollections */,
+				B8579B6427C561E900D8B4BC /* SwiftSubsurface */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B8EB29FB26F27797006E97C3 /* Subconscious.app */;
@@ -637,6 +643,7 @@
 			mainGroup = B8EB29ED26F27794006E97C3;
 			packageReferences = (
 				B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */,
+				B8579B6327C561E900D8B4BC /* XCRemoteSwiftPackageReference "SwiftSubsurface" */,
 			);
 			productRefGroup = B8EB29FC26F27797006E97C3 /* Products */;
 			projectDirPath = "";
@@ -875,6 +882,18 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		B8579B6727C5620800D8B4BC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = B8579B6627C5620800D8B4BC /* Collections */;
+		};
+		B8579B6927C5620800D8B4BC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = B8579B6827C5620800D8B4BC /* OrderedCollections */;
+		};
+		B8579B6B27C5620800D8B4BC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = B8579B6A27C5620800D8B4BC /* SwiftSubsurface */;
+		};
 		B8EB2A0D26F27797006E97C3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B8EB29FA26F27797006E97C3 /* Subconscious (iOS) */;
@@ -1292,6 +1311,14 @@
 				minimumVersion = 0.0.5;
 			};
 		};
+		B8579B6327C561E900D8B4BC /* XCRemoteSwiftPackageReference "SwiftSubsurface" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/cdata/SwiftSubsurface";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1304,6 +1331,26 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = OrderedCollections;
+		};
+		B8579B6427C561E900D8B4BC /* SwiftSubsurface */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B8579B6327C561E900D8B4BC /* XCRemoteSwiftPackageReference "SwiftSubsurface" */;
+			productName = SwiftSubsurface;
+		};
+		B8579B6627C5620800D8B4BC /* Collections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = Collections;
+		};
+		B8579B6827C5620800D8B4BC /* OrderedCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = OrderedCollections;
+		};
+		B8579B6A27C5620800D8B4BC /* SwiftSubsurface */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B8579B6327C561E900D8B4BC /* XCRemoteSwiftPackageReference "SwiftSubsurface" */;
+			productName = SwiftSubsurface;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
