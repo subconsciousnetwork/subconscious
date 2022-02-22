@@ -12,16 +12,20 @@ struct Config: Equatable {
     static let rdns = "com.subconscious.Subconscious"
     static let debug = false
 
-    // Standard interval at which to run long-polling services
+    /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
 
-    // Journal features
+    /// Subsurface "orb" shader on main FAB
+    var orbShaderEnabled = false
+
+    /// Toggle journal suggestion feature
     var journalSuggestionEnabled = true
+    /// Where to look for journal template
     var journalTemplate: Slug = Slug("special/template/journal")!
 
-    // Scratch features
+    /// Toggle scratch note suggestion feature
     var scratchSuggestionEnabled = true
 
-    // Random suggestion
+    /// Toggle random suggestion feature
     var randomSuggestionEnabled = true
 }
