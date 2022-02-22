@@ -533,7 +533,8 @@ struct DatabaseService {
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchLinkSuggestions(
-        query: String
+        query: String,
+        omitting invalidSuggestions: Set<Slug> = Set()
     ) -> AnyPublisher<[LinkSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             guard let sluglike = Slug.sanitizeString(query) else {
@@ -578,7 +579,11 @@ struct DatabaseService {
             // If literal query and an entry have the same slug,
             // entry will overwrite query.
             for entry in entries {
-                suggestions.updateValue(.entry(entry), forKey: entry.slug)
+                // Only insert suggestion if it is not in the set of
+                // suggestions to omit.
+                if !invalidSuggestions.contains(entry.slug) {
+                    suggestions.updateValue(.entry(entry), forKey: entry.slug)
+                }
             }
 
             return Array(suggestions.values)
