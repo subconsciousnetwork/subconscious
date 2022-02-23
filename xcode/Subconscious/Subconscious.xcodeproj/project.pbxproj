@@ -161,7 +161,6 @@
 		B8EB2A2326F27797006E97C3 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EB29F526F27794006E97C3 /* AppView.swift */; };
 		B8EB2A2426F27797006E97C3 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EB29F526F27794006E97C3 /* AppView.swift */; };
 		B8EB2A2526F27797006E97C3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B8EB29F626F27797006E97C3 /* Assets.xcassets */; };
-		B8EB2A2626F27797006E97C3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B8EB29F626F27797006E97C3 /* Assets.xcassets */; };
 		B8EC568626F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */; };
 		B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */; };
 		B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */; };
@@ -687,7 +686,6 @@
 				B88C9786276425E900B27DF0 /* IBMPlexMono-Bold.ttf in Resources */,
 				B88C9784276425E900B27DF0 /* IBMPlexMono-BoldItalic.ttf in Resources */,
 				B88C9788276425E900B27DF0 /* IBMPlexMono-Regular.ttf in Resources */,
-				B8EB2A2626F27797006E97C3 /* Assets.xcassets in Resources */,
 				B88C97942764264300B27DF0 /* IBMPlexSans-Regular.ttf in Resources */,
 				B88C9782276425E900B27DF0 /* IBMPlexMono-Italic.ttf in Resources */,
 				B88C97A02764266A00B27DF0 /* IBMPlexSans-Medium.ttf in Resources */,
