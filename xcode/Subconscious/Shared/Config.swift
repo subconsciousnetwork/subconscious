@@ -28,4 +28,21 @@ struct Config: Equatable {
 
     /// Toggle random suggestion feature
     var randomSuggestionEnabled = true
+
+    /// Default links feature enabled?
+    var linksEnabled = true
+    /// Template for default links
+    var linksTemplate = Subtext(
+        markup: """
+        /project
+        /pattern
+        /question
+        /decision
+        /meeting
+        /quote
+        /book
+        /reference
+        /person
+        """
+    )
 }

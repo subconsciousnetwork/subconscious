@@ -457,6 +457,16 @@ extension Sequence where Iterator.Element == Subtext.Inline {
     }
 }
 
+extension Subtext {
+    /// Get all slashlinks from Subtext
+    /// Simple array. Does not de-duplicate.
+    var slashlinks: [Slashlink] {
+        blocks.flatMap({ block in
+            block.inline.slashlinks
+        })
+    }
+}
+
 extension Subtext.Block {
     var inline: [Subtext.Inline] {
         switch self {
