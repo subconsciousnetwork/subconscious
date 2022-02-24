@@ -257,7 +257,32 @@ struct AppModel: Equatable {
 /// AppUpdate is a namespace where we keep the main app update function,
 /// as well as the sub-update functions it calls out to.
 struct AppUpdate {
-    static func update(
+    static let logger = Logger(
+        subsystem: Config.rdns,
+        category: "store"
+    )
+
+    static func debug(
+        state: AppModel,
+        environment: AppEnvironment,
+        action: AppAction
+    ) -> Update<AppModel, AppAction> {
+        if state.config.debug {
+            logger.debug("Action: \(String(reflecting: action))")
+        }
+        // Generate next state and effect
+        let next = main(
+            state: state,
+            environment: environment,
+            action: action
+        )
+        if state.config.debug {
+            logger.debug("State: \(String(reflecting: next.state))")
+        }
+        return next
+    }
+
+    static func main(
         state: AppModel,
         environment: AppEnvironment,
         action: AppAction

@@ -14,14 +14,9 @@ typealias SubconsciousStore = Store<AppModel, AppEnvironment, AppAction>
 @main
 struct SubconsciousApp: App {
     @StateObject private var store: SubconsciousStore = Store(
-        update: AppUpdate.update,
+        update: AppUpdate.debug,
         state: AppModel(),
-        environment: AppEnvironment(),
-        logger: Logger.init(
-            subsystem: Config.rdns,
-            category: "store"
-        ),
-        debug: Config.debug
+        environment: AppEnvironment()
     )
 
     var body: some Scene {
