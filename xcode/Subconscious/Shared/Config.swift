@@ -31,18 +31,17 @@ struct Config: Equatable {
 
     /// Default links feature enabled?
     var linksEnabled = true
+    /// Where to look for user-defined links
+    var linksTemplate: Slug = Slug("special/links")!
     /// Template for default links
-    var linksTemplate = Subtext(
-        markup: """
-        /project
-        /pattern
-        /question
-        /decision
-        /meeting
-        /quote
-        /book
-        /reference
-        /person
-        """
-    )
+    var linksFallback: [Slug] = [
+        Slug("pattern")!,
+        Slug("project")!,
+        Slug("question")!,
+        Slug("quote")!,
+        Slug("book")!,
+        Slug("reference")!,
+        Slug("decision")!,
+        Slug("person")!
+    ]
 }

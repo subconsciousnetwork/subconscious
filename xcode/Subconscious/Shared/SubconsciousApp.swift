@@ -1559,10 +1559,17 @@ extension AppModel {
             default: Set()
         )
 
+        // Get fallback link suggestions
+        let fallback = environment.database.readDefaultLinkSuggestions(
+            config: model.config
+        )
+
+        // Search link suggestions
         let fx: Fx<AppAction> = environment.database
             .searchLinkSuggestions(
                 query: text,
-                omitting: omitting
+                omitting: omitting,
+                fallback: fallback
             )
             .map({ suggestions in
                 AppAction.setLinkSuggestions(suggestions)
