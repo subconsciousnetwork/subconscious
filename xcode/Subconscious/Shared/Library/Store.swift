@@ -106,10 +106,6 @@ where State: Equatable {
     /// which in the case of long-lived services, could be until the
     /// app is stopped.
     public var environment: Environment
-    /// Logger, used when in debug mode
-    public var logger: Logger
-    /// Toggle debug mode
-    public var debug: Bool
 
     init(
         update: @escaping (
@@ -118,15 +114,11 @@ where State: Equatable {
             Action
         ) -> Update<State, Action>,
         state: State,
-        environment: Environment,
-        logger: Logger,
-        debug: Bool = false
+        environment: Environment
     ) {
         self.update = update
         self.state = state
         self.environment = environment
-        self.logger = logger
-        self.debug = debug
     }
 
     /// Create a binding that can update the store.
@@ -181,14 +173,8 @@ where State: Equatable {
     /// make sure that they join the main thread (e.g. with
     /// `.receive(on: DispatchQueue.main)`).
     public func send(action: Action) {
-        if debug {
-            logger.debug("Action: \(String(reflecting: action))")
-        }
         // Generate next state and effect
         let change = update(self.state, self.environment, action)
-        if debug {
-            logger.debug("State: \(String(reflecting: change.state))")
-        }
         // Set `state` if changed.
         //
         // Mutating state (a `@Published` property) will fire `objectWillChange`
