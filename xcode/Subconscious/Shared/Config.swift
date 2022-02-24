@@ -28,4 +28,20 @@ struct Config: Equatable {
 
     /// Toggle random suggestion feature
     var randomSuggestionEnabled = true
+
+    /// Default links feature enabled?
+    var linksEnabled = true
+    /// Where to look for user-defined links
+    var linksTemplate: Slug = Slug("special/links")!
+    /// Template for default links
+    var linksFallback: [Slug] = [
+        Slug("pattern")!,
+        Slug("project")!,
+        Slug("question")!,
+        Slug("quote")!,
+        Slug("book")!,
+        Slug("reference")!,
+        Slug("decision")!,
+        Slug("person")!
+    ]
 }

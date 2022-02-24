@@ -530,15 +530,39 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
+    func readDefaultLinkSuggestions(config: Config) -> [LinkSuggestion] {
+        guard let linksEntry = readEntry(slug: config.linksTemplate) else {
+            return config.linksFallback.map({ slug in
+                .entry(
+                    EntryLink(
+                        slug: slug,
+                        title: slug.toSentence()
+                    )
+                )
+            })
+        }
+        return linksEntry.dom.slashlinks.compactMap({ slashlink in
+            Slug(formatting: slashlink.description).map({ slug in
+                .entry(
+                    EntryLink(
+                        slug: slug,
+                        title: slug.toSentence()
+                    )
+                )
+            })
+        })
+    }
+
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchLinkSuggestions(
         query: String,
-        omitting invalidSuggestions: Set<Slug> = Set()
+        omitting invalidSuggestions: Set<Slug> = Set(),
+        fallback: [LinkSuggestion] = []
     ) -> AnyPublisher<[LinkSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             guard let sluglike = Slug.sanitizeString(query) else {
-                return []
+                return fallback
             }
 
             var suggestions: OrderedDictionary<Slug, LinkSuggestion> = [:]
