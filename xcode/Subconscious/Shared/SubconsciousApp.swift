@@ -1459,7 +1459,7 @@ extension AppModel {
         // Save current state before we blow it away
         return save(state: state, environment: environment)
             .pipe({ state in
-                var model = resetEditor(state: state)
+                var model = state
                 model.searchText = ""
                 model.isSearchShowing = false
                 model.isDetailShowing = true
