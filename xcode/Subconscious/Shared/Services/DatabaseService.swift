@@ -291,7 +291,7 @@ struct DatabaseService {
             // are read-only teaser views.
             try database.execute(
                 sql: """
-                SELECT slug, body
+                SELECT slug, body, modified
                 FROM entry_search
                 ORDER BY modified DESC
                 LIMIT 1000
@@ -300,13 +300,15 @@ struct DatabaseService {
                 if
                     let slugString: String = row.get(0),
                     let slug = Slug(slugString),
-                    let content: String = row.get(1)
+                    let body: String = row.get(1),
+                    let modified: Date = row.get(2)
                 {
-                    let summary = Subtext(markup: content).summarize()
+                    let summary = Subtext(markup: body).summarize()
                     return EntryStub(
                         slug: slug,
                         title: summary.title ?? "",
-                        excerpt: summary.excerpt ?? ""
+                        excerpt: summary.excerpt ?? "",
+                        modified: modified
                     )
                 }
                 return nil
@@ -665,7 +667,7 @@ struct DatabaseService {
             // Use content indexed in database, even though it might be stale.
             let backlinks: [EntryStub] = try database.execute(
                 sql: """
-                SELECT slug, body
+                SELECT slug, body, modified
                 FROM entry_search
                 WHERE slug != ? AND entry_search.body MATCH ?
                 ORDER BY rank
@@ -680,13 +682,15 @@ struct DatabaseService {
                 if
                     let slugString: String = row.get(0),
                     let slug = Slug(slugString),
-                    let content: String = row.get(1)
+                    let body: String = row.get(1),
+                    let modified: Date = row.get(2)
                 {
-                    let summary = Subtext(markup: content).summarize()
+                    let summary = Subtext(markup: body).summarize()
                     return EntryStub(
                         slug: slug,
                         title: summary.title ?? "",
-                        excerpt: summary.excerpt ?? ""
+                        excerpt: summary.excerpt ?? "",
+                        modified: modified
                     )
                 }
                 return nil

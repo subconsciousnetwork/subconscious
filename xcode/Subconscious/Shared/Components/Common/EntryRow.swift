@@ -26,6 +26,13 @@ struct EntryRow: View {
                     // center in a label.
                     .frame(minHeight: AppTheme.icon)
                 Spacer()
+                Text(
+                    NiceDateFormatter.shared.string(
+                        from: entry.modified,
+                        relativeTo: Date.now
+                    )
+                )
+                .foregroundColor(Color.secondaryText)
             }
             HStack {
                 Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)

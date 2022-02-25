@@ -17,5 +17,6 @@ struct EntryStub: Hashable, Identifiable, CustomDebugStringConvertible {
     var slug: Slug
     var title: String
     var excerpt: String
+    var modified: Date
     var id: Slug { slug }
 }

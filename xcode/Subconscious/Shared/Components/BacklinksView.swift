@@ -50,7 +50,8 @@ struct BacklinksView_Previews: PreviewProvider {
                 EntryStub(
                     slug: Slug("floop")!,
                     title: "Floop",
-                    excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi."
+                    excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
+                    modified: Date.now
                 )
             ],
             onSelect: { title in }
