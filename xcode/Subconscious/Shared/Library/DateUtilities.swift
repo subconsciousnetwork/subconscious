@@ -7,14 +7,32 @@
 
 import Foundation
 
-extension RelativeDateTimeFormatter {
-    static func short(
-        locale: Locale = Locale.current
-    ) -> RelativeDateTimeFormatter {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.locale = locale
-        formatter.unitsStyle = .short
-        return formatter
+/// A struct containing logic for nice dates
+/// Display times for same-day dates, or short dates, otherwise
+struct NiceDateFormatter {
+    static let shared = NiceDateFormatter()
+    private var dateFormatter: DateFormatter
+    private var timeFormatter: DateFormatter
+
+    init(locale: Locale = Locale.current) {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = locale
+        dateFormatter.dateStyle = .short
+        dateFormatter.timeStyle = .none
+        self.dateFormatter = dateFormatter
+
+        let timeFormatter = DateFormatter()
+        timeFormatter.locale = locale
+        timeFormatter.dateFormat = "HH:mm"
+        self.timeFormatter = timeFormatter
+    }
+
+    func string(from date: Date, relativeTo now: Date = Date.now) -> String {
+        if Calendar.current.isDate(date, inSameDayAs: now) {
+            return timeFormatter.string(from: date)
+        } else {
+            return dateFormatter.string(from: date)
+        }
     }
 }
 
