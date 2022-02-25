@@ -8,6 +8,7 @@
 import SwiftUI
 import os
 import Combine
+import ObservableStore
 
 @main
 struct SubconsciousApp: App {

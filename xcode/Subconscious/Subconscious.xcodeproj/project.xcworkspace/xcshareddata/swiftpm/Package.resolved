@@ -2,6 +2,15 @@
   "object": {
     "pins": [
       {
+        "package": "ObservableStore",
+        "repositoryURL": "https://github.com/gordonbrander/ObservableStore",
+        "state": {
+          "branch": null,
+          "revision": "7d9eefbfa24eed49b281b1e9381ea7db9da617d9",
+          "version": "0.0.4"
+        }
+      },
+      {
         "package": "swift-collections",
         "repositoryURL": "https://github.com/apple/swift-collections.git",
         "state": {

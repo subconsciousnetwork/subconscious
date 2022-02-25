@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B8082AAA26F3B43A004B10BB /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8082AA926F3B43A004B10BB /* Store.swift */; };
-		B8082AAB26F3B43A004B10BB /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8082AA926F3B43A004B10BB /* Store.swift */; };
 		B8109C2827A8879C00CD2B6D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8109C2727A8879C00CD2B6D /* AppTheme.swift */; };
 		B8109C2927A8879C00CD2B6D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8109C2727A8879C00CD2B6D /* AppTheme.swift */; };
 		B81A535C27275138001A6268 /* Tape.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A535B27275138001A6268 /* Tape.swift */; };
@@ -19,6 +17,7 @@
 		B81EACD927B724A000B3B8DC /* ThickDividerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81EACD727B724A000B3B8DC /* ThickDividerView.swift */; };
 		B81EBB0927025C1500B87594 /* BacklinkButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81EBB0827025C1500B87594 /* BacklinkButtonStyle.swift */; };
 		B81EBB0A27025C1500B87594 /* BacklinkButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81EBB0827025C1500B87594 /* BacklinkButtonStyle.swift */; };
+		B822F18B27C9615600943C6B /* ObservableStore in Frameworks */ = {isa = PBXBuildFile; productRef = B822F18A27C9615600943C6B /* ObservableStore */; };
 		B824FDCE26FA662200B81BBD /* SubtextFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDCD26FA662200B81BBD /* SubtextFile.swift */; };
 		B824FDD126FA98F300B81BBD /* EntryDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD026FA98F300B81BBD /* EntryDetail.swift */; };
 		B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD326FAB1BC00B81BBD /* Truncate.swift */; };
@@ -189,7 +188,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		B8082AA926F3B43A004B10BB /* Store.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		B8109C2727A8879C00CD2B6D /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		B81A535B27275138001A6268 /* Tape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tape.swift; sourceTree = "<group>"; };
 		B81A535E272751EE001A6268 /* Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext.swift; sourceTree = "<group>"; };
@@ -293,6 +291,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B82C3A7126F6B1C000833CC8 /* OrderedCollections in Frameworks */,
+				B822F18B27C9615600943C6B /* ObservableStore in Frameworks */,
 				B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */,
 				B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */,
 			);
@@ -471,7 +470,6 @@
 				B8879EA526F9348600A0B4FF /* Slashlink.swift */,
 				B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */,
 				B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */,
-				B8082AA926F3B43A004B10BB /* Store.swift */,
 				B8E63EA5270F9DD000545719 /* StringRandomAlphanumeric.swift */,
 				B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */,
 				B81A535E272751EE001A6268 /* Subtext.swift */,
@@ -543,6 +541,7 @@
 				B82C3A6E26F6B1C000833CC8 /* Collections */,
 				B82C3A7026F6B1C000833CC8 /* OrderedCollections */,
 				B8579B6427C561E900D8B4BC /* SwiftSubsurface */,
+				B822F18A27C9615600943C6B /* ObservableStore */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B8EB29FB26F27797006E97C3 /* Subconscious.app */;
@@ -639,6 +638,7 @@
 			packageReferences = (
 				B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				B8579B6327C561E900D8B4BC /* XCRemoteSwiftPackageReference "SwiftSubsurface" */,
+				B822F18927C9615600943C6B /* XCRemoteSwiftPackageReference "ObservableStore" */,
 			);
 			productRefGroup = B8EB29FC26F27797006E97C3 /* Products */;
 			projectDirPath = "";
@@ -737,7 +737,6 @@
 				B866868D27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift in Sources */,
 				B8AE34BC276AB3D500777FF0 /* SearchView.swift in Sources */,
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
-				B8082AAA26F3B43A004B10BB /* Store.swift in Sources */,
 				B8CC434027A07DF10079D2F9 /* DialogView.swift in Sources */,
 				B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
 				B85BF47D27BDA0E100F55730 /* SaveEnvelope.swift in Sources */,
@@ -806,7 +805,6 @@
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8AE34A8276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
 				B85BF47927BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
-				B8082AAB26F3B43A004B10BB /* Store.swift in Sources */,
 				B866868E27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift in Sources */,
 				B81EACD927B724A000B3B8DC /* ThickDividerView.swift in Sources */,
 				B82FD4572730A62C002CB641 /* EntryRow.swift in Sources */,
@@ -1297,6 +1295,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		B822F18927C9615600943C6B /* XCRemoteSwiftPackageReference "ObservableStore" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gordonbrander/ObservableStore";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.1;
+			};
+		};
 		B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-collections.git";
@@ -1316,6 +1322,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B822F18A27C9615600943C6B /* ObservableStore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B822F18927C9615600943C6B /* XCRemoteSwiftPackageReference "ObservableStore" */;
+			productName = ObservableStore;
+		};
 		B82C3A6E26F6B1C000833CC8 /* Collections */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */;
