@@ -20,7 +20,9 @@ struct ProgressScrimView: View {
             Spacer()
         }
         .background(Color.background)
-        .transition(.opacity)
+        .transition(
+            .opacity.animation(.easeOutCubic())
+        )
     }
 }
 
