@@ -1526,7 +1526,7 @@ extension AppModel {
         environment: AppEnvironment,
         detail: EntryDetail
     ) -> Update<AppModel, AppAction> {
-        var model = state
+        var model = resetEditor(state: state)
         model.slug = detail.slug
         model.backlinks = detail.backlinks
         // Set editor and save state.
