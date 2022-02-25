@@ -531,6 +531,10 @@ struct DatabaseService {
     }
 
     func readDefaultLinkSuggestions(config: Config) -> [LinkSuggestion] {
+        // If default link suggestsions are toggled off, return empty array.
+        guard config.linksEnabled else {
+            return []
+        }
         guard let linksEntry = readEntry(slug: config.linksTemplate) else {
             return config.linksFallback.map({ slug in
                 .entry(
