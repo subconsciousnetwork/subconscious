@@ -1063,6 +1063,12 @@ extension AppModel {
                     text: state.linkSearchText
                 )
             })
+            .pipe({ state in
+                countEntries(
+                    state: state,
+                    environment: environment
+                )
+            })
     }
 
     /// Insert search history event into database
