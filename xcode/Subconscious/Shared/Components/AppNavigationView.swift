@@ -129,8 +129,10 @@ struct AppNavigationView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .principal) {
-                    Text("Ideas")
-                        .font(Font(UIFont.appTextMedium))
+                    HStack {
+                        Text("Ideas").font(Font(UIFont.appTextMedium))
+                        CountChip(count: store.state.entryCount)
+                    }
                 }
             }
         }
