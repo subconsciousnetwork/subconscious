@@ -7,16 +7,28 @@
 import SwiftUI
 
 struct RowViewModifier: ViewModifier {
-    var insets: EdgeInsets? = EdgeInsets(
-        top: 0,
-        leading: 0,
-        bottom: 0,
-        trailing: 0
+    var insets = EdgeInsets(
+        top: AppTheme.unit3,
+        leading: AppTheme.padding,
+        bottom: AppTheme.unit3,
+        trailing: AppTheme.padding
     )
     func body(content: Content) -> some View {
-        content
-            .labelStyle(RowLabelStyle())
-            .listRowInsets(insets)
-            .listRowSeparator(.hidden, edges: .all)
+        VStack(spacing: 0) {
+            content
+                .multilineTextAlignment(.leading)
+                .padding(insets)
+            Divider()
+                .padding(.leading, insets.leading)
+        }
+        .listRowInsets(
+            EdgeInsets(
+                top: 0,
+                leading: 0,
+                bottom: 0,
+                trailing: 0
+            )
+        )
+        .listRowSeparator(.hidden, edges: .all)
     }
 }
