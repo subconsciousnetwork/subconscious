@@ -75,6 +75,13 @@ enum AppAction {
     case createSearchHistoryItemSuccess(String)
     case createSearchHistoryItemFailure(String)
 
+    /// Read entry count from DB
+    case countEntries
+    /// Set the count of existing entries
+    case setEntryCount(Int)
+    /// Fail to get count of existing entries
+    case failEntryCount(Error)
+
     // List entries
     case listRecent
     case setRecent([EntryStub])
@@ -187,6 +194,9 @@ struct AppModel: Equatable {
     var databaseState = DatabaseState.initial
     /// Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
+
+    /// Count of entries
+    var entryCount: Int? = nil
 
     ///  Recent entries (nil means "hasn't been loaded from DB")
     var recent: [EntryStub]? = nil
@@ -390,6 +400,23 @@ extension AppModel {
             )
         case let .createSearchHistoryItemFailure(error):
             return createSearchHistoryItemFailure(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .countEntries:
+            return countEntries(
+                state: state,
+                environment: environment
+            )
+        case .setEntryCount(let count):
+            return setEntryCount(
+                state: state,
+                environment: environment,
+                count: count
+            )
+        case .failEntryCount(let error):
+            return warn(
                 state: state,
                 environment: environment,
                 error: error
@@ -818,6 +845,9 @@ extension AppModel {
             "Documents: \(environment.documentURL)"
         )
 
+        let countFx: Fx<AppAction> = Just(AppAction.countEntries)
+            .eraseToAnyPublisher()
+
         let pollFx: Fx<AppAction> = AppEnvironment.poll(
             every: state.config.pollingInterval
         )
@@ -832,7 +862,10 @@ extension AppModel {
             .map({ value in
                 AppAction.changeKeyboardState(value)
             })
-            .merge(with: pollFx)
+            .merge(
+                with: pollFx,
+                countFx
+            )
             .eraseToAnyPublisher()
 
         return Update(state: state, fx: fx)
@@ -1076,6 +1109,33 @@ extension AppModel {
             "Failed to create search history entry: \(error)"
         )
         return Update(state: state)
+    }
+
+    /// Read entry count from db
+    static func countEntries(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel, AppAction> {
+        let fx: Fx<AppAction> = environment.database.countEntries()
+            .map({ count in
+                AppAction.setEntryCount(count)
+            })
+            .catch({ error in
+                Just(AppAction.failEntryCount(error))
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    /// Set entry count
+    static func setEntryCount(
+        state: AppModel,
+        environment: AppEnvironment,
+        count: Int
+    ) -> Update<AppModel, AppAction> {
+        var model = state
+        model.entryCount = count
+        return Update(state: model)
     }
 
     static func listRecent(

@@ -284,6 +284,27 @@ struct DatabaseService {
         .eraseToAnyPublisher()
     }
 
+    /// Count all entries
+    func countEntries() -> AnyPublisher<Int, Error> {
+        CombineUtilities.async(qos: .userInteractive) {
+            // Use stale body content from db. It's faster, and these
+            // are read-only teaser views.
+            try database.execute(
+                sql: """
+                SELECT count(slug)
+                FROM entry
+                """
+            )
+            .compactMap({ row in
+                row.get(0)
+            })
+            .first
+            .unwrap(or: 0)
+        }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
+    }
+
     /// List recent entries
     func listRecentEntries() -> AnyPublisher<[EntryStub], Error> {
         CombineUtilities.async(qos: .userInitiated) {
@@ -296,7 +317,8 @@ struct DatabaseService {
                 ORDER BY modified DESC
                 LIMIT 1000
                 """
-            ).compactMap({ row in
+            )
+            .compactMap({ row in
                 if
                     let slugString: String = row.get(0),
                     let slug = Slug(slugString),
@@ -662,7 +684,7 @@ struct DatabaseService {
         slug: Slug,
         fallback: String
     ) -> AnyPublisher<EntryDetail, Error> {
-        CombineUtilities.async(qos: .userInitiated) {
+        CombineUtilities.async(qos: .userInteractive) {
             // Get backlinks.
             // Use content indexed in database, even though it might be stale.
             let backlinks: [EntryStub] = try database.execute(
@@ -727,7 +749,7 @@ struct DatabaseService {
 
     /// Choose a random entry and read detailz
     func readRandomEntrySlug() -> AnyPublisher<Slug, Error> {
-        CombineUtilities.async(qos: .userInitiated) {
+        CombineUtilities.async(qos: .userInteractive) {
             try database.execute(
                 sql: """
                 SELECT slug
