@@ -22,14 +22,7 @@ struct EntryListView: View {
                             onEntryPress(entry)
                         }
                     ) {
-                        Label(
-                            title: {
-                                EntryRow(entry: entry)
-                            },
-                            icon: {
-                                Image(systemName: "doc")
-                            }
-                        )
+                        EntryRow(entry: entry)
                     }
                     .modifier(RowViewModifier())
                     .swipeActions(

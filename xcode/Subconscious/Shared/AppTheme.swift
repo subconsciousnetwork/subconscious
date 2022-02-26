@@ -49,6 +49,11 @@ extension UIFont {
         size: AppTheme.textSize
     )!
 
+    static let appTextSmall = UIFont(
+        name: "IBMPlexSans",
+        size: 14
+    )!
+
     static let appHeadline = UIFont(
         name: "IBMPlexSans-Medium",
         size: 14

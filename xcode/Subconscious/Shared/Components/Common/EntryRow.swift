@@ -18,7 +18,7 @@ struct EntryRow: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(entry.title.isEmpty ? emptyTitle : entry.title)
-                    .font(Font(UIFont.appTextMedium))
+                    .font(Font(UIFont.appText))
                     .lineLimit(1)
                     .foregroundColor(Color.text)
                     .multilineTextAlignment(.leading)
@@ -32,20 +32,23 @@ struct EntryRow: View {
                         relativeTo: Date.now
                     )
                 )
+                .font(Font(UIFont.appTextSmall))
                 .foregroundColor(Color.secondaryText)
             }
-            HStack {
-                Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
-                    .font(Font(UIFont.appText))
-                    .lineLimit(1)
-                    .multilineTextAlignment(.leading)
-                Spacer()
-            }
-            Text(entry.slug.description)
+            Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
                 .font(Font(UIFont.appText))
                 .lineLimit(1)
-                .foregroundColor(Color.secondaryText)
                 .multilineTextAlignment(.leading)
+                .foregroundColor(Color.secondaryText)
+            HStack(spacing: AppTheme.unit) {
+                Image(systemName: "doc")
+                    .font(.system(size: 12))
+                Text(entry.slug.description)
+            }
+            .font(Font(UIFont.appText))
+            .lineLimit(1)
+            .foregroundColor(Color.secondaryText)
+            .multilineTextAlignment(.leading)
         }
     }
 }

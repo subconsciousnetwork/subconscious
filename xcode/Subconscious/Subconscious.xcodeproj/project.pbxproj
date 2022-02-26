@@ -46,8 +46,6 @@
 		B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */ = {isa = PBXBuildFile; productRef = B8579B6427C561E900D8B4BC /* SwiftSubsurface */; };
 		B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */; };
 		B85BF47027BB0FA800F55730 /* RowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */; };
-		B85BF47227BB146400F55730 /* RowLabelStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF47127BB146400F55730 /* RowLabelStyle.swift */; };
-		B85BF47327BB146400F55730 /* RowLabelStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF47127BB146400F55730 /* RowLabelStyle.swift */; };
 		B85BF47527BB3D6E00F55730 /* ToolbarTitleGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */; };
 		B85BF47627BB3D6E00F55730 /* ToolbarTitleGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */; };
 		B85BF47827BC2B4700F55730 /* DetailToolbarContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */; };
@@ -207,7 +205,6 @@
 		B82FD4552730A62C002CB641 /* EntryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRow.swift; sourceTree = "<group>"; };
 		B83E91D627692EC600045C6A /* FABButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FABButtonStyle.swift; sourceTree = "<group>"; };
 		B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowViewModifier.swift; sourceTree = "<group>"; };
-		B85BF47127BB146400F55730 /* RowLabelStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowLabelStyle.swift; sourceTree = "<group>"; };
 		B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarTitleGroupView.swift; sourceTree = "<group>"; };
 		B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailToolbarContent.swift; sourceTree = "<group>"; };
 		B85BF47C27BDA0E100F55730 /* SaveEnvelope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveEnvelope.swift; sourceTree = "<group>"; };
@@ -502,7 +499,6 @@
 				B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */,
 				B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */,
 				B8AE34BE276BD61400777FF0 /* RowButtonStyle.swift */,
-				B85BF47127BB146400F55730 /* RowLabelStyle.swift */,
 				B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */,
 				B8CC433C27A07CE10079D2F9 /* ScrimView.swift */,
 				B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */,
@@ -754,7 +750,6 @@
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
-				B85BF47227BB146400F55730 /* RowLabelStyle.swift in Sources */,
 				B824FDCE26FA662200B81BBD /* SubtextFile.swift in Sources */,
 				B8EC568626F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
 				B8AC648A278F53920099E96B /* EntryStub.swift in Sources */,
@@ -826,7 +821,6 @@
 				B8AE34C9276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
-				B85BF47327BB146400F55730 /* RowLabelStyle.swift in Sources */,
 				B8DEBF1A2798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B8AE34CC276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
 				B8109C2927A8879C00CD2B6D /* AppTheme.swift in Sources */,
