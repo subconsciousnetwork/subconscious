@@ -11,6 +11,9 @@ import SwiftUI
 struct AppView: View {
     @ObservedObject var store: AppStore
     @Environment(\.scenePhase) var scenePhase: ScenePhase
+    var isFabPresented: Bool {
+        store.state.focus == nil
+    }
 
     var body: some View {
         // Give each element in this ZStack an explicit z-index.
@@ -26,29 +29,28 @@ struct AppView: View {
             if store.state.isReadyForInteraction {
                 AppNavigationView(store: store)
                     .zIndex(1)
-                if store.state.focus == nil {
-                    Button(
-                        action: {
-                            withAnimation(
-                                .easeOutCubic(duration: Duration.keyboard)
-                            ) {
-                                store.send(action: .showSearch)
-                            }
-                        },
-                        label: {
-                            Image(systemName: "doc.text.magnifyingglass")
-                                .font(.system(size: 20))
+                Button(
+                    action: {
+                        withAnimation(
+                            .easeOutCubic(duration: Duration.keyboard)
+                        ) {
+                            store.send(action: .showSearch)
                         }
+                    },
+                    label: {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.system(size: 20))
+                    }
+                )
+                .buttonStyle(
+                    FABButtonStyle(
+                        orbShaderEnabled:
+                            store.state.config.orbShaderEnabled
                     )
-                    .buttonStyle(
-                        FABButtonStyle(
-                            orbShaderEnabled:
-                                store.state.config.orbShaderEnabled
-                        )
-                    )
-                    .padding()
-                    .zIndex(2)
-                }
+                )
+                .padding()
+                .disabled(!isFabPresented)
+                .zIndex(2)
                 ModalView(
                     isPresented: store.binding(
                         get: \.isSearchShowing,
