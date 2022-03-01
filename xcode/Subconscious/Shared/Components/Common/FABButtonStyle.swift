@@ -55,6 +55,11 @@ struct FABButtonStyle: ButtonStyle {
             .easeOutCubic(duration: Duration.fast),
             value: configuration.isPressed
         )
+        .animation(
+            .easeOutCubic(duration: Duration.keyboard),
+            value: isEnabled
+        )
+        .opacity(isEnabled ? 1 : 0)
         .transition(
             .opacity.combined(
                 with: .scale(scale: 0.8, anchor: .center)
