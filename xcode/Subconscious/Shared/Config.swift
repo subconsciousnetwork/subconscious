@@ -16,7 +16,7 @@ struct Config: Equatable {
     var pollingInterval: Double = 15
 
     /// Subsurface "orb" shader on main FAB
-    var orbShaderEnabled = false
+    var orbShaderEnabled = true
 
     /// Toggle journal suggestion feature
     var journalSuggestionEnabled = true
