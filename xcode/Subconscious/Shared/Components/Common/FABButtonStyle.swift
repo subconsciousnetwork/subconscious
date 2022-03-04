@@ -15,7 +15,7 @@ struct FABButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         ZStack {
             if orbShaderEnabled {
-                SubsurfaceView(speed: 0.05, density: 0.25, corner_radius: 64)
+                SubsurfaceView(speed: 0.05, density: 0.75, corner_radius: 64)
                     .clipped()
                     .clipShape(Circle())
                     .frame(
