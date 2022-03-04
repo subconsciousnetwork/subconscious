@@ -16,28 +16,39 @@ struct EntryListView: View {
     var body: some View {
         if let entries = entries {
             if entries.count > 0 {
-                List(entries) { entry in
-                    Button(
-                        action: {
-                            onEntryPress(entry)
-                        }
-                    ) {
-                        EntryRow(entry: entry)
-                    }
-                    .modifier(RowViewModifier())
-                    .swipeActions(
-                        edge: .trailing,
-                        allowsFullSwipe: false
-                    ) {
+                List {
+                    ForEach(entries) { entry in
                         Button(
-                            role: .destructive,
                             action: {
-                                onEntryDelete(entry.slug)
+                                onEntryPress(entry)
                             }
                         ) {
-                            Text("Delete")
+                            EntryRow(entry: entry)
+                        }
+                        .modifier(RowViewModifier())
+                        .swipeActions(
+                            edge: .trailing,
+                            allowsFullSwipe: false
+                        ) {
+                            Button(
+                                role: .destructive,
+                                action: {
+                                    onEntryDelete(entry.slug)
+                                }
+                            ) {
+                                Text("Delete")
+                            }
                         }
                     }
+                    // Add space at the bottom of the list so that FAB
+                    // does not cover up swipe actions of last item.
+                    Color.clear
+                        .frame(
+                            height: (
+                                AppTheme.fabSize +
+                                (AppTheme.unit * 6)
+                            )
+                        )
                 }
                 .animation(.easeOutCubic(), value: entries)
                 .transition(.opacity)
