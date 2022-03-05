@@ -31,11 +31,7 @@ struct AppView: View {
                     .zIndex(1)
                 Button(
                     action: {
-                        withAnimation(
-                            .easeOutCubic(duration: Duration.keyboard)
-                        ) {
-                            store.send(action: .showSearch)
-                        }
+                        store.send(action: .showSearch)
                     },
                     label: {
                         Image(systemName: "doc.text.magnifyingglass")
@@ -54,8 +50,7 @@ struct AppView: View {
                 ModalView(
                     isPresented: store.binding(
                         get: \.isSearchShowing,
-                        tag: { _ in AppAction.hideSearch },
-                        animation: .easeOutCubic(duration: Duration.keyboard)
+                        tag: { _ in AppAction.hideSearch }
                     ),
                     content: SearchView(
                         placeholder: "Search or create...",
@@ -85,13 +80,7 @@ struct AppView: View {
                             )
                         },
                         onCancel: {
-                            withAnimation(
-                                .easeOutCubic(duration: Duration.keyboard)
-                            ) {
-                                store.send(
-                                    action: .hideSearch
-                                )
-                            }
+                            store.send(action: .hideSearch)
                         }
                     ),
                     keyboardHeight: store.state.keyboardEventualHeight

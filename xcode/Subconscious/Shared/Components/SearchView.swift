@@ -46,14 +46,10 @@ struct SearchView: View {
                 )
                 .submitLabel(.go)
                 .onSubmit {
-                    withAnimation(
-                        .easeOut(duration: Duration.fast)
-                    ) {
-                        onSubmit(
-                            Slug(formatting: text),
-                            text
-                        )
-                    }
+                    onSubmit(
+                        Slug(formatting: text),
+                        text
+                    )
                 }
                 Button(
                     action: onCancel,
@@ -67,11 +63,7 @@ struct SearchView: View {
             List(suggestions) { suggestion in
                 Button(
                     action: {
-                        withAnimation(
-                            .easeOutCubic(duration: Duration.keyboard)
-                        ) {
-                            onSelect(suggestion)
-                        }
+                        onSelect(suggestion)
                     },
                     label: {
                         SuggestionLabelView(suggestion: suggestion)
