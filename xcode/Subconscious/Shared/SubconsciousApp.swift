@@ -348,6 +348,7 @@ extension AppModel {
             var model = state
             model.focus = focus
             return Update(state: model)
+                .animation(.default)
         case .readyDatabase:
             return readyDatabase(state: state, environment: environment)
         case let .migrateDatabaseSuccess(success):
@@ -557,12 +558,14 @@ extension AppModel {
             model.searchText = ""
             model.focus = .search
             return Update(state: model)
+                .animation(.easeOutCubic(duration: Duration.keyboard))
         case .hideSearch:
             var model = state
             model.isSearchShowing = false
             model.searchText = ""
             model.focus = nil
             return Update(state: model)
+                .animation(.easeOutCubic(duration: Duration.keyboard))
         case let .selectSuggestion(suggestion):
             return selectSuggestion(
                 state: state,
@@ -1375,6 +1378,7 @@ extension AppModel {
                 "Rename invoked with same name. Doing nothing."
             )
             return Update(state: state, fx: fx)
+                .animation(.easeOutCubic(duration: Duration.keyboard))
         }
 
         let fx: Fx<AppAction> = environment.database
@@ -1392,6 +1396,7 @@ extension AppModel {
             .merge(with: Just(AppAction.hideRenameSheet))
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
+            .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
     /// Rename success lifecycle handler.
@@ -1471,40 +1476,47 @@ extension AppModel {
         environment: AppEnvironment,
         suggestion: Suggestion
     ) -> Update<AppModel, AppAction> {
+        var model = state
+        model.isSearchShowing = false
+
         switch suggestion {
         case .entry(let entryLink):
             return requestDetail(
-                state: state,
+                state: model,
                 environment: environment,
                 slug: entryLink.slug,
                 fallback: entryLink.title
             )
+            .animation(.easeOutCubic(duration: Duration.keyboard))
         case .search(let entryLink):
             return requestDetail(
-                state: state,
+                state: model,
                 environment: environment,
                 slug: entryLink.slug,
                 fallback: entryLink.title
             )
+            .animation(.easeOutCubic(duration: Duration.keyboard))
         case .journal(let entryLink):
             return requestTemplateDetail(
-                state: state,
+                state: model,
                 environment: environment,
                 slug: entryLink.slug,
                 template: state.config.journalTemplate
             )
+            .animation(.easeOutCubic(duration: Duration.keyboard))
         case .scratch(let entryLink):
             return requestDetail(
-                state: state,
+                state: model,
                 environment: environment,
                 slug: entryLink.slug,
                 fallback: entryLink.title
             )
         case .random:
             return requestRandomDetail(
-                state: state,
+                state: model,
                 environment: environment
             )
+            .animation(.easeOutCubic(duration: Duration.keyboard))
         }
     }
 
@@ -1544,6 +1556,7 @@ extension AppModel {
                     .eraseToAnyPublisher()
                 return Update(state: model, fx: fx)
             })
+            .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
     /// Request detail, using contents of template file as fallback content
@@ -1694,6 +1707,7 @@ extension AppModel {
         model.linkSearchText = ""
 
         return Update(state: model, fx: fx)
+            .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
     /// Save snapshot of entry
