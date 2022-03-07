@@ -49,11 +49,7 @@ struct RenameSearchView: View {
             List(suggestions) { suggestion in
                 Button(
                     action: {
-                        withAnimation(
-                            .easeOutCubic(duration: Duration.keyboard)
-                        ) {
-                            onSelect(slug, suggestion)
-                        }
+                        onSelect(slug, suggestion)
                     },
                     label: {
                         RenameSuggestionLabelView(suggestion: suggestion)

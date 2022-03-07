@@ -36,13 +36,7 @@ struct LinkSearchView: View {
             List(suggestions) { suggestion in
                 Button(
                     action: {
-                        withAnimation(
-                            .easeOutCubic(
-                                duration: Duration.keyboard
-                            )
-                        ) {
-                            onSelect(suggestion)
-                        }
+                        onSelect(suggestion)
                     },
                     label: {
                         LinkSuggestionLabelView(suggestion: suggestion)

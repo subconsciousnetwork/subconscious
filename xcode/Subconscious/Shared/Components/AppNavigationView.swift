@@ -64,8 +64,7 @@ struct AppNavigationView: View {
                             linkSuggestions: store.state.linkSuggestions,
                             focus: store.binding(
                                 get: \.focus,
-                                tag: AppAction.setFocus,
-                                animation: .easeOut(duration: Duration.normal)
+                                tag: AppAction.setFocus
                             ),
                             editorDom: store.binding(
                                 get: \.editorDom,
@@ -84,11 +83,7 @@ struct AppNavigationView: View {
                                 tag: AppAction.setLinkSearch
                             ),
                             onDone: {
-                                withAnimation(
-                                    .easeOutCubic(duration: Duration.fast)
-                                ) {
-                                    store.send(action: .selectDoneEditing)
-                                }
+                                store.send(action: .selectDoneEditing)
                             },
                             onEditorLink: { url, _, range, _ in
                                 store.send(
@@ -154,8 +149,7 @@ struct AppNavigationView: View {
                 ),
                 focus: store.binding(
                     get: \.focus,
-                    tag: AppAction.setFocus,
-                    animation: .easeOut(duration: Duration.normal)
+                    tag: AppAction.setFocus
                 ),
                 onCancel: {
                     store.send(action: .hideRenameSheet)
