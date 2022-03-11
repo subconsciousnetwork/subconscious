@@ -23,6 +23,7 @@ struct DetailView: View {
     /// If we have a Slug, we're ready to edit.
     /// If we don't, we have nothing to edit.
     var slug: Slug?
+    var isLoading: Bool
     var backlinks: [EntryStub]
     var linkSuggestions: [LinkSuggestion]
     @Binding var focus: AppModel.Focus?
@@ -43,11 +44,20 @@ struct DetailView: View {
     var onDelete: (Slug?) -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            Divider()
-            if slug == nil {
-                ProgressScrimView()
-            } else {
+        ZStack {
+            if isLoading || slug == nil {
+                Color.white
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .transition(
+                        .asymmetric(
+                            insertion: .opacity.animation(.none),
+                            removal: .opacity.animation(.default)
+                        )
+                    )
+                    .zIndex(2)
+            }
+            VStack(spacing: 0) {
+                Divider()
                 PseudoKeyboardToolbarView(
                     isKeyboardUp: focus == .editor,
                     toolbarHeight: 48,
@@ -95,35 +105,36 @@ struct DetailView: View {
                     }
                 )
             }
+            .zIndex(1)
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                DetailToolbarContent(
+                    isEditing: (focus == .editor),
+                    title: editorDom.title(),
+                    slug: slug,
+                    onRename: onRename,
+                    onDelete: onDelete,
+                    onDone: onDone
+                )
+            }
+            .sheet(
+                isPresented: $isLinkSheetPresented,
+                onDismiss: {}
+            ) {
+                LinkSearchView(
+                    placeholder: "Search or create...",
+                    suggestions: linkSuggestions,
+                    text: $linkSearchText,
+                    focus: $focus,
+                    onCancel: {
+                        isLinkSheetPresented = false
+                    },
+                    onSelect: { suggestion in
+                        onSelectLink(suggestion)
+                    }
+                )
         }
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            DetailToolbarContent(
-                isEditing: (focus == .editor),
-                title: editorDom.title(),
-                slug: slug,
-                onRename: onRename,
-                onDelete: onDelete,
-                onDone: onDone
-            )
-        }
-        .sheet(
-            isPresented: $isLinkSheetPresented,
-            onDismiss: {}
-        ) {
-            LinkSearchView(
-                placeholder: "Search or create...",
-                suggestions: linkSuggestions,
-                text: $linkSearchText,
-                focus: $focus,
-                onCancel: {
-                    isLinkSheetPresented = false
-                },
-                onSelect: { suggestion in
-                    onSelectLink(suggestion)
-                }
-            )
         }
     }
 }
