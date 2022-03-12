@@ -225,6 +225,7 @@ struct AppModel: Equatable {
 
     /// Slug for the currently selected entry
     var slug: Slug? = nil
+    var isDetailLoading = true
 
     /// Main search suggestions
     var suggestions: [Suggestion] = []
@@ -661,6 +662,7 @@ extension AppModel {
     static func resetEditor(state: AppModel) -> AppModel {
         var model = state
         model.slug = nil
+        model.isDetailLoading = true
         model.editorDom = .empty
         model.editorSaveState = .saved
         model.editorSelection = NSMakeRange(0, 0)
@@ -1511,6 +1513,7 @@ extension AppModel {
                 slug: entryLink.slug,
                 fallback: entryLink.title
             )
+            .animation(.easeOutCubic(duration: Duration.keyboard))
         case .random:
             return requestRandomDetail(
                 state: model,
@@ -1535,28 +1538,32 @@ extension AppModel {
             return Update(state: state)
         }
         // Save current state before we blow it away
-        return save(state: state, environment: environment)
-            .pipe({ state in
-                var model = state
-                model.searchText = ""
-                model.isSearchShowing = false
-                model.isDetailShowing = true
-                let fx: Fx<AppAction> = environment.database
-                    .readEntryDetail(slug: slug, fallback: fallback)
-                    .map({ detail in
-                        AppAction.updateDetail(detail)
-                    })
-                    .catch({ error in
-                        Just(AppAction.failDetail(error.localizedDescription))
-                    })
-                    .merge(
-                        with: Just(AppAction.setSearch("")),
-                        Just(AppAction.createSearchHistoryItem(fallback))
-                    )
-                    .eraseToAnyPublisher()
-                return Update(state: model, fx: fx)
-            })
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+        return save(
+            state: state,
+            environment: environment
+        )
+        .pipe({ state in
+            var model = state
+            model.isDetailLoading = true
+            model.searchText = ""
+            model.isSearchShowing = false
+            model.isDetailShowing = true
+            let fx: Fx<AppAction> = environment.database
+                .readEntryDetail(slug: slug, fallback: fallback)
+                .map({ detail in
+                    AppAction.updateDetail(detail)
+                })
+                .catch({ error in
+                    Just(AppAction.failDetail(error.localizedDescription))
+                })
+                .merge(
+                    with: Just(AppAction.setSearch("")),
+                    Just(AppAction.createSearchHistoryItem(fallback))
+                )
+                .eraseToAnyPublisher()
+            return Update(state: model, fx: fx)
+        })
+        .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
     /// Request detail, using contents of template file as fallback content
@@ -1606,6 +1613,7 @@ extension AppModel {
         detail: EntryDetail
     ) -> Update<AppModel, AppAction> {
         var model = resetEditor(state: state)
+        model.isDetailLoading = false
         model.slug = detail.slug
         model.backlinks = detail.backlinks
         // Set editor and save state.

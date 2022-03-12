@@ -60,6 +60,7 @@ struct AppNavigationView: View {
                     destination: {
                         DetailView(
                             slug: store.state.slug,
+                            isLoading: store.state.isDetailLoading,
                             backlinks: store.state.backlinks,
                             linkSuggestions: store.state.linkSuggestions,
                             focus: store.binding(
