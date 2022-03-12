@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B80057EB27DC355E002C0129 /* SubconsciousTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80057EA27DC355E002C0129 /* SubconsciousTests.swift */; };
+		B80057F427DC35BE002C0129 /* Tests_Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80057F327DC35BE002C0129 /* Tests_Slug.swift */; };
 		B8109C2827A8879C00CD2B6D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8109C2727A8879C00CD2B6D /* AppTheme.swift */; };
 		B8109C2927A8879C00CD2B6D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8109C2727A8879C00CD2B6D /* AppTheme.swift */; };
 		B81A535C27275138001A6268 /* Tape.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A535B27275138001A6268 /* Tape.swift */; };
@@ -171,6 +173,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		B80057EC27DC355E002C0129 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B8EB29EE26F27794006E97C3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B8EB29FA26F27797006E97C3;
+			remoteInfo = "Subconscious (iOS)";
+		};
 		B8EB2A0C26F27797006E97C3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B8EB29EE26F27794006E97C3 /* Project object */;
@@ -188,6 +197,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B80057E827DC355E002C0129 /* SubconsciousTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SubconsciousTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B80057EA27DC355E002C0129 /* SubconsciousTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubconsciousTests.swift; sourceTree = "<group>"; };
+		B80057F327DC35BE002C0129 /* Tests_Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Slug.swift; sourceTree = "<group>"; };
 		B8109C2727A8879C00CD2B6D /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		B81A535B27275138001A6268 /* Tape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tape.swift; sourceTree = "<group>"; };
 		B81A535E272751EE001A6268 /* Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext.swift; sourceTree = "<group>"; };
@@ -286,6 +298,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		B80057E527DC355E002C0129 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B8EB29F826F27797006E97C3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -321,6 +340,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B80057E927DC355E002C0129 /* SubconsciousTests */ = {
+			isa = PBXGroup;
+			children = (
+				B80057EA27DC355E002C0129 /* SubconsciousTests.swift */,
+				B80057F327DC35BE002C0129 /* Tests_Slug.swift */,
+			);
+			path = SubconsciousTests;
+			sourceTree = "<group>";
+		};
 		B8879E9B26F8F3BD00A0B4FF /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -373,6 +401,7 @@
 				B8EB2A0426F27797006E97C3 /* macOS */,
 				B8EB2A0E26F27797006E97C3 /* Tests iOS */,
 				B8EB2A1A26F27797006E97C3 /* Tests macOS */,
+				B80057E927DC355E002C0129 /* SubconsciousTests */,
 				B8EB29FC26F27797006E97C3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -400,6 +429,7 @@
 				B8EB2A0326F27797006E97C3 /* Subconscious.app */,
 				B8EB2A0B26F27797006E97C3 /* Tests iOS.xctest */,
 				B8EB2A1726F27797006E97C3 /* Tests macOS.xctest */,
+				B80057E827DC355E002C0129 /* SubconsciousTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -521,6 +551,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		B80057E727DC355E002C0129 /* SubconsciousTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B80057F027DC355E002C0129 /* Build configuration list for PBXNativeTarget "SubconsciousTests" */;
+			buildPhases = (
+				B80057E427DC355E002C0129 /* Sources */,
+				B80057E527DC355E002C0129 /* Frameworks */,
+				B80057E627DC355E002C0129 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B80057ED27DC355E002C0129 /* PBXTargetDependency */,
+			);
+			name = SubconsciousTests;
+			productName = SubconsciousTests;
+			productReference = B80057E827DC355E002C0129 /* SubconsciousTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		B8EB29FA26F27797006E97C3 /* Subconscious (iOS) */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B8EB2A2926F27797006E97C3 /* Build configuration list for PBXNativeTarget "Subconscious (iOS)" */;
@@ -607,9 +655,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1300;
+				LastSwiftUpdateCheck = 1320;
 				LastUpgradeCheck = 1300;
 				TargetAttributes = {
+					B80057E727DC355E002C0129 = {
+						CreatedOnToolsVersion = 13.2.1;
+						TestTargetID = B8EB29FA26F27797006E97C3;
+					};
 					B8EB29FA26F27797006E97C3 = {
 						CreatedOnToolsVersion = 13.0;
 					};
@@ -648,11 +700,19 @@
 				B8EB2A0226F27797006E97C3 /* Subconscious (macOS) */,
 				B8EB2A0A26F27797006E97C3 /* Tests iOS */,
 				B8EB2A1626F27797006E97C3 /* Tests macOS */,
+				B80057E727DC355E002C0129 /* SubconsciousTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		B80057E627DC355E002C0129 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B8EB29F926F27797006E97C3 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -707,6 +767,15 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		B80057E427DC355E002C0129 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B80057F427DC35BE002C0129 /* Tests_Slug.swift in Sources */,
+				B80057EB27DC355E002C0129 /* SubconsciousTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B8EB29F726F27797006E97C3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -872,6 +941,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		B80057ED27DC355E002C0129 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B8EB29FA26F27797006E97C3 /* Subconscious (iOS) */;
+			targetProxy = B80057EC27DC355E002C0129 /* PBXContainerItemProxy */;
+		};
 		B8579B6727C5620800D8B4BC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = B8579B6627C5620800D8B4BC /* Collections */;
@@ -897,6 +971,47 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		B80057EE27DC355E002C0129 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LA8RNJ2LQP;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.subconscious.SubconsciousTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Subconscious.app/Subconscious";
+			};
+			name = Debug;
+		};
+		B80057EF27DC355E002C0129 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LA8RNJ2LQP;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.subconscious.SubconsciousTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Subconscious.app/Subconscious";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		B8EB2A2726F27797006E97C3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1247,6 +1362,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		B80057F027DC355E002C0129 /* Build configuration list for PBXNativeTarget "SubconsciousTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B80057EE27DC355E002C0129 /* Debug */,
+				B80057EF27DC355E002C0129 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		B8EB29F126F27794006E97C3 /* Build configuration list for PBXProject "Subconscious" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

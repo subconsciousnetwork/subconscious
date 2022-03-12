@@ -38,6 +38,16 @@
                ReferencedContainer = "container:Subconscious.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "B80057E727DC355E002C0129"
+               BuildableName = "SubconsciousTests.xctest"
+               BlueprintName = "SubconsciousTests"
+               ReferencedContainer = "container:Subconscious.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
