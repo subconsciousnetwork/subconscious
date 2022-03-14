@@ -45,8 +45,6 @@ struct DatabaseService {
                 try FileManager.default.removeItem(at: databaseURL)
             }
         )
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     func migrate() -> AnyPublisher<SQLite3Migrations.MigrationSuccess, Error> {
@@ -56,8 +54,6 @@ struct DatabaseService {
                 try migrations.migrate(database: database)
             }
         )
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     /// Sync file system with database.
@@ -125,8 +121,6 @@ struct DatabaseService {
             }
             return changes
         }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     /// Write entry syncronously
@@ -181,8 +175,6 @@ struct DatabaseService {
                 size: fingerprint.size
             )
         }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     /// Delete entry from database
@@ -209,8 +201,6 @@ struct DatabaseService {
             try deleteEntryFile(slug: slug)
             try deleteEntryFromDatabase(slug: slug)
         }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     /// Rename file in file system
@@ -280,8 +270,6 @@ struct DatabaseService {
                 return
             }
         }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     /// Count all entries
@@ -301,8 +289,6 @@ struct DatabaseService {
             .first
             .unwrap(or: 0)
         }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     /// List recent entries
@@ -336,8 +322,6 @@ struct DatabaseService {
                 return nil
             })
         }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     private func searchSuggestionsForZeroQuery(
@@ -486,8 +470,6 @@ struct DatabaseService {
                 return try searchSuggestionsForQuery(query: query)
             }
         }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     /// Given a query and a `current` slug, produce an array of suggestions
@@ -550,8 +532,6 @@ struct DatabaseService {
             }
             return Array(suggestions.values)
         }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     func readDefaultLinkSuggestions(config: Config) -> [LinkSuggestion] {
@@ -640,8 +620,6 @@ struct DatabaseService {
 
             return Array(suggestions.values)
         }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     /// Log a search query in search history db
@@ -663,8 +641,6 @@ struct DatabaseService {
                 ]
             )
         }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     func readEntry(
@@ -743,8 +719,6 @@ struct DatabaseService {
                 backlinks: backlinks
             )
         }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 
     /// Choose a random entry and read detailz
@@ -764,7 +738,5 @@ struct DatabaseService {
             .first
             .unwrap(DatabaseServiceError.notFound)
         }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
     }
 }
