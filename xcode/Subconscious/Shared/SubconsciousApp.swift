@@ -14,8 +14,15 @@ import ObservableStore
 struct SubconsciousApp: App {
     @StateObject private var store: AppStore = Store(
         update: AppModel.updateAndLog,
-        state: AppModel(),
-        environment: AppEnvironment()
+        state: AppModel(
+            config: Config.from(
+                data: try! ConfigData.load(
+                    AppEnvironment.shared.documentURL
+                        .appendingPathComponent("special/config.json")
+                )
+            )
+        ),
+        environment: AppEnvironment.shared
     )
 
     var body: some Scene {
@@ -1812,6 +1819,7 @@ extension AppModel {
 //  MARK: Environment
 /// A place for constants and services
 struct AppEnvironment {
+    static let shared = AppEnvironment()
     var documentURL: URL
     var applicationSupportURL: URL
 

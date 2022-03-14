@@ -79,6 +79,11 @@
 		B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */; };
 		B8879EAC26F944DA00A0B4FF /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EAB26F944DA00A0B4FF /* DetailView.swift */; };
 		B8879EAD26F944DA00A0B4FF /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EAB26F944DA00A0B4FF /* DetailView.swift */; };
+		B88824C127DFDE42009025FE /* config.json in Resources */ = {isa = PBXBuildFile; fileRef = B88824C027DFDE42009025FE /* config.json */; };
+		B88824C227DFDE42009025FE /* config.json in Resources */ = {isa = PBXBuildFile; fileRef = B88824C027DFDE42009025FE /* config.json */; };
+		B88824C327DFDE42009025FE /* config.json in Resources */ = {isa = PBXBuildFile; fileRef = B88824C027DFDE42009025FE /* config.json */; };
+		B88824C427DFDE42009025FE /* config.json in Resources */ = {isa = PBXBuildFile; fileRef = B88824C027DFDE42009025FE /* config.json */; };
+		B88824C527DFDE42009025FE /* config.json in Resources */ = {isa = PBXBuildFile; fileRef = B88824C027DFDE42009025FE /* config.json */; };
 		B88C9781276425E800B27DF0 /* IBMPlexMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */; };
 		B88C9782276425E900B27DF0 /* IBMPlexMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */; };
 		B88C9783276425E900B27DF0 /* IBMPlexMono-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977E276425E800B27DF0 /* IBMPlexMono-BoldItalic.ttf */; };
@@ -238,6 +243,7 @@
 		B8879EA526F9348600A0B4FF /* Slashlink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slashlink.swift; sourceTree = "<group>"; };
 		B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinksView.swift; sourceTree = "<group>"; };
 		B8879EAB26F944DA00A0B4FF /* DetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
+		B88824C027DFDE42009025FE /* config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = config.json; sourceTree = "<group>"; };
 		B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-Italic.ttf"; sourceTree = "<group>"; };
 		B88C977E276425E800B27DF0 /* IBMPlexMono-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-BoldItalic.ttf"; sourceTree = "<group>"; };
 		B88C977F276425E800B27DF0 /* IBMPlexMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-Bold.ttf"; sourceTree = "<group>"; };
@@ -358,6 +364,22 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
+		B88824BE27DFDDB8009025FE /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				B88824BF27DFDE2A009025FE /* special */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		B88824BF27DFDE2A009025FE /* special */ = {
+			isa = PBXGroup;
+			children = (
+				B88824C027DFDE42009025FE /* config.json */,
+			);
+			path = special;
+			sourceTree = "<group>";
+		};
 		B88C977C276425C100B27DF0 /* Fonts */ = {
 			isa = PBXGroup;
 			children = (
@@ -409,6 +431,7 @@
 		B8EB29F226F27794006E97C3 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				B88824BE27DFDDB8009025FE /* Data */,
 				B8EB29F626F27797006E97C3 /* Assets.xcassets */,
 				B8EB2A3826F27CD1006E97C3 /* Components */,
 				B88C977C276425C100B27DF0 /* Fonts */,
@@ -710,6 +733,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B88824C527DFDE42009025FE /* config.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -724,6 +748,7 @@
 				B88C9783276425E900B27DF0 /* IBMPlexMono-BoldItalic.ttf in Resources */,
 				B88C9787276425E900B27DF0 /* IBMPlexMono-Regular.ttf in Resources */,
 				B8EB2A2526F27797006E97C3 /* Assets.xcassets in Resources */,
+				B88824C127DFDE42009025FE /* config.json in Resources */,
 				B88C97932764264300B27DF0 /* IBMPlexSans-Regular.ttf in Resources */,
 				B88C9781276425E800B27DF0 /* IBMPlexMono-Italic.ttf in Resources */,
 				B88C979F2764266A00B27DF0 /* IBMPlexSans-Medium.ttf in Resources */,
@@ -742,6 +767,7 @@
 				B88C9786276425E900B27DF0 /* IBMPlexMono-Bold.ttf in Resources */,
 				B88C9784276425E900B27DF0 /* IBMPlexMono-BoldItalic.ttf in Resources */,
 				B88C9788276425E900B27DF0 /* IBMPlexMono-Regular.ttf in Resources */,
+				B88824C227DFDE42009025FE /* config.json in Resources */,
 				B88C97942764264300B27DF0 /* IBMPlexSans-Regular.ttf in Resources */,
 				B88C9782276425E900B27DF0 /* IBMPlexMono-Italic.ttf in Resources */,
 				B88C97A02764266A00B27DF0 /* IBMPlexSans-Medium.ttf in Resources */,
@@ -754,6 +780,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B88824C327DFDE42009025FE /* config.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -761,6 +788,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B88824C427DFDE42009025FE /* config.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
