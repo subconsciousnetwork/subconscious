@@ -1423,8 +1423,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gordonbrander/ObservableStore";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.0.6;
+				branch = "2022-03-12-fx-tests-3";
+				kind = branch;
 			};
 		};
 		B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
