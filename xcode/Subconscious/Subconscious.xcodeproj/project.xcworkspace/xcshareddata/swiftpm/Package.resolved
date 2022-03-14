@@ -5,9 +5,9 @@
         "package": "ObservableStore",
         "repositoryURL": "https://github.com/gordonbrander/ObservableStore",
         "state": {
-          "branch": "2022-03-12-fx-tests-3",
-          "revision": "b8cafe13486dec6a6b5f4d7df45204669f1d1793",
-          "version": null
+          "branch": null,
+          "revision": "afc3459a06d91d168e61dacdc8c9cbdf307d8d39",
+          "version": "0.0.7"
         }
       },
       {
