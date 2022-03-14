@@ -46,7 +46,7 @@ struct DetailView: View {
     var body: some View {
         ZStack {
             if isLoading || slug == nil {
-                Color.white
+                Color.background
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .transition(
                         .asymmetric(
