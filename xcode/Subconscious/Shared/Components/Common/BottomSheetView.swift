@@ -10,7 +10,8 @@ import SwiftUI
 struct BottomSheetView<Content>: View
 where Content: View {
     @Binding var isPresented: Bool
-    var maxHeight: CGFloat = .infinity
+    var maxHeight: CGFloat
+    var containerSize: CGSize
     var content: Content
     var background: Color = Color.background
     var snapRatio: CGFloat = 0.25
@@ -43,7 +44,7 @@ where Content: View {
                 content
             }
             .frame(
-                maxWidth: .infinity,
+                maxWidth: containerSize.width,
                 maxHeight: maxHeight,
                 alignment: .top
             )
@@ -70,19 +71,23 @@ where Content: View {
                     }
             )
         }
+        .frame(
+            width: containerSize.width,
+            height: containerSize.height,
+            alignment: .bottom
+        )
     }
 }
 
 struct BottomSheetView_Previews: PreviewProvider {
     static var previews: some View {
-        BottomSheetView(
-            isPresented: .constant(true),
-            content: Text("Hello")
-        )
-        BottomSheetView(
-            isPresented: .constant(true),
-            maxHeight: 200,
-            content: Text("Hello")
-        )
+        GeometryReader { geometry in
+            BottomSheetView(
+                isPresented: .constant(true),
+                maxHeight: geometry.size.height - 50,
+                containerSize: geometry.size,
+                content: Text("Hello")
+            )
+        }
     }
 }
