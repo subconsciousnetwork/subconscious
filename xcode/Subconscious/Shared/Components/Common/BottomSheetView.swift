@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BottomSheetView<Content>: View
 where Content: View {
-    @Binding var isOpen: Bool
+    @Binding var isPresented: Bool
     var maxHeight: CGFloat = .infinity
     var content: Content
     var background: Color = Color.background
@@ -19,7 +19,7 @@ where Content: View {
     @GestureState private var drag: CGFloat = 0
 
     private var offsetY: CGFloat {
-        if isOpen {
+        if isPresented {
             return max(drag, 0)
         } else {
             return maxHeight + approximateSafeAreaBottomHeight
@@ -28,7 +28,7 @@ where Content: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            if isOpen {
+            if isPresented {
                 ScrimView()
                     .transition(
                         .opacity.animation(.default)
@@ -36,7 +36,7 @@ where Content: View {
                     .zIndex(1)
                     .edgesIgnoringSafeArea(.top)
                     .onTapGesture {
-                        self.isOpen = false
+                        self.isPresented = false
                     }
             }
             VStack {
@@ -53,7 +53,7 @@ where Content: View {
                 x: 0,
                 y: offsetY
             )
-            .animation(.interactiveSpring(), value: self.isOpen)
+            .animation(.interactiveSpring(), value: self.isPresented)
             .animation(.interactiveSpring(), value: self.drag)
             .zIndex(2)
             .gesture(
@@ -66,7 +66,7 @@ where Content: View {
                         guard abs(value.translation.height) > snapDistance else {
                             return
                         }
-                        self.isOpen = value.translation.height < 0
+                        self.isPresented = value.translation.height < 0
                     }
             )
         }
@@ -76,11 +76,11 @@ where Content: View {
 struct BottomSheetView_Previews: PreviewProvider {
     static var previews: some View {
         BottomSheetView(
-            isOpen: .constant(true),
+            isPresented: .constant(true),
             content: Text("Hello")
         )
         BottomSheetView(
-            isOpen: .constant(true),
+            isPresented: .constant(true),
             maxHeight: 200,
             content: Text("Hello")
         )
