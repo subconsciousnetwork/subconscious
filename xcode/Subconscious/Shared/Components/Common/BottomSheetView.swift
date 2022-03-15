@@ -10,38 +10,48 @@ import SwiftUI
 struct BottomSheetView<Content>: View
 where Content: View {
     @Binding var isOpen: Bool
-    var maxHeight: CGFloat
-    var minHeight: CGFloat
+    var maxHeight: CGFloat = .infinity
     var content: Content
-    var snapRatio: CGFloat = 0.3
     var background: Color = Color.background
+    var snapRatio: CGFloat = 0.25
+    /// Added to the offset to make sure that sheet is fully offscreen
+    var approximateSafeAreaBottomHeight: CGFloat = 50
     @GestureState private var drag: CGFloat = 0
+
+    private var offsetY: CGFloat {
+        if isOpen {
+            return max(drag, 0)
+        } else {
+            return maxHeight + approximateSafeAreaBottomHeight
+        }
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            ScrimView()
-                .zIndex(1)
-                .edgesIgnoringSafeArea(.top)
-                .onTapGesture {
-                    self.isOpen = false
-                }
+            if isOpen {
+                ScrimView()
+                    .transition(
+                        .opacity.animation(.default)
+                    )
+                    .zIndex(1)
+                    .edgesIgnoringSafeArea(.top)
+                    .onTapGesture {
+                        self.isOpen = false
+                    }
+            }
             VStack {
-                DragHandleView()
-                    .padding(AppTheme.unit2)
                 content
             }
             .frame(
                 maxWidth: .infinity,
-                minHeight: minHeight,
-                idealHeight: minHeight,
                 maxHeight: maxHeight,
                 alignment: .top
             )
             .background(self.background)
-            .cornerRadius(AppTheme.cornerRadius)
+            .cornerRadius(AppTheme.cornerRadiusLg)
             .offset(
                 x: 0,
-                y: self.drag
+                y: offsetY
             )
             .animation(.interactiveSpring(), value: self.isOpen)
             .animation(.interactiveSpring(), value: self.drag)
@@ -67,8 +77,11 @@ struct BottomSheetView_Previews: PreviewProvider {
     static var previews: some View {
         BottomSheetView(
             isOpen: .constant(true),
+            content: Text("Hello")
+        )
+        BottomSheetView(
+            isOpen: .constant(true),
             maxHeight: 200,
-            minHeight: 100,
             content: Text("Hello")
         )
     }
