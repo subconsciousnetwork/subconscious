@@ -17,16 +17,17 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
     /// If you need a value to truly be a slug, use the Slug constructor.
     static func format(_ string: String) -> String? {
         let slugString = string
-            // Remove all non-slug characters
+            // Strip all non-allowed characters
             .replacingOccurrences(
                 of: #"[^a-zA-Z0-9_\-\/\s]"#,
                 with: "",
                 options: .regularExpression,
                 range: nil
             )
-            // Trim whitespace and leading/trailing slashes
-            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            // Trim leading/trailing whitespace
             .trimmingCharacters(in: .whitespacesAndNewlines)
+            // Then trim leading/trailing slashes
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
             .lowercased()
             // Replace runs of one or more space with a single dash
             .replacingOccurrences(
