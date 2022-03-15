@@ -14,6 +14,7 @@ where Content: View {
     var minHeight: CGFloat
     var content: Content
     var snapRatio: CGFloat = 0.3
+    var background: Color = Color.background
     @GestureState private var drag: CGFloat = 0
 
     var body: some View {
@@ -25,15 +26,18 @@ where Content: View {
                     self.isOpen = false
                 }
             VStack {
+                DragHandleView()
+                    .padding(AppTheme.unit2)
                 content
             }
             .frame(
                 maxWidth: .infinity,
                 minHeight: minHeight,
+                idealHeight: minHeight,
                 maxHeight: maxHeight,
                 alignment: .top
             )
-            .background(Color.background)
+            .background(self.background)
             .cornerRadius(AppTheme.cornerRadius)
             .offset(
                 x: 0,
@@ -63,7 +67,7 @@ struct BottomSheetView_Previews: PreviewProvider {
     static var previews: some View {
         BottomSheetView(
             isOpen: .constant(true),
-            maxHeight: 500,
+            maxHeight: 200,
             minHeight: 100,
             content: Text("Hello")
         )
