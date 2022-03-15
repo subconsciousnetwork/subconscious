@@ -53,6 +53,8 @@ enum AppAction {
 
     // Focus state for TextFields, TextViews, etc
     case setFocus(AppModel.Focus?)
+    // Resign focus, if you have it
+    case resignFocus(AppModel.Focus)
 
     //  Database
     /// Get database ready for interaction
@@ -346,10 +348,15 @@ extension AppModel {
         case let .openEditorURL(url, range):
             return openEditorURL(state: state, url: url, range: range)
         case let .setFocus(focus):
-            var model = state
-            model.focus = focus
-            return Update(state: model)
-                .animation(.default)
+            return setFocus(
+                state: state,
+                focus: focus
+            )
+        case .resignFocus(let focus):
+            return resignFocus(
+                state: state,
+                focus: focus
+            )
         case .readyDatabase:
             return readyDatabase(state: state, environment: environment)
         case let .migrateDatabaseSuccess(success):
@@ -482,7 +489,10 @@ extension AppModel {
                 slug: slug
             )
         case .hideRenameSheet:
-            return hideRenameSheet(state: state)
+            return hideRenameSheet(
+                state: state,
+                environment: environment
+            )
         case let .setRenameSlugField(text):
             return setRenameSlugField(
                 state: state,
@@ -788,15 +798,18 @@ extension AppModel {
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
         // Save any entry that is currently active before we blow it away
-        return save(state: state, environment: environment)
-            .pipe({ state in
-                var model = state
-                model.isDetailShowing = isShowing
-                if isShowing == false {
-                    model.focus = nil
-                }
-                return Update(state: model)
-            })
+        return save(
+            state: state,
+            environment: environment
+        )
+        .pipe({ state in
+            var model = state
+            model.isDetailShowing = isShowing
+            if isShowing == false {
+                model.focus = nil
+            }
+            return Update(state: model)
+        })
     }
 
     /// Change state of keyboard
@@ -917,6 +930,26 @@ extension AppModel {
         )
         .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
+    }
+
+    static func setFocus(
+        state: AppModel,
+        focus: AppModel.Focus?
+    ) -> Update<AppModel, AppAction> {
+        var model = state
+        model.focus = focus
+        return Update(state: model).animation(.default)
+    }
+
+    static func resignFocus(
+        state: AppModel,
+        focus: AppModel.Focus
+    ) -> Update<AppModel, AppAction> {
+        var model  = state
+        if model.focus == focus {
+            model.focus = nil
+        }
+        return Update(state: model).animation(.default)
     }
 
     /// Make database ready.
@@ -1259,39 +1292,50 @@ extension AppModel {
             return Update(state: state)
         }
 
-        //  Set rename slug field text
-        //  Set focus on rename field
-        //  Save entry in preperation for any merge/move.
-        let fx: Fx<AppAction> = Just(
-            AppAction.setRenameSlugField(slug.description)
-        )
-        .merge(
-            with: Just(AppAction.setFocus(.rename)),
-            Just(AppAction.save)
-        )
-        .eraseToAnyPublisher()
-
         var model = state
         model.isRenameSheetShowing = true
         model.slugToRename = slug
 
-        return Update(state: model, fx: fx)
+        return Update(state: model)
+            //  Save entry in preperation for any merge/move.
+            .pipe({ state in
+                save(state: state, environment: environment)
+            })
+            //  Set rename slug field text
+            .pipe({ state in
+                setRenameSlugField(
+                    state: state,
+                    environment: environment,
+                    text: slug.description
+                )
+            })
+            //  Set focus on rename field
+            .pipe({ state in
+                setFocus(state: state, focus: .rename)
+            })
     }
 
     /// Hide rename sheet.
     /// Do rename-flow-related teardown.
     static func hideRenameSheet(
-        state: AppModel
+        state: AppModel,
+        environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
-        let fx: Fx<AppAction> = Just(
-            AppAction.setRenameSlugField("")
-        ).eraseToAnyPublisher()
-
         var model = state
         model.isRenameSheetShowing = false
         model.slugToRename = nil
 
-        return Update(state: model, fx: fx)
+        return Update(state: model)
+            .pipe({ state in
+                setRenameSlugField(
+                    state: state,
+                    environment: environment,
+                    text: ""
+                )
+            })
+            .pipe({ state in
+                resignFocus(state: state, focus: .rename)
+            })
     }
 
     /// Set text of slug field
@@ -1436,12 +1480,13 @@ extension AppModel {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
-        let fx: Fx<AppAction> = Just(
-            AppAction.save
+        return save(
+            state: state,
+            environment: environment
         )
-        .merge(with: Just(AppAction.setFocus(nil)))
-        .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+        .pipe({ state in
+            resignFocus(state: state, focus: .editor)
+        })
     }
 
     /// Set search text for main search input
