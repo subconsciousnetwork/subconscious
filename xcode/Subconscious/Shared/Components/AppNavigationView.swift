@@ -140,7 +140,7 @@ struct AppNavigationView: View {
                         get: \.isRenameSheetShowing,
                         tag: { _ in AppAction.hideRenameSheet }
                     ),
-                    height: geometry.size.height - 24,
+                    height: geometry.size.height,
                     containerSize: geometry.size,
                     content: RenameSearchView(
                         slug: store.state.slug,
