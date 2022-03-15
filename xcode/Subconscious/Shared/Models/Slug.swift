@@ -15,23 +15,23 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
     /// If a valid slug string cannot be produced, returns nil.
     ///
     /// If you need a value to truly be a slug, use the Slug constructor.
-    static func sanitizeString(_ string: String) -> String? {
+    static func format(_ string: String) -> String? {
         let slugString = string
+            // Remove all non-slug characters
+            .replacingOccurrences(
+                of: #"[^a-zA-Z0-9_\-\/\s]"#,
+                with: "",
+                options: .regularExpression,
+                range: nil
+            )
             // Trim whitespace and leading/trailing slashes
-            .trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
             // Replace runs of one or more space with a single dash
             .replacingOccurrences(
                 of: #"\s+"#,
                 with: "-",
-                options: .regularExpression,
-                range: nil
-            )
-            // Remove all non-slug characters
-            .replacingOccurrences(
-                of: #"[^a-zA-Z0-9_\-\/]"#,
-                with: "",
                 options: .regularExpression,
                 range: nil
             )
@@ -57,7 +57,7 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
     /// This requires that the string already be formatted like a
     /// sanitized slug, including being lowercased.
     init?(_ string: String) {
-        guard let id = Self.sanitizeString(string) else {
+        guard let id = Self.format(string) else {
             return nil
         }
         // Check that sanitization was lossless.
@@ -70,7 +70,7 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
     /// Convert a string into a slug.
     /// This will sanitize the string as best it can to create a valid slug.
     init?(formatting string: String) {
-        guard let id = Self.sanitizeString(string) else {
+        guard let id = Self.format(string) else {
             return nil
         }
         self.id = id
