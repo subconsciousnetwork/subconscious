@@ -33,4 +33,54 @@ class Tests_Slug: XCTestCase {
             "slug is LosslessStringConvertable for valid slug strings"
         )
     }
+
+    func testFormat() throws {
+        let a = Slug.format(
+            "The quick brown fox jumps over the lazy dog!@#$%^&*()+,>:;'|{}[]<>?"
+        )
+        XCTAssertEqual(
+            a,
+            "the-quick-brown-fox-jumps-over-the-lazy-dog",
+            "Formats the string into a valid slug-string"
+        )
+        let b = Slug.format("The_quick_Brown_fOx")
+        XCTAssertEqual(
+            b,
+            "the_quick_brown_fox",
+            "Underscores allowed"
+        )
+        let c = Slug.format("the/quick brown/fox jumps")
+        XCTAssertEqual(
+            c,
+            "the/quick-brown/fox-jumps",
+            "Formats deep slug string into a valid slug-string"
+        )
+        let d = Slug.format("the QuIck brown FOX ")
+        XCTAssertEqual(
+            d,
+            "the-quick-brown-fox",
+            "Trims string before sluggifying"
+        )
+        let e = Slug.format("the QuIck brown FOX !$%")
+        XCTAssertEqual(
+            e,
+            "the-quick-brown-fox",
+            "Trims string after stripping characters"
+        )
+        let f = Slug.format("  /the QuIck brown FOX/ !$%")
+        XCTAssertEqual(
+            f,
+            "the-quick-brown-fox",
+            "Trims non-allowed characters and whitespace before slashes"
+        )
+    }
+
+    func testToSentence() throws {
+        let sentence = Slug("frozen-yogurt")?.toSentence()
+        XCTAssertEqual(
+            sentence,
+            "Frozen yogurt",
+            "Sentenc-ifies slug and capitalizes first letter"
+        )
+    }
 }

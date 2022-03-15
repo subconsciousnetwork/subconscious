@@ -1301,7 +1301,7 @@ extension AppModel {
         text: String
     ) -> Update<AppModel, AppAction> {
         var model = state
-        let sluglike = Slug.sanitizeString(text).unwrap(or: "")
+        let sluglike = Slug.format(text).unwrap(or: "")
         model.renameSlugField = sluglike
         let fx: Fx<AppAction> = environment.database
             .searchRenameSuggestions(
@@ -1638,7 +1638,7 @@ extension AppModel {
         text: String
     ) -> Update<AppModel, AppAction> {
         var model = state
-        let sluglike = Slug.sanitizeString(text).unwrap(or: "")
+        let sluglike = Slug.format(text).unwrap(or: "")
         model.linkSearchText = sluglike
 
         // Omit current slug from results

@@ -569,7 +569,7 @@ struct DatabaseService {
         fallback: [LinkSuggestion] = []
     ) -> AnyPublisher<[LinkSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            guard let sluglike = Slug.sanitizeString(query) else {
+            guard let sluglike = Slug.format(query) else {
                 return fallback
             }
 
