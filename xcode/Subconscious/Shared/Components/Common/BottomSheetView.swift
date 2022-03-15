@@ -14,7 +14,7 @@ where Content: View {
     var containerSize: CGSize
     var content: Content
     var background: Color = Color.background
-    var snapRatio: CGFloat = 0.25
+    var snapRatio: CGFloat = 0.5
     /// Added to the offset to make sure that sheet is fully offscreen
     var approximateSafeAreaBottomHeight: CGFloat = 50
     @GestureState private var drag: CGFloat = 0
@@ -56,7 +56,14 @@ where Content: View {
                     x: 0,
                     y: offsetY
                 )
-                .animation(.interactiveSpring(), value: self.isPresented)
+                .animation(
+                    .interactiveSpring(
+                        response: 0.35,
+                        dampingFraction: 0.86,
+                        blendDuration: 0.25
+                    ),
+                    value: self.isPresented
+                )
                 .animation(.interactiveSpring(), value: self.drag)
                 .gesture(
                     DragGesture()
