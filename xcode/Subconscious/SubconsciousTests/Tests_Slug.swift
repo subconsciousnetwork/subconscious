@@ -67,6 +67,12 @@ class Tests_Slug: XCTestCase {
             "the-quick-brown-fox",
             "Trims string after stripping characters"
         )
+        let f = Slug.format("  /the QuIck brown FOX/ !$%")
+        XCTAssertEqual(
+            f,
+            "the-quick-brown-fox",
+            "Trims non-allowed characters and whitespace before slashes"
+        )
     }
 
     func testToSentence() throws {
