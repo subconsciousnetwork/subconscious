@@ -126,7 +126,7 @@ struct DetailView: View {
                 }
                 BottomSheetView(
                     isPresented: $isLinkSheetPresented,
-                    maxHeight: geometry.size.height,
+                    height: geometry.size.height,
                     containerSize: geometry.size,
                     content: LinkSearchView(
                         placeholder: "Search or create...",
@@ -140,6 +140,7 @@ struct DetailView: View {
                             onSelectLink(suggestion)
                         }
                     )
+                    .frame(height: geometry.size.height)
                 )
                 .zIndex(3)
             }
