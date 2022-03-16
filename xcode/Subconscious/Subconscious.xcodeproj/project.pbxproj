@@ -28,6 +28,8 @@
 		B822F18E27C9C0AB00943C6B /* CountChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = B822F18C27C9C0AB00943C6B /* CountChip.swift */; };
 		B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */; };
 		B8249DA127E2668500BCDFBA /* PinTrailingBottom.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */; };
+		B8249DA327E2753800BCDFBA /* ViewUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8249DA227E2753800BCDFBA /* ViewUtilities.swift */; };
+		B8249DA427E2753800BCDFBA /* ViewUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8249DA227E2753800BCDFBA /* ViewUtilities.swift */; };
 		B824FDCE26FA662200B81BBD /* SubtextFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDCD26FA662200B81BBD /* SubtextFile.swift */; };
 		B824FDD126FA98F300B81BBD /* EntryDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD026FA98F300B81BBD /* EntryDetail.swift */; };
 		B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD326FAB1BC00B81BBD /* Truncate.swift */; };
@@ -215,6 +217,7 @@
 		B8216F7A27E11D1E002B70CB /* DragHandleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragHandleView.swift; sourceTree = "<group>"; };
 		B822F18C27C9C0AB00943C6B /* CountChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountChip.swift; sourceTree = "<group>"; };
 		B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinTrailingBottom.swift; sourceTree = "<group>"; };
+		B8249DA227E2753800BCDFBA /* ViewUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewUtilities.swift; sourceTree = "<group>"; };
 		B824FDCD26FA662200B81BBD /* SubtextFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextFile.swift; sourceTree = "<group>"; };
 		B824FDD026FA98F300B81BBD /* EntryDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryDetail.swift; sourceTree = "<group>"; };
 		B824FDD326FAB1BC00B81BBD /* Truncate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Truncate.swift; sourceTree = "<group>"; };
@@ -518,6 +521,7 @@
 				B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */,
 				B86DFF3227C072CD002E57ED /* Func.swift */,
 				B86DFF3627C09CA2002E57ED /* DateUtilities.swift */,
+				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -801,6 +805,7 @@
 				B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */,
 				B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
 				B81EBB0927025C1500B87594 /* BacklinkButtonStyle.swift in Sources */,
+				B8249DA327E2753800BCDFBA /* ViewUtilities.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */,
 				B81A535F272751EE001A6268 /* Subtext.swift in Sources */,
@@ -915,6 +920,7 @@
 				B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
 				B8DEBF1A2798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B8AE34CC276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
+				B8249DA427E2753800BCDFBA /* ViewUtilities.swift in Sources */,
 				B8109C2927A8879C00CD2B6D /* AppTheme.swift in Sources */,
 				B8AE34AE276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8AE34C0276BD61400777FF0 /* RowButtonStyle.swift in Sources */,

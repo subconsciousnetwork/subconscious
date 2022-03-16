@@ -52,7 +52,10 @@ where Content: View {
                     height: height
                 )
                 .background(background)
-                .cornerRadius(AppTheme.cornerRadiusLg)
+                .cornerRadius(
+                    AppTheme.cornerRadiusLg,
+                    corners: [.topLeft, .topRight]
+                )
                 // This modifier is a hack/workaround to prevent a bug in
                 // SwiftUI animations where the `content` of the bottom sheet
                 // was incorrectly being animated.
