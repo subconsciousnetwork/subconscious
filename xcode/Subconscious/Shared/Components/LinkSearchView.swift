@@ -45,7 +45,8 @@ struct LinkSearchView: View {
                 .modifier(SuggestionViewModifier())
             }
             .listStyle(.plain)
-        }.background(Color.background)
+        }
+        .background(Color.background)
     }
 }
 

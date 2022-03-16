@@ -101,7 +101,12 @@ where
 
         /// Handle editing end (blur)
         func textViewDidEndEditing(_ textView: UITextView) {
-            representable.focus = nil
+            // Un-focus editor if it still has focus.
+            // If some other field has already taken focus, leave
+            // it alone.
+            if representable.focus == representable.field {
+                representable.focus = nil
+            }
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {

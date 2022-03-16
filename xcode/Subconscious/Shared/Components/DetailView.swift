@@ -43,98 +43,100 @@ struct DetailView: View {
     var onRename: (Slug?) -> Void
     var onDelete: (Slug?) -> Void
 
+    private var isKeyboardUp: Bool {
+        focus == .editor
+    }
+
     var body: some View {
-        ZStack {
-            if isLoading || slug == nil {
-                Color.background
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .transition(
-                        .asymmetric(
-                            insertion: .opacity.animation(.none),
-                            removal: .opacity.animation(.default)
-                        )
-                    )
-                    .zIndex(2)
-            }
-            VStack(spacing: 0) {
-                Divider()
-                PseudoKeyboardToolbarView(
-                    isKeyboardUp: focus == .editor,
-                    toolbarHeight: 48,
-                    toolbar: DetailKeyboardToolbarView(
-                        isSheetPresented: $isLinkSheetPresented,
-                        suggestions: linkSuggestions,
-                        onSelect: onSelectLink
-                    ),
-                    content: { isKeyboardUp, size in
-                        ScrollView(.vertical) {
-                            VStack(spacing: 0) {
-                                MarkupTextViewRepresenable(
-                                    dom: $editorDom,
-                                    selection: $editorSelection,
-                                    focus: $focus,
-                                    field: .editor,
-                                    fixedWidth: size.width,
-                                    onLink: onEditorLink
+        GeometryReader { geometry in
+            ZStack {
+                VStack(spacing: 0) {
+                    Divider()
+                    ScrollView(.vertical) {
+                        VStack(spacing: 0) {
+                            MarkupTextViewRepresenable(
+                                dom: $editorDom,
+                                selection: $editorSelection,
+                                focus: $focus,
+                                field: .editor,
+                                fixedWidth: geometry.size.width,
+                                onLink: onEditorLink
+                            )
+                            .insets(
+                                EdgeInsets(
+                                    top: AppTheme.padding,
+                                    leading: AppTheme.padding,
+                                    bottom: AppTheme.padding,
+                                    trailing: AppTheme.padding
                                 )
-                                .insets(
-                                    EdgeInsets(
-                                        top: AppTheme.padding,
-                                        leading: AppTheme.padding,
-                                        bottom: AppTheme.padding,
-                                        trailing: AppTheme.padding
-                                    )
+                            )
+                            .frame(
+                                minHeight: Self.calcTextFieldHeight(
+                                    containerHeight: geometry.size.height,
+                                    isKeyboardUp: isKeyboardUp,
+                                    hasBacklinks: backlinks.count > 0
                                 )
-                                .frame(
-                                    minHeight: Self.calcTextFieldHeight(
-                                        containerHeight: size.height,
-                                        isKeyboardUp: isKeyboardUp,
-                                        hasBacklinks: backlinks.count > 0
-                                    )
+                            )
+
+                            if !isKeyboardUp && backlinks.count > 0 {
+                                ThickDividerView()
+                                    .padding(.bottom, AppTheme.unit4)
+                                BacklinksView(
+                                    backlinks: backlinks,
+                                    onSelect: onSelectBacklink
                                 )
-                                if !isKeyboardUp && backlinks.count > 0 {
-                                    ThickDividerView()
-                                        .padding(.bottom, AppTheme.unit4)
-                                    BacklinksView(
-                                        backlinks: backlinks,
-                                        onSelect: onSelectBacklink
-                                    )
-                                }
                             }
                         }
                     }
-                )
-            }
-            .zIndex(1)
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                DetailToolbarContent(
-                    isEditing: (focus == .editor),
-                    title: editorDom.title(),
-                    slug: slug,
-                    onRename: onRename,
-                    onDelete: onDelete,
-                    onDone: onDone
-                )
-            }
-            .sheet(
-                isPresented: $isLinkSheetPresented,
-                onDismiss: {}
-            ) {
-                LinkSearchView(
-                    placeholder: "Search or create...",
-                    suggestions: linkSuggestions,
-                    text: $linkSearchText,
-                    focus: $focus,
-                    onCancel: {
-                        isLinkSheetPresented = false
-                    },
-                    onSelect: { suggestion in
-                        onSelectLink(suggestion)
+                    if isKeyboardUp {
+                        DetailKeyboardToolbarView(
+                            isSheetPresented: $isLinkSheetPresented,
+                            suggestions: linkSuggestions,
+                            onSelect: onSelectLink
+                        )
+                        .transition(
+                            .asymmetric(
+                                insertion: .opacity.animation(
+                                    .easeOutCubic(duration: Duration.normal)
+                                    .delay(Duration.keyboard)
+                                ),
+                                removal: .opacity.animation(
+                                    .easeOutCubic(duration: Duration.normal)
+                                )
+                            )
+                        )
                     }
+                }
+                .frame(
+                    width: geometry.size.width,
+                    height: geometry.size.height,
+                    alignment: .top
                 )
+                .zIndex(1)
+                if isLoading || slug == nil {
+                    Color.background
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .transition(
+                            .asymmetric(
+                                insertion: .opacity.animation(.none),
+                                removal: .opacity.animation(.default)
+                            )
+                        )
+                        .zIndex(2)
+                }
+            }
         }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            DetailToolbarContent(
+                isEditing: (focus == .editor),
+                title: editorDom.title(),
+                slug: slug,
+                onRename: onRename,
+                onDelete: onDelete,
+                onDone: onDone
+            )
         }
     }
 }

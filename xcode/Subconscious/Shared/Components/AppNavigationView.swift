@@ -132,33 +132,5 @@ struct AppNavigationView: View {
                 }
             }
         }
-        .sheet(
-            isPresented: store.binding(
-                get: \.isRenameSheetShowing,
-                tag: { _ in AppAction.hideRenameSheet }
-            ),
-            onDismiss: {
-                store.send(action: .hideRenameSheet)
-            }
-        ) {
-            RenameSearchView(
-                slug: store.state.slug,
-                suggestions: store.state.renameSuggestions,
-                text: store.binding(
-                    get: \.renameSlugField,
-                    tag: AppAction.setRenameSlugField
-                ),
-                focus: store.binding(
-                    get: \.focus,
-                    tag: AppAction.setFocus
-                ),
-                onCancel: {
-                    store.send(action: .hideRenameSheet)
-                },
-                onSelect: { curr, suggestion in
-                    store.send(action: .renameEntry(from: curr, to: suggestion))
-                }
-            )
-        }
     }
 }

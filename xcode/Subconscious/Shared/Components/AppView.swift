@@ -24,28 +24,33 @@ struct AppView: View {
         // out-transition for the search view.
         // See https://stackoverflow.com/a/58512696
         // 2021-12-16 Gordon Brander
-        ZStack(alignment: .bottomTrailing) {
-            Color.background.edgesIgnoringSafeArea(.all)
-            if store.state.isReadyForInteraction {
+        ZStack {
+            GeometryReader { geometry in
+                Color.background
+                    .edgesIgnoringSafeArea(.all)
+                    .zIndex(0)
                 AppNavigationView(store: store)
                     .zIndex(1)
-                Button(
-                    action: {
-                        store.send(action: .showSearch)
-                    },
-                    label: {
-                        Image(systemName: "doc.text.magnifyingglass")
-                            .font(.system(size: 20))
-                    }
-                )
-                .buttonStyle(
-                    FABButtonStyle(
-                        orbShaderEnabled:
-                            store.state.config.orbShaderEnabled
+                PinTrailingBottom(
+                    content: Button(
+                        action: {
+                            store.send(action: .showSearch)
+                        },
+                        label: {
+                            Image(systemName: "doc.text.magnifyingglass")
+                                .font(.system(size: 20))
+                        }
                     )
+                    .buttonStyle(
+                        FABButtonStyle(
+                            orbShaderEnabled:
+                                store.state.config.orbShaderEnabled
+                        )
+                    )
+                    .padding()
+                    .disabled(!isFabPresented)
                 )
-                .padding()
-                .disabled(!isFabPresented)
+                .ignoresSafeArea(.keyboard, edges: .bottom)
                 .zIndex(2)
                 ModalView(
                     isPresented: store.binding(
@@ -86,26 +91,81 @@ struct AppView: View {
                     keyboardHeight: store.state.keyboardEventualHeight
                 )
                 .zIndex(3)
-            } else {
-                ProgressScrimView()
-                    .zIndex(4)
+                BottomSheetView(
+                    isPresented: store.binding(
+                        get: \.isRenameSheetShowing,
+                        tag: { _ in AppAction.hideRenameSheet }
+                    ),
+                    height: geometry.size.height,
+                    containerSize: geometry.size,
+                    content: RenameSearchView(
+                        slug: store.state.slug,
+                        suggestions: store.state.renameSuggestions,
+                        text: store.binding(
+                            get: \.renameSlugField,
+                            tag: AppAction.setRenameSlugField
+                        ),
+                        focus: store.binding(
+                            get: \.focus,
+                            tag: AppAction.setFocus
+                        ),
+                        onCancel: {
+                            store.send(action: .hideRenameSheet)
+                        },
+                        onSelect: { curr, suggestion in
+                            store.send(action: .renameEntry(from: curr, to: suggestion))
+                        }
+                    )
+                )
+                .zIndex(4)
+                BottomSheetView(
+                    isPresented: store.binding(
+                        get: \.isLinkSheetPresented,
+                        tag: AppAction.setLinkSheetPresented
+                    ),
+                    height: geometry.size.height,
+                    containerSize: geometry.size,
+                    content: LinkSearchView(
+                        placeholder: "Search or create...",
+                        suggestions: store.state.linkSuggestions,
+                        text: store.binding(
+                            get: \.linkSearchText,
+                            tag: AppAction.setLinkSearch
+                        ),
+                        focus: store.binding(
+                            get: \.focus,
+                            tag: AppAction.setFocus
+                        ),
+                        onCancel: {
+                            store.send(
+                                action: .setLinkSheetPresented(false)
+                            )
+                        },
+                        onSelect: { suggestion in
+                            store.send(
+                                action: .selectLinkSuggestion(suggestion)
+                            )
+                        }
+                    )
+                )
+                .zIndex(4)
             }
+            .disabled(!store.state.isReadyForInteraction)
+            .font(Font(UIFont.appText))
+            // Track changes to scene phase so we know when app gets
+            // foregrounded/backgrounded.
+            // See https://developer.apple.com/documentation/swiftui/scenephase
+            // 2022-02-08 Gordon Brander
+            .onChange(of: self.scenePhase) { phase in
+                store.send(action: AppAction.scenePhaseChange(phase))
+            }
+            .onAppear {
+                store.send(action: .appear)
+            }
+            .environment(\.openURL, OpenURLAction { url in
+                store.send(action: .openURL(url))
+                return .handled
+            })
         }
-        .ignoresSafeArea(.keyboard, edges: .bottom)
-        .font(Font(UIFont.appText))
-        // Track changes to scene phase so we know when app gets
-        // foregrounded/backgrounded.
-        // See https://developer.apple.com/documentation/swiftui/scenephase
-        // 2022-02-08 Gordon Brander
-        .onChange(of: self.scenePhase) { phase in
-            store.send(action: AppAction.scenePhaseChange(phase))
-        }
-        .onAppear {
-            store.send(action: .appear)
-        }
-        .environment(\.openURL, OpenURLAction { url in
-            store.send(action: .openURL(url))
-            return .handled
-        })
     }
 }

@@ -19,9 +19,15 @@
 		B81EACD927B724A000B3B8DC /* ThickDividerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81EACD727B724A000B3B8DC /* ThickDividerView.swift */; };
 		B81EBB0927025C1500B87594 /* BacklinkButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81EBB0827025C1500B87594 /* BacklinkButtonStyle.swift */; };
 		B81EBB0A27025C1500B87594 /* BacklinkButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81EBB0827025C1500B87594 /* BacklinkButtonStyle.swift */; };
+		B8216F7827E11516002B70CB /* BottomSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8216F7727E11516002B70CB /* BottomSheetView.swift */; };
+		B8216F7927E11516002B70CB /* BottomSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8216F7727E11516002B70CB /* BottomSheetView.swift */; };
 		B822F18B27C9615600943C6B /* ObservableStore in Frameworks */ = {isa = PBXBuildFile; productRef = B822F18A27C9615600943C6B /* ObservableStore */; };
 		B822F18D27C9C0AB00943C6B /* CountChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = B822F18C27C9C0AB00943C6B /* CountChip.swift */; };
 		B822F18E27C9C0AB00943C6B /* CountChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = B822F18C27C9C0AB00943C6B /* CountChip.swift */; };
+		B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */; };
+		B8249DA127E2668500BCDFBA /* PinTrailingBottom.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */; };
+		B8249DA327E2753800BCDFBA /* ViewUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8249DA227E2753800BCDFBA /* ViewUtilities.swift */; };
+		B8249DA427E2753800BCDFBA /* ViewUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8249DA227E2753800BCDFBA /* ViewUtilities.swift */; };
 		B824FDCE26FA662200B81BBD /* SubtextFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDCD26FA662200B81BBD /* SubtextFile.swift */; };
 		B824FDD126FA98F300B81BBD /* EntryDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD026FA98F300B81BBD /* EntryDetail.swift */; };
 		B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD326FAB1BC00B81BBD /* Truncate.swift */; };
@@ -168,8 +174,6 @@
 		B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */; };
 		B8EC568C26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */; };
 		B8EC568D26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */; };
-		B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */; };
-		B8EDB807270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -205,7 +209,10 @@
 		B81A535E272751EE001A6268 /* Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext.swift; sourceTree = "<group>"; };
 		B81EACD727B724A000B3B8DC /* ThickDividerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThickDividerView.swift; sourceTree = "<group>"; };
 		B81EBB0827025C1500B87594 /* BacklinkButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinkButtonStyle.swift; sourceTree = "<group>"; };
+		B8216F7727E11516002B70CB /* BottomSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomSheetView.swift; sourceTree = "<group>"; };
 		B822F18C27C9C0AB00943C6B /* CountChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountChip.swift; sourceTree = "<group>"; };
+		B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinTrailingBottom.swift; sourceTree = "<group>"; };
+		B8249DA227E2753800BCDFBA /* ViewUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewUtilities.swift; sourceTree = "<group>"; };
 		B824FDCD26FA662200B81BBD /* SubtextFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextFile.swift; sourceTree = "<group>"; };
 		B824FDD026FA98F300B81BBD /* EntryDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryDetail.swift; sourceTree = "<group>"; };
 		B824FDD326FAB1BC00B81BBD /* Truncate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Truncate.swift; sourceTree = "<group>"; };
@@ -294,7 +301,6 @@
 		B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchbarRepresentable.swift; sourceTree = "<group>"; };
 		B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Database.swift; sourceTree = "<group>"; };
 		B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Migrations.swift; sourceTree = "<group>"; };
-		B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PseudoKeyboardToolbarView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -509,6 +515,7 @@
 				B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */,
 				B86DFF3227C072CD002E57ED /* Func.swift */,
 				B86DFF3627C09CA2002E57ED /* DateUtilities.swift */,
+				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -528,7 +535,6 @@
 				B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */,
 				B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */,
 				B8AC648B278F757B0099E96B /* ProgressScrimView.swift */,
-				B8EDB805270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift */,
 				B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */,
 				B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */,
 				B8AE34BE276BD61400777FF0 /* RowButtonStyle.swift */,
@@ -544,6 +550,8 @@
 				B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */,
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B822F18C27C9C0AB00943C6B /* CountChip.swift */,
+				B8216F7727E11516002B70CB /* BottomSheetView.swift */,
+				B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -783,11 +791,12 @@
 				B82FD4562730A62C002CB641 /* EntryRow.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
+				B8216F7827E11516002B70CB /* BottomSheetView.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */,
-				B8EDB806270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
 				B81EBB0927025C1500B87594 /* BacklinkButtonStyle.swift in Sources */,
+				B8249DA327E2753800BCDFBA /* ViewUtilities.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */,
 				B81A535F272751EE001A6268 /* Subtext.swift in Sources */,
@@ -823,6 +832,7 @@
 				B826B27527B5D95F003D3C03 /* SaveState.swift in Sources */,
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
+				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
 				B824FDCE26FA662200B81BBD /* SubtextFile.swift in Sources */,
 				B8EC568626F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
@@ -861,7 +871,6 @@
 			files = (
 				B82C3A6626F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8AC6490278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
-				B8EDB807270365BA00C63CA8 /* PseudoKeyboardToolbarView.swift in Sources */,
 				B866868227AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */,
 				B85BF47627BB3D6E00F55730 /* ToolbarTitleGroupView.swift in Sources */,
 				B8DEBF202798EC23007CB528 /* TitleGroupView.swift in Sources */,
@@ -869,6 +878,7 @@
 				B82C3A6326F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B8E63EA7270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */,
 				B83E91D827692EC600045C6A /* FABButtonStyle.swift in Sources */,
+				B8249DA127E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
 				B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B824FDD526FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
@@ -893,10 +903,12 @@
 				B85BF47027BB0FA800F55730 /* RowViewModifier.swift in Sources */,
 				B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8AE34C9276BF77000777FF0 /* SearchTextField.swift in Sources */,
+				B8216F7927E11516002B70CB /* BottomSheetView.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
 				B8DEBF1A2798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B8AE34CC276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
+				B8249DA427E2753800BCDFBA /* ViewUtilities.swift in Sources */,
 				B8109C2927A8879C00CD2B6D /* AppTheme.swift in Sources */,
 				B8AE34AE276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8AE34C0276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
