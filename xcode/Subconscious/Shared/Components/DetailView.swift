@@ -124,25 +124,6 @@ struct DetailView: View {
                         )
                         .zIndex(2)
                 }
-                BottomSheetView(
-                    isPresented: $isLinkSheetPresented,
-                    height: geometry.size.height,
-                    containerSize: geometry.size,
-                    content: LinkSearchView(
-                        placeholder: "Search or create...",
-                        suggestions: linkSuggestions,
-                        text: $linkSearchText,
-                        focus: $focus,
-                        onCancel: {
-                            isLinkSheetPresented = false
-                        },
-                        onSelect: { suggestion in
-                            onSelectLink(suggestion)
-                        }
-                    )
-                    .frame(height: geometry.size.height)
-                )
-                .zIndex(3)
             }
         }
         .navigationTitle("")
