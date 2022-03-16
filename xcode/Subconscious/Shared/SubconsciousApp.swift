@@ -51,9 +51,9 @@ enum AppAction {
     case openURL(URL)
     case openEditorURL(url: URL, range: NSRange)
 
-    // Focus state for TextFields, TextViews, etc
+    /// Focus state for TextFields, TextViews, etc
     case setFocus(AppModel.Focus?)
-    // Resign focus, if you have it
+    /// Resign focus, if you have it
     case resignFocus(AppModel.Focus)
 
     //  Database
@@ -932,6 +932,8 @@ extension AppModel {
         return Update(state: state, fx: fx)
     }
 
+    /// Set focus state.
+    /// Note if you want to resign focus, prefer using `resignFocus`.
     static func setFocus(
         state: AppModel,
         focus: AppModel.Focus?
@@ -941,6 +943,8 @@ extension AppModel {
         return Update(state: model).animation(.default)
     }
 
+    /// Resign focus if you have it.
+    /// Otherwise leave focus untouched.
     static func resignFocus(
         state: AppModel,
         focus: AppModel.Focus
