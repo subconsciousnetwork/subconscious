@@ -32,7 +32,9 @@ where Content: View {
             if isPresented {
                 ScrimView()
                     .transition(
-                        .opacity.animation(.default)
+                        .opacity.animation(
+                            .easeOutCubic(duration: Duration.fast)
+                        )
                     )
                     .zIndex(1)
                     .edgesIgnoringSafeArea(.top)
@@ -47,11 +49,35 @@ where Content: View {
                 }
                 .frame(
                     width: containerSize.width,
-                    height: height,
-                    alignment: .top
+                    height: height
                 )
                 .background(background)
                 .cornerRadius(AppTheme.cornerRadiusLg)
+                // This modifier is a hack/workaround to prevent a bug in
+                // SwiftUI animations where the `content` of the bottom sheet
+                // was incorrectly being animated.
+                //
+                // The list view and search view of the search interface
+                // in `content` were being animated separately, using the
+                // same implicit animations defined on `VStack` here.
+                // However, disabling the implicit animations on `content`
+                // would cause the content to remain in place, while the
+                // sheet would animate offset, cropping content.
+                //
+                // Setting `.scaleEffect(1)` does nothing visually, but
+                // causes the contents of the sheet to animate correctly
+                // with the sheet.
+                //
+                // I got the idea from this SO post
+                // https://stackoverflow.com/questions/65544581/swiftui-how-to-override-nested-offset-position-animations
+                //
+                // I suspect the mechanism by which this works is "snapshotting"
+                // the rendered contents of the sheet, causing SwiftUI
+                // animations to apply to that snapshot, rather than the
+                // individual layers.
+                //
+                // 2022-03-16 Gordon Brander
+                .scaleEffect(1)
                 .offset(
                     x: 0,
                     y: offsetY
