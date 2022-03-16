@@ -39,6 +39,81 @@ where
     Dom: Equatable,
     Dom: MarkupConvertable
 {
+    //  MARK: TextStorage subclass
+    /// TextStorage subclass responsible for rendering DOM to attributes.
+    ///
+    /// Our subclass uses a `attributedString`, an `NSMutableString` to
+    /// store our text data. Overrides to key methods make changes to this
+    /// mutable attributed string.
+    ///
+    /// See wiki for notes:
+    /// https://github.com/gordonbrander/subconscious/wiki/TextKit
+    ///
+    /// Related issue:
+    /// https://github.com/gordonbrander/subconscious/issues/211
+    class MarkupTextStorage: NSTextStorage {
+        /// The backing store in which we keep text data.
+        /// Subclasses of NSTextStorage are responsible for providing their
+        /// own backing store.
+        let attributedString = NSMutableAttributedString()
+
+        /// Defer to our backing store string for this attribute
+        override var string: String {
+            return attributedString.string
+        }
+
+        required init?(coder: NSCoder) {
+            super.init(coder: coder)
+        }
+
+        /// Defer to our backing store string for attributes
+        override func attributes(
+            at location: Int,
+            effectiveRange range: NSRangePointer?
+        ) -> [NSAttributedString.Key: Any] {
+            attributedString.attributes(
+                at: location,
+                effectiveRange: range
+            )
+        }
+
+        /// Replace characters on our backing store
+        override func replaceCharacters(in range: NSRange, with str: String) {
+            // We use the (required) text storage lifecycle methods to
+            // notify the associated layout manager when making edits.
+            // Start a text editing transaction
+            beginEditing()
+            // Update our backing store
+            attributedString.replaceCharacters(in: range, with:str)
+            // Mark what was edited
+            edited(
+                .editedCharacters,
+                range: range,
+                changeInLength: (str as NSString).length - range.length
+            )
+            // End editing transaction
+            endEditing()
+        }
+
+        /// Set attributes on our backing store
+        override func setAttributes(
+            _ attrs: [NSAttributedString.Key: Any]?,
+            range: NSRange
+        ) {
+            // We use the (required) text storage lifecycle methods to
+            // notify the associated layout manager when making edits.
+            // Start a text editing transaction
+            beginEditing()
+            // Update our backing store
+            attributedString.setAttributes(attrs, range: range)
+            // Mark what was edited
+            edited(.editedAttributes, range: range, changeInLength: 0)
+            // End editing transaction
+            endEditing()
+        }
+    }
+
+    //  MARK: UITextView subclass
     class FixedWidthTextView: UITextView {
         var fixedWidth: CGFloat = 0
         override var intrinsicContentSize: CGSize {
@@ -51,6 +126,7 @@ where
         }
     }
 
+    //  MARK: Coordinator
     class Coordinator: NSObject, UITextViewDelegate {
         /// Is event happening during updateUIView?
         /// Used to avoid sending up events that would cause feedback cycles where an update triggers
@@ -136,6 +212,7 @@ where
         return true
     }
 
+    //  MARK: Properties
     @Binding var dom: Dom
     @Binding var selection: NSRange
     @Binding var focus: Focus?
@@ -157,6 +234,7 @@ where
         focus == field
     }
 
+    //  MARK: makeUIView
     func makeUIView(context: Context) -> FixedWidthTextView {
         let view = FixedWidthTextView()
         view.delegate = context.coordinator
@@ -171,6 +249,7 @@ where
         return view
     }
 
+    //  MARK: updateUIView
     func updateUIView(_ view: FixedWidthTextView, context: Context) {
         // Set updating flag on coordinator
         context.coordinator.isUIViewUpdating = true
