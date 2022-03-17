@@ -132,7 +132,7 @@ enum AppAction {
     /// Invokes save and blurs editor
     case selectDoneEditing
     /// Update editor dom and mark if this state is saved or not
-    case setEditorDom(dom: Subtext, saveState: SaveState)
+    case setEditor(text: String, saveState: SaveState)
     case setEditorSelection(NSRange)
     case insertEditorText(
         text: String,
@@ -156,8 +156,8 @@ enum AppAction {
     )
 
     /// Update editor dom and always mark modified
-    static func modifyEditorDom(dom: Subtext) -> Self {
-        Self.setEditorDom(dom: dom, saveState: .modified)
+    static func modifyEditor(text: String) -> Self {
+        Self.setEditor(text: text, saveState: .modified)
     }
 }
 
@@ -234,7 +234,7 @@ struct AppModel: Equatable {
 
     // Editor
     /// Subtext object model
-    var editorDom: Subtext = .empty
+    var editorText = ""
     /// Are all changes to editor saved?
     var editorSaveState = SaveState.saved
     /// Editor selection corresponds with `editorAttributedText`
@@ -261,7 +261,7 @@ struct AppModel: Equatable {
     /// currently match it, such that we could say the editor is
     /// displaying that entry?
     func isEditorMatchingEntry(_ entry: SubtextFile) -> Bool {
-        self.slug == entry.slug && self.editorDom == entry.dom
+        self.slug == entry.slug && self.editorText == entry.dom.base
     }
 
     /// Get a Subtext file snapshot for the current editor state
@@ -269,7 +269,7 @@ struct AppModel: Equatable {
         guard let slug = self.slug else {
             return nil
         }
-        return SubtextFile(slug: slug, dom: self.editorDom)
+        return SubtextFile(slug: slug, content: self.editorText)
     }
 }
 
@@ -532,10 +532,10 @@ extension AppModel {
                 state: state,
                 environment: environment
             )
-        case let .setEditorDom(dom, saveState):
-            return setEditorDom(
+        case let .setEditor(text, saveState):
+            return setEditor(
                 state: state,
-                dom: dom,
+                text: text,
                 saveState: saveState
             )
         case let .setEditorSelection(range):
@@ -673,7 +673,7 @@ extension AppModel {
         var model = state
         model.slug = nil
         model.isDetailLoading = true
-        model.editorDom = .empty
+        model.editorText = ""
         model.editorSaveState = .saved
         model.editorSelection = NSMakeRange(0, 0)
         model.editorSelectedSlashlink = nil
@@ -692,16 +692,16 @@ extension AppModel {
     ///   - state: the state of the app
     ///   - dom: the Subtext DOM that should be rendered and set
     ///   - isSaved: is this text state saved already?
-    static func setEditorDom(
+    static func setEditor(
         state: AppModel,
-        dom: Subtext,
+        text: String,
         saveState: SaveState = .modified
     ) -> Update<AppModel, AppAction> {
         var model = state
-        model.editorDom = dom
+        model.editorText = text
         // Mark save state
         model.editorSaveState = saveState
-
+        let dom = Subtext(markup: text)
         let slashlink = dom.slashlinkFor(range: state.editorSelection)
         model.editorSelectedSlashlink = slashlink
 
@@ -727,8 +727,8 @@ extension AppModel {
     ) -> Update<AppModel, AppAction> {
         var model = state
         model.editorSelection = nsRange
-
-        let slashlink = model.editorDom.slashlinkFor(
+        let dom = Subtext(markup: model.editorText)
+        let slashlink = dom.slashlinkFor(
             range: model.editorSelection
         )
         model.editorSelectedSlashlink = slashlink
@@ -751,7 +751,7 @@ extension AppModel {
         range nsRange: NSRange,
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
-        guard let range = Range(nsRange, in: state.editorDom.base) else {
+        guard let range = Range(nsRange, in: state.editorText) else {
             environment.logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
@@ -759,7 +759,7 @@ extension AppModel {
         }
 
         // Replace selected range with committed link search text.
-        let markup = state.editorDom.base.replacingCharacters(
+        let markup = state.editorText.replacingCharacters(
             in: range,
             with: text
         )
@@ -776,19 +776,20 @@ extension AppModel {
             return Update(state: state)
         }
 
-        // Parse new markup
-        let dom = Subtext(markup: markup)
-
         // Set editor dom and editor selection immediately in same
         // Update.
-        return setEditorDom(state: state, dom: dom, saveState: .modified)
-            .pipe({ state in
-                setEditorSelection(
-                    state: state,
-                    environment: environment,
-                    range: NSRange(cursor..<cursor, in: dom.base)
-                )
-            })
+        return setEditor(
+            state: state,
+            text: markup,
+            saveState: .modified
+        )
+        .pipe({ state in
+            setEditorSelection(
+                state: state,
+                environment: environment,
+                range: NSRange(cursor..<cursor, in: markup)
+            )
+        })
     }
 
     /// Toggle detail view showing or hiding
@@ -1668,9 +1669,9 @@ extension AppModel {
         // Set editor and save state.
         // Then immediately save.
         // This ensures entry is created.
-        return setEditorDom(
+        return setEditor(
             state: model,
-            dom: detail.entry.value.dom,
+            text: detail.entry.value.dom.base,
             saveState: detail.entry.state
         )
         .pipe({ state in
@@ -1743,7 +1744,7 @@ extension AppModel {
         {
             range = NSRange(
                 slashlink.span.range,
-                in: state.editorDom.base
+                in: state.editorText
             )
         }
 

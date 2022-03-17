@@ -14,7 +14,16 @@ extension Slashlink {
         url.scheme == "sub" && url.host == "slashlink"
     }
 
-    static func slashlinkToURLString(_ text: String) -> String? {
+    static func slashlinkURLToSlug(_ url: URL) -> Slug? {
+        guard isSlashlinkURL(url) else {
+            return nil
+        }
+        return Slug(formatting: url.path)
+    }
+}
+
+extension Subtext {
+    private static func slashlinkToURLString(_ text: String) -> String? {
         if
             let slashlink = Slug(formatting: text),
             let url = URL(string: "sub://slashlink/\(slashlink.description)")
@@ -24,17 +33,12 @@ extension Slashlink {
         return nil
     }
 
-    static func slashlinkURLToSlug(_ url: URL) -> Slug? {
-        guard isSlashlinkURL(url) else {
-            return nil
-        }
-        return Slug(formatting: url.path)
-    }
-}
-
-// Implement renderable for Subtext
-extension Subtext: MarkupConvertable {
-    func render() -> NSAttributedString {
-        self.render(url: Subconscious.Slashlink.slashlinkToURLString)
+    static func renderAttributesOf(
+        _ attributedString: NSMutableAttributedString
+    ) {
+        renderAttributesOf(
+            attributedString,
+            url: slashlinkToURLString
+        )
     }
 }

@@ -1,5 +1,5 @@
 //
-//  MarkupTextViewRepresenable.swift
+//  MarkupTextViewRepresentable.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 7/6/21.
@@ -22,25 +22,24 @@
 //
 //  Lesson learned.
 //  2021-10-04 Gordon Brander
+//
+//  We now render text properties via an `NSTextStorageDelegate`.
+//  All styling is derived from markup. You should never have to set styling
+//  on the UITextView yourself when consuming this view.
+//  See https://github.com/gordonbrander/subconscious/pull/220/
+//  See https://github.com/gordonbrander/subconscious/issues/211
+//  2022-03-17 Gordon Brander
 
 import SwiftUI
 
-/// A type that can be parsed from string via `init(markup: String)`,
-/// and rendered to an NSAttributedString via `render()`.
-protocol MarkupConvertable {
-    init(markup: String)
-    func render() -> NSAttributedString
-}
-
 /// A textview that grows to the height of its content
-struct MarkupTextViewRepresenable<Focus, Dom>: UIViewRepresentable
-where
-    Focus: Hashable,
-    Dom: Equatable,
-    Dom: MarkupConvertable
+struct MarkupTextViewRepresentable<Focus>: UIViewRepresentable
+where Focus: Hashable
 {
+    //  MARK: UITextView subclass
     class FixedWidthTextView: UITextView {
         var fixedWidth: CGFloat = 0
+
         override var intrinsicContentSize: CGSize {
             sizeThatFits(
                 CGSize(
@@ -51,16 +50,48 @@ where
         }
     }
 
-    class Coordinator: NSObject, UITextViewDelegate {
+    //  MARK: Coordinator
+    class Coordinator: NSObject, UITextViewDelegate, NSTextStorageDelegate {
         /// Is event happening during updateUIView?
-        /// Used to avoid sending up events that would cause feedback cycles where an update triggers
-        /// an event, which triggers an update, which triggers an event, etc.
+        /// Used to avoid sending up events that would cause feedback cycles
+        /// where an update triggers an event, which triggers an update,
+        /// which triggers an event, etc.
         var isUIViewUpdating: Bool
-        var representable: MarkupTextViewRepresenable
+        var representable: MarkupTextViewRepresentable
 
-        init(_ representable: MarkupTextViewRepresenable) {
+        init(
+            representable: MarkupTextViewRepresentable
+        ) {
             self.isUIViewUpdating = false
             self.representable = representable
+        }
+
+        /// NSTextStorageDelegate method
+        /// Handle markup rendering, just before processEditing is fired.
+        /// It is important that we render markup in `willProcessEditing`
+        /// because it happens BEFORE font substitution. Rendering before font
+        /// substitution gives the OS a chance to replace fonts for things like
+        /// Emoji or Unicode characters when your font does not support them.
+        /// See:
+        /// https://github.com/gordonbrander/subconscious/wiki/nstextstorage-font-substitution-and-missing-text
+        ///
+        /// 2022-03-17 Gordon Brander
+        func textStorage(
+            _ textStorage: NSTextStorage,
+            willProcessEditing: NSTextStorage.EditActions,
+            range: NSRange,
+            changeInLength: Int
+        ) {
+            textStorage.setAttributes(
+                [:],
+                range: NSRange(
+                    textStorage.string.startIndex...,
+                    in: textStorage.string
+                )
+            )
+            // Render markup on TextStorage (which is an NSMutableString)
+            // using closure set on view (representable)
+            self.representable.renderAttributesOf(textStorage)
         }
 
         /// Handle link taps
@@ -84,13 +115,11 @@ where
             guard !isUIViewUpdating else {
                 return
             }
-            let dom = Dom(markup: view.attributedText.string)
-            if representable.dom != dom {
+            if representable.text != view.text {
                 let selectedRange = view.selectedRange
-                view.attributedText = dom.render()
                 view.selectedRange = selectedRange
                 view.invalidateIntrinsicContentSize()
-                representable.dom = dom
+                representable.text = view.text
             }
         }
 
@@ -112,7 +141,7 @@ where
         func textViewDidChangeSelection(_ textView: UITextView) {
             // Return early if view is currently updating.
             // We set selection during update when updating
-            // attributedText, in order to retain selection.
+            // text, in order to retain selection.
             // Do not set representable selection in this case. It would
             // generate an update feedback loop, since the direction of
             // mutation goes from representable to view during an update.
@@ -136,15 +165,19 @@ where
         return true
     }
 
-    @Binding var dom: Dom
+    //  MARK: Properties
+    @Binding var text: String
     @Binding var selection: NSRange
     @Binding var focus: Focus?
     var field: Focus
-    var fixedWidth: CGFloat
+    /// Frame needed to determine textview height.
+    /// Use `GeometryView` to find container width.
+    var frame: CGRect
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
-    /// Fixed width of textview container, needed to determine textview height.
-    /// Use `GeometryView` to find container width.
+    /// Function to render NSAttributedString attributes from a markup string.
+    /// The renderer will use these attributes to style the string.
+    var renderAttributesOf: (NSMutableAttributedString) -> Void
     var onLink: (
         URL,
         NSAttributedString,
@@ -157,10 +190,18 @@ where
         focus == field
     }
 
+    //  MARK: makeUIView
     func makeUIView(context: Context) -> FixedWidthTextView {
         let view = FixedWidthTextView()
+
+        // Coordinator is both an UITextViewDelegate
+        // and an NSTextStorageDelegate.
+        // Set delegate on textview (coordinator)
         view.delegate = context.coordinator
-        view.fixedWidth = context.coordinator.representable.fixedWidth
+        // Set delegate on textstorage (coordinator)
+        view.textStorage.delegate = context.coordinator
+
+        view.fixedWidth = self.frame.width
         // Remove that extra bit of inner padding.
         // Text in view should now be flush with view edge.
         // This puts you in full control of view padding.
@@ -171,6 +212,7 @@ where
         return view
     }
 
+    //  MARK: updateUIView
     func updateUIView(_ view: FixedWidthTextView, context: Context) {
         // Set updating flag on coordinator
         context.coordinator.isUIViewUpdating = true
@@ -179,18 +221,17 @@ where
             context.coordinator.isUIViewUpdating = false
         }
 
-        let attributedText = self.dom.render()
-        if !view.attributedText.isEqual(to: attributedText) {
+        if view.text != self.text {
             // Save selected range (cursor position).
             let selectedRange = view.selectedRange
-            view.attributedText = attributedText
+            view.text = self.text
             // Restore selected range (cursor position) after setting text.
             view.selectedRange = selectedRange
             view.invalidateIntrinsicContentSize()
         }
 
-        if fixedWidth != view.fixedWidth {
-            view.fixedWidth = fixedWidth
+        if view.fixedWidth != self.frame.width {
+            view.fixedWidth = self.frame.width
             view.invalidateIntrinsicContentSize()
         }
 
@@ -219,7 +260,9 @@ where
     }
 
     func makeCoordinator() -> Self.Coordinator {
-        Coordinator(self)
+        Coordinator(
+            representable: self
+        )
     }
 
     func insets(_ inset: EdgeInsets) -> Self {
