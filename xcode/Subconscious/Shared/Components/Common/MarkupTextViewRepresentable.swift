@@ -51,7 +51,7 @@ where
     ///
     /// Related issue:
     /// https://github.com/gordonbrander/subconscious/issues/211
-    class MarkupTextStorage: NSTextStorage {
+    class MutableTextStorage: NSTextStorage {
         /// The backing store in which we keep text data.
         /// Subclasses of NSTextStorage are responsible for providing their
         /// own backing store.
@@ -60,10 +60,6 @@ where
         /// Defer to our backing store string for this attribute
         override var string: String {
             return attributedString.string
-        }
-
-        required init?(coder: NSCoder) {
-            super.init(coder: coder)
         }
 
         /// Defer to our backing store string for attributes
@@ -116,6 +112,7 @@ where
     //  MARK: UITextView subclass
     class FixedWidthTextView: UITextView {
         var fixedWidth: CGFloat = 0
+
         override var intrinsicContentSize: CGSize {
             sizeThatFits(
                 CGSize(
@@ -217,11 +214,11 @@ where
     @Binding var selection: NSRange
     @Binding var focus: Focus?
     var field: Focus
-    var fixedWidth: CGFloat
+    /// Frame needed to determine textview height.
+    /// Use `GeometryView` to find container width.
+    var frame: CGRect
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
-    /// Fixed width of textview container, needed to determine textview height.
-    /// Use `GeometryView` to find container width.
     var onLink: (
         URL,
         NSAttributedString,
@@ -236,9 +233,29 @@ where
 
     //  MARK: makeUIView
     func makeUIView(context: Context) -> FixedWidthTextView {
-        let view = FixedWidthTextView()
+        // NSLayoutManager takes the stored text and renders it on the screen.
+        // It serves as the layout engine.
+        let layoutManager = NSLayoutManager()
+
+        // NSTextStorage subclass stores the attributed string, and informs
+        // the layout manager of changes to the text’s contents.
+        let textStorage = MutableTextStorage()
+        textStorage.append(dom.render())
+
+        // NSTextContainer describes the geometry of an area of the screen
+        // where the app renders text. Each text container is typically
+        // associated with a UITextView.
+        let textContainer = NSTextContainer(size: self.frame.size)
+        layoutManager.addTextContainer(textContainer)
+
+        // Create our subclassed UITextView, with a frame
+        let view = FixedWidthTextView(
+            frame: self.frame,
+            textContainer: textContainer
+        )
+        // Set delegate on textview (coordinator)
         view.delegate = context.coordinator
-        view.fixedWidth = context.coordinator.representable.fixedWidth
+        view.fixedWidth = self.frame.width
         // Remove that extra bit of inner padding.
         // Text in view should now be flush with view edge.
         // This puts you in full control of view padding.
@@ -268,8 +285,8 @@ where
             view.invalidateIntrinsicContentSize()
         }
 
-        if fixedWidth != view.fixedWidth {
-            view.fixedWidth = fixedWidth
+        if view.fixedWidth != self.frame.width {
+            view.fixedWidth = self.frame.width
             view.invalidateIntrinsicContentSize()
         }
 
