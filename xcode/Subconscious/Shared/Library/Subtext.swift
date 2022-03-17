@@ -323,7 +323,7 @@ extension Subtext {
     /// Read markup in NSMutableAttributedString, and render as attributes.
     /// Resets all attributes on string, replacing them with style attributes
     /// corresponding to the semantic meaning of Subtext markup.
-    static func renderAttributesOn(
+    static func renderAttributesOf(
         _ attributedString: NSMutableAttributedString,
         url: (String) -> String?
     ) {

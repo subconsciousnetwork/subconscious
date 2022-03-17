@@ -30,110 +30,115 @@
 
 import SwiftUI
 
-/// A textview that grows to the height of its content
-struct SubtextTextViewRepresentable<Focus>: UIViewRepresentable
-where Focus: Hashable
-{
-    //  MARK: TextStorage subclass
-    /// TextStorage subclass responsible for rendering DOM to attributes.
-    ///
-    /// Our subclass uses a `attributedString`, an `NSMutableString` to
-    /// store our text data. Overrides to key methods make changes to this
-    /// mutable attributed string.
-    ///
-    /// See wiki for notes:
-    /// https://github.com/gordonbrander/subconscious/wiki/TextKit
-    ///
-    /// Related issue:
-    /// https://github.com/gordonbrander/subconscious/issues/211
-    class SubtextTextStorage: NSTextStorage {
-        /// The backing store in which we keep text data.
-        /// Subclasses of NSTextStorage are responsible for providing their
-        /// own backing store.
-        var backingAttributedString: NSMutableAttributedString
-        /// Function by which to construct URLs for links
-        var url: (String) -> String?
+//  MARK: TextStorage subclass
+/// TextStorage subclass responsible for rendering DOM to attributes.
+///
+/// Our subclass uses a `attributedString`, an `NSMutableString` to
+/// store our text data. Overrides to key methods make changes to this
+/// mutable attributed string.
+///
+/// See wiki for notes:
+/// https://github.com/gordonbrander/subconscious/wiki/TextKit
+///
+/// Related issue:
+/// https://github.com/gordonbrander/subconscious/issues/211
+class MarkupTextStorage: NSTextStorage {
+    /// The backing store in which we keep text data.
+    /// Subclasses of NSTextStorage are responsible for providing their
+    /// own backing store.
+    var backingAttributedString: NSMutableAttributedString
+    /// Function to render attributes from markup string.
+    var renderAttributesOf: (NSMutableAttributedString) -> Void
 
-        init(
-            string: String,
-            url: @escaping (String) -> String?
-        ) {
-            self.backingAttributedString = NSMutableAttributedString(
-                string: string
-            )
-            self.url = url
-            super.init()
-        }
-
-        /// Implement required coder constructor
-        /// Setting our properties to sensible defaults
-        required init?(coder: NSCoder) {
-            self.backingAttributedString = NSMutableAttributedString()
-            self.url = { url in nil }
-            super.init(coder: coder)
-        }
-
-        /// Access string from our backing store
-        override var string: String {
-            backingAttributedString.string
-        }
-
-        /// Access attributes from our backing store
-        override func attributes(
-            at location: Int,
-            effectiveRange range: NSRangePointer?
-        ) -> [NSAttributedString.Key: Any] {
-            backingAttributedString.attributes(
-                at: location,
-                effectiveRange: range
-            )
-        }
-
-        /// Replace characters on our backing store
-        override func replaceCharacters(in range: NSRange, with str: String) {
-            // We use the (required) text storage lifecycle methods to
-            // notify the associated layout manager when making edits.
-            // Start a text editing transaction
-            beginEditing()
-            // Update our backing store
-            backingAttributedString.replaceCharacters(in: range, with:str)
-            // Mark what was edited
-            edited(
-                .editedCharacters,
-                range: range,
-                changeInLength: (str as NSString).length - range.length
-            )
-            // End editing transaction
-            endEditing()
-        }
-
-        /// Set attributes on our backing store
-        override func setAttributes(
-            _ attrs: [NSAttributedString.Key: Any]?,
-            range: NSRange
-        ) {
-            // We use the (required) text storage lifecycle methods to
-            // notify the associated layout manager when making edits.
-            // Start a text editing transaction
-            beginEditing()
-            // Update our backing store
-            backingAttributedString.setAttributes(attrs, range: range)
-            // Mark what was edited
-            edited(.editedAttributes, range: range, changeInLength: 0)
-            // End editing transaction
-            endEditing()
-        }
-
-        /// Render markup after changes to text
-        override func processEditing() {
-            Subtext.renderAttributesOn(
-                backingAttributedString,
-                url: self.url
-            )
-            super.processEditing()
-        }
+    init(
+        string: String,
+        renderAttributesOf: @escaping (NSMutableAttributedString) -> Void
+    ) {
+        self.backingAttributedString = NSMutableAttributedString(
+            string: string
+        )
+        self.renderAttributesOf = renderAttributesOf
+        super.init()
     }
 
+    /// Implement required coder constructor
+    /// Setting our properties to sensible defaults
+    required init?(coder: NSCoder) {
+        self.backingAttributedString = NSMutableAttributedString()
+        self.renderAttributesOf = { attributedString in }
+        super.init(coder: coder)
+    }
+
+    /// Access string from our backing store
+    override var string: String {
+        backingAttributedString.string
+    }
+
+    /// Access attributes from our backing store
+    override func attributes(
+        at location: Int,
+        effectiveRange range: NSRangePointer?
+    ) -> [NSAttributedString.Key: Any] {
+        backingAttributedString.attributes(
+            at: location,
+            effectiveRange: range
+        )
+    }
+
+    /// Replace characters on our backing store
+    override func replaceCharacters(in range: NSRange, with str: String) {
+        // We use the (required) text storage lifecycle methods to
+        // notify the associated layout manager when making edits.
+        // Start a text editing transaction
+        beginEditing()
+        // Update our backing store
+        backingAttributedString.replaceCharacters(in: range, with:str)
+        // Mark what was edited
+        edited(
+            .editedCharacters,
+            range: range,
+            changeInLength: (str as NSString).length - range.length
+        )
+        // End editing transaction
+        endEditing()
+    }
+
+    /// Set attributes on our backing store
+    override func setAttributes(
+        _ attrs: [NSAttributedString.Key: Any]?,
+        range: NSRange
+    ) {
+        // We use the (required) text storage lifecycle methods to
+        // notify the associated layout manager when making edits.
+        // Start a text editing transaction
+        beginEditing()
+        // Update our backing store
+        backingAttributedString.setAttributes(attrs, range: range)
+        // Mark what was edited
+        edited(.editedAttributes, range: range, changeInLength: 0)
+        // End editing transaction
+        endEditing()
+    }
+
+    /// Render markup after changes to text
+    override func processEditing() {
+        // Clear attributes
+        backingAttributedString.setAttributes(
+            [:],
+            range: NSRange(
+                location: 0,
+                length: self.backingAttributedString.length
+            )
+        )
+        renderAttributesOf(backingAttributedString)
+        super.processEditing()
+    }
+}
+
+/// A textview that grows to the height of its content
+struct MarkupTextViewRepresentable<Focus>: UIViewRepresentable
+where Focus: Hashable
+{
     //  MARK: UITextView subclass
     class FixedWidthTextView: UITextView {
         var fixedWidth: CGFloat = 0
@@ -154,10 +159,10 @@ where Focus: Hashable
         /// Used to avoid sending up events that would cause feedback cycles where an update triggers
         /// an event, which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
-        var representable: SubtextTextViewRepresentable
+        var representable: MarkupTextViewRepresentable
 
         init(
-            representable: SubtextTextViewRepresentable
+            representable: MarkupTextViewRepresentable
         ) {
             self.isUIViewUpdating = false
             self.representable = representable
@@ -244,7 +249,9 @@ where Focus: Hashable
     var frame: CGRect
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
-    var url: (String) -> String?
+    /// Function to render NSAttributedString attributes from a markup string.
+    /// The renderer will use these attributes to style the string.
+    var renderAttributesOf: (NSMutableAttributedString) -> Void
     var onLink: (
         URL,
         NSAttributedString,
@@ -265,9 +272,9 @@ where Focus: Hashable
 
         // NSTextStorage subclass stores the attributed string, and informs
         // the layout manager of changes to the text’s contents.
-        let textStorage = SubtextTextStorage(
+        let textStorage = MarkupTextStorage(
             string: text,
-            url: self.url
+            renderAttributesOf: self.renderAttributesOf
         )
         // Wire up to layout manager
         textStorage.addLayoutManager(layoutManager)

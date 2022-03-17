@@ -54,13 +54,13 @@ struct DetailView: View {
                     Divider()
                     ScrollView(.vertical) {
                         VStack(spacing: 0) {
-                            SubtextTextViewRepresentable(
+                            MarkupTextViewRepresentable(
                                 text: $editorText,
                                 selection: $editorSelection,
                                 focus: $focus,
                                 field: .editor,
                                 frame: geometry.frame(in: .local),
-                                url: Slashlink.slashlinkToURLString,
+                                renderAttributesOf: Subtext.renderAttributesOf,
                                 onLink: onEditorLink
                             )
                             .insets(
