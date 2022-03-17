@@ -328,10 +328,14 @@ extension Subtext {
         url: (String) -> String?
     ) {
         let dom = Subtext(markup: attributedString.string)
-        let baseNSRange = NSMakeRange(0, attributedString.length)
 
-        // Reset attributes
-        attributedString.setAttributes([:], range: baseNSRange)
+        // Get range of all text, using new Swift NSRange constructor
+        // that takes a Swift range which knows how to handle Unicode
+        // glyphs correctly.
+        let baseNSRange = NSRange(
+            dom.base.startIndex...,
+            in: dom.base
+        )
 
         // Set default font for entire string
         attributedString.addAttribute(

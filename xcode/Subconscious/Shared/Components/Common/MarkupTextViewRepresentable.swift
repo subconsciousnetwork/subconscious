@@ -127,8 +127,8 @@ class MarkupTextStorage: NSTextStorage {
         backingAttributedString.setAttributes(
             [:],
             range: NSRange(
-                location: 0,
-                length: self.backingAttributedString.length
+                self.backingAttributedString.string.startIndex...,
+                in: self.backingAttributedString.string
             )
         )
         renderAttributesOf(backingAttributedString)
