@@ -31,111 +31,6 @@
 
 import SwiftUI
 
-//  MARK: TextStorage subclass
-/// TextStorage subclass responsible for rendering DOM to attributes.
-///
-/// Our subclass uses a `attributedString`, an `NSMutableString` to
-/// store our text data. Overrides to key methods make changes to this
-/// mutable attributed string.
-///
-/// See wiki for notes:
-/// https://github.com/gordonbrander/subconscious/wiki/TextKit
-///
-/// Related issue:
-/// https://github.com/gordonbrander/subconscious/issues/211
-class MarkupTextStorage: NSTextStorage {
-    /// The backing store in which we keep text data.
-    /// Subclasses of NSTextStorage are responsible for providing their
-    /// own backing store.
-    var backingAttributedString: NSMutableAttributedString
-    /// Function to render attributes from markup string.
-    var renderAttributesOf: (NSMutableAttributedString) -> Void
-
-    init(
-        string: String,
-        renderAttributesOf: @escaping (NSMutableAttributedString) -> Void
-    ) {
-        self.backingAttributedString = NSMutableAttributedString(
-            string: string
-        )
-        self.renderAttributesOf = renderAttributesOf
-        super.init()
-    }
-
-    /// Implement required coder constructor
-    /// Setting our properties to sensible defaults
-    required init?(coder: NSCoder) {
-        self.backingAttributedString = NSMutableAttributedString()
-        self.renderAttributesOf = { attributedString in }
-        super.init(coder: coder)
-    }
-
-    /// Access string from our backing store
-    override var string: String {
-        backingAttributedString.string
-    }
-
-    /// Access attributes from our backing store
-    override func attributes(
-        at location: Int,
-        effectiveRange range: NSRangePointer?
-    ) -> [NSAttributedString.Key: Any] {
-        backingAttributedString.attributes(
-            at: location,
-            effectiveRange: range
-        )
-    }
-
-    /// Replace characters on our backing store
-    override func replaceCharacters(in range: NSRange, with str: String) {
-        // We use the (required) text storage lifecycle methods to
-        // notify the associated layout manager when making edits.
-        // Start a text editing transaction
-        beginEditing()
-        // Update our backing store
-        backingAttributedString.replaceCharacters(in: range, with:str)
-        // Mark what was edited
-        edited(
-            .editedCharacters,
-            range: range,
-            changeInLength: (str as NSString).length - range.length
-        )
-        // End editing transaction
-        endEditing()
-    }
-
-    /// Set attributes on our backing store
-    override func setAttributes(
-        _ attrs: [NSAttributedString.Key: Any]?,
-        range: NSRange
-    ) {
-        // We use the (required) text storage lifecycle methods to
-        // notify the associated layout manager when making edits.
-        // Start a text editing transaction
-        beginEditing()
-        // Update our backing store
-        backingAttributedString.setAttributes(attrs, range: range)
-        // Mark what was edited
-        edited(.editedAttributes, range: range, changeInLength: 0)
-        // End editing transaction
-        endEditing()
-    }
-
-    /// Render markup after changes to text
-    override func processEditing() {
-        // Clear attributes
-        backingAttributedString.setAttributes(
-            [:],
-            range: NSRange(
-                self.backingAttributedString.string.startIndex...,
-                in: self.backingAttributedString.string
-            )
-        )
-        renderAttributesOf(backingAttributedString)
-        super.processEditing()
-    }
-}
-
 /// A textview that grows to the height of its content
 struct MarkupTextViewRepresentable<Focus>: UIViewRepresentable
 where Focus: Hashable
@@ -155,10 +50,11 @@ where Focus: Hashable
     }
 
     //  MARK: Coordinator
-    class Coordinator: NSObject, UITextViewDelegate {
+    class Coordinator: NSObject, UITextViewDelegate, NSTextStorageDelegate {
         /// Is event happening during updateUIView?
-        /// Used to avoid sending up events that would cause feedback cycles where an update triggers
-        /// an event, which triggers an update, which triggers an event, etc.
+        /// Used to avoid sending up events that would cause feedback cycles
+        /// where an update triggers an event, which triggers an update,
+        /// which triggers an event, etc.
         var isUIViewUpdating: Bool
         var representable: MarkupTextViewRepresentable
 
@@ -167,6 +63,34 @@ where Focus: Hashable
         ) {
             self.isUIViewUpdating = false
             self.representable = representable
+        }
+
+        /// NSTextStorageDelegate method
+        /// Handle markup rendering, just before processEditing is fired.
+        /// It is important that we render markup in `willProcessEditing`
+        /// because it happens BEFORE font substitution. Rendering before font
+        /// substitution gives the OS a chance to replace fonts for things like
+        /// Emoji or Unicode characters when your font does not support them.
+        /// See:
+        /// https://github.com/gordonbrander/subconscious/wiki/nstextstorage-font-substitution-and-missing-text
+        ///
+        /// 2022-03-17 Gordon Brander
+        func textStorage(
+            _ textStorage: NSTextStorage,
+            willProcessEditing: NSTextStorage.EditActions,
+            range: NSRange,
+            changeInLength: Int
+        ) {
+            textStorage.setAttributes(
+                [:],
+                range: NSRange(
+                    textStorage.string.startIndex...,
+                    in: textStorage.string
+                )
+            )
+            // Render markup on TextStorage (which is an NSMutableString)
+            // using closure set on view (representable)
+            self.representable.renderAttributesOf(textStorage)
         }
 
         /// Handle link taps
@@ -267,34 +191,15 @@ where Focus: Hashable
 
     //  MARK: makeUIView
     func makeUIView(context: Context) -> FixedWidthTextView {
-        // NSLayoutManager takes the stored text and renders it on the screen.
-        // It serves as the layout engine.
-        let layoutManager = NSLayoutManager()
+        let view = FixedWidthTextView()
 
-        // NSTextStorage subclass stores the attributed string, and informs
-        // the layout manager of changes to the text’s contents.
-        let textStorage = MarkupTextStorage(
-            string: text,
-            renderAttributesOf: self.renderAttributesOf
-        )
-        // Wire up to layout manager
-        textStorage.addLayoutManager(layoutManager)
-
-        // NSTextContainer describes the geometry of an area of the screen
-        // where the app renders text. Each text container is typically
-        // associated with a UITextView.
-        let textContainer = NSTextContainer(size: self.frame.size)
-        // Wire up to layout manager
-        layoutManager.addTextContainer(textContainer)
-
-        // Create our subclassed UITextView, with a frame
-        let view = FixedWidthTextView(
-            frame: self.frame,
-            textContainer: textContainer
-        )
-
+        // Coordinator is both an UITextViewDelegate
+        // and an NSTextStorageDelegate.
         // Set delegate on textview (coordinator)
         view.delegate = context.coordinator
+        // Set delegate on textstorage (coordinator)
+        view.textStorage.delegate = context.coordinator
+
         view.fixedWidth = self.frame.width
         // Remove that extra bit of inner padding.
         // Text in view should now be flush with view edge.
