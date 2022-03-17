@@ -59,7 +59,7 @@ struct DetailView: View {
                                 selection: $editorSelection,
                                 focus: $focus,
                                 field: .editor,
-                                fixedWidth: geometry.size.width,
+                                frame: geometry.frame(in: .local),
                                 onLink: onEditorLink
                             )
                             .insets(

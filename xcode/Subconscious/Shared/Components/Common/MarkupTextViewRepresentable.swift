@@ -130,10 +130,15 @@ where
         /// an event, which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
         var representable: MarkupTextViewRepresenable
+        var textStorage: MutableTextStorage
 
-        init(_ representable: MarkupTextViewRepresenable) {
+        init(
+            representable: MarkupTextViewRepresenable,
+            textStorage: MutableTextStorage
+        ) {
             self.isUIViewUpdating = false
             self.representable = representable
+            self.textStorage = textStorage
         }
 
         /// Handle link taps
@@ -239,13 +244,16 @@ where
 
         // NSTextStorage subclass stores the attributed string, and informs
         // the layout manager of changes to the text’s contents.
-        let textStorage = MutableTextStorage()
+        let textStorage = context.coordinator.textStorage
         textStorage.append(dom.render())
+        // Wire up to layout manager
+        textStorage.addLayoutManager(layoutManager)
 
         // NSTextContainer describes the geometry of an area of the screen
         // where the app renders text. Each text container is typically
         // associated with a UITextView.
         let textContainer = NSTextContainer(size: self.frame.size)
+        // Wire up to layout manager
         layoutManager.addTextContainer(textContainer)
 
         // Create our subclassed UITextView, with a frame
@@ -276,7 +284,7 @@ where
         }
 
         let attributedText = self.dom.render()
-        if !view.attributedText.isEqual(to: attributedText) {
+        if !context.coordinator.isEqual(attributedText) {
             // Save selected range (cursor position).
             let selectedRange = view.selectedRange
             view.attributedText = attributedText
@@ -315,7 +323,10 @@ where
     }
 
     func makeCoordinator() -> Self.Coordinator {
-        Coordinator(self)
+        Coordinator(
+            representable: self,
+            textStorage: MutableTextStorage()
+        )
     }
 
     func insets(_ inset: EdgeInsets) -> Self {
