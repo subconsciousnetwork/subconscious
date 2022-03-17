@@ -25,7 +25,7 @@
 //
 //  We now render text properties via a backing TextStorage subclass, so you
 //  should never have to set styling on the UITextView itself.
-//  See https://github.com/gordonbrander/subconscious/pull/220/files
+//  See https://github.com/gordonbrander/subconscious/pull/220/
 //  See https://github.com/gordonbrander/subconscious/issues/211
 //  2022-03-17 Gordon Brander
 
