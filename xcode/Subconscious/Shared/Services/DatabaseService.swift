@@ -162,13 +162,15 @@ struct DatabaseService {
     }
 
     func writeEntry(entry: SubtextFile) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .userInitiated) {
+        CombineUtilities.async(qos: .utility) {
             // Write contents to file
             try entry.write(directory: documentURL)
             // Read fingerprint after writing to get updated time
-            let fingerprint = try FileFingerprint.Attributes(
-                url: entry.url(directory: documentURL)
-            ).unwrap()
+            let fingerprint = try FileFingerprint
+                .Attributes(
+                    url: entry.url(directory: documentURL)
+                )
+                .unwrap()
             return try writeEntryToDatabase(
                 entry: entry,
                 modified: fingerprint.modifiedDate,
@@ -244,7 +246,7 @@ struct DatabaseService {
         from: Slug,
         to: Slug
     ) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .userInitiated) {
+        CombineUtilities.async(qos: .utility) {
             // Succeed and do nothing if `from` and `to` are the same.
             guard from != to else {
                 return
