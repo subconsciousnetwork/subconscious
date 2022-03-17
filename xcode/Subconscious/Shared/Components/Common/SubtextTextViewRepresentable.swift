@@ -1,5 +1,5 @@
 //
-//  MarkupTextViewRepresenable.swift
+//  SubtextTextViewRepresentable.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 7/6/21.
@@ -22,22 +22,17 @@
 //
 //  Lesson learned.
 //  2021-10-04 Gordon Brander
+//
+//  We now render text properties via a backing TextStorage subclass, so you
+//  should never have to set styling on the UITextView itself.
+//  See https://github.com/gordonbrander/subconscious/issues/211
+//  2022-03-17 Gordon Brander
 
 import SwiftUI
 
-/// A type that can be parsed from string via `init(markup: String)`,
-/// and rendered to an NSAttributedString via `render()`.
-protocol MarkupConvertable {
-    init(markup: String)
-    func render() -> NSAttributedString
-}
-
 /// A textview that grows to the height of its content
-struct MarkupTextViewRepresenable<Focus, Dom>: UIViewRepresentable
-where
-    Focus: Hashable,
-    Dom: Equatable,
-    Dom: MarkupConvertable
+struct SubtextTextViewRepresentable<Focus>: UIViewRepresentable
+where Focus: Hashable
 {
     //  MARK: TextStorage subclass
     /// TextStorage subclass responsible for rendering DOM to attributes.
@@ -51,23 +46,44 @@ where
     ///
     /// Related issue:
     /// https://github.com/gordonbrander/subconscious/issues/211
-    class MutableTextStorage: NSTextStorage {
+    class SubtextTextStorage: NSTextStorage {
         /// The backing store in which we keep text data.
         /// Subclasses of NSTextStorage are responsible for providing their
         /// own backing store.
-        let attributedString = NSMutableAttributedString()
+        var backingAttributedString: NSMutableAttributedString
+        /// Function by which to construct URLs for links
+        var url: (String) -> String?
 
-        /// Defer to our backing store string for this attribute
-        override var string: String {
-            return attributedString.string
+        init(
+            string: String,
+            url: @escaping (String) -> String?
+        ) {
+            self.backingAttributedString = NSMutableAttributedString(
+                string: string
+            )
+            self.url = url
+            super.init()
         }
 
-        /// Defer to our backing store string for attributes
+        /// Implement required coder constructor
+        /// Setting our properties to sensible defaults
+        required init?(coder: NSCoder) {
+            self.backingAttributedString = NSMutableAttributedString()
+            self.url = { url in nil }
+            super.init(coder: coder)
+        }
+
+        /// Access string from our backing store
+        override var string: String {
+            backingAttributedString.string
+        }
+
+        /// Access attributes from our backing store
         override func attributes(
             at location: Int,
             effectiveRange range: NSRangePointer?
         ) -> [NSAttributedString.Key: Any] {
-            attributedString.attributes(
+            backingAttributedString.attributes(
                 at: location,
                 effectiveRange: range
             )
@@ -80,7 +96,7 @@ where
             // Start a text editing transaction
             beginEditing()
             // Update our backing store
-            attributedString.replaceCharacters(in: range, with:str)
+            backingAttributedString.replaceCharacters(in: range, with:str)
             // Mark what was edited
             edited(
                 .editedCharacters,
@@ -101,11 +117,20 @@ where
             // Start a text editing transaction
             beginEditing()
             // Update our backing store
-            attributedString.setAttributes(attrs, range: range)
+            backingAttributedString.setAttributes(attrs, range: range)
             // Mark what was edited
             edited(.editedAttributes, range: range, changeInLength: 0)
             // End editing transaction
             endEditing()
+        }
+
+        /// Render markup after changes to text
+        override func processEditing() {
+            Subtext.renderAttributesOn(
+                backingAttributedString,
+                url: self.url
+            )
+            super.processEditing()
         }
     }
 
@@ -129,16 +154,13 @@ where
         /// Used to avoid sending up events that would cause feedback cycles where an update triggers
         /// an event, which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
-        var representable: MarkupTextViewRepresenable
-        var textStorage: MutableTextStorage
+        var representable: SubtextTextViewRepresentable
 
         init(
-            representable: MarkupTextViewRepresenable,
-            textStorage: MutableTextStorage
+            representable: SubtextTextViewRepresentable
         ) {
             self.isUIViewUpdating = false
             self.representable = representable
-            self.textStorage = textStorage
         }
 
         /// Handle link taps
@@ -162,13 +184,11 @@ where
             guard !isUIViewUpdating else {
                 return
             }
-            let dom = Dom(markup: view.attributedText.string)
-            if representable.dom != dom {
+            if representable.text != view.text {
                 let selectedRange = view.selectedRange
-                view.attributedText = dom.render()
                 view.selectedRange = selectedRange
                 view.invalidateIntrinsicContentSize()
-                representable.dom = dom
+                representable.text = view.text
             }
         }
 
@@ -190,7 +210,7 @@ where
         func textViewDidChangeSelection(_ textView: UITextView) {
             // Return early if view is currently updating.
             // We set selection during update when updating
-            // attributedText, in order to retain selection.
+            // text, in order to retain selection.
             // Do not set representable selection in this case. It would
             // generate an update feedback loop, since the direction of
             // mutation goes from representable to view during an update.
@@ -215,7 +235,7 @@ where
     }
 
     //  MARK: Properties
-    @Binding var dom: Dom
+    @Binding var text: String
     @Binding var selection: NSRange
     @Binding var focus: Focus?
     var field: Focus
@@ -224,6 +244,7 @@ where
     var frame: CGRect
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
+    var url: (String) -> String?
     var onLink: (
         URL,
         NSAttributedString,
@@ -244,8 +265,10 @@ where
 
         // NSTextStorage subclass stores the attributed string, and informs
         // the layout manager of changes to the text’s contents.
-        let textStorage = context.coordinator.textStorage
-        textStorage.append(dom.render())
+        let textStorage = SubtextTextStorage(
+            string: text,
+            url: self.url
+        )
         // Wire up to layout manager
         textStorage.addLayoutManager(layoutManager)
 
@@ -261,6 +284,7 @@ where
             frame: self.frame,
             textContainer: textContainer
         )
+
         // Set delegate on textview (coordinator)
         view.delegate = context.coordinator
         view.fixedWidth = self.frame.width
@@ -283,11 +307,10 @@ where
             context.coordinator.isUIViewUpdating = false
         }
 
-        let attributedText = self.dom.render()
-        if !context.coordinator.isEqual(attributedText) {
+        if view.text != self.text {
             // Save selected range (cursor position).
             let selectedRange = view.selectedRange
-            view.attributedText = attributedText
+            view.text = self.text
             // Restore selected range (cursor position) after setting text.
             view.selectedRange = selectedRange
             view.invalidateIntrinsicContentSize()
@@ -324,8 +347,7 @@ where
 
     func makeCoordinator() -> Self.Coordinator {
         Coordinator(
-            representable: self,
-            textStorage: MutableTextStorage()
+            representable: self
         )
     }
 

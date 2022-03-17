@@ -27,7 +27,7 @@ struct DetailView: View {
     var backlinks: [EntryStub]
     var linkSuggestions: [LinkSuggestion]
     @Binding var focus: AppModel.Focus?
-    @Binding var editorDom: Subtext
+    @Binding var editorText: String
     @Binding var editorSelection: NSRange
     @Binding var isLinkSheetPresented: Bool
     @Binding var linkSearchText: String
@@ -54,12 +54,13 @@ struct DetailView: View {
                     Divider()
                     ScrollView(.vertical) {
                         VStack(spacing: 0) {
-                            MarkupTextViewRepresenable(
-                                dom: $editorDom,
+                            SubtextTextViewRepresentable(
+                                text: $editorText,
                                 selection: $editorSelection,
                                 focus: $focus,
                                 field: .editor,
                                 frame: geometry.frame(in: .local),
+                                url: Slashlink.slashlinkToURLString,
                                 onLink: onEditorLink
                             )
                             .insets(
@@ -131,7 +132,7 @@ struct DetailView: View {
         .toolbar {
             DetailToolbarContent(
                 isEditing: (focus == .editor),
-                title: editorDom.title(),
+                title: Subtext(markup: editorText).title(),
                 slug: slug,
                 onRename: onRename,
                 onDelete: onDelete,

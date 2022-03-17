@@ -31,10 +31,3 @@ extension Slashlink {
         return Slug(formatting: url.path)
     }
 }
-
-// Implement renderable for Subtext
-extension Subtext: MarkupConvertable {
-    func render() -> NSAttributedString {
-        self.render(url: Subconscious.Slashlink.slashlinkToURLString)
-    }
-}

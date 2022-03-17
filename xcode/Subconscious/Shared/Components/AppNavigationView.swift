@@ -67,9 +67,9 @@ struct AppNavigationView: View {
                                 get: \.focus,
                                 tag: AppAction.setFocus
                             ),
-                            editorDom: store.binding(
-                                get: \.editorDom,
-                                tag: AppAction.modifyEditorDom
+                            editorText: store.binding(
+                                get: \.editorText,
+                                tag: AppAction.modifyEditor
                             ),
                             editorSelection: store.binding(
                                 get: \.editorSelection,

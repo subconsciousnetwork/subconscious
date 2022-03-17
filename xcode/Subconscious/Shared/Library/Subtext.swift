@@ -320,13 +320,19 @@ struct Subtext: Hashable, Equatable {
 }
 
 extension Subtext {
-    /// Render markup verbatim with syntax highlighting and links
-    func render(url: (String) -> String?) -> NSAttributedString {
-        let attributedString = NSMutableAttributedString(string: base)
-        let baseNSRange = NSRange(
-            base.startIndex...,
-            in: base
-        )
+    /// Read markup in NSMutableAttributedString, and render as attributes.
+    /// Resets all attributes on string, replacing them with style attributes
+    /// corresponding to the semantic meaning of Subtext markup.
+    static func renderAttributesOn(
+        _ attributedString: NSMutableAttributedString,
+        url: (String) -> String?
+    ) {
+        let dom = Subtext(markup: attributedString.string)
+        let baseNSRange = NSMakeRange(0, attributedString.length)
+
+        // Reset attributes
+        attributedString.setAttributes([:], range: baseNSRange)
+
         // Set default font for entire string
         attributedString.addAttribute(
             .font,
@@ -350,12 +356,12 @@ extension Subtext {
             range: baseNSRange
         )
 
-        for block in blocks {
+        for block in dom.blocks {
             switch block {
             case .empty:
                 break
             case let .heading(line):
-                let nsRange = NSRange(line.range, in: base)
+                let nsRange = NSRange(line.range, in: dom.base)
                 attributedString.addAttribute(
                     .font,
                     value: UIFont.appTextMonoBold,
@@ -373,7 +379,7 @@ extension Subtext {
                             value: link.span,
                             range: NSRange(
                                 link.span.range,
-                                in: base
+                                in: dom.base
                             )
                         )
                     case let .bracketlink(bracketlink):
@@ -382,7 +388,7 @@ extension Subtext {
                             value: bracketlink.body(),
                             range: NSRange(
                                 bracketlink.body().range,
-                                in: base
+                                in: dom.base
                             )
                         )
                     case let .slashlink(slashlink):
@@ -392,7 +398,7 @@ extension Subtext {
                                 value: url,
                                 range: NSRange(
                                     slashlink.span.range,
-                                    in: base
+                                    in: dom.base
                                 )
                             )
                         }
@@ -400,8 +406,6 @@ extension Subtext {
                 }
             }
         }
-
-        return attributedString
     }
 }
 
