@@ -745,6 +745,23 @@ extension AppModel {
         return Update(state: model, fx: fx)
     }
 
+    /// Set text cursor at end of editor
+    static func setEditorSelectionEnd(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel, AppAction> {
+        let range = NSRange(
+            state.editorText.endIndex...,
+            in: state.editorText
+        )
+
+        return setEditorSelection(
+            state: state,
+            environment: environment,
+            range: range
+        )
+    }
+
     static func insertEditorText(
         state: AppModel,
         text: String,
@@ -1599,7 +1616,13 @@ extension AppModel {
             model.isSearchShowing = false
             model.isDetailShowing = true
             let fx: Fx<AppAction> = environment.database
-                .readEntryDetail(slug: slug, fallback: fallback)
+                .readEntryDetail(
+                    slug: slug,
+                    // Trim whitespace and add blank line to end of string
+                    // This gives us a good starting point to start
+                    // editing.
+                    fallback: fallback.formattingBlankLineEnding()
+                )
                 .map({ detail in
                     AppAction.updateDetail(detail)
                 })
@@ -1666,10 +1689,8 @@ extension AppModel {
         model.isDetailLoading = false
         model.slug = detail.slug
         model.backlinks = detail.backlinks
-        // Set editor and save state.
-        // Then immediately save.
-        // This ensures entry is created.
-        return setEditor(
+
+        let update = setEditor(
             state: model,
             text: detail.entry.value.dom.base,
             saveState: detail.entry.state
@@ -1680,6 +1701,27 @@ extension AppModel {
                 environment: environment
             )
         })
+
+        // If detail is not a just-created draft, return update
+        guard detail.entry.state == .draft else {
+            return update
+        }
+
+        // Otherwise, set editor selection and focus to end of document.
+        // When you've just created a new note, chances are you want to
+        // edit it, not browse it.
+        // We focus the editor and place the cursor at the end so you can just
+        // start typing
+        return update
+            .pipe({ state in
+                setEditorSelectionEnd(
+                    state: state,
+                    environment: environment
+                )
+            })
+            .pipe({ state in
+                setFocus(state: state, focus: .editor)
+            })
     }
 
     static func setLinkSearch(

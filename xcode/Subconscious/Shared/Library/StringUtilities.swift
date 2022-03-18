@@ -87,6 +87,17 @@ extension String {
     }
 }
 
+extension String {
+    /// Trim string and add blank line ending
+    func formattingBlankLineEnding() -> String {
+        var trimmed = self.trimmingCharacters(
+            in: CharacterSet(charactersIn: "\n ")
+        )
+        trimmed.append("\n\n")
+        return trimmed
+    }
+}
+
 extension StringProtocol {
     /// Capitalize first letter in string.
     func capitalizingFirst() -> String {
