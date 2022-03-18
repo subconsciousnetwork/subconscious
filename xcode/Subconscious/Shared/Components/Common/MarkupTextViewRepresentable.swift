@@ -237,13 +237,15 @@ where Focus: Hashable
 
         // Set firstResponder
         if isFocused != view.isFirstResponder {
-            if isFocused {
-                DispatchQueue.main.async {
-                    view.becomeFirstResponder()
-                }
-            } else {
-                DispatchQueue.main.async {
-                    view.resignFirstResponder()
+            DispatchQueue.main.async {
+                // Check that focus still is not matching before actually
+                // setting it.
+                if isFocused != view.isFirstResponder {
+                    if isFocused {
+                        view.becomeFirstResponder()
+                    } else {
+                        view.resignFirstResponder()
+                    }
                 }
             }
         }
