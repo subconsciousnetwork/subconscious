@@ -58,12 +58,17 @@ where Focus: Hashable
         /// which triggers an event, etc.
         var isUIViewUpdating: Bool
         var representable: MarkupTextViewRepresentable
+        /// Records the last known focus state.
+        /// Used as a dirty flag to prevent aggressive calling of
+        /// first responder methods during view update.
+        var didFocus: Focus?
 
         init(
             representable: MarkupTextViewRepresentable
         ) {
             self.isUIViewUpdating = false
             self.representable = representable
+            self.didFocus = representable.focus
         }
 
         /// NSTextStorageDelegate method
@@ -111,6 +116,7 @@ where Focus: Hashable
 
         /// Render user changes to textview
         func textViewDidChange(_ view: UITextView) {
+            print("textViewDidChange")
             // Return early if view is updating.
             guard !isUIViewUpdating else {
                 return
@@ -123,19 +129,29 @@ where Focus: Hashable
             }
         }
 
+        func setFocus(_ field: Focus?) {
+            self.didFocus = field
+            if representable.focus != field {
+                representable.focus = field
+            }
+        }
+
         /// Handle editing begin (focus)
         func textViewDidBeginEditing(_ textView: UITextView) {
-            representable.focus = representable.field
+            guard !isUIViewUpdating else {
+                return
+            }
+            self.setFocus(representable.field)
+            print("textViewDidBeginEditing", self.didFocus, representable.focus)
         }
 
         /// Handle editing end (blur)
         func textViewDidEndEditing(_ textView: UITextView) {
-            // Un-focus editor if it still has focus.
-            // If some other field has already taken focus, leave
-            // it alone.
-            if representable.focus == representable.field {
-                representable.focus = nil
+            guard !isUIViewUpdating else {
+                return
             }
+            self.setFocus(nil)
+            print("textViewDidEndEditing", self.didFocus, representable.focus)
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
@@ -150,7 +166,7 @@ where Focus: Hashable
                 return
             }
             if textView.selectedRange != representable.selection {
-                representable.selection = textView.selectedRange
+                representable.$selection.wrappedValue = textView.selectedRange
             }
         }
     }
@@ -185,11 +201,6 @@ where Focus: Hashable
         UITextItemInteraction
     ) -> Bool = onLinkDefault
 
-    /// Is this field is currently focused?
-    private var isFocused: Bool {
-        focus == field
-    }
-
     //  MARK: makeUIView
     func makeUIView(context: Context) -> FixedWidthTextView {
         let view = FixedWidthTextView()
@@ -214,6 +225,7 @@ where Focus: Hashable
 
     //  MARK: updateUIView
     func updateUIView(_ view: FixedWidthTextView, context: Context) {
+        print("updateUIView", context.coordinator.didFocus, self.focus)
         // Set updating flag on coordinator
         context.coordinator.isUIViewUpdating = true
         // Unset updating flag on coordator after this scope exits
@@ -236,12 +248,12 @@ where Focus: Hashable
         }
 
         // Set firstResponder
-        if isFocused != view.isFirstResponder {
+        if context.coordinator.didFocus != self.focus {
+            print("context.coordinator.didFocus != self.focus", context.coordinator.didFocus, self.focus)
             DispatchQueue.main.async {
-                // Check that focus still is not matching before actually
-                // setting it.
-                if isFocused != view.isFirstResponder {
-                    if isFocused {
+                print("DispatchQueue.main.async", context.coordinator.didFocus, self.focus)
+                if context.coordinator.didFocus != self.focus {
+                    if self.focus == field {
                         view.becomeFirstResponder()
                     } else {
                         view.resignFirstResponder()
@@ -251,13 +263,13 @@ where Focus: Hashable
         }
 
         // Set selection
-        if selection != view.selectedRange {
-            view.selectedRange = selection
+        if self.selection != view.selectedRange {
+            view.selectedRange = self.selection
         }
 
-        if textContainerInset != view.textContainerInset {
+        if self.textContainerInset != view.textContainerInset {
             // Set inner padding
-            view.textContainerInset = textContainerInset
+            view.textContainerInset = self.textContainerInset
         }
     }
 

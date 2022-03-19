@@ -301,8 +301,8 @@ extension AppModel {
         environment: AppEnvironment,
         action: AppAction
     ) -> Update<AppModel, AppAction> {
-        if state.config.debug {
-            logger.debug("Action: \(String(reflecting: action))")
+        if state.config.debug == .actions || state.config.debug == .all {
+            logger.debug("Action: \(String(describing: action))")
         }
         // Generate next state and effect
         let next = update(
@@ -310,8 +310,8 @@ extension AppModel {
             environment: environment,
             action: action
         )
-        if state.config.debug {
-            logger.debug("State: \(String(reflecting: next.state))")
+        if state.config.debug == .all {
+            logger.debug("State: \(String(describing: next.state))")
         }
         return next
     }
@@ -881,26 +881,15 @@ extension AppModel {
             "Documents: \(environment.documentURL)"
         )
 
-        let countFx: Fx<AppAction> = Just(AppAction.countEntries)
-            .eraseToAnyPublisher()
-
-        let pollFx: Fx<AppAction> = AppEnvironment.poll(
-            every: state.config.pollingInterval
-        )
-        .map({ date in
-            AppAction.poll(date)
-        })
-        .eraseToAnyPublisher()
-
-        // Subscribe to keyboard events
-        let fx: Fx<AppAction> = environment
-            .keyboard.state
-            .map({ value in
-                AppAction.changeKeyboardState(value)
+        let fx: Fx<AppAction> = AppEnvironment
+            .poll(
+                every: state.config.pollingInterval
+            )
+            .map({ date in
+                AppAction.poll(date)
             })
             .merge(
-                with: pollFx,
-                countFx
+                with: Just(AppAction.countEntries)
             )
             .eraseToAnyPublisher()
 
@@ -1908,7 +1897,6 @@ struct AppEnvironment {
     var applicationSupportURL: URL
 
     var logger: Logger
-    var keyboard: KeyboardService
     var database: DatabaseService
     /// Issues periodic polls
 
@@ -1947,8 +1935,6 @@ struct AppEnvironment {
                 .appendingPathComponent("database.sqlite"),
             migrations: Self.migrations
         )
-
-        self.keyboard = KeyboardService()
     }
 }
 

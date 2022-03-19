@@ -9,8 +9,14 @@ import Foundation
 
 /// Feature flags and settings
 struct Config: Equatable {
+    enum DebugFlag {
+        case none
+        case all
+        case actions
+    }
+
     static let rdns = "com.subconscious.Subconscious"
-    let debug = false
+    let debug = DebugFlag.none
 
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
