@@ -878,15 +878,26 @@ extension AppModel {
             "Documents: \(environment.documentURL)"
         )
 
-        let fx: Fx<AppAction> = AppEnvironment
-            .poll(
-                every: state.config.pollingInterval
-            )
-            .map({ date in
-                AppAction.poll(date)
+        let countFx: Fx<AppAction> = Just(AppAction.countEntries)
+            .eraseToAnyPublisher()
+
+        let pollFx: Fx<AppAction> = AppEnvironment.poll(
+            every: state.config.pollingInterval
+        )
+        .map({ date in
+            AppAction.poll(date)
+        })
+        .eraseToAnyPublisher()
+
+        // Subscribe to keyboard events
+        let fx: Fx<AppAction> = environment
+            .keyboard.state
+            .map({ value in
+                AppAction.changeKeyboardState(value)
             })
             .merge(
-                with: Just(AppAction.countEntries)
+                with: pollFx,
+                countFx
             )
             .eraseToAnyPublisher()
 
@@ -1894,8 +1905,8 @@ struct AppEnvironment {
     var applicationSupportURL: URL
 
     var logger: Logger
+    var keyboard: KeyboardService
     var database: DatabaseService
-    /// Issues periodic polls
 
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
@@ -1929,6 +1940,8 @@ struct AppEnvironment {
                 .appendingPathComponent("database.sqlite"),
             migrations: Self.migrations
         )
+
+        self.keyboard = KeyboardService()
     }
 }
 
