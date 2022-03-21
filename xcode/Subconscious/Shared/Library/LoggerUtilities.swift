@@ -10,8 +10,10 @@ import os
 extension Logger {
     // Main app logger
     static let main = Logger(subsystem: Config.rdns, category: "main")
-    // Logger for store
-    static let store = Logger(subsystem: Config.rdns, category: "store")
+    // Logger for actions
+    static let action = Logger(subsystem: Config.rdns, category: "action")
+    // Logger for states
+    static let state = Logger(subsystem: Config.rdns, category: "state")
     // Logger for editor
     static let editor = Logger(subsystem: Config.rdns, category: "editor")
 }
