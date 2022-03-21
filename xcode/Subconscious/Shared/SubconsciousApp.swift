@@ -289,10 +289,7 @@ struct AppModel: Equatable {
 /// AppUpdate is a namespace where we keep the main app update function,
 /// as well as the sub-update functions it calls out to.
 extension AppModel {
-    static let logger = Logger(
-        subsystem: Config.rdns,
-        category: "store"
-    )
+    static let logger = Logger.store
 
     /// Call through to main update function and log updates
     /// when `state.config.debug` is `true`.
@@ -301,7 +298,7 @@ extension AppModel {
         environment: AppEnvironment,
         action: AppAction
     ) -> Update<AppModel, AppAction> {
-        if state.config.debug == .actions || state.config.debug == .all {
+        if state.config.debug {
             logger.debug("Action: \(String(describing: action))")
         }
         // Generate next state and effect
@@ -310,7 +307,7 @@ extension AppModel {
             environment: environment,
             action: action
         )
-        if state.config.debug == .all {
+        if state.config.debug {
             logger.debug("State: \(String(describing: next.state))")
         }
         return next
@@ -1924,10 +1921,7 @@ struct AppEnvironment {
             create: true
         )
 
-        self.logger = Logger(
-            subsystem: Config.rdns,
-            category: "main"
-        )
+        self.logger = Logger.main
 
         self.database = DatabaseService(
             documentURL: self.documentURL,
