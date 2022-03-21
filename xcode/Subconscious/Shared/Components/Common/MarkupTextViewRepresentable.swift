@@ -117,13 +117,16 @@ where Focus: Hashable
 
         /// Render user changes to textview
         func textViewDidChange(_ view: UITextView) {
-            representable.logger?.debug(
-                "textViewDidChange"
-            )
             // Return early if view is updating.
             guard !isUIViewUpdating else {
                 representable.logger?.debug(
                     "textViewDidChange: View updating. Skipping."
+                )
+                return
+            }
+            guard representable.text != view.text else {
+                representable.logger?.debug(
+                    "textViewDidChange: text binding already in sync. Skipping."
                 )
                 return
             }
@@ -138,7 +141,6 @@ where Focus: Hashable
 
         /// Handle editing begin (focus)
         func textViewDidBeginEditing(_ textView: UITextView) {
-            representable.logger?.debug("textViewDidBeginEditing")
             // Mark focus clean
             guard !isUIViewUpdating else {
                 representable.logger?.debug(
@@ -146,38 +148,49 @@ where Focus: Hashable
                 )
                 return
             }
-            // Set dirty flag to false and
-            // Sync representable focus binding state to textview state.
+
+            // Mark focus clean
             self.isAwaitingFocusChange = false
-            if representable.focus != representable.field {
+
+            guard representable.focus != representable.field else {
                 representable.logger?.debug(
-                    "textViewDidBeginEditing: set focus binding to focused state."
+                    "textViewDidBeginEditing: focus binding already in sync. Skipping."
                 )
-                representable.focus = representable.field
+                return
             }
+
+            representable.logger?.debug(
+                "textViewDidBeginEditing: set focus binding to focused state."
+            )
+            representable.focus = representable.field
         }
 
         /// Handle editing end (blur)
         func textViewDidEndEditing(_ textView: UITextView) {
-            representable.logger?.debug("textViewDidEndEditing")
-            // Mark focus clean
-            self.isAwaitingFocusChange = false
             guard !isUIViewUpdating else {
                 representable.logger?.debug(
                     "textViewDidEndEditing: View updating. Skipping."
                 )
                 return
             }
-            if representable.focus == representable.field {
+
+            // Mark focus clean
+            self.isAwaitingFocusChange = false
+
+            guard representable.focus == representable.field else {
                 representable.logger?.debug(
-                    "textViewDidEndEditing: set focus binding to nil."
+                    "textViewDidEndEditing: focus binding already in sync. Skipping."
                 )
-                representable.focus = nil
+                return
             }
+
+            representable.logger?.debug(
+                "textViewDidEndEditing: set focus binding to nil."
+            )
+            representable.focus = nil
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
-            representable.logger?.debug("textViewDidChangeSelection")
             // Return early if view is currently updating.
             // We set selection during update when updating
             // text, in order to retain selection.
@@ -191,12 +204,16 @@ where Focus: Hashable
                 )
                 return
             }
-            if textView.selectedRange != representable.selection {
+            guard textView.selectedRange != representable.selection else {
                 representable.logger?.debug(
-                    "textViewDidChangeSelection: set selection binding."
+                    "textViewDidChangeSelection: selection binding already in sync. Skipping."
                 )
-                representable.$selection.wrappedValue = textView.selectedRange
+                return
             }
+            representable.logger?.debug(
+                "textViewDidChangeSelection: set selection binding."
+            )
+            representable.$selection.wrappedValue = textView.selectedRange
         }
     }
 
@@ -249,9 +266,18 @@ where Focus: Hashable
     }
 
     //  MARK: updateUIView
+    /// Note that this function gets called every time the parent of
+    /// MarkupTextViewRepresentable has to recalculate its `body` property.
+    ///
+    /// You should think of this function as a hot loop.
+    ///
+    /// Avoid bashing properties that have side-effects. If you need to
+    /// set a property that has side-effects, check that it is actually
+    /// out of sync with the binding before setting, using an if-statement
+    /// or guard.
     func updateUIView(_ view: MarkupTextView, context: Context) {
-        logger?.debug("updateUIView")
-        // Set updating flag on coordinator
+        // Set updating flag on coordinator so that event callbacks
+        // can know if they are being called during an update.
         context.coordinator.isUIViewUpdating = true
         // Unset updating flag on coordator after this scope exits
         defer {
@@ -292,11 +318,7 @@ where Focus: Hashable
             return
         }
         logger?.debug("updateUIView: set text")
-        // Save selected range (cursor position).
-        let selectedRange = view.selectedRange
         view.text = self.text
-        // Restore selected range (cursor position) after setting text.
-        view.selectedRange = selectedRange
         view.invalidateIntrinsicContentSize()
     }
 
