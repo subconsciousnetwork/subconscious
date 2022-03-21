@@ -29,7 +29,7 @@
 //  See https://github.com/gordonbrander/subconscious/pull/220/
 //  See https://github.com/gordonbrander/subconscious/issues/211
 //  2022-03-17 Gordon Brander
-
+import os
 import SwiftUI
 
 /// A textview that grows to the height of its content
@@ -37,7 +37,7 @@ struct MarkupTextViewRepresentable<Focus>: UIViewRepresentable
 where Focus: Hashable
 {
     //  MARK: UITextView subclass
-    class FixedWidthTextView: UITextView {
+    class MarkupTextView: UITextView {
         var fixedWidth: CGFloat = 0
 
         override var intrinsicContentSize: CGSize {
@@ -53,16 +53,19 @@ where Focus: Hashable
     //  MARK: Coordinator
     class Coordinator: NSObject, UITextViewDelegate, NSTextStorageDelegate {
         /// Is event happening during updateUIView?
-        /// Used to avoid sending up events that would cause feedback cycles
-        /// where an update triggers an event, which triggers an update,
-        /// which triggers an event, etc.
+        /// Used to avoid setting properties in events during view updates, as
+        /// that would cause feedback cycles where an update triggers an event,
+        /// which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
+        // Dirty flag signaling if focus change has been requested already
+        var isAwaitingFocusChange: Bool
         var representable: MarkupTextViewRepresentable
 
         init(
             representable: MarkupTextViewRepresentable
         ) {
             self.isUIViewUpdating = false
+            self.isAwaitingFocusChange = false
             self.representable = representable
         }
 
@@ -82,6 +85,9 @@ where Focus: Hashable
             range: NSRange,
             changeInLength: Int
         ) {
+            representable.logger?.debug(
+                "textStorage: render markup attributes"
+            )
             textStorage.setAttributes(
                 [:],
                 range: NSRange(
@@ -113,29 +119,75 @@ where Focus: Hashable
         func textViewDidChange(_ view: UITextView) {
             // Return early if view is updating.
             guard !isUIViewUpdating else {
+                representable.logger?.debug(
+                    "textViewDidChange: View updating. Skipping."
+                )
+                return
+            }
+            guard representable.text != view.text else {
+                representable.logger?.debug(
+                    "textViewDidChange: text binding already in sync. Skipping."
+                )
                 return
             }
             if representable.text != view.text {
-                let selectedRange = view.selectedRange
-                view.selectedRange = selectedRange
-                view.invalidateIntrinsicContentSize()
+                representable.logger?.debug(
+                    "textViewDidChange: set text binding"
+                )
                 representable.text = view.text
+                view.invalidateIntrinsicContentSize()
             }
         }
 
         /// Handle editing begin (focus)
         func textViewDidBeginEditing(_ textView: UITextView) {
+            // Mark focus clean
+            guard !isUIViewUpdating else {
+                representable.logger?.debug(
+                    "textViewDidBeginEditing: View updating. Skipping."
+                )
+                return
+            }
+
+            // Mark focus clean
+            self.isAwaitingFocusChange = false
+
+            guard representable.focus != representable.field else {
+                representable.logger?.debug(
+                    "textViewDidBeginEditing: focus binding already in sync. Skipping."
+                )
+                return
+            }
+
+            representable.logger?.debug(
+                "textViewDidBeginEditing: set focus binding to focused state."
+            )
             representable.focus = representable.field
         }
 
         /// Handle editing end (blur)
         func textViewDidEndEditing(_ textView: UITextView) {
-            // Un-focus editor if it still has focus.
-            // If some other field has already taken focus, leave
-            // it alone.
-            if representable.focus == representable.field {
-                representable.focus = nil
+            guard !isUIViewUpdating else {
+                representable.logger?.debug(
+                    "textViewDidEndEditing: View updating. Skipping."
+                )
+                return
             }
+
+            // Mark focus clean
+            self.isAwaitingFocusChange = false
+
+            guard representable.focus == representable.field else {
+                representable.logger?.debug(
+                    "textViewDidEndEditing: focus binding already in sync. Skipping."
+                )
+                return
+            }
+
+            representable.logger?.debug(
+                "textViewDidEndEditing: set focus binding to nil."
+            )
+            representable.focus = nil
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
@@ -147,22 +199,22 @@ where Focus: Hashable
             // mutation goes from representable to view during an update.
             // 2021-10-06 Gordon Brander
             guard !isUIViewUpdating else {
+                representable.logger?.debug(
+                    "textViewDidChangeSelection: View updating. Skipping."
+                )
                 return
             }
-            if textView.selectedRange != representable.selection {
-                representable.selection = textView.selectedRange
+            guard textView.selectedRange != representable.selection else {
+                representable.logger?.debug(
+                    "textViewDidChangeSelection: selection binding already in sync. Skipping."
+                )
+                return
             }
+            representable.logger?.debug(
+                "textViewDidChangeSelection: set selection binding."
+            )
+            representable.$selection.wrappedValue = textView.selectedRange
         }
-    }
-
-    /// Default handler for link clicks. Always defers to OS-level handler.
-    private static func onLinkDefault(
-        url: URL,
-        attributedText: NSAttributedString,
-        in characterRange: NSRange,
-        interaction: UITextItemInteraction
-    ) -> Bool {
-        return true
     }
 
     //  MARK: Properties
@@ -183,16 +235,17 @@ where Focus: Hashable
         NSAttributedString,
         NSRange,
         UITextItemInteraction
-    ) -> Bool = onLinkDefault
+    ) -> Bool
+    var logger: Logger?
 
-    /// Is this field is currently focused?
-    private var isFocused: Bool {
-        focus == field
+    var isFocused: Bool {
+        self.focus == field
     }
 
     //  MARK: makeUIView
-    func makeUIView(context: Context) -> FixedWidthTextView {
-        let view = FixedWidthTextView()
+    func makeUIView(context: Context) -> MarkupTextView {
+        logger?.debug("makeUIView")
+        let view = MarkupTextView()
 
         // Coordinator is both an UITextViewDelegate
         // and an NSTextStorageDelegate.
@@ -213,49 +266,102 @@ where Focus: Hashable
     }
 
     //  MARK: updateUIView
-    func updateUIView(_ view: FixedWidthTextView, context: Context) {
-        // Set updating flag on coordinator
+    /// Note that this function gets called every time the parent of
+    /// MarkupTextViewRepresentable has to recalculate its `body` property.
+    ///
+    /// You should think of this function as a hot loop.
+    ///
+    /// Avoid bashing properties that have side-effects. If you need to
+    /// set a property that has side-effects, check that it is actually
+    /// out of sync with the binding before setting, using an if-statement
+    /// or guard.
+    func updateUIView(_ view: MarkupTextView, context: Context) {
+        // Set updating flag on coordinator so that event callbacks
+        // can know if they are being called during an update.
         context.coordinator.isUIViewUpdating = true
         // Unset updating flag on coordator after this scope exits
         defer {
             context.coordinator.isUIViewUpdating = false
         }
 
-        if view.text != self.text {
-            // Save selected range (cursor position).
-            let selectedRange = view.selectedRange
-            view.text = self.text
-            // Restore selected range (cursor position) after setting text.
-            view.selectedRange = selectedRange
-            view.invalidateIntrinsicContentSize()
-        }
+        // Update text
+        self.updateUIViewText(view, context: context)
 
+        // Update width
         if view.fixedWidth != self.frame.width {
+            logger?.debug("updateUIView: set width")
             view.fixedWidth = self.frame.width
             view.invalidateIntrinsicContentSize()
         }
 
-        // Set firstResponder
-        if isFocused != view.isFirstResponder {
-            if isFocused {
-                DispatchQueue.main.async {
+        // Update view focus
+        self.updateUIViewFocus(view, context: context)
+
+        // Set selection
+        if self.selection != view.selectedRange {
+            logger?.debug("updateUIView: set selection")
+            view.selectedRange = self.selection
+        }
+
+        if self.textContainerInset != view.textContainerInset {
+            logger?.debug("updateUIView: set inset")
+            // Set inner padding
+            view.textContainerInset = self.textContainerInset
+        }
+    }
+
+    /// Update UIView text state farom binding if necessary
+    /// Also invalidates intrinsic content size so that text view can
+    /// grow to contain new text contents.
+    func updateUIViewText(_ view: MarkupTextView, context: Context) {
+        guard view.text != self.text else {
+            return
+        }
+        logger?.debug("updateUIView: set text")
+        view.text = self.text
+        view.invalidateIntrinsicContentSize()
+    }
+
+    /// If representable focus state is out of sync
+    /// with `view.isFirstResponder`, then focus is dirty.
+    /// Schedule first responder change in response, and
+    /// flag that we are awaiting a focus change.
+    /// The flag prevents us from accidentally requesting focus change
+    /// more than once.
+    func updateUIViewFocus(_ view: MarkupTextView, context: Context) {
+        // Focus is clean, do nothing
+        guard isFocused != view.isFirstResponder else {
+            return
+        }
+        guard !context.coordinator.isAwaitingFocusChange else {
+            logger?.debug(
+                "updateUIViewFocus: Focus is dirty but focus change already scheduled. Skipping."
+            )
+            return
+        }
+        context.coordinator.isAwaitingFocusChange = true
+        logger?.debug(
+            "updateUIViewFocus: Focus is dirty. Scheduling focus change."
+        )
+        // Call for first responder change needs to be async,
+        // or else we get an AttributeCycle warning from SwiftUI.
+        // 2022-03-21 Gordon Brander
+        DispatchQueue.main.async {
+            // Check again in this tick to make sure we still need to
+            // request first responder change.
+            if isFocused != view.isFirstResponder {
+                if isFocused {
+                    logger?.debug(
+                        "async: call becomeFirstResponder"
+                    )
                     view.becomeFirstResponder()
-                }
-            } else {
-                DispatchQueue.main.async {
+                } else {
+                    logger?.debug(
+                        "async: call resignFirstResponder"
+                    )
                     view.resignFirstResponder()
                 }
             }
-        }
-
-        // Set selection
-        if selection != view.selectedRange {
-            view.selectedRange = selection
-        }
-
-        if textContainerInset != view.textContainerInset {
-            // Set inner padding
-            view.textContainerInset = textContainerInset
         }
     }
 

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 struct DetailView: View {
     private static func calcTextFieldHeight(
@@ -61,7 +62,8 @@ struct DetailView: View {
                                 field: .editor,
                                 frame: geometry.frame(in: .local),
                                 renderAttributesOf: Subtext.renderAttributesOf,
-                                onLink: onEditorLink
+                                onLink: onEditorLink,
+                                logger: Logger.editor
                             )
                             .insets(
                                 EdgeInsets(

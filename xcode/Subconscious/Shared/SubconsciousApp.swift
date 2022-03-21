@@ -289,11 +289,6 @@ struct AppModel: Equatable {
 /// AppUpdate is a namespace where we keep the main app update function,
 /// as well as the sub-update functions it calls out to.
 extension AppModel {
-    static let logger = Logger(
-        subsystem: Config.rdns,
-        category: "store"
-    )
-
     /// Call through to main update function and log updates
     /// when `state.config.debug` is `true`.
     static func updateAndLog(
@@ -302,7 +297,7 @@ extension AppModel {
         action: AppAction
     ) -> Update<AppModel, AppAction> {
         if state.config.debug {
-            logger.debug("Action: \(String(reflecting: action))")
+            Logger.action.debug("\(String(describing: action))")
         }
         // Generate next state and effect
         let next = update(
@@ -311,7 +306,7 @@ extension AppModel {
             action: action
         )
         if state.config.debug {
-            logger.debug("State: \(String(reflecting: next.state))")
+            Logger.state.debug("\(String(describing: next.state))")
         }
         return next
     }
@@ -1910,7 +1905,6 @@ struct AppEnvironment {
     var logger: Logger
     var keyboard: KeyboardService
     var database: DatabaseService
-    /// Issues periodic polls
 
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
@@ -1936,10 +1930,7 @@ struct AppEnvironment {
             create: true
         )
 
-        self.logger = Logger(
-            subsystem: Config.rdns,
-            category: "main"
-        )
+        self.logger = Logger.main
 
         self.database = DatabaseService(
             documentURL: self.documentURL,
