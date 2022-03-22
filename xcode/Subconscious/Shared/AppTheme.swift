@@ -99,20 +99,18 @@ extension Color {
     static let background = SwiftUI.Color("BackgroundColor")
     static let secondaryBackground = SwiftUI.Color("SecondaryBackgroundColor")
     static let inputBackground = SwiftUI.Color("InputBackgroundColor")
-    static let primaryButtonBackground = SwiftUI.Color(
-        "PrimaryButtonBackgroundColor"
-    )
+    static let primaryButtonBackground = Color.accentColor.opacity(0.2)
     static let primaryButtonBackgroundPressed = primaryButtonBackground
         .opacity(0.5)
     static let primaryButtonBackgroundDisabled = primaryButtonBackground
         .opacity(0.3)
-    static let primaryButtonText = SwiftUI.Color("PrimaryButtonTextColor")
-    static let primaryButtonTextPressed = fabText.opacity(0.5)
-    static let primaryButtonTextDisabled = fabText.opacity(0.3)
+    static let primaryButtonText = SwiftUI.Color.accentColor
+    static let primaryButtonTextPressed = primaryButtonText.opacity(0.5)
+    static let primaryButtonTextDisabled = primaryButtonText.opacity(0.3)
     static let fabBackground = primaryButtonBackground
     static let fabBackgroundPressed = primaryButtonBackgroundPressed
-    static let fabText = primaryButtonText
-    static let fabTextPressed = primaryButtonTextPressed
-    static let fabTextDisabled = primaryButtonTextDisabled
+    static let fabText = Color.white
+    static let fabTextPressed = fabText.opacity(0.5)
+    static let fabTextDisabled = fabText.opacity(0.3)
     static let scrim = SwiftUI.Color(UIColor.tertiarySystemFill)
 }

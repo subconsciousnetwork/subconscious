@@ -11,19 +11,14 @@ struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
-        ZStack {
-            Capsule().foregroundColor(
-                Color.chooseForState(
-                    isPressed: configuration.isPressed,
-                    isEnabled: isEnabled,
-                    normal: Color.primaryButtonBackground,
-                    pressed: Color.primaryButtonBackgroundPressed,
-                    disabled: Color.primaryButtonBackgroundDisabled
-                )
-            ).frame(
+        configuration.label
+            .font(
+                Font(UIFont.appButton)
+            )
+            .frame(
                 height: AppTheme.unit * 8
             )
-            configuration.label.foregroundColor(
+            .foregroundColor(
                 Color.chooseForState(
                     isPressed: configuration.isPressed,
                     isEnabled: isEnabled,
@@ -31,12 +26,21 @@ struct PrimaryButtonStyle: ButtonStyle {
                     pressed: Color.primaryButtonTextPressed,
                     disabled: Color.primaryButtonTextDisabled
                 )
-            ).padding(
-                .horizontal, AppTheme.unit * 4
-            ).font(
-                Font(UIFont.appButton)
             )
-        }
+            .padding(
+                .horizontal, AppTheme.unit * 4
+            )
+            .background(
+                Color.chooseForState(
+                    isPressed: configuration.isPressed,
+                    isEnabled: isEnabled,
+                    normal: Color.primaryButtonBackground,
+                    pressed: Color.primaryButtonBackgroundPressed,
+                    disabled: Color.primaryButtonBackgroundDisabled
+                )
+            )
+            .clipShape(Capsule())
+            .animation(.default, value: configuration.isPressed)
     }
 }
 
