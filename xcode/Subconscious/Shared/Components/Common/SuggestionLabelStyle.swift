@@ -11,7 +11,7 @@ import SwiftUI
 /// However, this version gives us more control over the styling, allowing us to create hanging icons.
 struct SuggestionLabelStyle: LabelStyle {
     var spacing: CGFloat? = nil
-    var iconColor = Color.secondaryIcon
+    var iconColor = Color.icon
 
     func makeBody(configuration: Configuration) -> some View {
         HStack(alignment: .top, spacing: spacing) {
