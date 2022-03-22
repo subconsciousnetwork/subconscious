@@ -49,6 +49,7 @@ struct EntryListView: View {
                                 (AppTheme.unit * 6)
                             )
                         )
+                        .listRowSeparator(.hidden)
                 }
                 .animation(.easeOutCubic(), value: entries)
                 .transition(.opacity)
