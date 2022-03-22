@@ -15,8 +15,8 @@ struct RenameSuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroupView(
-                        title: entryLink.slug.description,
-                        subtitle: "Merge ideas"
+                        title: Text(String(entryLink.slug)),
+                        subtitle: Text("Merge ideas")
                     )
                 },
                 icon: {
@@ -27,8 +27,8 @@ struct RenameSuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroupView(
-                        title: entryLink.slug.description,
-                        subtitle: "Rename idea"
+                        title: Text(String(entryLink.slug)),
+                        subtitle: Text("Rename idea")
                     )
                 },
                 icon: {

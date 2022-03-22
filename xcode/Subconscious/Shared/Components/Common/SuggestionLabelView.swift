@@ -21,8 +21,8 @@ struct SuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroupView(
-                        title: readTitle(entryLink.title),
-                        subtitle: entryLink.slug.description
+                        title: Text(readTitle(entryLink.title)),
+                        subtitle: Text(String(entryLink.slug))
                     )
                 },
                 icon: {
@@ -33,8 +33,8 @@ struct SuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroupView(
-                        title: readTitle(entryLink.title),
-                        subtitle: entryLink.slug.description
+                        title: Text(readTitle(entryLink.title)),
+                        subtitle: Text(String(entryLink.slug))
                     )
                 },
                 icon: {
@@ -45,8 +45,8 @@ struct SuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroupView(
-                        title: "Daily journal",
-                        subtitle: entryLink.slug.description
+                        title: Text("Daily journal"),
+                        subtitle: Text(String(entryLink.slug))
                     )
                 },
                 icon: {
@@ -57,8 +57,8 @@ struct SuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroupView(
-                        title: "Scratch note",
-                        subtitle: entryLink.slug.description
+                        title: Text("Scratch note"),
+                        subtitle: Text(String(entryLink.slug))
                     )
                 },
                 icon: {
@@ -69,8 +69,8 @@ struct SuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroupView(
-                        title: "Random",
-                        subtitle: "Display a random idea"
+                        title: Text("Random"),
+                        subtitle: Text("Display a random idea")
                     )
                 },
                 icon: {

@@ -11,21 +11,21 @@ import SwiftUI
 /// Often used in list views.
 /// Each line is at least 1 icon in height.
 struct TitleGroupView: View {
-    var title: String
-    var subtitle: String
+    var title: Text
+    var subtitle: Text
     var lineHeight: CGFloat = AppTheme.icon
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text(title)
+                title
                     .font(Font(UIFont.appText))
                     .foregroundColor(Color.text)
                 Spacer()
             }
             .frame(minHeight: AppTheme.icon)
             HStack {
-                Text(subtitle)
+                subtitle
                     .font(Font(UIFont.appCaption))
                     .foregroundColor(Color.secondaryText)
                 Spacer()
@@ -38,8 +38,8 @@ struct TitleGroupView: View {
 struct TitleGroup_Previews: PreviewProvider {
     static var previews: some View {
         TitleGroupView(
-            title: "Foo",
-            subtitle: "Bar"
+            title: Text("Foo"),
+            subtitle: Text("Bar")
         )
     }
 }
