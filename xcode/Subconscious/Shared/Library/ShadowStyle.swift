@@ -1,5 +1,5 @@
 //
-//  Shadow.swift
+//  ShadowStyle.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 3/22/22.
