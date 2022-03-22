@@ -129,6 +129,7 @@ struct AppNavigationView: View {
                         Text("Ideas").font(Font(UIFont.appTextMedium))
                         CountChip(count: store.state.entryCount)
                     }
+                    .frame(minWidth: 200, maxWidth: .infinity)
                 }
             }
         }
