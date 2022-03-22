@@ -50,9 +50,7 @@ struct DetailToolbarContent: ToolbarContent {
                     ) {
                         Text("Done").bold()
                     }
-                    .foregroundColor(.buttonText)
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.capsule)
+                    .buttonStyle(PrimaryButtonStyle())
                     .transition(.opacity)
                 }
             } else {
