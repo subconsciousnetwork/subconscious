@@ -29,7 +29,6 @@ struct RenameSearchView: View {
                     ) {
                         Text("Cancel")
                     }
-                    .buttonStyle(.plain)
                     .lineLimit(1)
                 },
                 trailing: {
