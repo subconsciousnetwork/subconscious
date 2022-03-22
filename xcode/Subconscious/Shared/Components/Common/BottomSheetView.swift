@@ -87,7 +87,7 @@ where Content: View {
                 )
                 .animation(
                     .interactiveSpring(
-                        response: 0.35,
+                        response: 0.5,
                         dampingFraction: 0.86,
                         blendDuration: 0.25
                     ),
@@ -108,6 +108,7 @@ where Content: View {
                         }
                 )
             }
+            .shadow(style: .lv1)
             .zIndex(2)
         }
         .frame(

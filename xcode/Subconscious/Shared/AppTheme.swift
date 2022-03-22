@@ -93,6 +93,7 @@ extension Color {
     static let placeholderText = SwiftUI.Color("PlaceholderTextColor")
     static let icon = SwiftUI.Color.accentColor
     static let secondaryIcon = SwiftUI.Color.secondaryText
+    static let tertiaryIcon = SwiftUI.Color(UIColor.tertiarySystemFill)
     static let buttonText = SwiftUI.Color.accentColor
     /// Fill for pressed-state overlays
     static let pressedFill = SwiftUI.Color(UIColor.systemFill)
