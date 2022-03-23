@@ -65,7 +65,12 @@ struct AppNavigationView: View {
                             linkSuggestions: store.state.linkSuggestions,
                             focus: store.binding(
                                 get: \.focus,
-                                tag: AppAction.setFocus
+                                tag: { focus in
+                                    AppAction.setFocus(
+                                        focus: focus,
+                                        field: .editor
+                                    )
+                                }
                             ),
                             editorText: store.binding(
                                 get: \.editorText,

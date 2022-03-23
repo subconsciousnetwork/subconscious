@@ -51,10 +51,11 @@ enum AppAction {
     case openURL(URL)
     case openEditorURL(url: URL, range: NSRange)
 
-    /// Focus state for TextFields, TextViews, etc
-    case setFocus(AppModel.Focus?)
-    /// Resign focus, if you have it
-    case resignFocus(AppModel.Focus)
+    /// Set focus from a particular field
+    case setFocus(
+        focus: AppModel.Focus?,
+        field: AppModel.Focus
+    )
 
     //  Database
     /// Get database ready for interaction
@@ -342,15 +343,12 @@ extension AppModel {
             return Update(state: state)
         case let .openEditorURL(url, range):
             return openEditorURL(state: state, url: url, range: range)
-        case let .setFocus(focus):
+        case let .setFocus(focus, field):
             return setFocus(
                 state: state,
-                focus: focus
-            )
-        case .resignFocus(let focus):
-            return resignFocus(
-                state: state,
-                focus: focus
+                environment: environment,
+                focus: focus,
+                field: field
             )
         case .readyDatabase:
             return readyDatabase(state: state, environment: environment)
@@ -612,10 +610,11 @@ extension AppModel {
                 error: error
             )
         case let .setLinkSheetPresented(isPresented):
-            var model = state
-            model.focus = isPresented ? .linkSearch : .editor
-            model.isLinkSheetPresented = isPresented
-            return Update(state: model)
+            return setLinkSheetPresented(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
         case let .setLinkSearch(text):
             return setLinkSearch(
                 state: state,
@@ -946,27 +945,35 @@ extension AppModel {
     }
 
     /// Set focus state.
-    /// Note if you want to resign focus, prefer using `resignFocus`.
     static func setFocus(
         state: AppModel,
-        focus: AppModel.Focus?
+        environment: AppEnvironment,
+        focus: AppModel.Focus?,
+        field: AppModel.Focus
     ) -> Update<AppModel, AppAction> {
-        var model = state
-        model.focus = focus
-        return Update(state: model).animation(.default)
-    }
-
-    /// Resign focus if you have it.
-    /// Otherwise leave focus untouched.
-    static func resignFocus(
-        state: AppModel,
-        focus: AppModel.Focus
-    ) -> Update<AppModel, AppAction> {
-        var model  = state
-        if model.focus == focus {
-            model.focus = nil
+        // If desired focus is not nil, just set it.
+        if focus != nil {
+            var model = state
+            model.focus = focus
+            return Update(state: model).animation(.default)
         }
-        return Update(state: model).animation(.default)
+        // If desired focus is nil, only resign focus if the current focus
+        // is on the expected focus field.
+        // In general, nil means "relinquish my focus", not
+        // "relinquish all focus". If someone else has taken focus in the
+        // meantime, we don't want to stomp on them.
+        else if focus == nil && state.focus == field {
+            var model = state
+            model.focus = nil
+            return Update(state: model).animation(.default)
+        }
+        // Otherwise, do nothing.
+        else {
+            environment.logger.debug(
+                "setFocus: requested nil focus, but focus already changed. Noop."
+            )
+            return Update(state: state)
+        }
     }
 
     /// Make database ready.
@@ -1328,7 +1335,12 @@ extension AppModel {
             })
             //  Set focus on rename field
             .pipe({ state in
-                setFocus(state: state, focus: .rename)
+                setFocus(
+                    state: state,
+                    environment: environment,
+                    focus: .rename,
+                    field: .rename
+                )
             })
     }
 
@@ -1351,7 +1363,12 @@ extension AppModel {
                 )
             })
             .pipe({ state in
-                resignFocus(state: state, focus: .rename)
+                setFocus(
+                    state: state,
+                    environment: environment,
+                    focus: nil,
+                    field: .rename
+                )
             })
     }
 
@@ -1502,7 +1519,12 @@ extension AppModel {
             environment: environment
         )
         .pipe({ state in
-            resignFocus(state: state, focus: .editor)
+            setFocus(
+                state: state,
+                environment: environment,
+                focus: nil,
+                field: .editor
+            )
         })
     }
 
@@ -1715,8 +1737,28 @@ extension AppModel {
                 )
             })
             .pipe({ state in
-                setFocus(state: state, focus: .editor)
+                setFocus(
+                    state: state,
+                    environment: environment,
+                    focus: .editor,
+                    field: .editor
+                )
             })
+    }
+
+    static func setLinkSheetPresented(
+        state: AppModel,
+        environment: AppEnvironment,
+        isPresented: Bool
+    ) -> Update<AppModel, AppAction> {
+        var update = setFocus(
+            state: state,
+            environment: environment,
+            focus: isPresented ? .linkSearch : .editor,
+            field: .linkSearch
+        )
+        update.state.isLinkSheetPresented = isPresented
+        return update
     }
 
     static func setLinkSearch(
