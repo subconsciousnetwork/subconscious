@@ -162,6 +162,26 @@ enum AppAction {
     }
 }
 
+extension AppAction {
+    /// Generates a short (approximately 1 line) loggable string for action.
+    func toLogString() -> String {
+        switch self {
+        case .setRecent(let items):
+            return "setRecent(...) (\(items.count) items)"
+        case .setSuggestions(let items):
+            return "setSuggestions(...) (\(items.count) items)"
+        case .setLinkSuggestions(let items):
+            return "setLinkSuggestions(...) (\(items.count) items)"
+        case .setRenameSuggestions(let items):
+            return "setRenameSuggestions(...) (\(items.count) items)"
+        case .updateDetail(let detail):
+            return "updateDetail(\(detail.slug))"
+        default:
+            return String(describing: self)
+        }
+    }
+}
+
 //  MARK: Model
 struct AppModel: Equatable {
     /// Enum describing which view is currently focused.
@@ -297,9 +317,7 @@ extension AppModel {
         environment: AppEnvironment,
         action: AppAction
     ) -> Update<AppModel, AppAction> {
-        if state.config.debug {
-            Logger.action.debug("\(String(describing: action))")
-        }
+        Logger.action.debug("\(action.toLogString())")
         // Generate next state and effect
         let next = update(
             state: state,
