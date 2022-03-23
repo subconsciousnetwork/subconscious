@@ -175,7 +175,7 @@ extension AppAction {
         case .setRenameSuggestions(let items):
             return "setRenameSuggestions(...) (\(items.count) items)"
         case .updateDetail(let detail):
-            return "updateDetail(\(detail.slug))"
+            return "updateDetail(\(detail.slug)) (saved state: \(detail.entry.state))"
         default:
             return String(describing: self)
         }
