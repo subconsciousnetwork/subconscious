@@ -65,7 +65,12 @@ struct AppView: View {
                         ),
                         focus: store.binding(
                             get: \.focus,
-                            tag: AppAction.setFocus
+                            tag: { focus in
+                                AppAction.setFocus(
+                                    focus: focus,
+                                    field: .search
+                                )
+                            }
                         ),
                         suggestions: store.binding(
                             get: \.suggestions,
@@ -107,7 +112,12 @@ struct AppView: View {
                         ),
                         focus: store.binding(
                             get: \.focus,
-                            tag: AppAction.setFocus
+                            tag: { focus in
+                                AppAction.setFocus(
+                                    focus: focus,
+                                    field: .rename
+                                )
+                            }
                         ),
                         onCancel: {
                             store.send(action: .hideRenameSheet)
@@ -134,7 +144,12 @@ struct AppView: View {
                         ),
                         focus: store.binding(
                             get: \.focus,
-                            tag: AppAction.setFocus
+                            tag: { focus in
+                                AppAction.setFocus(
+                                    focus: focus,
+                                    field: .linkSearch
+                                )
+                            }
                         ),
                         onCancel: {
                             store.send(
