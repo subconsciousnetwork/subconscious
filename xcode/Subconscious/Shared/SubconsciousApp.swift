@@ -254,7 +254,7 @@ struct AppModel: Equatable {
     var suggestions: [Suggestion] = []
 
     // Editor
-    /// Subtext object model
+    /// Editor text (markup)
     var editorText = ""
     /// Are all changes to editor saved?
     var editorSaveState = SaveState.saved
