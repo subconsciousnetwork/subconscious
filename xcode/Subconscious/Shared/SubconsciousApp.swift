@@ -1700,7 +1700,29 @@ extension AppModel {
         }
     }
 
-    /// Request that entry detail view be shown
+    /// Factors out the non-get-detail related aspects
+    /// of requesting a detail view.
+    /// Used by a few request detail implementations.
+    private static func prepareRequestDetail(
+        state: AppModel,
+        environment: AppEnvironment,
+        slug: Slug
+    ) -> Update<AppModel, AppAction> {
+        var model = state
+        model.isDetailLoading = true
+        model.isDetailShowing = true
+
+        // Save current state before we blow it away
+        return save(
+            state: model,
+            environment: environment
+        )
+        .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
+    /// Request detail view for entry.
+    /// Fall back on string (typically query string) when no detail
+    /// exists for this slug yet.
     static func requestDetail(
         state: AppModel,
         environment: AppEnvironment,
@@ -1714,58 +1736,60 @@ extension AppModel {
             )
             return Update(state: state)
         }
-        // Save current state before we blow it away
-        return save(
+
+        let fx: Fx<AppAction> = environment.database
+            .readEntryDetail(
+                slug: slug,
+                // Trim whitespace and add blank line to end of string
+                // This gives us a good starting point to start
+                // editing.
+                fallback: fallback.formattingBlankLineEnding()
+            )
+            .map({ detail in
+                AppAction.updateDetail(detail)
+            })
+            .catch({ error in
+                Just(AppAction.failDetail(error.localizedDescription))
+            })
+            .merge(
+                with: Just(AppAction.setSearch("")),
+                Just(AppAction.createSearchHistoryItem(fallback))
+            )
+            .eraseToAnyPublisher()
+
+        return prepareRequestDetail(
             state: state,
-            environment: environment
+            environment: environment,
+            slug: slug
         )
-        .pipe({ state in
-            var model = state
-            model.isDetailLoading = true
-            model.searchText = ""
-            model.isDetailShowing = true
-            let fx: Fx<AppAction> = environment.database
-                .readEntryDetail(
-                    slug: slug,
-                    // Trim whitespace and add blank line to end of string
-                    // This gives us a good starting point to start
-                    // editing.
-                    fallback: fallback.formattingBlankLineEnding()
-                )
-                .map({ detail in
-                    AppAction.updateDetail(detail)
-                })
-                .catch({ error in
-                    Just(AppAction.failDetail(error.localizedDescription))
-                })
-                .merge(
-                    with: Just(AppAction.setSearch("")),
-                    Just(AppAction.createSearchHistoryItem(fallback))
-                )
-                .eraseToAnyPublisher()
-            return Update(state: model, fx: fx)
-        })
-        .animation(.easeOutCubic(duration: Duration.keyboard))
+        .mergeFx(fx)
     }
 
-    /// Request detail, using contents of template file as fallback content
+    /// Request detail view for entry.
+    /// Fall back on contents of template file when no detail
+    /// exists for this slug yet.
     static func requestTemplateDetail(
         state: AppModel,
         environment: AppEnvironment,
         slug: Slug,
         template: Slug
     ) -> Update<AppModel, AppAction> {
-        /// Get template contents
-        let fallback = environment.database
-            .readEntry(slug: template)
-            .map({ entry in entry.content })
-            .unwrap(or: "")
-        return requestDetail(
+        let fx: Fx<AppAction> = environment.database
+            .readEntryDetail(slug: slug, template: template)
+            .map({ detail in
+                AppAction.updateDetail(detail)
+            })
+            .catch({ error in
+                Just(AppAction.failDetail(error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+
+        return prepareRequestDetail(
             state: state,
             environment: environment,
-            slug: slug,
-            fallback: fallback
+            slug: slug
         )
+        .mergeFx(fx)
     }
 
     /// Request detail for a random entry
