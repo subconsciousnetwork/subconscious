@@ -578,15 +578,29 @@ extension AppModel {
             var model = state
             model.isSearchShowing = true
             model.searchText = ""
-            model.focus = .search
             return Update(state: model)
+                .pipe({ state in
+                    setFocus(
+                        state: state,
+                        environment: environment,
+                        focus: .search,
+                        field: .search
+                    )
+                })
                 .animation(.easeOutCubic(duration: Duration.keyboard))
         case .hideSearch:
             var model = state
             model.isSearchShowing = false
             model.searchText = ""
-            model.focus = nil
             return Update(state: model)
+                .pipe({ state in
+                    setFocus(
+                        state: state,
+                        environment: environment,
+                        focus: nil,
+                        field: .search
+                    )
+                })
                 .animation(.easeOutCubic(duration: Duration.keyboard))
         case let .selectSuggestion(suggestion):
             return selectSuggestion(
@@ -689,7 +703,6 @@ extension AppModel {
         model.editorSaveState = .saved
         model.editorSelection = NSMakeRange(0, 0)
         model.editorSelectedSlashlink = nil
-        model.focus = nil
         return model
     }
 
@@ -835,10 +848,15 @@ extension AppModel {
         .pipe({ state in
             var model = state
             model.isDetailShowing = isShowing
-            if isShowing == false {
-                model.focus = nil
+            guard isShowing == false else {
+                return Update(state: model)
             }
-            return Update(state: model)
+            return setFocus(
+                state: model,
+                environment: environment,
+                focus: nil,
+                field: .editor
+            )
         })
     }
 
@@ -987,8 +1005,10 @@ extension AppModel {
         }
         // Otherwise, do nothing.
         else {
+            let fieldString = String(describing: field)
+            let currentString = String(describing: state.focus)
             environment.logger.debug(
-                "setFocus: requested nil focus, but focus already changed. Noop."
+                "setFocus: requested nil focus for field \(fieldString), but focus already changed to \(currentString). Noop."
             )
             return Update(state: state)
         }
@@ -1580,13 +1600,10 @@ extension AppModel {
         environment: AppEnvironment,
         suggestion: Suggestion
     ) -> Update<AppModel, AppAction> {
-        var model = state
-        model.isSearchShowing = false
-
         switch suggestion {
         case .entry(let entryLink):
             return requestDetail(
-                state: model,
+                state: state,
                 environment: environment,
                 slug: entryLink.slug,
                 fallback: entryLink.title
@@ -1594,7 +1611,7 @@ extension AppModel {
             .animation(.easeOutCubic(duration: Duration.keyboard))
         case .search(let entryLink):
             return requestDetail(
-                state: model,
+                state: state,
                 environment: environment,
                 slug: entryLink.slug,
                 fallback: entryLink.title
@@ -1602,7 +1619,7 @@ extension AppModel {
             .animation(.easeOutCubic(duration: Duration.keyboard))
         case .journal(let entryLink):
             return requestTemplateDetail(
-                state: model,
+                state: state,
                 environment: environment,
                 slug: entryLink.slug,
                 template: state.config.journalTemplate
@@ -1610,7 +1627,7 @@ extension AppModel {
             .animation(.easeOutCubic(duration: Duration.keyboard))
         case .scratch(let entryLink):
             return requestDetail(
-                state: model,
+                state: state,
                 environment: environment,
                 slug: entryLink.slug,
                 fallback: entryLink.title
@@ -1618,7 +1635,7 @@ extension AppModel {
             .animation(.easeOutCubic(duration: Duration.keyboard))
         case .random:
             return requestRandomDetail(
-                state: model,
+                state: state,
                 environment: environment
             )
             .animation(.easeOutCubic(duration: Duration.keyboard))
@@ -1648,7 +1665,6 @@ extension AppModel {
             var model = state
             model.isDetailLoading = true
             model.searchText = ""
-            model.isSearchShowing = false
             model.isDetailShowing = true
             let fx: Fx<AppAction> = environment.database
                 .readEntryDetail(
@@ -1721,15 +1737,26 @@ extension AppModel {
         detail: EntryDetail
     ) -> Update<AppModel, AppAction> {
         var model = resetEditor(state: state)
+
         model.isDetailLoading = false
         model.slug = detail.slug
         model.backlinks = detail.backlinks
 
-        let update = setEditor(
+        let fx: Fx<AppAction> = Just(AppAction.hideSearch)
+            .delay(for: .seconds(0.5), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+
+        let update = Update(
             state: model,
-            text: detail.entry.value.dom.base,
-            saveState: detail.entry.state
+            fx: fx
         )
+        .pipe({ state in
+            setEditor(
+                state: model,
+                text: detail.entry.value.dom.base,
+                saveState: detail.entry.state
+            )
+        })
         .pipe({ state in
             save(
                 state: state,
