@@ -124,6 +124,9 @@ enum AppAction {
 
     // Detail
     case requestDetail(slug: Slug?, fallback: String)
+    /// request detail for slug, using template file as a fallback
+    case requestTemplateDetail(slug: Slug, template: Slug)
+    case requestRandomDetail
     case updateDetail(EntryDetail)
     case failDetail(String)
     case failRandomDetail(Error)
@@ -589,19 +592,10 @@ extension AppModel {
                 })
                 .animation(.easeOutCubic(duration: Duration.keyboard))
         case .hideSearch:
-            var model = state
-            model.isSearchShowing = false
-            model.searchText = ""
-            return Update(state: model)
-                .pipe({ state in
-                    setFocus(
-                        state: state,
-                        environment: environment,
-                        focus: nil,
-                        field: .search
-                    )
-                })
-                .animation(.easeOutCubic(duration: Duration.keyboard))
+            return hideSearch(
+                state: state,
+                environment: environment
+            )
         case let .selectSuggestion(suggestion):
             return selectSuggestion(
                 state: state,
@@ -623,6 +617,18 @@ extension AppModel {
                 environment: environment,
                 slug: slug,
                 fallback: fallback
+            )
+        case let .requestTemplateDetail(slug, template):
+            return requestTemplateDetail(
+                state: state,
+                environment: environment,
+                slug: slug,
+                template: template
+            )
+        case .requestRandomDetail:
+            return requestRandomDetail(
+                state: state,
+                environment: environment
             )
         case let .updateDetail(results):
             return updateDetail(
@@ -1594,51 +1600,103 @@ extension AppModel {
         return Update(state: model, fx: fx)
     }
 
+    /// Set search HUD to hidden state
+    static func hideSearch(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel, AppAction> {
+        var model = state
+        model.isSearchShowing = false
+        model.searchText = ""
+        return Update(state: model)
+            .pipe({ state in
+                setFocus(
+                    state: state,
+                    environment: environment,
+                    focus: nil,
+                    field: .search
+                )
+            })
+            .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
     /// Handle user select search suggestion
     static func selectSuggestion(
         state: AppModel,
         environment: AppEnvironment,
         suggestion: Suggestion
     ) -> Update<AppModel, AppAction> {
+        // Duration of keyboard animation
+        let duration = Duration.keyboard
+        let delay = duration + 0.03
+
+        var update = hideSearch(
+            state: state,
+            environment: environment
+        )
+        .animation(.easeOutCubic(duration: duration))
+
         switch suggestion {
         case .entry(let entryLink):
-            return requestDetail(
-                state: state,
-                environment: environment,
-                slug: entryLink.slug,
-                fallback: entryLink.title
+            let fx: Fx<AppAction> = Just(
+                AppAction.requestDetail(
+                    slug: entryLink.slug,
+                    fallback: entryLink.title
+                )
             )
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+            // Request detail AFTER animaiton completes
+            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+
+            update.fx = fx
+            return update
         case .search(let entryLink):
-            return requestDetail(
-                state: state,
-                environment: environment,
-                slug: entryLink.slug,
-                fallback: entryLink.title
+            let fx: Fx<AppAction> = Just(
+                AppAction.requestDetail(
+                    slug: entryLink.slug,
+                    fallback: entryLink.title
+                )
             )
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+            // Request detail AFTER animaiton completes
+            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+
+            update.fx = fx
+            return update
         case .journal(let entryLink):
-            return requestTemplateDetail(
-                state: state,
-                environment: environment,
-                slug: entryLink.slug,
-                template: state.config.journalTemplate
+            let fx: Fx<AppAction> = Just(
+                AppAction.requestTemplateDetail(
+                    slug: entryLink.slug,
+                    template: state.config.journalTemplate
+                )
             )
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+            // Request detail AFTER animaiton completes
+            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+
+            update.fx = fx
+            return update
         case .scratch(let entryLink):
-            return requestDetail(
-                state: state,
-                environment: environment,
-                slug: entryLink.slug,
-                fallback: entryLink.title
+            let fx: Fx<AppAction> = Just(
+                AppAction.requestDetail(
+                    slug: entryLink.slug,
+                    fallback: entryLink.title
+                )
             )
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+
+            update.fx = fx
+            return update
         case .random:
-            return requestRandomDetail(
-                state: state,
-                environment: environment
+            let fx: Fx<AppAction> = Just(
+                AppAction.requestRandomDetail
             )
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+
+            update.fx = fx
+            return update
         }
     }
 
@@ -1742,27 +1800,20 @@ extension AppModel {
         model.slug = detail.slug
         model.backlinks = detail.backlinks
 
-        let fx: Fx<AppAction> = Just(AppAction.hideSearch)
-            .delay(for: .seconds(0.5), scheduler: DispatchQueue.main)
-            .eraseToAnyPublisher()
-
-        let update = Update(
-            state: model,
-            fx: fx
-        )
-        .pipe({ state in
-            setEditor(
-                state: model,
-                text: detail.entry.value.dom.base,
-                saveState: detail.entry.state
-            )
-        })
-        .pipe({ state in
-            save(
-                state: state,
-                environment: environment
-            )
-        })
+        let update = Update(state: model)
+            .pipe({ state in
+                setEditor(
+                    state: model,
+                    text: detail.entry.value.dom.base,
+                    saveState: detail.entry.state
+                )
+            })
+            .pipe({ state in
+                save(
+                    state: state,
+                    environment: environment
+                )
+            })
 
         // If detail is not a just-created draft, return update
         guard detail.entry.state == .draft else {
