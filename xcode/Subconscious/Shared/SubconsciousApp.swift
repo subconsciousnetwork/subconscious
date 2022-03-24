@@ -1710,7 +1710,6 @@ extension AppModel {
     ) -> Update<AppModel, AppAction> {
         var model = state
         model.isDetailLoading = true
-        model.isDetailShowing = true
 
         // Save current state before we blow it away
         return save(
@@ -1820,26 +1819,37 @@ extension AppModel {
     ) -> Update<AppModel, AppAction> {
         var model = resetEditor(state: state)
 
+        model.isDetailShowing = true
         model.isDetailLoading = false
         model.slug = detail.slug
         model.backlinks = detail.backlinks
 
-        let update = Update(state: model)
-            .pipe({ state in
-                setEditor(
-                    state: model,
-                    text: detail.entry.value.dom.base,
-                    saveState: detail.entry.state
-                )
-            })
-            .pipe({ state in
-                save(
-                    state: state,
-                    environment: environment
-                )
-            })
+        // Scehdule save for ~ after the transition animation completes.
+        // If we save immediately, it causes list view to update while the
+        // panel animates in, creating much visual noise.
+        // By delaying the fx, we do this out of sight.
+        // 2022-03-24 Gordon Brander
+        let fx: Fx<AppAction> = Just(.save)
+            .delay(
+                for: .seconds(1),
+                scheduler: DispatchQueue.main
+            )
+            .eraseToAnyPublisher()
 
-        // If detail is not a just-created draft, return update
+        let update = Update(
+            state: model,
+            fx: fx
+        )
+        .pipe({ state in
+            setEditor(
+                state: model,
+                text: detail.entry.value.dom.base,
+                saveState: detail.entry.state
+            )
+        })
+
+        // If detail already exists and is NOT a just-created draft,
+        // return update
         guard detail.entry.state == .draft else {
             return update
         }

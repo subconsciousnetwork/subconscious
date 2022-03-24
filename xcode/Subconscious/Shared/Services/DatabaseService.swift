@@ -728,7 +728,7 @@ struct DatabaseService {
         slug: Slug,
         fallback: String
     ) -> AnyPublisher<EntryDetail, Error> {
-        CombineUtilities.async(qos: .userInteractive) {
+        CombineUtilities.async(qos: .utility) {
             try readEntryDetail(slug: slug, fallback: fallback)
         }
     }
@@ -738,7 +738,7 @@ struct DatabaseService {
         slug: Slug,
         template: Slug
     ) -> AnyPublisher<EntryDetail, Error> {
-        CombineUtilities.async(qos: .userInteractive) {
+        CombineUtilities.async(qos: .utility) {
             let fallback = readEntry(slug: template)?.content ?? ""
             return try readEntryDetail(
                 slug: slug,
