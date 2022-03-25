@@ -1282,13 +1282,6 @@ extension AppModel {
             model.recent = recent
         }
 
-        // Hide detail view.
-        // Delete may have been invoked from detail view
-        // in which case, we don't want it showing.
-        // If it was invoked from list view, then setting this to false
-        // is harmless.
-        model.isDetailShowing = false
-
         let fx: Fx<AppAction> = environment.database
             .deleteEntry(slug: slug)
             .map({ _ in
@@ -1303,6 +1296,20 @@ extension AppModel {
             })
             .eraseToAnyPublisher()
         return Update(state: model, fx: fx)
+            // Hide detail view.
+            // Delete may have been invoked from detail view
+            // in which case, we don't want it showing.
+            // If it was invoked from list view, then setting this to false
+            // is harmless.
+            .pipe({ state in
+                showDetail(
+                    state: state,
+                    environment: environment,
+                    isShowing: false
+                )
+            })
+            // Set animation so that recent list animates deletion
+            .animation(.default)
     }
 
     /// Handle completion of entry delete

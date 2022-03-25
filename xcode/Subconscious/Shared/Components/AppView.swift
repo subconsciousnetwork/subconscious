@@ -34,7 +34,7 @@ struct AppView: View {
                 PinTrailingBottom(
                     content: Button(
                         action: {
-                            store.send(action: .showSearch)
+                            store.send(.showSearch)
                         },
                         label: {
                             Image(systemName: "doc.text.magnifyingglass")
@@ -77,20 +77,18 @@ struct AppView: View {
                             tag: AppAction.setSuggestions
                         ),
                         onSelect: { suggestion in
-                            store.send(
-                                action: .selectSuggestion(suggestion)
-                            )
+                            store.send(.selectSuggestion(suggestion))
                         },
                         onSubmit: { slug, query in
                             store.send(
-                                action: .requestDetail(
+                                .requestDetail(
                                     slug: slug,
                                     fallback: query
                                 )
                             )
                         },
                         onCancel: {
-                            store.send(action: .hideSearch)
+                            store.send(.hideSearch)
                         }
                     ),
                     keyboardHeight: store.state.keyboardEventualHeight
@@ -120,10 +118,15 @@ struct AppView: View {
                             }
                         ),
                         onCancel: {
-                            store.send(action: .hideRenameSheet)
+                            store.send(.hideRenameSheet)
                         },
                         onSelect: { curr, suggestion in
-                            store.send(action: .renameEntry(from: curr, to: suggestion))
+                            store.send(
+                                .renameEntry(
+                                    from: curr,
+                                    to: suggestion
+                                )
+                            )
                         }
                     )
                 )
@@ -152,14 +155,10 @@ struct AppView: View {
                             }
                         ),
                         onCancel: {
-                            store.send(
-                                action: .setLinkSheetPresented(false)
-                            )
+                            store.send(.setLinkSheetPresented(false))
                         },
                         onSelect: { suggestion in
-                            store.send(
-                                action: .selectLinkSuggestion(suggestion)
-                            )
+                            store.send(.selectLinkSuggestion(suggestion))
                         }
                     )
                 )
@@ -172,13 +171,13 @@ struct AppView: View {
             // See https://developer.apple.com/documentation/swiftui/scenephase
             // 2022-02-08 Gordon Brander
             .onChange(of: self.scenePhase) { phase in
-                store.send(action: AppAction.scenePhaseChange(phase))
+                store.send(.scenePhaseChange(phase))
             }
             .onAppear {
-                store.send(action: .appear)
+                store.send(.appear)
             }
             .environment(\.openURL, OpenURLAction { url in
-                store.send(action: .openURL(url))
+                store.send(.openURL(url))
                 return .handled
             })
         }
