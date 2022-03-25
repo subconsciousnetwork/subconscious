@@ -568,8 +568,8 @@ extension AppModel {
         case let .showDetail(isShowing):
             return showDetail(
                 state: state,
-                isShowing: isShowing,
-                environment: environment
+                environment: environment,
+                isShowing: isShowing
             )
         case let .setSearch(text):
             return setSearch(
@@ -843,27 +843,12 @@ extension AppModel {
     /// Toggle detail view showing or hiding
     static func showDetail(
         state: AppModel,
-        isShowing: Bool,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        isShowing: Bool
     ) -> Update<AppModel, AppAction> {
-        // Save any entry that is currently active before we blow it away
-        return save(
-            state: state,
-            environment: environment
-        )
-        .pipe({ state in
-            var model = state
-            model.isDetailShowing = isShowing
-            guard isShowing == false else {
-                return Update(state: model)
-            }
-            return setFocus(
-                state: model,
-                environment: environment,
-                focus: nil,
-                field: .editor
-            )
-        })
+        var model = state
+        model.isDetailShowing = isShowing
+        return Update(state: model)
     }
 
     /// Change state of keyboard
@@ -1819,19 +1804,24 @@ extension AppModel {
     ) -> Update<AppModel, AppAction> {
         var model = resetEditor(state: state)
 
-        model.isDetailShowing = true
         model.isDetailLoading = false
         model.slug = detail.slug
         model.backlinks = detail.backlinks
 
-        // Scehdule save for ~ after the transition animation completes.
+        // Schedule save for ~ after the transition animation completes.
         // If we save immediately, it causes list view to update while the
         // panel animates in, creating much visual noise.
         // By delaying the fx, we do this out of sight.
+        // We don't actually know the exact time that the sliding panel
+        // animation takes in NavigationView, so we estimate a time by which
+        // the transition animation should be complete.
         // 2022-03-24 Gordon Brander
-        let fx: Fx<AppAction> = Just(.save)
+        let approximateNavigationViewAnimationCompleteDuration: Double = 1
+        let fx: Fx<AppAction> = Just(AppAction.save)
             .delay(
-                for: .seconds(1),
+                for: .seconds(
+                    approximateNavigationViewAnimationCompleteDuration
+                ),
                 scheduler: DispatchQueue.main
             )
             .eraseToAnyPublisher()
@@ -1841,8 +1831,15 @@ extension AppModel {
             fx: fx
         )
         .pipe({ state in
+            showDetail(
+                state: state,
+                environment: environment,
+                isShowing: true
+            )
+        })
+        .pipe({ state in
             setEditor(
-                state: model,
+                state: state,
                 text: detail.entry.value.dom.base,
                 saveState: detail.entry.state
             )
