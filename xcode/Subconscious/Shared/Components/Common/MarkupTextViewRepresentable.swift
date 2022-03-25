@@ -339,13 +339,9 @@ where Focus: Hashable
             )
             return
         }
-        context.coordinator.isAwaitingFocusChange = true
-        logger?.debug(
-            "updateUIViewFocus: Focus is dirty. Scheduling focus change."
-        )
-        if isFocused {
+        guard !isFocused else {
             logger?.debug(
-                "call becomeFirstResponder"
+                "updateUIViewFocus: call becomeFirstResponder"
             )
             // Call to becomeFirstResponder should be sync.
             //
@@ -362,23 +358,27 @@ where Focus: Hashable
             // 2022-03-24 Gordon Brander
             view.becomeFirstResponder()
             return
-        } else {
-            // Call for first resignFirstResponder change needs to be async,
-            // or else we get an AttributeCycle warning from SwiftUI.
-            // I don't know why there is an asymmetry between these two
-            // methods, but there is.
-            // 2022-03-21 Gordon Brander
-            DispatchQueue.main.async {
-                // Check again in this tick to make sure we still need to
-                // request resign first responder.
-                if !isFocused && isFocused != view.isFirstResponder {
-                    logger?.debug(
-                        "async: call resignFirstResponder"
-                    )
-                    view.resignFirstResponder()
-                }
+        }
+        logger?.debug(
+            "updateUIViewFocus: scheduling resignFirstResponder"
+        )
+        context.coordinator.isAwaitingFocusChange = true
+        // Call for first resignFirstResponder change needs to be async,
+        // or else we get an AttributeCycle warning from SwiftUI.
+        // I don't know why there is an asymmetry between these two
+        // methods, but there is.
+        // 2022-03-21 Gordon Brander
+        DispatchQueue.main.async {
+            // Check again in this tick to make sure we still need to
+            // request resign first responder.
+            if !isFocused && isFocused != view.isFirstResponder {
+                logger?.debug(
+                    "async: call resignFirstResponder"
+                )
+                view.resignFirstResponder()
             }
         }
+        return
     }
 
     func makeCoordinator() -> Self.Coordinator {
