@@ -13,7 +13,6 @@ import OrderedCollections
 struct DatabaseService {
     enum DatabaseServiceError: Error {
         case pathNotInFilePath
-        case invalidSlug(String)
         case notFound
     }
 
@@ -645,7 +644,9 @@ struct DatabaseService {
         }
     }
 
-    func readEntry(
+    /// Private syncronous API to read a Subtext file via its Slug
+    /// Used by public async APIs.
+    private func readEntry(
         slug: Slug
     ) -> SubtextFile? {
         SubtextFile(
@@ -654,7 +655,72 @@ struct DatabaseService {
         )
     }
 
-    /// Get entry and backlinks from slug.
+    /// Sync version of readEntryDetail
+    /// Use `readEntryDetail` API to call this async.
+    private func readEntryDetail(
+        slug: Slug,
+        fallback: String
+    ) throws -> EntryDetail {
+        // Get backlinks.
+        // Use content indexed in database, even though it might be stale.
+        let backlinks: [EntryStub] = try database.execute(
+            sql: """
+            SELECT slug, body, modified
+            FROM entry_search
+            WHERE slug != ? AND entry_search.body MATCH ?
+            ORDER BY rank
+            LIMIT 200
+            """,
+            parameters: [
+                .text(slug.description),
+                .queryFTS5(slug.description)
+            ]
+        )
+        .compactMap({ row in
+            if
+                let slugString: String = row.get(0),
+                let slug = Slug(slugString),
+                let body: String = row.get(1),
+                let modified: Date = row.get(2)
+            {
+                let summary = Subtext(markup: body).summarize()
+                return EntryStub(
+                    slug: slug,
+                    title: summary.title ?? "",
+                    excerpt: summary.excerpt ?? "",
+                    modified: modified
+                )
+            }
+            return nil
+        })
+
+        // Create draft to use as fallback in event we don't find
+        // a file with this slug.
+        let draft = SaveEnvelope(
+            state: .draft,
+            value: SubtextFile(
+                slug: slug,
+                content: fallback
+            )
+        )
+
+        // Retreive top entry from file system to ensure it is fresh.
+        // If no file exists, then construct one using fallback content.
+        // Wrap in SaveEnvelope envelope to indicate whether it
+        // represents saved state on disk, or is a draft.
+        let entry = readEntry(slug: slug).mapOr(
+            { entry in SaveEnvelope(state: .saved, value: entry) },
+            default: draft
+        )
+
+        return EntryDetail(
+            slug: slug,
+            entry: entry,
+            backlinks: backlinks
+        )
+    }
+
+    /// Get entry and backlinks from slug, using string as a fallback.
     /// We trust caller to slugify the string, if necessary.
     /// Allowing any string allows us to retreive files that don't have a
     /// clean slug.
@@ -662,63 +728,21 @@ struct DatabaseService {
         slug: Slug,
         fallback: String
     ) -> AnyPublisher<EntryDetail, Error> {
-        CombineUtilities.async(qos: .userInteractive) {
-            // Get backlinks.
-            // Use content indexed in database, even though it might be stale.
-            let backlinks: [EntryStub] = try database.execute(
-                sql: """
-                SELECT slug, body, modified
-                FROM entry_search
-                WHERE slug != ? AND entry_search.body MATCH ?
-                ORDER BY rank
-                LIMIT 200
-                """,
-                parameters: [
-                    .text(slug.description),
-                    .queryFTS5(slug.description)
-                ]
-            )
-            .compactMap({ row in
-                if
-                    let slugString: String = row.get(0),
-                    let slug = Slug(slugString),
-                    let body: String = row.get(1),
-                    let modified: Date = row.get(2)
-                {
-                    let summary = Subtext(markup: body).summarize()
-                    return EntryStub(
-                        slug: slug,
-                        title: summary.title ?? "",
-                        excerpt: summary.excerpt ?? "",
-                        modified: modified
-                    )
-                }
-                return nil
-            })
+        CombineUtilities.async(qos: .utility) {
+            try readEntryDetail(slug: slug, fallback: fallback)
+        }
+    }
 
-            // Create draft to use as fallback in event we don't find
-            // a file with this slug.
-            let draft = SaveEnvelope(
-                state: .draft,
-                value: SubtextFile(
-                    slug: slug,
-                    content: fallback
-                )
-            )
-
-            // Retreive top entry from file system to ensure it is fresh.
-            // If no file exists, then construct one using fallback content.
-            // Wrap in SaveEnvelope envelope to indicate whether it
-            // represents saved state on disk, or is a draft.
-            let entry = readEntry(slug: slug).mapOr(
-                { entry in SaveEnvelope(state: .saved, value: entry) },
-                default: draft
-            )
-
-            return EntryDetail(
+    /// Get entry and backlinks from slug, using template file as a fallback.
+    func readEntryDetail(
+        slug: Slug,
+        template: Slug
+    ) -> AnyPublisher<EntryDetail, Error> {
+        CombineUtilities.async(qos: .utility) {
+            let fallback = readEntry(slug: template)?.content ?? ""
+            return try readEntryDetail(
                 slug: slug,
-                entry: entry,
-                backlinks: backlinks
+                fallback: fallback
             )
         }
     }

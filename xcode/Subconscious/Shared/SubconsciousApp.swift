@@ -124,6 +124,9 @@ enum AppAction {
 
     // Detail
     case requestDetail(slug: Slug?, fallback: String)
+    /// request detail for slug, using template file as a fallback
+    case requestTemplateDetail(slug: Slug, template: Slug)
+    case requestRandomDetail
     case updateDetail(EntryDetail)
     case failDetail(String)
     case failRandomDetail(Error)
@@ -565,8 +568,8 @@ extension AppModel {
         case let .showDetail(isShowing):
             return showDetail(
                 state: state,
-                isShowing: isShowing,
-                environment: environment
+                environment: environment,
+                isShowing: isShowing
             )
         case let .setSearch(text):
             return setSearch(
@@ -578,16 +581,21 @@ extension AppModel {
             var model = state
             model.isSearchShowing = true
             model.searchText = ""
-            model.focus = .search
             return Update(state: model)
+                .pipe({ state in
+                    setFocus(
+                        state: state,
+                        environment: environment,
+                        focus: .search,
+                        field: .search
+                    )
+                })
                 .animation(.easeOutCubic(duration: Duration.keyboard))
         case .hideSearch:
-            var model = state
-            model.isSearchShowing = false
-            model.searchText = ""
-            model.focus = nil
-            return Update(state: model)
-                .animation(.easeOutCubic(duration: Duration.keyboard))
+            return hideSearch(
+                state: state,
+                environment: environment
+            )
         case let .selectSuggestion(suggestion):
             return selectSuggestion(
                 state: state,
@@ -609,6 +617,18 @@ extension AppModel {
                 environment: environment,
                 slug: slug,
                 fallback: fallback
+            )
+        case let .requestTemplateDetail(slug, template):
+            return requestTemplateDetail(
+                state: state,
+                environment: environment,
+                slug: slug,
+                template: template
+            )
+        case .requestRandomDetail:
+            return requestRandomDetail(
+                state: state,
+                environment: environment
             )
         case let .updateDetail(results):
             return updateDetail(
@@ -689,7 +709,6 @@ extension AppModel {
         model.editorSaveState = .saved
         model.editorSelection = NSMakeRange(0, 0)
         model.editorSelectedSlashlink = nil
-        model.focus = nil
         return model
     }
 
@@ -824,22 +843,12 @@ extension AppModel {
     /// Toggle detail view showing or hiding
     static func showDetail(
         state: AppModel,
-        isShowing: Bool,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        isShowing: Bool
     ) -> Update<AppModel, AppAction> {
-        // Save any entry that is currently active before we blow it away
-        return save(
-            state: state,
-            environment: environment
-        )
-        .pipe({ state in
-            var model = state
-            model.isDetailShowing = isShowing
-            if isShowing == false {
-                model.focus = nil
-            }
-            return Update(state: model)
-        })
+        var model = state
+        model.isDetailShowing = isShowing
+        return Update(state: model)
     }
 
     /// Change state of keyboard
@@ -987,8 +996,10 @@ extension AppModel {
         }
         // Otherwise, do nothing.
         else {
+            let fieldString = String(describing: field)
+            let currentString = String(describing: state.focus)
             environment.logger.debug(
-                "setFocus: requested nil focus, but focus already changed. Noop."
+                "setFocus: requested nil focus for field \(fieldString), but focus already changed to \(currentString). Noop."
             )
             return Update(state: state)
         }
@@ -1574,58 +1585,128 @@ extension AppModel {
         return Update(state: model, fx: fx)
     }
 
+    /// Set search HUD to hidden state
+    static func hideSearch(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel, AppAction> {
+        var model = state
+        model.isSearchShowing = false
+        model.searchText = ""
+        return Update(state: model)
+            .pipe({ state in
+                setFocus(
+                    state: state,
+                    environment: environment,
+                    focus: nil,
+                    field: .search
+                )
+            })
+            .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
     /// Handle user select search suggestion
     static func selectSuggestion(
         state: AppModel,
         environment: AppEnvironment,
         suggestion: Suggestion
     ) -> Update<AppModel, AppAction> {
-        var model = state
-        model.isSearchShowing = false
+        // Duration of keyboard animation
+        let duration = Duration.keyboard
+        let delay = duration + 0.03
+
+        var update = hideSearch(
+            state: state,
+            environment: environment
+        )
+        .animation(.easeOutCubic(duration: duration))
 
         switch suggestion {
         case .entry(let entryLink):
-            return requestDetail(
-                state: model,
-                environment: environment,
-                slug: entryLink.slug,
-                fallback: entryLink.title
+            let fx: Fx<AppAction> = Just(
+                AppAction.requestDetail(
+                    slug: entryLink.slug,
+                    fallback: entryLink.title
+                )
             )
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+            // Request detail AFTER animaiton completes
+            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+
+            update.fx = fx
+            return update
         case .search(let entryLink):
-            return requestDetail(
-                state: model,
-                environment: environment,
-                slug: entryLink.slug,
-                fallback: entryLink.title
+            let fx: Fx<AppAction> = Just(
+                AppAction.requestDetail(
+                    slug: entryLink.slug,
+                    fallback: entryLink.title
+                )
             )
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+            // Request detail AFTER animaiton completes
+            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+
+            update.fx = fx
+            return update
         case .journal(let entryLink):
-            return requestTemplateDetail(
-                state: model,
-                environment: environment,
-                slug: entryLink.slug,
-                template: state.config.journalTemplate
+            let fx: Fx<AppAction> = Just(
+                AppAction.requestTemplateDetail(
+                    slug: entryLink.slug,
+                    template: state.config.journalTemplate
+                )
             )
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+            // Request detail AFTER animaiton completes
+            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+
+            update.fx = fx
+            return update
         case .scratch(let entryLink):
-            return requestDetail(
-                state: model,
-                environment: environment,
-                slug: entryLink.slug,
-                fallback: entryLink.title
+            let fx: Fx<AppAction> = Just(
+                AppAction.requestDetail(
+                    slug: entryLink.slug,
+                    fallback: entryLink.title
+                )
             )
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+
+            update.fx = fx
+            return update
         case .random:
-            return requestRandomDetail(
-                state: model,
-                environment: environment
+            let fx: Fx<AppAction> = Just(
+                AppAction.requestRandomDetail
             )
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+
+            update.fx = fx
+            return update
         }
     }
 
-    /// Request that entry detail view be shown
+    /// Factors out the non-get-detail related aspects
+    /// of requesting a detail view.
+    /// Used by a few request detail implementations.
+    private static func prepareRequestDetail(
+        state: AppModel,
+        environment: AppEnvironment,
+        slug: Slug
+    ) -> Update<AppModel, AppAction> {
+        var model = state
+        model.isDetailLoading = true
+
+        // Save current state before we blow it away
+        return save(
+            state: model,
+            environment: environment
+        )
+        .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
+    /// Request detail view for entry.
+    /// Fall back on string (typically query string) when no detail
+    /// exists for this slug yet.
     static func requestDetail(
         state: AppModel,
         environment: AppEnvironment,
@@ -1639,59 +1720,60 @@ extension AppModel {
             )
             return Update(state: state)
         }
-        // Save current state before we blow it away
-        return save(
+
+        let fx: Fx<AppAction> = environment.database
+            .readEntryDetail(
+                slug: slug,
+                // Trim whitespace and add blank line to end of string
+                // This gives us a good starting point to start
+                // editing.
+                fallback: fallback.formattingBlankLineEnding()
+            )
+            .map({ detail in
+                AppAction.updateDetail(detail)
+            })
+            .catch({ error in
+                Just(AppAction.failDetail(error.localizedDescription))
+            })
+            .merge(
+                with: Just(AppAction.setSearch("")),
+                Just(AppAction.createSearchHistoryItem(fallback))
+            )
+            .eraseToAnyPublisher()
+
+        return prepareRequestDetail(
             state: state,
-            environment: environment
+            environment: environment,
+            slug: slug
         )
-        .pipe({ state in
-            var model = state
-            model.isDetailLoading = true
-            model.searchText = ""
-            model.isSearchShowing = false
-            model.isDetailShowing = true
-            let fx: Fx<AppAction> = environment.database
-                .readEntryDetail(
-                    slug: slug,
-                    // Trim whitespace and add blank line to end of string
-                    // This gives us a good starting point to start
-                    // editing.
-                    fallback: fallback.formattingBlankLineEnding()
-                )
-                .map({ detail in
-                    AppAction.updateDetail(detail)
-                })
-                .catch({ error in
-                    Just(AppAction.failDetail(error.localizedDescription))
-                })
-                .merge(
-                    with: Just(AppAction.setSearch("")),
-                    Just(AppAction.createSearchHistoryItem(fallback))
-                )
-                .eraseToAnyPublisher()
-            return Update(state: model, fx: fx)
-        })
-        .animation(.easeOutCubic(duration: Duration.keyboard))
+        .mergeFx(fx)
     }
 
-    /// Request detail, using contents of template file as fallback content
+    /// Request detail view for entry.
+    /// Fall back on contents of template file when no detail
+    /// exists for this slug yet.
     static func requestTemplateDetail(
         state: AppModel,
         environment: AppEnvironment,
         slug: Slug,
         template: Slug
     ) -> Update<AppModel, AppAction> {
-        /// Get template contents
-        let fallback = environment.database
-            .readEntry(slug: template)
-            .map({ entry in entry.content })
-            .unwrap(or: "")
-        return requestDetail(
+        let fx: Fx<AppAction> = environment.database
+            .readEntryDetail(slug: slug, template: template)
+            .map({ detail in
+                AppAction.updateDetail(detail)
+            })
+            .catch({ error in
+                Just(AppAction.failDetail(error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+
+        return prepareRequestDetail(
             state: state,
             environment: environment,
-            slug: slug,
-            fallback: fallback
+            slug: slug
         )
+        .mergeFx(fx)
     }
 
     /// Request detail for a random entry
@@ -1721,23 +1803,50 @@ extension AppModel {
         detail: EntryDetail
     ) -> Update<AppModel, AppAction> {
         var model = resetEditor(state: state)
+
         model.isDetailLoading = false
         model.slug = detail.slug
         model.backlinks = detail.backlinks
 
-        let update = setEditor(
+        // Schedule save for ~ after the transition animation completes.
+        // If we save immediately, it causes list view to update while the
+        // panel animates in, creating much visual noise.
+        // By delaying the fx, we do this out of sight.
+        // We don't actually know the exact time that the sliding panel
+        // animation takes in NavigationView, so we estimate a time by which
+        // the transition animation should be complete.
+        // 2022-03-24 Gordon Brander
+        let approximateNavigationViewAnimationCompleteDuration: Double = 1
+        let fx: Fx<AppAction> = Just(AppAction.save)
+            .delay(
+                for: .seconds(
+                    approximateNavigationViewAnimationCompleteDuration
+                ),
+                scheduler: DispatchQueue.main
+            )
+            .eraseToAnyPublisher()
+
+        let update = Update(
             state: model,
-            text: detail.entry.value.dom.base,
-            saveState: detail.entry.state
+            fx: fx
         )
         .pipe({ state in
-            save(
+            showDetail(
                 state: state,
-                environment: environment
+                environment: environment,
+                isShowing: true
+            )
+        })
+        .pipe({ state in
+            setEditor(
+                state: state,
+                text: detail.entry.value.dom.base,
+                saveState: detail.entry.state
             )
         })
 
-        // If detail is not a just-created draft, return update
+        // If detail already exists and is NOT a just-created draft,
+        // return update
         guard detail.entry.state == .draft else {
             return update
         }
