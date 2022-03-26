@@ -254,6 +254,9 @@ where Focus: Hashable
         // Set delegate on textstorage (coordinator)
         view.textStorage.delegate = context.coordinator
 
+        // Set inner padding
+        view.textContainerInset = self.textContainerInset
+        // Set width (needed to calculate height based on text length)
         view.fixedWidth = self.frame.width
         // Remove that extra bit of inner padding.
         // Text in view should now be flush with view edge.
@@ -262,6 +265,45 @@ where Focus: Hashable
         view.backgroundColor = .clear
         view.textColor = textColor
         view.isScrollEnabled = false
+
+        // If view is out of sync with desired focus state,
+        // change first responder state synchronously.
+        //
+        // Note, that focus management code in `makeUIView` is synchronous,
+        // while focus management code in `updateUIView` is asynchronous.
+        //
+        // In `updateUIView` we call first responder methods asynchronously
+        // to prevent Attribute Graph cycle bugs. It is unclear how these bugs
+        // appear (the Apple framework is proprietary). However, we know we
+        // get them from calling first responder methods synchronously within
+        // `updateUIView`. However, this does not happen in `makeUIView`.
+        //
+        // However, calling keyboard asynchronously can cause "tearing" during
+        // animation, as keyboard animates in while the other animation is
+        // happening. This is especially difficult in cases were we create
+        // a `MarkupTextViewRepresentable` and immediately focus it
+        // (autofocus).
+        //
+        // Since calling focus methods in `makeUIView` is not triggering the
+        // attribute graph cycle issue, we use it as an opportunity to
+        // synchronously call focus methods.
+        // This allows us to create the view, immediately focus it,
+        // so that the keyboard follows the view during any animations,
+        // without tearing.
+        //
+        // See:
+        // https://github.com/gordonbrander/subconscious/issues/253
+        //
+        // 2022-03-26 Gordon Brander
+        if isFocused != view.isFirstResponder {
+            context.coordinator.isAwaitingFocusChange = true
+            if isFocused {
+                view.becomeFirstResponder()
+            } else {
+                view.resignFirstResponder()
+            }
+        }
+
         return view
     }
 
@@ -339,43 +381,29 @@ where Focus: Hashable
             )
             return
         }
-        guard !isFocused else {
-            logger?.debug(
-                "updateUIViewFocus: call becomeFirstResponder"
-            )
-            // Call to becomeFirstResponder should be sync.
-            //
-            // If this method is not called sync, then we run into problems
-            // where setting focus on editor, and teeing off an animation
-            // will cause keyboard to animate in DURING animation, causing
-            // judder. When called sync, setting focus plays nicely with
-            // animations.
-            //
-            // Unlike resignFirstResponder, we do not get
-            // AttributeCycle warning from SwiftUI when calling
-            // becomeFirstResponder, so we don't need to call it
-            // async anyway.
-            // 2022-03-24 Gordon Brander
-            view.becomeFirstResponder()
-            return
-        }
         logger?.debug(
-            "updateUIViewFocus: scheduling resignFirstResponder"
+            "updateUIViewFocus: scheduling first responder change"
         )
         context.coordinator.isAwaitingFocusChange = true
-        // Call for first resignFirstResponder change needs to be async,
-        // or else we get an AttributeCycle warning from SwiftUI.
-        // I don't know why there is an asymmetry between these two
-        // methods, but there is.
+        // Call for first responder change needs to be async,
+        // or else we get an AttributeGraph cycle warning from SwiftUI.
+        // This is true for both becomeFirstResponder and resignFirstResponder.
         // 2022-03-21 Gordon Brander
         DispatchQueue.main.async {
             // Check again in this tick to make sure we still need to
-            // request resign first responder.
-            if !isFocused && isFocused != view.isFirstResponder {
-                logger?.debug(
-                    "async: call resignFirstResponder"
-                )
-                view.resignFirstResponder()
+            // change first responder state.
+            if isFocused != view.isFirstResponder {
+                if isFocused {
+                    logger?.debug(
+                        "async: call becomeFirstResponder"
+                    )
+                    view.becomeFirstResponder()
+                } else {
+                    logger?.debug(
+                        "async: call resignFirstResponder"
+                    )
+                    view.resignFirstResponder()
+                }
             }
         }
         return
