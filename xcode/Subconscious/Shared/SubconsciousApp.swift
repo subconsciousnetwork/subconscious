@@ -26,7 +26,7 @@ struct SubconsciousApp: App {
 }
 
 //  MARK: Store typealias
-typealias AppStore = Store<AppModel, AppEnvironment, AppAction>
+typealias AppStore = Store<AppModel, AppAction, AppEnvironment>
 
 //  MARK: Actions
 /// Actions for modifying state
@@ -317,15 +317,15 @@ extension AppModel {
     /// when `state.config.debug` is `true`.
     static func updateAndLog(
         state: AppModel,
-        environment: AppEnvironment,
-        action: AppAction
+        action: AppAction,
+        environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
         Logger.action.debug("\(action.toLogString())")
         // Generate next state and effect
         let next = update(
             state: state,
-            environment: environment,
-            action: action
+            action: action,
+            environment: environment
         )
         if state.config.debug {
             Logger.state.debug("\(String(describing: next.state))")
@@ -336,8 +336,8 @@ extension AppModel {
     /// Main update function
     static func update(
         state: AppModel,
-        environment: AppEnvironment,
-        action: AppAction
+        action: AppAction,
+        environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
         switch action {
         case .noop:
@@ -1303,6 +1303,7 @@ extension AppModel {
             })
             .eraseToAnyPublisher()
         return Update(state: model, fx: fx)
+            .animation(.default)
     }
 
     /// Handle completion of entry delete

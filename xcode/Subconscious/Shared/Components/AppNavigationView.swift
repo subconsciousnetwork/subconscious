@@ -18,16 +18,14 @@ struct AppNavigationView: View {
                     entries: store.state.recent,
                     onEntryPress: { entry in
                         store.send(
-                            action: .requestDetail(
+                            .requestDetail(
                                 slug: entry.slug,
                                 fallback: entry.title
                             )
                         )
                     },
                     onEntryDelete: { slug in
-                        store.send(
-                            action: .confirmDelete(slug)
-                        )
+                        store.send(.confirmDelete(slug))
                     }
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -42,11 +40,7 @@ struct AppNavigationView: View {
                     Button(
                         role: .destructive,
                         action: {
-                            withAnimation {
-                                store.send(
-                                    action: .deleteEntry(slug)
-                                )
-                            }
+                            store.send(.deleteEntry(slug))
                         }
                     ) {
                         Text("Delete Immediately")
@@ -89,11 +83,11 @@ struct AppNavigationView: View {
                                 tag: AppAction.setLinkSearch
                             ),
                             onDone: {
-                                store.send(action: .selectDoneEditing)
+                                store.send(.selectDoneEditing)
                             },
                             onEditorLink: { url, _, range, _ in
                                 store.send(
-                                    action: .openEditorURL(
+                                    .openEditorURL(
                                         url: url,
                                         range: range
                                     )
@@ -102,7 +96,7 @@ struct AppNavigationView: View {
                             },
                             onSelectBacklink: { entryLink in
                                 store.send(
-                                    action: .requestDetail(
+                                    .requestDetail(
                                         slug: entryLink.slug,
                                         fallback: entryLink.title
                                     )
@@ -110,14 +104,14 @@ struct AppNavigationView: View {
                             },
                             onSelectLink: { suggestion in
                                 store.send(
-                                    action: .selectLinkSuggestion(suggestion)
+                                    .selectLinkSuggestion(suggestion)
                                 )
                             },
                             onRename: { slug in
-                                store.send(action: .showRenameSheet(slug))
+                                store.send(.showRenameSheet(slug))
                             },
                             onDelete: { slug in
-                                store.send(action: .confirmDelete(slug))
+                                store.send(.confirmDelete(slug))
                             }
                         )
                     },
