@@ -1,34 +1,32 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "ObservableStore",
-        "repositoryURL": "https://github.com/gordonbrander/ObservableStore",
-        "state": {
-          "branch": null,
-          "revision": "afc3459a06d91d168e61dacdc8c9cbdf307d8d39",
-          "version": "0.0.7"
-        }
-      },
-      {
-        "package": "swift-collections",
-        "repositoryURL": "https://github.com/apple/swift-collections.git",
-        "state": {
-          "branch": null,
-          "revision": "9d8719c8bebdc79740b6969c912ac706eb721d7a",
-          "version": "0.0.7"
-        }
-      },
-      {
-        "package": "SwiftSubsurface",
-        "repositoryURL": "https://github.com/cdata/SwiftSubsurface",
-        "state": {
-          "branch": "main",
-          "revision": "e7f5e8dbedf94a8f53df0bebad7389893ca961b3",
-          "version": null
-        }
+  "pins" : [
+    {
+      "identity" : "observablestore",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gordonbrander/ObservableStore",
+      "state" : {
+        "revision" : "546c7d013ea8631c0d3949ee831f032f2fdc3cc3",
+        "version" : "0.1.0"
       }
-    ]
-  },
-  "version": 1
+    },
+    {
+      "identity" : "swift-collections",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-collections.git",
+      "state" : {
+        "revision" : "9d8719c8bebdc79740b6969c912ac706eb721d7a",
+        "version" : "0.0.7"
+      }
+    },
+    {
+      "identity" : "swiftsubsurface",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/cdata/SwiftSubsurface",
+      "state" : {
+        "branch" : "main",
+        "revision" : "e7f5e8dbedf94a8f53df0bebad7389893ca961b3"
+      }
+    }
+  ],
+  "version" : 2
 }
