@@ -251,7 +251,7 @@ where Focus: Hashable
         // and an NSTextStorageDelegate.
         // Set delegate on textview (coordinator)
         view.delegate = context.coordinator
-        // Set delegate on textstorage (coordinator).
+        // Set delegate on textstorage (coordinator)
         view.textStorage.delegate = context.coordinator
 
         // Set inner padding
