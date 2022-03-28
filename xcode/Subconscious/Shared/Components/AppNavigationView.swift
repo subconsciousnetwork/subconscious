@@ -67,11 +67,11 @@ struct AppNavigationView: View {
                                 }
                             ),
                             editorText: store.binding(
-                                get: \.editorText,
+                                get: \.editor.text,
                                 tag: AppAction.modifyEditor
                             ),
                             editorSelection: store.binding(
-                                get: \.editorSelection,
+                                get: \.editor.selection,
                                 tag: AppAction.setEditorSelection
                             ),
                             isLinkSheetPresented: store.binding(

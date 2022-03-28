@@ -257,14 +257,7 @@ struct AppModel: Equatable {
     var suggestions: [Suggestion] = []
 
     // Editor
-    /// Subtext object model
-    var editorText = ""
-    /// Are all changes to editor saved?
-    var editorSaveState = SaveState.saved
-    /// Editor selection corresponds with `editorAttributedText`
-    var editorSelection = NSMakeRange(0, 0)
-    /// Slashlink currently being written (if any)
-    var editorSelectedSlashlink: Subtext.Slashlink? = nil
+    var editor = Editor()
 
     /// Backlinks to the currently active entry
     var backlinks: [EntryStub] = []
@@ -285,7 +278,7 @@ struct AppModel: Equatable {
     /// currently match it, such that we could say the editor is
     /// displaying that entry?
     func isEditorMatchingEntry(_ entry: SubtextFile) -> Bool {
-        self.slug == entry.slug && self.editorText == entry.dom.base
+        self.slug == entry.slug && self.editor.text == entry.dom.base
     }
 
     /// Get a Subtext file snapshot for the current editor state
@@ -293,7 +286,7 @@ struct AppModel: Equatable {
         guard let slug = self.slug else {
             return nil
         }
-        return SubtextFile(slug: slug, content: self.editorText)
+        return SubtextFile(slug: slug, content: self.editor.text)
     }
 }
 
@@ -705,10 +698,7 @@ extension AppModel {
         var model = state
         model.slug = nil
         model.isDetailLoading = true
-        model.editorText = ""
-        model.editorSaveState = .saved
-        model.editorSelection = NSMakeRange(0, 0)
-        model.editorSelectedSlashlink = nil
+        model.editor = Editor()
         return model
     }
 
@@ -729,12 +719,12 @@ extension AppModel {
         saveState: SaveState = .modified
     ) -> Update<AppModel, AppAction> {
         var model = state
-        model.editorText = text
+        model.editor.text = text
         // Mark save state
-        model.editorSaveState = saveState
+        model.editor.saveState = saveState
         let dom = Subtext(markup: text)
-        let slashlink = dom.slashlinkFor(range: state.editorSelection)
-        model.editorSelectedSlashlink = slashlink
+        let slashlink = dom.slashlinkFor(range: state.editor.selection)
+        model.editor.selectedSlashlink = slashlink
 
         // Find out if our selection touches a slashlink.
         // If it does, search for links.
@@ -757,12 +747,12 @@ extension AppModel {
         range nsRange: NSRange
     ) -> Update<AppModel, AppAction> {
         var model = state
-        model.editorSelection = nsRange
-        let dom = Subtext(markup: model.editorText)
+        model.editor.selection = nsRange
+        let dom = Subtext(markup: model.editor.text)
         let slashlink = dom.slashlinkFor(
-            range: model.editorSelection
+            range: model.editor.selection
         )
-        model.editorSelectedSlashlink = slashlink
+        model.editor.selectedSlashlink = slashlink
 
         let fx: Fx<AppAction> = slashlink.mapOr(
             { slashlink in
@@ -782,8 +772,8 @@ extension AppModel {
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
         let range = NSRange(
-            state.editorText.endIndex...,
-            in: state.editorText
+            state.editor.text.endIndex...,
+            in: state.editor.text
         )
 
         return setEditorSelection(
@@ -799,7 +789,7 @@ extension AppModel {
         range nsRange: NSRange,
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
-        guard let range = Range(nsRange, in: state.editorText) else {
+        guard let range = Range(nsRange, in: state.editor.text) else {
             environment.logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
@@ -807,7 +797,7 @@ extension AppModel {
         }
 
         // Replace selected range with committed link search text.
-        let markup = state.editorText.replacingCharacters(
+        let markup = state.editor.text.replacingCharacters(
             in: range,
             with: text
         )
@@ -1944,14 +1934,14 @@ extension AppModel {
             }
         })
 
-        var range = state.editorSelection
+        var range = state.editor.selection
         // If there is a selected slashlink, use that range
         // instead of selection
-        if let slashlink = state.editorSelectedSlashlink
+        if let slashlink = state.editor.selectedSlashlink
         {
             range = NSRange(
                 slashlink.span.range,
-                in: state.editorText
+                in: state.editor.text
             )
         }
 
@@ -1981,13 +1971,13 @@ extension AppModel {
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
         // If editor dom is already saved, noop
-        guard state.editorSaveState != .saved else {
+        guard state.editor.saveState != .saved else {
             return Update(state: state)
         }
 
         // If there is no entry currently being edited, noop.
         guard let entry = state.snapshotEditorAsEntry() else {
-            let saveState = String(reflecting: state.editorSaveState)
+            let saveState = String(reflecting: state.editor.saveState)
             environment.logger.warning(
                 "Entry save state is marked \(saveState) but no entry could be derived for state"
             )
@@ -1996,7 +1986,7 @@ extension AppModel {
 
         var model = state
         // Mark saving in-progress
-        model.editorSaveState = .saving
+        model.editor.saveState = .saving
 
         let fx: Fx<AppAction> = environment.database
             .writeEntry(
@@ -2040,10 +2030,10 @@ extension AppModel {
         // new changes.
         // 2022-02-09 Gordon Brander
         if
-            model.editorSaveState == .saving &&
+            model.editor.saveState == .saving &&
             model.isEditorMatchingEntry(entry)
         {
-            model.editorSaveState = .saved
+            model.editor.saveState = .saved
         }
 
         return Update(state: model, fx: fx)
@@ -2061,7 +2051,7 @@ extension AppModel {
         )
         // Mark modified, since we failed to save
         var model = state
-        model.editorSaveState = .modified
+        model.editor.saveState = .modified
         return Update(state: model)
     }
 }
