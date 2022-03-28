@@ -53,6 +53,8 @@
 		B82FD4572730A62C002CB641 /* EntryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82FD4552730A62C002CB641 /* EntryRow.swift */; };
 		B83E91D727692EC600045C6A /* FABButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E91D627692EC600045C6A /* FABButtonStyle.swift */; };
 		B83E91D827692EC600045C6A /* FABButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E91D627692EC600045C6A /* FABButtonStyle.swift */; };
+		B84E295627F26B2B00573BC4 /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84E295527F26B2B00573BC4 /* NavigationStackView.swift */; };
+		B84E295827F26BAB00573BC4 /* StoreUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84E295727F26BAB00573BC4 /* StoreUtilities.swift */; };
 		B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */ = {isa = PBXBuildFile; productRef = B8579B6427C561E900D8B4BC /* SwiftSubsurface */; };
 		B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */; };
 		B85BF47027BB0FA800F55730 /* RowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */; };
@@ -229,6 +231,8 @@
 		B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringUtilities.swift; sourceTree = "<group>"; };
 		B82FD4552730A62C002CB641 /* EntryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRow.swift; sourceTree = "<group>"; };
 		B83E91D627692EC600045C6A /* FABButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FABButtonStyle.swift; sourceTree = "<group>"; };
+		B84E295527F26B2B00573BC4 /* NavigationStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationStackView.swift; sourceTree = "<group>"; };
+		B84E295727F26BAB00573BC4 /* StoreUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreUtilities.swift; sourceTree = "<group>"; };
 		B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowViewModifier.swift; sourceTree = "<group>"; };
 		B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarTitleGroupView.swift; sourceTree = "<group>"; };
 		B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailToolbarContent.swift; sourceTree = "<group>"; };
@@ -524,6 +528,7 @@
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
 				B89D296727E832DC009E0DED /* LoggerUtilities.swift */,
 				B8B4D7EB27EA890B00633B5F /* ShadowStyle.swift */,
+				B84E295727F26BAB00573BC4 /* StoreUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -561,6 +566,7 @@
 				B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */,
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B8B4D7ED27EA8AA000633B5F /* DragHandleView.swift */,
+				B84E295527F26B2B00573BC4 /* NavigationStackView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -804,6 +810,7 @@
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */,
+				B84E295627F26B2B00573BC4 /* NavigationStackView.swift in Sources */,
 				B81EBB0927025C1500B87594 /* BacklinkButtonStyle.swift in Sources */,
 				B8249DA327E2753800BCDFBA /* ViewUtilities.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
@@ -852,6 +859,7 @@
 				B8AE34CB276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
 				B8AC648C278F757B0099E96B /* ProgressScrimView.swift in Sources */,
 				B82C3A5326F528B000833CC8 /* DatabaseService.swift in Sources */,
+				B84E295827F26BAB00573BC4 /* StoreUtilities.swift in Sources */,
 				B877A6E527A1C2BC00F11A90 /* KeyboardService.swift in Sources */,
 				B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */,
 				B8EB2A2326F27797006E97C3 /* AppView.swift in Sources */,
