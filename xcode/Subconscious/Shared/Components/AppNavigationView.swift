@@ -18,10 +18,16 @@ struct AppNavigationView: View {
                     entries: store.state.recent,
                     onEntryPress: { entry in
                         store.send(
-                            .requestDetail(
-                                slug: entry.slug,
-                                fallback: entry.title
+                            .forward(
+                                Editor2(
+                                    slug: entry.slug,
+                                    text: entry.title
+                                )
                             )
+//                            .requestDetail(
+//                                slug: entry.slug,
+//                                fallback: entry.title
+//                            )
                         )
                     },
                     onEntryDelete: { slug in

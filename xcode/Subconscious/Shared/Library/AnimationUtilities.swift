@@ -24,8 +24,19 @@ extension Duration {
 }
 
 extension Animation {
-    //  Penner curves sourced from
+    //  Penner Bezier curves sourced from
     //  https://matthewlein.com/tools/ceaser
+
+    /// Penner easeOutQuad curve
+    static func easeOutQuad(duration: Double = Duration.normal) -> Animation {
+        .timingCurve(
+            0.250,
+            0.460,
+            0.450,
+            0.940,
+            duration: duration
+        )
+    }
 
     /// Penner easeOutCubic curve
     static func easeOutCubic(duration: Double = Duration.normal) -> Animation {
@@ -33,7 +44,18 @@ extension Animation {
             0.215,
             0.610,
             0.355,
-            1,
+            1.000,
+            duration: duration
+        )
+    }
+
+    /// Penner easeOutQuart curve
+    static func easeOutQuart(duration: Double = Duration.normal) -> Animation {
+        .timingCurve(
+            0.165,
+            0.840,
+            0.440,
+            1.000,
             duration: duration
         )
     }

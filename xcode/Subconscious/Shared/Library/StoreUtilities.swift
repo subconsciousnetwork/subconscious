@@ -10,17 +10,16 @@ import ObservableStore
 
 extension Update {
     /// Map an update for a local scope
-    /// into an update for a broader scope.
-    static func scope<LocalState, LocalAction>(
-        update: Update<LocalState, LocalAction>,
-        state: State,
-        set: (State, LocalState) -> State,
-        tag: @escaping (LocalAction) -> Action
-    ) -> Update<State, Action> {
-        Update(
-            state: set(state, update.state),
-            fx: update.fx.map(tag).eraseToAnyPublisher(),
-            transaction: update.transaction
+    /// into an update for an outer scope.
+    func scope<OuterState, OuterAction>(
+        state: OuterState,
+        set: (OuterState, State) -> OuterState,
+        tag: @escaping (Action) -> OuterAction
+    ) -> Update<OuterState, OuterAction> {
+        Update<OuterState, OuterAction>(
+            state: set(state, self.state),
+            fx: self.fx.map(tag).eraseToAnyPublisher(),
+            transaction: self.transaction
         )
     }
 }

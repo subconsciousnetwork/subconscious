@@ -31,6 +31,17 @@ struct AppView: View {
                     .zIndex(0)
                 AppNavigationView(store: store)
                     .zIndex(1)
+                NavigationStackView(
+                    store: store.viewStore(
+                        get: { state in state.entryStack },
+                        tag: { local in AppAction.entryStack(local) }
+                    )
+                ) { content in
+                    VStack {
+                        Text(content.text)
+                    }
+                }
+                .zIndex(1.1)
                 PinTrailingBottom(
                     content: Button(
                         action: {

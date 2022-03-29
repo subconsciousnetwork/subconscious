@@ -56,6 +56,7 @@
 		B84E295627F26B2B00573BC4 /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84E295527F26B2B00573BC4 /* NavigationStackView.swift */; };
 		B84E295827F26BAB00573BC4 /* StoreUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84E295727F26BAB00573BC4 /* StoreUtilities.swift */; };
 		B84E295A27F26D8100573BC4 /* Editor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84E295927F26D8100573BC4 /* Editor.swift */; };
+		B84E295C27F2948400573BC4 /* Editor2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84E295B27F2948400573BC4 /* Editor2.swift */; };
 		B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */ = {isa = PBXBuildFile; productRef = B8579B6427C561E900D8B4BC /* SwiftSubsurface */; };
 		B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */; };
 		B85BF47027BB0FA800F55730 /* RowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */; };
@@ -235,6 +236,7 @@
 		B84E295527F26B2B00573BC4 /* NavigationStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationStackView.swift; sourceTree = "<group>"; };
 		B84E295727F26BAB00573BC4 /* StoreUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreUtilities.swift; sourceTree = "<group>"; };
 		B84E295927F26D8100573BC4 /* Editor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Editor.swift; sourceTree = "<group>"; };
+		B84E295B27F2948400573BC4 /* Editor2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Editor2.swift; sourceTree = "<group>"; };
 		B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowViewModifier.swift; sourceTree = "<group>"; };
 		B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarTitleGroupView.swift; sourceTree = "<group>"; };
 		B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailToolbarContent.swift; sourceTree = "<group>"; };
@@ -408,6 +410,7 @@
 				B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */,
 				B86DFF3427C07438002E57ED /* LinkSuggestion.swift */,
 				B84E295927F26D8100573BC4 /* Editor.swift */,
+				B84E295B27F2948400573BC4 /* Editor2.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -823,6 +826,7 @@
 				B84E295A27F26D8100573BC4 /* Editor.swift in Sources */,
 				B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
 				B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */,
+				B84E295C27F2948400573BC4 /* Editor2.swift in Sources */,
 				B8E63EA6270F9DD000545719 /* StringRandomAlphanumeric.swift in Sources */,
 				B8CC434327A0815E0079D2F9 /* ModalView.swift in Sources */,
 				B85BF47527BB3D6E00F55730 /* ToolbarTitleGroupView.swift in Sources */,

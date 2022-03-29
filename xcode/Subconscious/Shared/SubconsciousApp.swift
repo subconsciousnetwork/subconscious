@@ -28,12 +28,16 @@ struct SubconsciousApp: App {
 //  MARK: Store typealias
 typealias AppStore = Store<AppModel, AppAction, AppEnvironment>
 
+typealias EntryStackModel = NavigationStackModel<Editor2>
+
 //  MARK: Actions
 /// Actions for modifying state
 /// For action naming convention, see
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
 enum AppAction {
     case noop
+
+    case entryStack(EntryStackModel.Action)
 
     ///  KeyboardService state change
     case changeKeyboardState(KeyboardState)
@@ -163,6 +167,12 @@ enum AppAction {
     static func modifyEditor(text: String) -> Self {
         Self.setEditor(text: text, saveState: .modified)
     }
+
+    static func forward(
+        _ panel: Editor2
+    ) -> AppAction {
+        .entryStack(.forward(panel))
+    }
 }
 
 extension AppAction {
@@ -256,6 +266,8 @@ struct AppModel: Equatable {
     /// Main search suggestions
     var suggestions: [Suggestion] = []
 
+    var entryStack = EntryStackModel()
+
     // Editor
     var editor = Editor()
 
@@ -335,6 +347,21 @@ extension AppModel {
         switch action {
         case .noop:
             return Update(state: state)
+        case .entryStack(let action):
+            return EntryStackModel
+                .update(
+                    state: state.entryStack,
+                    action: action
+                )
+                .scope(
+                    state: state,
+                    set: { state, local in
+                        var model = state
+                        model.entryStack = local
+                        return model
+                    },
+                    tag: { local in AppAction.entryStack(local) }
+                )
         case let .scenePhaseChange(phase):
             return scenePhaseChange(
                 state: state,
