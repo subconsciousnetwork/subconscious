@@ -22,12 +22,30 @@ where Content: Equatable
     }
 
     enum Action {
+        case drag(drag: CGFloat, width: CGFloat)
+        case dragEnd(drag: CGFloat, width: CGFloat)
         case forward(Content)
         case forwardFade(Content)
         case slideIn
         case fadeIn
         case back
         case pop
+    }
+
+    static func back(
+        state: Self
+    ) -> Update<Self, Action> {
+        let fx: Fx<Action> = Just(Action.pop)
+            .delay(
+                for: .seconds(state.animationDuration),
+                scheduler: DispatchQueue.main
+            )
+            .eraseToAnyPublisher()
+
+        var model = state
+        model.dragRatio = 1
+
+        return Update(state: model, fx: fx)
     }
 
     static func update(
@@ -37,7 +55,7 @@ where Content: Equatable
         switch action {
         case .forward(let content):
             var model = state
-            model.isTopSlideComplete = false
+            model.dragRatio = 1
             model.isTopVisible = true
             let panel = Panel(content: content)
             model.stack[panel.id] = panel
@@ -46,7 +64,7 @@ where Content: Equatable
             return Update(state: model, fx: fx)
         case .forwardFade(let content):
             var model = state
-            model.isTopSlideComplete = true
+            model.dragRatio = 0
             model.isTopVisible = false
             let panel = Panel(content: content)
             model.stack[panel.id] = panel
@@ -55,52 +73,42 @@ where Content: Equatable
             return Update(state: model, fx: fx)
         case .slideIn:
             var model = state
-            model.isTopSlideComplete = true
+            model.dragRatio = 0
             model.isTopVisible = true
             return Update(state: model)
-                .animation(
-                    .spring(
-                        response: 0.3,
-                        dampingFraction: 1,
-                        blendDuration: 0.25
-                    )
-                )
         case .fadeIn:
             var model = state
-            model.isTopSlideComplete = true
+            model.dragRatio = 0
             model.isTopVisible = true
             return Update(state: model)
                 .animation(.easeOutCubic(duration: model.animationDuration))
         case .back:
-            var model = state
-            model.isTopSlideComplete = false
-
-            let fx: Fx<Action> = Just(Action.pop)
-                .delay(
-                    for: .seconds(model.animationDuration),
-                    scheduler: DispatchQueue.main
-                )
-                .eraseToAnyPublisher()
-
-            return Update(state: model, fx: fx)
-                .animation(
-                    .interactiveSpring(
-                        response: 0.2,
-                        dampingFraction: 1,
-                        blendDuration: 0.25
-                    )
-                )
+            return back(state: state)
         case .pop:
             var model = state
             if !model.stack.isEmpty {
                 model.stack.removeLast()
             }
-            model.isTopSlideComplete = true
+            model.dragRatio = 0
             return Update(state: model)
+        case .drag(let drag, let width):
+            var model = state
+            model.dragRatio = drag / width
+            return Update(state: model)
+        case .dragEnd(let drag, let width):
+            let ratio = drag / width
+            if ratio > state.dragSnapRatio {
+                return back(state: state)
+            } else {
+                var model = state
+                model.dragRatio = 0
+                return Update(state: model)
+            }
         }
     }
 
-    private(set) var isTopSlideComplete: Bool
+    private(set) var dragRatio: CGFloat
+    private(set) var dragSnapRatio: CGFloat
     private(set) var isTopVisible: Bool
     var stack: OrderedDictionary<UUID, Panel>
     var animationDuration: Double
@@ -117,7 +125,8 @@ where Content: Equatable
             uniquingKeysWith: { l, r in r }
         )
         self.animationDuration = animationDuration
-        self.isTopSlideComplete = true
+        self.dragRatio = 0
+        self.dragSnapRatio = 0.3
         self.isTopVisible = true
     }
 }
@@ -129,8 +138,6 @@ where ContentView: View, Content: Equatable {
         NavigationStackModel<Content>.Action
     >
     var panel: (Content) -> ContentView
-    var snapRatio: CGFloat = 0.3
-    @GestureState private var drag: CGSize = CGSize.zero
 
     var rest: ArraySlice<NavigationStackModel<Content>.Panel> {
         store.state.stack.values.suffix(2).dropLast()
@@ -141,11 +148,7 @@ where ContentView: View, Content: Equatable {
     }
 
     func offsetXForTop(width: CGFloat) -> CGFloat {
-        if store.state.isTopSlideComplete {
-            return max(drag.width, 0)
-        } else {
-            return width
-        }
+        max(store.state.dragRatio * width, 0)
     }
 
     struct EdgeHandleView: View {
@@ -219,29 +222,26 @@ where ContentView: View, Content: Equatable {
                     .zIndex(3)
                     .gesture(
                         DragGesture(minimumDistance: 0)
-                            .updating($drag) { value, state, t in
-                                state = value.translation
-                            }
-                            .onEnded { value in
-                                let snapDistance = (
-                                    geometry.size.width *
-                                    self.snapRatio
+                            .onChanged({ value in
+                                store.send(
+                                    .drag(
+                                        drag: value.translation.width,
+                                        width: geometry.size.width
+                                    )
                                 )
-                                if
-                                    value.translation.width >
-                                    snapDistance
-                                {
-                                    store.send(.back)
-                                }
+                            })
+                            .onEnded { value in
+                                store.send(
+                                    .dragEnd(
+                                        drag: value.translation.width,
+                                        width: geometry.size.width
+                                    )
+                                )
                             }
                     )
                     .animation(
-                        .interactiveSpring(
-                            response: 0.2,
-                            dampingFraction: 1,
-                            blendDuration: 0.25
-                        ),
-                        value: drag
+                        .interpolatingSpring(mass: 0.01, stiffness: 3, damping: 1),
+                        value: store.state.dragRatio
                     )
                 }
             }
