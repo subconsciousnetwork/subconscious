@@ -79,13 +79,8 @@ struct AppView: View {
                         onSelect: { suggestion in
                             store.send(.selectSuggestion(suggestion))
                         },
-                        onSubmit: { slug, query in
-                            store.send(
-                                .requestDetail(
-                                    slug: slug,
-                                    fallback: query
-                                )
-                            )
+                        onSubmit: { query in
+                            store.send(.submitSearch(query))
                         },
                         onCancel: {
                             store.send(.hideSearch)

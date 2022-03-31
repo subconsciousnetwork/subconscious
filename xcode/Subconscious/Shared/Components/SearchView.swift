@@ -22,7 +22,7 @@ struct SearchView: View {
     /// Select suggestion
     var onSelect: (Suggestion) -> Void
     /// Commit via keyboard
-    var onSubmit: (Slug?, String) -> Void
+    var onSubmit: (String) -> Void
     var onCancel: () -> Void
 
     /// Calculate maxHeight given number of suggestions.
@@ -46,10 +46,7 @@ struct SearchView: View {
                 )
                 .submitLabel(.go)
                 .onSubmit {
-                    onSubmit(
-                        Slug(formatting: text),
-                        text
-                    )
+                    self.onSubmit(text)
                 }
                 Button(
                     action: onCancel,
@@ -102,7 +99,7 @@ struct SearchView_Previews: PreviewProvider {
             focus: .constant(nil),
             suggestions: .constant([]),
             onSelect: { suggestion in },
-            onSubmit: { slug, title in },
+            onSubmit: { query in },
             onCancel: {}
         )
     }

@@ -115,6 +115,8 @@ enum AppAction {
     case setSearch(String)
     case showSearch
     case hideSearch
+    /// Hit submit ("go") while focused on search field
+    case submitSearch(String)
 
     // Search suggestions
     /// Submit search suggestion
@@ -595,6 +597,12 @@ extension AppModel {
             return hideSearch(
                 state: state,
                 environment: environment
+            )
+        case .submitSearch(let query):
+            return submitSearch(
+                state: state,
+                environment: environment,
+                query: query
             )
         case let .selectSuggestion(suggestion):
             return selectSuggestion(
@@ -1606,6 +1614,42 @@ extension AppModel {
             .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
+    /// Submit a search query (typically by hitting "go" on keyboard)
+    static func submitSearch(
+        state: AppModel,
+        environment: AppEnvironment,
+        query: String
+    ) -> Update<AppModel, AppAction> {
+        // Duration of keyboard animation
+        let duration = Duration.keyboard
+        let delay = duration + 0.03
+
+        let update = hideSearch(
+            state: state,
+            environment: environment
+        )
+        .animation(.easeOutCubic(duration: duration))
+
+        guard let slug = Slug(formatting: query) else {
+            environment.logger.log(
+                "Query could not be converted to slug: \(query)"
+            )
+            return update
+        }
+
+        let fx: Fx<AppAction> = Just(
+            AppAction.requestDetail(
+                slug: slug,
+                fallback: query
+            )
+        )
+        // Request detail AFTER animaiton completes
+        .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+        .eraseToAnyPublisher()
+
+        return update.mergeFx(fx)
+    }
+
     /// Handle user select search suggestion
     static func selectSuggestion(
         state: AppModel,
@@ -1616,7 +1660,7 @@ extension AppModel {
         let duration = Duration.keyboard
         let delay = duration + 0.03
 
-        var update = hideSearch(
+        let update = hideSearch(
             state: state,
             environment: environment
         )
@@ -1634,8 +1678,7 @@ extension AppModel {
             .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
             .eraseToAnyPublisher()
 
-            update.fx = fx
-            return update
+            return update.mergeFx(fx)
         case .search(let entryLink):
             let fx: Fx<AppAction> = Just(
                 AppAction.requestDetail(
@@ -1647,8 +1690,7 @@ extension AppModel {
             .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
             .eraseToAnyPublisher()
 
-            update.fx = fx
-            return update
+            return update.mergeFx(fx)
         case .journal(let entryLink):
             let fx: Fx<AppAction> = Just(
                 AppAction.requestTemplateDetail(
@@ -1660,8 +1702,7 @@ extension AppModel {
             .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
             .eraseToAnyPublisher()
 
-            update.fx = fx
-            return update
+            return update.mergeFx(fx)
         case .scratch(let entryLink):
             let fx: Fx<AppAction> = Just(
                 AppAction.requestDetail(
@@ -1672,8 +1713,7 @@ extension AppModel {
             .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
             .eraseToAnyPublisher()
 
-            update.fx = fx
-            return update
+            return update.mergeFx(fx)
         case .random:
             let fx: Fx<AppAction> = Just(
                 AppAction.requestRandomDetail
@@ -1681,8 +1721,7 @@ extension AppModel {
             .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
             .eraseToAnyPublisher()
 
-            update.fx = fx
-            return update
+            return update.mergeFx(fx)
         }
     }
 
