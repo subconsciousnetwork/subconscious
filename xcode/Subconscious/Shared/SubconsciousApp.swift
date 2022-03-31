@@ -1630,6 +1630,8 @@ extension AppModel {
         )
         .animation(.easeOutCubic(duration: duration))
 
+        // Derive slug. If we can't (e.g. invalid query such as empty string),
+        // just hide the search HUD and do nothing.
         guard let slug = Slug(formatting: query) else {
             environment.logger.log(
                 "Query could not be converted to slug: \(query)"
