@@ -62,10 +62,18 @@ struct Subtext: Hashable, Equatable {
         }
     }
 
+    struct Wikilink: Hashable, Equatable, CustomStringConvertible {
+        var span: Substring
+        var description: String {
+            String(span)
+        }
+    }
+
     enum Inline: Hashable, Equatable {
         case link(Link)
         case bracketlink(Bracketlink)
         case slashlink(Slashlink)
+        case wikilink(Wikilink)
     }
 
     /// Consume a well-formed bracket link, or else backtrack
@@ -76,6 +84,20 @@ struct Subtext: Hashable, Equatable {
                 tape.backtrack()
                 return nil
             } else if tape.consumeMatch(">") {
+                return tape.cut()
+            } else {
+                tape.advance()
+            }
+        }
+        tape.backtrack()
+        return nil
+    }
+
+    /// Consume a well-formed bracket link, or else backtrack
+    private static func consumeWikilink(tape: inout Tape<Substring>) -> Substring? {
+        tape.save()
+        while !tape.isExhausted() {
+            if tape.consumeMatch("]]") {
                 return tape.cut()
             } else {
                 tape.advance()
@@ -222,6 +244,12 @@ struct Subtext: Hashable, Equatable {
         if tape.consumeMatch("<") {
             if let link = consumeBracketLink(tape: &tape) {
                 return .bracketlink(Bracketlink(span: link))
+            } else {
+                return nil
+            }
+        } else if tape.consumeMatch("[[") {
+            if let wikilink = consumeWikilink(tape: &tape) {
+                return .wikilink(Wikilink(span: wikilink))
             } else {
                 return nil
             }
@@ -396,12 +424,27 @@ extension Subtext {
                             )
                         )
                     case let .slashlink(slashlink):
-                        if let url = url(String(slashlink.span)) {
+                        if let url = url(String(describing: slashlink)) {
                             attributedString.addAttribute(
                                 .link,
                                 value: url,
                                 range: NSRange(
                                     slashlink.span.range,
+                                    in: dom.base
+                                )
+                            )
+                        }
+                    case let .wikilink(wikilink):
+                        let wiklinkString = String(describing: wikilink)
+                        if
+                            let slug = Slug(formatting: wiklinkString),
+                            let urlString = url(String(describing: slug))
+                        {
+                            attributedString.addAttribute(
+                                .link,
+                                value: urlString,
+                                range: NSRange(
+                                    wikilink.span.range,
                                     in: dom.base
                                 )
                             )
