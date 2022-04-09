@@ -64,6 +64,9 @@ struct Subtext: Hashable, Equatable {
 
     struct Wikilink: Hashable, Equatable, CustomStringConvertible {
         var span: Substring
+        var text: Substring {
+            span.dropFirst(2).dropLast(2)
+        }
         var description: String {
             String(span)
         }
@@ -435,16 +438,24 @@ extension Subtext {
                             )
                         }
                     case let .wikilink(wikilink):
-                        let wiklinkString = String(describing: wikilink)
+                        let text = String(wikilink.text)
+                        attributedString.addAttribute(
+                            .foregroundColor,
+                            value: UIColor(Color.secondaryText),
+                            range: NSRange(
+                                wikilink.span.range,
+                                in: dom.base
+                            )
+                        )
                         if
-                            let slug = Slug(formatting: wiklinkString),
+                            let slug = Slug(formatting: text),
                             let urlString = url(String(describing: slug))
                         {
                             attributedString.addAttribute(
                                 .link,
                                 value: urlString,
                                 range: NSRange(
-                                    wikilink.span.range,
+                                    wikilink.text.range,
                                     in: dom.base
                                 )
                             )
