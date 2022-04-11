@@ -441,7 +441,7 @@ extension Subtext {
                         let text = String(wikilink.text)
                         attributedString.addAttribute(
                             .foregroundColor,
-                            value: UIColor(Color.secondaryText),
+                            value: UIColor(Color.tertiaryText),
                             range: NSRange(
                                 wikilink.span.range,
                                 in: dom.base
