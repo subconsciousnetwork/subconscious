@@ -100,7 +100,11 @@ struct Subtext: Hashable, Equatable {
     private static func consumeWikilink(tape: inout Tape<Substring>) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
-            if tape.consumeMatch("]]") {
+            // Brackets are not allowed in wikilink bodies
+            if tape.consumeMatch("[") {
+                tape.backtrack()
+                return nil
+            } else if tape.consumeMatch("]]") {
                 return tape.cut()
             } else {
                 tape.advance()

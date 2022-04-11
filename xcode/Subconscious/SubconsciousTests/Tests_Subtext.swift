@@ -72,4 +72,68 @@ class Tests_Subtext: XCTestCase {
             "Wikilink does not parse when embedded within word"
         )
     }
+
+    func testWikilinkParsingBrokenClosingBracket() throws {
+        let markup = """
+        Here's a [[wikilink]] followed by ]] in some text.
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
+        guard case let .wikilink(wikilink) = inline0 else {
+            XCTFail("Expected wikilink but was \(String(describing: inline0))")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: wikilink),
+            "[[wikilink]]",
+            "Wikilink closes at the first closing bracket"
+        )
+    }
+
+    func testWikilinkParsingBrokenOpenBracket() throws {
+        let markup = """
+        Here's a [[nonwikilink in some text.
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
+        XCTAssertEqual(
+            inline0,
+            nil,
+            "Wikilink requires closing bracket"
+        )
+    }
+
+    func testWikilinkDoubleOpenBracket() throws {
+        let markup = """
+        Here's a [[ [[wikilink]] with an additional opening bracket preceding.
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
+        guard case let .wikilink(wikilink) = inline0 else {
+            XCTFail("Expected wikilink but was \(String(describing: inline0))")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: wikilink),
+            "[[wikilink]]",
+            "Wikilink requires closing bracket"
+        )
+    }
+
+    func testWikilinkText() throws {
+        let markup = """
+        Let's test out a [[wikilink]].
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .wikilink(wikilink) = inline0 else {
+            XCTFail("Expected wikilink but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            wikilink.text,
+            "wikilink",
+            "Wikilink text omits brackets"
+        )
+    }
 }
