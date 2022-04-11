@@ -69,6 +69,11 @@ extension UIFont {
         size: AppTheme.textSize
     )!
 
+    static let appTextMonoItalic = UIFont(
+        name: "IBMPlexMono-Italic",
+        size: AppTheme.textSize
+    )!
+
     static let appLargeTitle = UIFont(name: "IBMPlexSans-Light", size: 34)!
 
     static let appTitle = appTextMedium
