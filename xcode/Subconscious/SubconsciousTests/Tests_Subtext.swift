@@ -66,10 +66,14 @@ class Tests_Subtext: XCTestCase {
         """
         let dom = Subtext(markup: markup)
         let inline0 = dom.blocks.get(0)?.inline.get(0)
+        guard case let .wikilink(wikilink) = inline0 else {
+            XCTFail("Expected wikilink but was \(String(describing: inline0))")
+            return
+        }
         XCTAssertEqual(
-            inline0,
-            nil,
-            "Wikilink does not parse when embedded within word"
+            String(describing: wikilink),
+            "[[wikilink]]",
+            "Wikilink is detected when embedded in text"
         )
     }
 
