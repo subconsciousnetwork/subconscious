@@ -64,9 +64,35 @@ struct Subtext: Hashable, Equatable {
 
     struct Wikilink: Hashable, Equatable, CustomStringConvertible {
         var span: Substring
+
         var text: Substring {
             span.dropFirst(2).dropLast(2)
         }
+
+        var description: String {
+            String(span)
+        }
+    }
+
+    struct Bold: Hashable, Equatable, CustomStringConvertible {
+        var span: Substring
+
+        var text: Substring {
+            span.dropFirst(2).dropLast(2)
+        }
+
+        var description: String {
+            String(span)
+        }
+    }
+
+    struct Italic: Hashable, Equatable, CustomStringConvertible {
+        var span: Substring
+
+        var text: Substring {
+            span.dropFirst(1).dropLast(1)
+        }
+
         var description: String {
             String(span)
         }
@@ -77,6 +103,8 @@ struct Subtext: Hashable, Equatable {
         case bracketlink(Bracketlink)
         case slashlink(Slashlink)
         case wikilink(Wikilink)
+        case bold(Bold)
+        case italic(Italic)
     }
 
     /// Consume a well-formed bracket link, or else backtrack
@@ -97,7 +125,9 @@ struct Subtext: Hashable, Equatable {
     }
 
     /// Consume a well-formed bracket link, or else backtrack
-    private static func consumeWikilink(tape: inout Tape<Substring>) -> Substring? {
+    private static func consumeWikilink(
+        tape: inout Tape<Substring>
+    ) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
             // Brackets are not allowed in wikilink bodies
@@ -105,6 +135,38 @@ struct Subtext: Hashable, Equatable {
                 tape.backtrack()
                 return nil
             } else if tape.consumeMatch("]]") {
+                return tape.cut()
+            } else {
+                tape.advance()
+            }
+        }
+        tape.backtrack()
+        return nil
+    }
+
+    /// Consume a well-formed italics run, or else backtrack
+    private static func consumeBold(
+        tape: inout Tape<Substring>
+    ) -> Substring? {
+        tape.save()
+        while !tape.isExhausted() {
+            if tape.consumeMatch("*") {
+                return tape.cut()
+            } else {
+                tape.advance()
+            }
+        }
+        tape.backtrack()
+        return nil
+    }
+
+    /// Consume a well-formed italics run, or else backtrack
+    private static func consumeItalic(
+        tape: inout Tape<Substring>
+    ) -> Substring? {
+        tape.save()
+        while !tape.isExhausted() {
+            if tape.consumeMatch("_") {
                 return tape.cut()
             } else {
                 tape.advance()
@@ -286,6 +348,18 @@ struct Subtext: Hashable, Equatable {
         } else if tape.consumeMatch("http://") {
             let span = consumeURLBody(tape: &tape)
             return .link(Link(span: span))
+        } else if tape.consumeMatch("*") {
+            if let bold = consumeBold(tape: &tape) {
+                return .bold(Bold(span: bold))
+            } else {
+                return nil
+            }
+        } else if tape.consumeMatch("_") {
+            if let bold = consumeItalic(tape: &tape) {
+                return .italic(Italic(span: bold))
+            } else {
+                return nil
+            }
         } else {
             return nil
         }
@@ -433,6 +507,24 @@ extension Subtext {
                     )
                 )
             }
+        case .bold(let bold):
+            attributedString.addAttribute(
+                .font,
+                value: UIFont.appTextMonoBold,
+                range: NSRange(
+                    bold.span.range,
+                    in: attributedString.string
+                )
+            )
+        case .italic(let italic):
+            attributedString.addAttribute(
+                .font,
+                value: UIFont.appTextMonoItalic,
+                range: NSRange(
+                    italic.span.range,
+                    in: attributedString.string
+                )
+            )
         }
     }
 
