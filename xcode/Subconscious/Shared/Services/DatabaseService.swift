@@ -206,9 +206,13 @@ struct DatabaseService {
 
     /// Rename file in file system
     private func moveEntryFile(from: Slug, to: Slug) throws {
-        let fromURL = from.toURL(directory: documentURL, ext: "subtext")
-        let toURL = to.toURL(directory: documentURL, ext: "subtext")
-        try FileManager.default.moveItem(at: fromURL, to: toURL)
+        let fromFile = try SubtextFile(slug: from, directory: documentURL)
+            .unwrap()
+        let toFile = SubtextFile(slug: to, content: fromFile.content)
+        try toFile.write(directory: documentURL)
+        try FileManager.default.removeItem(
+            at: fromFile.url(directory: documentURL)
+        )
     }
 
     /// Merge two files together
