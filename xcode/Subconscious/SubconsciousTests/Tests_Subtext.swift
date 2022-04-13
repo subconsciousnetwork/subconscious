@@ -320,4 +320,38 @@ class Tests_Subtext: XCTestCase {
             "Bold text field omits markup"
         )
     }
+
+    func testInlineCollisions0() throws {
+        let markup = """
+        Let's test out *bo_ld*_.
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .bold(bold) = inline0 else {
+            XCTFail("Expected bold but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: bold),
+            "*bo_ld*",
+            "Opening * parses until closing, * or backtracks"
+        )
+    }
+
+    func testInlineCollisions2() throws {
+        let markup = """
+        Let's test out _it*al*ic_ly*.
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .italic(italic) = inline0 else {
+            XCTFail("Expected italic but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: italic),
+            "_it*al*ic_",
+            "Opening _ parses until closing, _ or backtracks"
+        )
+    }
 }
