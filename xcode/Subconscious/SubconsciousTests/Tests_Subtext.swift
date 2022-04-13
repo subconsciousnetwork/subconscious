@@ -152,8 +152,8 @@ class Tests_Subtext: XCTestCase {
             return
         }
         XCTAssertEqual(
-            italic.text,
-            "Italics",
+            String(describing: italic),
+            "_Italics_",
             "Italic markup parses to italic"
         )
     }
@@ -169,13 +169,13 @@ class Tests_Subtext: XCTestCase {
             return
         }
         XCTAssertEqual(
-            italic.text,
-            "italic",
+            String(describing: italic),
+            "_italic_",
             "Italic markup parses to italic"
         )
     }
 
-    func testItalicParsing3() throws {
+    func testItalicParsing2() throws {
         let markup = """
         Heres some_italic_embedded in the text
         """
@@ -186,13 +186,13 @@ class Tests_Subtext: XCTestCase {
             return
         }
         XCTAssertEqual(
-            italic.text,
-            "italic",
+            String(describing: italic),
+            "_italic_",
             "Italic markup parses to italic"
         )
     }
 
-    func testItalicParsing4() throws {
+    func testItalicParsing3() throws {
         let markup = """
         Here's some _italic_ with_ a stray tag in the text
         """
@@ -208,8 +208,8 @@ class Tests_Subtext: XCTestCase {
             return
         }
         XCTAssertEqual(
-            italic.text,
-            "italic",
+            String(describing: italic),
+            "_italic_",
             "Italic markup parses to italic"
         )
     }
@@ -228,6 +228,96 @@ class Tests_Subtext: XCTestCase {
             italic.text,
             "italic",
             "Italic text field omits markup"
+        )
+    }
+
+    func testBoldParsing0() throws {
+        let markup = """
+        *Bold* in the front
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .bold(bold) = inline0 else {
+            XCTFail("Expected bold but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: bold),
+            "*Bold*",
+            "Bold markup parses to bold"
+        )
+    }
+
+    func testBoldParsing1() throws {
+        let markup = """
+        Some *bold* in the middle
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .bold(bold) = inline0 else {
+            XCTFail("Expected bold but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: bold),
+            "*bold*",
+            "Bold markup parses to bold"
+        )
+    }
+
+    func testBoldParsing2() throws {
+        let markup = """
+        Heres some*bold*embedded in the text
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .bold(bold) = inline0 else {
+            XCTFail("Expected bold but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: bold),
+            "*bold*",
+            "Bold markup parses to bold"
+        )
+    }
+
+    func testBoldParsing3() throws {
+        let markup = """
+        Here's some *bold* with* a stray tag in the text
+        """
+        let dom = Subtext(markup: markup)
+        XCTAssertEqual(
+            dom.blocks[0].inline.count,
+            1,
+            "Only one bold block detected"
+        )
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .bold(bold) = inline0 else {
+            XCTFail("Expected bold but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: bold),
+            "*bold*",
+            "Bold markup parses to bold"
+        )
+    }
+
+    func testBoldText() throws {
+        let markup = """
+        Let's test out *bold*.
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .bold(bold) = inline0 else {
+            XCTFail("Expected bold but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            bold.text,
+            "bold",
+            "Bold text field omits markup"
         )
     }
 }

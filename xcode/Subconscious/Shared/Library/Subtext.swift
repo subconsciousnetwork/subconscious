@@ -78,7 +78,7 @@ struct Subtext: Hashable, Equatable {
         var span: Substring
 
         var text: Substring {
-            span.dropFirst(2).dropLast(2)
+            span.dropFirst(1).dropLast(1)
         }
 
         var description: String {
