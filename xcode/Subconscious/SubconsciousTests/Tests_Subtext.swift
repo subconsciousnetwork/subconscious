@@ -140,4 +140,94 @@ class Tests_Subtext: XCTestCase {
             "Wikilink text omits brackets"
         )
     }
+
+    func testItalicParsing0() throws {
+        let markup = """
+        _Italics_ in the front
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .italic(italic) = inline0 else {
+            XCTFail("Expected italic but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            italic.text,
+            "Italics",
+            "Italic markup parses to italic"
+        )
+    }
+
+    func testItalicParsing1() throws {
+        let markup = """
+        Some _italic_ in the middle
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .italic(italic) = inline0 else {
+            XCTFail("Expected italic but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            italic.text,
+            "italic",
+            "Italic markup parses to italic"
+        )
+    }
+
+    func testItalicParsing3() throws {
+        let markup = """
+        Heres some_italic_embedded in the text
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .italic(italic) = inline0 else {
+            XCTFail("Expected italic but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            italic.text,
+            "italic",
+            "Italic markup parses to italic"
+        )
+    }
+
+    func testItalicParsing4() throws {
+        let markup = """
+        Here's some _italic_ with_ a stray tag in the text
+        """
+        let dom = Subtext(markup: markup)
+        XCTAssertEqual(
+            dom.blocks[0].inline.count,
+            1,
+            "Only one italic block detected"
+        )
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .italic(italic) = inline0 else {
+            XCTFail("Expected italic but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            italic.text,
+            "italic",
+            "Italic markup parses to italic"
+        )
+    }
+
+    func testItalicText() throws {
+        let markup = """
+        Let's test out _italic_
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .italic(italic) = inline0 else {
+            XCTFail("Expected italic but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            italic.text,
+            "italic",
+            "Italic text field omits markup"
+        )
+    }
 }
