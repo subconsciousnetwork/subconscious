@@ -321,6 +321,96 @@ class Tests_Subtext: XCTestCase {
         )
     }
 
+    func testCodeParsing0() throws {
+        let markup = """
+        `Code` in the front
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .code(code) = inline0 else {
+            XCTFail("Expected code but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: code),
+            "`Code`",
+            "Code markup parses to code"
+        )
+    }
+
+    func testCodeParsing1() throws {
+        let markup = """
+        Some `code text` in the middle
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .code(code) = inline0 else {
+            XCTFail("Expected code but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: code),
+            "`code text`",
+            "Code markup parses to code"
+        )
+    }
+
+    func testCodeParsing2() throws {
+        let markup = """
+        Heres some`code`embedded in the text
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .code(code) = inline0 else {
+            XCTFail("Expected code but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: code),
+            "`code`",
+            "Code markup parses to code"
+        )
+    }
+
+    func testCodeParsing3() throws {
+        let markup = """
+        Here's some `code` with` a stray tag in the text
+        """
+        let dom = Subtext(markup: markup)
+        XCTAssertEqual(
+            dom.blocks[0].inline.count,
+            1,
+            "Only one code block detected"
+        )
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .code(code) = inline0 else {
+            XCTFail("Expected code but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: code),
+            "`code`",
+            "Code markup parses to code"
+        )
+    }
+
+    func testCodeText() throws {
+        let markup = """
+        Let's test out `code`.
+        """
+        let dom = Subtext(markup: markup)
+        let inline0 = dom.blocks[0].inline[0]
+        guard case let .code(code) = inline0 else {
+            XCTFail("Expected code but was \(inline0)")
+            return
+        }
+        XCTAssertEqual(
+            code.text,
+            "code",
+            "Code text field omits markup"
+        )
+    }
+
     func testInlineCollisions0() throws {
         let markup = """
         Let's test out *bo_ld*_.
