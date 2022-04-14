@@ -266,7 +266,7 @@ struct AppModel: Equatable {
     /// Editor selection corresponds with `editorAttributedText`
     var editorSelection = NSMakeRange(0, 0)
     /// Slashlink currently being written (if any)
-    var editorSelectedSlashlink: Subtext.Slashlink? = nil
+    var editorSelectedWikilink: Subtext.Wikilink? = nil
 
     /// Backlinks to the currently active entry
     var backlinks: [EntryStub] = []
@@ -551,6 +551,7 @@ extension AppModel {
         case let .setEditor(text, saveState):
             return setEditor(
                 state: state,
+                environment: environment,
                 text: text,
                 saveState: saveState
             )
@@ -720,7 +721,7 @@ extension AppModel {
         model.editorText = ""
         model.editorSaveState = .saved
         model.editorSelection = NSMakeRange(0, 0)
-        model.editorSelectedSlashlink = nil
+        model.editorSelectedWikilink = nil
         return model
     }
 
@@ -737,6 +738,7 @@ extension AppModel {
     ///   - isSaved: is this text state saved already?
     static func setEditor(
         state: AppModel,
+        environment: AppEnvironment,
         text: String,
         saveState: SaveState = .modified
     ) -> Update<AppModel, AppAction> {
@@ -745,21 +747,23 @@ extension AppModel {
         // Mark save state
         model.editorSaveState = saveState
         let dom = Subtext(markup: text)
-        let slashlink = dom.slashlinkFor(range: state.editorSelection)
-        model.editorSelectedSlashlink = slashlink
+        let link = dom.wikilinkFor(range: state.editorSelection)
+        model.editorSelectedWikilink = link
 
-        // Find out if our selection touches a slashlink.
-        // If it does, search for links.
-        let fx: Fx<AppAction> = slashlink.mapOr(
-            { slashlink in
-                Just(
-                    AppAction.setLinkSearch(slashlink.description)
+        let linkSearchText = link
+            .map({ link in
+                String(link.text)
+            })
+            .unwrap(or: "")
+
+        return Update(state: model)
+            .pipe({ state in
+                setLinkSearch(
+                    state: state,
+                    environment: environment,
+                    text: linkSearchText
                 )
-                .eraseToAnyPublisher()
-            },
-            default: Empty().eraseToAnyPublisher()
-        )
-        return Update(state: model, fx: fx)
+            })
     }
 
     /// Set editor selection.
@@ -771,21 +775,25 @@ extension AppModel {
         var model = state
         model.editorSelection = nsRange
         let dom = Subtext(markup: model.editorText)
-        let slashlink = dom.slashlinkFor(
+        let link = dom.wikilinkFor(
             range: model.editorSelection
         )
-        model.editorSelectedSlashlink = slashlink
+        model.editorSelectedWikilink = link
 
-        let fx: Fx<AppAction> = slashlink.mapOr(
-            { slashlink in
-                Just(AppAction.setLinkSearch(slashlink.description))
-                    .eraseToAnyPublisher()
-            },
-            default: Just(AppAction.setLinkSearch(""))
-                .eraseToAnyPublisher()
-        )
+        let linkSearchText = link
+            .map({ link in
+                String(link.text)
+            })
+            .unwrap(or: "")
 
-        return Update(state: model, fx: fx)
+        return Update(state: model)
+            .pipe({ state in
+                setLinkSearch(
+                    state: state,
+                    environment: environment,
+                    text: linkSearchText
+                )
+            })
     }
 
     /// Set text cursor at end of editor
@@ -840,6 +848,7 @@ extension AppModel {
         // Update.
         return setEditor(
             state: state,
+            environment: environment,
             text: markup,
             saveState: .modified
         )
@@ -1886,6 +1895,7 @@ extension AppModel {
         .pipe({ state in
             setEditor(
                 state: state,
+                environment: environment,
                 text: detail.entry.value.dom.base,
                 saveState: detail.entry.state
             )
@@ -1991,7 +2001,7 @@ extension AppModel {
 
         // If there is a selected slashlink, use that range
         // instead of selection
-        let range = state.editorSelectedSlashlink
+        let range = state.editorSelectedWikilink
             .map({ slashlink in
                 NSRange(
                     slashlink.span.range,
