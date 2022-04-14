@@ -444,4 +444,35 @@ class Tests_Subtext: XCTestCase {
             "Opening _ parses until closing, _ or backtracks"
         )
     }
+
+    func testInlineCollisions3() throws {
+        let markup = """
+        Let's test out `_`it*al*ic_ly*.
+        """
+        let dom = Subtext(markup: markup)
+        let block = dom.blocks[0]
+
+        XCTAssertEqual(block.inline.count, 2, "Two inlines parsed")
+
+        guard case let .code(code) = block.inline[0] else {
+            XCTFail("Expected code")
+            return
+        }
+        guard case let .bold(bold) = block.inline[1] else {
+            XCTFail("Expected bold")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: code),
+            "`_`",
+            "First inline is code"
+        )
+
+        XCTAssertEqual(
+            String(describing: bold),
+            "*al*",
+            "Second inline is bold"
+        )
+    }
 }
