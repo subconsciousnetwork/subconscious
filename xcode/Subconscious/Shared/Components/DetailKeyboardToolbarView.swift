@@ -34,7 +34,7 @@ struct DetailKeyboardToolbarView: View {
                         isSheetPresented = true
                     },
                     label: {
-                        Image(systemName: "magnifyingglass")
+                        Image(systemName: "link.badge.plus")
                             .frame(
                                 width: AppTheme.icon,
                                 height: AppTheme.icon

@@ -542,6 +542,7 @@
 				B8216F7727E11516002B70CB /* BottomSheetView.swift */,
 				B822F18C27C9C0AB00943C6B /* CountChip.swift */,
 				B8CC433F27A07DF10079D2F9 /* DialogView.swift */,
+				B8B4D7ED27EA8AA000633B5F /* DragHandleView.swift */,
 				B82FD4552730A62C002CB641 /* EntryRow.swift */,
 				B83E91D627692EC600045C6A /* FABButtonStyle.swift */,
 				B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */,
@@ -566,7 +567,6 @@
 				B81EACD727B724A000B3B8DC /* ThickDividerView.swift */,
 				B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */,
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
-				B8B4D7ED27EA8AA000633B5F /* DragHandleView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";

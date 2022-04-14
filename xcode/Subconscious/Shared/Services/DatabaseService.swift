@@ -574,7 +574,7 @@ struct DatabaseService {
         fallback: [LinkSuggestion] = []
     ) -> AnyPublisher<[LinkSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            guard let sluglike = Slug.format(query) else {
+            guard !query.isWhitespace else {
                 return fallback
             }
 
@@ -588,25 +588,24 @@ struct DatabaseService {
             let entries: [EntryLink] = try database
                 .execute(
                     sql: """
-                    SELECT slug, title
+                    SELECT slug
                     FROM entry_search
                     WHERE entry_search MATCH ?
                     ORDER BY rank
                     LIMIT 25
                     """,
                     parameters: [
-                        .prefixQueryFTS5(sluglike)
+                        .prefixQueryFTS5(query)
                     ]
                 )
                 .compactMap({ row in
                     if
                         let slugString: String = row.get(0),
-                        let slug = Slug(slugString),
-                        let title: String = row.get(1)
+                        let slug = Slug(slugString)
                     {
                         return EntryLink(
                             slug: slug,
-                            title: title
+                            title: slug.toSentence()
                         )
                     }
                     return nil

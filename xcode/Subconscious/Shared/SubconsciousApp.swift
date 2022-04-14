@@ -1940,8 +1940,7 @@ extension AppModel {
         text: String
     ) -> Update<AppModel, AppAction> {
         var model = state
-        let sluglike = Slug.format(text).unwrap(or: "")
-        model.linkSearchText = sluglike
+        model.linkSearchText = text
 
         // Omit current slug from results
         let omitting = state.slug.mapOr(

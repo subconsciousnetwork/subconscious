@@ -15,8 +15,10 @@ struct LinkSuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text(String(entryLink.slug)),
-                        subtitle: Text(#"Link to "\#(entryLink.title)""#)
+                        title: Text(String(entryLink.title)),
+                        subtitle: Text(
+                            #"Link to "\#(String(describing: entryLink.slug))""#
+                        )
                     )
                 },
                 icon: {
@@ -27,7 +29,7 @@ struct LinkSuggestionLabelView: View {
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text(String(entryLink.slug)),
+                        title: Text(String(entryLink.title)),
                         subtitle: Text("Link to new idea")
                     )
                 },
