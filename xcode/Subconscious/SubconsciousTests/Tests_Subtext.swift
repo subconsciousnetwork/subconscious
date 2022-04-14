@@ -9,6 +9,54 @@ import XCTest
 @testable import Subconscious
 
 class Tests_Subtext: XCTestCase {
+    func testLinkParsing0() throws {
+        let markup = "Some text with a http://example.com link"
+        let dom = Subtext(markup: markup)
+
+        guard case let .link(link) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected link")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: link),
+            "http://example.com",
+            "Link parses successfully"
+        )
+    }
+
+    func testSlashlinkParsing0() throws {
+        let markup = "Some text with a /slashlink."
+        let dom = Subtext(markup: markup)
+
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "/slashlink",
+            "Slashlink parses successfully"
+        )
+    }
+
+    func testSlashlinkParsing1() throws {
+        let markup = "/slashlink at the beginning."
+        let dom = Subtext(markup: markup)
+
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "/slashlink",
+            "Slashlink parses successfully"
+        )
+    }
+
     func testWikilinkParsing0() throws {
         let markup = """
         Let's test out some [[wikilinks]].
