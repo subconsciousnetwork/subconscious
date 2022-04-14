@@ -98,6 +98,18 @@ struct Subtext: Hashable, Equatable {
         }
     }
 
+    struct Code: Hashable, Equatable, CustomStringConvertible {
+        var span: Substring
+
+        var text: Substring {
+            span.dropFirst(1).dropLast(1)
+        }
+
+        var description: String {
+            String(span)
+        }
+    }
+
     enum Inline: Hashable, Equatable {
         case link(Link)
         case bracketlink(Bracketlink)
@@ -105,6 +117,7 @@ struct Subtext: Hashable, Equatable {
         case wikilink(Wikilink)
         case bold(Bold)
         case italic(Italic)
+        case code(Code)
     }
 
     /// Consume a well-formed bracket link, or else backtrack
@@ -167,6 +180,22 @@ struct Subtext: Hashable, Equatable {
         tape.save()
         while !tape.isExhausted() {
             if tape.consumeMatch("_") {
+                return tape.cut()
+            } else {
+                tape.advance()
+            }
+        }
+        tape.backtrack()
+        return nil
+    }
+
+    /// Consume a well-formed code run, or else backtrack
+    private static func consumeCode(
+        tape: inout Tape<Substring>
+    ) -> Substring? {
+        tape.save()
+        while !tape.isExhausted() {
+            if tape.consumeMatch("`") {
                 return tape.cut()
             } else {
                 tape.advance()
@@ -355,8 +384,14 @@ struct Subtext: Hashable, Equatable {
                 return nil
             }
         } else if tape.consumeMatch("_") {
-            if let bold = consumeItalic(tape: &tape) {
-                return .italic(Italic(span: bold))
+            if let italic = consumeItalic(tape: &tape) {
+                return .italic(Italic(span: italic))
+            } else {
+                return nil
+            }
+        } else if tape.consumeMatch("`") {
+            if let code = consumeCode(tape: &tape) {
+                return .code(Code(span: code))
             } else {
                 return nil
             }
@@ -522,6 +557,15 @@ extension Subtext {
                 value: UIFont.appTextMonoItalic,
                 range: NSRange(
                     italic.span.range,
+                    in: attributedString.string
+                )
+            )
+        case .code(let code):
+            attributedString.addAttribute(
+                .backgroundColor,
+                value: UIColor(Color.secondaryBackground),
+                range: NSRange(
+                    code.span.range,
                     in: attributedString.string
                 )
             )
