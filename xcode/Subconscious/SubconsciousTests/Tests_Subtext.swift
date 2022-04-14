@@ -57,6 +57,118 @@ class Tests_Subtext: XCTestCase {
         )
     }
 
+    func testLinkParsingTrailingPunctuation0() throws {
+        let markup = "Some text with a https://example.com. Yes!"
+        let dom = Subtext(markup: markup)
+
+        guard case let .link(link) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected link")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: link),
+            "https://example.com",
+            "Link with trailing punctuation parses successfully"
+        )
+    }
+
+    func testLinkParsingTrailingPunctuation1() throws {
+        let markup = "Some text with a https://example.com! Yes!"
+        let dom = Subtext(markup: markup)
+
+        guard case let .link(link) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected link")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: link),
+            "https://example.com",
+            "Link with trailing punctuation parses successfully"
+        )
+    }
+
+    func testLinkParsingTrailingPunctuation2() throws {
+        let markup = "Some text with a https://example.com? Yes!"
+        let dom = Subtext(markup: markup)
+
+        guard case let .link(link) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected link")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: link),
+            "https://example.com",
+            "Link with trailing punctuation parses successfully"
+        )
+    }
+
+    func testLinkParsingTrailingPunctuation3() throws {
+        let markup = "Some text with a https://example.com, yes!"
+        let dom = Subtext(markup: markup)
+
+        guard case let .link(link) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected link")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: link),
+            "https://example.com",
+            "Link with trailing punctuation parses successfully"
+        )
+    }
+
+    func testLinkParsingTrailingPunctuation4() throws {
+        let markup = "Some text with a https://example.com; yes!"
+        let dom = Subtext(markup: markup)
+
+        guard case let .link(link) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected link")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: link),
+            "https://example.com",
+            "Link with trailing punctuation parses successfully"
+        )
+    }
+
+    func testLinkParsingTrailingPunctuation5() throws {
+        let markup = "Some text with a https://example.com( Yes!"
+        let dom = Subtext(markup: markup)
+
+        guard case let .link(link) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected link")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: link),
+            "https://example.com",
+            "Link with trailing punctuation parses successfully"
+        )
+    }
+
+    func testLinkParsingTrailingSlash() throws {
+        let markup = "Some text with a https://example.com/ Yes!"
+        let dom = Subtext(markup: markup)
+
+        guard case let .link(link) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected link")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: link),
+            "https://example.com/",
+            "Link with trailing punctuation parses successfully"
+        )
+    }
+
     func testSlashlinkParsing0() throws {
         let markup = "Some text with a /slashlink."
         let dom = Subtext(markup: markup)
