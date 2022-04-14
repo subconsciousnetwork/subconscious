@@ -48,7 +48,7 @@ struct DetailKeyboardToolbarView: View {
                             onSelect(.entry(suggestion))
                         },
                         label: {
-                            Text(suggestion.slug.description)
+                            Text(suggestion.slug.toSentence())
                                 .lineLimit(1)
                         }
                     )

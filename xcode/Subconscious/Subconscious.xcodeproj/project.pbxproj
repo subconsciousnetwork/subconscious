@@ -497,10 +497,10 @@
 				B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */,
 				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
 				B8879EAB26F944DA00A0B4FF /* DetailView.swift */,
+				B86DFF2C27C0280B002E57ED /* EntryListView.swift */,
 				B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */,
 				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 				B8AE34BB276AB3D400777FF0 /* SearchView.swift */,
-				B86DFF2C27C0280B002E57ED /* EntryListView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
