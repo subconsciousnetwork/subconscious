@@ -1980,12 +1980,12 @@ extension AppModel {
         environment: AppEnvironment,
         suggestion: LinkSuggestion
     ) -> Update<AppModel, AppAction> {
-        let slug: Slug = Func.pipe(suggestion, { suggestion in
+        let wikilink: Wikilink = Func.pipe(suggestion, { suggestion in
             switch suggestion {
-            case .entry(let entryLink):
-                return entryLink.slug
-            case .new(let entryLink):
-                return entryLink.slug
+            case .entry(let wikilink):
+                return wikilink
+            case .new(let wikilink):
+                return wikilink
             }
         })
 
@@ -2015,7 +2015,7 @@ extension AppModel {
                 insertEditorText(
                     state: state,
                     environment: environment,
-                    text: "\(slug.toWikilink()) ",
+                    text: "\(wikilink.markup) ",
                     range: range
                 )
             })

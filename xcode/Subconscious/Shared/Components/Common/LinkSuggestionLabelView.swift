@@ -11,13 +11,13 @@ struct LinkSuggestionLabelView: View {
     var suggestion: LinkSuggestion
     var body: some View {
         switch suggestion {
-        case .entry(let entryLink):
+        case .entry(let wikilink):
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text(String(entryLink.title)),
+                        title: Text(wikilink.text),
                         subtitle: Text(
-                            #"Link to "\#(String(describing: entryLink.slug))""#
+                            #"Link to "\#(String(describing: wikilink.slug))""#
                         )
                     )
                 },
@@ -25,11 +25,11 @@ struct LinkSuggestionLabelView: View {
                     Image(systemName: "link")
                 }
             )
-        case .new(let entryLink):
+        case .new(let wikilink):
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text(String(entryLink.title)),
+                        title: Text(wikilink.text),
                         subtitle: Text("Link to new idea")
                     )
                 },
@@ -46,9 +46,8 @@ struct LinkSuggestionLabel_Previews: PreviewProvider {
     static var previews: some View {
         LinkSuggestionLabelView(
             suggestion: .new(
-                EntryLink(
-                    slug: Slug("floop")!,
-                    title: "Floop the pig"
+                Wikilink(
+                    slug: Slug("floop")!
                 )
             )
         )

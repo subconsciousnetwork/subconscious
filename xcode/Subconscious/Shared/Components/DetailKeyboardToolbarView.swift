@@ -12,7 +12,7 @@ struct DetailKeyboardToolbarView: View {
     var suggestions: [LinkSuggestion]
     var onSelect: (LinkSuggestion) -> Void
 
-    private func barSuggestions() -> ArraySlice<EntryLink> {
+    private func barSuggestions() -> ArraySlice<Wikilink> {
         self.suggestions
             .compactMap({ suggestion in
                 switch suggestion {
@@ -69,9 +69,8 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
             isSheetPresented: .constant(false),
             suggestions: [
                 .entry(
-                    EntryLink(
-                        slug: Slug("an-organism-is-a-living-system")!,
-                        title: "An organism is a living system maintaining both a higher level of internal cooperation"
+                    Wikilink(
+                        slug: Slug("an-organism-is-a-living-system")!
                     )
                 )
             ],
