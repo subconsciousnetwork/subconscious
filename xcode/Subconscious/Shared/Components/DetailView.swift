@@ -27,6 +27,7 @@ struct DetailView: View {
     var isLoading: Bool
     var backlinks: [EntryStub]
     var linkSuggestions: [LinkSuggestion]
+    var selectedWikilink: Subtext.Wikilink?
     @Binding var focus: AppModel.Focus?
     @Binding var editorText: String
     @Binding var editorSelection: NSRange
@@ -94,8 +95,10 @@ struct DetailView: View {
                     if isKeyboardUp {
                         DetailKeyboardToolbarView(
                             isSheetPresented: $isLinkSheetPresented,
+                            selectedWikilink: selectedWikilink,
                             suggestions: linkSuggestions,
-                            onSelect: onSelectLink
+                            onSelectLink: onSelectLink,
+                            onDoneEditing: onDone
                         )
                         .transition(
                             .asymmetric(
