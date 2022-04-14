@@ -94,6 +94,28 @@ class Tests_Subtext: XCTestCase {
         )
     }
 
+    func testWikilinkParsingSpaceInBrackets() throws {
+        let markup = """
+        Here's a [[wikilink] ] except it's broken.
+        """
+        let dom = Subtext(markup: markup)
+        XCTAssert(
+            dom.blocks.get(0)?.inline.count == 0,
+            "Broken wikilink with space in brackets is not parsed as wikilink"
+        )
+    }
+
+    func testWikilinkParsingSpaceInBrackets2() throws {
+        let markup = """
+        Here's a [[wikilink] text] except it's broken.
+        """
+        let dom = Subtext(markup: markup)
+        XCTAssert(
+            dom.blocks.get(0)?.inline.count == 0,
+            "Broken wikilink with space in brackets is not parsed as wikilink"
+        )
+    }
+
     func testWikilinkParsingBrokenOpenBracket() throws {
         let markup = """
         Here's a [[nonwikilink in some text.
