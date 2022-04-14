@@ -126,6 +126,12 @@ extension Slug {
     func toSlashlink() -> String {
         "/\(self.description)"
     }
+
+    /// Create wikilink (markup string) from slug
+    func toWikilink() -> String {
+        let sentence = self.toSentence()
+        return "[[\(sentence)]]"
+    }
 }
 
 extension URL {

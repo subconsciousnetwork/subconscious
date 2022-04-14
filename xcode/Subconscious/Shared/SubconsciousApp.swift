@@ -563,9 +563,9 @@ extension AppModel {
         case let .insertEditorText(text, range):
             return insertEditorText(
                 state: state,
+                environment: environment,
                 text: text,
-                range: range,
-                environment: environment
+                range: range
             )
         case let .showDetail(isShowing):
             return showDetail(
@@ -668,7 +668,11 @@ extension AppModel {
                 text: text
             )
         case let .selectLinkSuggestion(suggestion):
-            return selectLinkSuggestion(state: state, suggestion: suggestion)
+            return selectLinkSuggestion(
+                state: state,
+                environment: environment,
+                suggestion: suggestion
+            )
         case let .setLinkSuggestions(suggestions):
             var model = state
             model.linkSuggestions = suggestions
@@ -803,9 +807,9 @@ extension AppModel {
 
     static func insertEditorText(
         state: AppModel,
+        environment: AppEnvironment,
         text: String,
-        range nsRange: NSRange,
-        environment: AppEnvironment
+        range nsRange: NSRange
     ) -> Update<AppModel, AppAction> {
         guard let range = Range(nsRange, in: state.editorText) else {
             environment.logger.log(
@@ -1974,6 +1978,7 @@ extension AppModel {
 
     static func selectLinkSuggestion(
         state: AppModel,
+        environment: AppEnvironment,
         suggestion: LinkSuggestion
     ) -> Update<AppModel, AppAction> {
         let slug: Slug = Func.pipe(suggestion, { suggestion in
@@ -1985,34 +1990,36 @@ extension AppModel {
             }
         })
 
-        var range = state.editorSelection
         // If there is a selected slashlink, use that range
         // instead of selection
-        if let slashlink = state.editorSelectedSlashlink
-        {
-            range = NSRange(
-                slashlink.span.range,
-                in: state.editorText
-            )
-        }
-
-        let fx: Fx<AppAction> = Just(
-            AppAction.setLinkSheetPresented(false)
-        )
-        .merge(
-            with: Just(
-                AppAction.insertEditorText(
-                    text: "\(slug.toSlashlink()) ",
-                    range: range
+        let range = state.editorSelectedSlashlink
+            .map({ slashlink in
+                NSRange(
+                    slashlink.span.range,
+                    in: state.editorText
                 )
-            )
-        )
-        .eraseToAnyPublisher()
+            })
+            .unwrap(or: state.editorSelection)
 
         var model = state
         model.linkSearchText = ""
 
-        return Update(state: model, fx: fx)
+        return Update(state: model)
+            .pipe({ state in
+                setLinkSheetPresented(
+                    state: state,
+                    environment: environment,
+                    isPresented: false
+                )
+            })
+            .pipe({ state in
+                insertEditorText(
+                    state: state,
+                    environment: environment,
+                    text: "\(slug.toWikilink()) ",
+                    range: range
+                )
+            })
             .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
