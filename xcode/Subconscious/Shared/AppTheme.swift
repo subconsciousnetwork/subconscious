@@ -69,6 +69,11 @@ extension UIFont {
         size: AppTheme.textSize
     )!
 
+    static let appTextMonoItalic = UIFont(
+        name: "IBMPlexMono-Italic",
+        size: AppTheme.textSize
+    )!
+
     static let appLargeTitle = UIFont(name: "IBMPlexSans-Light", size: 34)!
 
     static let appTitle = appTextMedium
@@ -87,10 +92,11 @@ extension UIFont {
 //  2021-12-15 Gordon Brander
 extension Color {
     static let text = SwiftUI.Color("TextColor")
+    static let placeholderText = SwiftUI.Color("PlaceholderTextColor")
     static let textPressed = text.opacity(0.5)
     static let textDisabled = placeholderText
     static let secondaryText = SwiftUI.Color("SecondaryTextColor")
-    static let placeholderText = SwiftUI.Color("PlaceholderTextColor")
+    static let tertiaryText = placeholderText
     static let icon = SwiftUI.Color.accentColor
     static let secondaryIcon = SwiftUI.Color.secondaryText
     static let tertiaryIcon = SwiftUI.Color(UIColor.tertiarySystemFill)

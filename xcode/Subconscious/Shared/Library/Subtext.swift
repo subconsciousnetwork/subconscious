@@ -62,10 +62,62 @@ struct Subtext: Hashable, Equatable {
         }
     }
 
+    struct Wikilink: Hashable, Equatable, CustomStringConvertible {
+        var span: Substring
+
+        var text: Substring {
+            span.dropFirst(2).dropLast(2)
+        }
+
+        var description: String {
+            String(span)
+        }
+    }
+
+    struct Bold: Hashable, Equatable, CustomStringConvertible {
+        var span: Substring
+
+        var text: Substring {
+            span.dropFirst(1).dropLast(1)
+        }
+
+        var description: String {
+            String(span)
+        }
+    }
+
+    struct Italic: Hashable, Equatable, CustomStringConvertible {
+        var span: Substring
+
+        var text: Substring {
+            span.dropFirst(1).dropLast(1)
+        }
+
+        var description: String {
+            String(span)
+        }
+    }
+
+    struct Code: Hashable, Equatable, CustomStringConvertible {
+        var span: Substring
+
+        var text: Substring {
+            span.dropFirst(1).dropLast(1)
+        }
+
+        var description: String {
+            String(span)
+        }
+    }
+
     enum Inline: Hashable, Equatable {
         case link(Link)
         case bracketlink(Bracketlink)
         case slashlink(Slashlink)
+        case wikilink(Wikilink)
+        case bold(Bold)
+        case italic(Italic)
+        case code(Code)
     }
 
     /// Consume a well-formed bracket link, or else backtrack
@@ -76,6 +128,74 @@ struct Subtext: Hashable, Equatable {
                 tape.backtrack()
                 return nil
             } else if tape.consumeMatch(">") {
+                return tape.cut()
+            } else {
+                tape.advance()
+            }
+        }
+        tape.backtrack()
+        return nil
+    }
+
+    /// Consume a well-formed bracket link, or else backtrack
+    private static func consumeWikilink(
+        tape: inout Tape<Substring>
+    ) -> Substring? {
+        tape.save()
+        while !tape.isExhausted() {
+            // Brackets are not allowed in wikilink bodies
+            if tape.consumeMatch("[") {
+                tape.backtrack()
+                return nil
+            } else if tape.consumeMatch("]]") {
+                return tape.cut()
+            } else {
+                tape.advance()
+            }
+        }
+        tape.backtrack()
+        return nil
+    }
+
+    /// Consume a well-formed italics run, or else backtrack
+    private static func consumeBold(
+        tape: inout Tape<Substring>
+    ) -> Substring? {
+        tape.save()
+        while !tape.isExhausted() {
+            if tape.consumeMatch("*") {
+                return tape.cut()
+            } else {
+                tape.advance()
+            }
+        }
+        tape.backtrack()
+        return nil
+    }
+
+    /// Consume a well-formed italics run, or else backtrack
+    private static func consumeItalic(
+        tape: inout Tape<Substring>
+    ) -> Substring? {
+        tape.save()
+        while !tape.isExhausted() {
+            if tape.consumeMatch("_") {
+                return tape.cut()
+            } else {
+                tape.advance()
+            }
+        }
+        tape.backtrack()
+        return nil
+    }
+
+    /// Consume a well-formed code run, or else backtrack
+    private static func consumeCode(
+        tape: inout Tape<Substring>
+    ) -> Substring? {
+        tape.save()
+        while !tape.isExhausted() {
+            if tape.consumeMatch("`") {
                 return tape.cut()
             } else {
                 tape.advance()
@@ -215,13 +335,39 @@ struct Subtext: Hashable, Equatable {
     /// Consume one of the inline forms that is delimited by word boundaries.
     /// A word boundary is generally a preceding space, or beginning of input.
     /// Cuts tape before word boundary.
-    /// Returns an Inline?
+    /// - Returns: Inline?
     private static func consumeInlineWordBoundaryForm(
+        tape: inout Tape<Substring>
+    ) -> Inline? {
+        let isAtStart = tape.currentIndex == tape.collection.startIndex
+        // Inline word boundary forms must appear at beginning of block
+        // or after a space.
+        guard isAtStart || tape.consumeMatch(" ") else {
+            return nil
+        }
+        tape.start()
+        if tape.consumeMatch("/") {
+            let span = consumeSlashlinkBody(tape: &tape)
+            return .slashlink(Slashlink(span: span))
+        } else {
+            return nil
+        }
+    }
+
+    /// Consume inline forms that are not sensitive to word boundaries
+    /// - Returns: Inline?
+    private static func consumeInlineForm(
         tape: inout Tape<Substring>
     ) -> Inline? {
         if tape.consumeMatch("<") {
             if let link = consumeBracketLink(tape: &tape) {
                 return .bracketlink(Bracketlink(span: link))
+            } else {
+                return nil
+            }
+        } else if tape.consumeMatch("[[") {
+            if let wikilink = consumeWikilink(tape: &tape) {
+                return .wikilink(Wikilink(span: wikilink))
             } else {
                 return nil
             }
@@ -231,32 +377,42 @@ struct Subtext: Hashable, Equatable {
         } else if tape.consumeMatch("http://") {
             let span = consumeURLBody(tape: &tape)
             return .link(Link(span: span))
-        } else if tape.consumeMatch("/") {
-            let span = consumeSlashlinkBody(tape: &tape)
-            return .slashlink(Slashlink(span: span))
+        } else if tape.consumeMatch("*") {
+            if let bold = consumeBold(tape: &tape) {
+                return .bold(Bold(span: bold))
+            } else {
+                return nil
+            }
+        } else if tape.consumeMatch("_") {
+            if let italic = consumeItalic(tape: &tape) {
+                return .italic(Italic(span: italic))
+            } else {
+                return nil
+            }
+        } else if tape.consumeMatch("`") {
+            if let code = consumeCode(tape: &tape) {
+                return .code(Code(span: code))
+            } else {
+                return nil
+            }
         } else {
             return nil
         }
     }
 
+    /// Parse all inline forms within the line
+    /// - Returns: an array of inline forms
     private static func parseInline(tape: inout Tape<Substring>) -> [Inline] {
         var inlines: [Inline] = []
 
-        /// Capture word-boundary-delimited forms at beginning of line.
-        tape.start()
-        if let inline = consumeInlineWordBoundaryForm(tape: &tape) {
-            inlines.append(inline)
-        }
-
         while !tape.isExhausted() {
             tape.start()
-            let curr = tape.consume()
-            /// Capture word-boundary-delimited forms after space
-            if curr == " " {
-                tape.start()
-                if let inline = consumeInlineWordBoundaryForm(tape: &tape) {
-                    inlines.append(inline)
-                }
+            if let inline = consumeInlineWordBoundaryForm(tape: &tape) {
+                inlines.append(inline)
+            } else if let inline = consumeInlineForm(tape: &tape) {
+                inlines.append(inline)
+            } else {
+                tape.advance()
             }
         }
 
@@ -278,7 +434,7 @@ struct Subtext: Hashable, Equatable {
             tape.advance()
             let inline = parseInline(tape: &tape)
             return Block.list(span: line, inline: inline)
-        } else if line.isWhitespace {
+        } else if line == "\n" {
             return Block.empty(span: line)
         } else {
             var tape = Tape(line)
@@ -320,6 +476,102 @@ struct Subtext: Hashable, Equatable {
 }
 
 extension Subtext {
+    private static func renderInlineAttributeOf(
+        _ attributedString: NSMutableAttributedString,
+        inline: Subtext.Inline,
+        url: (String) -> String?
+    ) {
+        switch inline {
+        case let .link(link):
+            attributedString.addAttribute(
+                .link,
+                value: link.span,
+                range: NSRange(
+                    link.span.range,
+                    in: attributedString.string
+                )
+            )
+        case let .bracketlink(bracketlink):
+            attributedString.addAttribute(
+                .foregroundColor,
+                value: UIColor(Color.tertiaryText),
+                range: NSRange(
+                    bracketlink.span.range,
+                    in: attributedString.string
+                )
+            )
+            attributedString.addAttribute(
+                .link,
+                value: bracketlink.body(),
+                range: NSRange(
+                    bracketlink.body().range,
+                    in: attributedString.string
+                )
+            )
+        case let .slashlink(slashlink):
+            if let url = url(String(describing: slashlink)) {
+                attributedString.addAttribute(
+                    .link,
+                    value: url,
+                    range: NSRange(
+                        slashlink.span.range,
+                        in: attributedString.string
+                    )
+                )
+            }
+        case let .wikilink(wikilink):
+            let text = String(wikilink.text)
+            attributedString.addAttribute(
+                .foregroundColor,
+                value: UIColor(Color.tertiaryText),
+                range: NSRange(
+                    wikilink.span.range,
+                    in: attributedString.string
+                )
+            )
+            if
+                let slug = Slug(formatting: text),
+                let urlString = url(String(describing: slug))
+            {
+                attributedString.addAttribute(
+                    .link,
+                    value: urlString,
+                    range: NSRange(
+                        wikilink.text.range,
+                        in: attributedString.string
+                    )
+                )
+            }
+        case .bold(let bold):
+            attributedString.addAttribute(
+                .font,
+                value: UIFont.appTextMonoBold,
+                range: NSRange(
+                    bold.span.range,
+                    in: attributedString.string
+                )
+            )
+        case .italic(let italic):
+            attributedString.addAttribute(
+                .font,
+                value: UIFont.appTextMonoItalic,
+                range: NSRange(
+                    italic.span.range,
+                    in: attributedString.string
+                )
+            )
+        case .code(let code):
+            attributedString.addAttribute(
+                .backgroundColor,
+                value: UIColor(Color.secondaryBackground),
+                range: NSRange(
+                    code.span.range,
+                    in: attributedString.string
+                )
+            )
+        }
+    }
+
     /// Read markup in NSMutableAttributedString, and render as attributes.
     /// Resets all attributes on string, replacing them with style attributes
     /// corresponding to the semantic meaning of Subtext markup.
@@ -371,42 +623,35 @@ extension Subtext {
                     value: UIFont.appTextMonoBold,
                     range: nsRange
                 )
-            case
-                .list(_, let inline),
-                .quote(_, let inline),
-                .text(_, let inline):
+            case .list(_, let inline):
                 for inline in inline {
-                    switch inline {
-                    case let .link(link):
-                        attributedString.addAttribute(
-                            .link,
-                            value: link.span,
-                            range: NSRange(
-                                link.span.range,
-                                in: dom.base
-                            )
-                        )
-                    case let .bracketlink(bracketlink):
-                        attributedString.addAttribute(
-                            .link,
-                            value: bracketlink.body(),
-                            range: NSRange(
-                                bracketlink.body().range,
-                                in: dom.base
-                            )
-                        )
-                    case let .slashlink(slashlink):
-                        if let url = url(String(slashlink.span)) {
-                            attributedString.addAttribute(
-                                .link,
-                                value: url,
-                                range: NSRange(
-                                    slashlink.span.range,
-                                    in: dom.base
-                                )
-                            )
-                        }
-                    }
+                    renderInlineAttributeOf(
+                        attributedString,
+                        inline: inline,
+                        url: url
+                    )
+                }
+            case .quote(let line, let inline):
+                let nsRange = NSRange(line.range, in: dom.base)
+                attributedString.addAttribute(
+                    .font,
+                    value: UIFont.appTextMonoItalic,
+                    range: nsRange
+                )
+                for inline in inline {
+                    renderInlineAttributeOf(
+                        attributedString,
+                        inline: inline,
+                        url: url
+                    )
+                }
+            case .text(_, let inline):
+                for inline in inline {
+                    renderInlineAttributeOf(
+                        attributedString,
+                        inline: inline,
+                        url: url
+                    )
                 }
             }
         }
