@@ -434,7 +434,7 @@ struct Subtext: Hashable, Equatable {
             tape.advance()
             let inline = parseInline(tape: &tape)
             return Block.list(span: line, inline: inline)
-        } else if line.isWhitespace {
+        } else if line == "\n" {
             return Block.empty(span: line)
         } else {
             var tape = Tape(line)

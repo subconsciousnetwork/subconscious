@@ -9,6 +9,73 @@ import XCTest
 @testable import Subconscious
 
 class Tests_Subtext: XCTestCase {
+    func testHeadingParsing() throws {
+        let markup = "# Some text"
+        let dom = Subtext(markup: markup)
+
+        guard case .heading(_) = dom.blocks[0] else {
+            XCTFail("Expected heading")
+            return
+        }
+    }
+
+    func testQuoteParsing() throws {
+        let markup = "> Some text"
+        let dom = Subtext(markup: markup)
+
+        guard case .quote(_, _) = dom.blocks[0] else {
+            XCTFail("Expected quote")
+            return
+        }
+    }
+
+    func testListParsing() throws {
+        let markup = "- Some text"
+        let dom = Subtext(markup: markup)
+
+        guard case .list(_, _) = dom.blocks[0] else {
+            XCTFail("Expected list")
+            return
+        }
+    }
+
+    func testTextParsing() throws {
+        let markup = "Some text"
+        let dom = Subtext(markup: markup)
+
+        guard case .text(_, _) = dom.blocks[0] else {
+            XCTFail("Expected text")
+            return
+        }
+    }
+
+    func testEmptyParsing() throws {
+        let markup = """
+        
+        Some text after an empty block
+        """
+        let dom = Subtext(markup: markup)
+
+        let block = dom.blocks[0]
+        guard case .empty = block else {
+            XCTFail("Expected empty, got \(block)")
+            return
+        }
+    }
+
+    func testSpaceParsesAsTextNotEmpty() throws {
+        let markup = """
+         
+        Some text after an empty block
+        """
+        let dom = Subtext(markup: markup)
+
+        guard case .text(_, _) = dom.blocks[0] else {
+            XCTFail("Expected text")
+            return
+        }
+    }
+
     func testLinkParsing0() throws {
         let markup = "Some text with a http://example.com link"
         let dom = Subtext(markup: markup)
