@@ -140,8 +140,7 @@ struct DetailView: View {
                 title: Subtext(markup: editorText).title(),
                 slug: slug,
                 onRename: onRename,
-                onDelete: onDelete,
-                onDone: onDone
+                onDelete: onDelete
             )
         }
     }

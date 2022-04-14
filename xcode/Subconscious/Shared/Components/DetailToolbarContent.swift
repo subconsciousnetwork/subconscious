@@ -14,7 +14,6 @@ struct DetailToolbarContent: ToolbarContent {
     var slug: Slug?
     var onRename: (Slug?) -> Void
     var onDelete: (Slug?) -> Void
-    var onDone: () -> Void
 
     //  The Toolbar `.principal` position does not limit its own width.
     //  This results in titles that can overflow and cover up the back button.
@@ -44,15 +43,7 @@ struct DetailToolbarContent: ToolbarContent {
         }
         ToolbarItem(placement: .navigationBarTrailing) {
             if isEditing {
-                HStack {
-                    Button(
-                        action: onDone
-                    ) {
-                        Text("Done").bold()
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .transition(.opacity)
-                }
+                EmptyView()
             } else {
                 Menu(
                     content: {
