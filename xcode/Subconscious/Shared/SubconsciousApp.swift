@@ -148,6 +148,8 @@ enum AppAction {
     )
     /// Insert wikilink markup, wrapping range
     case insertEditorWikilinkAtSelection
+    case insertEditorBoldAtSelection
+    case insertEditorItalicAtSelection
 
     // Link suggestions
     case setLinkSheetPresented(Bool)
@@ -573,10 +575,25 @@ extension AppModel {
                 range: range
             )
         case .insertEditorWikilinkAtSelection:
-            return insertEditorWikilink(
+            return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.editorSelection
+                range: state.editorSelection,
+                with: { text in Markup.Wikilink(text: text) }
+            )
+        case .insertEditorBoldAtSelection:
+            return insertTaggedMarkup(
+                state: state,
+                environment: environment,
+                range: state.editorSelection,
+                with: { text in Markup.Bold(text: text) }
+            )
+        case .insertEditorItalicAtSelection:
+            return insertTaggedMarkup(
+                state: state,
+                environment: environment,
+                range: state.editorSelection,
+                with: { text in Markup.Italic(text: text) }
             )
         case let .showDetail(isShowing):
             return showDetail(
@@ -874,31 +891,35 @@ extension AppModel {
 
     /// Insert wikilink markup into editor, begining at previous range
     /// and wrapping the contents of previous range
-    static func insertEditorWikilink(
+    static func insertTaggedMarkup<T>(
         state: AppModel,
         environment: AppEnvironment,
-        range nsRange: NSRange
-    ) -> Update<AppModel, AppAction> {
+        range nsRange: NSRange,
+        with withMarkup: (String) -> T
+    ) -> Update<AppModel, AppAction>
+    where T: TaggedMarkup
+    {
         guard let range = Range(nsRange, in: state.editorText) else {
             environment.logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
             return Update(state: state)
         }
+
         let selectedText = String(state.editorText[range])
-        let wikilink = WikilinkMarkup(text: selectedText)
+        let markup = withMarkup(selectedText)
 
         // Replace selected range with committed link search text.
-        let markup = state.editorText.replacingCharacters(
+        let editorText = state.editorText.replacingCharacters(
             in: range,
-            with: String(describing: wikilink)
+            with: String(describing: markup)
         )
 
         // Find new cursor position
-        guard let cursor = markup.index(
+        guard let cursor = editorText.index(
             range.lowerBound,
-            offsetBy: wikilink.withoutClosingTag.count,
-            limitedBy: markup.endIndex
+            offsetBy: markup.markupWithoutClosingTag.count,
+            limitedBy: editorText.endIndex
         ) else {
             environment.logger.log(
                 "Could not find new cursor position. Aborting text insert."
@@ -911,14 +932,14 @@ extension AppModel {
         return setEditor(
             state: state,
             environment: environment,
-            text: markup,
+            text: editorText,
             saveState: .modified
         )
         .pipe({ state in
             setEditorSelection(
                 state: state,
                 environment: environment,
-                range: NSRange(cursor..<cursor, in: markup)
+                range: NSRange(cursor..<cursor, in: editorText)
             )
         })
     }

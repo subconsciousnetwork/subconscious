@@ -112,6 +112,12 @@ struct AppNavigationView: View {
                             onInsertWikilink: {
                                 store.send(.insertEditorWikilinkAtSelection)
                             },
+                            onInsertBold: {
+                                store.send(.insertEditorBoldAtSelection)
+                            },
+                            onInsertItalic: {
+                                store.send(.insertEditorItalicAtSelection)
+                            },
                             onRename: { slug in
                                 store.send(.showRenameSheet(slug))
                             },

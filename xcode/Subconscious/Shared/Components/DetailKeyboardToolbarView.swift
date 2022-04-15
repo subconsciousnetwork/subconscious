@@ -48,6 +48,8 @@ struct DetailKeyboardWikilinkToolbarView: View {
 struct DetailKeyboardDefaultToolbarView: View {
     @Binding var isSheetPresented: Bool
     var onInsertWikilink: () -> Void
+    var onInsertBold: () -> Void
+    var onInsertItalic: () -> Void
     var onDoneEditing: () -> Void
 
     var body: some View {
@@ -75,6 +77,28 @@ struct DetailKeyboardDefaultToolbarView: View {
                         )
                 }
             )
+            Divider()
+            Button(
+                action: onInsertBold,
+                label: {
+                    Image(systemName: "bold")
+                        .frame(
+                            width: AppTheme.icon,
+                            height: AppTheme.icon
+                        )
+                }
+            )
+            Divider()
+            Button(
+                action: onInsertItalic,
+                label: {
+                    Image(systemName: "italic")
+                        .frame(
+                            width: AppTheme.icon,
+                            height: AppTheme.icon
+                        )
+                }
+            )
             Spacer()
             Button(
                 action: onDoneEditing,
@@ -93,6 +117,8 @@ struct DetailKeyboardToolbarView: View {
     var suggestions: [LinkSuggestion]
     var onSelectLink: (LinkSuggestion) -> Void
     var onInsertWikilink: () -> Void
+    var onInsertBold: () -> Void
+    var onInsertItalic: () -> Void
     var onDoneEditing: () -> Void
 
     private func wikilinkSuggestions() -> [Wikilink] {
@@ -121,6 +147,8 @@ struct DetailKeyboardToolbarView: View {
                     DetailKeyboardDefaultToolbarView(
                         isSheetPresented: $isSheetPresented,
                         onInsertWikilink: onInsertWikilink,
+                        onInsertBold: onInsertBold,
+                        onInsertItalic: onInsertItalic,
                         onDoneEditing: onDoneEditing
                     )
                 }
@@ -146,6 +174,8 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
             ],
             onSelectLink: { suggestion in },
             onInsertWikilink: {},
+            onInsertBold: {},
+            onInsertItalic: {},
             onDoneEditing: {}
         )
     }

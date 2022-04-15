@@ -43,6 +43,8 @@ struct DetailView: View {
     var onSelectBacklink: (EntryLink) -> Void
     var onSelectLink: (LinkSuggestion) -> Void
     var onInsertWikilink: () -> Void
+    var onInsertBold: () -> Void
+    var onInsertItalic: () -> Void
     var onRename: (Slug?) -> Void
     var onDelete: (Slug?) -> Void
 
@@ -100,6 +102,8 @@ struct DetailView: View {
                             suggestions: linkSuggestions,
                             onSelectLink: onSelectLink,
                             onInsertWikilink: onInsertWikilink,
+                            onInsertBold: onInsertBold,
+                            onInsertItalic: onInsertItalic,
                             onDoneEditing: onDone
                         )
                         .transition(

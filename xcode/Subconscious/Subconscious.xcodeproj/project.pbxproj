@@ -143,7 +143,7 @@
 		B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3A271F6C8400B9B507 /* EntryLink.swift */; };
 		B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */; };
 		B8C7E8BC2808C8EC00E439DC /* Wikilink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7E8BB2808C8EC00E439DC /* Wikilink.swift */; };
-		B8C7E8BE2809F19500E439DC /* WikilinkMarkup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7E8BD2809F19500E439DC /* WikilinkMarkup.swift */; };
+		B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7E8BD2809F19500E439DC /* Markup.swift */; };
 		B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433C27A07CE10079D2F9 /* ScrimView.swift */; };
 		B8CC433E27A07CE10079D2F9 /* ScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433C27A07CE10079D2F9 /* ScrimView.swift */; };
 		B8CC434027A07DF10079D2F9 /* DialogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433F27A07DF10079D2F9 /* DialogView.swift */; };
@@ -286,7 +286,7 @@
 		B8B54F3A271F6C8400B9B507 /* EntryLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryLink.swift; sourceTree = "<group>"; };
 		B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestion.swift; sourceTree = "<group>"; };
 		B8C7E8BB2808C8EC00E439DC /* Wikilink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wikilink.swift; sourceTree = "<group>"; };
-		B8C7E8BD2809F19500E439DC /* WikilinkMarkup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikilinkMarkup.swift; sourceTree = "<group>"; };
+		B8C7E8BD2809F19500E439DC /* Markup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Markup.swift; sourceTree = "<group>"; };
 		B8CC433C27A07CE10079D2F9 /* ScrimView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrimView.swift; sourceTree = "<group>"; };
 		B8CC433F27A07DF10079D2F9 /* DialogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogView.swift; sourceTree = "<group>"; };
 		B8CC434227A0815E0079D2F9 /* ModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalView.swift; sourceTree = "<group>"; };
@@ -405,6 +405,7 @@
 				B8B54F3A271F6C8400B9B507 /* EntryLink.swift */,
 				B8AC6489278F53920099E96B /* EntryStub.swift */,
 				B86DFF3427C07438002E57ED /* LinkSuggestion.swift */,
+				B8C7E8BD2809F19500E439DC /* Markup.swift */,
 				B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */,
 				B85BF47C27BDA0E100F55730 /* SaveEnvelope.swift */,
 				B826B27427B5D95F003D3C03 /* SaveState.swift */,
@@ -412,7 +413,6 @@
 				B824FDCD26FA662200B81BBD /* SubtextFile.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
 				B8C7E8BB2808C8EC00E439DC /* Wikilink.swift */,
-				B8C7E8BD2809F19500E439DC /* WikilinkMarkup.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -812,7 +812,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B82FD4562730A62C002CB641 /* EntryRow.swift in Sources */,
-				B8C7E8BE2809F19500E439DC /* WikilinkMarkup.swift in Sources */,
+				B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8216F7827E11516002B70CB /* BottomSheetView.swift in Sources */,

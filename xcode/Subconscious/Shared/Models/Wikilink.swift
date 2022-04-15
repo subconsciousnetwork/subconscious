@@ -40,6 +40,6 @@ struct Wikilink: Hashable, Equatable, Identifiable, CustomStringConvertible {
 
     /// As markup string
     var markup: String {
-        String(describing: WikilinkMarkup(text: text))
+        String(describing: Markup.Wikilink(text: text))
     }
 }
