@@ -57,6 +57,8 @@ struct AppNavigationView: View {
                             isLoading: store.state.isDetailLoading,
                             backlinks: store.state.backlinks,
                             linkSuggestions: store.state.linkSuggestions,
+                            selectedWikilink:
+                                store.state.editorSelectedWikilink,
                             focus: store.binding(
                                 get: \.focus,
                                 tag: { focus in
@@ -106,6 +108,15 @@ struct AppNavigationView: View {
                                 store.send(
                                     .selectLinkSuggestion(suggestion)
                                 )
+                            },
+                            onInsertWikilink: {
+                                store.send(.insertEditorWikilinkAtSelection)
+                            },
+                            onInsertBold: {
+                                store.send(.insertEditorBoldAtSelection)
+                            },
+                            onInsertItalic: {
+                                store.send(.insertEditorItalicAtSelection)
                             },
                             onRename: { slug in
                                 store.send(.showRenameSheet(slug))

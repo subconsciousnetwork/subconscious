@@ -547,20 +547,14 @@ struct DatabaseService {
         guard let linksEntry = readEntry(slug: config.linksTemplate) else {
             return config.linksFallback.map({ slug in
                 .entry(
-                    EntryLink(
-                        slug: slug,
-                        title: slug.toSentence()
-                    )
+                    EntryWikilink(slug: slug)
                 )
             })
         }
         return linksEntry.dom.slashlinks.compactMap({ slashlink in
             Slug(formatting: slashlink.description).map({ slug in
                 .entry(
-                    EntryLink(
-                        slug: slug,
-                        title: slug.toSentence()
-                    )
+                    EntryWikilink(slug: slug)
                 )
             })
         })
@@ -574,40 +568,36 @@ struct DatabaseService {
         fallback: [LinkSuggestion] = []
     ) -> AnyPublisher<[LinkSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            guard let sluglike = Slug.format(query) else {
+            guard !query.isWhitespace else {
                 return fallback
             }
 
             var suggestions: OrderedDictionary<Slug, LinkSuggestion> = [:]
 
             // Append literal
-            if let literal = EntryLink(title: query) {
+            if let literal = EntryWikilink(text: query) {
                 suggestions[literal.slug] = .new(literal)
             }
 
-            let entries: [EntryLink] = try database
+            let entries: [EntryWikilink] = try database
                 .execute(
                     sql: """
-                    SELECT slug, title
+                    SELECT slug
                     FROM entry_search
                     WHERE entry_search MATCH ?
                     ORDER BY rank
                     LIMIT 25
                     """,
                     parameters: [
-                        .prefixQueryFTS5(sluglike)
+                        .prefixQueryFTS5(query)
                     ]
                 )
                 .compactMap({ row in
                     if
                         let slugString: String = row.get(0),
-                        let slug = Slug(slugString),
-                        let title: String = row.get(1)
+                        let slug = Slug(slugString)
                     {
-                        return EntryLink(
-                            slug: slug,
-                            title: title
-                        )
+                        return EntryWikilink(slug: slug)
                     }
                     return nil
                 })

@@ -735,13 +735,43 @@ extension Subtext.Block {
 }
 
 extension Subtext {
-    func slashlinkForPosition(_ i: String.Index) -> Subtext.Slashlink? {
+    func wikilinkFor(index: String.Index) -> Subtext.Wikilink? {
+        self.blocks
+            .flatMap({ block in
+                block.inline.compactMap({ inline in
+                    switch inline {
+                    case .wikilink(let wikilink):
+                        return wikilink
+                    default:
+                        return nil
+                    }
+                })
+            })
+            .first(
+                where: { wikilink in
+                    wikilink.text.range.upperBound == index
+                }
+            )
+    }
+
+    /// Get wikilink in markup for range.
+    /// Range is typically a selection range, with wikilink being the
+    /// one currently being edited/typed.
+    func wikilinkFor(range nsRange: NSRange) -> Subtext.Wikilink? {
+        guard let range = Range(nsRange, in: base) else {
+            return nil
+        }
+        let wikilink = wikilinkFor(index: range.lowerBound)
+        return wikilink
+    }
+
+    func slashlinkFor(index: String.Index) -> Subtext.Slashlink? {
         let slashlinks: [Subtext.Slashlink] = self.blocks.flatMap({ block in
             block.inline.slashlinks
         })
 
         for slashlink in slashlinks {
-            if slashlink.span.range.upperBound == i {
+            if slashlink.span.range.upperBound == index {
                 return slashlink
             }
         }
@@ -753,6 +783,6 @@ extension Subtext {
         guard let range = Range(nsRange, in: base) else {
             return nil
         }
-        return slashlinkForPosition(range.lowerBound)
+        return slashlinkFor(index: range.lowerBound)
     }
 }
