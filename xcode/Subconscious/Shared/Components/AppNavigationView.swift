@@ -109,6 +109,9 @@ struct AppNavigationView: View {
                                     .selectLinkSuggestion(suggestion)
                                 )
                             },
+                            onInsertWikilink: {
+                                store.send(.insertEditorWikilinkAtSelection)
+                            },
                             onRename: { slug in
                                 store.send(.showRenameSheet(slug))
                             },

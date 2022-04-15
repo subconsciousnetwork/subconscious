@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// Toolbar in wikilink autocomplete mode
 struct DetailKeyboardWikilinkToolbarView: View {
     @Binding var isSheetPresented: Bool
     var links: [Wikilink]
@@ -19,7 +20,7 @@ struct DetailKeyboardWikilinkToolbarView: View {
                     isSheetPresented = true
                 },
                 label: {
-                    Image(systemName: "link.badge.plus")
+                    Image(systemName: "magnifyingglass")
                         .frame(
                             width: AppTheme.icon,
                             height: AppTheme.icon
@@ -43,8 +44,10 @@ struct DetailKeyboardWikilinkToolbarView: View {
     }
 }
 
+/// Toolbar in default mode
 struct DetailKeyboardDefaultToolbarView: View {
     @Binding var isSheetPresented: Bool
+    var onInsertWikilink: () -> Void
     var onDoneEditing: () -> Void
 
     var body: some View {
@@ -54,7 +57,18 @@ struct DetailKeyboardDefaultToolbarView: View {
                     isSheetPresented = true
                 },
                 label: {
-                    Image(systemName: "link.badge.plus")
+                    Image(systemName: "magnifyingglass")
+                        .frame(
+                            width: AppTheme.icon,
+                            height: AppTheme.icon
+                        )
+                }
+            )
+            Divider()
+            Button(
+                action: onInsertWikilink,
+                label: {
+                    Image(systemName: "link")
                         .frame(
                             width: AppTheme.icon,
                             height: AppTheme.icon
@@ -72,11 +86,13 @@ struct DetailKeyboardDefaultToolbarView: View {
     }
 }
 
+/// Root toolbar
 struct DetailKeyboardToolbarView: View {
     @Binding var isSheetPresented: Bool
     var selectedWikilink: Subtext.Wikilink?
     var suggestions: [LinkSuggestion]
     var onSelectLink: (LinkSuggestion) -> Void
+    var onInsertWikilink: () -> Void
     var onDoneEditing: () -> Void
 
     private func wikilinkSuggestions() -> [Wikilink] {
@@ -104,6 +120,7 @@ struct DetailKeyboardToolbarView: View {
                 } else {
                     DetailKeyboardDefaultToolbarView(
                         isSheetPresented: $isSheetPresented,
+                        onInsertWikilink: onInsertWikilink,
                         onDoneEditing: onDoneEditing
                     )
                 }
@@ -128,6 +145,7 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
                 )
             ],
             onSelectLink: { suggestion in },
+            onInsertWikilink: {},
             onDoneEditing: {}
         )
     }

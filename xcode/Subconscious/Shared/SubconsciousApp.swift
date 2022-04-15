@@ -139,11 +139,15 @@ enum AppAction {
     case selectDoneEditing
     /// Update editor dom and mark if this state is saved or not
     case setEditor(text: String, saveState: SaveState)
+    /// Set selected range in editor
     case setEditorSelection(NSRange)
+    /// Insert text into editor, replacing range
     case insertEditorText(
         text: String,
         range: NSRange
     )
+    /// Insert wikilink markup, wrapping range
+    case insertEditorWikilinkAtSelection
 
     // Link suggestions
     case setLinkSheetPresented(Bool)
@@ -568,6 +572,12 @@ extension AppModel {
                 text: text,
                 range: range
             )
+        case .insertEditorWikilinkAtSelection:
+            return insertEditorWikilink(
+                state: state,
+                environment: environment,
+                range: state.editorSelection
+            )
         case let .showDetail(isShowing):
             return showDetail(
                 state: state,
@@ -813,6 +823,7 @@ extension AppModel {
         )
     }
 
+    /// Insert text in editor at range
     static func insertEditorText(
         state: AppModel,
         environment: AppEnvironment,
@@ -836,6 +847,57 @@ extension AppModel {
         guard let cursor = markup.index(
             range.lowerBound,
             offsetBy: text.count,
+            limitedBy: markup.endIndex
+        ) else {
+            environment.logger.log(
+                "Could not find new cursor position. Aborting text insert."
+            )
+            return Update(state: state)
+        }
+
+        // Set editor dom and editor selection immediately in same
+        // Update.
+        return setEditor(
+            state: state,
+            environment: environment,
+            text: markup,
+            saveState: .modified
+        )
+        .pipe({ state in
+            setEditorSelection(
+                state: state,
+                environment: environment,
+                range: NSRange(cursor..<cursor, in: markup)
+            )
+        })
+    }
+
+    /// Insert wikilink markup into editor, begining at previous range
+    /// and wrapping the contents of previous range
+    static func insertEditorWikilink(
+        state: AppModel,
+        environment: AppEnvironment,
+        range nsRange: NSRange
+    ) -> Update<AppModel, AppAction> {
+        guard let range = Range(nsRange, in: state.editorText) else {
+            environment.logger.log(
+                "Cannot replace text. Invalid range: \(nsRange))"
+            )
+            return Update(state: state)
+        }
+        let selectedText = String(state.editorText[range])
+        let wikilink = WikilinkMarkup(text: selectedText)
+
+        // Replace selected range with committed link search text.
+        let markup = state.editorText.replacingCharacters(
+            in: range,
+            with: String(describing: wikilink)
+        )
+
+        // Find new cursor position
+        guard let cursor = markup.index(
+            range.lowerBound,
+            offsetBy: wikilink.withoutClosingTag.count,
             limitedBy: markup.endIndex
         ) else {
             environment.logger.log(
@@ -2025,7 +2087,7 @@ extension AppModel {
                 insertEditorText(
                     state: state,
                     environment: environment,
-                    text: "\(wikilink.markup) ",
+                    text: wikilink.markup,
                     range: range
                 )
             })

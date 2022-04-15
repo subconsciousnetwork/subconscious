@@ -42,6 +42,7 @@ struct DetailView: View {
     ) -> Bool
     var onSelectBacklink: (EntryLink) -> Void
     var onSelectLink: (LinkSuggestion) -> Void
+    var onInsertWikilink: () -> Void
     var onRename: (Slug?) -> Void
     var onDelete: (Slug?) -> Void
 
@@ -98,6 +99,7 @@ struct DetailView: View {
                             selectedWikilink: selectedWikilink,
                             suggestions: linkSuggestions,
                             onSelectLink: onSelectLink,
+                            onInsertWikilink: onInsertWikilink,
                             onDoneEditing: onDone
                         )
                         .transition(
