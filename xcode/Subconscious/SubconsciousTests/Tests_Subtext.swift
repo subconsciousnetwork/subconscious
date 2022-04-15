@@ -714,9 +714,10 @@ class Tests_Subtext: XCTestCase {
         Let's test out _it*al*ic_ly*.
         """
         let dom = Subtext(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
-        guard case let .italic(italic) = inline0 else {
-            XCTFail("Expected italic but was \(inline0)")
+        let firstBlock = dom.blocks[0]
+        let firstInline = firstBlock.inline[0]
+        guard case let .italic(italic) = firstInline else {
+            XCTFail("Expected italic but was \(firstInline)")
             return
         }
         XCTAssertEqual(
@@ -727,9 +728,7 @@ class Tests_Subtext: XCTestCase {
     }
 
     func testInlineCollisions3() throws {
-        let markup = """
-        Let's test out `_`it*al*ic_ly*.
-        """
+        let markup = "Let's test out `_`it*al*ic_ly*."
         let dom = Subtext(markup: markup)
         let block = dom.blocks[0]
 
@@ -754,6 +753,24 @@ class Tests_Subtext: XCTestCase {
             String(describing: bold),
             "*al*",
             "Second inline is bold"
+        )
+    }
+
+    func testInlineCollisions4() throws {
+        let markup = """
+        Let's test out _#ouX_*di_*
+        """
+        let dom = Subtext(markup: markup)
+        let firstBlock = dom.blocks[0]
+        let firstInline = firstBlock.inline[0]
+        guard case let .italic(italic) = firstInline else {
+            XCTFail("Expected italic but was \(firstInline)")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: italic),
+            "_#ouX_",
+            "Opening _ parses until closing, _ or backtracks"
         )
     }
 }
