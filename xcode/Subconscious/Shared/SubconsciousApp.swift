@@ -2073,7 +2073,7 @@ extension AppModel {
         environment: AppEnvironment,
         suggestion: LinkSuggestion
     ) -> Update<AppModel, AppAction> {
-        let wikilink: Wikilink = Func.pipe(suggestion, { suggestion in
+        let wikilink: EntryWikilink = Func.pipe(suggestion, { suggestion in
             switch suggestion {
             case .entry(let wikilink):
                 return wikilink

@@ -547,14 +547,14 @@ struct DatabaseService {
         guard let linksEntry = readEntry(slug: config.linksTemplate) else {
             return config.linksFallback.map({ slug in
                 .entry(
-                    Wikilink(slug: slug)
+                    EntryWikilink(slug: slug)
                 )
             })
         }
         return linksEntry.dom.slashlinks.compactMap({ slashlink in
             Slug(formatting: slashlink.description).map({ slug in
                 .entry(
-                    Wikilink(slug: slug)
+                    EntryWikilink(slug: slug)
                 )
             })
         })
@@ -575,11 +575,11 @@ struct DatabaseService {
             var suggestions: OrderedDictionary<Slug, LinkSuggestion> = [:]
 
             // Append literal
-            if let literal = Wikilink(text: query) {
+            if let literal = EntryWikilink(text: query) {
                 suggestions[literal.slug] = .new(literal)
             }
 
-            let entries: [Wikilink] = try database
+            let entries: [EntryWikilink] = try database
                 .execute(
                     sql: """
                     SELECT slug
@@ -597,7 +597,7 @@ struct DatabaseService {
                         let slugString: String = row.get(0),
                         let slug = Slug(slugString)
                     {
-                        return Wikilink(slug: slug)
+                        return EntryWikilink(slug: slug)
                     }
                     return nil
                 })

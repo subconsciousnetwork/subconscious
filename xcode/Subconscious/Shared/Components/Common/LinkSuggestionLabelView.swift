@@ -46,7 +46,7 @@ struct LinkSuggestionLabel_Previews: PreviewProvider {
     static var previews: some View {
         LinkSuggestionLabelView(
             suggestion: .new(
-                Wikilink(
+                EntryWikilink(
                     slug: Slug("floop")!
                 )
             )

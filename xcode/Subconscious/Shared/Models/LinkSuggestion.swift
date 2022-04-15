@@ -8,8 +8,8 @@
 import Foundation
 
 enum LinkSuggestion: Hashable, Identifiable, CustomStringConvertible {
-    case entry(Wikilink)
-    case new(Wikilink)
+    case entry(EntryWikilink)
+    case new(EntryWikilink)
 
     var id: String {
         switch self {

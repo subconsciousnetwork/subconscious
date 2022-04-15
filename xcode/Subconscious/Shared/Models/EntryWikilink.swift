@@ -11,7 +11,7 @@ import Foundation
 /// Text corresponds to a slug in 1:1 relationship.
 /// Conversion from text to slug is lossy, so these fields are immutable, and
 /// derived from each other.
-struct Wikilink: Hashable, Equatable, Identifiable, CustomStringConvertible {
+struct EntryWikilink: Hashable, Equatable, Identifiable, CustomStringConvertible {
     let slug: Slug
     let text: String
 

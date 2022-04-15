@@ -10,7 +10,7 @@ import SwiftUI
 /// Toolbar in wikilink autocomplete mode
 struct DetailKeyboardWikilinkToolbarView: View {
     @Binding var isSheetPresented: Bool
-    var links: [Wikilink]
+    var links: [EntryWikilink]
     var onSelectLink: (LinkSuggestion) -> Void
 
     var body: some View {
@@ -121,8 +121,8 @@ struct DetailKeyboardToolbarView: View {
     var onInsertItalic: () -> Void
     var onDoneEditing: () -> Void
 
-    private func wikilinkSuggestions() -> [Wikilink] {
-        let wikilinks: [Wikilink] = suggestions.compactMap({ suggestion in
+    private func wikilinkSuggestions() -> [EntryWikilink] {
+        let wikilinks: [EntryWikilink] = suggestions.compactMap({ suggestion in
             switch suggestion {
             case let .entry(link):
                 return link
@@ -167,7 +167,7 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
             isSheetPresented: .constant(false),
             suggestions: [
                 .entry(
-                    Wikilink(
+                    EntryWikilink(
                         slug: Slug("an-organism-is-a-living-system")!
                     )
                 )
