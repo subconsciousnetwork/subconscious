@@ -108,10 +108,8 @@ struct HeaderParser {
     let base: String
     let headers: [Header]
 
-    init?(_ markup: String) {
-        guard let headers = Self.parseHeaders(markup) else {
-            return nil
-        }
+    init(_ markup: String) {
+        let headers: [Header] = Self.parseHeaders(markup) ?? []
         self.base = markup
         self.headers = headers
     }

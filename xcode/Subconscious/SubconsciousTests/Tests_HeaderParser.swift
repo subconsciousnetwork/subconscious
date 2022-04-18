@@ -17,10 +17,7 @@ class Tests_HeaderParser: XCTestCase {
 
         Body content
         """
-        guard let headers = HeaderParser(markup) else {
-            XCTFail("Failed to parse headers")
-            return
-        }
+        let headers = HeaderParser(markup)
 
         XCTAssertEqual(
             headers.headers.count,
@@ -36,14 +33,42 @@ class Tests_HeaderParser: XCTestCase {
         
         Body content
         """
-        guard let headers = HeaderParser(markup) else {
-            XCTFail("Failed to parse headers")
-            return
-        }
-
+        let headers = HeaderParser(markup)
         XCTAssertEqual(
             String(headers.headers[0].name),
             "Content-Type"
+        )
+    }
+
+    func testSniffsFirstLine() throws {
+        let markup = """
+        Not a header
+        Content-Type: text/subtext
+        Title : Floop the Pig
+
+        Body content
+        """
+        let headers = HeaderParser(markup)
+        XCTAssertEqual(
+            headers.headers.count,
+            0,
+            "Sniffs first line to see if it should expect headers"
+        )
+    }
+
+    func testRejectsKeysWithSpaces() throws {
+        let markup = """
+        Content-Type: text/subtext
+        Title : Floop the Pig
+        
+        Body content
+        """
+        let headers = HeaderParser(markup)
+
+        XCTAssertEqual(
+            headers.headers.count,
+            1,
+            "Rejects headers that have spaces in keys"
         )
     }
 }
