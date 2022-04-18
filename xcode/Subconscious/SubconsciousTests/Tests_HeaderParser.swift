@@ -137,4 +137,20 @@ class Tests_HeaderParser: XCTestCase {
             "Rejects headers that have spaces in keys"
         )
     }
+
+    func testValueOmitsNewline() throws {
+        let markup = """
+        Content-Type: text/subtext
+        Title : Floop the Pig
+        
+        Body content
+        """
+        let headers = HeaderParser(markup)
+
+        XCTAssertEqual(
+            String(headers.headers[0].value),
+            "text/subtext",
+            "Value omits leading spaces and trailing newline"
+        )
+    }
 }
