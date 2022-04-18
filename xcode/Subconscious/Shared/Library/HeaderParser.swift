@@ -32,7 +32,6 @@ struct HeaderParser {
     ) {
         while !tape.isExhausted() {
             let next = tape.peek()
-            print("next", next)
             if next == " " {
                 tape.advance()
             } else {
@@ -46,7 +45,7 @@ struct HeaderParser {
     ) -> Substring? {
         tape.start()
         while !tape.isExhausted() {
-            let next = tape.peek()
+            let next = tape.peek()!
             // If end of key, cut tape and return key
             if next == ":" {
                 // Cut tape, getting key value
@@ -64,6 +63,11 @@ struct HeaderParser {
             // Invalid! This header has no key delimiter.
             // Throw away the rest of the line and return nil.
             else if next == "\n" {
+                advanceToEndOfLine(tape: &tape)
+                return nil
+            }
+            // Invalid! HTTP header keys must be ASCII
+            else if !next.isASCII {
                 advanceToEndOfLine(tape: &tape)
                 return nil
             }

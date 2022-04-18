@@ -76,6 +76,22 @@ class Tests_HeaderParser: XCTestCase {
         )
     }
 
+    func testValueOmitsNewline() throws {
+        let markup = """
+        Content-Type: text/subtext
+        Title : Floop the Pig
+        
+        Body content
+        """
+        let headers = HeaderParser(markup)
+
+        XCTAssertEqual(
+            String(headers.headers[0].value),
+            "text/subtext",
+            "Value omits leading spaces and trailing newline"
+        )
+    }
+
     func testSniffsFirstLine() throws {
         let markup = """
         Not a header
@@ -138,19 +154,19 @@ class Tests_HeaderParser: XCTestCase {
         )
     }
 
-    func testValueOmitsNewline() throws {
+    func testRejectsNonAsciiKeys() throws {
         let markup = """
-        Content-Type: text/subtext
-        Title : Floop the Pig
-        
+        Title: Floop the Pig
+        Non-Ascii-Header-Key-😈: mwhahaha
+
         Body content
         """
         let headers = HeaderParser(markup)
 
         XCTAssertEqual(
-            String(headers.headers[0].value),
-            "text/subtext",
-            "Value omits leading spaces and trailing newline"
+            headers.headers.count,
+            1,
+            "Rejects headers that have non-ascii characters in keys"
         )
     }
 }
