@@ -9,8 +9,20 @@ import Foundation
 
 struct HeaderParser {
     struct Header {
-        var key: Substring
+        var name: Substring
         var value: Substring
+    }
+
+    /// Fast-forward to the end of the line
+    private static func advanceToEndOfLine(
+        tape: inout Tape<Substring>
+    ) {
+        while !tape.isExhausted() {
+            let curr = tape.consume()
+            if curr == "\n" {
+                return
+            }
+        }
     }
 
     private static func parseHeaderKey(
@@ -18,16 +30,39 @@ struct HeaderParser {
     ) -> Substring? {
         tape.start()
         while !tape.isExhausted() {
-            let curr = tape.consume()
-            if curr == ":" {
-                return tape.cut()
-            } else if curr == "\n" {
+            let next = tape.peek()
+            // If end of key, cut tape and return key
+            if next == ":" {
+                // Cut tape, getting key value
+                let key = tape.cut()
+                // Advance tape, discarding `:`
+                tape.advance()
+                return key
+            }
+            // Invalid! Header keys cannot contain spaces.
+            // Throw away the rest of the line and return nil.
+            else if next == " " {
+                advanceToEndOfLine(tape: &tape)
                 return nil
             }
+            // Invalid! This header has no key delimiter.
+            // Throw away the rest of the line and return nil.
+            else if next == "\n" {
+                advanceToEndOfLine(tape: &tape)
+                return nil
+            }
+            // Character is part of key. Advance tape so it is part of our
+            // tape range.
+            else {
+                tape.advance()
+            }
         }
+        // If we got to the end of the file without finding a valid header key,
+        // return nil.
         return nil
     }
 
+    /// Whitespace before the value is ignored.
     private static func parseHeaderValue(
         tape: inout Tape<Substring>
     ) -> Substring? {
@@ -49,7 +84,7 @@ struct HeaderParser {
         guard let value = parseHeaderValue(tape: &tape) else {
             return nil
         }
-        return Header(key: key, value: value)
+        return Header(name: key, value: value)
     }
 
     /// Splits lines in markup, keeping line endings
