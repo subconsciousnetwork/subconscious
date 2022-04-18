@@ -12,6 +12,7 @@ struct DetailKeyboardWikilinkToolbarView: View {
     @Binding var isSheetPresented: Bool
     var links: [EntryWikilink]
     var onSelectLink: (LinkSuggestion) -> Void
+    var onDoneEditing: () -> Void
 
     var body: some View {
         HStack(alignment: .center, spacing: AppTheme.unit4) {
@@ -40,6 +41,12 @@ struct DetailKeyboardWikilinkToolbarView: View {
                 )
             }
             Spacer()
+            Button(
+                action: onDoneEditing,
+                label: {
+                    Image(systemName: "keyboard.chevron.compact.down")
+                }
+            )
         }
     }
 }
@@ -141,7 +148,8 @@ struct DetailKeyboardToolbarView: View {
                     DetailKeyboardWikilinkToolbarView(
                         isSheetPresented: $isSheetPresented,
                         links: self.wikilinkSuggestions(),
-                        onSelectLink: onSelectLink
+                        onSelectLink: onSelectLink,
+                        onDoneEditing: onDoneEditing
                     )
                 } else {
                     DetailKeyboardDefaultToolbarView(
