@@ -26,10 +26,46 @@ class Tests_HeaderParser: XCTestCase {
         )
     }
 
+    func testStopsBeforeHeaderlikeContentInBody() throws {
+        let markup = """
+        Content-Type: text/subtext
+        Title: Floop the Pig
+        
+        Body: content
+        """
+        let headers = HeaderParser(markup)
+        XCTAssertEqual(
+            headers.headers.count,
+            2,
+            "Stops parsing after first blank line"
+        )
+    }
+
     func testHeaders() throws {
         let markup = """
         Content-Type: text/subtext
         Title: Floop the Pig
+        
+        Body content
+        """
+        let headers = HeaderParser(markup)
+        XCTAssertEqual(
+            String(headers.headers[0].name),
+            "Content-Type"
+        )
+    }
+
+    func testMoreHeaders() throws {
+        let markup = """
+        Content-Type: text/subtext
+        Title: Floop the Pig
+        Accept: */*
+        Cache-Control: no-cache
+        Content-Length: 438
+        Vary: Accept-Encoding,User-Agent
+        Connection: close
+        Date: Thu, 08 Sep 2011 08:57:00 GMT
+        Server: Apache
         
         Body content
         """
@@ -68,6 +104,36 @@ class Tests_HeaderParser: XCTestCase {
         XCTAssertEqual(
             headers.headers.count,
             1,
+            "Rejects headers that have spaces in keys"
+        )
+    }
+
+    func testRejectsKeysWithSpaces2() throws {
+        let markup = """
+        Content-Type: text/subtext
+        Title: Floop the Pig
+        Accept: */*
+        Cache-Control: no-cache
+        Key with space: some text
+        Content-Length: 438
+        Vary: Accept-Encoding,User-Agent
+        Connection: close
+        Date: Thu, 08 Sep 2011 08:57:00 GMT
+        Server: Apache
+        
+        Body content
+        """
+        let headers = HeaderParser(markup)
+
+        XCTAssertEqual(
+            headers.headers.count,
+            9,
+            "Rejects headers that have spaces in keys"
+        )
+
+        XCTAssertEqual(
+            headers.headers[4].name,
+            "Content-Length",
             "Rejects headers that have spaces in keys"
         )
     }
