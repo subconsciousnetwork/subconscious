@@ -34,42 +34,66 @@ class Tests_Slug: XCTestCase {
         )
     }
 
-    func testFormat() throws {
-        let a = Slug.format(
+    func testFormatStripsInvalidCharacters() throws {
+        let slug = Slug.format(
             "The quick brown fox jumps over the lazy dog!@#$%^&*()+,>:;'|{}[]<>?"
         )
         XCTAssertEqual(
-            a,
+            slug,
             "the-quick-brown-fox-jumps-over-the-lazy-dog",
             "Formats the string into a valid slug-string"
         )
-        let b = Slug.format("The_quick_Brown_fOx")
+    }
+
+    func testFormatLeavesUnderscoresIntact() throws {
+        let slug = Slug.format("The_quick_Brown_fOx")
         XCTAssertEqual(
-            b,
+            slug,
             "the_quick_brown_fox",
             "Underscores allowed"
         )
-        let c = Slug.format("the/quick brown/fox jumps")
+    }
+
+    func testFormatRespectsDeepSlashes() throws {
+        let slug = Slug.format("the/quick brown/fox jumps")
         XCTAssertEqual(
-            c,
+            slug,
             "the/quick-brown/fox-jumps",
             "Formats deep slug string into a valid slug-string"
         )
-        let d = Slug.format("the QuIck brown FOX ")
+    }
+
+    func testFormatTrimsEndOfString() throws {
+        let slug = Slug.format("the QuIck brown FOX ")
         XCTAssertEqual(
-            d,
+            slug,
             "the-quick-brown-fox",
             "Trims string before sluggifying"
         )
-        let e = Slug.format("the QuIck brown FOX !$%")
+    }
+
+    func testFormatTrimsStringAfterRemovingInvalidCharacters() throws {
+        let slug = Slug.format("the QuIck brown FOX !$%")
         XCTAssertEqual(
-            e,
+            slug,
             "the-quick-brown-fox",
             "Trims string after stripping characters"
         )
-        let f = Slug.format("  /the QuIck brown FOX/ !$%")
+    }
+
+    func testFormatTrimsNonAllowedAndWhitespaceBeforeSlashes() throws {
+        let slug = Slug.format("  /the QuIck brown FOX/ !$%")
         XCTAssertEqual(
-            f,
+            slug,
+            "the-quick-brown-fox",
+            "Trims non-allowed characters and whitespace before slashes"
+        )
+    }
+
+    func testFormatCollapsesContiguousWhitespace() throws {
+        let slug = Slug.format("  /the QuIck      brown FOX")
+        XCTAssertEqual(
+            slug,
             "the-quick-brown-fox",
             "Trims non-allowed characters and whitespace before slashes"
         )
