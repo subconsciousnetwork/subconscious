@@ -7,9 +7,14 @@
 
 import Foundation
 
-enum LinkSuggestion: Hashable, Identifiable, CustomStringConvertible {
-    case entry(EntryWikilink)
-    case new(EntryWikilink)
+enum LinkSuggestion:
+Hashable,
+Equatable,
+Identifiable,
+CustomStringConvertible
+{
+    case entry(EntryLink)
+    case new(EntryLink)
 
     var id: String {
         switch self {
@@ -22,10 +27,10 @@ enum LinkSuggestion: Hashable, Identifiable, CustomStringConvertible {
 
     var description: String {
         switch self {
-        case let .entry(wikilink):
-            return wikilink.text
-        case let .new(wikilink):
-            return wikilink.text
+        case let .entry(link):
+            return link.title
+        case let .new(link):
+            return link.title
         }
     }
 }

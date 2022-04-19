@@ -2073,12 +2073,12 @@ extension AppModel {
         environment: AppEnvironment,
         suggestion: LinkSuggestion
     ) -> Update<AppModel, AppAction> {
-        let wikilink: EntryWikilink = Func.pipe(suggestion, { suggestion in
+        let link: EntryLink = Func.pipe(suggestion, { suggestion in
             switch suggestion {
-            case .entry(let wikilink):
-                return wikilink
-            case .new(let wikilink):
-                return wikilink
+            case .entry(let link):
+                return link
+            case .new(let link):
+                return link
             }
         })
 
@@ -2108,7 +2108,7 @@ extension AppModel {
                 insertEditorText(
                     state: state,
                     environment: environment,
-                    text: wikilink.markup,
+                    text: Markup.Wikilink(link).markup,
                     range: range
                 )
             })
