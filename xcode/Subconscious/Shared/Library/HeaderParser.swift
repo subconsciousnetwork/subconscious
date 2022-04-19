@@ -27,7 +27,7 @@ struct HeaderParser {
 
     /// Advance past contiguous whitespace.
     /// Useful for moving past a range of space.
-    private static func advancePastSpace(
+    private static func advancePastSpaces(
         tape: inout Tape<Substring>
     ) {
         while !tape.isExhausted() {
@@ -87,7 +87,7 @@ struct HeaderParser {
         tape: inout Tape<Substring>
     ) -> Substring? {
         // Discard leading space, per spec
-        advancePastSpace(tape: &tape)
+        advancePastSpaces(tape: &tape)
         // Mark tape start
         tape.start()
         while !tape.isExhausted() {
@@ -119,7 +119,7 @@ struct HeaderParser {
     private static func parseHeaders(_ string: String) -> [Header]? {
         var tape = Tape(string[...])
         var headers: [Header] = []
-        // Sniff for first header. If it can't be parsed, stop.
+        // Sniff first line for header. If it can't be parsed as a header, stop.
         // We consider this a document without headers.
         guard let header = parseHeader(tape: &tape) else {
             return nil
