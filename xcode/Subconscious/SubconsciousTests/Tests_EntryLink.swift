@@ -38,6 +38,20 @@ class Tests_EntryLink: XCTestCase {
         )
     }
 
+    func testSlugOnlyEntryLinkUsesToSentenceForWikilink() throws {
+        guard let slug = Slug("rand") else {
+            XCTFail("Expected slug")
+            return
+        }
+        let link = EntryLink(slug: slug)
+        let wikilink = Markup.Wikilink(link)
+        XCTAssertEqual(
+            wikilink.markup,
+            "[[Rand]]",
+            "Title is derived by sentence-ifying slug when constructed without title"
+        )
+    }
+
     func testWikilinkMarkupWithTitleMatchingSlug() throws {
         guard let link = EntryLink(title: "RAND") else {
             XCTFail("Expected title to parse to slug successfully")
