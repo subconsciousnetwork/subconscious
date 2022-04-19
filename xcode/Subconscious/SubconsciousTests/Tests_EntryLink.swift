@@ -37,4 +37,34 @@ class Tests_EntryLink: XCTestCase {
             "Title with slashes is converted to deep slug"
         )
     }
+
+    func testWikilinkMarkupWithTitleMatchingSlug() throws {
+        guard let link = EntryLink(title: "RAND") else {
+            XCTFail("Expected title to parse to slug successfully")
+            return
+        }
+        let wikilink = Markup.Wikilink(link)
+        XCTAssertEqual(
+            wikilink.markup,
+            "[[RAND]]",
+            "Title is used for wikilink text when slugified title matches slug"
+        )
+    }
+
+    func testWikilinkMarkupWithTitleNotMatchingSlug() throws {
+        guard let slug = Slug("rand") else {
+            XCTFail("Expected slug")
+            return
+        }
+        let link = EntryLink(
+            slug: slug,
+            title: "RAND Corporation"
+        )
+        let wikilink = Markup.Wikilink(link)
+        XCTAssertEqual(
+            wikilink.markup,
+            "[[Rand]]",
+            "Sentence-ified slug is used for wikilink text when slugified title does not match slug"
+        )
+    }
 }
