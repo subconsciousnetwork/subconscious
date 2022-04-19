@@ -28,5 +28,30 @@ struct EntryLink: Hashable, Identifiable {
         self.slug = slug
     }
 
+    /// Construct an EntryLink from a slug.
+    /// Title is generated using `slug.toSentence()`.
+    init(slug: Slug) {
+        self.slug = slug
+        self.title = slug.toSentence()
+    }
+
     var id: Slug { slug }
+}
+
+extension Markup.Wikilink {
+    /// Create wiklink markup from this entry link
+    init(_ link: EntryLink) {
+        let titleSlug = Slug(formatting: link.title)
+        // If title slug matches actual slug, then we can use title as the
+        // nicename for the wikilink. This is better than sentence-ifying
+        // the slug, because it lets us include things like apostrophes,
+        // special case capitalization, etc.
+        if titleSlug == link.slug {
+            self.init(text: link.title)
+        }
+        // Otherwise, sentence-ify the slug
+        else {
+            self.init(text: link.slug.toSentence())
+        }
+    }
 }
