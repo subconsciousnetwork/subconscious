@@ -697,30 +697,8 @@ extension Subtext {
     }
 }
 
-extension Sequence where Iterator.Element == Subtext.Inline {
-    var slashlinks: [Subtext.Slashlink] {
-        self.compactMap({ inline in
-            switch inline {
-            case .slashlink(let slashlink):
-                return slashlink
-            default:
-                return nil
-            }
-        })
-    }
-}
-
-extension Subtext {
-    /// Get all slashlinks from Subtext
-    /// Simple array. Does not de-duplicate.
-    var slashlinks: [Slashlink] {
-        blocks.flatMap({ block in
-            block.inline.slashlinks
-        })
-    }
-}
-
 extension Subtext.Block {
+    /// Get inline ranges from a block of any type
     var inline: [Subtext.Inline] {
         switch self {
         case
@@ -732,26 +710,72 @@ extension Subtext.Block {
             return []
         }
     }
+
+    /// Extract all slugs from inline
+    var slugs: [Slug] {
+        self.inline.compactMap({ inline in
+            switch inline {
+            case .slashlink(let slashlink):
+                return Slug(formatting: String(slashlink.span))
+            case .wikilink(let wikilink):
+                return Slug(formatting: String(wikilink.text))
+            default:
+                return nil
+            }
+        })
+    }
+
+    /// Extract all slashlinks from inline
+    var slashlinks: [Subtext.Slashlink] {
+        self.inline.compactMap({ inline in
+            switch inline {
+            case .slashlink(let slashlink):
+                return slashlink
+            default:
+                return nil
+            }
+        })
+    }
+
+    /// Extract all wikilinks from inline
+    var wikilinks: [Subtext.Wikilink] {
+        self.inline.compactMap({ inline in
+            switch inline {
+            case .wikilink(let wikilink):
+                return wikilink
+            default:
+                return nil
+            }
+        })
+    }
 }
 
 extension Subtext {
+    /// Get all slugs from Subtext.
+    /// Simple array. Does not de-duplicate.
+    var slugs: [Slug] {
+        blocks.flatMap({ block in block.slugs })
+    }
+
+    /// Get all slashlinks from Subtext.
+    /// Simple array. Does not de-duplicate.
+    var slashlinks: [Subtext.Slashlink] {
+        blocks.flatMap({ block in block.slashlinks })
+    }
+
+    /// Get all wikilinks from Subtext.
+    /// Simple array. Does not de-duplicate.
+    var wikilinks: [Subtext.Wikilink] {
+        blocks.flatMap({ block in block.wikilinks })
+    }
+}
+
+extension Subtext {
+    /// Get wikilink for index, if any
     func wikilinkFor(index: String.Index) -> Subtext.Wikilink? {
-        self.blocks
-            .flatMap({ block in
-                block.inline.compactMap({ inline in
-                    switch inline {
-                    case .wikilink(let wikilink):
-                        return wikilink
-                    default:
-                        return nil
-                    }
-                })
-            })
-            .first(
-                where: { wikilink in
-                    wikilink.text.range.upperBound == index
-                }
-            )
+        self.wikilinks.first(where: { wikilink in
+            wikilink.text.range.upperBound == index
+        })
     }
 
     /// Get wikilink in markup for range.
@@ -765,20 +789,16 @@ extension Subtext {
         return wikilink
     }
 
+    /// Get slashlink for index, if any
     func slashlinkFor(index: String.Index) -> Subtext.Slashlink? {
-        let slashlinks: [Subtext.Slashlink] = self.blocks.flatMap({ block in
-            block.inline.slashlinks
+        self.slashlinks.first(where: { slashlink in
+            slashlink.span.range.upperBound == index
         })
-
-        for slashlink in slashlinks {
-            if slashlink.span.range.upperBound == index {
-                return slashlink
-            }
-        }
-
-        return nil
     }
 
+    /// Get slashlink in markup for range.
+    /// Range is typically a selection range, with slashlink being the
+    /// one currently being edited/typed.
     func slashlinkFor(range nsRange: NSRange) -> Subtext.Slashlink? {
         guard let range = Range(nsRange, in: base) else {
             return nil
