@@ -57,6 +57,7 @@ struct DetailKeyboardDefaultToolbarView: View {
     var onInsertWikilink: () -> Void
     var onInsertBold: () -> Void
     var onInsertItalic: () -> Void
+    var onInsertCode: () -> Void
     var onDoneEditing: () -> Void
 
     var body: some View {
@@ -74,37 +75,11 @@ struct DetailKeyboardDefaultToolbarView: View {
                 }
             )
             Divider()
-            Button(
-                action: onInsertWikilink,
-                label: {
-                    Image(systemName: "link")
-                        .frame(
-                            width: AppTheme.icon,
-                            height: AppTheme.icon
-                        )
-                }
-            )
-            Divider()
-            Button(
-                action: onInsertBold,
-                label: {
-                    Image(systemName: "bold")
-                        .frame(
-                            width: AppTheme.icon,
-                            height: AppTheme.icon
-                        )
-                }
-            )
-            Divider()
-            Button(
-                action: onInsertItalic,
-                label: {
-                    Image(systemName: "italic")
-                        .frame(
-                            width: AppTheme.icon,
-                            height: AppTheme.icon
-                        )
-                }
+            InlineFormattingBarView(
+                onInsertWikilink: onInsertWikilink,
+                onInsertBold: onInsertBold,
+                onInsertItalic: onInsertItalic,
+                onInsertCode: onInsertCode
             )
             Spacer()
             Button(
@@ -126,6 +101,7 @@ struct DetailKeyboardToolbarView: View {
     var onInsertWikilink: () -> Void
     var onInsertBold: () -> Void
     var onInsertItalic: () -> Void
+    var onInsertCode: () -> Void
     var onDoneEditing: () -> Void
 
     private func wikilinkSuggestions() -> [EntryLink] {
@@ -157,6 +133,7 @@ struct DetailKeyboardToolbarView: View {
                         onInsertWikilink: onInsertWikilink,
                         onInsertBold: onInsertBold,
                         onInsertItalic: onInsertItalic,
+                        onInsertCode: onInsertCode,
                         onDoneEditing: onDoneEditing
                     )
                 }
@@ -184,6 +161,7 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
             onInsertWikilink: {},
             onInsertBold: {},
             onInsertItalic: {},
+            onInsertCode: {},
             onDoneEditing: {}
         )
     }

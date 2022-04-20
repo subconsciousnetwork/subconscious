@@ -114,4 +114,34 @@ extension Markup {
             self.markup = "_\(text)_"
         }
     }
+
+    /// An code string
+    struct Code: Hashable, Equatable, TaggedMarkup {
+        var markup: String
+
+        var text: Substring {
+            markup.dropFirst(1).dropLast(1)
+        }
+
+        var description: String {
+            markup
+        }
+
+        /// Get text from opening brackets through to end of wikilink text,
+        /// but excluding closing brackets.
+        var markupWithoutClosingTag: Substring {
+            markup.dropLast(1)
+        }
+
+        init?(_ description: String) {
+            guard isTag(description, opening: "`", closing: "`") else {
+                return nil
+            }
+            self.markup = description
+        }
+
+        init(text: String) {
+            self.markup = "`\(text)`"
+        }
+    }
 }

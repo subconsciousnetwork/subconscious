@@ -150,6 +150,7 @@ enum AppAction {
     case insertEditorWikilinkAtSelection
     case insertEditorBoldAtSelection
     case insertEditorItalicAtSelection
+    case insertEditorCodeAtSelection
 
     // Link suggestions
     case setLinkSheetPresented(Bool)
@@ -594,6 +595,13 @@ extension AppModel {
                 environment: environment,
                 range: state.editorSelection,
                 with: { text in Markup.Italic(text: text) }
+            )
+        case .insertEditorCodeAtSelection:
+            return insertTaggedMarkup(
+                state: state,
+                environment: environment,
+                range: state.editorSelection,
+                with: { text in Markup.Code(text: text) }
             )
         case let .showDetail(isShowing):
             return showDetail(
