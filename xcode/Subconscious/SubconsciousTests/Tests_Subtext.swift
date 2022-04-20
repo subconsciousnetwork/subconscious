@@ -756,4 +756,94 @@ class Tests_Subtext: XCTestCase {
             "Second inline is bold"
         )
     }
+
+    func testEntryLinksCount() throws {
+        let markup = """
+        [[The quick]] [[brown]]
+        [[fox]] [[JUMPS]] /over-the-lazy-dog
+        """
+        let dom = Subtext(markup: markup)
+        XCTAssertEqual(
+            dom.entryLinks.count,
+            5,
+            "Correct number of links parsed"
+        )
+    }
+
+    func testEntryLinksCasing() throws {
+        let markup = """
+        [[HAMLET]]
+        Let me see.
+        Takes the /skull
+
+        Alas, poor [[Yorick]]! I knew him, [[Horatio]]: a fellow
+        of [[infinite jest]], of most /excellent-fancy: he hath
+        borne me on his back a thousand times; and now, how
+        abhorred in my imagination it is!
+        """
+        let dom = Subtext(markup: markup)
+        let entryLinks = dom.entryLinks
+        XCTAssertEqual(
+            entryLinks[0].title,
+            "HAMLET"
+        )
+        XCTAssertEqual(
+            entryLinks[1].title,
+            "Skull"
+        )
+        XCTAssertEqual(
+            entryLinks[2].title,
+            "Yorick"
+        )
+        XCTAssertEqual(
+            entryLinks[3].title,
+            "Horatio"
+        )
+        XCTAssertEqual(
+            entryLinks[4].title,
+            "infinite jest"
+        )
+        XCTAssertEqual(
+            entryLinks[5].title,
+            "Excellent fancy"
+        )
+    }
+
+    func testWikilinkForRange() throws {
+        let markup = """
+        To what base uses we may return, [[Horatio]]! Why may
+        not imagination trace the noble dust of Alexander,
+        till he find it stopping a bung-hole?
+        """
+        let dom = Subtext(markup: markup)
+        guard let wikilink = dom.wikilinkFor(
+            range: NSRange(location: 42, length: 42)
+        ) else {
+            XCTFail("Expected wikilink to be found")
+            return
+        }
+        XCTAssertEqual(
+            String(wikilink.span),
+            "[[Horatio]]"
+        )
+    }
+
+    func testSlashlinkForRange() throws {
+        let markup = """
+        To what base uses we may return, /Horatio! Why may
+        not imagination trace the noble dust of Alexander,
+        till he find it stopping a bung-hole?
+        """
+        let dom = Subtext(markup: markup)
+        guard let slashlink = dom.slashlinkFor(
+            range: NSRange(location: 41, length: 41)
+        ) else {
+            XCTFail("Expected slashlink to be found")
+            return
+        }
+        XCTAssertEqual(
+            String(slashlink.span),
+            "/Horatio"
+        )
+    }
 }

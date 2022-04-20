@@ -21,7 +21,7 @@ struct Config: Equatable {
     /// Toggle journal suggestion feature
     var journalSuggestionEnabled = true
     /// Where to look for journal template
-    var journalTemplate: Slug = Slug("special/journal/template")!
+    var journalTemplate: Slug = Slug("_special/journal-template")!
 
     /// Toggle scratch note suggestion feature
     var scratchSuggestionEnabled = false
@@ -32,7 +32,7 @@ struct Config: Equatable {
     /// Default links feature enabled?
     var linksEnabled = true
     /// Where to look for user-defined links
-    var linksTemplate: Slug = Slug("special/links/template")!
+    var linksTemplate: Slug = Slug("_special/links")!
     /// Template for default links
     var linksFallback: [Slug] = [
         Slug("pattern")!,
