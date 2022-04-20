@@ -65,3 +65,18 @@ extension Sequence where Iterator.Element == URL {
         self.filter({url in url.pathExtension == ext})
     }
 }
+
+extension URLComponents {
+    /// Construct
+    func indexQueryItems() -> Dictionary<String, String?> {
+        guard let items = queryItems else {
+            return [:]
+        }
+        return Dictionary(
+            items.map({ item in
+                (item.name, item.value)
+            }),
+            uniquingKeysWith: { first, last in first }
+        )
+    }
+}
