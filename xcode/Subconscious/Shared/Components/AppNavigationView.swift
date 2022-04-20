@@ -118,6 +118,9 @@ struct AppNavigationView: View {
                             onInsertItalic: {
                                 store.send(.insertEditorItalicAtSelection)
                             },
+                            onInsertCode: {
+                                store.send(.insertEditorCodeAtSelection)
+                            },
                             onRename: { slug in
                                 store.send(.showRenameSheet(slug))
                             },

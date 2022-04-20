@@ -45,6 +45,7 @@ struct DetailView: View {
     var onInsertWikilink: () -> Void
     var onInsertBold: () -> Void
     var onInsertItalic: () -> Void
+    var onInsertCode: () -> Void
     var onRename: (Slug?) -> Void
     var onDelete: (Slug?) -> Void
 
@@ -104,6 +105,7 @@ struct DetailView: View {
                             onInsertWikilink: onInsertWikilink,
                             onInsertBold: onInsertBold,
                             onInsertItalic: onInsertItalic,
+                            onInsertCode: onInsertCode,
                             onDoneEditing: onDone
                         )
                         .transition(
