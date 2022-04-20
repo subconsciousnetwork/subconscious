@@ -551,13 +551,7 @@ struct DatabaseService {
                 )
             })
         }
-        return linksEntry.dom.slashlinks.compactMap({ slashlink in
-            Slug(formatting: slashlink.description).map({ slug in
-                .entry(
-                    EntryLink(slug: slug)
-                )
-            })
-        })
+        return linksEntry.dom.entryLinks.map(LinkSuggestion.entry)
     }
 
     /// Fetch search suggestions

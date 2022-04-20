@@ -711,14 +711,16 @@ extension Subtext.Block {
         }
     }
 
-    /// Extract all slugs from inline
-    var slugs: [Slug] {
+    /// Extract all wikilinks and slashlinks from inline
+    var entryLinks: [EntryLink] {
         self.inline.compactMap({ inline in
             switch inline {
             case .slashlink(let slashlink):
-                return Slug(formatting: String(slashlink.span))
+                return Slug(formatting: String(slashlink.span)).map({ slug in
+                    EntryLink(slug: slug)
+                })
             case .wikilink(let wikilink):
-                return Slug(formatting: String(wikilink.text))
+                return EntryLink(title: String(wikilink.text))
             default:
                 return nil
             }
@@ -753,8 +755,8 @@ extension Subtext.Block {
 extension Subtext {
     /// Get all slugs from Subtext.
     /// Simple array. Does not de-duplicate.
-    var slugs: [Slug] {
-        blocks.flatMap({ block in block.slugs })
+    var entryLinks: [EntryLink] {
+        blocks.flatMap({ block in block.entryLinks })
     }
 
     /// Get all slashlinks from Subtext.
