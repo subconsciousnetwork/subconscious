@@ -74,4 +74,28 @@ class Test_Markup: XCTestCase {
             "markupWithoutClosingTag drops closing tag"
         )
     }
+
+    func testCodeLosslessStringConvertable() throws {
+        guard let markup = Markup.Code("`code`") else {
+            XCTFail("Expected Code")
+            return
+        }
+        XCTAssertEqual(
+            String(markup),
+            "`code`",
+            "Losslessly converts to/from string"
+        )
+    }
+
+    func testCodeMarkupWithoutClosingTag() throws {
+        guard let markup = Markup.Code("`code`") else {
+            XCTFail("Expected Code")
+            return
+        }
+        XCTAssertEqual(
+            String(markup.markupWithoutClosingTag),
+            "`code",
+            "markupWithoutClosingTag drops closing tag"
+        )
+    }
 }
