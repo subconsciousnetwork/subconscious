@@ -753,7 +753,7 @@ extension Subtext.Block {
 }
 
 extension Subtext {
-    /// Get all slugs from Subtext.
+    /// Get all entry links from Subtext.
     /// Simple array. Does not de-duplicate.
     var entryLinks: [EntryLink] {
         blocks.flatMap({ block in block.entryLinks })
