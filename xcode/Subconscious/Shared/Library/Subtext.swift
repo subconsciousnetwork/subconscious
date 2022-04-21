@@ -120,6 +120,12 @@ struct Subtext: Hashable, Equatable {
         case code(Code)
     }
 
+    /// One of the two link forms
+    enum EntryLinkMarkup: Hashable, Equatable {
+        case slashlink(Slashlink)
+        case wikilink(Wikilink)
+    }
+
     /// Consume a well-formed bracket link, or else backtrack
     private static func consumeBracketLink(tape: inout Tape<Substring>) -> Substring? {
         tape.save()
@@ -756,6 +762,11 @@ extension Subtext.Block {
 }
 
 extension Subtext {
+    /// Get all inline markup from blocks
+    var inline: [Inline] {
+        blocks.flatMap({ block in block.inline })
+    }
+
     /// Get all entry links from Subtext.
     /// Simple array. Does not de-duplicate.
     var entryLinks: [EntryLink] {
@@ -809,5 +820,33 @@ extension Subtext {
             return nil
         }
         return slashlinkFor(index: range.lowerBound)
+    }
+
+    /// Get EntryLinkMarkup for index, if any
+    func entryLinkFor(index: String.Index) -> Subtext.EntryLinkMarkup? {
+        for markup in inline {
+            switch markup {
+            case .slashlink(let slashlink):
+                if slashlink.span.range.upperBound == index {
+                    return EntryLinkMarkup.slashlink(slashlink)
+                }
+                break
+            case .wikilink(let wikilink):
+                if wikilink.text.range.upperBound == index {
+                    return EntryLinkMarkup.wikilink(wikilink)
+                }
+                break
+            default:
+                break
+            }
+        }
+        return nil
+    }
+
+    func entryLinkFor(range nsRange: NSRange) -> Subtext.EntryLinkMarkup? {
+        guard let range = Range(nsRange, in: base) else {
+            return nil
+        }
+        return entryLinkFor(index: range.lowerBound)
     }
 }

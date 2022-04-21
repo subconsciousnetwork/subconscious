@@ -846,4 +846,52 @@ class Tests_Subtext: XCTestCase {
             "/Horatio"
         )
     }
+
+    func testEntryLinkMarkupForRange0() throws {
+        let markup = """
+        To what [[base uses]] we may return, /Horatio! Why may
+        not imagination trace the noble dust of Alexander,
+        till he find it stopping a bung-hole?
+        """
+        let dom = Subtext(markup: markup)
+        guard let entryLinkMarkup = dom.entryLinkFor(
+            range: NSRange(location: 45, length: 45)
+        ) else {
+            XCTFail("Expected entry link markup to be found")
+            return
+        }
+        guard case let .slashlink(slashlink) = entryLinkMarkup else {
+            XCTFail("Expected slashlink markup to be found")
+            return
+        }
+        XCTAssertEqual(
+            String(slashlink.span),
+            "/Horatio",
+            "Finds slashlink when cursor is at end of slashlink"
+        )
+    }
+
+    func testEntryLinkMarkupForRange1() throws {
+        let markup = """
+        To what [[base uses]] we may return, /Horatio! Why may
+        not imagination trace the noble dust of Alexander,
+        till he find it stopping a bung-hole?
+        """
+        let dom = Subtext(markup: markup)
+        guard let entryLinkMarkup = dom.entryLinkFor(
+            range: NSRange(location: 19, length: 19)
+        ) else {
+            XCTFail("Expected entry link markup to be found")
+            return
+        }
+        guard case let .wikilink(wikilink) = entryLinkMarkup else {
+            XCTFail("Expected wikilink markup to be found")
+            return
+        }
+        XCTAssertEqual(
+            String(wikilink.span),
+            "[[base uses]]",
+            "Finds wikilink when cursor is at end of text"
+        )
+    }
 }
