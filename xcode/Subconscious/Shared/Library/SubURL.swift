@@ -44,8 +44,7 @@ extension EntryLink {
             return nil
         }
         let slug = Slug(formatting: components.path)
-        let query = components.indexQueryItems()
-        let title = query["title"] ?? nil
+        let title = components.firstQueryItemWhere(name: "title")?.value
         if let title = title, let slug = slug {
             return EntryLink(slug: slug, title: title)
         } else if let slug = slug {
