@@ -29,17 +29,17 @@ struct EntryLink: Hashable, Equatable, Identifiable {
     }
 
     /// Construct an EntryLink from a slug.
-    /// Title is generated using `slug.toSentence()`.
+    /// Title is generated using `slug.toTitle()`.
     init(slug: Slug) {
         self.slug = slug
-        self.title = slug.toSentence()
+        self.title = slug.toTitle()
     }
 
     var id: Slug { slug }
 
     /// Returns a nice-name string that will format to a valid
     /// slug for this entry.
-    func toLinkableSentence() -> String {
+    func toLinkableTitle() -> String {
         let titleSlug = Slug(formatting: self.title)
         // If title slug matches actual slug, then we can use title as the
         // nicename for the wikilink. This is better than sentence-ifying
@@ -48,6 +48,6 @@ struct EntryLink: Hashable, Equatable, Identifiable {
         if titleSlug == self.slug {
             return self.title
         }
-        return self.slug.toSentence()
+        return self.slug.toTitle()
     }
 }

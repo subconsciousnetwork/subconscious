@@ -62,8 +62,8 @@ struct Subtext: Hashable, Equatable {
             String(span)
         }
 
-        func toSentence() -> String? {
-            Slug(formatting: String(span))?.toSentence()
+        func toTitle() -> String? {
+            Slug(formatting: String(span))?.toTitle()
         }
     }
 
@@ -78,7 +78,7 @@ struct Subtext: Hashable, Equatable {
             String(span)
         }
 
-        func toSentence() -> String? {
+        func toTitle() -> String? {
             String(text)
         }
     }
@@ -136,12 +136,12 @@ struct Subtext: Hashable, Equatable {
 
         /// Get sentence version of link (nice text).
         /// Used to create default content for note from link text.
-        func toSentence() -> String? {
+        func toTitle() -> String? {
             switch self {
             case .wikilink(let wikilink):
-                return wikilink.toSentence()
+                return wikilink.toTitle()
             case .slashlink(let slashlink):
-                return slashlink.toSentence()
+                return slashlink.toTitle()
             }
         }
     }
@@ -538,7 +538,7 @@ extension Subtext {
         case let .slashlink(slashlink):
             if
                 let slug = Slug(formatting: String(describing: slashlink)),
-                let url = url(EntryLink(slug: slug, title: slug.toSentence()))
+                let url = url(EntryLink(slug: slug, title: slug.toTitle()))
             {
                 attributedString.addAttribute(
                     .link,

@@ -43,7 +43,7 @@ class Tests_EntryLink: XCTestCase {
             XCTFail("Expected slug")
             return
         }
-        let title = EntryLink(slug: slug).toLinkableSentence()
+        let title = EntryLink(slug: slug).toLinkableTitle()
         XCTAssertEqual(
             title,
             "Rand",
@@ -56,7 +56,7 @@ class Tests_EntryLink: XCTestCase {
             XCTFail("Expected title to parse to slug successfully")
             return
         }
-        let title = link.toLinkableSentence()
+        let title = link.toLinkableTitle()
         XCTAssertEqual(
             title,
             "RAND",
@@ -73,7 +73,7 @@ class Tests_EntryLink: XCTestCase {
             slug: slug,
             title: "RAND Corporation"
         )
-        let title = link.toLinkableSentence()
+        let title = link.toLinkableTitle()
         XCTAssertEqual(
             title,
             "Rand",

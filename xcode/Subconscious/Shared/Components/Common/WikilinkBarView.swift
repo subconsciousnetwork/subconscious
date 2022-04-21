@@ -21,7 +21,7 @@ struct WikilinkBarView: View {
                         onSelectLink(link)
                     },
                     label: {
-                        Text(link.toLinkableSentence())
+                        Text(link.toLinkableTitle())
                             .lineLimit(1)
                     }
                 )

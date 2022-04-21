@@ -790,7 +790,7 @@ extension AppModel {
         let link = dom.entryLinkFor(range: state.editorSelection)
         model.editorSelectedEntryLinkMarkup = link
 
-        let linkSearchText = link?.toSentence() ?? ""
+        let linkSearchText = link?.toTitle() ?? ""
 
         return Update(state: model)
             .pipe({ state in
@@ -816,7 +816,7 @@ extension AppModel {
         )
         model.editorSelectedEntryLinkMarkup = link
 
-        let linkSearchText = link?.toSentence() ?? ""
+        let linkSearchText = link?.toTitle() ?? ""
 
         return Update(state: model)
             .pipe({ state in
@@ -1923,7 +1923,7 @@ extension AppModel {
             .map({ slug in
                 AppAction.requestDetail(
                     slug: slug,
-                    fallback: slug.toSentence()
+                    fallback: slug.toTitle()
                 )
             })
             .catch({ error in
@@ -2096,7 +2096,7 @@ extension AppModel {
                     )
                     return (range, replacement)
                 case .wikilink(let wikilink):
-                    let text = link.toLinkableSentence()
+                    let text = link.toLinkableTitle()
                     let replacement = Markup.Wikilink(text: text).markup
                     let range = NSRange(
                         wikilink.span.range,
@@ -2104,7 +2104,7 @@ extension AppModel {
                     )
                     return (range, replacement)
                 case .none:
-                    let text = link.toLinkableSentence()
+                    let text = link.toLinkableTitle()
                     let replacement = Markup.Wikilink(text: text).markup
                     return (state.editorSelection, replacement)
                 }
