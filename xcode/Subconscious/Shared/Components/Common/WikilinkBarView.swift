@@ -1,5 +1,5 @@
 //
-//  EntryLinkSuggestionBarView.swift
+//  WikilinkBarView.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 4/21/22.
@@ -8,9 +8,9 @@
 import SwiftUI
 
 /// Toolbar that displays entry links in a horizontal bar
-struct EntryLinkSuggestionBarView: View {
+struct WikilinkBarView: View {
     var links: [EntryLink]
-    var onSelectLink: (LinkSuggestion) -> Void
+    var onSelectLink: (EntryLink) -> Void
     var max = 2
 
     var body: some View {
@@ -18,7 +18,7 @@ struct EntryLinkSuggestionBarView: View {
             ForEach(links.prefix(max)) { link in
                 Button(
                     action: {
-                        onSelectLink(.entry(link))
+                        onSelectLink(link)
                     },
                     label: {
                         Text(link.title)
@@ -33,7 +33,7 @@ struct EntryLinkSuggestionBarView: View {
 
 struct EntryLinkSuggestionBarView_Previews: PreviewProvider {
     static var previews: some View {
-        EntryLinkSuggestionBarView(
+        WikilinkBarView(
             links: [
                 EntryLink(title: "Finn the Human")!,
                 EntryLink(title: "Land of OOO")!

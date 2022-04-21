@@ -104,9 +104,14 @@ struct AppNavigationView: View {
                                     )
                                 )
                             },
-                            onSelectLink: { suggestion in
+                            onSelectWikilink: { link in
                                 store.send(
-                                    .selectLinkSuggestion(suggestion)
+                                    .selectLinkSuggestion(.entry(link))
+                                )
+                            },
+                            onSelectSlashlink: { link in
+                                store.send(
+                                    .selectLinkSuggestion(.entry(link))
                                 )
                             },
                             onInsertWikilink: {

@@ -12,7 +12,8 @@ struct DetailKeyboardToolbarView: View {
     @Binding var isSheetPresented: Bool
     var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
     var suggestions: [LinkSuggestion]
-    var onSelectLink: (LinkSuggestion) -> Void
+    var onSelectWikilink: (EntryLink) -> Void
+    var onSelectSlashlink: (EntryLink) -> Void
     var onInsertWikilink: () -> Void
     var onInsertBold: () -> Void
     var onInsertItalic: () -> Void
@@ -49,14 +50,14 @@ struct DetailKeyboardToolbarView: View {
                 Divider()
                 switch selectedEntryLinkMarkup {
                 case .wikilink:
-                    EntryLinkSuggestionBarView(
+                    WikilinkBarView(
                         links: entryLinks,
-                        onSelectLink: onSelectLink
+                        onSelectLink: onSelectWikilink
                     )
                 case .slashlink:
-                    EntryLinkSuggestionBarView(
+                    SlashlinkBarView(
                         links: entryLinks,
-                        onSelectLink: onSelectLink
+                        onSelectLink: onSelectSlashlink
                     )
                 case .none:
                     InlineFormattingBarView(
@@ -93,7 +94,8 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
                     )
                 )
             ],
-            onSelectLink: { suggestion in },
+            onSelectWikilink: { _ in },
+            onSelectSlashlink: { _ in },
             onInsertWikilink: {},
             onInsertBold: {},
             onInsertItalic: {},
