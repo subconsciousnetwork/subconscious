@@ -119,6 +119,8 @@
 		B88C97A32764270000B27DF0 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = B88C97A12764270000B27DF0 /* LICENSE.txt */; };
 		B8901CF327978FDE007C9021 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8901CF227978FDE007C9021 /* Slug.swift */; };
 		B89D296827E832DC009E0DED /* LoggerUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89D296727E832DC009E0DED /* LoggerUtilities.swift */; };
+		B8A41D4E2811E81E0096D2E7 /* EntryLinkSuggestionBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A41D4D2811E81E0096D2E7 /* EntryLinkSuggestionBarView.swift */; };
+		B8A41D4F2811E81E0096D2E7 /* EntryLinkSuggestionBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A41D4D2811E81E0096D2E7 /* EntryLinkSuggestionBarView.swift */; };
 		B8AC648A278F53920099E96B /* EntryStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC6489278F53920099E96B /* EntryStub.swift */; };
 		B8AC648C278F757B0099E96B /* ProgressScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC648B278F757B0099E96B /* ProgressScrimView.swift */; };
 		B8AC648D278F757B0099E96B /* ProgressScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC648B278F757B0099E96B /* ProgressScrimView.swift */; };
@@ -279,6 +281,7 @@
 		B88C97A12764270000B27DF0 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		B8901CF227978FDE007C9021 /* Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
 		B89D296727E832DC009E0DED /* LoggerUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerUtilities.swift; sourceTree = "<group>"; };
+		B8A41D4D2811E81E0096D2E7 /* EntryLinkSuggestionBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryLinkSuggestionBarView.swift; sourceTree = "<group>"; };
 		B8AC6489278F53920099E96B /* EntryStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryStub.swift; sourceTree = "<group>"; };
 		B8AC648B278F757B0099E96B /* ProgressScrimView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressScrimView.swift; sourceTree = "<group>"; };
 		B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackLabelStyle.swift; sourceTree = "<group>"; };
@@ -589,6 +592,7 @@
 				B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */,
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B84AD8E2281073CE006B3153 /* InlineFormattingBarView.swift */,
+				B8A41D4D2811E81E0096D2E7 /* EntryLinkSuggestionBarView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -902,6 +906,7 @@
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
 				B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
+				B8A41D4E2811E81E0096D2E7 /* EntryLinkSuggestionBarView.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */,
 				B8AC648F278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
@@ -972,6 +977,7 @@
 				B8AE34C6276BF72500777FF0 /* LinkSearchView.swift in Sources */,
 				B82C3A5426F528B000833CC8 /* DatabaseService.swift in Sources */,
 				B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
+				B8A41D4F2811E81E0096D2E7 /* EntryLinkSuggestionBarView.swift in Sources */,
 				B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
 				B8879EA126F90C5100A0B4FF /* AppNavigationView.swift in Sources */,
 				B877A6E627A1C2BC00F11A90 /* KeyboardService.swift in Sources */,
