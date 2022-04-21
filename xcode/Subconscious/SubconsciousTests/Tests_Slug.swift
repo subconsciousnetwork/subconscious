@@ -45,6 +45,32 @@ class Tests_Slug: XCTestCase {
         )
     }
 
+    func testFormatUnicodeCharacters0() throws {
+        guard let slug = Slug(
+            formatting: "Baháʼí"
+        ) else {
+            XCTFail("Expected Slug")
+            return
+        }
+        XCTAssertEqual(
+            String(slug),
+            "bah"
+        )
+    }
+
+    func testFormatUnicodeCharacters1() throws {
+        guard let slug = Slug(
+            formatting: "Fédération Aéronautique Internationale"
+        ) else {
+            XCTFail("Expected Slug")
+            return
+        }
+        XCTAssertEqual(
+            String(slug),
+            "fdration-aronautique-internationale"
+        )
+    }
+
     func testFormatLeavesUnderscoresIntact() throws {
         let slug = Slug.format("The_quick_Brown_fOx")
         XCTAssertEqual(

@@ -39,7 +39,7 @@ class Tests_SubURLs: XCTestCase {
         )
     }
 
-    func testEncodeDecodeRoundTrip() throws {
+    func testEncodeDecodeRoundTrip0() throws {
         let link = EntryLink(
             slug: Slug("evergreen-notes")!,
             title: "Evergreen Notes"
@@ -59,6 +59,56 @@ class Tests_SubURLs: XCTestCase {
         XCTAssertEqual(
             String(link.slug),
             "evergreen-notes"
+        )
+    }
+
+    func testEncodeDecodeRoundTrip1() throws {
+        guard let link = EntryLink(
+            title: "Baháʼí"
+        ) else {
+            XCTFail("Expected EntryLink")
+            return
+        }
+        guard let url = link.encodeAsSubEntryURL() else {
+            XCTFail("Expected URL")
+            return
+        }
+        guard let link = EntryLink.decodefromSubEntryURL(url) else {
+            XCTFail("Expected EntryLink")
+            return
+        }
+        XCTAssertEqual(
+            link.title,
+            "Baháʼí"
+        )
+        XCTAssertEqual(
+            String(link.slug),
+            "bah"
+        )
+    }
+
+    func testEncodeDecodeRoundTrip2() throws {
+        guard let link = EntryLink(
+            title: "Fédération Aéronautique Internationale"
+        ) else {
+            XCTFail("Expected EntryLink")
+            return
+        }
+        guard let url = link.encodeAsSubEntryURL() else {
+            XCTFail("Expected URL")
+            return
+        }
+        guard let link = EntryLink.decodefromSubEntryURL(url) else {
+            XCTFail("Expected EntryLink")
+            return
+        }
+        XCTAssertEqual(
+            link.title,
+            "Fédération Aéronautique Internationale"
+        )
+        XCTAssertEqual(
+            String(link.slug),
+            "fdration-aronautique-internationale"
         )
     }
 }
