@@ -36,22 +36,18 @@ struct EntryLink: Hashable, Equatable, Identifiable {
     }
 
     var id: Slug { slug }
-}
 
-extension Markup.Wikilink {
-    /// Create wiklink markup from this entry link
-    init(_ link: EntryLink) {
-        let titleSlug = Slug(formatting: link.title)
+    /// Returns a nice-name string that will format to a valid
+    /// slug for this entry.
+    func toLinkableSentence() -> String {
+        let titleSlug = Slug(formatting: self.title)
         // If title slug matches actual slug, then we can use title as the
         // nicename for the wikilink. This is better than sentence-ifying
         // the slug, because it lets us include things like apostrophes,
         // special case capitalization, etc.
-        if titleSlug == link.slug {
-            self.init(text: link.title)
+        if titleSlug == self.slug {
+            return self.title
         }
-        // Otherwise, sentence-ify the slug
-        else {
-            self.init(text: link.slug.toSentence())
-        }
+        return self.slug.toSentence()
     }
 }

@@ -2100,6 +2100,8 @@ extension AppModel {
         var model = state
         model.linkSearchText = ""
 
+        let title = link.toLinkableSentence()
+
         return Update(state: model)
             .pipe({ state in
                 setLinkSheetPresented(
@@ -2112,7 +2114,7 @@ extension AppModel {
                 insertEditorText(
                     state: state,
                     environment: environment,
-                    text: Markup.Wikilink(link).markup,
+                    text: Markup.Wikilink(text: title).markup,
                     range: range
                 )
             })
