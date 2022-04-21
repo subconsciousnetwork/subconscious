@@ -479,7 +479,7 @@ extension Subtext {
     private static func renderInlineAttributeOf(
         _ attributedString: NSMutableAttributedString,
         inline: Subtext.Inline,
-        url: (String) -> String?
+        url: (EntryLink) -> String?
     ) {
         switch inline {
         case let .link(link):
@@ -509,7 +509,10 @@ extension Subtext {
                 )
             )
         case let .slashlink(slashlink):
-            if let url = url(String(describing: slashlink)) {
+            if
+                let slug = Slug(formatting: String(describing: slashlink)),
+                let url = url(EntryLink(slug: slug, title: slug.toSentence()))
+            {
                 attributedString.addAttribute(
                     .link,
                     value: url,
@@ -531,7 +534,7 @@ extension Subtext {
             )
             if
                 let slug = Slug(formatting: text),
-                let urlString = url(String(describing: slug))
+                let urlString = url(EntryLink(slug: slug, title: text))
             {
                 attributedString.addAttribute(
                     .link,
@@ -577,7 +580,7 @@ extension Subtext {
     /// corresponding to the semantic meaning of Subtext markup.
     static func renderAttributesOf(
         _ attributedString: NSMutableAttributedString,
-        url: (String) -> String?
+        url: (EntryLink) -> String?
     ) {
         let dom = Subtext(markup: attributedString.string)
 

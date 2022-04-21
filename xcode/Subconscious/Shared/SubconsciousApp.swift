@@ -1062,21 +1062,16 @@ extension AppModel {
         }
 
         // Follow ordinary links when not in edit mode
-        guard Slashlink.isSlashlinkURL(url) else {
+        guard SubURL.isSubEntryURL(url) else {
             UIApplication.shared.open(url)
             return Update(state: state)
         }
 
-        let slug = Slashlink.slashlinkURLToSlug(url)
-        // If this is a Subtext URL, then commit a search for the
-        // corresponding query
+        let link = EntryLink.decodefromSubEntryURL(url)
         let fx: Fx<AppAction> = Just(
             AppAction.requestDetail(
-                slug: slug,
-                fallback: slug.mapOr(
-                    { slug in slug.toSentence() },
-                    default: ""
-                )
+                slug: link?.slug,
+                fallback: link?.title ?? ""
             )
         )
         .eraseToAnyPublisher()
