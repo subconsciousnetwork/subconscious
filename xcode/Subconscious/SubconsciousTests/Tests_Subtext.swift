@@ -268,6 +268,22 @@ class Tests_Subtext: XCTestCase {
         )
     }
 
+    func testSlashlinkParsingUnderscore() throws {
+        let markup = "A /_slashlink-with-an-underscore."
+        let dom = Subtext(markup: markup)
+
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "/_slashlink-with-an-underscore",
+            "Slashlink with underscore parses successfully"
+        )
+    }
+
     func testWikilinkParsing0() throws {
         let markup = """
         Let's test out some [[wikilinks]].

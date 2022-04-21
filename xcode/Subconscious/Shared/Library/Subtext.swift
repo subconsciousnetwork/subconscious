@@ -337,6 +337,7 @@ struct Subtext: Hashable, Equatable {
             character.isLetter ||
             character.isNumber ||
             character == "-" ||
+            character == "_" ||
             character == "/"
         )
     }
