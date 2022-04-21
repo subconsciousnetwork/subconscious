@@ -12,8 +12,7 @@ struct DetailKeyboardToolbarView: View {
     @Binding var isSheetPresented: Bool
     var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
     var suggestions: [LinkSuggestion]
-    var onSelectWikilink: (EntryLink) -> Void
-    var onSelectSlashlink: (EntryLink) -> Void
+    var onSelectLinkCompletion: (EntryLink) -> Void
     var onInsertWikilink: () -> Void
     var onInsertBold: () -> Void
     var onInsertItalic: () -> Void
@@ -52,12 +51,12 @@ struct DetailKeyboardToolbarView: View {
                 case .wikilink:
                     WikilinkBarView(
                         links: entryLinks,
-                        onSelectLink: onSelectWikilink
+                        onSelectLink: onSelectLinkCompletion
                     )
                 case .slashlink:
                     SlashlinkBarView(
                         links: entryLinks,
-                        onSelectLink: onSelectSlashlink
+                        onSelectLink: onSelectLinkCompletion
                     )
                 case .none:
                     InlineFormattingBarView(
@@ -94,8 +93,7 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
                     )
                 )
             ],
-            onSelectWikilink: { _ in },
-            onSelectSlashlink: { _ in },
+            onSelectLinkCompletion: { _ in },
             onInsertWikilink: {},
             onInsertBold: {},
             onInsertItalic: {},

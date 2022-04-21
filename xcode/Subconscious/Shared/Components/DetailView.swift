@@ -41,8 +41,7 @@ struct DetailView: View {
         UITextItemInteraction
     ) -> Bool
     var onSelectBacklink: (EntryLink) -> Void
-    var onSelectWikilink: (EntryLink) -> Void
-    var onSelectSlashlink: (EntryLink) -> Void
+    var onSelectLinkCompletion: (EntryLink) -> Void
     var onInsertWikilink: () -> Void
     var onInsertBold: () -> Void
     var onInsertItalic: () -> Void
@@ -102,8 +101,7 @@ struct DetailView: View {
                             isSheetPresented: $isLinkSheetPresented,
                             selectedEntryLinkMarkup: selectedEntryLinkMarkup,
                             suggestions: linkSuggestions,
-                            onSelectWikilink: onSelectWikilink,
-                            onSelectSlashlink: onSelectSlashlink,
+                            onSelectLinkCompletion: onSelectLinkCompletion,
                             onInsertWikilink: onInsertWikilink,
                             onInsertBold: onInsertBold,
                             onInsertItalic: onInsertItalic,

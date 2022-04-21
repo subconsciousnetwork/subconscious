@@ -172,6 +172,10 @@ enum AppAction {
     static func modifyEditor(text: String) -> Self {
         Self.setEditor(text: text, saveState: .modified)
     }
+
+    static func selectLinkCompletion(_ link: EntryLink) -> Self {
+        .selectLinkSuggestion(.entry(link))
+    }
 }
 
 extension AppAction {
@@ -2080,27 +2084,35 @@ extension AppModel {
 
         // If there is a selected link, use that range
         // instead of selection
-        let range = state.editorSelectedEntryLinkMarkup
-            .map({ markup in
+        let (range, replacement): (NSRange, String) = Func.pipe(
+            state.editorSelectedEntryLinkMarkup,
+            { markup in
                 switch markup {
                 case .slashlink(let slashlink):
-                    return NSRange(
+                    let replacement = link.slug.toSlashlink()
+                    let range = NSRange(
                         slashlink.span.range,
                         in: state.editorText
                     )
+                    return (range, replacement)
                 case .wikilink(let wikilink):
-                    return NSRange(
+                    let text = link.toLinkableSentence()
+                    let replacement = Markup.Wikilink(text: text).markup
+                    let range = NSRange(
                         wikilink.span.range,
                         in: state.editorText
                     )
+                    return (range, replacement)
+                case .none:
+                    let text = link.toLinkableSentence()
+                    let replacement = Markup.Wikilink(text: text).markup
+                    return (state.editorSelection, replacement)
                 }
-            })
-            .unwrap(or: state.editorSelection)
+            }
+        )
 
         var model = state
         model.linkSearchText = ""
-
-        let title = link.toLinkableSentence()
 
         return Update(state: model)
             .pipe({ state in
@@ -2114,7 +2126,7 @@ extension AppModel {
                 insertEditorText(
                     state: state,
                     environment: environment,
-                    text: Markup.Wikilink(text: title).markup,
+                    text: replacement,
                     range: range
                 )
             })
