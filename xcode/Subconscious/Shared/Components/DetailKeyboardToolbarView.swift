@@ -47,12 +47,18 @@ struct DetailKeyboardToolbarView: View {
                     }
                 )
                 Divider()
-                if selectedEntryLinkMarkup != nil {
+                switch selectedEntryLinkMarkup {
+                case .wikilink:
                     EntryLinkSuggestionBarView(
                         links: entryLinks,
                         onSelectLink: onSelectLink
                     )
-                } else {
+                case .slashlink:
+                    EntryLinkSuggestionBarView(
+                        links: entryLinks,
+                        onSelectLink: onSelectLink
+                    )
+                case .none:
                     InlineFormattingBarView(
                         onInsertWikilink: onInsertWikilink,
                         onInsertBold: onInsertBold,
