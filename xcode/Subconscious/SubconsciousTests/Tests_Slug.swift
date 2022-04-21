@@ -125,12 +125,12 @@ class Tests_Slug: XCTestCase {
         )
     }
 
-    func testToSentence() throws {
-        let sentence = Slug("frozen-yogurt")?.toSentence()
+    func testToTitle() throws {
+        let title = Slug("frozen-yogurt")!.toTitle()
         XCTAssertEqual(
-            sentence,
+            title,
             "Frozen yogurt",
-            "Sentenc-ifies slug and capitalizes first letter"
+            "Title-ifies slug and capitalizes first letter"
         )
     }
 }

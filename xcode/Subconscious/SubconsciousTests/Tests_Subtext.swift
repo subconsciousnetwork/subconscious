@@ -268,6 +268,22 @@ class Tests_Subtext: XCTestCase {
         )
     }
 
+    func testSlashlinkParsingUnderscore() throws {
+        let markup = "A /_slashlink-with-an-underscore."
+        let dom = Subtext(markup: markup)
+
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "/_slashlink-with-an-underscore",
+            "Slashlink with underscore parses successfully"
+        )
+    }
+
     func testWikilinkParsing0() throws {
         let markup = """
         Let's test out some [[wikilinks]].
@@ -844,6 +860,54 @@ class Tests_Subtext: XCTestCase {
         XCTAssertEqual(
             String(slashlink.span),
             "/Horatio"
+        )
+    }
+
+    func testEntryLinkMarkupForRange0() throws {
+        let markup = """
+        To what [[base uses]] we may return, /Horatio! Why may
+        not imagination trace the noble dust of Alexander,
+        till he find it stopping a bung-hole?
+        """
+        let dom = Subtext(markup: markup)
+        guard let entryLinkMarkup = dom.entryLinkFor(
+            range: NSRange(location: 45, length: 45)
+        ) else {
+            XCTFail("Expected entry link markup to be found")
+            return
+        }
+        guard case let .slashlink(slashlink) = entryLinkMarkup else {
+            XCTFail("Expected slashlink markup to be found")
+            return
+        }
+        XCTAssertEqual(
+            String(slashlink.span),
+            "/Horatio",
+            "Finds slashlink when cursor is at end of slashlink"
+        )
+    }
+
+    func testEntryLinkMarkupForRange1() throws {
+        let markup = """
+        To what [[base uses]] we may return, /Horatio! Why may
+        not imagination trace the noble dust of Alexander,
+        till he find it stopping a bung-hole?
+        """
+        let dom = Subtext(markup: markup)
+        guard let entryLinkMarkup = dom.entryLinkFor(
+            range: NSRange(location: 19, length: 19)
+        ) else {
+            XCTFail("Expected entry link markup to be found")
+            return
+        }
+        guard case let .wikilink(wikilink) = entryLinkMarkup else {
+            XCTFail("Expected wikilink markup to be found")
+            return
+        }
+        XCTAssertEqual(
+            String(wikilink.span),
+            "[[base uses]]",
+            "Finds wikilink when cursor is at end of text"
         )
     }
 }

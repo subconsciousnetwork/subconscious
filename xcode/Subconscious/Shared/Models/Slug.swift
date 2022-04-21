@@ -107,8 +107,8 @@ struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
         directory.appendingFilename(name: self.id, ext: ext)
     }
 
-    /// Create a nice sentence-like string from a slug
-    func toSentence() -> String {
+    /// Create a nice title-like string from a slug
+    func toTitle() -> String {
         // Remove all non-slug characters
         self.description
             .replacingOccurrences(

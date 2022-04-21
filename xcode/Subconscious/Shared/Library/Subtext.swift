@@ -57,8 +57,13 @@ struct Subtext: Hashable, Equatable {
 
     struct Slashlink: Hashable, Equatable, CustomStringConvertible {
         var span: Substring
+
         var description: String {
             String(span)
+        }
+
+        func toTitle() -> String? {
+            Slug(formatting: String(span))?.toTitle()
         }
     }
 
@@ -71,6 +76,10 @@ struct Subtext: Hashable, Equatable {
 
         var description: String {
             String(span)
+        }
+
+        func toTitle() -> String? {
+            String(text)
         }
     }
 
@@ -118,6 +127,23 @@ struct Subtext: Hashable, Equatable {
         case bold(Bold)
         case italic(Italic)
         case code(Code)
+    }
+
+    /// One of the two link forms
+    enum EntryLinkMarkup: Hashable, Equatable {
+        case slashlink(Slashlink)
+        case wikilink(Wikilink)
+
+        /// Get sentence version of link (nice text).
+        /// Used to create default content for note from link text.
+        func toTitle() -> String? {
+            switch self {
+            case .wikilink(let wikilink):
+                return wikilink.toTitle()
+            case .slashlink(let slashlink):
+                return slashlink.toTitle()
+            }
+        }
     }
 
     /// Consume a well-formed bracket link, or else backtrack
@@ -311,6 +337,7 @@ struct Subtext: Hashable, Equatable {
             character.isLetter ||
             character.isNumber ||
             character == "-" ||
+            character == "_" ||
             character == "/"
         )
     }
@@ -511,7 +538,7 @@ extension Subtext {
         case let .slashlink(slashlink):
             if
                 let slug = Slug(formatting: String(describing: slashlink)),
-                let url = url(EntryLink(slug: slug, title: slug.toSentence()))
+                let url = url(EntryLink(slug: slug, title: slug.toTitle()))
             {
                 attributedString.addAttribute(
                     .link,
@@ -756,6 +783,11 @@ extension Subtext.Block {
 }
 
 extension Subtext {
+    /// Get all inline markup from blocks
+    var inline: [Inline] {
+        blocks.flatMap({ block in block.inline })
+    }
+
     /// Get all entry links from Subtext.
     /// Simple array. Does not de-duplicate.
     var entryLinks: [EntryLink] {
@@ -809,5 +841,33 @@ extension Subtext {
             return nil
         }
         return slashlinkFor(index: range.lowerBound)
+    }
+
+    /// Get EntryLinkMarkup for index, if any
+    func entryLinkFor(index: String.Index) -> Subtext.EntryLinkMarkup? {
+        for markup in inline {
+            switch markup {
+            case .slashlink(let slashlink):
+                if slashlink.span.range.upperBound == index {
+                    return EntryLinkMarkup.slashlink(slashlink)
+                }
+                break
+            case .wikilink(let wikilink):
+                if wikilink.text.range.upperBound == index {
+                    return EntryLinkMarkup.wikilink(wikilink)
+                }
+                break
+            default:
+                break
+            }
+        }
+        return nil
+    }
+
+    func entryLinkFor(range nsRange: NSRange) -> Subtext.EntryLinkMarkup? {
+        guard let range = Range(nsRange, in: base) else {
+            return nil
+        }
+        return entryLinkFor(index: range.lowerBound)
     }
 }

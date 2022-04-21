@@ -27,7 +27,7 @@ struct DetailView: View {
     var isLoading: Bool
     var backlinks: [EntryStub]
     var linkSuggestions: [LinkSuggestion]
-    var selectedWikilink: Subtext.Wikilink?
+    var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
     @Binding var focus: AppModel.Focus?
     @Binding var editorText: String
     @Binding var editorSelection: NSRange
@@ -41,7 +41,7 @@ struct DetailView: View {
         UITextItemInteraction
     ) -> Bool
     var onSelectBacklink: (EntryLink) -> Void
-    var onSelectLink: (LinkSuggestion) -> Void
+    var onSelectLinkCompletion: (EntryLink) -> Void
     var onInsertWikilink: () -> Void
     var onInsertBold: () -> Void
     var onInsertItalic: () -> Void
@@ -99,9 +99,9 @@ struct DetailView: View {
                     if isKeyboardUp {
                         DetailKeyboardToolbarView(
                             isSheetPresented: $isLinkSheetPresented,
-                            selectedWikilink: selectedWikilink,
+                            selectedEntryLinkMarkup: selectedEntryLinkMarkup,
                             suggestions: linkSuggestions,
-                            onSelectLink: onSelectLink,
+                            onSelectLinkCompletion: onSelectLinkCompletion,
                             onInsertWikilink: onInsertWikilink,
                             onInsertBold: onInsertBold,
                             onInsertItalic: onInsertItalic,

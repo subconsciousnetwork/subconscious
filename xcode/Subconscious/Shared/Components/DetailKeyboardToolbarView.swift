@@ -7,105 +7,20 @@
 
 import SwiftUI
 
-/// Toolbar in wikilink autocomplete mode
-struct DetailKeyboardWikilinkToolbarView: View {
-    @Binding var isSheetPresented: Bool
-    var links: [EntryLink]
-    var onSelectLink: (LinkSuggestion) -> Void
-    var onDoneEditing: () -> Void
-
-    var body: some View {
-        HStack(alignment: .center, spacing: AppTheme.unit4) {
-            Button(
-                action: {
-                    isSheetPresented = true
-                },
-                label: {
-                    Image(systemName: "magnifyingglass")
-                        .frame(
-                            width: AppTheme.icon,
-                            height: AppTheme.icon
-                        )
-                }
-            )
-            ForEach(links) { link in
-                Divider()
-                Button(
-                    action: {
-                        onSelectLink(.entry(link))
-                    },
-                    label: {
-                        Text(link.title)
-                            .lineLimit(1)
-                    }
-                )
-            }
-            Spacer()
-            Button(
-                action: onDoneEditing,
-                label: {
-                    Image(systemName: "keyboard.chevron.compact.down")
-                }
-            )
-        }
-    }
-}
-
-/// Toolbar in default mode
-struct DetailKeyboardDefaultToolbarView: View {
-    @Binding var isSheetPresented: Bool
-    var onInsertWikilink: () -> Void
-    var onInsertBold: () -> Void
-    var onInsertItalic: () -> Void
-    var onInsertCode: () -> Void
-    var onDoneEditing: () -> Void
-
-    var body: some View {
-        HStack(alignment: .center, spacing: AppTheme.unit4) {
-            Button(
-                action: {
-                    isSheetPresented = true
-                },
-                label: {
-                    Image(systemName: "magnifyingglass")
-                        .frame(
-                            width: AppTheme.icon,
-                            height: AppTheme.icon
-                        )
-                }
-            )
-            Divider()
-            InlineFormattingBarView(
-                onInsertWikilink: onInsertWikilink,
-                onInsertBold: onInsertBold,
-                onInsertItalic: onInsertItalic,
-                onInsertCode: onInsertCode
-            )
-            Spacer()
-            Button(
-                action: onDoneEditing,
-                label: {
-                    Image(systemName: "keyboard.chevron.compact.down")
-                }
-            )
-        }
-    }
-}
-
 /// Root toolbar
 struct DetailKeyboardToolbarView: View {
     @Binding var isSheetPresented: Bool
-    var selectedWikilink: Subtext.Wikilink?
+    var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
     var suggestions: [LinkSuggestion]
-    var onSelectLink: (LinkSuggestion) -> Void
+    var onSelectLinkCompletion: (EntryLink) -> Void
     var onInsertWikilink: () -> Void
     var onInsertBold: () -> Void
     var onInsertItalic: () -> Void
     var onInsertCode: () -> Void
     var onDoneEditing: () -> Void
 
-    private func wikilinkSuggestions() -> [EntryLink] {
-        let wikilinks: [EntryLink] = suggestions.compactMap({ suggestion in
+    private var entryLinks: [EntryLink] {
+        suggestions.compactMap({ suggestion in
             switch suggestion {
             case let .entry(link):
                 return link
@@ -113,30 +28,51 @@ struct DetailKeyboardToolbarView: View {
                 return nil
             }
         })
-        return Array(wikilinks.prefix(2))
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Divider()
-            VStack {
-                if selectedWikilink != nil {
-                    DetailKeyboardWikilinkToolbarView(
-                        isSheetPresented: $isSheetPresented,
-                        links: self.wikilinkSuggestions(),
-                        onSelectLink: onSelectLink,
-                        onDoneEditing: onDoneEditing
+            HStack(alignment: .center, spacing: AppTheme.unit4) {
+                Button(
+                    action: {
+                        isSheetPresented = true
+                    },
+                    label: {
+                        Image(systemName: "magnifyingglass")
+                            .frame(
+                                width: AppTheme.icon,
+                                height: AppTheme.icon
+                            )
+                    }
+                )
+                Divider()
+                switch selectedEntryLinkMarkup {
+                case .wikilink:
+                    WikilinkBarView(
+                        links: entryLinks,
+                        onSelectLink: onSelectLinkCompletion
                     )
-                } else {
-                    DetailKeyboardDefaultToolbarView(
-                        isSheetPresented: $isSheetPresented,
+                case .slashlink:
+                    SlashlinkBarView(
+                        links: entryLinks,
+                        onSelectLink: onSelectLinkCompletion
+                    )
+                case .none:
+                    InlineFormattingBarView(
                         onInsertWikilink: onInsertWikilink,
                         onInsertBold: onInsertBold,
                         onInsertItalic: onInsertItalic,
-                        onInsertCode: onInsertCode,
-                        onDoneEditing: onDoneEditing
+                        onInsertCode: onInsertCode
                     )
                 }
+                Spacer()
+                Button(
+                    action: onDoneEditing,
+                    label: {
+                        Image(systemName: "keyboard.chevron.compact.down")
+                    }
+                )
             }
             .frame(height: AppTheme.icon, alignment: .center)
             .padding(.horizontal, AppTheme.padding)
@@ -157,7 +93,7 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
                     )
                 )
             ],
-            onSelectLink: { suggestion in },
+            onSelectLinkCompletion: { _ in },
             onInsertWikilink: {},
             onInsertBold: {},
             onInsertItalic: {},
