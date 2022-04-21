@@ -479,7 +479,7 @@ extension Subtext {
     private static func renderInlineAttributeOf(
         _ attributedString: NSMutableAttributedString,
         inline: Subtext.Inline,
-        url: (EntryLink) -> String?
+        url: (EntryLink) -> URL?
     ) {
         switch inline {
         case let .link(link):
@@ -580,7 +580,7 @@ extension Subtext {
     /// corresponding to the semantic meaning of Subtext markup.
     static func renderAttributesOf(
         _ attributedString: NSMutableAttributedString,
-        url: (EntryLink) -> String?
+        url: (EntryLink) -> URL?
     ) {
         let dom = Subtext(markup: attributedString.string)
 

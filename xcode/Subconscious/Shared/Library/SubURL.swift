@@ -58,8 +58,8 @@ extension EntryLink {
 extension Subtext {
     private static func linkToURLString(
         _ link: EntryLink
-    ) -> String? {
-        link.encodeAsSubEntryURL()?.absoluteString
+    ) -> URL? {
+        link.encodeAsSubEntryURL()
     }
 
     static func renderAttributesOf(
