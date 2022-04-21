@@ -272,8 +272,9 @@ struct AppModel: Equatable {
     var editorSaveState = SaveState.saved
     /// Editor selection corresponds with `editorAttributedText`
     var editorSelection = NSMakeRange(0, 0)
-    /// Slashlink currently being written (if any)
-    var editorSelectedWikilink: Subtext.Wikilink? = nil
+    /// Link markup currently being edited (if any).
+    /// Used for autocompleting link.
+    var editorSelectedEntryLinkMarkup: Subtext.EntryLinkMarkup? = nil
 
     /// Backlinks to the currently active entry
     var backlinks: [EntryStub] = []
@@ -756,7 +757,7 @@ extension AppModel {
         model.editorText = ""
         model.editorSaveState = .saved
         model.editorSelection = NSMakeRange(0, 0)
-        model.editorSelectedWikilink = nil
+        model.editorSelectedEntryLinkMarkup = nil
         return model
     }
 
@@ -782,14 +783,10 @@ extension AppModel {
         // Mark save state
         model.editorSaveState = saveState
         let dom = Subtext(markup: text)
-        let link = dom.wikilinkFor(range: state.editorSelection)
-        model.editorSelectedWikilink = link
+        let link = dom.entryLinkFor(range: state.editorSelection)
+        model.editorSelectedEntryLinkMarkup = link
 
-        let linkSearchText = link
-            .map({ link in
-                String(link.text)
-            })
-            .unwrap(or: "")
+        let linkSearchText = link?.toSentence() ?? ""
 
         return Update(state: model)
             .pipe({ state in
@@ -810,16 +807,12 @@ extension AppModel {
         var model = state
         model.editorSelection = nsRange
         let dom = Subtext(markup: model.editorText)
-        let link = dom.wikilinkFor(
+        let link = dom.entryLinkFor(
             range: model.editorSelection
         )
-        model.editorSelectedWikilink = link
+        model.editorSelectedEntryLinkMarkup = link
 
-        let linkSearchText = link
-            .map({ link in
-                String(link.text)
-            })
-            .unwrap(or: "")
+        let linkSearchText = link?.toSentence() ?? ""
 
         return Update(state: model)
             .pipe({ state in
@@ -2085,14 +2078,22 @@ extension AppModel {
             }
         })
 
-        // If there is a selected slashlink, use that range
+        // If there is a selected link, use that range
         // instead of selection
-        let range = state.editorSelectedWikilink
-            .map({ slashlink in
-                NSRange(
-                    slashlink.span.range,
-                    in: state.editorText
-                )
+        let range = state.editorSelectedEntryLinkMarkup
+            .map({ markup in
+                switch markup {
+                case .slashlink(let slashlink):
+                    return NSRange(
+                        slashlink.span.range,
+                        in: state.editorText
+                    )
+                case .wikilink(let wikilink):
+                    return NSRange(
+                        wikilink.span.range,
+                        in: state.editorText
+                    )
+                }
             })
             .unwrap(or: state.editorSelection)
 

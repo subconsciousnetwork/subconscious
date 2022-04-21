@@ -57,8 +57,13 @@ struct Subtext: Hashable, Equatable {
 
     struct Slashlink: Hashable, Equatable, CustomStringConvertible {
         var span: Substring
+
         var description: String {
             String(span)
+        }
+
+        func toSentence() -> String? {
+            Slug(formatting: String(span))?.toSentence()
         }
     }
 
@@ -71,6 +76,10 @@ struct Subtext: Hashable, Equatable {
 
         var description: String {
             String(span)
+        }
+
+        func toSentence() -> String? {
+            String(text)
         }
     }
 
@@ -124,6 +133,17 @@ struct Subtext: Hashable, Equatable {
     enum EntryLinkMarkup: Hashable, Equatable {
         case slashlink(Slashlink)
         case wikilink(Wikilink)
+
+        /// Get sentence version of link (nice text).
+        /// Used to create default content for note from link text.
+        func toSentence() -> String? {
+            switch self {
+            case .wikilink(let wikilink):
+                return wikilink.toSentence()
+            case .slashlink(let slashlink):
+                return slashlink.toSentence()
+            }
+        }
     }
 
     /// Consume a well-formed bracket link, or else backtrack

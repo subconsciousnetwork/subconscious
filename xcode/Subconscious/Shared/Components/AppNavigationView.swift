@@ -57,8 +57,8 @@ struct AppNavigationView: View {
                             isLoading: store.state.isDetailLoading,
                             backlinks: store.state.backlinks,
                             linkSuggestions: store.state.linkSuggestions,
-                            selectedWikilink:
-                                store.state.editorSelectedWikilink,
+                            selectedEntryLinkMarkup:
+                                store.state.editorSelectedEntryLinkMarkup,
                             focus: store.binding(
                                 get: \.focus,
                                 tag: { focus in

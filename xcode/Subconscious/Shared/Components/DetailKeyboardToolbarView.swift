@@ -95,7 +95,7 @@ struct DetailKeyboardDefaultToolbarView: View {
 /// Root toolbar
 struct DetailKeyboardToolbarView: View {
     @Binding var isSheetPresented: Bool
-    var selectedWikilink: Subtext.Wikilink?
+    var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
     var suggestions: [LinkSuggestion]
     var onSelectLink: (LinkSuggestion) -> Void
     var onInsertWikilink: () -> Void
@@ -120,7 +120,7 @@ struct DetailKeyboardToolbarView: View {
         VStack(alignment: .leading, spacing: 0) {
             Divider()
             VStack {
-                if selectedWikilink != nil {
+                if selectedEntryLinkMarkup != nil {
                     DetailKeyboardWikilinkToolbarView(
                         isSheetPresented: $isSheetPresented,
                         links: self.wikilinkSuggestions(),
