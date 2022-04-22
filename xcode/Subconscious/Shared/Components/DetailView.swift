@@ -54,10 +54,10 @@ struct DetailView: View {
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                VStack(spacing: 0) {
-                    Divider()
+        ZStack {
+            VStack(spacing: 0) {
+                Divider()
+                GeometryReader { geometry in
                     ScrollView(.vertical) {
                         VStack(spacing: 0) {
                             MarkupTextViewRepresentable(
@@ -96,48 +96,43 @@ struct DetailView: View {
                             }
                         }
                     }
-                    if isKeyboardUp {
-                        DetailKeyboardToolbarView(
-                            isSheetPresented: $isLinkSheetPresented,
-                            selectedEntryLinkMarkup: selectedEntryLinkMarkup,
-                            suggestions: linkSuggestions,
-                            onSelectLinkCompletion: onSelectLinkCompletion,
-                            onInsertWikilink: onInsertWikilink,
-                            onInsertBold: onInsertBold,
-                            onInsertItalic: onInsertItalic,
-                            onInsertCode: onInsertCode,
-                            onDoneEditing: onDone
-                        )
-                        .transition(
-                            .asymmetric(
-                                insertion: .opacity.animation(
-                                    .easeOutCubic(duration: Duration.normal)
-                                    .delay(Duration.keyboard)
-                                ),
-                                removal: .opacity.animation(
-                                    .easeOutCubic(duration: Duration.normal)
-                                )
+                }
+                if isKeyboardUp {
+                    DetailKeyboardToolbarView(
+                        isSheetPresented: $isLinkSheetPresented,
+                        selectedEntryLinkMarkup: selectedEntryLinkMarkup,
+                        suggestions: linkSuggestions,
+                        onSelectLinkCompletion: onSelectLinkCompletion,
+                        onInsertWikilink: onInsertWikilink,
+                        onInsertBold: onInsertBold,
+                        onInsertItalic: onInsertItalic,
+                        onInsertCode: onInsertCode,
+                        onDoneEditing: onDone
+                    )
+                    .transition(
+                        .asymmetric(
+                            insertion: .opacity.animation(
+                                .easeOutCubic(duration: Duration.normal)
+                                .delay(Duration.keyboard)
+                            ),
+                            removal: .opacity.animation(
+                                .easeOutCubic(duration: Duration.normal)
                             )
                         )
-                    }
+                    )
                 }
-                .frame(
-                    width: geometry.size.width,
-                    height: geometry.size.height,
-                    alignment: .top
-                )
-                .zIndex(1)
-                if isLoading || slug == nil {
-                    Color.background
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .transition(
-                            .asymmetric(
-                                insertion: .opacity.animation(.none),
-                                removal: .opacity.animation(.default)
-                            )
+            }
+            .zIndex(1)
+            if isLoading || slug == nil {
+                Color.background
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .transition(
+                        .asymmetric(
+                            insertion: .opacity.animation(.none),
+                            removal: .opacity.animation(.default)
                         )
-                        .zIndex(2)
-                }
+                    )
+                    .zIndex(2)
             }
         }
         .navigationTitle("")
