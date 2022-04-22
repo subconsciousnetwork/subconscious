@@ -124,19 +124,21 @@ struct HeaderParser {
         guard let header = parseHeader(tape: &tape) else {
             // Return empty header struct
             return Self(
-                text: tape.collection,
-                headerText: tape.collection[text.startIndex..<text.startIndex],
+                string: tape.collection,
+                headerPart: tape.collection[text.startIndex..<text.startIndex],
                 headers: []
             )
         }
         headers.append(header)
         while !tape.isExhausted() {
             let next = tape.peek()
-            /// First empty line ends header parsing
+            // First empty line ends header parsing
+            // Since we are at the beginning of a line, if the next character
+            // is a newline, then this is an empty line.
             if next != nil && next!.isNewline {
                 return Self(
-                    text: tape.collection,
-                    headerText: tape.collection[
+                    string: tape.collection,
+                    headerPart: tape.collection[
                         tape.collection.startIndex..<tape.currentIndex
                     ],
                     headers: headers
@@ -146,28 +148,28 @@ struct HeaderParser {
             }
         }
         return Self(
-            text: tape.collection,
-            headerText: tape.collection[
+            string: tape.collection,
+            headerPart: tape.collection[
                 tape.collection.startIndex..<tape.currentIndex
             ],
             headers: headers
         )
     }
 
-    let text: String
-    let headerText: Substring
+    let string: String
+    let headerPart: Substring
     let headers: [Header]
 
     /// Call `HeaderParser.parse` to get an instance.
     /// Initializer is private, since all of these fields need to be
     /// constructed via a parse.
     private init(
-        text: String,
-        headerText: Substring,
+        string: String,
+        headerPart: Substring,
         headers: [Header]
     ) {
-        self.text = text
-        self.headerText = headerText
+        self.string = string
+        self.headerPart = headerPart
         self.headers = headers
     }
 }

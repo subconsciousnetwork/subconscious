@@ -15,6 +15,7 @@ class Tests_HeaderParser: XCTestCase {
         Title: Floop the Pig
         Date: 2022-03-18
 
+
         Body content
         """
         let headers = HeaderParser.parse(markup)
@@ -26,7 +27,7 @@ class Tests_HeaderParser: XCTestCase {
         )
 
         XCTAssertEqual(
-            String(headers.headerText),
+            String(headers.headerPart),
             "Content-Type: text/subtext\nTitle: Floop the Pig\nDate: 2022-03-18\n",
             "Stops parsing headers at first empty line"
         )
@@ -40,9 +41,16 @@ class Tests_HeaderParser: XCTestCase {
         Body: content
         """
         let headers = HeaderParser.parse(markup)
+ 
         XCTAssertEqual(
             headers.headers.count,
             2,
+            "Stops parsing after first blank line"
+        )
+ 
+        XCTAssertEqual(
+            String(headers.headerPart),
+            "Content-Type: text/subtext\nTitle: Floop the Pig\n",
             "Stops parsing after first blank line"
         )
     }
@@ -107,10 +115,40 @@ class Tests_HeaderParser: XCTestCase {
         Body content
         """
         let headers = HeaderParser.parse(markup)
+
+        XCTAssertEqual(
+            String(headers.headerPart),
+            "",
+            "Sniffs first line to see if it should expect headers"
+        )
+
         XCTAssertEqual(
             headers.headers.count,
             0,
             "Sniffs first line to see if it should expect headers"
+        )
+    }
+
+    func testRejectsInvalidHeaders() throws {
+        let markup = """
+        Content-Type: text/subtext
+        I'm not a header 😈!
+        Title : Floop the Pig
+        
+        Body content
+        """
+        let headers = HeaderParser.parse(markup)
+
+        XCTAssertEqual(
+            String(headers.headerPart),
+            "Content-Type: text/subtext\nI'm not a header 😈!\nTitle : Floop the Pig\n",
+            "Rejects badly-formed headers, while capturing correct headerPart substring"
+        )
+
+        XCTAssertEqual(
+            headers.headers.count,
+            1,
+            "Rejects badly-formed headers"
         )
     }
 
@@ -122,6 +160,12 @@ class Tests_HeaderParser: XCTestCase {
         Body content
         """
         let headers = HeaderParser.parse(markup)
+
+        XCTAssertEqual(
+            String(headers.headerPart),
+            "Content-Type: text/subtext\nTitle : Floop the Pig\n",
+            "Rejects headers that have spaces in keys"
+        )
 
         XCTAssertEqual(
             headers.headers.count,
