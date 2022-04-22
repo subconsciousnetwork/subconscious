@@ -14,11 +14,7 @@ struct DetailView: View {
         isKeyboardUp: Bool,
         hasBacklinks: Bool
     ) -> CGFloat {
-        if !isKeyboardUp && hasBacklinks {
-            return UIFont.appTextMono.lineHeight * 8
-        } else {
-            return containerHeight
-        }
+        UIFont.appTextMono.lineHeight * 8
     }
 
     /// If we have a Slug, we're ready to edit.
@@ -85,15 +81,12 @@ struct DetailView: View {
                                     hasBacklinks: backlinks.count > 0
                                 )
                             )
-
-                            if !isKeyboardUp && backlinks.count > 0 {
-                                ThickDividerView()
-                                    .padding(.bottom, AppTheme.unit4)
-                                BacklinksView(
-                                    backlinks: backlinks,
-                                    onSelect: onSelectBacklink
-                                )
-                            }
+                            ThickDividerView()
+                                .padding(.bottom, AppTheme.unit4)
+                            BacklinksView(
+                                backlinks: backlinks,
+                                onSelect: onSelectBacklink
+                            )
                         }
                     }
                 }
