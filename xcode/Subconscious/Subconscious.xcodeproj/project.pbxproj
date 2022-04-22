@@ -191,6 +191,9 @@
 		B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */; };
 		B8EC568C26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */; };
 		B8EC568D26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */; };
+		B8F692072813544E00AD2A3A /* HeaderParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F692062813544E00AD2A3A /* HeaderParser.swift */; };
+		B8F692082813544E00AD2A3A /* HeaderParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F692062813544E00AD2A3A /* HeaderParser.swift */; };
+		B8F6920A2813546400AD2A3A /* Tests_HeaderParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F692092813546400AD2A3A /* Tests_HeaderParser.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -332,6 +335,8 @@
 		B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchbarRepresentable.swift; sourceTree = "<group>"; };
 		B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Database.swift; sourceTree = "<group>"; };
 		B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Migrations.swift; sourceTree = "<group>"; };
+		B8F692062813544E00AD2A3A /* HeaderParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderParser.swift; sourceTree = "<group>"; };
+		B8F692092813546400AD2A3A /* Tests_HeaderParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_HeaderParser.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -389,6 +394,7 @@
 				B84AD8E0280F7A19006B3153 /* Tests_StringUtilities.swift */,
 				B84AD8E52810B74E006B3153 /* Tests_SubURLs.swift */,
 				B84AD8E72811C827006B3153 /* Tests_URLComponentsUtilities.swift */,
+				B8F692092813546400AD2A3A /* Tests_HeaderParser.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
@@ -557,6 +563,7 @@
 				B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
+				B8F692062813544E00AD2A3A /* HeaderParser.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -833,6 +840,7 @@
 				B80057EB27DC355E002C0129 /* SubconsciousTests.swift in Sources */,
 				B84AD8DF280F3659006B3153 /* Tests_EntryLink.swift in Sources */,
 				B8682DCB2804BF04001CD8DD /* Tests_Subtext.swift in Sources */,
+				B8F6920A2813546400AD2A3A /* Tests_HeaderParser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -887,6 +895,7 @@
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B84AD8E3281073CE006B3153 /* InlineFormattingBarView.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
+				B8F692072813544E00AD2A3A /* HeaderParser.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
 				B89D296827E832DC009E0DED /* LoggerUtilities.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
@@ -963,6 +972,7 @@
 				B8AE34C9276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B8216F7927E11516002B70CB /* BottomSheetView.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
+				B8F692082813544E00AD2A3A /* HeaderParser.swift in Sources */,
 				B8EC568726F41A3C00AC64E5 /* SearchbarRepresentable.swift in Sources */,
 				B8DEBF1A2798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B8AE34CC276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
