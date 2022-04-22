@@ -135,7 +135,6 @@ where Focus: Hashable
                     "textViewDidChange: set text binding"
                 )
                 representable.text = view.text
-                view.invalidateIntrinsicContentSize()
             }
         }
 
@@ -333,7 +332,6 @@ where Focus: Hashable
         if view.fixedWidth != self.frame.width {
             logger?.debug("updateUIView: set width")
             view.fixedWidth = self.frame.width
-            view.invalidateIntrinsicContentSize()
         }
 
         // Update view focus
@@ -361,7 +359,6 @@ where Focus: Hashable
         }
         logger?.debug("updateUIView: set text")
         view.text = self.text
-        view.invalidateIntrinsicContentSize()
     }
 
     /// If representable focus state is out of sync

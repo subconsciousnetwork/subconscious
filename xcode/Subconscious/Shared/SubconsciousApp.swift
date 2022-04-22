@@ -2032,6 +2032,10 @@ extension AppModel {
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel, AppAction> {
+        /// Only change links if text has changed
+        guard text != state.linkSearchText else {
+            return Update(state: state)
+        }
         var model = state
         model.linkSearchText = text
 
