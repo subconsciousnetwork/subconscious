@@ -19,7 +19,7 @@ struct HeaderParser {
     ) {
         while !tape.isExhausted() {
             let curr = tape.consume()
-            if curr == "\n" {
+            if curr.isNewline {
                 return
             }
         }
@@ -62,7 +62,7 @@ struct HeaderParser {
             }
             // Invalid! This header has no key delimiter.
             // Throw away the rest of the line and return nil.
-            else if next == "\n" {
+            else if next.isNewline {
                 advanceToEndOfLine(tape: &tape)
                 return nil
             }
@@ -91,8 +91,8 @@ struct HeaderParser {
         // Mark tape start
         tape.start()
         while !tape.isExhausted() {
-            let next = tape.peek()
-            if next == "\n" {
+            let next = tape.peek()!
+            if next.isNewline {
                 let value = tape.cut()
                 // Throw away newline
                 tape.advance()

@@ -90,6 +90,21 @@ class Tests_HeaderParser: XCTestCase {
         )
     }
 
+    func testCRLF() throws {
+        let markup = "Content-Type: text/subtext\r\nTitle: Floop the Pig\r\n\r\nBody content"
+        let headers = HeaderParser.parse(markup)
+        XCTAssertEqual(
+            String(headers.headerPart),
+            "Content-Type: text/subtext\r\nTitle: Floop the Pig\r\n",
+            "Breaks line on CRLF"
+        )
+        XCTAssertEqual(
+            String(headers.headers[0].name),
+            "Content-Type",
+            "Parses headers on CRLF"
+        )
+    }
+
     func testValueOmitsNewline() throws {
         let markup = """
         Content-Type: text/subtext
