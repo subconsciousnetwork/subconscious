@@ -316,6 +316,47 @@ class Tests_Subtext: XCTestCase {
         )
     }
 
+    func testSlashlinkLineBreak() throws {
+        let markup = """
+        Some text
+        /slashlink
+        /another-slashlink
+        /a-third-slashlink followed by some text
+        """
+        let dom = Subtext(markup: markup)
+
+        guard case let .slashlink(slashlink1) = dom.blocks[1].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+
+        guard case let .slashlink(slashlink2) = dom.blocks[2].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+
+        guard case let .slashlink(slashlink3) = dom.blocks[3].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: slashlink1),
+            "/slashlink",
+            "Slashlink parses successfully"
+        )
+        XCTAssertEqual(
+            String(describing: slashlink2),
+            "/another-slashlink",
+            "Slashlink parses successfully"
+        )
+        XCTAssertEqual(
+            String(describing: slashlink3),
+            "/a-third-slashlink",
+            "Slashlink parses successfully"
+        )
+    }
+
     func testWikilinkParsing0() throws {
         let markup = """
         Let's test out some [[wikilinks]].

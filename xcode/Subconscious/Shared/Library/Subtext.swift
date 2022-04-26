@@ -374,7 +374,7 @@ struct Subtext: Hashable, Equatable {
         guard isAtStart || tape.consumeMatch(" ") else {
             return nil
         }
-        tape.start()
+        tape.save()
         if tape.consumeMatch("/") {
             let span = consumeSlashlinkBody(tape: &tape)
             return .slashlink(Slashlink(span: span))
