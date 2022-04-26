@@ -284,6 +284,38 @@ class Tests_Subtext: XCTestCase {
         )
     }
 
+    func testSlashlinkParsingTwoSpaces() throws {
+        let markup = "Some text with a  /slashlink that has two spaces preceding."
+        let dom = Subtext(markup: markup)
+
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline.get(0) else {
+            XCTFail("Expected slashlink")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "/slashlink",
+            "Slashlink parses successfully"
+        )
+    }
+
+    func testSlashlinkParsingThreeSpaces() throws {
+        let markup = "Some text with a   /slashlink that has three spaces preceding."
+        let dom = Subtext(markup: markup)
+
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline.get(0) else {
+            XCTFail("Expected slashlink")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "/slashlink",
+            "Slashlink parses successfully"
+        )
+    }
+
     func testWikilinkParsing0() throws {
         let markup = """
         Let's test out some [[wikilinks]].

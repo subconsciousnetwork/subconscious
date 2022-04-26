@@ -147,7 +147,9 @@ struct Subtext: Hashable, Equatable {
     }
 
     /// Consume a well-formed bracket link, or else backtrack
-    private static func consumeBracketLink(tape: inout Tape<Substring>) -> Substring? {
+    private static func consumeBracketLink(
+        tape: inout Tape<Substring>
+    ) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
             if tape.consumeMatch(" ") {
@@ -376,9 +378,9 @@ struct Subtext: Hashable, Equatable {
         if tape.consumeMatch("/") {
             let span = consumeSlashlinkBody(tape: &tape)
             return .slashlink(Slashlink(span: span))
-        } else {
-            return nil
         }
+        tape.backtrack()
+        return nil
     }
 
     /// Consume inline forms that are not sensitive to word boundaries
