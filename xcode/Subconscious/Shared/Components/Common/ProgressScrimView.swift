@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// A progress view that takes up the whole space of its parent
-struct ProgressScrimView: View {
+struct ProgressScrimView: View, Equatable {
     var body: some View {
         VStack(alignment: .center) {
             Spacer()

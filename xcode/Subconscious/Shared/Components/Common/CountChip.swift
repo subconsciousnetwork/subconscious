@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CountChip: View {
+struct CountChip: View, Equatable {
     var count: Int?
 
     private static func asText(count: Int?) -> String {

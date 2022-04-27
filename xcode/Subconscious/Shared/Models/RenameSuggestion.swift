@@ -7,7 +7,12 @@
 
 import Foundation
 
-enum RenameSuggestion: Hashable, Identifiable, CustomStringConvertible {
+enum RenameSuggestion:
+    Hashable,
+    Equatable,
+    Identifiable,
+    CustomStringConvertible
+{
     case rename(EntryLink)
     case merge(EntryLink)
 

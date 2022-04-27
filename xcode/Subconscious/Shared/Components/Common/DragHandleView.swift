@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct DragHandleView: View {
+struct DragHandleView: View, Equatable {
     var body: some View {
         Capsule()
             .foregroundColor(.tertiaryIcon)

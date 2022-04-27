@@ -24,6 +24,7 @@ struct EntryListView: View {
                             }
                         ) {
                             EntryRow(entry: entry)
+                                .equatable()
                         }
                         .modifier(RowViewModifier())
                         .swipeActions(

@@ -8,10 +8,10 @@
 import Foundation
 
 enum LinkSuggestion:
-Hashable,
-Equatable,
-Identifiable,
-CustomStringConvertible
+    Hashable,
+    Equatable,
+    Identifiable,
+    CustomStringConvertible
 {
     case entry(EntryLink)
     case new(EntryLink)

@@ -7,8 +7,9 @@
 
 import SwiftUI
 
-struct LinkSuggestionLabelView: View {
+struct LinkSuggestionLabelView: View, Equatable {
     var suggestion: LinkSuggestion
+
     var body: some View {
         switch suggestion {
         case .entry(let link):

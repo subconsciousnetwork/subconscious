@@ -13,6 +13,7 @@ struct PlaceholderTextView: View {
     @Binding var isFocused: Bool
     var placeholder: String
     var font: UIFont = UIFont.preferredFont(forTextStyle: .body)
+
     var body: some View {
         ZStack {
             VStack(alignment: .leading) {

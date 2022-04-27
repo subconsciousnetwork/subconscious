@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// A semi-transparent overlay scrim for use in modals
-struct ScrimView: View {
+struct ScrimView: View, Equatable {
     var body: some View {
         Rectangle()
             .foregroundColor(Color.scrim)

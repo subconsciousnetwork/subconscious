@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ThickDividerView: View {
+struct ThickDividerView: View, Equatable {
     var body: some View {
         Color.secondaryBackground
             .frame(height: AppTheme.unit2)
