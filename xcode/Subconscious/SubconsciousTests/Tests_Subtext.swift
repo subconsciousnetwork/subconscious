@@ -983,4 +983,52 @@ class Tests_Subtext: XCTestCase {
             "Finds wikilink when cursor is at end of text"
         )
     }
+
+    func testBlockDoesNotEndInLinebreak() throws {
+        let markup = """
+        
+        Some text after an empty block
+        # A heading block
+        - A list block [[with a wikilink]]
+        > A quote block /with-slashlink
+        """
+        let dom = Subtext(markup: markup)
+
+        guard case .empty(let empty) = dom.blocks[0] else {
+            XCTFail("Expected empty")
+            return
+        }
+        XCTAssertEqual(empty.count, 0)
+        XCTAssertEqual(empty.first, nil)
+        XCTAssertEqual(empty.last, nil)
+
+        guard case .text(let text, _) = dom.blocks[1] else {
+            XCTFail("Expected text")
+            return
+        }
+        XCTAssertEqual(text.first, "S")
+        XCTAssertEqual(text.last, "k")
+
+        guard case .heading(let heading) = dom.blocks[2] else {
+            XCTFail("Expected heading")
+            return
+        }
+        XCTAssertEqual(heading.first, "#")
+        XCTAssertEqual(heading.last, "k")
+
+        guard case .list(let list, _) = dom.blocks[3] else {
+            XCTFail("Expected list")
+            return
+        }
+        XCTAssertEqual(list.first, "-")
+        XCTAssertEqual(list.last, "]")
+
+        guard case .quote(let quote, _) = dom.blocks[4] else {
+            XCTFail("Expected quote")
+            return
+        }
+        XCTAssertEqual(quote.first, ">")
+        XCTAssertEqual(quote.last, "k")
+
+    }
 }

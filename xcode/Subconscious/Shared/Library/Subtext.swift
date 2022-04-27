@@ -29,11 +29,11 @@ struct Subtext: Hashable, Equatable {
         func body() -> Substring {
             switch self {
             case .text(let span, _):
-                return span.trimming(" ").trimming("\n")
+                return span.trimming(" ")
             case .empty(let span):
                 return span
             case .quote(let span, _), .list(let span, _), .heading(let span):
-                return span.dropFirst().trimming(" ").trimming("\n")
+                return span.dropFirst().trimming(" ")
             }
         }
     }
