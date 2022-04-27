@@ -30,16 +30,6 @@ extension String {
     }
 }
 
-extension String {
-    func splitlines() -> [Substring] {
-        self.split(
-            maxSplits: Int.max,
-            omittingEmptySubsequences: true,
-            whereSeparator: \.isNewline
-        )
-    }
-}
-
 extension StringProtocol {
     /// Check if a string contains only whitespace characters
     var isWhitespace: Bool {

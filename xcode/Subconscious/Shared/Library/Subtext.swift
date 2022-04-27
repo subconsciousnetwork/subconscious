@@ -29,11 +29,11 @@ struct Subtext: Hashable, Equatable {
         func body() -> Substring {
             switch self {
             case .text(let span, _):
-                return span.trimming(" ").trimming("\n")
+                return span.trimming(" ")
             case .empty(let span):
                 return span
             case .quote(let span, _), .list(let span, _), .heading(let span):
-                return span.dropFirst().trimming(" ").trimming("\n")
+                return span.dropFirst().trimming(" ")
             }
         }
     }
@@ -361,20 +361,14 @@ struct Subtext: Hashable, Equatable {
         return tape.cut()
     }
 
-    /// Consume one of the inline forms that is delimited by word boundaries.
+    /// Consume inline form after identifying a word boundary.
     /// A word boundary is generally a preceding space, or beginning of input.
-    /// Cuts tape before word boundary.
     /// - Returns: Inline?
     private static func consumeInlineWordBoundaryForm(
         tape: inout Tape<Substring>
     ) -> Inline? {
-        let isAtStart = tape.currentIndex == tape.collection.startIndex
-        // Inline word boundary forms must appear at beginning of block
-        // or after a space.
-        guard isAtStart || tape.consumeMatch(" ") else {
-            return nil
-        }
         tape.save()
+        tape.start()
         if tape.consumeMatch("/") {
             let span = consumeSlashlinkBody(tape: &tape)
             return .slashlink(Slashlink(span: span))
@@ -433,11 +427,16 @@ struct Subtext: Hashable, Equatable {
     /// - Returns: an array of inline forms
     private static func parseInline(tape: inout Tape<Substring>) -> [Inline] {
         var inlines: [Inline] = []
-
+        /// Check for inline word boundary forms at beginning of input.
+        if let inline = consumeInlineWordBoundaryForm(tape: &tape) {
+            inlines.append(inline)
+        }
         while !tape.isExhausted() {
             tape.start()
-            if let inline = consumeInlineWordBoundaryForm(tape: &tape) {
-                inlines.append(inline)
+            if tape.consumeMatch(" ") {
+                if let inline = consumeInlineWordBoundaryForm(tape: &tape) {
+                    inlines.append(inline)
+                }
             } else if let inline = consumeInlineForm(tape: &tape) {
                 inlines.append(inline)
             } else {
@@ -463,7 +462,7 @@ struct Subtext: Hashable, Equatable {
             tape.advance()
             let inline = parseInline(tape: &tape)
             return Block.list(span: line, inline: inline)
-        } else if line == "\n" {
+        } else if line == "" {
             return Block.empty(span: line)
         } else {
             var tape = Tape(line)
@@ -472,27 +471,13 @@ struct Subtext: Hashable, Equatable {
         }
     }
 
-    /// Parse a single line from tape, returning it
-    private static func consumeLine(tape: inout Tape<String>) -> Substring {
-        tape.start()
-        while !tape.isExhausted() {
-            let curr = tape.consume()
-            if curr == "\n" {
-                return tape.cut()
-            }
-        }
-        return tape.cut()
-    }
-
     /// Splits lines in markup, keeping line endings
     private static func parseLines(_ string: String) -> [Substring] {
-        var tape = Tape(string)
-        var lines: [Substring] = []
-        while !tape.isExhausted() {
-            let line = consumeLine(tape: &tape)
-            lines.append(line)
-        }
-        return lines
+        string.split(
+            maxSplits: Int.max,
+            omittingEmptySubsequences: false,
+            whereSeparator: \.isNewline
+        )
     }
 
     let base: String
