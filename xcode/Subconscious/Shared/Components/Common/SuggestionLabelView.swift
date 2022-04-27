@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SuggestionLabelView: View {
+struct SuggestionLabelView: View, Equatable {
     var suggestion: Suggestion
     var untitled = "Untitled"
 

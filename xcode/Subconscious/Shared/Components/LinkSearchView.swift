@@ -43,6 +43,7 @@ struct LinkSearchView: View {
                     },
                     label: {
                         LinkSuggestionLabelView(suggestion: suggestion)
+                            .equatable()
                     }
                 )
                 .modifier(SuggestionViewModifier())

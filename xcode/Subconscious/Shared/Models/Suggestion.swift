@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Suggestion: Hashable, Identifiable {
+enum Suggestion: Hashable, Equatable, Identifiable {
     case entry(EntryLink)
     case search(EntryLink)
     case journal(EntryLink)

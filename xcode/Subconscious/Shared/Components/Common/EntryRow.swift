@@ -9,7 +9,7 @@ import SwiftUI
 
 /// An EntryRow suitable for use in lists.
 /// Provides a preview/excerpt of the entry.
-struct EntryRow: View {
+struct EntryRow: View, Equatable {
     var entry: EntryStub
     var emptyTitle = "Untitled"
     var emptyExcerpt = "No additional text"

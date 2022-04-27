@@ -64,6 +64,7 @@ struct SearchView: View {
                     },
                     label: {
                         SuggestionLabelView(suggestion: suggestion)
+                            .equatable()
                     }
                 )
                 .modifier(

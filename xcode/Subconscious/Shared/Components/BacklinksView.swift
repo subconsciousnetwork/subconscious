@@ -34,6 +34,7 @@ struct BacklinksView: View {
                         },
                         label: {
                             EntryRow(entry: entry)
+                                .equatable()
                         }
                     )
                     .buttonStyle(BacklinkButtonStyle())

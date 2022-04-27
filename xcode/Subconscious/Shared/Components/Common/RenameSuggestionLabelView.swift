@@ -7,8 +7,9 @@
 
 import SwiftUI
 
-struct RenameSuggestionLabelView: View {
+struct RenameSuggestionLabelView: View, Equatable {
     var suggestion: RenameSuggestion
+
     var body: some View {
         switch suggestion {
         case .merge(let entryLink):
