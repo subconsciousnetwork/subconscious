@@ -463,7 +463,7 @@ struct Subtext: Hashable, Equatable {
             tape.advance()
             let inline = parseInline(tape: &tape)
             return Block.list(span: line, inline: inline)
-        } else if line == "\n" {
+        } else if line == "" {
             return Block.empty(span: line)
         } else {
             var tape = Tape(line)
@@ -472,27 +472,13 @@ struct Subtext: Hashable, Equatable {
         }
     }
 
-    /// Parse a single line from tape, returning it
-    private static func consumeLine(tape: inout Tape<String>) -> Substring {
-        tape.start()
-        while !tape.isExhausted() {
-            let curr = tape.consume()
-            if curr == "\n" {
-                return tape.cut()
-            }
-        }
-        return tape.cut()
-    }
-
     /// Splits lines in markup, keeping line endings
     private static func parseLines(_ string: String) -> [Substring] {
-        var tape = Tape(string)
-        var lines: [Substring] = []
-        while !tape.isExhausted() {
-            let line = consumeLine(tape: &tape)
-            lines.append(line)
-        }
-        return lines
+        string.split(
+            maxSplits: Int.max,
+            omittingEmptySubsequences: false,
+            whereSeparator: \.isNewline
+        )
     }
 
     let base: String
