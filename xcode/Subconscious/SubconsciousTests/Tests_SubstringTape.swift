@@ -11,9 +11,12 @@ import XCTest
 class Tests_SubstringTape: XCTestCase {
     func testPerformanceExample() throws {
         let markup = """
-        /slashlink where is  /slashlink [[and here is a wikilink]] this/slashlink? Some *bold* and _italic text_ and who wants `code`?
+        /slashlink-a  /slashlink-b [[and here is a wikilink]] and a https://example.com. Not/a-slashlink this /slashlink-c? And *here is some bold text* and _italic_ `code` But what hapens with a *broken bold?
+
+        More subtext http://example.com
         """
-        let tokens = SubtextRegexParser.parse(markup)
+        let tokens = SubtextParser().parse(markup: markup)
+//        let tokens = SubtextRegexParser.parse(markup)
         print("!!!", tokens)
     }
 }
