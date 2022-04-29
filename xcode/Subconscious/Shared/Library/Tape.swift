@@ -23,9 +23,8 @@ where T: Collection,
         self.savedIndex = collection.startIndex
     }
 
-    /// Get current subsequence
-    var subsequence: T.SubSequence {
-        collection[startIndex..<currentIndex]
+    var isAtBeginning: Bool {
+        self.startIndex == self.collection.startIndex
     }
 
     func isExhausted() -> Bool {
