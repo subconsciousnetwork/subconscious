@@ -361,90 +361,52 @@ struct Subtext: Hashable, Equatable {
         return tape.cut()
     }
 
-    /// Consume inline form after identifying a word boundary.
-    /// A word boundary is generally a preceding space, or beginning of input.
-    /// - Returns: Inline?
-    private static func consumeInlineWordBoundaryForm(
-        tape: inout Tape<Substring>
-    ) -> Inline? {
-        tape.save()
-        tape.start()
-        if tape.consumeMatch("/") {
-            let span = consumeSlashlinkBody(tape: &tape)
-            return .slashlink(Slashlink(span: span))
-        }
-        tape.backtrack()
-        return nil
-    }
-
-    /// Consume inline forms that are not sensitive to word boundaries
-    /// - Returns: Inline?
-    private static func consumeInlineForm(
-        tape: inout Tape<Substring>
-    ) -> Inline? {
-        if tape.consumeMatch("<") {
-            if let link = consumeBracketLink(tape: &tape) {
-                return .bracketlink(Bracketlink(span: link))
-            } else {
-                return nil
-            }
-        } else if tape.consumeMatch("[[") {
-            if let wikilink = consumeWikilink(tape: &tape) {
-                return .wikilink(Wikilink(span: wikilink))
-            } else {
-                return nil
-            }
-        } else if tape.consumeMatch("https://") {
-            let span = consumeURLBody(tape: &tape)
-            return .link(Link(span: span))
-        } else if tape.consumeMatch("http://") {
-            let span = consumeURLBody(tape: &tape)
-            return .link(Link(span: span))
-        } else if tape.consumeMatch("*") {
-            if let bold = consumeBold(tape: &tape) {
-                return .bold(Bold(span: bold))
-            } else {
-                return nil
-            }
-        } else if tape.consumeMatch("_") {
-            if let italic = consumeItalic(tape: &tape) {
-                return .italic(Italic(span: italic))
-            } else {
-                return nil
-            }
-        } else if tape.consumeMatch("`") {
-            if let code = consumeCode(tape: &tape) {
-                return .code(Code(span: code))
-            } else {
-                return nil
-            }
-        } else {
-            return nil
-        }
-    }
-
     /// Parse all inline forms within the line
     /// - Returns: an array of inline forms
-    private static func parseInline(tape: inout Tape<Substring>) -> [Inline] {
-        var inlines: [Inline] = []
-        /// Check for inline word boundary forms at beginning of input.
-        if let inline = consumeInlineWordBoundaryForm(tape: &tape) {
-            inlines.append(inline)
-        }
+    private static func parseInline(
+        tape: inout Tape<Substring>
+    ) -> [Inline] {
+        var inline: [Inline] = []
         while !tape.isExhausted() {
             tape.start()
-            if tape.consumeMatch(" ") {
-                if let inline = consumeInlineWordBoundaryForm(tape: &tape) {
-                    inlines.append(inline)
+            if tape.isAtBeginning && tape.consumeMatch("/") {
+                let span = consumeSlashlinkBody(tape: &tape)
+                inline.append(.slashlink(Slashlink(span: span)))
+            } else if tape.consumeMatch(" /") {
+                let span = consumeSlashlinkBody(tape: &tape)
+                let cleaned = span.dropFirst()
+                inline.append(.slashlink(Slashlink(span: cleaned)))
+            } else if tape.consumeMatch("<") {
+                if let link = consumeBracketLink(tape: &tape) {
+                    inline.append(.bracketlink(Bracketlink(span: link)))
                 }
-            } else if let inline = consumeInlineForm(tape: &tape) {
-                inlines.append(inline)
+            } else if tape.consumeMatch("[[") {
+                if let wikilink = consumeWikilink(tape: &tape) {
+                    inline.append(.wikilink(Wikilink(span: wikilink)))
+                }
+            } else if tape.consumeMatch("https://") {
+                let span = consumeURLBody(tape: &tape)
+                inline.append(.link(Link(span: span)))
+            } else if tape.consumeMatch("http://") {
+                let span = consumeURLBody(tape: &tape)
+                inline.append(.link(Link(span: span)))
+            } else if tape.consumeMatch("*") {
+                if let bold = consumeBold(tape: &tape) {
+                    inline.append(.bold(Bold(span: bold)))
+                }
+            } else if tape.consumeMatch("_") {
+                if let italic = consumeItalic(tape: &tape) {
+                    inline.append(.italic(Italic(span: italic)))
+                }
+            } else if tape.consumeMatch("`") {
+                if let code = consumeCode(tape: &tape) {
+                    inline.append(.code(Code(span: code)))
+                }
             } else {
                 tape.advance()
             }
         }
-
-        return inlines
+        return inline
     }
 
     private static func parseBlock(_ line: Substring) -> Block {
