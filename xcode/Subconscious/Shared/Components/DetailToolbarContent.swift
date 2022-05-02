@@ -27,50 +27,44 @@ struct DetailToolbarContent: ToolbarContent {
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
-            if !isEditing {
-                Button(
-                    action: {
-                        onRename(slug)
-                    }
-                ) {
-                    ToolbarTitleGroupView(
-                        title: title,
-                        slug: slug
-                    )
-                    .frame(maxWidth: titleMaxWidth)
+            Button(
+                action: {
+                    onRename(slug)
                 }
+            ) {
+                ToolbarTitleGroupView(
+                    title: title,
+                    slug: slug
+                )
+                .frame(maxWidth: titleMaxWidth)
             }
         }
         ToolbarItem(placement: .navigationBarTrailing) {
-            if isEditing {
-                EmptyView()
-            } else {
-                Menu(
-                    content: {
-                        Section {
-                            Button(
-                                action: {
-                                    onRename(slug)
-                                }
-                            ) {
-                                Label("Rename", systemImage: "pencil")
+            Menu(
+                content: {
+                    Section {
+                        Button(
+                            action: {
+                                onRename(slug)
                             }
+                        ) {
+                            Label("Rename", systemImage: "pencil")
                         }
-                        Section {
-                            Button(
-                                action: {
-                                    onDelete(slug)
-                                }
-                            ) {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
-                    },
-                    label: {
-                        Image(systemName: "ellipsis.circle")
                     }
-                )
-            }
+                    Section {
+                        Button(
+                            action: {
+                                onDelete(slug)
+                            }
+                        ) {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                },
+                label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            )
         }
     }
 }
