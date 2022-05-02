@@ -452,18 +452,18 @@ extension Subtext {
             }
         case let .wikilink(wikilink):
             let text = String(wikilink.text)
-            attributedString.addAttribute(
-                .foregroundColor,
-                value: UIColor(Color.tertiaryText),
-                range: NSRange(
-                    wikilink.span.range,
-                    in: attributedString.string
-                )
-            )
             if
                 let slug = Slug(formatting: text),
                 let urlString = url(EntryLink(slug: slug, title: text))
             {
+                attributedString.addAttribute(
+                    .foregroundColor,
+                    value: UIColor(Color.tertiaryText),
+                    range: NSRange(
+                        wikilink.span.range,
+                        in: attributedString.string
+                    )
+                )
                 attributedString.addAttribute(
                     .link,
                     value: urlString,
