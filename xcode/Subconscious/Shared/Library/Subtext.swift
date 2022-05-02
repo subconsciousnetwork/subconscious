@@ -233,53 +233,18 @@ struct Subtext: Hashable, Equatable {
         return nil
     }
 
-    /// Determine if character is ASCII alphanumeric.
-    /// For convenience, character is an optional type, since peek
-    /// returns an optional type.
-    private static func isAlphanumericAscii(
-        character: Character?
-    ) -> Bool {
-        guard let character = character else {
-            return false
-        }
-        guard character.isASCII else {
-            return false
-        }
-        return character.isLetter || character.isNumber
-    }
-
-    /// Determine if character can be part of a slashlink
-    /// See https://github.com/gordonbrander/subtext/blob/main/specification.md#slashlinks
-    /// For convenience, character is an optional type, since peek
-    /// returns an optional type.
-    private static func isURLCharacter(
-        character: Character?
-    ) -> Bool {
-        (
-            isAlphanumericAscii(character: character) ||
-            character == "/" ||
-            character == "-" ||
-            character == "_" ||
-            character == "~" ||
-            character == "=" ||
-            character == "&" ||
-            character == "%" ||
-            character == "+" ||
-            character == "'" ||
-            character == "$" ||
-            character == "#" ||
-            isURLPunctuationCharacter(character: character)
-        )
-    }
-
     /// Is character a valid URL character that is punctuation?
     /// For convenience, character is an optional type, since peek
     /// returns an optional type.
-    private static func isURLPunctuationCharacter(
+    private static func isPossibleTrailingPunctuation(
         character: Character?
     ) -> Bool {
         switch character {
-        case ".", "?", "!", ",", ";":
+        case ".", "?", "!", ",", ";", "|":
+            return true
+        case "'", "\"":
+            return true
+        case  "(", ")", "{", "}", "[", "]", "<", ">":
             return true
         default:
             return false
@@ -299,9 +264,8 @@ struct Subtext: Hashable, Equatable {
         }
     }
 
-    /// Consume tape until the end of the URL body.
-    /// Returns Substring.
-    private static func consumeURLBody(
+    /// Consume all non-space characters excluding trailing punctuation.
+    private static func consumeAddressBody(
         tape: inout Tape<Substring>
     ) -> Substring {
         while !tape.isExhausted() {
@@ -311,51 +275,24 @@ struct Subtext: Hashable, Equatable {
             // character, we treat it as terminal punctuation and ignore it.
             // Cut the tape and return.
             if
-               isURLPunctuationCharacter(character: c0) &&
+               isPossibleTrailingPunctuation(character: c0) &&
                isSpace(character: c1)
             {
                 return tape.cut()
             }
-            // If c0 is a URL character (not followed by a space)
-            // advance the tape.
-            else if isURLCharacter(character: c0) {
-                tape.advance()
+            // If current character is trailing punctionation and the
+            // one after that is end-of-tape, cut and return.
+            else if isPossibleTrailingPunctuation(character: c0) && c1 == nil {
+                return tape.cut()
             }
-            // Otherwie we've reached the end of the URL.
-            // Cut the tape and return.
+            // If c0 is a space we've reached the end of the address,
+            // cut and return.
+            else if isSpace(character: c0) {
+                return tape.cut()
+            }
+            //
             else {
-                return tape.cut()
-            }
-        }
-        return tape.cut()
-    }
-
-    /// Determine if character can be part of a slashlink
-    /// See https://github.com/gordonbrander/subtext/blob/main/specification.md#slashlinks
-    private static func isSlashlinkCharacter(
-        character: Character
-    ) -> Bool {
-        (
-            character.isLetter ||
-            character.isNumber ||
-            character == "-" ||
-            character == "_" ||
-            character == "/"
-        )
-    }
-
-    /// Consume tape until the end of the slashlink body.
-    /// Returns Substring.
-    private static func consumeSlashlinkBody(
-        tape: inout Tape<Substring>
-    ) -> Substring {
-        while !tape.isExhausted() {
-            // Consume slashlink body characters.
-            // If character is not a slashlink body character,
-            // that marks the end of the slashlink body.
-            // We cut the tape and return.
-            if !tape.consumeMatch(where: isSlashlinkCharacter) {
-                return tape.cut()
+                tape.advance()
             }
         }
         return tape.cut()
@@ -370,10 +307,10 @@ struct Subtext: Hashable, Equatable {
         while !tape.isExhausted() {
             tape.start()
             if tape.isAtBeginning && tape.consumeMatch("/") {
-                let span = consumeSlashlinkBody(tape: &tape)
+                let span = consumeAddressBody(tape: &tape)
                 inline.append(.slashlink(Slashlink(span: span)))
             } else if tape.consumeMatch(" /") {
-                let span = consumeSlashlinkBody(tape: &tape)
+                let span = consumeAddressBody(tape: &tape)
                 let cleaned = span.dropFirst()
                 inline.append(.slashlink(Slashlink(span: cleaned)))
             } else if tape.consumeMatch("<") {
@@ -385,10 +322,10 @@ struct Subtext: Hashable, Equatable {
                     inline.append(.wikilink(Wikilink(span: wikilink)))
                 }
             } else if tape.consumeMatch("https://") {
-                let span = consumeURLBody(tape: &tape)
+                let span = consumeAddressBody(tape: &tape)
                 inline.append(.link(Link(span: span)))
             } else if tape.consumeMatch("http://") {
-                let span = consumeURLBody(tape: &tape)
+                let span = consumeAddressBody(tape: &tape)
                 inline.append(.link(Link(span: span)))
             } else if tape.consumeMatch("*") {
                 if let bold = consumeBold(tape: &tape) {

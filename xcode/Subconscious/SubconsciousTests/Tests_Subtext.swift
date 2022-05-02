@@ -357,6 +357,23 @@ class Tests_Subtext: XCTestCase {
         )
     }
 
+    func testSlashlinkUnicode() throws {
+        let markup = "A /_slashlink-with-😤-unicode."
+        let dom = Subtext(markup: markup)
+        let inline = dom.blocks.get(0)?.inline.get(0)
+
+        guard case let .slashlink(slashlink) = inline else {
+            XCTFail("Expected slashlink but was \(String(describing: inline))")
+            return
+        }
+
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "/_slashlink-with-😤-unicode",
+            "Slashlink with unicode parses correctly"
+        )
+    }
+
     func testWikilinkParsing0() throws {
         let markup = """
         Let's test out some [[wikilinks]].
@@ -508,6 +525,21 @@ class Tests_Subtext: XCTestCase {
             wikilink.text,
             "wikilink",
             "Wikilink text omits brackets"
+        )
+    }
+
+    func testWikilinkUnicode() throws {
+        let markup = "A [[wikilink with 😤 unicode]]."
+        let dom = Subtext(markup: markup)
+        let inline = dom.blocks[0].inline[0]
+        guard case let .wikilink(wikilink) = inline else {
+            XCTFail("Expected wikilink but was \(inline)")
+            return
+        }
+        XCTAssertEqual(
+            String(describing: wikilink),
+            "[[wikilink with 😤 unicode]]",
+            "Rejects unicode in slashlinks"
         )
     }
 
