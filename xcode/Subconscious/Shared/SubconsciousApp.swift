@@ -125,11 +125,19 @@ enum AppAction {
     case suggestionsFailure(String)
 
     // Detail
-    case requestDetail(slug: Slug?, fallback: String)
+    case requestDetail(
+        slug: Slug?,
+        fallback: String,
+        autofocus: Bool
+    )
     /// request detail for slug, using template file as a fallback
-    case requestTemplateDetail(slug: Slug, template: Slug)
-    case requestRandomDetail
-    case updateDetail(EntryDetail)
+    case requestTemplateDetail(
+        slug: Slug,
+        template: Slug,
+        autofocus: Bool
+    )
+    case requestRandomDetail(autofocus: Bool)
+    case updateDetail(detail: EntryDetail, autofocus: Bool)
     case failDetail(String)
     case failRandomDetail(Error)
     case showDetail(Bool)
@@ -190,7 +198,7 @@ extension AppAction {
             return "setLinkSuggestions(...) (\(items.count) items)"
         case .setRenameSuggestions(let items):
             return "setRenameSuggestions(...) (\(items.count) items)"
-        case .updateDetail(let detail):
+        case .updateDetail(let detail, _):
             return "updateDetail(\(detail.slug)) (saved state: \(detail.entry.state))"
         default:
             return String(describing: self)
@@ -660,30 +668,34 @@ extension AppModel {
                 "Suggest failed: \(message)"
             )
             return Update(state: state)
-        case let .requestDetail(slug, fallback):
+        case let .requestDetail(slug, fallback, autofocus):
             return requestDetail(
                 state: state,
                 environment: environment,
                 slug: slug,
-                fallback: fallback
+                fallback: fallback,
+                autofocus: autofocus
             )
-        case let .requestTemplateDetail(slug, template):
+        case let .requestTemplateDetail(slug, template, autofocus):
             return requestTemplateDetail(
                 state: state,
                 environment: environment,
                 slug: slug,
-                template: template
+                template: template,
+                autofocus: autofocus
             )
-        case .requestRandomDetail:
+        case let .requestRandomDetail(autofocus):
             return requestRandomDetail(
                 state: state,
-                environment: environment
+                environment: environment,
+                autofocus: autofocus
             )
-        case let .updateDetail(results):
+        case let .updateDetail(results, autofocus):
             return updateDetail(
                 state: state,
                 environment: environment,
-                detail: results
+                detail: results,
+                autofocus: autofocus
             )
         case let .failDetail(message):
             environment.logger.log(
@@ -1042,22 +1054,6 @@ extension AppModel {
         url: URL,
         range: NSRange
     ) -> Update<AppModel, AppAction> {
-        // Don't follow links while editing.
-        //
-        // When editing, you usually don't want to follow a link, you
-        // want to tap into it to edit it. Also, we don't want to follow a
-        // link in the middle of an edit and lose changes.
-        //
-        // Other approaches we could take in future:
-        // - Save before following
-        // - Have a disclosure step before following (like Google Docs)
-        // For now, I think this is the best approach.
-        //
-        // 2021-09-23 Gordon Brander
-        guard state.focus != .editor else {
-            return Update(state: state)
-        }
-
         // Follow ordinary links when not in edit mode
         guard SubURL.isSubEntryURL(url) else {
             UIApplication.shared.open(url)
@@ -1068,7 +1064,8 @@ extension AppModel {
         let fx: Fx<AppAction> = Just(
             AppAction.requestDetail(
                 slug: link?.slug,
-                fallback: link?.title ?? ""
+                fallback: link?.title ?? "",
+                autofocus: false
             )
         )
         .eraseToAnyPublisher()
@@ -1623,7 +1620,11 @@ extension AppModel {
     ) -> Update<AppModel, AppAction> {
         environment.logger.log("Renamed entry from \(from) to \(to)")
         let fx: Fx<AppAction> = Just(
-            AppAction.requestDetail(slug: to, fallback: "")
+            AppAction.requestDetail(
+                slug: to,
+                fallback: "",
+                autofocus: false
+            )
         )
         .merge(with: Just(AppAction.refreshAll))
         .eraseToAnyPublisher()
@@ -1738,7 +1739,8 @@ extension AppModel {
         let fx: Fx<AppAction> = Just(
             AppAction.requestDetail(
                 slug: slug,
-                fallback: query
+                fallback: query,
+                autofocus: true
             )
         )
         // Request detail AFTER animaiton completes
@@ -1769,7 +1771,8 @@ extension AppModel {
             let fx: Fx<AppAction> = Just(
                 AppAction.requestDetail(
                     slug: entryLink.slug,
-                    fallback: entryLink.title
+                    fallback: entryLink.title,
+                    autofocus: false
                 )
             )
             // Request detail AFTER animaiton completes
@@ -1781,7 +1784,9 @@ extension AppModel {
             let fx: Fx<AppAction> = Just(
                 AppAction.requestDetail(
                     slug: entryLink.slug,
-                    fallback: entryLink.title
+                    fallback: entryLink.title,
+                    // Autofocus note because we're creating it from scratch
+                    autofocus: true
                 )
             )
             // Request detail AFTER animaiton completes
@@ -1793,7 +1798,9 @@ extension AppModel {
             let fx: Fx<AppAction> = Just(
                 AppAction.requestTemplateDetail(
                     slug: entryLink.slug,
-                    template: state.config.journalTemplate
+                    template: state.config.journalTemplate,
+                    // Autofocus note because we're creating it from scratch
+                    autofocus: true
                 )
             )
             // Request detail AFTER animaiton completes
@@ -1805,7 +1812,8 @@ extension AppModel {
             let fx: Fx<AppAction> = Just(
                 AppAction.requestDetail(
                     slug: entryLink.slug,
-                    fallback: entryLink.title
+                    fallback: entryLink.title,
+                    autofocus: true
                 )
             )
             .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
@@ -1814,7 +1822,7 @@ extension AppModel {
             return update.mergeFx(fx)
         case .random:
             let fx: Fx<AppAction> = Just(
-                AppAction.requestRandomDetail
+                AppAction.requestRandomDetail(autofocus: false)
             )
             .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
             .eraseToAnyPublisher()
@@ -1849,7 +1857,8 @@ extension AppModel {
         state: AppModel,
         environment: AppEnvironment,
         slug: Slug?,
-        fallback: String
+        fallback: String,
+        autofocus: Bool
     ) -> Update<AppModel, AppAction> {
         // If nil slug was requested, do nothing
         guard let slug = slug else {
@@ -1868,7 +1877,10 @@ extension AppModel {
                 fallback: fallback.formattingBlankLineEnding()
             )
             .map({ detail in
-                AppAction.updateDetail(detail)
+                AppAction.updateDetail(
+                    detail: detail,
+                    autofocus: autofocus
+                )
             })
             .catch({ error in
                 Just(AppAction.failDetail(error.localizedDescription))
@@ -1894,12 +1906,16 @@ extension AppModel {
         state: AppModel,
         environment: AppEnvironment,
         slug: Slug,
-        template: Slug
+        template: Slug,
+        autofocus: Bool
     ) -> Update<AppModel, AppAction> {
         let fx: Fx<AppAction> = environment.database
             .readEntryDetail(slug: slug, template: template)
             .map({ detail in
-                AppAction.updateDetail(detail)
+                AppAction.updateDetail(
+                    detail: detail,
+                    autofocus: autofocus
+                )
             })
             .catch({ error in
                 Just(AppAction.failDetail(error.localizedDescription))
@@ -1917,13 +1933,15 @@ extension AppModel {
     /// Request detail for a random entry
     static func requestRandomDetail(
         state: AppModel,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        autofocus: Bool
     ) -> Update<AppModel, AppAction> {
         let fx: Fx<AppAction> = environment.database.readRandomEntrySlug()
             .map({ slug in
                 AppAction.requestDetail(
                     slug: slug,
-                    fallback: slug.toTitle()
+                    fallback: slug.toTitle(),
+                    autofocus: autofocus
                 )
             })
             .catch({ error in
@@ -1938,7 +1956,8 @@ extension AppModel {
     static func updateDetail(
         state: AppModel,
         environment: AppEnvironment,
-        detail: EntryDetail
+        detail: EntryDetail,
+        autofocus: Bool
     ) -> Update<AppModel, AppAction> {
         var model = resetEditor(state: state)
 
@@ -1984,10 +2003,18 @@ extension AppModel {
             )
         })
 
-        // If detail already exists and is NOT a just-created draft,
-        // return update
-        guard detail.entry.state == .draft else {
+        // If editor is not meant to be focused, return early, setting focus
+        // to nil.
+        guard autofocus else {
             return update
+                .pipe({ state in
+                    setFocus(
+                        state: state,
+                        environment: environment,
+                        focus: nil,
+                        field: .editor
+                    )
+                })
         }
 
         // Otherwise, set editor selection and focus to end of document.

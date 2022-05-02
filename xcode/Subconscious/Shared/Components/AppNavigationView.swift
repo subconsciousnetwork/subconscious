@@ -20,7 +20,8 @@ struct AppNavigationView: View {
                         store.send(
                             .requestDetail(
                                 slug: entry.slug,
-                                fallback: entry.title
+                                fallback: entry.title,
+                                autofocus: false
                             )
                         )
                     },
@@ -100,7 +101,8 @@ struct AppNavigationView: View {
                                 store.send(
                                     .requestDetail(
                                         slug: entryLink.slug,
-                                        fallback: entryLink.title
+                                        fallback: entryLink.title,
+                                        autofocus: false
                                     )
                                 )
                             },
