@@ -40,8 +40,13 @@ struct Subtext: Hashable, Equatable {
 
     struct Link: Hashable, Equatable, CustomStringConvertible {
         var span: Substring
+
         var description: String {
             String(span)
+        }
+
+        var url: URL? {
+            URL(string: String(span))
         }
     }
 
@@ -50,8 +55,14 @@ struct Subtext: Hashable, Equatable {
         var description: String {
             String(span)
         }
+
         func body() -> Substring {
             span.dropFirst().dropLast()
+        }
+
+        var url: URL? {
+            let body = span.dropFirst().dropLast()
+            return URL(string: String(body))
         }
     }
 
@@ -396,31 +407,35 @@ extension Subtext {
     ) {
         switch inline {
         case let .link(link):
-            attributedString.addAttribute(
-                .link,
-                value: link.span,
-                range: NSRange(
-                    link.span.range,
-                    in: attributedString.string
+            if let url = link.url {
+                attributedString.addAttribute(
+                    .link,
+                    value: url,
+                    range: NSRange(
+                        link.span.range,
+                        in: attributedString.string
+                    )
                 )
-            )
+            }
         case let .bracketlink(bracketlink):
-            attributedString.addAttribute(
-                .foregroundColor,
-                value: UIColor(Color.tertiaryText),
-                range: NSRange(
-                    bracketlink.span.range,
-                    in: attributedString.string
+            if let url = bracketlink.url {
+                attributedString.addAttribute(
+                    .foregroundColor,
+                    value: UIColor(Color.tertiaryText),
+                    range: NSRange(
+                        bracketlink.span.range,
+                        in: attributedString.string
+                    )
                 )
-            )
-            attributedString.addAttribute(
-                .link,
-                value: bracketlink.body(),
-                range: NSRange(
-                    bracketlink.body().range,
-                    in: attributedString.string
+                attributedString.addAttribute(
+                    .link,
+                    value: url,
+                    range: NSRange(
+                        bracketlink.body().range,
+                        in: attributedString.string
+                    )
                 )
-            )
+            }
         case let .slashlink(slashlink):
             if
                 let slug = Slug(formatting: String(describing: slashlink)),
