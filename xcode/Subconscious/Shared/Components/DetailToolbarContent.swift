@@ -9,7 +9,6 @@ import SwiftUI
 
 /// Toolbar for detail view
 struct DetailToolbarContent: ToolbarContent {
-    var isEditing: Bool
     var title: String
     var slug: Slug?
     var onRename: (Slug?) -> Void

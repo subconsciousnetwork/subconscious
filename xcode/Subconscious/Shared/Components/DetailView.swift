@@ -132,7 +132,6 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             DetailToolbarContent(
-                isEditing: isKeyboardUp,
                 title: Subtext(markup: editorText).title(),
                 slug: slug,
                 onRename: onRename,
