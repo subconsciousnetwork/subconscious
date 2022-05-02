@@ -1042,22 +1042,6 @@ extension AppModel {
         url: URL,
         range: NSRange
     ) -> Update<AppModel, AppAction> {
-        // Don't follow links while editing.
-        //
-        // When editing, you usually don't want to follow a link, you
-        // want to tap into it to edit it. Also, we don't want to follow a
-        // link in the middle of an edit and lose changes.
-        //
-        // Other approaches we could take in future:
-        // - Save before following
-        // - Have a disclosure step before following (like Google Docs)
-        // For now, I think this is the best approach.
-        //
-        // 2021-09-23 Gordon Brander
-        guard state.focus != .editor else {
-            return Update(state: state)
-        }
-
         // Follow ordinary links when not in edit mode
         guard SubURL.isSubEntryURL(url) else {
             UIApplication.shared.open(url)
