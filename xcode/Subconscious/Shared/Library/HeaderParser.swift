@@ -96,7 +96,7 @@ struct Header: Hashable, Equatable {
 
     /// Parse a header from substring
     /// - Returns Header?
-    static func parse(base: Substring) -> Self? {
+    static func parse(_ base: Substring) -> Self? {
         var tape = Tape(base)
         guard let name = parseName(tape: &tape) else {
             return nil
@@ -112,21 +112,89 @@ struct Header: Hashable, Equatable {
     }
 }
 
-struct MemoDocument<Body> {
-    let headers: [Header]
-    let body: Body
+struct Toggle<T> where T: Equatable {
+    enum State {
+        case on
+        case off
+    }
+    var state: State = .on
+    var control: T
+    var reset: T?
 
-    private init(
-        headers: [Header],
-        body: Body
-    ) {
-        self.headers = headers
-        self.body = body
+    mutating func toggle(_ value: T) -> State {
+        if value == control {
+            self.state = .off
+        }
+        else if value == reset {
+            self.state = .on
+        }
+        return self.state
+    }
+}
+
+/// Lazily yields lines as substrings
+struct LineIterator: IteratorProtocol {
+    private var tape: Tape<Substring>
+
+    init(_ base: Substring) {
+        self.tape = Tape(base)
     }
 
-    static func parse(
-        _ parseBody: (Substring) -> Body?
-    ) -> Self? {
-        
+    /// Get next line
+    mutating func next() -> Substring? {
+        guard !tape.isExhausted() else {
+            return nil
+        }
+        tape.start()
+        while !tape.isExhausted() {
+            let curr = tape.consume()
+            if curr.isNewline {
+                return tape.cut()
+            }
+        }
+        return tape.cut()
+    }
+}
+
+extension Substring {
+    func lines() -> LineIterator {
+        LineIterator(self)
+    }
+}
+
+struct Headers {
+    let span: Substring
+    let headers: [Header]
+
+    private init(
+        span: Substring,
+        headers: [Header]
+    ) {
+        self.span = span
+        self.headers = headers
+    }
+
+    static func parse(_ base: Substring) -> Self? {
+        var headers: [Header] = []
+        var lines = base.lines()
+        guard let firstLine = lines.next() else {
+            return nil
+        }
+        guard let firstHeader = Header.parse(firstLine) else {
+            return nil
+        }
+        headers.append(firstHeader)
+        while let line = lines.next() {
+            if line.isWhitespace {
+                break
+            }
+            if let header = Header.parse(line) {
+                headers.append(header)
+            }
+        }
+//        return Self(
+//            span: base,
+//            headers: <#T##[Header]#>
+//        )
     }
 }
