@@ -212,4 +212,19 @@ class Tests_AppModelUpdate: XCTestCase {
             "The Pig has been flooped."
         )
     }
+    
+    func testSetSearch() throws {
+        let state = AppModel()
+        let update = AppModel.update(
+            state: state,
+            action: .setSearch("I Summon my Corn Demon"),
+            environment: environment
+        )
+
+        XCTAssertEqual(
+            update.state.searchText,
+            "I Summon my Corn Demon",
+            "Set search returns same string"
+        )
+    }
 }
