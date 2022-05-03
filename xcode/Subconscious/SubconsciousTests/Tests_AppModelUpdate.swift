@@ -197,4 +197,19 @@ class Tests_AppModelUpdate: XCTestCase {
             "slugToRename was set"
         )
     }
+    
+    func testRenameSlugField() throws {
+        let state = AppModel()
+        let update = AppModel.update(
+            state: state,
+            action: .setRenameSlugField("I Floop the Pig"),
+            environment: environment
+        )
+
+        XCTAssertEqual(
+            update.state.renameSlugField,
+            "i-floop-the-pig",
+            "The Pig has been flooped."
+        )
+    }
 }
