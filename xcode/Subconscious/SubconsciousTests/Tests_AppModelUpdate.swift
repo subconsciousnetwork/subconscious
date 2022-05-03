@@ -258,4 +258,38 @@ class Tests_AppModelUpdate: XCTestCase {
             "Search Text Returns Blank"
         )
     }
+
+    func testSave() throws {
+        let state = AppModel(
+            slug: Slug("floop-the-pig")!,
+            editorSaveState: .modified
+        )
+        let update = AppModel.update(
+            state: state,
+            action: .save,
+            environment: environment
+        )
+        XCTAssertEqual(
+            update.state.editorSaveState,
+            .saving,
+            "Sets editor save state to saving when not already saved"
+        )
+    }
+
+    func testSaveAlreadySaved() throws {
+        let state = AppModel(
+            slug: Slug("floop-the-pig")!,
+            editorSaveState: .saved
+        )
+        let update = AppModel.update(
+            state: state,
+            action: .save,
+            environment: environment
+        )
+        XCTAssertEqual(
+            update.state.editorSaveState,
+            .saved,
+            "Leaves editor save state as saved if already saved"
+        )
+    }
 }
