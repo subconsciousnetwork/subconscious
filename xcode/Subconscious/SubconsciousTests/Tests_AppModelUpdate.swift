@@ -33,6 +33,16 @@ class Tests_AppModelUpdate: XCTestCase {
             environment: environment
         )
         XCTAssertEqual(
+            update.state.isDetailLoading,
+            false,
+            "isDetailLoading set to false"
+        )
+        XCTAssertEqual(
+            update.state.slug,
+            detail.slug,
+            "Sets the slug"
+        )
+        XCTAssertEqual(
             update.state.editorText,
             "Example text",
             "Sets editor text"
@@ -225,6 +235,27 @@ class Tests_AppModelUpdate: XCTestCase {
             update.state.searchText,
             "I Summon my Corn Demon",
             "Set search returns same string"
+        )
+    }
+    
+    func testHideSearch() throws {
+        let state = AppModel()
+        let update = AppModel.update(
+            state: state,
+            action: .hideSearch,
+            environment: environment
+        )
+
+        XCTAssertEqual(
+            update.state.isSearchShowing,
+            false,
+            "SearchShowing is false"
+        )
+        
+        XCTAssertEqual(
+            update.state.searchText,
+            "",
+            "Search Text Returns Blank"
         )
     }
 }
