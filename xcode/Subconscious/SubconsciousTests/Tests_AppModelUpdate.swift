@@ -177,4 +177,24 @@ class Tests_AppModelUpdate: XCTestCase {
             "slugToRename was set"
         )
     }
+
+    func testHideRenameSheet() throws {
+        let state = AppModel()
+        let update = AppModel.update(
+            state: state,
+            action: .hideRenameSheet,
+            environment: environment
+        )
+
+        XCTAssertEqual(
+            update.state.isRenameSheetShowing,
+            false,
+            "Rename sheet is hidden"
+        )
+        XCTAssertEqual(
+            update.state.slugToRename,
+            nil,
+            "slugToRename was set"
+        )
+    }
 }
