@@ -7,6 +7,221 @@
 
 import Foundation
 
+enum Parser {}
+
+extension Parser {
+    struct ParseState<Token>: Hashable
+    where Token: Hashable
+    {
+        var token: Token
+        var rest: Substring
+
+        init(token: Token, rest: Substring) {
+            self.token = token
+            self.rest = rest
+        }
+    }
+}
+
+extension Parser.ParseState where Token == Substring {
+    init(rest: Substring) {
+        self.token = rest.prefix(0)
+        self.rest = rest
+    }
+}
+
+extension Parser {
+    struct Header: Hashable, Equatable {
+        var nameSpan: Substring
+        var valueSpan: Substring
+
+        init(
+            name: Substring,
+            value: Substring
+        ) {
+            self.nameSpan = name
+            self.valueSpan = value
+        }
+
+        var name: String {
+            nameSpan.lowercased()
+        }
+
+        var value: String {
+            String(valueSpan)
+        }
+    }
+}
+
+extension Parser {
+    static func advance(
+        _ state: ParseState<Substring>
+    ) -> ParseState<Substring> {
+        let base = state.rest.base
+        let rest = state.rest.dropFirst()
+        return ParseState(
+            token: base[state.token.startIndex..<rest.startIndex],
+            rest: rest
+        )
+    }
+
+    /// Parse until encountering a character
+    static func parseUntil(
+        _ state: ParseState<Substring>,
+        match: (Character) -> Bool
+    ) -> ParseState<Substring> {
+        guard let next = state.rest.first else {
+            return state
+        }
+        guard !match(next) else {
+            return state
+        }
+        return parseUntil(advance(state), match: match)
+    }
+
+    static func discardSpaces(_ rest: Substring) -> Substring {
+        if rest.first == " " {
+            return discardSpaces(rest.dropFirst())
+        }
+        return rest
+    }
+
+    static func discardLine(_ rest: Substring) -> Substring {
+        guard let next = rest.first else {
+            return rest
+        }
+        guard !next.isNewline else {
+            return rest.dropFirst()
+        }
+        return discardLine(rest.dropFirst())
+    }
+
+    static func parseHeaderName(
+        _ state: ParseState<Substring>
+    ) -> ParseState<Substring>? {
+        guard let next = state.rest.first else {
+            return nil
+        }
+        guard !next.isWhitespace else {
+            return nil
+        }
+        guard !next.isNewline else {
+            return nil
+        }
+        guard next.isASCII else {
+            return nil
+        }
+        guard next != ":" else {
+            return ParseState(
+                token: state.token,
+                rest: state.rest.dropFirst()
+            )
+        }
+        return parseHeaderName(advance(state))
+    }
+
+    private static func parseHeaderValueRecursive(
+        _ state: ParseState<Substring>
+    ) -> ParseState<Substring>? {
+        guard let next = state.rest.first else {
+            return state
+        }
+        guard !next.isNewline else {
+            return ParseState(
+                token: state.token,
+                rest: state.rest.dropFirst()
+            )
+        }
+        return parseHeaderValueRecursive(advance(state))
+    }
+
+    static func parseHeaderValue(
+        _ state: ParseState<Substring>
+    ) -> ParseState<Substring>? {
+        let rest = discardSpaces(state.rest)
+        return parseHeaderValueRecursive(
+            ParseState(
+                rest: rest
+            )
+        )
+    }
+
+    /// Parse a single header line
+    /// - Returns ParseState containing header
+    static func parseHeader(
+        _ rest: Substring
+    ) -> ParseState<Header>? {
+        guard let name = parseHeaderName(
+            ParseState(rest: rest)
+        ) else {
+            return nil
+        }
+        guard let value = parseHeaderValue(
+            ParseState(rest: name.rest)
+        ) else {
+            return nil
+        }
+        return ParseState(
+            token: Header(name: name.token, value: value.token),
+            rest: value.rest
+        )
+    }
+
+    /// If the next character is a newline, drops it and returns rest.
+    /// Otherwise returns nil.
+    /// - Returns Substring
+    static func parseEmptyLine(
+        _ rest: Substring
+    ) -> Substring? {
+        if rest.first != nil && rest.first!.isNewline {
+            return rest.dropFirst()
+        }
+        return nil
+    }
+
+    private static func parseHeadersRecursive(
+        _ state: inout ParseState<[Header]>
+    ) {
+        if state.rest.isEmpty {
+            return
+        } else if let rest = parseEmptyLine(state.rest) {
+            state.rest = rest
+            return
+        } else if let header = parseHeader(state.rest) {
+            state.rest = header.rest
+            state.token.append(header.token)
+            return parseHeadersRecursive(&state)
+        } else {
+            state.rest = discardLine(state.rest)
+            return parseHeadersRecursive(&state)
+        }
+    }
+
+    /// Parse headers from a substring.
+    /// Handles missing headers, invalid headers, and no headers.
+    /// - Returns a ParseState containing an array of headers (if any)
+    static func parseHeaders(
+        _ rest: Substring
+    ) -> ParseState<[Header]> {
+        // Sniff first line. If it is empty, there are no headers.
+        if let rest = parseEmptyLine(rest) {
+            return ParseState(token: [], rest: rest)
+        }
+        // Sniff first line. If it is a valid header,
+        // then kick off header parsing until first empty line.
+        if let firstHeader = parseHeader(rest) {
+            var state = ParseState(
+                token: [firstHeader.token],
+                rest: firstHeader.rest
+            )
+            parseHeadersRecursive(&state)
+            return state
+        }
+        // Otherwise there are no headers
+        return ParseState(token: [], rest: rest)
+    }
+}
+
 /// A struct representing a single header (line)
 struct Header: Hashable, Equatable {
     let base: Substring
@@ -109,92 +324,5 @@ struct Header: Hashable, Equatable {
             name: name,
             value: value
         )
-    }
-}
-
-struct Toggle<T> where T: Equatable {
-    enum State {
-        case on
-        case off
-    }
-    var state: State = .on
-    var control: T
-    var reset: T?
-
-    mutating func toggle(_ value: T) -> State {
-        if value == control {
-            self.state = .off
-        }
-        else if value == reset {
-            self.state = .on
-        }
-        return self.state
-    }
-}
-
-/// Lazily yields lines as substrings
-struct LineIterator: IteratorProtocol {
-    private var tape: Tape<Substring>
-
-    init(_ base: Substring) {
-        self.tape = Tape(base)
-    }
-
-    /// Get next line
-    mutating func next() -> Substring? {
-        guard !tape.isExhausted() else {
-            return nil
-        }
-        tape.start()
-        while !tape.isExhausted() {
-            let curr = tape.consume()
-            if curr.isNewline {
-                return tape.cut()
-            }
-        }
-        return tape.cut()
-    }
-}
-
-extension Substring {
-    func lines() -> LineIterator {
-        LineIterator(self)
-    }
-}
-
-struct Headers {
-    let span: Substring
-    let headers: [Header]
-
-    private init(
-        span: Substring,
-        headers: [Header]
-    ) {
-        self.span = span
-        self.headers = headers
-    }
-
-    static func parse(_ base: Substring) -> Self? {
-        var headers: [Header] = []
-        var lines = base.lines()
-        guard let firstLine = lines.next() else {
-            return nil
-        }
-        guard let firstHeader = Header.parse(firstLine) else {
-            return nil
-        }
-        headers.append(firstHeader)
-        while let line = lines.next() {
-            if line.isWhitespace {
-                break
-            }
-            if let header = Header.parse(line) {
-                headers.append(header)
-            }
-        }
-//        return Self(
-//            span: base,
-//            headers: <#T##[Header]#>
-//        )
     }
 }
