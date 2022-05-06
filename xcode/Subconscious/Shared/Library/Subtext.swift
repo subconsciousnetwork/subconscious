@@ -392,14 +392,14 @@ struct Subtext: Hashable, Equatable {
         var tape = Tape(markup[...])
         // For us, the body portion of the document is whatever the "rest"
         // of the tape is when it was handed to us.
-        let headers = Parser.parseHeaders(&tape)
-        let body = tape.rest
+        let headers = Headers.parse(&tape)
+        let body = headers.body
         let blocks = parseBlocks(&tape)
         return Self(
             base: base,
             body: body,
             blocks: blocks,
-            headers: headers
+            headers: headers.headers
         )
     }
 
