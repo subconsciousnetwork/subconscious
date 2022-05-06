@@ -60,4 +60,20 @@ class Tests_Tape: XCTestCase {
         tape.start()
         XCTAssertEqual(tape.rest, "")
     }
+
+    func testTapeConsumeMatch() throws {
+        var tape = Tape("abcdefg")
+        let flag = tape.consumeMatch("ab")
+        let value = tape.cut()
+        XCTAssertEqual(flag, true)
+        XCTAssertEqual(value, "ab")
+        XCTAssertEqual(tape.rest, "cdefg")
+    }
+
+    func testTapeConsumeMatchNoMatch() throws {
+        var tape = Tape("abcdefg")
+        let flag = tape.consumeMatch("fg")
+        XCTAssertEqual(flag, false)
+        XCTAssertEqual(tape.rest, "abcdefg")
+    }
 }

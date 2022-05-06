@@ -8,9 +8,14 @@
 import Foundation
 
 struct Tape {
+    /// Saved index, used for backtracking
     private(set) var savedIndex: Substring.Index
+    /// Current index, used for slicing substrings off of
+    /// the beginning of the tape.
     private(set) var currentIndex: Substring.Index
+    /// The original substring
     private(set) var base: Substring
+    /// The "rest" of the substring at the current state of the parser
     private(set) var rest: Substring
 
     init(_ base: Substring) {
@@ -20,14 +25,17 @@ struct Tape {
         self.savedIndex = rest.startIndex
     }
 
+    /// Is tape at beginning? Equivalient to `^` in regex.
     var isAtBeginning: Bool {
         self.currentIndex == self.base.startIndex
     }
 
+    /// Is tape exhausted (at end)?
     func isExhausted() -> Bool {
         return self.currentIndex >= self.rest.endIndex
     }
 
+    /// Get an index offset by some amount
     private func offset(by offset: Int) -> Substring.Index? {
         self.rest.index(
             self.currentIndex,
@@ -80,16 +88,6 @@ struct Tape {
                 self.currentIndex = endIndex
                 return true
             }
-        }
-        return false
-    }
-
-    /// Peek forward at next `Collection.Item` and consume if it matches
-    /// predicate function
-    mutating func consumeMatch(where predicate: (Character) -> Bool) -> Bool {
-        if predicate(rest[currentIndex]) {
-            self.advance()
-            return true
         }
         return false
     }
