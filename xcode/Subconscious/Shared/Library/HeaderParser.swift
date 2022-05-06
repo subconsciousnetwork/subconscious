@@ -10,7 +10,7 @@ import Foundation
 enum Parser {}
 
 extension Parser {
-    static func discardSpaces(_ tape: inout Tape2) {
+    static func discardSpaces(_ tape: inout Tape) {
         while let next = tape.peek() {
             if next != " " {
                 tape.start()
@@ -20,7 +20,7 @@ extension Parser {
         }
     }
 
-    static func discardLine(_ tape: inout Tape2) {
+    static func discardLine(_ tape: inout Tape) {
         while !tape.isExhausted() {
             let curr = tape.consume()
             if curr == "\n" {
@@ -31,7 +31,7 @@ extension Parser {
     }
 
     static func parseHeaderName(
-        _ tape: inout Tape2
+        _ tape: inout Tape
     ) -> Substring? {
         tape.start()
         while !tape.isExhausted() {
@@ -52,7 +52,7 @@ extension Parser {
     }
 
     static func parseHeaderValue(
-        _ tape: inout Tape2
+        _ tape: inout Tape
     ) -> Substring {
         discardSpaces(&tape)
         tape.start()
@@ -69,7 +69,7 @@ extension Parser {
     /// Parse a single header line
     /// - Returns ParseState containing header
     static func parseHeader(
-        _ tape: inout Tape2
+        _ tape: inout Tape
     ) -> Header? {
         tape.save()
         // Require header to have valid name.
@@ -85,7 +85,7 @@ extension Parser {
     /// Otherwise returns nil.
     /// - Returns Substring
     static func consumeEmptyLine(
-        _ tape: inout Tape<Substring>
+        _ tape: inout Tape
     ) -> Bool {
         let next = tape.peek()
         if next != nil && next!.isNewline {
@@ -99,7 +99,7 @@ extension Parser {
     /// Otherwise returns nil.
     /// - Returns Substring
     static func parseEmptyLine(
-        _ tape: inout Tape2
+        _ tape: inout Tape
     ) -> Bool {
         let next = tape.peek()
         if next != nil && next!.isNewline {
@@ -114,7 +114,7 @@ extension Parser {
     /// Handles missing headers, invalid headers, and no headers.
     /// - Returns a ParseState containing an array of headers (if any)
     static func parseHeaders(
-        _ tape: inout Tape2
+        _ tape: inout Tape
     ) -> Headers {
         // Sniff first line. If it is empty, there are no headers.
         guard !parseEmptyLine(&tape) else {

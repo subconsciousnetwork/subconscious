@@ -159,7 +159,7 @@ struct Subtext: Hashable, Equatable {
 
     /// Consume a well-formed bracket link, or else backtrack
     private static func consumeBracketLink(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
@@ -178,7 +178,7 @@ struct Subtext: Hashable, Equatable {
 
     /// Consume a well-formed bracket link, or else backtrack
     private static func consumeWikilink(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
@@ -198,7 +198,7 @@ struct Subtext: Hashable, Equatable {
 
     /// Consume a well-formed italics run, or else backtrack
     private static func consumeBold(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
@@ -214,7 +214,7 @@ struct Subtext: Hashable, Equatable {
 
     /// Consume a well-formed italics run, or else backtrack
     private static func consumeItalic(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
@@ -230,7 +230,7 @@ struct Subtext: Hashable, Equatable {
 
     /// Consume a well-formed code run, or else backtrack
     private static func consumeCode(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
@@ -277,7 +277,7 @@ struct Subtext: Hashable, Equatable {
 
     /// Consume all non-space characters excluding trailing punctuation.
     private static func consumeAddressBody(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> Substring {
         while !tape.isExhausted() {
             let c0 = tape.peek(offset: 0)
@@ -312,7 +312,7 @@ struct Subtext: Hashable, Equatable {
     /// Parse all inline forms within the line
     /// - Returns: an array of inline forms
     private static func parseInline(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> [Inline] {
         var inline: [Inline] = []
         while !tape.isExhausted() {
