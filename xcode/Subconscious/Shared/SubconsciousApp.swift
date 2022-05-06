@@ -1998,7 +1998,7 @@ extension AppModel {
             setEditor(
                 state: state,
                 environment: environment,
-                text: detail.entry.value.dom.base,
+                text: detail.entry.value.content,
                 saveState: detail.entry.state
             )
         })

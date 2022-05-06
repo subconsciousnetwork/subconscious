@@ -386,38 +386,31 @@ struct Subtext: Hashable, Equatable {
         Parser.parseLines(&tape, keepEnds: false).map(Self.parseBlock)
     }
 
-    /// Parse from string
-    static func parse(markup: String) -> Self {
-        let base = markup
-        var tape = Tape(markup[...])
-        // For us, the body portion of the document is whatever the "rest"
-        // of the tape is when it was handed to us.
-        let headers = Headers.parse(&tape)
-        let body = headers.body
+    /// Parse Subtext body from tape
+    static func parse(_ tape: inout Tape) -> Self {
+        let base = tape.rest
         let blocks = parseBlocks(&tape)
         return Self(
             base: base,
-            body: body,
-            blocks: blocks,
-            headers: headers.headers
+            blocks: blocks
         )
     }
 
-    let base: String
-    private let body: Substring
+    /// Parse Subtext body from string
+    static func parse(markup: String) -> Self {
+        var tape = Tape(markup[...])
+        return parse(&tape)
+    }
+
+    let base: Substring
     let blocks: [Block]
-    let headers: [Header]
 
     private init(
-        base: String,
-        body: Substring,
-        blocks: [Block],
-        headers: [Header]
+        base: Substring,
+        blocks: [Block]
     ) {
         self.base = base
-        self.body = body
         self.blocks = blocks
-        self.headers = headers
     }
 }
 
@@ -538,8 +531,8 @@ extension Subtext {
         // that takes a Swift range which knows how to handle Unicode
         // glyphs correctly.
         let baseNSRange = NSRange(
-            dom.body.startIndex...,
-            in: dom.body
+            dom.base.startIndex...,
+            in: dom.base
         )
 
         // Set default font for entire string
@@ -570,7 +563,7 @@ extension Subtext {
             case .empty:
                 break
             case let .heading(line):
-                let nsRange = NSRange(line.range, in: dom.body)
+                let nsRange = NSRange(line.range, in: dom.base)
                 attributedString.addAttribute(
                     .font,
                     value: UIFont.appTextMonoBold,
@@ -585,7 +578,7 @@ extension Subtext {
                     )
                 }
             case .quote(let line, let inline):
-                let nsRange = NSRange(line.range, in: dom.body)
+                let nsRange = NSRange(line.range, in: dom.base)
                 attributedString.addAttribute(
                     .font,
                     value: UIFont.appTextMonoItalic,
@@ -646,7 +639,7 @@ extension Subtext {
 extension Subtext {
     /// Append another Subtext document
     func append(_ other: Subtext) -> Subtext {
-        Subtext.parse(markup: "\(self.body)\n\n\(other.body)")
+        Subtext.parse(markup: "\(self.base)\n\n\(other.base)")
     }
 }
 
@@ -742,7 +735,7 @@ extension Subtext {
     /// Range is typically a selection range, with wikilink being the
     /// one currently being edited/typed.
     func wikilinkFor(range nsRange: NSRange) -> Subtext.Wikilink? {
-        guard let range = Range(nsRange, in: body) else {
+        guard let range = Range(nsRange, in: base) else {
             return nil
         }
         let wikilink = wikilinkFor(index: range.lowerBound)
@@ -760,7 +753,7 @@ extension Subtext {
     /// Range is typically a selection range, with slashlink being the
     /// one currently being edited/typed.
     func slashlinkFor(range nsRange: NSRange) -> Subtext.Slashlink? {
-        guard let range = Range(nsRange, in: body) else {
+        guard let range = Range(nsRange, in: base) else {
             return nil
         }
         return slashlinkFor(index: range.lowerBound)
@@ -788,7 +781,7 @@ extension Subtext {
     }
 
     func entryLinkFor(range nsRange: NSRange) -> Subtext.EntryLinkMarkup? {
-        guard let range = Range(nsRange, in: body) else {
+        guard let range = Range(nsRange, in: base) else {
             return nil
         }
         return entryLinkFor(index: range.lowerBound)

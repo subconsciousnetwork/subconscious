@@ -9,7 +9,7 @@ import Foundation
 struct SubtextFile: Hashable, Equatable, Identifiable {
     var slug: Slug
     var dom: Subtext
-    var content: String { dom.base }
+    var content: String { String(dom.base) }
     var id: Slug { slug }
 
     init(
