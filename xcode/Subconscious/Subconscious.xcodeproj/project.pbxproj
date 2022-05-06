@@ -58,6 +58,8 @@
 		B831BDB92825A28A00C4CE92 /* Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDB82825A28A00C4CE92 /* Header.swift */; };
 		B831BDBA2825A28A00C4CE92 /* Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDB82825A28A00C4CE92 /* Header.swift */; };
 		B831BDBC2825A4E700C4CE92 /* Tests_Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */; };
+		B831BDBF2825BA9100C4CE92 /* SubtextEnvelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDBE2825BA9100C4CE92 /* SubtextEnvelope.swift */; };
+		B831BDC02825BA9100C4CE92 /* SubtextEnvelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDBE2825BA9100C4CE92 /* SubtextEnvelope.swift */; };
 		B839A78E282090A0007143E4 /* Tests_AppModelUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B839A78D282090A0007143E4 /* Tests_AppModelUpdate.swift */; };
 		B83E91D727692EC600045C6A /* FABButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E91D627692EC600045C6A /* FABButtonStyle.swift */; };
 		B83E91D827692EC600045C6A /* FABButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E91D627692EC600045C6A /* FABButtonStyle.swift */; };
@@ -255,6 +257,7 @@
 		B831BDB62824DA9700C4CE92 /* Tests_Tape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Tape.swift; sourceTree = "<group>"; };
 		B831BDB82825A28A00C4CE92 /* Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Header.swift; sourceTree = "<group>"; };
 		B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Header.swift; sourceTree = "<group>"; };
+		B831BDBE2825BA9100C4CE92 /* SubtextEnvelope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextEnvelope.swift; sourceTree = "<group>"; };
 		B839A78D282090A0007143E4 /* Tests_AppModelUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_AppModelUpdate.swift; sourceTree = "<group>"; };
 		B83E91D627692EC600045C6A /* FABButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FABButtonStyle.swift; sourceTree = "<group>"; };
 		B84AD8DE280F3659006B3153 /* Tests_EntryLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_EntryLink.swift; sourceTree = "<group>"; };
@@ -396,19 +399,31 @@
 			children = (
 				B80057EA27DC355E002C0129 /* SubconsciousTests.swift */,
 				B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */,
-				B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */,
-				B80057F327DC35BE002C0129 /* Tests_Slug.swift */,
-				B8682DCA2804BF04001CD8DD /* Tests_Subtext.swift */,
-				B84AD8DE280F3659006B3153 /* Tests_EntryLink.swift */,
-				B84AD8E0280F7A19006B3153 /* Tests_StringUtilities.swift */,
-				B84AD8E52810B74E006B3153 /* Tests_SubURLs.swift */,
-				B84AD8E72811C827006B3153 /* Tests_URLComponentsUtilities.swift */,
 				B839A78D282090A0007143E4 /* Tests_AppModelUpdate.swift */,
-				B82BB7FD28243F32000C9FCC /* Tests_Parser.swift */,
-				B831BDB62824DA9700C4CE92 /* Tests_Tape.swift */,
+				B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */,
+				B84AD8DE280F3659006B3153 /* Tests_EntryLink.swift */,
 				B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */,
+				B82BB7FD28243F32000C9FCC /* Tests_Parser.swift */,
+				B80057F327DC35BE002C0129 /* Tests_Slug.swift */,
+				B84AD8E0280F7A19006B3153 /* Tests_StringUtilities.swift */,
+				B8682DCA2804BF04001CD8DD /* Tests_Subtext.swift */,
+				B84AD8E52810B74E006B3153 /* Tests_SubURLs.swift */,
+				B831BDB62824DA9700C4CE92 /* Tests_Tape.swift */,
+				B84AD8E72811C827006B3153 /* Tests_URLComponentsUtilities.swift */,
 			);
 			path = SubconsciousTests;
+			sourceTree = "<group>";
+		};
+		B831BDBD2825BA6900C4CE92 /* Parsers */ = {
+			isa = PBXGroup;
+			children = (
+				B831BDB82825A28A00C4CE92 /* Header.swift */,
+				B82BB7FA2821DA61000C9FCC /* Parser.swift */,
+				B81A535E272751EE001A6268 /* Subtext.swift */,
+				B831BDBE2825BA9100C4CE92 /* SubtextEnvelope.swift */,
+				B81A535B27275138001A6268 /* Tape.swift */,
+			);
+			path = Parsers;
 			sourceTree = "<group>";
 		};
 		B8879E9B26F8F3BD00A0B4FF /* Services */ = {
@@ -472,15 +487,16 @@
 		B8EB29F226F27794006E97C3 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				B8109C2727A8879C00CD2B6D /* AppTheme.swift */,
 				B8EB29F626F27797006E97C3 /* Assets.xcassets */,
 				B8EB2A3826F27CD1006E97C3 /* Components */,
+				B86DFF3827C15B77002E57ED /* Config.swift */,
 				B88C977C276425C100B27DF0 /* Fonts */,
 				B8EC568026F4156F00AC64E5 /* Library */,
 				B8B54F39271F6C6800B9B507 /* Models */,
+				B831BDBD2825BA6900C4CE92 /* Parsers */,
 				B8879E9B26F8F3BD00A0B4FF /* Services */,
 				B8EB29F326F27794006E97C3 /* SubconsciousApp.swift */,
-				B8109C2727A8879C00CD2B6D /* AppTheme.swift */,
-				B86DFF3827C15B77002E57ED /* Config.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -561,7 +577,6 @@
 				B82C3A5E26F576C600833CC8 /* FileManagerUtilities.swift */,
 				B82C3A5826F5761700833CC8 /* FileSync.swift */,
 				B86DFF3227C072CD002E57ED /* Func.swift */,
-				B82BB7FA2821DA61000C9FCC /* Parser.swift */,
 				B89D296727E832DC009E0DED /* LoggerUtilities.swift */,
 				B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */,
 				B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */,
@@ -569,14 +584,11 @@
 				B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */,
 				B8EC568B26F4206400AC64E5 /* SQLite3Migrations.swift */,
 				B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */,
-				B81A535E272751EE001A6268 /* Subtext.swift */,
 				B8879EA526F9348600A0B4FF /* SubURL.swift */,
-				B81A535B27275138001A6268 /* Tape.swift */,
 				B824FDD326FAB1BC00B81BBD /* Truncate.swift */,
 				B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
-				B831BDB82825A28A00C4CE92 /* Header.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -909,6 +921,7 @@
 				B8AE34AA276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
 				B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */,
 				B826B27527B5D95F003D3C03 /* SaveState.swift in Sources */,
+				B831BDBF2825BA9100C4CE92 /* SubtextEnvelope.swift in Sources */,
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B84AD8E3281073CE006B3153 /* InlineFormattingBarView.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
@@ -1011,6 +1024,7 @@
 				B8AE34C6276BF72500777FF0 /* LinkSearchView.swift in Sources */,
 				B82C3A5426F528B000833CC8 /* DatabaseService.swift in Sources */,
 				B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
+				B831BDC02825BA9100C4CE92 /* SubtextEnvelope.swift in Sources */,
 				B8A41D4F2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,
 				B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
 				B8879EA126F90C5100A0B4FF /* AppNavigationView.swift in Sources */,

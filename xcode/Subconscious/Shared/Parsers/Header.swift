@@ -94,6 +94,13 @@ struct Headers {
         self.body = body
     }
 
+    /// Get the first header matching a particular name (if any)
+    /// - Returns Header?
+    func first(named name: String) -> Header? {
+        let name = name.lowercased()
+        return headers.first(where: { header in header.name == name })
+    }
+
     /// Parse headers from a substring.
     /// Handles missing headers, invalid headers, and no headers.
     /// - Returns a ParseState containing an array of headers (if any)

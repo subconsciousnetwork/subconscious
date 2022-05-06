@@ -130,4 +130,21 @@ class Tests_Header: XCTestCase {
             "Body text\n"
         )
     }
+
+    func testHeadersFirst() throws {
+        var tape = Tape(
+            """
+            Content-Type: text/subtext
+            Malformed header: Husker knights
+            Content-Type: text/plain
+            Title: Floop the Pig
+
+            Body text
+            """
+        )
+        let headers = Headers.parse(&tape)
+        let header = headers.first(named: "content-type")
+        XCTAssertNotNil(header)
+        XCTAssertEqual(header!.value, "text/subtext")
+    }
 }
