@@ -147,4 +147,30 @@ class Tests_Header: XCTestCase {
         XCTAssertNotNil(header)
         XCTAssertEqual(header!.value, "text/subtext")
     }
+
+    func testHeadersRender() throws {
+        var tape = Tape(
+            """
+            Content-Type: text/subtext
+            Malformed header: Husker knights
+            Content-Type: text/plain
+            Title: Floop the Pig
+
+            Body text
+            """
+        )
+        let headers = Headers.parse(&tape)
+        let text = headers.render()
+        XCTAssertEqual(
+            text,
+            """
+            Content-Type: text/subtext
+            Content-Type: text/plain
+            Title: Floop the Pig
+
+            Body text
+            """,
+            "Renders headers, dropping malformed headers"
+        )
+    }
 }

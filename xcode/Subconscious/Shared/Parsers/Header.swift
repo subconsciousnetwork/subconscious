@@ -8,25 +8,23 @@
 import Foundation
 
 struct Header: Hashable, Equatable {
-    let nameSpan: Substring
-    let valueSpan: Substring
+    var name: String
+    var value: String
 
-    /// Private initialiser
-    /// Use `Header.parse` instead
-    private init(
-        name: Substring,
-        value: Substring
+    init(
+        name: String,
+        value: String
     ) {
-        self.nameSpan = name
-        self.valueSpan = value
+        self.name = name
+        self.value = value
     }
 
-    var name: String {
-        nameSpan.lowercased()
+    var normalizedName: String {
+        name.lowercased()
     }
 
-    var value: String {
-        String(valueSpan)
+    func render() -> String {
+        "\(name): \(value)\n"
     }
 
     static func parseName(
@@ -77,21 +75,27 @@ struct Header: Hashable, Equatable {
             return nil
         }
         let value = parseValue(&tape)
-        return Header(name: name, value: value)
+        return Header(
+            name: String(name),
+            value: String(value)
+        )
     }
 }
 
 /// A document with headers
 struct Headers {
-    let headers: [Header]
-    let body: Substring
+    var headers: [Header]
+    var body: String
 
-    private init(
-        headers: [Header],
-        body: Substring
-    ) {
-        self.headers = headers
-        self.body = body
+    /// Get headers and body, rendered back out as a string
+    func render() -> String {
+        let head = headers
+            .map({ header in header.render() })
+            .joined(separator: "")
+        return """
+        \(head)
+        \(body)
+        """
     }
 
     /// Get the first header matching a particular name (if any)
@@ -99,6 +103,18 @@ struct Headers {
     func first(named name: String) -> Header? {
         let name = name.lowercased()
         return headers.first(where: { header in header.name == name })
+    }
+
+    /// Remove all headers matching a particular name
+    mutating func removeAll(named name: String) {
+        self.headers.removeAll(
+            where: { header in header.normalizedName == name }
+        )
+    }
+
+    /// Append a header
+    mutating func append(_ header: Header) {
+        self.headers.append(header)
     }
 
     /// Parse headers from a substring.
@@ -111,7 +127,7 @@ struct Headers {
         guard !Parser.parseEmptyLine(&tape) else {
             return Self(
                 headers: [],
-                body: tape.rest
+                body: String(tape.rest)
             )
         }
         // Sniff first line. If it is not a valid header,
@@ -119,7 +135,7 @@ struct Headers {
         guard let firstHeader = Header.parse(&tape) else {
             return Self(
                 headers: [],
-                body: tape.rest
+                body: String(tape.rest)
             )
         }
         var headers: [Header] = [firstHeader]
@@ -128,7 +144,7 @@ struct Headers {
             if Parser.parseEmptyLine(&tape) {
                 return Self(
                     headers: headers,
-                    body: tape.rest
+                    body: String(tape.rest)
                 )
             } else if let header = Header.parse(&tape) {
                 headers.append(header)
@@ -138,7 +154,12 @@ struct Headers {
         }
         return Self(
             headers: headers,
-            body: tape.rest
+            body: String(tape.rest)
         )
+    }
+
+    static func parse(markup: String) -> Self {
+        var tape = Tape(markup[...])
+        return parse(&tape)
     }
 }
