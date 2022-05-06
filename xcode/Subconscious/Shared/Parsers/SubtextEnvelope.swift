@@ -8,15 +8,15 @@
 import Foundation
 
 struct SubtextEnvelope {
-    let headers: Headers
-    let body: Subtext
+    var headers: Headers
+    var body: Subtext
 
-    private init(
-        headers: Headers,
-        body: Subtext
-    ) {
-        self.headers = headers
-        self.body = body
+    /// Get title from headers, or derive title from Subtext body
+    func title() -> String {
+        if let header = headers.first(named: "title") {
+            return header.value
+        }
+        return body.title()
     }
 
     static func parse(markup: String) -> Self {
