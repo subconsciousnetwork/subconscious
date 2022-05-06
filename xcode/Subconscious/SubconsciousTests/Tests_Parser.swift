@@ -128,4 +128,52 @@ class Tests_Parser: XCTestCase {
             "Body text\n"
         )
     }
+
+    func testParseHeaderName2() throws {
+        let doc = "Content-Type: text/subtext\nMalformed header: Husker knights\nTitle: Floop the Pig\n\nBody text\n"
+        var tape = Tape(doc[...])
+        let header = Parser.parseHeaderName(&tape)
+        XCTAssertEqual(
+            header,
+            "Content-Type"
+        )
+    }
+
+    func testParseHeader2() throws {
+        let doc = "Content-Type: text/subtext\nMalformed header: Husker knights\nTitle: Floop the Pig\n\nBody text\n"
+        var tape = Tape(doc[...])
+        let header = Parser.parseHeader(&tape)
+        XCTAssertEqual(
+            header!.name,
+            "content-type"
+        )
+    }
+
+    func testParseHeaderMalformed2() throws {
+        let doc = "Malformed header: You ganked my spirit walker\n"
+        var tape = Tape(doc[...])
+        let header = Parser.parseHeader(&tape)
+        XCTAssertEqual(
+            header,
+            nil
+        )
+    }
+
+    func testHeadersParser2() throws {
+        let doc = "Content-Type: text/subtext\nMalformed header: Husker knights\nTitle: Floop the Pig\n\nBody text\n"
+        var tape = Tape(doc[...])
+        let headers = Parser.parseHeaders(&tape)
+        XCTAssertEqual(
+            headers.headers[0].name,
+            "content-type"
+        )
+        XCTAssertEqual(
+            headers.headers[1].name,
+            "title"
+        )
+        XCTAssertEqual(
+            headers.headers[1].value,
+            "Floop the Pig"
+        )
+    }
 }
