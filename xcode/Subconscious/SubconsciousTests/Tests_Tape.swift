@@ -76,4 +76,22 @@ class Tests_Tape: XCTestCase {
         XCTAssertEqual(flag, false)
         XCTAssertEqual(tape.rest, "abcdefg")
     }
+
+    func testTapeBacktrack() throws {
+        var tape = Tape("abcdefg")
+        tape.advance()
+        tape.save()
+        tape.advance()
+        tape.advance()
+        let value = tape.cut()
+
+        XCTAssertEqual(value, "abc")
+        XCTAssertEqual(tape.rest, "defg")
+
+        tape.backtrack()
+
+        XCTAssertEqual(tape.rest, "bcdefg")
+        XCTAssertEqual(tape.currentIndex, tape.rest.startIndex)
+    }
+
 }
