@@ -17,6 +17,26 @@ class Tests_Parser: XCTestCase {
         XCTAssertEqual(tape.rest, "abcd")
     }
 
+    func testDiscardLine() throws {
+        var tape = Tape(
+            """
+            Content-Type: text/subtext
+            Title: Cybernetic self-systems
+            
+            Body text
+            """
+        )
+        Parser.discardLine(&tape)
+        XCTAssertEqual(
+            tape.rest,
+            """
+            Title: Cybernetic self-systems
+            
+            Body text
+            """
+        )
+    }
+
     func testParseLine() throws {
         var tape = Tape(
             """
