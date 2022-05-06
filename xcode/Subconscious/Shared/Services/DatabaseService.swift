@@ -316,7 +316,7 @@ struct DatabaseService {
                     let body: String = row.get(1),
                     let modified: Date = row.get(2)
                 {
-                    let summary = Subtext(markup: body).summarize()
+                    let summary = Subtext.parse(markup: body).summarize()
                     return EntryStub(
                         slug: slug,
                         title: summary.title ?? "",
@@ -675,7 +675,7 @@ struct DatabaseService {
                 let body: String = row.get(1),
                 let modified: Date = row.get(2)
             {
-                let summary = Subtext(markup: body).summarize()
+                let summary = Subtext.parse(markup: body).summarize()
                 return EntryStub(
                     slug: slug,
                     title: summary.title ?? "",

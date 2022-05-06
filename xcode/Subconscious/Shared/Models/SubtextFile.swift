@@ -17,7 +17,7 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
         content: String
     ) {
         self.slug = slug
-        self.dom = Subtext(markup: content)
+        self.dom = Subtext.parse(markup: content)
     }
 
     init(

@@ -16,7 +16,7 @@ struct Subtext: Hashable, Equatable {
     }
 
     /// Empty document
-    static let empty = Self(markup: "")
+    static let empty = Self.parse(markup: "")
 
     enum Block: Hashable, Equatable {
         case text(span: Substring, inline: [Inline])
@@ -381,21 +381,43 @@ struct Subtext: Hashable, Equatable {
         }
     }
 
-    /// Splits lines in markup, keeping line endings
-    private static func parseLines(_ string: String) -> [Substring] {
-        string.split(
-            maxSplits: Int.max,
-            omittingEmptySubsequences: false,
-            whereSeparator: \.isNewline
+    /// Parse all blocks from tape
+    static func parseBlocks(_ tape: inout Tape) -> [Block] {
+        Parser.parseLines(&tape, keepEnds: false).map(Self.parseBlock)
+    }
+
+    /// Parse from string
+    static func parse(markup: String) -> Self {
+        let base = markup
+        var tape = Tape(markup[...])
+        // For us, the body portion of the document is whatever the "rest"
+        // of the tape is when it was handed to us.
+        let headers = Parser.parseHeaders(&tape)
+        let body = tape.rest
+        let blocks = parseBlocks(&tape)
+        return Self(
+            base: base,
+            body: body,
+            blocks: blocks,
+            headers: headers
         )
     }
 
     let base: String
+    private let body: Substring
     let blocks: [Block]
+    let headers: [Header]
 
-    init(markup: String) {
-        self.base = markup
-        self.blocks = Self.parseLines(markup).map(Self.parseBlock)
+    private init(
+        base: String,
+        body: Substring,
+        blocks: [Block],
+        headers: [Header]
+    ) {
+        self.base = base
+        self.body = body
+        self.blocks = blocks
+        self.headers = headers
     }
 }
 
@@ -510,14 +532,14 @@ extension Subtext {
         _ attributedString: NSMutableAttributedString,
         url: (EntryLink) -> URL?
     ) {
-        let dom = Subtext(markup: attributedString.string)
+        let dom = Subtext.parse(markup: attributedString.string)
 
         // Get range of all text, using new Swift NSRange constructor
         // that takes a Swift range which knows how to handle Unicode
         // glyphs correctly.
         let baseNSRange = NSRange(
-            dom.base.startIndex...,
-            in: dom.base
+            dom.body.startIndex...,
+            in: dom.body
         )
 
         // Set default font for entire string
@@ -548,7 +570,7 @@ extension Subtext {
             case .empty:
                 break
             case let .heading(line):
-                let nsRange = NSRange(line.range, in: dom.base)
+                let nsRange = NSRange(line.range, in: dom.body)
                 attributedString.addAttribute(
                     .font,
                     value: UIFont.appTextMonoBold,
@@ -563,7 +585,7 @@ extension Subtext {
                     )
                 }
             case .quote(let line, let inline):
-                let nsRange = NSRange(line.range, in: dom.base)
+                let nsRange = NSRange(line.range, in: dom.body)
                 attributedString.addAttribute(
                     .font,
                     value: UIFont.appTextMonoItalic,
@@ -624,7 +646,7 @@ extension Subtext {
 extension Subtext {
     /// Append another Subtext document
     func append(_ other: Subtext) -> Subtext {
-        Subtext(markup: "\(self.base)\n\n\(other.base)")
+        Subtext.parse(markup: "\(self.body)\n\n\(other.body)")
     }
 }
 
@@ -720,7 +742,7 @@ extension Subtext {
     /// Range is typically a selection range, with wikilink being the
     /// one currently being edited/typed.
     func wikilinkFor(range nsRange: NSRange) -> Subtext.Wikilink? {
-        guard let range = Range(nsRange, in: base) else {
+        guard let range = Range(nsRange, in: body) else {
             return nil
         }
         let wikilink = wikilinkFor(index: range.lowerBound)
@@ -738,7 +760,7 @@ extension Subtext {
     /// Range is typically a selection range, with slashlink being the
     /// one currently being edited/typed.
     func slashlinkFor(range nsRange: NSRange) -> Subtext.Slashlink? {
-        guard let range = Range(nsRange, in: base) else {
+        guard let range = Range(nsRange, in: body) else {
             return nil
         }
         return slashlinkFor(index: range.lowerBound)
@@ -766,7 +788,7 @@ extension Subtext {
     }
 
     func entryLinkFor(range nsRange: NSRange) -> Subtext.EntryLinkMarkup? {
-        guard let range = Range(nsRange, in: base) else {
+        guard let range = Range(nsRange, in: body) else {
             return nil
         }
         return entryLinkFor(index: range.lowerBound)

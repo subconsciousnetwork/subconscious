@@ -798,7 +798,7 @@ extension AppModel {
         model.editorText = text
         // Mark save state
         model.editorSaveState = saveState
-        let dom = Subtext(markup: text)
+        let dom = Subtext.parse(markup: text)
         let link = dom.entryLinkFor(range: state.editorSelection)
         model.editorSelectedEntryLinkMarkup = link
 
@@ -822,7 +822,7 @@ extension AppModel {
     ) -> Update<AppModel, AppAction> {
         var model = state
         model.editorSelection = nsRange
-        let dom = Subtext(markup: model.editorText)
+        let dom = Subtext.parse(markup: model.editorText)
         let link = dom.entryLinkFor(
             range: model.editorSelection
         )

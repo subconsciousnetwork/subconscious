@@ -62,24 +62,24 @@ class Tests_Parser: XCTestCase {
         var tape = Tape(doc[...])
         let headers = Parser.parseHeaders(&tape)
         XCTAssertEqual(
-            headers.headers[0].name,
+            headers[0].name,
             "content-type"
         )
         XCTAssertEqual(
-            headers.headers[1].name,
+            headers[1].name,
             "title"
         )
         XCTAssertEqual(
-            headers.headers[1].value,
+            headers[1].value,
             "Floop the Pig"
         )
     }
 
     func testParseNoHeaders() throws {
         var tape = Tape("\nBody text\n")
-        let result = Parser.parseHeaders(&tape)
+        let headers = Parser.parseHeaders(&tape)
         XCTAssertEqual(
-            result.headers.count,
+            headers.count,
             0
         )
         XCTAssertEqual(
@@ -90,9 +90,9 @@ class Tests_Parser: XCTestCase {
 
     func testParseMissingHeaders() throws {
         var tape = Tape("Body text\n")
-        let result = Parser.parseHeaders(&tape)
+        let headers = Parser.parseHeaders(&tape)
         XCTAssertEqual(
-            result.headers.count,
+            headers.count,
             0
         )
         XCTAssertEqual(
@@ -139,5 +139,35 @@ class Tests_Parser: XCTestCase {
 
         let body = Parser.parseLine(&tape)
         XCTAssertEqual(body, "Body text")
+    }
+
+    func testParseLines() throws {
+        var tape = Tape(
+            """
+            Content-Type: text/subtext
+            Title: Cybernetic self-systems
+            
+            Body text
+            """
+        )
+        let lines = Parser.parseLines(&tape)
+        XCTAssertEqual(lines.count, 4)
+        XCTAssertEqual(lines[0], "Content-Type: text/subtext\n")
+        XCTAssertEqual(lines[3], "Body text")
+    }
+
+    func testParseLinesDiscardEnds() throws {
+        var tape = Tape(
+            """
+            Content-Type: text/subtext
+            Title: Cybernetic self-systems
+            
+            Body text
+            """
+        )
+        let lines = Parser.parseLines(&tape, keepEnds: false)
+        XCTAssertEqual(lines.count, 4)
+        XCTAssertEqual(lines[0], "Content-Type: text/subtext")
+        XCTAssertEqual(lines[3], "Body text")
     }
 }

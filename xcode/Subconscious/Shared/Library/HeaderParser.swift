@@ -96,6 +96,25 @@ extension Parser {
         return tape.cut()
     }
 
+    /// Parse all lines until tape is exhausted
+    /// - Returns array of Substrings (lines)
+    static func parseLines(
+        _ tape: inout Tape,
+        keepEnds: Bool = true
+    ) -> [Substring] {
+        var lines: [Substring] = []
+        tape.start()
+        while !tape.isExhausted() {
+            var line = parseLine(&tape)
+            // Remove newline ending if needed
+            if !keepEnds && line.last != nil && line.last!.isNewline {
+                line.removeLast()
+            }
+            lines.append(line)
+        }
+        return lines
+    }
+
     /// If the next character is a newline, drops it and returns rest.
     /// Otherwise returns nil.
     /// - Returns Substring
@@ -116,28 +135,28 @@ extension Parser {
     /// - Returns a ParseState containing an array of headers (if any)
     static func parseHeaders(
         _ tape: inout Tape
-    ) -> Headers {
+    ) -> [Header] {
         // Sniff first line. If it is empty, there are no headers.
         guard !parseEmptyLine(&tape) else {
-            return Headers(headers: [])
+            return []
         }
         // Sniff first line. If it is not a valid header,
         // then return empty headers
         guard let firstHeader = parseHeader(&tape) else {
-            return Headers(headers: [])
+            return []
         }
         var headers: [Header] = [firstHeader]
         while !tape.isExhausted() {
             tape.start()
             if parseEmptyLine(&tape) {
-                return Headers(headers: headers)
+                return headers
             } else if let header = parseHeader(&tape) {
                 headers.append(header)
             } else {
                 discardLine(&tape)
             }
         }
-        return Headers(headers: headers)
+        return headers
     }
 }
 

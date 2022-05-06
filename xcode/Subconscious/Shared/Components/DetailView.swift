@@ -132,7 +132,7 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             DetailToolbarContent(
-                title: Subtext(markup: editorText).title(),
+                title: Subtext.parse(markup: editorText).title(),
                 slug: slug,
                 onRename: onRename,
                 onDelete: onDelete
