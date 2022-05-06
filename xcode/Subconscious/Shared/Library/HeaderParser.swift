@@ -81,18 +81,19 @@ extension Parser {
         return Header(name: name, value: value)
     }
 
-    /// If the next character is a newline, drops it and returns .
-    /// Otherwise returns nil.
-    /// - Returns Substring
-    static func consumeEmptyLine(
+    /// Parse an entire line of text, up to and including the next
+    /// newline (if any).
+    static func parseLine(
         _ tape: inout Tape
-    ) -> Bool {
-        let next = tape.peek()
-        if next != nil && next!.isNewline {
-            tape.advance()
-            return true
+    ) -> Substring {
+        tape.start()
+        while !tape.isExhausted() {
+            let curr = tape.consume()
+            if curr.isNewline {
+                return tape.cut()
+            }
         }
-        return false
+        return tape.cut()
     }
 
     /// If the next character is a newline, drops it and returns rest.

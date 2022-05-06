@@ -118,4 +118,26 @@ class Tests_Parser: XCTestCase {
             "text/subtext"
         )
     }
+
+    func testParseLine() throws {
+        var tape = Tape(
+            """
+            Content-Type: text/subtext
+            Title: Cybernetic self-systems
+            
+            Body text
+            """
+        )
+        let header = Parser.parseLine(&tape)
+        XCTAssertEqual(header, "Content-Type: text/subtext\n")
+
+        let title = Parser.parseLine(&tape)
+        XCTAssertEqual(title, "Title: Cybernetic self-systems\n")
+
+        let blank = Parser.parseLine(&tape)
+        XCTAssertEqual(blank, "\n")
+
+        let body = Parser.parseLine(&tape)
+        XCTAssertEqual(body, "Body text")
+    }
 }
