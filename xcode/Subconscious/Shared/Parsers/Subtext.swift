@@ -9,6 +9,17 @@ import Foundation
 import SwiftUI
 
 struct Subtext: Hashable, Equatable {
+    let base: Substring
+    let blocks: [Block]
+
+    private init(
+        base: Substring,
+        blocks: [Block]
+    ) {
+        self.base = base
+        self.blocks = blocks
+    }
+
     /// Implement custom equatable for Subtext.
     /// Since parsing is deterministic, we can simply compare base strings.
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -400,17 +411,6 @@ struct Subtext: Hashable, Equatable {
     static func parse(markup: String) -> Self {
         var tape = Tape(markup[...])
         return parse(&tape)
-    }
-
-    let base: Substring
-    let blocks: [Block]
-
-    private init(
-        base: Substring,
-        blocks: [Block]
-    ) {
-        self.base = base
-        self.blocks = blocks
     }
 }
 
