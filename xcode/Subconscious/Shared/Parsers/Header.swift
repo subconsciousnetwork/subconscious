@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Header: Hashable, Equatable {
+struct Header: Hashable {
     var name: String
     var value: String
 
@@ -83,7 +83,7 @@ struct Header: Hashable, Equatable {
 }
 
 /// A document with headers
-struct Headers {
+struct Headers: Hashable {
     var headers: [Header]
 
     /// Get headers, rendered back out as a string
