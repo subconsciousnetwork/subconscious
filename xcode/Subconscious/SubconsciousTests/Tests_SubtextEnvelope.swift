@@ -27,8 +27,12 @@ class Tests_SubtextEnvelope: XCTestCase {
             "content-type"
         )
 
-        XCTAssertEqual(envelope.body.blocks.count, 1)
-        XCTAssertEqual(envelope.body.blocks.count, 1)
+        XCTAssertEqual(envelope.body.blocks.count, 2)
+        guard case let .heading(heading) = envelope.body.blocks[0] else {
+            XCTFail("Expected heading")
+            return
+        }
+        XCTAssertEqual(heading, "# Body text")
     }
 
 }
