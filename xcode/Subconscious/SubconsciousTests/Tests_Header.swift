@@ -42,7 +42,7 @@ class Tests_Header: XCTestCase {
         var tape = Tape(doc[...])
         let header = Header.parse(&tape)
         XCTAssertEqual(
-            header!.name,
+            header!.normalizedName,
             "content-type"
         )
     }
@@ -80,20 +80,16 @@ class Tests_Header: XCTestCase {
         var tape = Tape(doc[...])
         let headers = Headers.parse(&tape)
         XCTAssertEqual(
-            headers.headers[0].name,
+            headers.headers[0].normalizedName,
             "content-type"
         )
         XCTAssertEqual(
-            headers.headers[1].name,
+            headers.headers[1].normalizedName,
             "title"
         )
         XCTAssertEqual(
             headers.headers[1].value,
             "Floop the Pig"
-        )
-        XCTAssertEqual(
-            headers.body,
-            "Body text\n"
         )
     }
 
@@ -103,10 +99,6 @@ class Tests_Header: XCTestCase {
         XCTAssertEqual(
             headers.headers.count,
             0
-        )
-        XCTAssertEqual(
-            headers.body,
-            "Body text\n"
         )
         XCTAssertEqual(
             tape.rest,
@@ -120,10 +112,6 @@ class Tests_Header: XCTestCase {
         XCTAssertEqual(
             headers.headers.count,
             0
-        )
-        XCTAssertEqual(
-            headers.body,
-            "Body text\n"
         )
         XCTAssertEqual(
             tape.rest,
@@ -163,13 +151,7 @@ class Tests_Header: XCTestCase {
         let text = headers.render()
         XCTAssertEqual(
             text,
-            """
-            Content-Type: text/subtext
-            Content-Type: text/plain
-            Title: Floop the Pig
-
-            Body text
-            """,
+            "Content-Type: text/subtext\nContent-Type: text/plain\nTitle: Floop the Pig\n\n",
             "Renders headers, dropping malformed headers"
         )
     }

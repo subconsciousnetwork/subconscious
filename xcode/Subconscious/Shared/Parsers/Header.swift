@@ -85,24 +85,20 @@ struct Header: Hashable, Equatable {
 /// A document with headers
 struct Headers {
     var headers: [Header]
-    var body: String
 
-    /// Get headers and body, rendered back out as a string
+    /// Get headers, rendered back out as a string
     func render() -> String {
-        let head = headers
+        headers
             .map({ header in header.render() })
             .joined(separator: "")
-        return """
-        \(head)
-        \(body)
-        """
+            .appending("\n")
     }
 
     /// Get the first header matching a particular name (if any)
     /// - Returns Header?
     func first(named name: String) -> Header? {
         let name = name.lowercased()
-        return headers.first(where: { header in header.name == name })
+        return headers.first(where: { header in header.normalizedName == name })
     }
 
     /// Remove all headers matching a particular name
@@ -126,16 +122,14 @@ struct Headers {
         // Sniff first line. If it is empty, there are no headers.
         guard !Parser.parseEmptyLine(&tape) else {
             return Self(
-                headers: [],
-                body: String(tape.rest)
+                headers: []
             )
         }
         // Sniff first line. If it is not a valid header,
         // then return empty headers
         guard let firstHeader = Header.parse(&tape) else {
             return Self(
-                headers: [],
-                body: String(tape.rest)
+                headers: []
             )
         }
         var headers: [Header] = [firstHeader]
@@ -143,8 +137,7 @@ struct Headers {
             tape.start()
             if Parser.parseEmptyLine(&tape) {
                 return Self(
-                    headers: headers,
-                    body: String(tape.rest)
+                    headers: headers
                 )
             } else if let header = Header.parse(&tape) {
                 headers.append(header)
@@ -153,8 +146,7 @@ struct Headers {
             }
         }
         return Self(
-            headers: headers,
-            body: String(tape.rest)
+            headers: headers
         )
     }
 

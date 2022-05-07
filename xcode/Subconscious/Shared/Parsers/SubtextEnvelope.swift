@@ -19,13 +19,24 @@ struct SubtextEnvelope {
         return body.title()
     }
 
-    static func parse(markup: String) -> Self {
-        var tape = Tape(markup[...])
+    func render() -> String {
+        """
+        \(headers.render())
+        \(body.base)
+        """
+    }
+
+    static func parse(_ tape: inout Tape) -> Self {
         let headers = Headers.parse(&tape)
         let dom = Subtext.parse(&tape)
         return Self(
             headers: headers,
             body: dom
         )
+    }
+
+    static func parse(markup: String) -> Self {
+        var tape = Tape(markup[...])
+        return parse(&tape)
     }
 }
