@@ -59,4 +59,28 @@ class Tests_SubtextEnvelope: XCTestCase {
             """
         )
     }
+
+    func testRenderRoundtripNormalization() throws {
+        let envelope = SubtextEnvelope.parse(
+            markup: """
+            CONTENT-TYPE: text/subtext
+            title: Double, double toil and trouble
+            
+            (from Macbeth)
+            Double, double toil and trouble;
+            Fire burn and caldron bubble.
+            """
+        )
+        XCTAssertEqual(
+            envelope.render(),
+            """
+            Content-Type: text/subtext
+            Title: Double, double toil and trouble
+            
+            (from Macbeth)
+            Double, double toil and trouble;
+            Fire burn and caldron bubble.
+            """
+        )
+    }
 }
