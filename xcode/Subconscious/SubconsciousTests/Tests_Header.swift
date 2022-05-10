@@ -93,6 +93,39 @@ class Tests_Header: XCTestCase {
         )
     }
 
+    func testParseHeadersDropsEmptyLine() throws {
+        var tape = Tape(
+            """
+            Content-Type: text/subtext
+            Malformed header: Husker knights
+            Title: Floop the Pig
+            
+            Body text
+            """
+        )
+        let headers = Headers.parse(&tape)
+        XCTAssertEqual(headers.headers.count, 2)
+        XCTAssertEqual(
+            headers.headers[1].value,
+            "Floop the Pig"
+        )
+    }
+
+    func testParseHeadersTapeDropsEmptyLine() throws {
+        var tape = Tape(
+            """
+            Content-Type: text/subtext
+            Malformed header: Husker knights
+            Title: Floop the Pig
+            
+            Body text
+            """
+        )
+        _ = Headers.parse(&tape)
+        let next = tape.consume()
+        XCTAssertEqual(next, "B")
+    }
+
     func testParseNoHeaders() throws {
         var tape = Tape("\nBody text\n")
         let headers = Headers.parse(&tape)
