@@ -24,7 +24,7 @@ class Tests_SubtextEnvelope: XCTestCase {
         XCTAssertEqual(envelope.headers.headers.count, 2)
         XCTAssertEqual(
             envelope.headers.headers[0].normalizedName,
-            "content-type"
+            "Content-Type"
         )
 
         XCTAssertEqual(envelope.body.blocks.count, 2)
