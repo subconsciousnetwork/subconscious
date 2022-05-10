@@ -43,7 +43,7 @@ class Tests_Header: XCTestCase {
         let header = Header.parse(&tape)
         XCTAssertEqual(
             header!.normalizedName,
-            "content-type"
+            "Content-Type"
         )
     }
 
@@ -81,11 +81,11 @@ class Tests_Header: XCTestCase {
         let headers = Headers.parse(&tape)
         XCTAssertEqual(
             headers.headers[0].normalizedName,
-            "content-type"
+            "Content-Type"
         )
         XCTAssertEqual(
             headers.headers[1].normalizedName,
-            "title"
+            "Title"
         )
         XCTAssertEqual(
             headers.headers[1].value,

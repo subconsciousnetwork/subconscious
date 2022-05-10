@@ -19,8 +19,16 @@ struct Header: Hashable {
         self.value = value
     }
 
+    /// Normalize name by capitalizing first letter of each dashed word
+    /// and lowercasing the rest. E.g.
+    ///
+    /// content-type -> Content-Type
+    /// TITLE -> Title
+    ///
+    /// Headers are case-insensitive, but this format is in keeping with
+    /// typical HTTP header naming conventions.
     var normalizedName: String {
-        name.lowercased()
+        name.capitalized
     }
 
     func render() -> String {
@@ -97,8 +105,22 @@ struct Headers: Hashable {
     /// Get the first header matching a particular name (if any)
     /// - Returns Header?
     func first(named name: String) -> Header? {
-        let name = name.lowercased()
+        let name = name.capitalized
         return headers.first(where: { header in header.normalizedName == name })
+    }
+
+    /// Index header to dictionary.
+    /// Duplicate headers will be ignored. First header wins.
+    /// While duplicate headers are technically allowed by the HTTP spec for
+    /// some header types (comma separated), we discourage this form.
+    func toDictionary() -> Dictionary<String, String> {
+        var index: Dictionary<String, String> = Dictionary()
+        for header in headers {
+            if index[header.normalizedName] == nil {
+                index[header.normalizedName] = header.value
+            }
+        }
+        return index
     }
 
     /// Remove all headers matching a particular name
