@@ -20,10 +20,7 @@ struct SubtextEnvelope {
     }
 
     func render() -> String {
-        """
-        \(headers.render())
-        \(body.base)
-        """
+        "\(headers.render())\(body.base)"
     }
 
     static func parse(_ tape: inout Tape) -> Self {

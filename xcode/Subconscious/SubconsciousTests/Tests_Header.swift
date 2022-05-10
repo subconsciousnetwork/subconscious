@@ -37,18 +37,30 @@ class Tests_Header: XCTestCase {
         )
     }
 
-    func testParseHeader() throws {
+    func testHeaderParse() throws {
         let doc = "Content-Type: text/subtext\nMalformed header: Husker knights\nTitle: Floop the Pig\n\nBody text\n"
         var tape = Tape(doc[...])
         let header = Header.parse(&tape)
+        XCTAssertNotNil(header)
         XCTAssertEqual(
             header!.normalizedName,
             "Content-Type"
         )
     }
 
+    func testHeaderParsedCleanValue() throws {
+        var tape = Tape("Content-Type:    text/subtext\n")
+        let header = Header.parse(&tape)
+        XCTAssertNotNil(header)
+        XCTAssertEqual(
+            header!.value,
+            "text/subtext",
+            "Header value trims leading spaces and trailing newline"
+        )
+    }
+
     func testParseHeaderMalformed() throws {
-        let doc = "Malformed header: You ganked my spirit walker\n"
+        let doc = "Malformed header You ganked my spirit walker\n"
         var tape = Tape(doc[...])
         let header = Header.parse(&tape)
         XCTAssertEqual(
@@ -72,6 +84,30 @@ class Tests_Header: XCTestCase {
         XCTAssertEqual(
             result.value,
             "text/subtext"
+        )
+    }
+
+    func testHeaderRender() throws {
+        var tape = Tape("Content-Type: text/subtext\n")
+        let header = Header.parse(&tape)
+        XCTAssertNotNil(header)
+        XCTAssertEqual(
+            header!.render(),
+            "Content-Type: text/subtext\n",
+            "Render returns valid header with trailing newline"
+        )
+    }
+
+    /// Test name normalization. This behavior is not required, but is
+    /// nice-to-have.
+    func testHeaderRenderNormalized() throws {
+        var tape = Tape("CONTENT-TYPE: text/subtext\n")
+        let header = Header.parse(&tape)
+        XCTAssertNotNil(header)
+        XCTAssertEqual(
+            header!.render(),
+            "Content-Type: text/subtext\n",
+            "Render normalizes name"
         )
     }
 
@@ -107,7 +143,8 @@ class Tests_Header: XCTestCase {
         XCTAssertEqual(headers.headers.count, 2)
         XCTAssertEqual(
             headers.headers[1].value,
-            "Floop the Pig"
+            "Floop the Pig",
+            "Header value does not include newline"
         )
     }
 
@@ -123,7 +160,11 @@ class Tests_Header: XCTestCase {
         )
         _ = Headers.parse(&tape)
         let next = tape.consume()
-        XCTAssertEqual(next, "B")
+        XCTAssertEqual(
+            next,
+            "B",
+            "Tape drops empty line after parsing headers"
+        )
     }
 
     func testParseNoHeaders() throws {
@@ -185,7 +226,7 @@ class Tests_Header: XCTestCase {
         XCTAssertEqual(
             text,
             "Content-Type: text/subtext\nContent-Type: text/plain\nTitle: Floop the Pig\n\n",
-            "Renders headers, dropping malformed headers"
+            "Renders headers with trailing blank line"
         )
     }
 }

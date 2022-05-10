@@ -32,7 +32,7 @@ struct Header: Hashable {
     }
 
     func render() -> String {
-        "\(name): \(value)\n"
+        "\(normalizedName): \(value)\n"
     }
 
     static func parseName(
