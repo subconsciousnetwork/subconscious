@@ -83,6 +83,64 @@ class Tests_SubtextEnvelope: XCTestCase {
         )
     }
 
+    func testBodyTextNoHeaders() throws {
+        let envelope = SubtextEnvelope.parse(
+            markup: """
+            Over hill, over dale,
+            Thorough bush, thorough brier,
+            Over park, over pale,
+            """
+        )
+        XCTAssertEqual(
+            envelope.body.base,
+            """
+            Over hill, over dale,
+            Thorough bush, thorough brier,
+            Over park, over pale,
+            """
+        )
+    }
+
+    func testBodyTextEmptyHeaders() throws {
+        let envelope = SubtextEnvelope.parse(
+            markup: """
+
+            Thorough flood, thorough fire,
+            I do wander everywhere,
+            Swifter than the moon's sphere;
+            """
+        )
+        XCTAssertEqual(
+            envelope.body.base,
+            """
+            Thorough flood, thorough fire,
+            I do wander everywhere,
+            Swifter than the moon's sphere;
+            """
+        )
+    }
+
+    func testBodyTextHeaders() throws {
+        let envelope = SubtextEnvelope.parse(
+            markup: """
+            Content-Type: text/subtext
+            Title: A wood near Athens
+
+            Thorough flood, thorough fire,
+            I do wander everywhere,
+            Swifter than the moon's sphere;
+            """
+        )
+        XCTAssertEqual(
+            envelope.body.base,
+            """
+            Thorough flood, thorough fire,
+            I do wander everywhere,
+            Swifter than the moon's sphere;
+            """
+        )
+    }
+
     func testAppend() throws {
         let a = SubtextEnvelope.parse(
             markup: "content-type: text/subtext\ntitle: Double, double toil and trouble\n\nDouble, double toil and trouble;\nFire burn and caldron bubble."

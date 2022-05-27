@@ -409,10 +409,10 @@
 				B80057F327DC35BE002C0129 /* Tests_Slug.swift */,
 				B84AD8E0280F7A19006B3153 /* Tests_StringUtilities.swift */,
 				B8682DCA2804BF04001CD8DD /* Tests_Subtext.swift */,
+				B831BDC12825EB9F00C4CE92 /* Tests_SubtextEnvelope.swift */,
 				B84AD8E52810B74E006B3153 /* Tests_SubURLs.swift */,
 				B831BDB62824DA9700C4CE92 /* Tests_Tape.swift */,
 				B84AD8E72811C827006B3153 /* Tests_URLComponentsUtilities.swift */,
-				B831BDC12825EB9F00C4CE92 /* Tests_SubtextEnvelope.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
