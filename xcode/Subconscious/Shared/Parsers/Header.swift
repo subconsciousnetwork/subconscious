@@ -135,6 +135,9 @@ struct Headers: Hashable, CustomStringConvertible {
         self.headers.append(header)
     }
 
+    /// An empty header struct that can be re-used
+    static let empty = Headers(headers: [])
+
     /// Parse headers from a substring.
     /// Handles missing headers, invalid headers, and no headers.
     /// - Returns a ParseState containing an array of headers (if any)
