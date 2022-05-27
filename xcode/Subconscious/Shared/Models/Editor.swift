@@ -18,6 +18,7 @@ struct Editor: Hashable {
     /// Is editor in loading state?
     var isLoading = true
 
+    var headers = Headers.empty
     /// Text of editor
     var text: String = ""
 
@@ -26,4 +27,7 @@ struct Editor: Hashable {
 
     /// The entry link within the text
     var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
+
+    /// Backlinks to the currently active entry
+    var backlinks: [EntryStub] = []
 }

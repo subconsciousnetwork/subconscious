@@ -276,9 +276,6 @@ struct AppModel: Equatable {
     // Editor
     var editor = Editor()
 
-    /// Backlinks to the currently active entry
-    var backlinks: [EntryStub] = []
-
     /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
     var linkSearchText = ""
@@ -1949,7 +1946,8 @@ extension AppModel {
 
         model.editor.isLoading = false
         model.editor.slug = detail.slug
-        model.backlinks = detail.backlinks
+        model.editor.backlinks = detail.backlinks
+        model.editor.headers = detail.entry.value.dom.headers
 
         let body: Subtext = detail.entry.value.dom.body
 

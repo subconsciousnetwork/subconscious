@@ -56,7 +56,7 @@ struct AppNavigationView: View {
                         DetailView(
                             slug: store.state.editor.slug,
                             isLoading: store.state.editor.isLoading,
-                            backlinks: store.state.backlinks,
+                            backlinks: store.state.editor.backlinks,
                             linkSuggestions: store.state.linkSuggestions,
                             selectedEntryLinkMarkup:
                                 store.state.editor.selectedEntryLinkMarkup,
