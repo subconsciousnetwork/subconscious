@@ -1965,6 +1965,8 @@ extension AppModel {
         model.slug = detail.slug
         model.backlinks = detail.backlinks
 
+        let body: Subtext = detail.entry.value.dom.body
+
         // Schedule save for ~ after the transition animation completes.
         // If we save immediately, it causes list view to update while the
         // panel animates in, creating much visual noise.
@@ -1998,7 +2000,7 @@ extension AppModel {
             setEditor(
                 state: state,
                 environment: environment,
-                text: detail.entry.value.content,
+                text: String(describing: body),
                 saveState: detail.entry.state
             )
         })
