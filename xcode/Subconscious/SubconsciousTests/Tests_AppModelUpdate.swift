@@ -33,17 +33,17 @@ class Tests_AppModelUpdate: XCTestCase {
             environment: environment
         )
         XCTAssertEqual(
-            update.state.isDetailLoading,
+            update.state.editor.isLoading,
             false,
             "isDetailLoading set to false"
         )
         XCTAssertEqual(
-            update.state.slug,
+            update.state.editor.slug,
             detail.slug,
             "Sets the slug"
         )
         XCTAssertEqual(
-            update.state.editorText,
+            update.state.editor.text,
             "Example text",
             "Sets editor text"
         )
@@ -261,8 +261,10 @@ class Tests_AppModelUpdate: XCTestCase {
 
     func testSave() throws {
         let state = AppModel(
-            slug: Slug("floop-the-pig")!,
-            editorSaveState: .modified
+            editor: Editor(
+                slug: Slug("floop-the-pig")!,
+                saveState: .modified
+            )
         )
         let update = AppModel.update(
             state: state,
@@ -270,7 +272,7 @@ class Tests_AppModelUpdate: XCTestCase {
             environment: environment
         )
         XCTAssertEqual(
-            update.state.editorSaveState,
+            update.state.editor.saveState,
             .saving,
             "Sets editor save state to saving when not already saved"
         )
@@ -278,8 +280,10 @@ class Tests_AppModelUpdate: XCTestCase {
 
     func testSaveAlreadySaved() throws {
         let state = AppModel(
-            slug: Slug("floop-the-pig")!,
-            editorSaveState: .saved
+            editor: Editor(
+                slug: Slug("floop-the-pig")!,
+                saveState: .saved
+            )
         )
         let update = AppModel.update(
             state: state,
@@ -287,7 +291,7 @@ class Tests_AppModelUpdate: XCTestCase {
             environment: environment
         )
         XCTAssertEqual(
-            update.state.editorSaveState,
+            update.state.editor.saveState,
             .saved,
             "Leaves editor save state as saved if already saved"
         )
