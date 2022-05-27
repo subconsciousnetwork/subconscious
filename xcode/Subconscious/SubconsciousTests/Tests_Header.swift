@@ -92,7 +92,7 @@ class Tests_Header: XCTestCase {
         let header = Header.parse(&tape)
         XCTAssertNotNil(header)
         XCTAssertEqual(
-            header!.render(),
+            String(describing: header!),
             "Content-Type: text/subtext\n",
             "Render returns valid header with trailing newline"
         )
@@ -105,7 +105,7 @@ class Tests_Header: XCTestCase {
         let header = Header.parse(&tape)
         XCTAssertNotNil(header)
         XCTAssertEqual(
-            header!.render(),
+            String(describing: header!),
             "Content-Type: text/subtext\n",
             "Render normalizes name"
         )
@@ -222,7 +222,7 @@ class Tests_Header: XCTestCase {
             """
         )
         let headers = Headers.parse(&tape)
-        let text = headers.render()
+        let text = String(describing: headers)
         XCTAssertEqual(
             text,
             "Content-Type: text/subtext\nContent-Type: text/plain\nTitle: Floop the Pig\n\n",

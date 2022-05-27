@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SubtextEnvelope {
+struct SubtextEnvelope:CustomStringConvertible {
     var headers: Headers
     var body: Subtext
 
@@ -19,21 +19,16 @@ struct SubtextEnvelope {
         return body.title()
     }
 
-    func render() -> String {
-        "\(headers.render())\(body.base)"
-    }
-
-    static func parse(_ tape: inout Tape) -> Self {
-        let headers = Headers.parse(&tape)
-        let dom = Subtext.parse(&tape)
-        return Self(
-            headers: headers,
-            body: dom
-        )
+    var description: String {
+        "\(headers)\(body.base)"
     }
 
     static func parse(markup: String) -> Self {
-        var tape = Tape(markup[...])
-        return parse(&tape)
+        let envelope = HeadersEnvelope.parse(markup: markup)
+        let dom = Subtext.parse(markup: String(envelope.body))
+        return Self(
+            headers: envelope.headers,
+            body: dom
+        )
     }
 }

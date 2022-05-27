@@ -10,8 +10,8 @@ import XCTest
 
 class Tests_SubtextEnvelope: XCTestCase {
     func testParse() throws {
-        var tape = Tape(
-            """
+        let envelope = SubtextEnvelope.parse(
+            markup: """
             Content-Type: text/subtext
             Malformed header: Bloop
             Title: Some title
@@ -20,7 +20,6 @@ class Tests_SubtextEnvelope: XCTestCase {
             Some text
             """
         )
-        let envelope = SubtextEnvelope.parse(&tape)
         XCTAssertEqual(envelope.headers.headers.count, 2)
         XCTAssertEqual(
             envelope.headers.headers[0].normalizedName,
@@ -48,7 +47,7 @@ class Tests_SubtextEnvelope: XCTestCase {
             """
         )
         XCTAssertEqual(
-            envelope.render(),
+            String(describing: envelope),
             """
             Content-Type: text/subtext
             Title: Double, double toil and trouble
@@ -72,7 +71,7 @@ class Tests_SubtextEnvelope: XCTestCase {
             """
         )
         XCTAssertEqual(
-            envelope.render(),
+            String(describing: envelope),
             """
             Content-Type: text/subtext
             Title: Double, double toil and trouble

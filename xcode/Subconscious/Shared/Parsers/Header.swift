@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Header: Hashable {
+struct Header: Hashable, CustomStringConvertible {
     var name: String
     var value: String
 
@@ -31,7 +31,7 @@ struct Header: Hashable {
         name.capitalized
     }
 
-    func render() -> String {
+    var description: String {
         "\(normalizedName): \(value)\n"
     }
 
@@ -91,13 +91,13 @@ struct Header: Hashable {
 }
 
 /// A document with headers
-struct Headers: Hashable {
+struct Headers: Hashable, CustomStringConvertible {
     var headers: [Header]
 
     /// Get headers, rendered back out as a string
-    func render() -> String {
+    var description: String {
         headers
-            .map({ header in header.render() })
+            .map({ header in String(describing: header) })
             .joined(separator: "")
             .appending("\n")
     }
@@ -175,5 +175,33 @@ struct Headers: Hashable {
     static func parse(markup: String) -> Self {
         var tape = Tape(markup[...])
         return parse(&tape)
+    }
+}
+
+/// Parses headers and retains body portion as a substring
+struct HeadersEnvelope: CustomStringConvertible {
+    var headers: Headers
+    var body: Substring
+
+    private init(
+        headers: Headers,
+        body: Substring
+    ) {
+        self.headers = headers
+        self.body = body
+    }
+
+    var description: String {
+        "\(headers)\(body)"
+    }
+
+    static func parse(markup: String) -> Self {
+        var tape = Tape(markup[...])
+        let headers = Headers.parse(&tape)
+        let body = tape.rest
+        return Self(
+            headers: headers,
+            body: body
+        )
     }
 }
