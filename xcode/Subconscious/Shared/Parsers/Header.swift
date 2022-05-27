@@ -90,7 +90,7 @@ struct Header: Hashable, CustomStringConvertible {
     }
 }
 
-/// A document with headers
+/// A collection of parsed HTTP-style headers
 struct Headers: Hashable, CustomStringConvertible {
     var headers: [Header]
 
@@ -178,6 +178,7 @@ struct Headers: Hashable, CustomStringConvertible {
     }
 }
 
+/// A combination of parsed headers and body part
 /// Parses headers and retains body portion as a substring
 struct HeadersEnvelope: CustomStringConvertible {
     var headers: Headers

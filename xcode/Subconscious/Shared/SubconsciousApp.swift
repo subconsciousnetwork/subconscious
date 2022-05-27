@@ -270,23 +270,11 @@ struct AppModel: Equatable {
     var searchText = ""
     var isSearchShowing = false
 
-    /// Slug for the currently selected entry
-    var slug: Slug? = nil
-    var isDetailLoading = true
-
     /// Main search suggestions
     var suggestions: [Suggestion] = []
 
     // Editor
-    /// Subtext object model
-    var editorText = ""
-    /// Are all changes to editor saved?
-    var editorSaveState = SaveState.saved
-    /// Editor selection corresponds with `editorAttributedText`
-    var editorSelection = NSMakeRange(0, 0)
-    /// Link markup currently being edited (if any).
-    /// Used for autocompleting link.
-    var editorSelectedEntryLinkMarkup: Subtext.EntryLinkMarkup? = nil
+    var editor = Editor()
 
     /// Backlinks to the currently active entry
     var backlinks: [EntryStub] = []
@@ -307,15 +295,18 @@ struct AppModel: Equatable {
     /// currently match it, such that we could say the editor is
     /// displaying that entry?
     func isEditorMatchingEntry(_ entry: SubtextFile) -> Bool {
-        self.slug == entry.slug && self.editorText == entry.dom.body.base
+        (
+            self.editor.slug == entry.slug &&
+            self.editor.text == entry.dom.body.base
+        )
     }
 
     /// Get a Subtext file snapshot for the current editor state
     func snapshotEditorAsEntry() -> SubtextFile? {
-        guard let slug = self.slug else {
+        guard let slug = self.editor.slug else {
             return nil
         }
-        return SubtextFile(slug: slug, content: self.editorText)
+        return SubtextFile(slug: slug, content: self.editor.text)
     }
 }
 
@@ -592,28 +583,28 @@ extension AppModel {
             return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.editorSelection,
+                range: state.editor.selection,
                 with: { text in Markup.Wikilink(text: text) }
             )
         case .insertEditorBoldAtSelection:
             return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.editorSelection,
+                range: state.editor.selection,
                 with: { text in Markup.Bold(text: text) }
             )
         case .insertEditorItalicAtSelection:
             return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.editorSelection,
+                range: state.editor.selection,
                 with: { text in Markup.Italic(text: text) }
             )
         case .insertEditorCodeAtSelection:
             return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.editorSelection,
+                range: state.editor.selection,
                 with: { text in Markup.Code(text: text) }
             )
         case let .showDetail(isShowing):
@@ -768,12 +759,7 @@ extension AppModel {
     /// Set all editor properties to initial values
     static func resetEditor(state: AppModel) -> AppModel {
         var model = state
-        model.slug = nil
-        model.isDetailLoading = true
-        model.editorText = ""
-        model.editorSaveState = .saved
-        model.editorSelection = NSMakeRange(0, 0)
-        model.editorSelectedEntryLinkMarkup = nil
+        model.editor = Editor()
         return model
     }
 
@@ -795,12 +781,12 @@ extension AppModel {
         saveState: SaveState = .modified
     ) -> Update<AppModel, AppAction> {
         var model = state
-        model.editorText = text
+        model.editor.text = text
         // Mark save state
-        model.editorSaveState = saveState
+        model.editor.saveState = saveState
         let dom = Subtext.parse(markup: text)
-        let link = dom.entryLinkFor(range: state.editorSelection)
-        model.editorSelectedEntryLinkMarkup = link
+        let link = dom.entryLinkFor(range: state.editor.selection)
+        model.editor.selectedEntryLinkMarkup = link
 
         let linkSearchText = link?.toTitle() ?? ""
 
@@ -821,12 +807,12 @@ extension AppModel {
         range nsRange: NSRange
     ) -> Update<AppModel, AppAction> {
         var model = state
-        model.editorSelection = nsRange
-        let dom = Subtext.parse(markup: model.editorText)
+        model.editor.selection = nsRange
+        let dom = Subtext.parse(markup: model.editor.text)
         let link = dom.entryLinkFor(
-            range: model.editorSelection
+            range: model.editor.selection
         )
-        model.editorSelectedEntryLinkMarkup = link
+        model.editor.selectedEntryLinkMarkup = link
 
         let linkSearchText = link?.toTitle() ?? ""
 
@@ -846,8 +832,8 @@ extension AppModel {
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
         let range = NSRange(
-            state.editorText.endIndex...,
-            in: state.editorText
+            state.editor.text.endIndex...,
+            in: state.editor.text
         )
 
         return setEditorSelection(
@@ -864,7 +850,7 @@ extension AppModel {
         text: String,
         range nsRange: NSRange
     ) -> Update<AppModel, AppAction> {
-        guard let range = Range(nsRange, in: state.editorText) else {
+        guard let range = Range(nsRange, in: state.editor.text) else {
             environment.logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
@@ -872,7 +858,7 @@ extension AppModel {
         }
 
         // Replace selected range with committed link search text.
-        let markup = state.editorText.replacingCharacters(
+        let markup = state.editor.text.replacingCharacters(
             in: range,
             with: text
         )
@@ -916,18 +902,18 @@ extension AppModel {
     ) -> Update<AppModel, AppAction>
     where T: TaggedMarkup
     {
-        guard let range = Range(nsRange, in: state.editorText) else {
+        guard let range = Range(nsRange, in: state.editor.text) else {
             environment.logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
             return Update(state: state)
         }
 
-        let selectedText = String(state.editorText[range])
+        let selectedText = String(state.editor.text[range])
         let markup = withMarkup(selectedText)
 
         // Replace selected range with committed link search text.
-        let editorText = state.editorText.replacingCharacters(
+        let editorText = state.editor.text.replacingCharacters(
             in: range,
             with: String(describing: markup)
         )
@@ -1422,7 +1408,7 @@ extension AppModel {
         var model = state
         // If we just deleted the entry currently being edited,
         // reset the editor to initial state (nothing is being edited).
-        if state.slug == slug {
+        if state.editor.slug == slug {
             model = resetEditor(state: model)
             model.isDetailShowing = false
         }
@@ -1840,7 +1826,7 @@ extension AppModel {
         slug: Slug
     ) -> Update<AppModel, AppAction> {
         var model = state
-        model.isDetailLoading = true
+        model.editor.isLoading = true
 
         // Save current state before we blow it away
         return save(
@@ -1961,8 +1947,8 @@ extension AppModel {
     ) -> Update<AppModel, AppAction> {
         var model = resetEditor(state: state)
 
-        model.isDetailLoading = false
-        model.slug = detail.slug
+        model.editor.isLoading = false
+        model.editor.slug = detail.slug
         model.backlinks = detail.backlinks
 
         let body: Subtext = detail.entry.value.dom.body
@@ -2069,7 +2055,7 @@ extension AppModel {
         model.linkSearchText = text
 
         // Omit current slug from results
-        let omitting = state.slug.mapOr(
+        let omitting = state.editor.slug.mapOr(
             { slug in Set([slug]) },
             default: Set()
         )
@@ -2118,14 +2104,14 @@ extension AppModel {
         // If there is a selected link, use that range
         // instead of selection
         let (range, replacement): (NSRange, String) = Func.pipe(
-            state.editorSelectedEntryLinkMarkup,
+            state.editor.selectedEntryLinkMarkup,
             { markup in
                 switch markup {
                 case .slashlink(let slashlink):
                     let replacement = link.slug.toSlashlink()
                     let range = NSRange(
                         slashlink.span.range,
-                        in: state.editorText
+                        in: state.editor.text
                     )
                     return (range, replacement)
                 case .wikilink(let wikilink):
@@ -2133,13 +2119,13 @@ extension AppModel {
                     let replacement = Markup.Wikilink(text: text).markup
                     let range = NSRange(
                         wikilink.span.range,
-                        in: state.editorText
+                        in: state.editor.text
                     )
                     return (range, replacement)
                 case .none:
                     let text = link.toLinkableTitle()
                     let replacement = Markup.Wikilink(text: text).markup
-                    return (state.editorSelection, replacement)
+                    return (state.editor.selection, replacement)
                 }
             }
         )
@@ -2172,13 +2158,13 @@ extension AppModel {
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
         // If editor dom is already saved, noop
-        guard state.editorSaveState != .saved else {
+        guard state.editor.saveState != .saved else {
             return Update(state: state)
         }
 
         // If there is no entry currently being edited, noop.
         guard let entry = state.snapshotEditorAsEntry() else {
-            let saveState = String(reflecting: state.editorSaveState)
+            let saveState = String(reflecting: state.editor.saveState)
             environment.logger.warning(
                 "Entry save state is marked \(saveState) but no entry could be derived for state"
             )
@@ -2187,7 +2173,7 @@ extension AppModel {
 
         var model = state
         // Mark saving in-progress
-        model.editorSaveState = .saving
+        model.editor.saveState = .saving
 
         let fx: Fx<AppAction> = environment.database
             .writeEntry(
@@ -2231,10 +2217,10 @@ extension AppModel {
         // new changes.
         // 2022-02-09 Gordon Brander
         if
-            model.editorSaveState == .saving &&
+            model.editor.saveState == .saving &&
             model.isEditorMatchingEntry(entry)
         {
-            model.editorSaveState = .saved
+            model.editor.saveState = .saved
         }
 
         return Update(state: model, fx: fx)
@@ -2252,7 +2238,7 @@ extension AppModel {
         )
         // Mark modified, since we failed to save
         var model = state
-        model.editorSaveState = .modified
+        model.editor.saveState = .modified
         return Update(state: model)
     }
 }
