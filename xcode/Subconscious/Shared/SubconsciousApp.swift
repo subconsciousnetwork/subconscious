@@ -199,7 +199,7 @@ extension AppAction {
         case .setRenameSuggestions(let items):
             return "setRenameSuggestions(...) (\(items.count) items)"
         case .updateDetail(let detail, _):
-            return "updateDetail(\(detail.slug)) (saved state: \(detail.entry.state))"
+            return "updateDetail(\(detail.slug)) (saved state: \(detail.saveState))"
         default:
             return String(describing: self)
         }
@@ -1940,8 +1940,8 @@ extension AppModel {
         model.editor.slug = detail.slug
         model.editor.backlinks = detail.backlinks
 
-        let headers: Headers = detail.entry.value.envelope.headers
-        let body: Subtext = detail.entry.value.envelope.body
+        let headers: Headers = detail.entry.envelope.headers
+        let body: Subtext = detail.entry.envelope.body
 
         // If headers are empty, create a default set of headers from
         // the subtext.
@@ -1981,7 +1981,7 @@ extension AppModel {
                 state: state,
                 environment: environment,
                 text: String(describing: body),
-                saveState: detail.entry.state
+                saveState: detail.saveState
             )
         })
 

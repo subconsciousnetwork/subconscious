@@ -15,13 +15,10 @@ class Tests_AppModelUpdate: XCTestCase {
         let state = AppModel()
         let slug = try Slug("example").unwrap()
         let detail = EntryDetail(
-            slug: slug,
-            entry: SaveEnvelope(
-                state: .saved,
-                value: SubtextFile(
-                    slug: slug,
-                    content: "Example text"
-                )
+            saveState: .saved,
+            entry: SubtextFile(
+                slug: slug,
+                content: "Example text"
             )
         )
         let update = AppModel.update(
@@ -58,13 +55,10 @@ class Tests_AppModelUpdate: XCTestCase {
         let state = AppModel()
         let slug = try Slug("example").unwrap()
         let detail = EntryDetail(
-            slug: slug,
-            entry: SaveEnvelope(
-                state: .saved,
-                value: SubtextFile(
-                    slug: slug,
-                    content: "Example text"
-                )
+            saveState: .saved,
+            entry: SubtextFile(
+                slug: slug,
+                content: "Example text"
             )
         )
         let update = AppModel.update(
@@ -86,13 +80,10 @@ class Tests_AppModelUpdate: XCTestCase {
         let state = AppModel()
         let slug = try Slug("example").unwrap()
         let detail = EntryDetail(
-            slug: slug,
-            entry: SaveEnvelope(
-                state: .saved,
-                value: SubtextFile(
-                    slug: slug,
-                    content: "Example text"
-                )
+            saveState: .saved,
+            entry: SubtextFile(
+                slug: slug,
+                content: "Example text"
             )
         )
         let update = AppModel.update(
