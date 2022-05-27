@@ -31,3 +31,17 @@ struct Editor: Hashable {
     /// Backlinks to the currently active entry
     var backlinks: [EntryStub] = []
 }
+
+extension SubtextFile {
+    /// Construct a SubtextFile from an Editor model
+    init?(_ editor: Editor) {
+        guard let slug = editor.slug else {
+            return nil
+        }
+        self.slug = slug
+        self.envelope = SubtextEnvelope(
+            headers: editor.headers,
+            body: Subtext.parse(markup: editor.text)
+        )
+    }
+}

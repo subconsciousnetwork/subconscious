@@ -140,7 +140,7 @@ struct DatabaseService {
             """,
             parameters: [
                 .text(entry.slug.description),
-                .text(entry.dom.title()),
+                .text(entry.envelope.title()),
                 .text(entry.content),
                 .date(modified),
                 .integer(size)
@@ -231,7 +231,7 @@ struct DatabaseService {
             directory: documentURL
         )
         .unwrap()
-        .append(fromFile.dom)
+        .append(fromFile.envelope)
 
         //  First write the merged file to "to" location
         try toFile.write(directory: documentURL)
@@ -551,7 +551,7 @@ struct DatabaseService {
                 )
             })
         }
-        return linksEntry.dom.body.entryLinks.map(LinkSuggestion.entry)
+        return linksEntry.envelope.body.entryLinks.map(LinkSuggestion.entry)
     }
 
     /// Fetch search suggestions

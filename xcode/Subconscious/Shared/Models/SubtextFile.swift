@@ -8,8 +8,8 @@ import Foundation
 /// A Subtext DOM together with a location for that document
 struct SubtextFile: Hashable, Equatable, Identifiable {
     var slug: Slug
-    var dom: SubtextEnvelope
-    var content: String { String(describing: dom) }
+    var envelope: SubtextEnvelope
+    var content: String { String(describing: envelope) }
     var id: Slug { slug }
 
     init(
@@ -17,7 +17,7 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
         content: String
     ) {
         self.slug = slug
-        self.dom = SubtextEnvelope.parse(markup: content)
+        self.envelope = SubtextEnvelope.parse(markup: content)
     }
 
     init(
@@ -25,7 +25,7 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
         dom: SubtextEnvelope
     ) {
         self.slug = slug
-        self.dom = dom
+        self.envelope = dom
     }
 
     /// Open existing document
@@ -49,7 +49,7 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
     /// Returns a new instance
     func append(_ dom: SubtextEnvelope) -> Self {
         var file = self
-        file.dom = self.dom.append(dom)
+        file.envelope = self.envelope.append(dom)
         return file
     }
 

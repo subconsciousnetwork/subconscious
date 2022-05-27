@@ -47,6 +47,11 @@ class Tests_AppModelUpdate: XCTestCase {
             "Example text",
             "Sets editor text"
         )
+        XCTAssertEqual(
+            update.state.editor.headers.headers.count,
+            2,
+            "Update function populates the editor with default headers if the file has none"
+        )
     }
 
     func testUpdateDetailFocus() throws {

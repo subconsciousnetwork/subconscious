@@ -294,16 +294,8 @@ struct AppModel: Equatable {
     func isEditorMatchingEntry(_ entry: SubtextFile) -> Bool {
         (
             self.editor.slug == entry.slug &&
-            self.editor.text == entry.dom.body.base
+            self.editor.text == entry.envelope.body.base
         )
-    }
-
-    /// Get a Subtext file snapshot for the current editor state
-    func snapshotEditorAsEntry() -> SubtextFile? {
-        guard let slug = self.editor.slug else {
-            return nil
-        }
-        return SubtextFile(slug: slug, content: self.editor.text)
     }
 }
 
@@ -1947,9 +1939,13 @@ extension AppModel {
         model.editor.isLoading = false
         model.editor.slug = detail.slug
         model.editor.backlinks = detail.backlinks
-        model.editor.headers = detail.entry.value.dom.headers
 
-        let body: Subtext = detail.entry.value.dom.body
+        let headers: Headers = detail.entry.value.envelope.headers
+        let body: Subtext = detail.entry.value.envelope.body
+
+        // If headers are empty, create a default set of headers from
+        // the subtext.
+        model.editor.headers = headers
 
         // Schedule save for ~ after the transition animation completes.
         // If we save immediately, it causes list view to update while the
@@ -2161,7 +2157,7 @@ extension AppModel {
         }
 
         // If there is no entry currently being edited, noop.
-        guard let entry = state.snapshotEditorAsEntry() else {
+        guard let entry = SubtextFile(state.editor) else {
             let saveState = String(reflecting: state.editor.saveState)
             environment.logger.warning(
                 "Entry save state is marked \(saveState) but no entry could be derived for state"

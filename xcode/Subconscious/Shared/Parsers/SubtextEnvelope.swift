@@ -11,6 +11,27 @@ struct SubtextEnvelope: Hashable, CustomStringConvertible {
     var headers: Headers
     var body: Subtext
 
+    init(
+        headers: Headers,
+        body: Subtext
+    ) {
+        self.headers = headers
+        self.body = body
+    }
+
+    init(
+        title: String,
+        body: Subtext
+    ) {
+        self.headers = Headers(
+            headers: [
+                Header(name: "Content-Type", value: "text/subtext"),
+                Header(name: "Title", value: title)
+            ]
+        )
+        self.body = body
+    }
+
     /// Get title from headers, or derive title from Subtext body
     func title() -> String {
         if let header = headers.first(named: "title") {
