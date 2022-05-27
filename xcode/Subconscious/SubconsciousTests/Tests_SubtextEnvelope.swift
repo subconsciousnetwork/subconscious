@@ -82,4 +82,27 @@ class Tests_SubtextEnvelope: XCTestCase {
             """
         )
     }
+
+    func testAppend() throws {
+        let a = SubtextEnvelope.parse(
+            markup: "content-type: text/subtext\ntitle: Double, double toil and trouble\n\nDouble, double toil and trouble;\nFire burn and caldron bubble."
+        )
+        let b = SubtextEnvelope.parse(
+            markup: "CONTENT-TYPE: text/subtext\ntitle: A desert place\n\nWhen shall we three meet again\nIn thunder, lightning, or in rain?"
+        )
+        let c = a.append(b)
+
+        XCTAssertEqual(
+            String(describing: c),
+            """
+            Content-Type: text/subtext
+            Title: Double, double toil and trouble
+            
+            Double, double toil and trouble;
+            Fire burn and caldron bubble.
+            When shall we three meet again
+            In thunder, lightning, or in rain?
+            """
+        )
+    }
 }

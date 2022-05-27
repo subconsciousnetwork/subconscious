@@ -307,7 +307,7 @@ struct AppModel: Equatable {
     /// currently match it, such that we could say the editor is
     /// displaying that entry?
     func isEditorMatchingEntry(_ entry: SubtextFile) -> Bool {
-        self.slug == entry.slug && self.editorText == entry.dom.base
+        self.slug == entry.slug && self.editorText == entry.dom.body.base
     }
 
     /// Get a Subtext file snapshot for the current editor state

@@ -551,7 +551,7 @@ struct DatabaseService {
                 )
             })
         }
-        return linksEntry.dom.entryLinks.map(LinkSuggestion.entry)
+        return linksEntry.dom.body.entryLinks.map(LinkSuggestion.entry)
     }
 
     /// Fetch search suggestions

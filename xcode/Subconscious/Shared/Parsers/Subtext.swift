@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-struct Subtext: Hashable, Equatable {
+struct Subtext: Hashable, Equatable, CustomStringConvertible {
     let base: Substring
     let blocks: [Block]
 
@@ -18,6 +18,10 @@ struct Subtext: Hashable, Equatable {
     ) {
         self.base = base
         self.blocks = blocks
+    }
+
+    var description: String {
+        String(base)
     }
 
     /// Implement custom equatable for Subtext.
@@ -639,7 +643,7 @@ extension Subtext {
 extension Subtext {
     /// Append another Subtext document
     func append(_ other: Subtext) -> Subtext {
-        Subtext.parse(markup: "\(self.base)\n\n\(other.base)")
+        Subtext.parse(markup: "\(self.base)\n\(other.base)")
     }
 }
 

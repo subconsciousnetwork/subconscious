@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SubtextEnvelope:CustomStringConvertible {
+struct SubtextEnvelope: Hashable, CustomStringConvertible {
     var headers: Headers
     var body: Subtext
 
@@ -21,6 +21,14 @@ struct SubtextEnvelope:CustomStringConvertible {
 
     var description: String {
         "\(headers)\(body.base)"
+    }
+
+    /// Append one SubtextEnvelope to another.
+    /// Discards the headers of `other`.
+    func append(_ other: SubtextEnvelope) -> Self {
+        var this = self
+        this.body = this.body.append(other.body)
+        return this
     }
 
     static func parse(markup: String) -> Self {

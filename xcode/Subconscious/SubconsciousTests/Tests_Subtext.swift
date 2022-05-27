@@ -1063,4 +1063,28 @@ class Tests_Subtext: XCTestCase {
         XCTAssertEqual(quote.first, ">")
         XCTAssertEqual(quote.last, "k")
     }
+
+    func testAppend() throws {
+        let a = Subtext.parse(
+            markup: """
+            Here comes the sun, doo da doo doo
+            Here comes the sun, and I say
+            """
+        )
+        let b = Subtext.parse(
+            markup: """
+            It's all right
+            """
+        )
+        let c = a.append(b)
+        XCTAssertEqual(
+            String(describing: c),
+            """
+            Here comes the sun, doo da doo doo
+            Here comes the sun, and I say
+            It's all right
+            """,
+            "Append concatenates two subtext instances, joining them with a single newline"
+        )
+    }
 }
