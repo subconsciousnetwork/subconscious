@@ -43,7 +43,7 @@ class Tests_Header: XCTestCase {
         let header = Header.parse(&tape)
         XCTAssertNotNil(header)
         XCTAssertEqual(
-            header!.normalizedName,
+            String(describing: header!.normalizedName),
             "Content-Type"
         )
     }
@@ -116,11 +116,11 @@ class Tests_Header: XCTestCase {
         var tape = Tape(doc[...])
         let headers = Headers.parse(&tape)
         XCTAssertEqual(
-            headers.headers[0].normalizedName,
+            String(describing: headers.headers[0].normalizedName),
             "Content-Type"
         )
         XCTAssertEqual(
-            headers.headers[1].normalizedName,
+            String(describing: headers.headers[1].normalizedName),
             "Title"
         )
         XCTAssertEqual(
@@ -210,6 +210,20 @@ class Tests_Header: XCTestCase {
         XCTAssertEqual(header!.value, "text/subtext")
     }
 
+    func testHeadersIndexFirstWins() throws {
+        let headers = Headers.parse(
+            markup: """
+            content-type: text/subtext
+            Content-Type: text/javascript
+            """
+        )
+        let index = headers.index()
+        XCTAssertEqual(
+            index[HeaderName(formatting: "Content-Type")],
+            "text/subtext"
+        )
+    }
+
     func testHeadersRender() throws {
         var tape = Tape(
             """
@@ -227,6 +241,15 @@ class Tests_Header: XCTestCase {
             text,
             "Content-Type: text/subtext\nContent-Type: text/plain\nTitle: Floop the Pig\n\n",
             "Renders headers with trailing blank line"
+        )
+    }
+
+    func testHeaderName() throws {
+        let name = HeaderName(formatting: "content type")
+        XCTAssertEqual(
+            String(describing: name),
+            "Content-Type",
+            "HeaderName formats free text into a valid normalized header name"
         )
     }
 }

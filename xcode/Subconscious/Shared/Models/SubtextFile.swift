@@ -67,4 +67,29 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
             encoding: .utf8
         )
     }
+
+    /// Sets required headers.
+    /// Also removes duplicate headers (we discourage these).
+    func mendHeaders() -> Self {
+        var index = self.envelope.headers.index()
+
+        let contentTypeName = HeaderName(formatting: "Content-Type")
+        index[contentTypeName] = "text/subtext"
+
+        let titleName = HeaderName(formatting: "Title")
+        let currentTitle = index[titleName]
+        let titleValue = EntryLink(
+            slug: slug,
+            title: currentTitle ?? ""
+        )
+        .toLinkableTitle()
+        index[titleName] = titleValue
+
+        let headers = Headers(index)
+
+        var this = self
+        this.envelope.headers = headers
+
+        return this
+    }
 }

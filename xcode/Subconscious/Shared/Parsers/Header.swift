@@ -6,7 +6,29 @@
 //
 
 import Foundation
+import OrderedCollections
 
+/// A normalized header name
+struct HeaderName: Hashable, CustomStringConvertible {
+    let name: String
+
+    init(formatting string: String) {
+        self.name = string
+            .capitalized
+            .replacingOccurrences(
+                of: #"\s"#,
+                with: "-",
+                options: .regularExpression,
+                range: nil
+            )
+    }
+
+    var description: String {
+        name
+    }
+}
+
+/// A header
 struct Header: Hashable, CustomStringConvertible {
     var name: String
     var value: String
@@ -27,8 +49,8 @@ struct Header: Hashable, CustomStringConvertible {
     ///
     /// Headers are case-insensitive, but this format is in keeping with
     /// typical HTTP header naming conventions.
-    var normalizedName: String {
-        name.capitalized
+    var normalizedName: HeaderName {
+        HeaderName(formatting: name)
     }
 
     var description: String {
@@ -91,8 +113,21 @@ struct Header: Hashable, CustomStringConvertible {
 }
 
 /// A collection of parsed HTTP-style headers
-struct Headers: Hashable, CustomStringConvertible {
+struct Headers: Hashable, CustomStringConvertible, Sequence {
     var headers: [Header]
+
+    init(headers: [Header]) {
+        self.headers = headers
+    }
+
+    init(_ index: OrderedDictionary<HeaderName, String>) {
+        self.headers = index.map({ name, value in
+            Header(
+                name: String(describing: name),
+                value: value
+            )
+        })
+    }
 
     /// Get headers, rendered back out as a string
     var description: String {
@@ -102,37 +137,34 @@ struct Headers: Hashable, CustomStringConvertible {
             .appending("\n")
     }
 
+    /// Conform to Sequence
+    func makeIterator() -> IndexingIterator<Array<Header>> {
+        headers.makeIterator()
+    }
+
     /// Get the first header matching a particular name (if any)
     /// - Returns Header?
     func first(named name: String) -> Header? {
-        let name = name.capitalized
+        let name = HeaderName(formatting: name)
         return headers.first(where: { header in header.normalizedName == name })
-    }
-
-    /// Index header to dictionary.
-    /// Duplicate headers will be ignored. First header wins.
-    /// While duplicate headers are technically allowed by the HTTP spec for
-    /// some header types (comma separated), we discourage this form.
-    func toDictionary() -> Dictionary<String, String> {
-        var index: Dictionary<String, String> = Dictionary()
-        for header in headers {
-            if index[header.normalizedName] == nil {
-                index[header.normalizedName] = header.value
-            }
-        }
-        return index
-    }
-
-    /// Remove all headers matching a particular name
-    mutating func removeAll(named name: String) {
-        self.headers.removeAll(
-            where: { header in header.normalizedName == name }
-        )
     }
 
     /// Append a header
     mutating func append(_ header: Header) {
         self.headers.append(header)
+    }
+
+    /// Index headers as an OrderedDictionary
+    /// Removes duplicate headers with same HeaderNames. First header wins.
+    func index() -> OrderedDictionary<HeaderName, String> {
+        var headerIndex: OrderedDictionary<HeaderName, String> = [:]
+        for header in headers {
+            let name = header.normalizedName
+            if headerIndex[name] == nil {
+                headerIndex[name] = header.value
+            }
+        }
+        return headerIndex
     }
 
     /// An empty header struct that can be re-used
