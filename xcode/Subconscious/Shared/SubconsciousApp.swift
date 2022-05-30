@@ -2146,6 +2146,15 @@ extension AppModel {
             .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
+    /// Snapshot editor state in preparation for saving.
+    /// Also mends header files.
+    static func snapshotEditor(_ editor: Editor) -> SubtextFile? {
+        guard let entry = SubtextFile(editor) else {
+            return nil
+        }
+        return entry.mendHeaders()
+    }
+
     /// Save snapshot of entry
     static func save(
         state: AppModel,
@@ -2157,7 +2166,7 @@ extension AppModel {
         }
 
         // If there is no entry currently being edited, noop.
-        guard let entry = SubtextFile(state.editor) else {
+        guard let entry = snapshotEditor(state.editor) else {
             let saveState = String(reflecting: state.editor.saveState)
             environment.logger.warning(
                 "Entry save state is marked \(saveState) but no entry could be derived for state"
