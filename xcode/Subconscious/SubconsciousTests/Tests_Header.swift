@@ -210,21 +210,7 @@ class Tests_Header: XCTestCase {
         XCTAssertEqual(header!.value, "text/subtext")
     }
 
-    func testHeadersIndexFirstWins() throws {
-        let headers = Headers.parse(
-            markup: """
-            content-type: text/subtext
-            Content-Type: text/javascript
-            """
-        )
-        let index = HeaderIndex(headers)
-        XCTAssertEqual(
-            index["Content-Type"],
-            "text/subtext"
-        )
-    }
-
-    func testHeadersRender() throws {
+    func testHeadersDescription() throws {
         var tape = Tape(
             """
             Content-Type: text/subtext
@@ -241,6 +227,61 @@ class Tests_Header: XCTestCase {
             text,
             "Content-Type: text/subtext\nContent-Type: text/plain\nTitle: Floop the Pig\n\n",
             "Renders headers with trailing blank line"
+        )
+    }
+
+    func testHeadersIndexFirstWins() throws {
+        let headers = Headers.parse(
+            markup: """
+            content-type: text/subtext
+            Content-Type: text/javascript
+            """
+        )
+        let index = HeaderIndex(headers)
+        XCTAssertEqual(
+            index["Content-Type"],
+            "text/subtext"
+        )
+    }
+
+    func testHeadersSubscriptNormalization() throws {
+        var index = HeaderIndex()
+        index["title"] = "Kosmos"
+        index["content type"] = "text/subtext"
+        index["absurd\n   HEADER"] = "nonsense"
+        XCTAssertEqual(
+            index["TITLE"],
+            "Kosmos",
+            "Subscript normalizes keys when getting"
+        )
+        XCTAssertEqual(
+            index.index["Title"],
+            "Kosmos",
+            "Subscript normalizes keys when setting"
+        )
+        XCTAssertEqual(
+            index.index["Content-Type"],
+            "text/subtext",
+            "Subscript replaces spaces with dashes"
+        )
+        XCTAssertEqual(
+            index.index["Absurd----Header"],
+            "nonsense",
+            "Subscript replaces whitespace with dashes"
+        )
+    }
+
+    func testHeadersIndexDescription() throws {
+        let index = HeaderIndex(
+            [
+                Header(name: "content-type", value: "text/subtext"),
+                Header(name: "title", value: "Gliding O'er All"),
+            ]
+        )
+        XCTAssertEqual(
+            String(describing: index),
+            "Content-Type: text/subtext\nTitle: Gliding O'er All\n\n",
+            "Index renders to correctly formatted header block"
         )
     }
 }
