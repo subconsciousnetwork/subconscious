@@ -9,8 +9,6 @@ import Foundation
 struct SubtextFile: Hashable, Equatable, Identifiable {
     var slug: Slug
     var envelope: SubtextEnvelope
-    var content: String { String(describing: envelope) }
-    var id: Slug { slug }
 
     init(
         slug: Slug,
@@ -41,6 +39,9 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
         }
     }
 
+    var content: String { String(describing: envelope) }
+    var id: Slug { slug }
+
     func url(directory: URL) -> URL {
         self.slug.toURL(directory: directory, ext: "subtext")
     }
@@ -68,28 +69,55 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
         )
     }
 
+    /// Return linkable title.
+    /// Use header value if present, otherwise derive from slug.
+    func title() -> String {
+        EntryLink(
+            slug: slug,
+            title: envelope.headers["Title"] ?? ""
+        )
+        .toLinkableTitle()
+    }
+
+    func excerpt() -> String {
+        envelope.body.excerpt()
+    }
+
     /// Sets required headers.
     /// Also removes duplicate headers (we discourage these).
     func mendHeaders() -> Self {
-        var index = self.envelope.headers.index()
+        var headers = self.envelope.headers
 
-        let contentTypeName = HeaderName(formatting: "Content-Type")
-        index[contentTypeName] = "text/subtext"
+        headers["Content-Type"] = "text/subtext"
 
-        let titleName = HeaderName(formatting: "Title")
-        let currentTitle = index[titleName]
         let titleValue = EntryLink(
             slug: slug,
-            title: currentTitle ?? ""
+            title: headers["Title"] ?? ""
         )
         .toLinkableTitle()
-        index[titleName] = titleValue
+        headers["Title"] = titleValue
 
-        let headers = Headers(index)
+        // headers["Modified"] = modified.ISO8601Format()
 
         var this = self
         this.envelope.headers = headers
-
         return this
     }
 }
+
+extension EntryLink {
+    init(_ entry: SubtextFile) {
+        self.slug = entry.slug
+        self.title = entry.envelope.headers["Title"] ?? ""
+    }
+}
+
+//
+//extension EntryStub {
+//    init(_ entry: SubtextFile) {
+//        self.slug = entry.slug
+//        self.title = entry.envelope.title()
+//        self.excerpt = entry.envelope.body.excerpt()
+//        self.modified = Date.now
+//    }
+//}

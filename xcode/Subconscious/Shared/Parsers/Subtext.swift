@@ -638,6 +638,14 @@ extension Subtext {
         }
         return ""
     }
+
+    /// Derive an excerpt
+    func excerpt() -> String {
+        for block in blocks {
+            return String(block.body())
+        }
+        return ""
+    }
 }
 
 extension Subtext {

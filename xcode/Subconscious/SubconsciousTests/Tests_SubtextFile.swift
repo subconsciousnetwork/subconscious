@@ -20,8 +20,8 @@ class Tests_SubtextFile: XCTestCase {
             """
         )
         let mended = entry.mendHeaders()
-        let expectedHeaders = Headers(
-            headers: [
+        let expectedHeaders = HeaderIndex(
+            [
                 Header(name: "Content-Type", value: "text/subtext"),
                 Header(name: "Title", value: "A farm picture"),
             ]
@@ -48,8 +48,8 @@ class Tests_SubtextFile: XCTestCase {
             """
         )
         let mended = entry.mendHeaders()
-        let expectedHeaders = Headers(
-            headers: [
+        let expectedHeaders = HeaderIndex(
+            [
                 Header(name: "Title", value: "A Farm Picture"),
                 Header(name: "Author", value: "Walt Whitman"),
                 Header(name: "Content-Type", value: "text/subtext"),
@@ -78,8 +78,8 @@ class Tests_SubtextFile: XCTestCase {
             """
         )
         let mended = entry.mendHeaders()
-        let expectedHeaders = Headers(
-            headers: [
+        let expectedHeaders = HeaderIndex(
+            [
                 Header(name: "Content-Type", value: "text/subtext"),
                 Header(name: "Title", value: "A farm picture"),
                 Header(name: "Author", value: "Walt Whitman"),

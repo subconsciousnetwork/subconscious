@@ -18,7 +18,7 @@ struct Editor: Hashable {
     /// Is editor in loading state?
     var isLoading = true
 
-    var headers = Headers.empty
+    var headers = HeaderIndex.empty
     /// Text of editor
     var text: String = ""
 

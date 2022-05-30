@@ -140,7 +140,7 @@ struct DatabaseService {
             """,
             parameters: [
                 .text(entry.slug.description),
-                .text(entry.envelope.title()),
+                .text(entry.title()),
                 .text(entry.content),
                 .date(modified),
                 .integer(size)

@@ -8,36 +8,15 @@
 import Foundation
 
 struct SubtextEnvelope: Hashable, CustomStringConvertible {
-    var headers: Headers
+    var headers: HeaderIndex
     var body: Subtext
 
     init(
-        headers: Headers,
+        headers: HeaderIndex,
         body: Subtext
     ) {
         self.headers = headers
         self.body = body
-    }
-
-    init(
-        title: String,
-        body: Subtext
-    ) {
-        self.headers = Headers(
-            headers: [
-                Header(name: "Content-Type", value: "text/subtext"),
-                Header(name: "Title", value: title)
-            ]
-        )
-        self.body = body
-    }
-
-    /// Get title from headers, or derive title from Subtext body
-    func title() -> String {
-        if let header = headers.first(named: "title") {
-            return header.value
-        }
-        return body.title()
     }
 
     var description: String {
@@ -45,18 +24,21 @@ struct SubtextEnvelope: Hashable, CustomStringConvertible {
     }
 
     /// Append one SubtextEnvelope to another.
-    /// Discards the headers of `other`.
+    /// Adds headers from `other` if they are not currently present,
+    /// but does not overwrite headers.
     func append(_ other: SubtextEnvelope) -> Self {
         var this = self
+        this.headers = this.headers.merge(other.headers)
         this.body = this.body.append(other.body)
         return this
     }
 
     static func parse(markup: String) -> Self {
         let envelope = HeadersEnvelope.parse(markup: markup)
+        let headers = HeaderIndex(envelope.headers)
         let dom = Subtext.parse(markup: String(envelope.body))
         return Self(
-            headers: envelope.headers,
+            headers: headers,
             body: dom
         )
     }

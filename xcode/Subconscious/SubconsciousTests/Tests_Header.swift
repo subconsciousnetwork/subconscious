@@ -217,9 +217,9 @@ class Tests_Header: XCTestCase {
             Content-Type: text/javascript
             """
         )
-        let index = headers.index()
+        let index = HeaderIndex(headers)
         XCTAssertEqual(
-            index[HeaderName(formatting: "Content-Type")],
+            index["Content-Type"],
             "text/subtext"
         )
     }
@@ -241,15 +241,6 @@ class Tests_Header: XCTestCase {
             text,
             "Content-Type: text/subtext\nContent-Type: text/plain\nTitle: Floop the Pig\n\n",
             "Renders headers with trailing blank line"
-        )
-    }
-
-    func testHeaderName() throws {
-        let name = HeaderName(formatting: "content type")
-        XCTAssertEqual(
-            String(describing: name),
-            "Content-Type",
-            "HeaderName formats free text into a valid normalized header name"
         )
     }
 }

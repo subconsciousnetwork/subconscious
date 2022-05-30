@@ -1940,7 +1940,7 @@ extension AppModel {
         model.editor.slug = detail.slug
         model.editor.backlinks = detail.backlinks
 
-        let headers: Headers = detail.entry.envelope.headers
+        let headers: HeaderIndex = detail.entry.envelope.headers
         let body: Subtext = detail.entry.envelope.body
 
         // If headers are empty, create a default set of headers from

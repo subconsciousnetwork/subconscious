@@ -20,9 +20,9 @@ class Tests_SubtextEnvelope: XCTestCase {
             Some text
             """
         )
-        XCTAssertEqual(envelope.headers.headers.count, 2)
+        XCTAssertEqual(envelope.headers.index.count, 2)
         XCTAssertEqual(
-            String(describing: envelope.headers.headers[0].normalizedName),
+            String(describing: envelope.headers.index.keys[0]),
             "Content-Type"
         )
 
