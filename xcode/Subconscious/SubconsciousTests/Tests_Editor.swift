@@ -99,8 +99,8 @@ class Tests_Editor: XCTestCase {
 
         XCTAssertEqual(
             entryInfo.headers["Title"],
-            "A farm picture",
-            "mendHeaders replaces title with linkable title"
+            "Some other title",
+            "Respects non-linkable title when present"
         )
         XCTAssertEqual(
             entryInfo.headers["Author"],

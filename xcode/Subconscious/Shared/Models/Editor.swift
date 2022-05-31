@@ -25,16 +25,16 @@ struct EditorEntryInfo: Hashable, Identifiable {
 
     /// Sets standard headers.
     mutating func mendHeaders() {
+        // Ensure content-type header
         self.headers["Content-Type"] = "text/subtext"
 
-        let link = EntryLink(
-            slug: slug,
-            title: headers["Title"] ?? ""
-        )
-        self.headers["Title"] = link.toLinkableTitle()
+        // Derive title header from slug, if no title present
+        self.headers.setDefault(name: "Title", value: slug.toTitle())
 
         let now = Date.now.ISO8601Format()
+        // Set modified time to now
         self.headers["Modified"] = now
+        // Set created header to now, if not present
         self.headers.setDefault(name: "Created", value: now)
     }
 }
