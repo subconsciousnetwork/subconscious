@@ -30,6 +30,16 @@ struct Editor: Hashable {
 
     /// Backlinks to the currently active entry
     var backlinks: [EntryStub] = []
+
+    func title(fallback: String) -> String {
+        if let title = headers["Title"] {
+            return title
+        } else if let title = slug?.toTitle() {
+            return title
+        } else {
+            return fallback
+        }
+    }
 }
 
 extension SubtextFile {

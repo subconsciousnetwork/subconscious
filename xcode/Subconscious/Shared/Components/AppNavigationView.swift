@@ -55,6 +55,9 @@ struct AppNavigationView: View {
                     destination: {
                         DetailView(
                             slug: store.state.editor.slug,
+                            title: store.state.editor.title(
+                                fallback: "Untitled"
+                            ),
                             isLoading: store.state.editor.isLoading,
                             backlinks: store.state.editor.backlinks,
                             linkSuggestions: store.state.linkSuggestions,

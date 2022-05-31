@@ -20,6 +20,7 @@ struct DetailView: View {
     /// If we have a Slug, we're ready to edit.
     /// If we don't, we have nothing to edit.
     var slug: Slug?
+    var title: String
     var isLoading: Bool
     var backlinks: [EntryStub]
     var linkSuggestions: [LinkSuggestion]
@@ -132,7 +133,7 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             DetailToolbarContent(
-                title: Subtext.parse(markup: editorText).title(),
+                title: title,
                 slug: slug,
                 onRename: onRename,
                 onDelete: onDelete
