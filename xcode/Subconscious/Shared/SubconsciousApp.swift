@@ -287,16 +287,6 @@ struct AppModel: Equatable {
     var isReadyForInteraction: Bool {
         self.databaseState == .ready
     }
-
-    /// Given a particular entry value, does the editor's state
-    /// currently match it, such that we could say the editor is
-    /// displaying that entry?
-    func isEditorMatchingEntry(_ entry: SubtextFile) -> Bool {
-        (
-            self.editor.slug == entry.slug &&
-            self.editor.text == entry.content
-        )
-    }
 }
 
 //  MARK: Update
@@ -1397,7 +1387,7 @@ extension AppModel {
         var model = state
         // If we just deleted the entry currently being edited,
         // reset the editor to initial state (nothing is being edited).
-        if state.editor.slug == slug {
+        if state.editor.entryInfo?.slug == slug {
             model = resetEditor(state: model)
             model.isDetailShowing = false
         }
@@ -1934,15 +1924,8 @@ extension AppModel {
         detail: EntryDetail,
         autofocus: Bool
     ) -> Update<AppModel, AppAction> {
-        var model = resetEditor(state: state)
-
-        model.editor.isLoading = false
-        model.editor.slug = detail.slug
-        model.editor.backlinks = detail.backlinks
-
-        // If headers are empty, create a default set of headers from
-        // the subtext.
-        model.editor.headers = detail.entry.headers
+        var model = state
+        model.editor = Editor(detail)
 
         // Schedule save for ~ after the transition animation completes.
         // If we save immediately, it causes list view to update while the
@@ -2046,8 +2029,8 @@ extension AppModel {
         model.linkSearchText = text
 
         // Omit current slug from results
-        let omitting = state.editor.slug.mapOr(
-            { slug in Set([slug]) },
+        let omitting = state.editor.entryInfo.mapOr(
+            { info in Set([info.slug]) },
             default: Set()
         )
 
@@ -2146,11 +2129,12 @@ extension AppModel {
     /// Snapshot editor state in preparation for saving.
     /// Also mends header files.
     static func snapshotEditor(_ editor: Editor) -> SubtextFile? {
+        var editor = editor
+        editor.entryInfo?.mendHeaders()
         guard let entry = SubtextFile(editor) else {
             return nil
         }
-        let mended = entry.mendHeaders()
-        return mended
+        return entry
     }
 
     /// Save snapshot of entry
@@ -2219,7 +2203,7 @@ extension AppModel {
         // 2022-02-09 Gordon Brander
         if
             model.editor.saveState == .saving &&
-            model.isEditorMatchingEntry(entry)
+            model.editor.stateMatches(entry: entry)
         {
             model.editor.saveState = .saved
         }

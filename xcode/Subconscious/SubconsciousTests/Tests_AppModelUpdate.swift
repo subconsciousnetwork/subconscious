@@ -35,7 +35,7 @@ class Tests_AppModelUpdate: XCTestCase {
             "isDetailLoading set to false"
         )
         XCTAssertEqual(
-            update.state.editor.slug,
+            update.state.editor.entryInfo?.slug,
             detail.slug,
             "Sets the slug"
         )
@@ -253,7 +253,9 @@ class Tests_AppModelUpdate: XCTestCase {
     func testSave() throws {
         let state = AppModel(
             editor: Editor(
-                slug: Slug("floop-the-pig")!,
+                entryInfo: EditorEntryInfo(
+                    slug: Slug("floop-the-pig")!
+                ),
                 saveState: .modified
             )
         )
@@ -272,7 +274,9 @@ class Tests_AppModelUpdate: XCTestCase {
     func testSaveAlreadySaved() throws {
         let state = AppModel(
             editor: Editor(
-                slug: Slug("floop-the-pig")!,
+                entryInfo: EditorEntryInfo(
+                    slug: Slug("floop-the-pig")!
+                ),
                 saveState: .saved
             )
         )

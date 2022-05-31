@@ -97,7 +97,7 @@ struct AppView: View {
                     height: geometry.size.height,
                     containerSize: geometry.size,
                     content: RenameSearchView(
-                        slug: store.state.editor.slug,
+                        slug: store.state.editor.entryInfo?.slug,
                         suggestions: store.state.renameSuggestions,
                         text: store.binding(
                             get: \.renameSlugField,

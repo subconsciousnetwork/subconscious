@@ -132,25 +132,6 @@ struct SubtextFile:
             dom.excerpt()
         }
     }
-
-    /// Sets standard headers.
-    func mendHeaders() -> Self {
-        var this = self
-
-        this.headers["Content-Type"] = "text/subtext"
-
-        let link = EntryLink(
-            slug: slug,
-            title: headers["Title"] ?? ""
-        )
-        this.headers["Title"] = link.toLinkableTitle()
-
-        let now = Date.now.ISO8601Format()
-        this.headers["Modified"] = now
-        this.headers.setDefault(name: "Created", value: now)
-
-        return this
-    }
 }
 
 extension EntryLink {
