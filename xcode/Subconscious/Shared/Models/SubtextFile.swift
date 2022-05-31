@@ -56,7 +56,7 @@ struct SubtextFile:
 
     var id: Slug { slug }
     var size: Int {
-        content.lengthOfBytes(using: .utf8)
+        description.lengthOfBytes(using: .utf8)
     }
 
     func url(directory: URL) -> URL {

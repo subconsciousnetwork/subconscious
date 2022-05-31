@@ -79,4 +79,23 @@ class Tests_SubtextFile: XCTestCase {
             "Excerpt pulls first line of body"
         )
     }
+
+    func testSize() throws {
+        let body = """
+        title: Fire and Ice
+        author: Robert Frost
+
+        Some say the world will end in fire,
+        Some say in ice.
+        """
+        let entry = SubtextFile(
+            slug: Slug("fire-and-ice")!,
+            content: body
+        )
+        XCTAssertEqual(
+            entry.size,
+            body.lengthOfBytes(using: .utf8),
+            "Size matches full document size, including headers"
+        )
+    }
 }
