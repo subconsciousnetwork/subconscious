@@ -648,7 +648,7 @@ struct DatabaseService {
         // Use content indexed in database, even though it might be stale.
         let backlinks: [EntryStub] = try database.execute(
             sql: """
-            SELECT slug, body, modified
+            SELECT slug, body
             FROM entry_search
             WHERE slug != ? AND entry_search.body MATCH ?
             ORDER BY rank
@@ -660,21 +660,15 @@ struct DatabaseService {
             ]
         )
         .compactMap({ row in
-            if
+            guard
                 let slugString: String = row.get(0),
                 let slug = Slug(slugString),
-                let body: String = row.get(1),
-                let modified: Date = row.get(2)
-            {
-                let summary = Subtext.parse(markup: body).summarize()
-                return EntryStub(
-                    slug: slug,
-                    title: summary.title ?? "",
-                    excerpt: summary.excerpt ?? "",
-                    modified: modified
-                )
+                let body: String = row.get(1)
+            else {
+                return nil
             }
-            return nil
+            let entry = SubtextFile(slug: slug, content: body)
+            return EntryStub(entry)
         })
         // Retreive top entry from file system to ensure it is fresh.
         // If no file exists, return a draft with fallback content.

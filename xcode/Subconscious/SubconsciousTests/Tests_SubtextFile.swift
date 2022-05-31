@@ -61,4 +61,22 @@ class Tests_SubtextFile: XCTestCase {
             "Fire and Ice"
         )
     }
+
+    func testExcerpt() throws {
+        let entry = SubtextFile(
+            slug: Slug("a-farm-picture")!,
+            content: """
+            title: Fire and Ice
+            author: Robert Frost
+
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        XCTAssertEqual(
+            entry.excerpt,
+            "Some say the world will end in fire,",
+            "Excerpt pulls first line of body"
+        )
+    }
 }
