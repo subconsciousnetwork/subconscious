@@ -140,7 +140,7 @@ struct DatabaseService {
             """,
             parameters: [
                 .text(entry.slug.description),
-                .text(entry.title()),
+                .text(entry.title),
                 .text(entry.content),
                 .date(modified),
                 .integer(size)
@@ -316,13 +316,8 @@ struct DatabaseService {
                     let body: String = row.get(1),
                     let modified: Date = row.get(2)
                 {
-                    let summary = Subtext.parse(markup: body).summarize()
-                    return EntryStub(
-                        slug: slug,
-                        title: summary.title ?? "",
-                        excerpt: summary.excerpt ?? "",
-                        modified: modified
-                    )
+                    let entry = SubtextFile(slug: slug, content: body)
+                    return EntryStub(entry)
                 }
                 return nil
             })

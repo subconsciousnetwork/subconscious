@@ -6,7 +6,9 @@
 import Foundation
 
 /// A Subtext DOM together with a location for that document
-struct SubtextFile: Hashable, Equatable, Identifiable {
+struct SubtextFile:
+    Hashable, Identifiable
+{
     var slug: Slug
     var envelope: SubtextEnvelope
 
@@ -69,35 +71,50 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
         )
     }
 
-    /// Return linkable title.
-    /// Use header value if present, otherwise derive from slug.
-    func title() -> String {
-        EntryLink(
-            slug: slug,
-            title: envelope.headers["Title"] ?? ""
-        )
-        .toLinkableTitle()
+    var title: String {
+        get {
+            envelope.headers["Title"] ?? slug.toTitle()
+        }
+        set {
+            envelope.headers["Title"] = newValue
+        }
     }
 
-    func excerpt() -> String {
-        envelope.body.excerpt()
+    var modified: Date {
+        get {
+            guard let modified = envelope.headers["modified"] else {
+                return Date(timeIntervalSince1970: 0)
+            }
+            guard let date = try? Date(modified, strategy: .iso8601) else {
+                return Date(timeIntervalSince1970: 0)
+            }
+            return date
+        }
+        set {
+            envelope.headers["Modified"] = newValue.ISO8601Format()
+        }
     }
 
-    /// Sets required headers.
-    /// Also removes duplicate headers (we discourage these).
+    var excerpt: String {
+        get {
+            envelope.body.excerpt()
+        }
+    }
+
+    /// Sets standard headers.
     func mendHeaders() -> Self {
         var headers = self.envelope.headers
 
         headers["Content-Type"] = "text/subtext"
 
-        let titleValue = EntryLink(
+        let linkableTitle = EntryLink(
             slug: slug,
             title: headers["Title"] ?? ""
         )
         .toLinkableTitle()
-        headers["Title"] = titleValue
+        headers["Title"] = linkableTitle
 
-        // headers["Modified"] = modified.ISO8601Format()
+        headers["Modified"] = modified.ISO8601Format()
 
         var this = self
         this.envelope.headers = headers
@@ -112,12 +129,12 @@ extension EntryLink {
     }
 }
 
-//
-//extension EntryStub {
-//    init(_ entry: SubtextFile) {
-//        self.slug = entry.slug
-//        self.title = entry.envelope.title()
-//        self.excerpt = entry.envelope.body.excerpt()
-//        self.modified = Date.now
-//    }
-//}
+
+extension EntryStub {
+    init(_ entry: SubtextFile) {
+        self.slug = entry.slug
+        self.title = entry.title
+        self.excerpt = entry.excerpt
+        self.modified = entry.modified
+    }
+}

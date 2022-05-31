@@ -20,17 +20,20 @@ class Tests_SubtextFile: XCTestCase {
             """
         )
         let mended = entry.mendHeaders()
-        let expectedHeaders = HeaderIndex(
-            [
-                Header(name: "Content-Type", value: "text/subtext"),
-                Header(name: "Title", value: "A farm picture"),
-            ]
-        )
 
         XCTAssertEqual(
-            mended.envelope.headers,
-            expectedHeaders,
-            "mendHeaders sets expected headers when headers are missing"
+            mended.envelope.headers["Content-Type"],
+            "text/subtext",
+            "mendHeaders sets Content-Type header"
+        )
+        XCTAssertEqual(
+            mended.envelope.headers["Title"],
+            "A farm picture",
+            "mendHeaders sets Title header"
+        )
+        XCTAssertNotNil(
+            mended.envelope.headers["Modified"],
+            "mendHeaders sets Modified header"
         )
     }
 
@@ -48,18 +51,21 @@ class Tests_SubtextFile: XCTestCase {
             """
         )
         let mended = entry.mendHeaders()
-        let expectedHeaders = HeaderIndex(
-            [
-                Header(name: "Title", value: "A Farm Picture"),
-                Header(name: "Author", value: "Walt Whitman"),
-                Header(name: "Content-Type", value: "text/subtext"),
-            ]
-        )
 
         XCTAssertEqual(
-            mended.envelope.headers,
-            expectedHeaders,
-            "mendHeaders merges in expected headers"
+            mended.envelope.headers["Content-Type"],
+            "text/subtext",
+            "mendHeaders sets Content-Type header"
+        )
+        XCTAssertEqual(
+            mended.envelope.headers["Title"],
+            "A Farm Picture",
+            "mendHeaders does not overwrite headers"
+        )
+        XCTAssertEqual(
+            mended.envelope.headers["Author"],
+            "Walt Whitman",
+            "mendHeaders keeps other headers"
         )
     }
 
@@ -78,18 +84,21 @@ class Tests_SubtextFile: XCTestCase {
             """
         )
         let mended = entry.mendHeaders()
-        let expectedHeaders = HeaderIndex(
-            [
-                Header(name: "Content-Type", value: "text/subtext"),
-                Header(name: "Title", value: "A farm picture"),
-                Header(name: "Author", value: "Walt Whitman"),
-            ]
-        )
 
         XCTAssertEqual(
-            mended.envelope.headers,
-            expectedHeaders,
-            "mendHeaders merges in expected headers"
+            mended.envelope.headers["Content-Type"],
+            "text/subtext",
+            "mendHeaders sets Content-Type header"
+        )
+        XCTAssertEqual(
+            mended.envelope.headers["Title"],
+            "A farm picture",
+            "mendHeaders replaces title with linkable title"
+        )
+        XCTAssertEqual(
+            mended.envelope.headers["Author"],
+            "Walt Whitman",
+            "mendHeaders keeps other headers"
         )
     }
 }
