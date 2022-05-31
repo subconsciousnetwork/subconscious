@@ -124,9 +124,7 @@ struct DatabaseService {
 
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        entry: SubtextFile,
-        modified: Date,
-        size: Int
+        entry: SubtextFile
     ) throws {
         try database.execute(
             sql: """
@@ -139,42 +137,37 @@ struct DatabaseService {
                 size=excluded.size
             """,
             parameters: [
-                .text(entry.slug.description),
-                .text(entry.dom.title()),
-                .text(entry.content),
-                .date(modified),
-                .integer(size)
+                .text(String(describing: entry.slug)),
+                .text(entry.title),
+                .text(String(describing: entry)),
+                .date(entry.modified),
+                .integer(entry.size)
             ]
         )
     }
 
     private func writeEntryToDatabase(slug: Slug) throws {
-        let entry = try SubtextFile(slug: slug, directory: documentURL).unwrap()
-        let fingerprint = try FileFingerprint.Attributes(
-            url: entry.url(directory: documentURL)
-        ).unwrap()
-        return try writeEntryToDatabase(
-            entry: entry,
-            modified: fingerprint.modifiedDate,
-            size: fingerprint.size
-        )
+        var entry = try SubtextFile(slug: slug, directory: documentURL)
+            .unwrap()
+        let fingerprint = try FileFingerprint
+            .Attributes(url: entry.url(directory: documentURL))
+            .unwrap()
+        entry.modified = fingerprint.modifiedDate
+        return try writeEntryToDatabase(entry: entry)
     }
 
     func writeEntry(entry: SubtextFile) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
+            var entry = entry
             // Write contents to file
             try entry.write(directory: documentURL)
-            // Read fingerprint after writing to get updated time
+            // Read modified date from file system directly after writing
             let fingerprint = try FileFingerprint
-                .Attributes(
-                    url: entry.url(directory: documentURL)
-                )
+                .Attributes(url: entry.url(directory: documentURL))
                 .unwrap()
-            return try writeEntryToDatabase(
-                entry: entry,
-                modified: fingerprint.modifiedDate,
-                size: fingerprint.size
-            )
+            // Set modified date on entry
+            entry.modified = fingerprint.modifiedDate
+            return try writeEntryToDatabase(entry: entry)
         }
     }
 
@@ -231,7 +224,7 @@ struct DatabaseService {
             directory: documentURL
         )
         .unwrap()
-        .append(fromFile.dom)
+        .appending(fromFile)
 
         //  First write the merged file to "to" location
         try toFile.write(directory: documentURL)
@@ -303,7 +296,7 @@ struct DatabaseService {
             // are read-only teaser views.
             try database.execute(
                 sql: """
-                SELECT slug, body, modified
+                SELECT slug, body, title, modified
                 FROM entry_search
                 ORDER BY modified DESC
                 LIMIT 1000
@@ -314,15 +307,13 @@ struct DatabaseService {
                     let slugString: String = row.get(0),
                     let slug = Slug(slugString),
                     let body: String = row.get(1),
-                    let modified: Date = row.get(2)
+                    let title: String = row.get(2),
+                    let modified: Date = row.get(3)
                 {
-                    let summary = Subtext(markup: body).summarize()
-                    return EntryStub(
-                        slug: slug,
-                        title: summary.title ?? "",
-                        excerpt: summary.excerpt ?? "",
-                        modified: modified
-                    )
+                    var entry = SubtextFile(slug: slug, content: body)
+                    entry.modified = modified
+                    entry.title = title
+                    return EntryStub(entry)
                 }
                 return nil
             })
@@ -657,7 +648,7 @@ struct DatabaseService {
         // Use content indexed in database, even though it might be stale.
         let backlinks: [EntryStub] = try database.execute(
             sql: """
-            SELECT slug, body, modified
+            SELECT slug, body
             FROM entry_search
             WHERE slug != ? AND entry_search.body MATCH ?
             ORDER BY rank
@@ -669,44 +660,31 @@ struct DatabaseService {
             ]
         )
         .compactMap({ row in
-            if
+            guard
                 let slugString: String = row.get(0),
                 let slug = Slug(slugString),
-                let body: String = row.get(1),
-                let modified: Date = row.get(2)
-            {
-                let summary = Subtext(markup: body).summarize()
-                return EntryStub(
-                    slug: slug,
-                    title: summary.title ?? "",
-                    excerpt: summary.excerpt ?? "",
-                    modified: modified
-                )
+                let body: String = row.get(1)
+            else {
+                return nil
             }
-            return nil
+            let entry = SubtextFile(slug: slug, content: body)
+            return EntryStub(entry)
         })
-
-        // Create draft to use as fallback in event we don't find
-        // a file with this slug.
-        let draft = SaveEnvelope(
-            state: .draft,
-            value: SubtextFile(
-                slug: slug,
-                content: fallback
-            )
-        )
-
         // Retreive top entry from file system to ensure it is fresh.
-        // If no file exists, then construct one using fallback content.
-        // Wrap in SaveEnvelope envelope to indicate whether it
-        // represents saved state on disk, or is a draft.
-        let entry = readEntry(slug: slug).mapOr(
-            { entry in SaveEnvelope(state: .saved, value: entry) },
-            default: draft
-        )
-
+        // If no file exists, return a draft with fallback content.
+        guard let entry = readEntry(slug: slug) else {
+            return EntryDetail(
+                saveState: .draft,
+                entry: SubtextFile(
+                    slug: slug,
+                    content: fallback
+                ),
+                backlinks: backlinks
+            )
+        }
+        // Return entry
         return EntryDetail(
-            slug: slug,
+            saveState: .saved,
             entry: entry,
             backlinks: backlinks
         )

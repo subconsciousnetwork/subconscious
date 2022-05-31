@@ -6,26 +6,31 @@
 import Foundation
 
 /// A Subtext DOM together with a location for that document
-struct SubtextFile: Hashable, Equatable, Identifiable {
+struct SubtextFile:
+    Hashable, Identifiable, CustomStringConvertible
+{
     var slug: Slug
-    var dom: Subtext
-    var content: String { dom.base }
-    var id: Slug { slug }
+    var headers: HeaderIndex
+    var content: String
 
     init(
         slug: Slug,
         content: String
     ) {
         self.slug = slug
-        self.dom = Subtext(markup: content)
+        let envelope = HeadersEnvelope.parse(markup: content)
+        self.headers = HeaderIndex(envelope.headers)
+        self.content = String(envelope.body)
     }
 
     init(
         slug: Slug,
+        headers: HeaderIndex,
         dom: Subtext
     ) {
         self.slug = slug
-        self.dom = dom
+        self.headers = headers
+        self.content = String(describing: dom)
     }
 
     /// Open existing document
@@ -41,15 +46,29 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
         }
     }
 
+    var dom: Subtext {
+        Subtext.parse(markup: content)
+    }
+
+    var description: String {
+        "\(headers)\(content)"
+    }
+
+    var id: Slug { slug }
+    var size: Int {
+        description.lengthOfBytes(using: .utf8)
+    }
+
     func url(directory: URL) -> URL {
         self.slug.toURL(directory: directory, ext: "subtext")
     }
 
     /// Append additional Subtext to this file
     /// Returns a new instance
-    func append(_ dom: Subtext) -> Self {
+    func appending(_ other: SubtextFile) -> Self {
         var file = self
-        file.dom = self.dom.append(dom)
+        file.headers = headers.merge(other.headers)
+        file.content = content.appending("\n").appending(other.content)
         return file
     }
 
@@ -61,10 +80,73 @@ struct SubtextFile: Hashable, Equatable, Identifiable {
             withIntermediateDirectories: true,
             attributes: nil
         )
-        try content.write(
+        let body = String(describing: self)
+        try body.write(
             to: fileURL,
             atomically: true,
             encoding: .utf8
         )
+    }
+
+    var title: String {
+        get {
+            headers["Title"] ?? slug.toTitle()
+        }
+        set {
+            headers["Title"] = newValue
+        }
+    }
+
+    var modified: Date {
+        get {
+            guard
+                let dateString = headers["Modified"],
+                let date = try? Date(dateString, strategy: .iso8601)
+            else {
+                return Date(timeIntervalSince1970: 0)
+            }
+            return date
+        }
+        set {
+            headers["Modified"] = newValue.ISO8601Format()
+        }
+    }
+
+    var created: Date {
+        get {
+            guard
+                let dateString = headers["Created"],
+                let date = try? Date(dateString, strategy: .iso8601)
+            else {
+                return Date(timeIntervalSince1970: 0)
+            }
+            return date
+        }
+        set {
+            headers["Created"] = newValue.ISO8601Format()
+        }
+    }
+
+    var excerpt: String {
+        get {
+            dom.excerpt()
+        }
+    }
+}
+
+extension EntryLink {
+    init(_ entry: SubtextFile) {
+        self.slug = entry.slug
+        self.title = entry.headers["Title"] ?? ""
+    }
+}
+
+
+extension EntryStub {
+    init(_ entry: SubtextFile) {
+        self.slug = entry.slug
+        self.title = entry.title
+        self.excerpt = entry.excerpt
+        self.modified = entry.modified
     }
 }

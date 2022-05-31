@@ -8,7 +8,22 @@
 import Foundation
 import SwiftUI
 
-struct Subtext: Hashable, Equatable {
+struct Subtext: Hashable, Equatable, CustomStringConvertible {
+    let base: Substring
+    let blocks: [Block]
+
+    private init(
+        base: Substring,
+        blocks: [Block]
+    ) {
+        self.base = base
+        self.blocks = blocks
+    }
+
+    var description: String {
+        String(base)
+    }
+
     /// Implement custom equatable for Subtext.
     /// Since parsing is deterministic, we can simply compare base strings.
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -16,7 +31,7 @@ struct Subtext: Hashable, Equatable {
     }
 
     /// Empty document
-    static let empty = Self(markup: "")
+    static let empty = Self.parse(markup: "")
 
     enum Block: Hashable, Equatable {
         case text(span: Substring, inline: [Inline])
@@ -159,7 +174,7 @@ struct Subtext: Hashable, Equatable {
 
     /// Consume a well-formed bracket link, or else backtrack
     private static func consumeBracketLink(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
@@ -178,7 +193,7 @@ struct Subtext: Hashable, Equatable {
 
     /// Consume a well-formed bracket link, or else backtrack
     private static func consumeWikilink(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
@@ -198,7 +213,7 @@ struct Subtext: Hashable, Equatable {
 
     /// Consume a well-formed italics run, or else backtrack
     private static func consumeBold(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
@@ -214,7 +229,7 @@ struct Subtext: Hashable, Equatable {
 
     /// Consume a well-formed italics run, or else backtrack
     private static func consumeItalic(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
@@ -230,7 +245,7 @@ struct Subtext: Hashable, Equatable {
 
     /// Consume a well-formed code run, or else backtrack
     private static func consumeCode(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> Substring? {
         tape.save()
         while !tape.isExhausted() {
@@ -277,7 +292,7 @@ struct Subtext: Hashable, Equatable {
 
     /// Consume all non-space characters excluding trailing punctuation.
     private static func consumeAddressBody(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> Substring {
         while !tape.isExhausted() {
             let c0 = tape.peek(offset: 0)
@@ -312,7 +327,7 @@ struct Subtext: Hashable, Equatable {
     /// Parse all inline forms within the line
     /// - Returns: an array of inline forms
     private static func parseInline(
-        tape: inout Tape<Substring>
+        tape: inout Tape
     ) -> [Inline] {
         var inline: [Inline] = []
         while !tape.isExhausted() {
@@ -381,21 +396,25 @@ struct Subtext: Hashable, Equatable {
         }
     }
 
-    /// Splits lines in markup, keeping line endings
-    private static func parseLines(_ string: String) -> [Substring] {
-        string.split(
-            maxSplits: Int.max,
-            omittingEmptySubsequences: false,
-            whereSeparator: \.isNewline
+    /// Parse all blocks from tape
+    static func parseBlocks(_ tape: inout Tape) -> [Block] {
+        Parser.parseLines(&tape, keepEnds: false).map(Self.parseBlock)
+    }
+
+    /// Parse Subtext body from tape
+    static func parse(_ tape: inout Tape) -> Self {
+        let base = tape.rest
+        let blocks = parseBlocks(&tape)
+        return Self(
+            base: base,
+            blocks: blocks
         )
     }
 
-    let base: String
-    let blocks: [Block]
-
-    init(markup: String) {
-        self.base = markup
-        self.blocks = Self.parseLines(markup).map(Self.parseBlock)
+    /// Parse Subtext body from string
+    static func parse(markup: String) -> Self {
+        var tape = Tape(markup[...])
+        return parse(&tape)
     }
 }
 
@@ -510,7 +529,7 @@ extension Subtext {
         _ attributedString: NSMutableAttributedString,
         url: (EntryLink) -> URL?
     ) {
-        let dom = Subtext(markup: attributedString.string)
+        let dom = Subtext.parse(markup: attributedString.string)
 
         // Get range of all text, using new Swift NSRange constructor
         // that takes a Swift range which knows how to handle Unicode
@@ -619,12 +638,20 @@ extension Subtext {
         }
         return ""
     }
+
+    /// Derive an excerpt
+    func excerpt() -> String {
+        for block in blocks {
+            return String(block.body())
+        }
+        return ""
+    }
 }
 
 extension Subtext {
     /// Append another Subtext document
     func append(_ other: Subtext) -> Subtext {
-        Subtext(markup: "\(self.base)\n\n\(other.base)")
+        Subtext.parse(markup: "\(self.base)\n\(other.base)")
     }
 }
 

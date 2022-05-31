@@ -54,12 +54,11 @@ struct AppNavigationView: View {
                     ),
                     destination: {
                         DetailView(
-                            slug: store.state.slug,
-                            isLoading: store.state.isDetailLoading,
-                            backlinks: store.state.backlinks,
+                            entryInfo: store.state.editor.entryInfo,
+                            isLoading: store.state.editor.isLoading,
                             linkSuggestions: store.state.linkSuggestions,
                             selectedEntryLinkMarkup:
-                                store.state.editorSelectedEntryLinkMarkup,
+                                store.state.editor.selectedEntryLinkMarkup,
                             focus: store.binding(
                                 get: \.focus,
                                 tag: { focus in
@@ -70,11 +69,11 @@ struct AppNavigationView: View {
                                 }
                             ),
                             editorText: store.binding(
-                                get: \.editorText,
+                                get: \.editor.text,
                                 tag: AppAction.modifyEditor
                             ),
                             editorSelection: store.binding(
-                                get: \.editorSelection,
+                                get: \.editor.selection,
                                 tag: AppAction.setEditorSelection
                             ),
                             isLinkSheetPresented: store.binding(

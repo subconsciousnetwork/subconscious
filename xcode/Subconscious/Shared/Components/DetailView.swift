@@ -19,9 +19,8 @@ struct DetailView: View {
 
     /// If we have a Slug, we're ready to edit.
     /// If we don't, we have nothing to edit.
-    var slug: Slug?
+    var entryInfo: EditorEntryInfo?
     var isLoading: Bool
-    var backlinks: [EntryStub]
     var linkSuggestions: [LinkSuggestion]
     var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
     @Binding var focus: AppModel.Focus?
@@ -47,6 +46,13 @@ struct DetailView: View {
 
     private var isKeyboardUp: Bool {
         focus == .editor
+    }
+
+    private var backlinks: [EntryStub] {
+        guard let backlinks = entryInfo?.backlinks else {
+            return []
+        }
+        return backlinks
     }
 
     var body: some View {
@@ -116,7 +122,7 @@ struct DetailView: View {
                 }
             }
             .zIndex(1)
-            if isLoading || slug == nil {
+            if isLoading || entryInfo?.slug == nil {
                 Color.background
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .transition(
@@ -132,8 +138,8 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             DetailToolbarContent(
-                title: Subtext(markup: editorText).title(),
-                slug: slug,
+                title: entryInfo?.title ?? "",
+                slug: entryInfo?.slug,
                 onRename: onRename,
                 onDelete: onDelete
             )
