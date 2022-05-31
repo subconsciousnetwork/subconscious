@@ -231,7 +231,7 @@ struct DatabaseService {
             directory: documentURL
         )
         .unwrap()
-        .append(fromFile.envelope)
+        .appending(fromFile)
 
         //  First write the merged file to "to" location
         try toFile.write(directory: documentURL)
@@ -546,7 +546,7 @@ struct DatabaseService {
                 )
             })
         }
-        return linksEntry.envelope.body.entryLinks.map(LinkSuggestion.entry)
+        return linksEntry.dom.entryLinks.map(LinkSuggestion.entry)
     }
 
     /// Fetch search suggestions

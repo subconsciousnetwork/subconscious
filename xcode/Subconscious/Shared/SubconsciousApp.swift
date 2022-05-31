@@ -294,7 +294,7 @@ struct AppModel: Equatable {
     func isEditorMatchingEntry(_ entry: SubtextFile) -> Bool {
         (
             self.editor.slug == entry.slug &&
-            self.editor.text == entry.envelope.body.base
+            self.editor.text == entry.content
         )
     }
 }
@@ -1940,12 +1940,9 @@ extension AppModel {
         model.editor.slug = detail.slug
         model.editor.backlinks = detail.backlinks
 
-        let headers: HeaderIndex = detail.entry.envelope.headers
-        let body: Subtext = detail.entry.envelope.body
-
         // If headers are empty, create a default set of headers from
         // the subtext.
-        model.editor.headers = headers
+        model.editor.headers = detail.entry.headers
 
         // Schedule save for ~ after the transition animation completes.
         // If we save immediately, it causes list view to update while the
@@ -1980,7 +1977,7 @@ extension AppModel {
             setEditor(
                 state: state,
                 environment: environment,
-                text: String(describing: body),
+                text: detail.entry.content,
                 saveState: detail.saveState
             )
         })

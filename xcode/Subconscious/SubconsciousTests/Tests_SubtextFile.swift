@@ -22,17 +22,17 @@ class Tests_SubtextFile: XCTestCase {
         let mended = entry.mendHeaders()
 
         XCTAssertEqual(
-            mended.envelope.headers["Content-Type"],
+            mended.headers["Content-Type"],
             "text/subtext",
             "mendHeaders sets Content-Type header"
         )
         XCTAssertEqual(
-            mended.envelope.headers["Title"],
+            mended.headers["Title"],
             "A farm picture",
             "mendHeaders sets Title header"
         )
         XCTAssertNotNil(
-            mended.envelope.headers["Modified"],
+            mended.headers["Modified"],
             "mendHeaders sets Modified header"
         )
     }
@@ -53,17 +53,17 @@ class Tests_SubtextFile: XCTestCase {
         let mended = entry.mendHeaders()
 
         XCTAssertEqual(
-            mended.envelope.headers["Content-Type"],
+            mended.headers["Content-Type"],
             "text/subtext",
             "mendHeaders sets Content-Type header"
         )
         XCTAssertEqual(
-            mended.envelope.headers["Title"],
+            mended.headers["Title"],
             "A Farm Picture",
             "mendHeaders does not overwrite headers"
         )
         XCTAssertEqual(
-            mended.envelope.headers["Author"],
+            mended.headers["Author"],
             "Walt Whitman",
             "mendHeaders keeps other headers"
         )
@@ -86,17 +86,17 @@ class Tests_SubtextFile: XCTestCase {
         let mended = entry.mendHeaders()
 
         XCTAssertEqual(
-            mended.envelope.headers["Content-Type"],
+            mended.headers["Content-Type"],
             "text/subtext",
             "mendHeaders sets Content-Type header"
         )
         XCTAssertEqual(
-            mended.envelope.headers["Title"],
+            mended.headers["Title"],
             "A farm picture",
             "mendHeaders replaces title with linkable title"
         )
         XCTAssertEqual(
-            mended.envelope.headers["Author"],
+            mended.headers["Author"],
             "Walt Whitman",
             "mendHeaders keeps other headers"
         )

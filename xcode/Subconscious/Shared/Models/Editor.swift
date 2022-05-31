@@ -39,9 +39,7 @@ extension SubtextFile {
             return nil
         }
         self.slug = slug
-        self.envelope = SubtextEnvelope(
-            headers: editor.headers,
-            body: Subtext.parse(markup: editor.text)
-        )
+        self.headers = editor.headers
+        self.content = editor.text
     }
 }

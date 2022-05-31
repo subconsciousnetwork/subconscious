@@ -21,7 +21,7 @@ class Tests_Editor: XCTestCase {
         )
         let entry = SubtextFile(editor)!
         XCTAssertEqual(
-            entry.envelope.headers.index.count,
+            entry.headers.index.count,
             2,
             "SubtextFile constructor carries over headers"
         )

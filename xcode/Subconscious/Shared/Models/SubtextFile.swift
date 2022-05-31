@@ -7,25 +7,30 @@ import Foundation
 
 /// A Subtext DOM together with a location for that document
 struct SubtextFile:
-    Hashable, Identifiable
+    Hashable, Identifiable, CustomStringConvertible
 {
     var slug: Slug
-    var envelope: SubtextEnvelope
+    var headers: HeaderIndex
+    var content: String
 
     init(
         slug: Slug,
         content: String
     ) {
         self.slug = slug
-        self.envelope = SubtextEnvelope.parse(markup: content)
+        let envelope = HeadersEnvelope.parse(markup: content)
+        self.headers = HeaderIndex(envelope.headers)
+        self.content = String(envelope.body)
     }
 
     init(
         slug: Slug,
-        dom: SubtextEnvelope
+        headers: HeaderIndex,
+        dom: Subtext
     ) {
         self.slug = slug
-        self.envelope = dom
+        self.headers = headers
+        self.content = String(describing: dom)
     }
 
     /// Open existing document
@@ -41,7 +46,8 @@ struct SubtextFile:
         }
     }
 
-    var content: String { String(describing: envelope) }
+    var dom: Subtext { Subtext.parse(markup: content) }
+    var description: String { content }
     var id: Slug { slug }
 
     func url(directory: URL) -> URL {
@@ -50,9 +56,10 @@ struct SubtextFile:
 
     /// Append additional Subtext to this file
     /// Returns a new instance
-    func append(_ dom: SubtextEnvelope) -> Self {
+    func appending(_ other: SubtextFile) -> Self {
         var file = self
-        file.envelope = self.envelope.append(dom)
+        file.headers = headers.merge(other.headers)
+        file.content = content.appending("\n").appending(other.content)
         return file
     }
 
@@ -73,16 +80,16 @@ struct SubtextFile:
 
     var title: String {
         get {
-            envelope.headers["Title"] ?? slug.toTitle()
+            headers["Title"] ?? slug.toTitle()
         }
         set {
-            envelope.headers["Title"] = newValue
+            headers["Title"] = newValue
         }
     }
 
     var modified: Date {
         get {
-            guard let modified = envelope.headers["modified"] else {
+            guard let modified = headers["modified"] else {
                 return Date(timeIntervalSince1970: 0)
             }
             guard let date = try? Date(modified, strategy: .iso8601) else {
@@ -91,33 +98,31 @@ struct SubtextFile:
             return date
         }
         set {
-            envelope.headers["Modified"] = newValue.ISO8601Format()
+            headers["Modified"] = newValue.ISO8601Format()
         }
     }
 
     var excerpt: String {
         get {
-            envelope.body.excerpt()
+            dom.excerpt()
         }
     }
 
     /// Sets standard headers.
     func mendHeaders() -> Self {
-        var headers = self.envelope.headers
+        var this = self
 
-        headers["Content-Type"] = "text/subtext"
+        this.headers["Content-Type"] = "text/subtext"
 
         let linkableTitle = EntryLink(
             slug: slug,
             title: headers["Title"] ?? ""
         )
         .toLinkableTitle()
-        headers["Title"] = linkableTitle
+        this.headers["Title"] = linkableTitle
 
-        headers["Modified"] = modified.ISO8601Format()
+        this.headers["Modified"] = modified.ISO8601Format()
 
-        var this = self
-        this.envelope.headers = headers
         return this
     }
 }
@@ -125,7 +130,7 @@ struct SubtextFile:
 extension EntryLink {
     init(_ entry: SubtextFile) {
         self.slug = entry.slug
-        self.title = entry.envelope.headers["Title"] ?? ""
+        self.title = entry.headers["Title"] ?? ""
     }
 }
 
