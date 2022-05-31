@@ -2146,17 +2146,28 @@ extension AppModel {
         guard state.editor.saveState != .saved else {
             return Update(state: state)
         }
-
-        // If there is no entry currently being edited, noop.
-        guard let entry = snapshotEditor(state.editor) else {
-            let saveState = String(reflecting: state.editor.saveState)
-            environment.logger.warning(
-                "Entry save state is marked \(saveState) but no entry could be derived for state"
+        guard var entryInfo = state.editor.entryInfo else {
+            environment.logger.log(
+                "Nothing to save. No entry selected."
             )
             return Update(state: state)
         }
 
         var model = state
+
+        // Assign default headers, and update entry info before saving
+        entryInfo.mendHeaders()
+        model.editor.entryInfo = entryInfo
+
+        // Derive entry from editor
+        guard let entry = SubtextFile(model.editor) else {
+            let saveState = String(reflecting: state.editor.saveState)
+            environment.logger.warning(
+                "Entry save state is marked \(saveState) but no entry could be derived for state. Doing nothing."
+            )
+            return Update(state: state)
+        }
+
         // Mark saving in-progress
         model.editor.saveState = .saving
 
