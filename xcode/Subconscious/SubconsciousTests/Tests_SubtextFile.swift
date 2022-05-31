@@ -9,6 +9,24 @@ import XCTest
 @testable import Subconscious
 
 class Tests_SubtextFile: XCTestCase {
+    func testDescription() throws {
+        let entry = SubtextFile(
+            slug: Slug("a-farm-picture")!,
+            content: """
+            title: Fire and Ice
+            author: Robert Frost
+
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        XCTAssertEqual(
+            String(describing: entry),
+            "Title: Fire and Ice\nAuthor: Robert Frost\n\nSome say the world will end in fire,\nSome say in ice.",
+            "Entry description produces correctly formatted document"
+        )
+    }
+
     /// Tests that standard headers are added to the file.
     func testMendEmptyHeaders() throws {
         let entry = SubtextFile(

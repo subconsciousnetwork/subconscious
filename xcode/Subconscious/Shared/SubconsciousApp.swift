@@ -2149,7 +2149,8 @@ extension AppModel {
         guard let entry = SubtextFile(editor) else {
             return nil
         }
-        return entry.mendHeaders()
+        let mended = entry.mendHeaders()
+        return mended
     }
 
     /// Save snapshot of entry

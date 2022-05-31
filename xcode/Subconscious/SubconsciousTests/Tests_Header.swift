@@ -230,7 +230,7 @@ class Tests_Header: XCTestCase {
         )
     }
 
-    func testHeadersIndexFirstWins() throws {
+    func testHeaderIndexFirstWins() throws {
         let headers = Headers.parse(
             markup: """
             content-type: text/subtext
@@ -244,7 +244,7 @@ class Tests_Header: XCTestCase {
         )
     }
 
-    func testHeadersSubscriptNormalization() throws {
+    func testHeaderIndexSubscriptNormalization() throws {
         var index = HeaderIndex()
         index["title"] = "Kosmos"
         index["content type"] = "text/subtext"
@@ -271,7 +271,7 @@ class Tests_Header: XCTestCase {
         )
     }
 
-    func testHeadersIndexDescription() throws {
+    func testHeaderIndexDescription() throws {
         let index = HeaderIndex(
             [
                 Header(name: "content-type", value: "text/subtext"),
@@ -282,6 +282,26 @@ class Tests_Header: XCTestCase {
             String(describing: index),
             "Content-Type: text/subtext\nTitle: Gliding O'er All\n\n",
             "Index renders to correctly formatted header block"
+        )
+    }
+
+    func testHeaderIndexSetDefault() throws {
+        var index = HeaderIndex(
+            [
+                Header(name: "content-type", value: "text/subtext"),
+            ]
+        )
+        index.setDefault(name: "Content-Type", value: "fail")
+        index.setDefault(name: "author", value: "Walt Whitman")
+        XCTAssertEqual(
+            index.index["Content-Type"],
+            "text/subtext",
+            "setDefault does not override existing headers"
+        )
+        XCTAssertEqual(
+            index.index["Author"],
+            "Walt Whitman",
+            "setDefault sets when no header with that name is present"
         )
     }
 }

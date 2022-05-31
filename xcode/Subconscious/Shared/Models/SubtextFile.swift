@@ -46,9 +46,18 @@ struct SubtextFile:
         }
     }
 
-    var dom: Subtext { Subtext.parse(markup: content) }
-    var description: String { content }
+    var dom: Subtext {
+        Subtext.parse(markup: content)
+    }
+
+    var description: String {
+        "\(headers)\(content)"
+    }
+
     var id: Slug { slug }
+    var size: Int {
+        content.lengthOfBytes(using: .utf8)
+    }
 
     func url(directory: URL) -> URL {
         self.slug.toURL(directory: directory, ext: "subtext")
@@ -71,7 +80,8 @@ struct SubtextFile:
             withIntermediateDirectories: true,
             attributes: nil
         )
-        try content.write(
+        let body = String(describing: self)
+        try body.write(
             to: fileURL,
             atomically: true,
             encoding: .utf8
@@ -89,16 +99,31 @@ struct SubtextFile:
 
     var modified: Date {
         get {
-            guard let modified = headers["modified"] else {
-                return Date(timeIntervalSince1970: 0)
-            }
-            guard let date = try? Date(modified, strategy: .iso8601) else {
+            guard
+                let dateString = headers["Modified"],
+                let date = try? Date(dateString, strategy: .iso8601)
+            else {
                 return Date(timeIntervalSince1970: 0)
             }
             return date
         }
         set {
             headers["Modified"] = newValue.ISO8601Format()
+        }
+    }
+
+    var created: Date {
+        get {
+            guard
+                let dateString = headers["Created"],
+                let date = try? Date(dateString, strategy: .iso8601)
+            else {
+                return Date(timeIntervalSince1970: 0)
+            }
+            return date
+        }
+        set {
+            headers["Created"] = newValue.ISO8601Format()
         }
     }
 
@@ -114,14 +139,15 @@ struct SubtextFile:
 
         this.headers["Content-Type"] = "text/subtext"
 
-        let linkableTitle = EntryLink(
+        let link = EntryLink(
             slug: slug,
             title: headers["Title"] ?? ""
         )
-        .toLinkableTitle()
-        this.headers["Title"] = linkableTitle
+        this.headers["Title"] = link.toLinkableTitle()
 
-        this.headers["Modified"] = modified.ISO8601Format()
+        let now = Date.now.ISO8601Format()
+        this.headers["Modified"] = now
+        this.headers.setDefault(name: "Created", value: now)
 
         return this
     }

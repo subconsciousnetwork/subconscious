@@ -234,6 +234,15 @@ struct HeaderIndex: Hashable, CustomStringConvertible {
         return this
     }
 
+    /// Set a header value only if a header of the same name
+    /// does not already exist.
+    mutating func setDefault(name: String, value: String) {
+        let name = Header.normalizeName(name)
+        if self.index[name] == nil {
+            self.index[name] = value
+        }
+    }
+
     static let empty = HeaderIndex()
 }
 

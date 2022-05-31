@@ -124,9 +124,7 @@ struct DatabaseService {
 
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        entry: SubtextFile,
-        modified: Date,
-        size: Int
+        entry: SubtextFile
     ) throws {
         try database.execute(
             sql: """
@@ -139,42 +137,37 @@ struct DatabaseService {
                 size=excluded.size
             """,
             parameters: [
-                .text(entry.slug.description),
+                .text(String(describing: entry.slug)),
                 .text(entry.title),
-                .text(entry.content),
-                .date(modified),
-                .integer(size)
+                .text(String(describing: entry)),
+                .date(entry.modified),
+                .integer(entry.size)
             ]
         )
     }
 
     private func writeEntryToDatabase(slug: Slug) throws {
-        let entry = try SubtextFile(slug: slug, directory: documentURL).unwrap()
-        let fingerprint = try FileFingerprint.Attributes(
-            url: entry.url(directory: documentURL)
-        ).unwrap()
-        return try writeEntryToDatabase(
-            entry: entry,
-            modified: fingerprint.modifiedDate,
-            size: fingerprint.size
-        )
+        var entry = try SubtextFile(slug: slug, directory: documentURL)
+            .unwrap()
+        let fingerprint = try FileFingerprint
+            .Attributes(url: entry.url(directory: documentURL))
+            .unwrap()
+        entry.modified = fingerprint.modifiedDate
+        return try writeEntryToDatabase(entry: entry)
     }
 
     func writeEntry(entry: SubtextFile) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
+            var entry = entry
             // Write contents to file
             try entry.write(directory: documentURL)
-            // Read fingerprint after writing to get updated time
+            // Read modified date from file system directly after writing
             let fingerprint = try FileFingerprint
-                .Attributes(
-                    url: entry.url(directory: documentURL)
-                )
+                .Attributes(url: entry.url(directory: documentURL))
                 .unwrap()
-            return try writeEntryToDatabase(
-                entry: entry,
-                modified: fingerprint.modifiedDate,
-                size: fingerprint.size
-            )
+            // Set modified date on entry
+            entry.modified = fingerprint.modifiedDate
+            return try writeEntryToDatabase(entry: entry)
         }
     }
 
@@ -303,7 +296,7 @@ struct DatabaseService {
             // are read-only teaser views.
             try database.execute(
                 sql: """
-                SELECT slug, body, modified
+                SELECT slug, body, title, modified
                 FROM entry_search
                 ORDER BY modified DESC
                 LIMIT 1000
@@ -314,9 +307,12 @@ struct DatabaseService {
                     let slugString: String = row.get(0),
                     let slug = Slug(slugString),
                     let body: String = row.get(1),
-                    let modified: Date = row.get(2)
+                    let title: String = row.get(2),
+                    let modified: Date = row.get(3)
                 {
-                    let entry = SubtextFile(slug: slug, content: body)
+                    var entry = SubtextFile(slug: slug, content: body)
+                    entry.modified = modified
+                    entry.title = title
                     return EntryStub(entry)
                 }
                 return nil
