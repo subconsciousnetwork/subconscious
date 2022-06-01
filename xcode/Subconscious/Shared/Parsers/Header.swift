@@ -229,11 +229,16 @@ struct HeaderIndex: Hashable, Sequence, CustomStringConvertible {
 
     /// Set a header value only if a header of the same name
     /// does not already exist.
-    mutating func setDefault(name: String, value: String) {
+    /// - Returns the current value of the header
+    @discardableResult mutating func setDefault(
+        name: String,
+        value: String
+    ) -> String {
         let name = Header.normalizeName(name)
         if self.index[name] == nil {
             self.index[name] = value
         }
+        return self.index[name]!
     }
 
     /// Merge headers together, returning a new HeaderIndex.
