@@ -9,6 +9,16 @@ import XCTest
 @testable import Subconscious
 
 class Tests_Header: XCTestCase {
+    func testHeaderTitleNormalization() throws {
+        let header = Header(name: "CONTENT TYPE", value: "text/subtext")
+        XCTAssertEqual(header.name, "Content-Type")
+    }
+
+    func testHeaderValueNormalization() throws {
+        let header = Header(name: "Title", value: "A title with newline\r\n")
+        XCTAssertEqual(header.value, "A title with newline  ")
+    }
+
     func testParseHeaderName() throws {
         let doc = "Content-Type: text/subtext\nMalformed header: Husker knights\nTitle: Floop the Pig\n\nBody text\n"
         var tape = Tape(doc[...])
@@ -43,7 +53,7 @@ class Tests_Header: XCTestCase {
         let header = Header.parse(&tape)
         XCTAssertNotNil(header)
         XCTAssertEqual(
-            String(describing: header!.normalizedName),
+            String(describing: header!.name),
             "Content-Type"
         )
     }
@@ -116,11 +126,11 @@ class Tests_Header: XCTestCase {
         var tape = Tape(doc[...])
         let headers = Headers.parse(&tape)
         XCTAssertEqual(
-            String(describing: headers.headers[0].normalizedName),
+            String(describing: headers.headers[0].name),
             "Content-Type"
         )
         XCTAssertEqual(
-            String(describing: headers.headers[1].normalizedName),
+            String(describing: headers.headers[1].name),
             "Title"
         )
         XCTAssertEqual(
@@ -249,6 +259,7 @@ class Tests_Header: XCTestCase {
         index["title"] = "Kosmos"
         index["content type"] = "text/subtext"
         index["absurd\n   HEADER"] = "nonsense"
+        index["Valid-Header"] = "Content with newline\r\n"
         XCTAssertEqual(
             index["TITLE"],
             "Kosmos",
@@ -267,6 +278,11 @@ class Tests_Header: XCTestCase {
         XCTAssertEqual(
             index.index["Absurd----Header"],
             "nonsense",
+            "Subscript replaces whitespace with dashes"
+        )
+        XCTAssertEqual(
+            index.index["Valid-Header"],
+            "Content with newline  ",
             "Subscript replaces whitespace with dashes"
         )
     }
