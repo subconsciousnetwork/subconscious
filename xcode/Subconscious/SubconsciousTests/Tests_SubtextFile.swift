@@ -57,7 +57,7 @@ class Tests_SubtextFile: XCTestCase {
             """
         )
         XCTAssertEqual(
-            entry.title,
+            entry.title(),
             "Fire and Ice"
         )
     }
@@ -74,7 +74,7 @@ class Tests_SubtextFile: XCTestCase {
             """
         )
         XCTAssertEqual(
-            entry.excerpt,
+            entry.excerpt(),
             "Some say the world will end in fire,",
             "Excerpt pulls first line of body"
         )
@@ -241,6 +241,109 @@ class Tests_SubtextFile: XCTestCase {
         XCTAssertEqual(
             entry.headers["title"],
             "Fire and Ice"
+        )
+    }
+
+    func testMendingMissingHeaders() throws {
+        let now = Date.now
+        let nowISO = now.ISO8601Format()
+        let entry = SubtextFile(
+            slug: Slug("fire-and-ice")!,
+            content: """
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        .mendingHeaders(modified: now)
+
+        XCTAssertEqual(
+            entry.headers["Title"],
+            "Fire and ice",
+            "Default title derived from slug when missing"
+        )
+        XCTAssertEqual(
+            entry.headers["Modified"],
+            nowISO,
+            "Defaults modified to date provided"
+        )
+        XCTAssertEqual(
+            entry.headers["Created"],
+            nowISO,
+            "Defaults created to date provided"
+        )
+    }
+
+    func testMendingSomeHeaders() throws {
+        let now = Date.now
+        let nowISO = now.ISO8601Format()
+        let entry = SubtextFile(
+            slug: Slug("fire-and-ice")!,
+            content: """
+            Title: Non-linkable title
+            Author: Robert Frost
+
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        .mendingHeaders(modified: now)
+
+        XCTAssertEqual(
+            entry.headers["Title"],
+            "Non-linkable title",
+            "Does not overwrite existing title"
+        )
+        XCTAssertEqual(
+            entry.headers["Author"],
+            "Robert Frost",
+            "Leaves other headers alone"
+        )
+        XCTAssertEqual(
+            entry.headers["Modified"],
+            nowISO,
+            "Defaults created to date provided"
+        )
+    }
+
+    func testModified() throws {
+        let now = Date.now
+        let nowISO = now.ISO8601Format()
+        let entry = SubtextFile(
+            slug: Slug("fire-and-ice")!,
+            content: """
+            Title: Non-linkable title
+            Author: Robert Frost
+
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        .modified(now)
+        XCTAssertEqual(
+            entry.headers["Modified"],
+            nowISO,
+            "Sets modified to date provided"
+        )
+    }
+
+    func testCreated() throws {
+        let now = Date.now
+        let nowISO = now.ISO8601Format()
+        let entry = SubtextFile(
+            slug: Slug("fire-and-ice")!,
+            content: """
+            Title: Non-linkable title
+            Author: Robert Frost
+
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        .created(now)
+        XCTAssertEqual(
+            entry.headers["Created"],
+            nowISO,
+            "Sets created to date provided"
         )
     }
 }

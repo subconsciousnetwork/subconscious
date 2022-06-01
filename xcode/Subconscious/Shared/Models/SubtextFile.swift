@@ -88,59 +88,6 @@ struct SubtextFile:
         )
     }
 
-    var title: String {
-        headers["Title"] ?? slug.toTitle()
-    }
-
-    var modified: Date {
-        get {
-            guard
-                let dateString = headers["Modified"],
-                let date = try? Date(dateString, strategy: .iso8601)
-            else {
-                return Date(timeIntervalSince1970: 0)
-            }
-            return date
-        }
-        set {
-            headers["Modified"] = newValue.ISO8601Format()
-        }
-    }
-
-    var created: Date {
-        get {
-            guard
-                let dateString = headers["Created"],
-                let date = try? Date(dateString, strategy: .iso8601)
-            else {
-                return Date(timeIntervalSince1970: 0)
-            }
-            return date
-        }
-        set {
-            headers["Created"] = newValue.ISO8601Format()
-        }
-    }
-
-    var excerpt: String {
-        get {
-            dom.excerpt()
-        }
-    }
-
-    func timestamped(
-        _ date: Date = Date.now
-    ) -> Self {
-        var this = self
-        let iso = date.ISO8601Format()
-        this.headers["Modified"] = iso
-        this.headers.setDefault(
-            name: "Created",
-            value: iso
-        )
-        return this
-    }
-
     /// Set slug and title from an entry link.
     /// Sets a linkable title, falling back to title derived from slug
     /// if title is not linkable.
@@ -176,6 +123,58 @@ struct SubtextFile:
         this.setSlugAndTitle(link)
         return this
     }
+
+    /// Mend "blessed" headers, providing them with sensible default values
+    func mendingHeaders(
+        modified: Date = Date.now
+    ) -> Self {
+        var this = self
+        this.headers.setDefault(name: "Title", value: slug.toTitle())
+        let iso = modified.ISO8601Format()
+        this.headers.setDefault(name: "Modified", value: iso)
+        this.headers.setDefault(name: "Created", value: iso)
+        return this
+    }
+
+    func title() -> String {
+        headers["Title"] ?? slug.toTitle()
+    }
+
+    func modified() -> Date {
+        guard
+            let dateString = headers["Modified"],
+            let date = try? Date(dateString, strategy: .iso8601)
+        else {
+            return Date(timeIntervalSince1970: 0)
+        }
+        return date
+    }
+
+    func modified(_ date: Date) -> Self {
+        var this = self
+        this.headers["Modified"] = date.ISO8601Format()
+        return this
+    }
+
+    func created() -> Date {
+        guard
+            let dateString = headers["Created"],
+            let date = try? Date(dateString, strategy: .iso8601)
+        else {
+            return Date(timeIntervalSince1970: 0)
+        }
+        return date
+    }
+
+    func created(_ date: Date) -> Self {
+        var this = self
+        this.headers["Created"] = date.ISO8601Format()
+        return this
+    }
+
+    func excerpt() -> String {
+        dom.excerpt()
+    }
 }
 
 extension EntryLink {
@@ -189,8 +188,8 @@ extension EntryLink {
 extension EntryStub {
     init(_ entry: SubtextFile) {
         self.slug = entry.slug
-        self.title = entry.title
-        self.excerpt = entry.excerpt
-        self.modified = entry.modified
+        self.title = entry.title()
+        self.excerpt = entry.excerpt()
+        self.modified = entry.modified()
     }
 }
