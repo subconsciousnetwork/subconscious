@@ -100,8 +100,8 @@ struct AppView: View {
                         slug: store.state.editor.entryInfo?.slug,
                         suggestions: store.state.renameSuggestions,
                         text: store.binding(
-                            get: \.renameSlugField,
-                            tag: AppAction.setRenameSlugField
+                            get: \.renameField,
+                            tag: AppAction.setRenameField
                         ),
                         focus: store.binding(
                             get: \.focus,

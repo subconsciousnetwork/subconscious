@@ -41,8 +41,8 @@ struct DetailView: View {
     var onInsertBold: () -> Void
     var onInsertItalic: () -> Void
     var onInsertCode: () -> Void
-    var onRename: (Slug?) -> Void
-    var onDelete: (Slug?) -> Void
+    var onRename: (EntryLink) -> Void
+    var onDelete: (Slug) -> Void
 
     private var isKeyboardUp: Bool {
         focus == .editor
@@ -138,8 +138,7 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             DetailToolbarContent(
-                title: entryInfo?.title ?? "",
-                slug: entryInfo?.slug,
+                link: entryInfo.map({ info in EntryLink(info) }),
                 onRename: onRename,
                 onDelete: onDelete
             )

@@ -39,6 +39,13 @@ struct EditorEntryInfo: Hashable, Identifiable {
     }
 }
 
+extension EntryLink {
+    init(_ info: EditorEntryInfo) {
+        self.slug = info.slug
+        self.title = info.title
+    }
+}
+
 /// Holds the state for an editor
 struct Editor: Hashable {
     /// Current slug editor is set to, if any

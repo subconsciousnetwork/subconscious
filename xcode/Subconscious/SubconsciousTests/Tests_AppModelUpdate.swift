@@ -173,7 +173,7 @@ class Tests_AppModelUpdate: XCTestCase {
             "Rename sheet is shown"
         )
         XCTAssertEqual(
-            update.state.slugToRename,
+            update.state.entryToRename,
             slug,
             "slugToRename was set"
         )
@@ -193,27 +193,27 @@ class Tests_AppModelUpdate: XCTestCase {
             "Rename sheet is hidden"
         )
         XCTAssertEqual(
-            update.state.slugToRename,
+            update.state.entryToRename,
             nil,
             "slugToRename was set"
         )
     }
     
-    func testRenameSlugField() throws {
+    func testRenameField() throws {
         let state = AppModel()
         let update = AppModel.update(
             state: state,
-            action: .setRenameSlugField("I Floop the Pig"),
+            action: .setRenameField("Two pink faces turned in the flare of the tiny torch"),
             environment: environment
         )
 
         XCTAssertEqual(
-            update.state.renameSlugField,
-            "i-floop-the-pig",
-            "The Pig has been flooped."
+            update.state.renameField,
+            "Two pink faces turned in the flare of the tiny torch",
+            "Rename field set to literal text of query"
         )
     }
-    
+
     func testSetSearch() throws {
         let state = AppModel()
         let update = AppModel.update(

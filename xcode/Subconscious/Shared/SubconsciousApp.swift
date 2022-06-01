@@ -98,9 +98,9 @@ enum AppAction {
     case deleteEntryFailure(String)
 
     // Rename
-    case showRenameSheet(Slug?)
+    case showRenameSheet(EntryLink?)
     case hideRenameSheet
-    case setRenameSlugField(String)
+    case setRenameField(String)
     case setRenameSuggestions([RenameSuggestion])
     case renameSuggestionsFailure(String)
     /// Issue a rename action for an entry.
@@ -258,11 +258,11 @@ struct AppModel: Equatable {
     /// Is rename sheet showing?
     var isRenameSheetShowing = false
     /// Slug of the candidate for renaming
-    var slugToRename: Slug? = nil
+    var entryToRename: EntryLink?
     /// Text for slug rename TextField.
     /// Note this is the contents of the search text field, which
     /// is different from the actual candidate slug to be renamed.
-    var renameSlugField: String = ""
+    var renameField: String = ""
     /// Suggestions for renaming note.
     var renameSuggestions: [RenameSuggestion] = []
 
@@ -488,19 +488,19 @@ extension AppModel {
         case let .deleteEntryFailure(error):
             environment.logger.log("Failed to delete entry: \(error)")
             return Update(state: state)
-        case let .showRenameSheet(slug):
+        case let .showRenameSheet(entry):
             return showRenameSheet(
                 state: state,
                 environment: environment,
-                slug: slug
+                entry: entry
             )
         case .hideRenameSheet:
             return hideRenameSheet(
                 state: state,
                 environment: environment
             )
-        case let .setRenameSlugField(text):
-            return setRenameSlugField(
+        case let .setRenameField(text):
+            return setRenameField(
                 state: state,
                 environment: environment,
                 text: text
@@ -1403,18 +1403,20 @@ extension AppModel {
     static func showRenameSheet(
         state: AppModel,
         environment: AppEnvironment,
-        slug: Slug?
+        entry: EntryLink?
     ) -> Update<AppModel, AppAction> {
-        guard let slug = slug else {
+        guard let entry = entry else {
             environment.logger.warning(
-                "Rename sheet invoked with nil slug"
+                "Rename sheet invoked on missing entry"
             )
             return Update(state: state)
         }
 
         var model = state
         model.isRenameSheetShowing = true
-        model.slugToRename = slug
+        model.entryToRename = entry
+
+        let title = entry.toLinkableTitle()
 
         return Update(state: model)
             //  Save entry in preperation for any merge/move.
@@ -1423,10 +1425,10 @@ extension AppModel {
             })
             //  Set rename slug field text
             .pipe({ state in
-                setRenameSlugField(
+                setRenameField(
                     state: state,
                     environment: environment,
-                    text: slug.description
+                    text: title
                 )
             })
             //  Set focus on rename field
@@ -1448,11 +1450,11 @@ extension AppModel {
     ) -> Update<AppModel, AppAction> {
         var model = state
         model.isRenameSheetShowing = false
-        model.slugToRename = nil
+        model.entryToRename = nil
 
         return Update(state: model)
             .pipe({ state in
-                setRenameSlugField(
+                setRenameField(
                     state: state,
                     environment: environment,
                     text: ""
@@ -1469,18 +1471,17 @@ extension AppModel {
     }
 
     /// Set text of slug field
-    static func setRenameSlugField(
+    static func setRenameField(
         state: AppModel,
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel, AppAction> {
         var model = state
-        let sluglike = Slug.format(text).unwrap(or: "")
-        model.renameSlugField = sluglike
+        model.renameField = text
         let fx: Fx<AppAction> = environment.database
             .searchRenameSuggestions(
-                query: sluglike,
-                current: state.slugToRename
+                query: text,
+                current: state.entryToRename?.slug
             )
             .map({ suggestions in
                 AppAction.setRenameSuggestions(suggestions)
