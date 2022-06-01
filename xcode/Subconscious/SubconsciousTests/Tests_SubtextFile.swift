@@ -99,7 +99,7 @@ class Tests_SubtextFile: XCTestCase {
         )
     }
 
-    func testAppending() throws {
+    func testMerge() throws {
         let a = SubtextFile(
             slug: Slug("fire-and-ice")!,
             content: """
@@ -123,7 +123,7 @@ class Tests_SubtextFile: XCTestCase {
             """
         )
 
-        let c = a.appending(b)
+        let c = a.merge(b)
 
         XCTAssertEqual(
             c.headers["Title"],
@@ -145,6 +145,121 @@ class Tests_SubtextFile: XCTestCase {
             Here come real stars to fill the upper skies,
             And here on earth come emulating flies,
             """
+        )
+    }
+
+    func testLinkableTitleMissingTitleHeader() throws {
+        let entry = SubtextFile(
+            slug: Slug("fire-and-ice")!,
+            content: """
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        .linkableTitle()
+
+        XCTAssertEqual(
+            entry.headers["title"],
+            "Fire and ice"
+        )
+    }
+
+    func testLinkableTitleNoTitleHeader() throws {
+        let entry = SubtextFile(
+            slug: Slug("fire-and-ice")!,
+            content: """
+            
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        .linkableTitle()
+
+        XCTAssertEqual(
+            entry.headers["title"],
+            "Fire and ice"
+        )
+    }
+
+    func testLinkableTitleMismatchTitleHeader() throws {
+        let entry = SubtextFile(
+            slug: Slug("fire-and-ice")!,
+            content: """
+            Title: Floop the Pig
+            
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        .linkableTitle()
+
+        XCTAssertEqual(
+            entry.headers["title"],
+            "Fire and ice"
+        )
+    }
+
+    func testLinkableTitleMatchingTitleHeader() throws {
+        let entry = SubtextFile(
+            slug: Slug("fire-and-ice")!,
+            content: """
+            Title: Fire and Ice
+            
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        .linkableTitle()
+
+        XCTAssertEqual(
+            entry.headers["title"],
+            "Fire and Ice"
+        )
+    }
+
+    func testTitleAndSlugFromSlug() throws {
+        let slug = Slug("fire-and-ice")!
+        let entry = SubtextFile(
+            slug: Slug("some-other-slug")!,
+            content: """
+            
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        .titleAndSlug(slug)
+
+        XCTAssertEqual(
+            entry.slug,
+            slug
+        )
+        XCTAssertEqual(
+            entry.headers["title"],
+            "Fire and ice"
+        )
+    }
+
+    func testTitleAndSlugFromTitle() throws {
+        let entry = SubtextFile(
+            slug: Slug("some-other-slug")!,
+            content: """
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        .titleAndSlug("Fire and Ice")
+
+        guard let entry = entry else {
+            XCTFail("Title could not be slugified")
+            return
+        }
+        XCTAssertEqual(
+            entry.slug,
+            Slug("fire-and-ice")!
+        )
+        XCTAssertEqual(
+            entry.headers["title"],
+            "Fire and Ice"
         )
     }
 }

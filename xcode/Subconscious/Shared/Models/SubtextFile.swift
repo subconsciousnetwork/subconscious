@@ -65,7 +65,7 @@ struct SubtextFile:
 
     /// Append additional Subtext to this file
     /// Returns a new instance
-    func appending(_ other: SubtextFile) -> Self {
+    func merge(_ other: SubtextFile) -> Self {
         var file = self
         file.headers = headers.merge(other.headers)
         file.content = content.appending("\n").appending(other.content)
@@ -89,12 +89,7 @@ struct SubtextFile:
     }
 
     var title: String {
-        get {
-            headers["Title"] ?? slug.toTitle()
-        }
-        set {
-            headers["Title"] = newValue
-        }
+        headers["Title"] ?? slug.toTitle()
     }
 
     var modified: Date {
@@ -131,6 +126,36 @@ struct SubtextFile:
         get {
             dom.excerpt()
         }
+    }
+
+    /// Updates the title to be a linkable title.
+    /// If the title is already linkable (reduces to the slug) then it is
+    /// left alone
+    /// - Returns a new SubtextFile
+    func linkableTitle() -> Self {
+        var this = self
+        let link = EntryLink(slug: slug, title: headers["Title"] ?? "")
+        this.headers["Title"] = link.toLinkableTitle()
+        return this
+    }
+
+    /// Associate title and slug, deriving from a title string
+    func titleAndSlug(_ title: String) -> Self? {
+        guard let slug = Slug(formatting: title) else {
+            return nil
+        }
+        var this = self
+        this.slug = slug
+        this.headers["Title"] = title
+        return this
+    }
+
+    /// Associate title and slug, deriving from a slug
+    func titleAndSlug(_ slug: Slug) -> Self {
+        var this = self
+        this.slug = slug
+        this.headers["Title"] = slug.toTitle()
+        return this
     }
 }
 
