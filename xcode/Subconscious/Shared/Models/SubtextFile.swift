@@ -11,8 +11,41 @@ struct SubtextFile:
 {
     var slug: Slug
     var headers: HeaderIndex
-    var content: String
+    var body: String
 
+    /// Initialize SubtextFile properties directly
+    init(
+        slug: Slug,
+        headers: HeaderIndex,
+        body: String
+    ) {
+        self.slug = slug
+        self.headers = headers
+        self.body = body
+    }
+
+    /// Initialize SubtextFile with blessed headers
+    init(
+        slug: Slug,
+        title: String,
+        modified: Date,
+        created: Date,
+        body: String
+    ) {
+        self.slug = slug
+        let link = EntryLink(slug: slug, title: title)
+        self.headers = HeaderIndex(
+            [
+                Header(name: "Content-Type", value: "text/subtext"),
+                Header(name: "Title", value: link.linkableTitle),
+                Header(name: "Modified", value: modified.ISO8601Format()),
+                Header(name: "Created", value: created.ISO8601Format()),
+            ]
+        )
+        self.body = body
+    }
+
+    /// Initialize SubtextFile by parsing body and headers from `content`
     init(
         slug: Slug,
         content: String
@@ -20,17 +53,7 @@ struct SubtextFile:
         self.slug = slug
         let envelope = HeadersEnvelope.parse(markup: content)
         self.headers = HeaderIndex(envelope.headers)
-        self.content = String(envelope.body)
-    }
-
-    init(
-        slug: Slug,
-        headers: HeaderIndex,
-        dom: Subtext
-    ) {
-        self.slug = slug
-        self.headers = headers
-        self.content = String(describing: dom)
+        self.body = String(envelope.body)
     }
 
     /// Open existing document
@@ -47,11 +70,11 @@ struct SubtextFile:
     }
 
     var dom: Subtext {
-        Subtext.parse(markup: content)
+        Subtext.parse(markup: body)
     }
 
     var description: String {
-        "\(headers)\(content)"
+        "\(headers)\(body)"
     }
 
     var id: Slug { slug }
@@ -68,7 +91,7 @@ struct SubtextFile:
     func merge(_ other: SubtextFile) -> Self {
         var file = self
         file.headers = headers.merge(other.headers)
-        file.content = content.appending("\n").appending(other.content)
+        file.body = body.appending("\n").appending(other.body)
         return file
     }
 
@@ -93,7 +116,7 @@ struct SubtextFile:
     /// if title is not linkable.
     mutating func setSlugAndTitle(_ link: EntryLink) {
         self.slug = link.slug
-        self.headers["Title"] = link.toLinkableTitle()
+        self.headers["Title"] = link.linkableTitle
     }
 
     /// Updates slug and title, deriving linkable title from entry link
@@ -129,6 +152,7 @@ struct SubtextFile:
         modified: Date = Date.now
     ) -> Self {
         var this = self
+        this.headers["Content-Type"] = "text/subtext"
         this.headers.setDefault(name: "Title", value: slug.toTitle())
         let iso = modified.ISO8601Format()
         this.headers.setDefault(name: "Modified", value: iso)
@@ -179,8 +203,10 @@ struct SubtextFile:
 
 extension EntryLink {
     init(_ entry: SubtextFile) {
-        self.slug = entry.slug
-        self.title = entry.headers["Title"] ?? ""
+        self.init(
+            slug: entry.slug,
+            title: entry.headers["Title"] ?? ""
+        )
     }
 }
 

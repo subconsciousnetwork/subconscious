@@ -9,6 +9,51 @@ import XCTest
 @testable import Subconscious
 
 class Tests_SubtextFile: XCTestCase {
+    func testInitBlessedHeaders() throws {
+        let then = Date(timeIntervalSince1970: 0)
+        let thenISO = then.ISO8601Format()
+        let entry = SubtextFile(
+            slug: Slug("fire-and-ice")!,
+            title: "Fire and Ice",
+            modified: then,
+            created: then,
+            body: """
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        XCTAssertEqual(
+            entry.headers["Title"],
+            "Fire and Ice"
+        )
+        XCTAssertEqual(
+            entry.headers["Modified"],
+            thenISO
+        )
+        XCTAssertEqual(
+            entry.headers["Created"],
+            thenISO
+        )
+    }
+
+    func testInitBlessedHeadersNonlinkableTitle() throws {
+        let now = Date.now
+        let entry = SubtextFile(
+            slug: Slug("fire-and-ice")!,
+            title: "Nonlinkable title",
+            modified: now,
+            created: now,
+            body: """
+            Some say the world will end in fire,
+            Some say in ice.
+            """
+        )
+        XCTAssertEqual(
+            entry.headers["Title"],
+            "Fire and ice"
+        )
+    }
+
     func testContentParsing() throws {
         let entry = SubtextFile(
             slug: Slug("fire-and-ice")!,
@@ -21,7 +66,7 @@ class Tests_SubtextFile: XCTestCase {
             """
         )
         XCTAssertEqual(
-            entry.content,
+            entry.body,
             "Some say the world will end in fire,\nSome say in ice.",
             "Entry description produces correctly formatted document"
         )
@@ -138,7 +183,7 @@ class Tests_SubtextFile: XCTestCase {
             "1928"
         )
         XCTAssertEqual(
-            c.content,
+            c.body,
             """
             Some say the world will end in fire,
             Some say in ice.
