@@ -141,33 +141,39 @@ struct SubtextFile:
         return this
     }
 
+    /// Set slug and title from an entry link.
+    /// Sets a linkable title, falling back to title derived from slug
+    /// if title is not linkable.
+    mutating func setSlugAndTitle(_ link: EntryLink) {
+        self.slug = link.slug
+        self.headers["Title"] = link.toLinkableTitle()
+    }
+
+    /// Updates slug and title, deriving linkable title from entry link
+    /// - Returns new SubtextFile
+    func slugAndTitle(_ link: EntryLink) -> Self {
+        var this = self
+        this.setSlugAndTitle(link)
+        return this
+    }
+
     /// Updates the slug and title, deriving both from a title string
+    /// - Returns new SubtextFile
     func slugAndTitle(_ title: String) -> Self? {
-        guard let slug = Slug(formatting: title) else {
+        guard let link = EntryLink(title: title) else {
             return nil
         }
         var this = self
-        this.slug = slug
-        this.headers["Title"] = title
+        this.setSlugAndTitle(link)
         return this
     }
 
     /// Updates the slug and title, deriving both from a slug
+    /// - Returns new SubtextFile
     func slugAndTitle(_ slug: Slug) -> Self {
+        let link = EntryLink(slug: slug)
         var this = self
-        this.slug = slug
-        this.headers["Title"] = slug.toTitle()
-        return this
-    }
-
-    /// Updates the slug and title.
-    /// Sets title from `proposedTitle`, if title is reducible to the same slug.
-    /// Otherwise derives title from slug.
-    func slugAndTitle(slug: Slug, proposedTitle: String) -> Self {
-        var this = self
-        this.slug = slug
-        let link = EntryLink(slug: slug, title: proposedTitle)
-        this.headers["Title"] = link.toLinkableTitle()
+        this.setSlugAndTitle(link)
         return this
     }
 }
