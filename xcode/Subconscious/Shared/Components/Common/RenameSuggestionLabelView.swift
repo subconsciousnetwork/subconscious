@@ -16,7 +16,7 @@ struct RenameSuggestionLabelView: View, Equatable {
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text(entryLink.toLinkableTitle()),
+                        title: Text(entryLink.linkableTitle),
                         subtitle: Text("Merge ideas")
                     )
                 },
@@ -28,7 +28,7 @@ struct RenameSuggestionLabelView: View, Equatable {
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text(entryLink.toLinkableTitle()),
+                        title: Text(entryLink.linkableTitle),
                         subtitle: Text("Rename idea")
                     )
                 },

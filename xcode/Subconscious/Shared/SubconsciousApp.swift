@@ -1416,7 +1416,7 @@ extension AppModel {
         model.isRenameSheetShowing = true
         model.entryToRename = entry
 
-        let title = entry.toLinkableTitle()
+        let title = entry.linkableTitle
 
         return Update(state: model)
             //  Save entry in preperation for any merge/move.
@@ -1539,16 +1539,19 @@ extension AppModel {
             return Update(state: state, fx: fx)
         }
 
-        let to: Slug = Func.pipe(suggestion) { suggestion in
-            switch suggestion {
-            case .rename(let entryLink):
-                return entryLink.slug
-            case .merge(let entryLink):
-                return entryLink.slug
+        let to: EntryLink = Func.pipe(
+            suggestion,
+            through: { suggestion in
+                switch suggestion {
+                case .rename(let entryLink):
+                    return entryLink
+                case .merge(let entryLink):
+                    return entryLink
+                }
             }
-        }
+        )
 
-        guard from != to else {
+        guard from != to.slug else {
             let fx: Fx<AppAction> = Just(.hideRenameSheet)
                 .eraseToAnyPublisher()
             environment.logger.log(
@@ -1561,7 +1564,7 @@ extension AppModel {
         let fx: Fx<AppAction> = environment.database
             .renameOrMergeEntry(from: from, to: to)
             .map({ _ in
-                AppAction.succeedRenameEntry(from: from, to: to)
+                AppAction.succeedRenameEntry(from: from, to: to.slug)
             })
             .catch({ error in
                 Just(
@@ -1961,7 +1964,7 @@ extension AppModel {
             setEditor(
                 state: state,
                 environment: environment,
-                text: detail.entry.content,
+                text: detail.entry.body,
                 saveState: detail.saveState
             )
         })
@@ -2067,20 +2070,23 @@ extension AppModel {
         environment: AppEnvironment,
         suggestion: LinkSuggestion
     ) -> Update<AppModel, AppAction> {
-        let link: EntryLink = Func.pipe(suggestion, { suggestion in
-            switch suggestion {
-            case .entry(let link):
-                return link
-            case .new(let link):
-                return link
+        let link: EntryLink = Func.pipe(
+            suggestion,
+            through: { suggestion in
+                switch suggestion {
+                case .entry(let link):
+                    return link
+                case .new(let link):
+                    return link
+                }
             }
-        })
+        )
 
         // If there is a selected link, use that range
         // instead of selection
         let (range, replacement): (NSRange, String) = Func.pipe(
             state.editor.selectedEntryLinkMarkup,
-            { markup in
+            through: { markup in
                 switch markup {
                 case .slashlink(let slashlink):
                     let replacement = link.slug.toSlashlink()
@@ -2090,7 +2096,7 @@ extension AppModel {
                     )
                     return (range, replacement)
                 case .wikilink(let wikilink):
-                    let text = link.toLinkableTitle()
+                    let text = link.linkableTitle
                     let replacement = Markup.Wikilink(text: text).markup
                     let range = NSRange(
                         wikilink.span.range,
@@ -2098,7 +2104,7 @@ extension AppModel {
                     )
                     return (range, replacement)
                 case .none:
-                    let text = link.toLinkableTitle()
+                    let text = link.linkableTitle
                     let replacement = Markup.Wikilink(text: text).markup
                     return (state.editor.selection, replacement)
                 }

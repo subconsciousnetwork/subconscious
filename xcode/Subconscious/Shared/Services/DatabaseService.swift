@@ -138,27 +138,27 @@ struct DatabaseService {
             """,
             parameters: [
                 .text(String(describing: entry.slug)),
-                .text(entry.title),
+                .text(entry.title()),
                 .text(String(describing: entry)),
-                .date(entry.modified),
+                .date(entry.modified()),
                 .integer(entry.size)
             ]
         )
     }
 
     private func writeEntryToDatabase(slug: Slug) throws {
-        var entry = try SubtextFile(slug: slug, directory: documentURL)
+        let entry = try SubtextFile(slug: slug, directory: documentURL)
             .unwrap()
         let fingerprint = try FileFingerprint
             .Attributes(url: entry.url(directory: documentURL))
             .unwrap()
-        entry.modified = fingerprint.modifiedDate
-        return try writeEntryToDatabase(entry: entry)
+        return try writeEntryToDatabase(
+            entry: entry.modified(fingerprint.modifiedDate)
+        )
     }
 
     func writeEntry(entry: SubtextFile) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
-            var entry = entry
             // Write contents to file
             try entry.write(directory: documentURL)
             // Read modified date from file system directly after writing
@@ -166,8 +166,9 @@ struct DatabaseService {
                 .Attributes(url: entry.url(directory: documentURL))
                 .unwrap()
             // Set modified date on entry
-            entry.modified = fingerprint.modifiedDate
-            return try writeEntryToDatabase(entry: entry)
+            return try writeEntryToDatabase(
+                entry: entry.modified(fingerprint.modifiedDate)
+            )
         }
     }
 
@@ -198,10 +199,9 @@ struct DatabaseService {
     }
 
     /// Rename file in file system
-    private func moveEntryFile(from: Slug, to: Slug) throws {
-        let fromFile = try SubtextFile(slug: from, directory: documentURL)
-            .unwrap()
-        let toFile = SubtextFile(slug: to, content: fromFile.content)
+    private func moveEntryFile(from: Slug, to: EntryLink) throws {
+        let fromFile = try readEntry(slug: from).unwrap()
+        let toFile = fromFile.slugAndTitle(to)
         try toFile.write(directory: documentURL)
         try FileManager.default.removeItem(
             at: fromFile.url(directory: documentURL)
@@ -213,18 +213,11 @@ struct DatabaseService {
     /// - Writes the combined content to `to`
     /// - Deletes `from`
     private func mergeEntryFile(from: Slug, to: Slug) throws {
-        let fromFile = try SubtextFile(
-            slug: from,
-            directory: documentURL
-        )
-        .unwrap()
+        let fromFile = try readEntry(slug: from).unwrap()
 
-        let toFile = try SubtextFile(
-            slug: to,
-            directory: documentURL
-        )
-        .unwrap()
-        .appending(fromFile)
+        let toFile = try readEntry(slug: to)
+            .unwrap()
+            .merge(fromFile)
 
         //  First write the merged file to "to" location
         try toFile.write(directory: documentURL)
@@ -240,15 +233,15 @@ struct DatabaseService {
     /// Updates both database and file system.
     func renameOrMergeEntry(
         from: Slug,
-        to: Slug
+        to: EntryLink
     ) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
-            // Succeed and do nothing if `from` and `to` are the same.
-            guard from != to else {
+            // Succeed and do nothing if `from` and `to.slug` are the same.
+            guard from != to.slug else {
                 return
             }
 
-            let toURL = to.toURL(directory: documentURL, ext: "subtext")
+            let toURL = to.slug.toURL(directory: documentURL, ext: "subtext")
 
             //  If file already exists, perform a merge.
             //  Otherwise, perform a rename.
@@ -257,13 +250,13 @@ struct DatabaseService {
             //  at its `.absolutePath`.
             //  2022-01-21 Gordon Brander
             if FileManager.default.fileExists(atPath: toURL.path) {
-                try mergeEntryFile(from: from, to: to)
-                try writeEntryToDatabase(slug: to)
+                try mergeEntryFile(from: from, to: to.slug)
+                try writeEntryToDatabase(slug: to.slug)
                 try deleteEntryFromDatabase(slug: from)
                 return
             } else {
                 try moveEntryFile(from: from, to: to)
-                try writeEntryToDatabase(slug: to)
+                try writeEntryToDatabase(slug: to.slug)
                 try deleteEntryFromDatabase(slug: from)
                 return
             }
@@ -296,26 +289,26 @@ struct DatabaseService {
             // are read-only teaser views.
             try database.execute(
                 sql: """
-                SELECT slug, body, title, modified
+                SELECT slug, body, modified
                 FROM entry_search
                 ORDER BY modified DESC
                 LIMIT 1000
                 """
             )
             .compactMap({ row in
-                if
+                guard
                     let slugString: String = row.get(0),
                     let slug = Slug(slugString),
                     let body: String = row.get(1),
-                    let title: String = row.get(2),
-                    let modified: Date = row.get(3)
-                {
-                    var entry = SubtextFile(slug: slug, content: body)
-                    entry.modified = modified
-                    entry.title = title
-                    return EntryStub(entry)
+                    let modified: Date = row.get(2)
+                else {
+                    return nil
                 }
-                return nil
+                /// Read entry and mend headers using information
+                /// from database.
+                let entry = SubtextFile(slug: slug, content: body)
+                    .mendingHeaders(modified: modified)
+                return EntryStub(entry)
             })
         }
     }
@@ -627,15 +620,14 @@ struct DatabaseService {
         }
     }
 
+    /// Read an entry from the file system.
     /// Private syncronous API to read a Subtext file via its Slug
     /// Used by public async APIs.
+    /// - Returns a SubtextFile with mended headers.
     private func readEntry(
         slug: Slug
     ) -> SubtextFile? {
-        SubtextFile(
-            slug: slug,
-            directory: documentURL
-        )
+        SubtextFile(slug: slug, directory: documentURL)?.mendingHeaders()
     }
 
     /// Sync version of readEntryDetail
@@ -671,13 +663,17 @@ struct DatabaseService {
             return EntryStub(entry)
         })
         // Retreive top entry from file system to ensure it is fresh.
-        // If no file exists, return a draft with fallback content.
+        // If no file exists, return a draft, using fallback for title.
         guard let entry = readEntry(slug: slug) else {
+            let now = Date.now
             return EntryDetail(
                 saveState: .draft,
                 entry: SubtextFile(
                     slug: slug,
-                    content: fallback
+                    title: fallback,
+                    modified: now,
+                    created: now,
+                    body: ""
                 ),
                 backlinks: backlinks
             )
@@ -709,7 +705,7 @@ struct DatabaseService {
         template: Slug
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .utility) {
-            let fallback = readEntry(slug: template)?.content ?? ""
+            let fallback = readEntry(slug: template)?.body ?? ""
             return try readEntryDetail(
                 slug: slug,
                 fallback: fallback

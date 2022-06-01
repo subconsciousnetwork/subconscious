@@ -41,8 +41,7 @@ struct EditorEntryInfo: Hashable, Identifiable {
 
 extension EntryLink {
     init(_ info: EditorEntryInfo) {
-        self.slug = info.slug
-        self.title = info.title
+        self.init(slug: info.slug, title: info.title)
     }
 }
 
@@ -75,7 +74,7 @@ struct Editor: Hashable {
         }
         return (
             entryInfo.slug == entry.slug &&
-            text == entry.content
+            text == entry.body
         )
     }
 }
@@ -87,7 +86,7 @@ extension Editor {
             headers: detail.entry.headers,
             backlinks: detail.backlinks
         )
-        self.text = detail.entry.content
+        self.text = detail.entry.body
         self.saveState = .saved
         self.isLoading = false
     }
@@ -101,6 +100,6 @@ extension SubtextFile {
         }
         self.slug = info.slug
         self.headers = info.headers
-        self.content = editor.text
+        self.body = editor.text
     }
 }
