@@ -194,7 +194,7 @@ class Tests_SubtextFile: XCTestCase {
             Some say in ice.
             """
         )
-        .slugAndTitle(slug: slug, proposedTitle: "Fire and Ice")
+        .slugAndTitle(EntryLink(slug: slug, title: "Fire and Ice"))
 
         XCTAssertEqual(
             entry.headers["title"],
@@ -211,7 +211,7 @@ class Tests_SubtextFile: XCTestCase {
             Some say in ice.
             """
         )
-        .slugAndTitle(slug: slug, proposedTitle: "Does not match")
+        .slugAndTitle(EntryLink(slug: slug, title: "Not a linkable title"))
 
         XCTAssertEqual(
             entry.headers["title"],
