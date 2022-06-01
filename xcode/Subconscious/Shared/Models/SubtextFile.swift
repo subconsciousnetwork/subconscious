@@ -128,19 +128,21 @@ struct SubtextFile:
         }
     }
 
-    /// Updates the title to be a linkable title.
-    /// If the title is already linkable (reduces to the slug) then it is
-    /// left alone
-    /// - Returns a new SubtextFile
-    func linkableTitle() -> Self {
+    func timestamped(
+        _ date: Date = Date.now
+    ) -> Self {
         var this = self
-        let link = EntryLink(slug: slug, title: headers["Title"] ?? "")
-        this.headers["Title"] = link.toLinkableTitle()
+        let iso = date.ISO8601Format()
+        this.headers["Modified"] = iso
+        this.headers.setDefault(
+            name: "Created",
+            value: iso
+        )
         return this
     }
 
-    /// Associate title and slug, deriving from a title string
-    func titleAndSlug(_ title: String) -> Self? {
+    /// Updates the slug and title, deriving both from a title string
+    func slugAndTitle(_ title: String) -> Self? {
         guard let slug = Slug(formatting: title) else {
             return nil
         }
@@ -150,11 +152,22 @@ struct SubtextFile:
         return this
     }
 
-    /// Associate title and slug, deriving from a slug
-    func titleAndSlug(_ slug: Slug) -> Self {
+    /// Updates the slug and title, deriving both from a slug
+    func slugAndTitle(_ slug: Slug) -> Self {
         var this = self
         this.slug = slug
         this.headers["Title"] = slug.toTitle()
+        return this
+    }
+
+    /// Updates the slug and title.
+    /// Sets title from `proposedTitle`, if title is reducible to the same slug.
+    /// Otherwise derives title from slug.
+    func slugAndTitle(slug: Slug, proposedTitle: String) -> Self {
+        var this = self
+        this.slug = slug
+        let link = EntryLink(slug: slug, title: proposedTitle)
+        this.headers["Title"] = link.toLinkableTitle()
         return this
     }
 }
