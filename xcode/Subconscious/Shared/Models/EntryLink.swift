@@ -16,8 +16,9 @@ struct EntryLink: Hashable, Equatable, Identifiable {
 
     init(slug: Slug, title: String) {
         self.slug = slug
-        self.title = Self.sanitizeTitle(title)
-        let titleSlug = Slug(formatting: self.title)
+        let title = Self.sanitizeTitle(title)
+        self.title = title
+        let titleSlug = Slug(formatting: title)
         self.linkableTitle = (
             titleSlug != self.slug ?
             Self.sanitizeTitle(slug.toTitle()) :

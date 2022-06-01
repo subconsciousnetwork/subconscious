@@ -1843,7 +1843,7 @@ extension AppModel {
                 // Trim whitespace and add blank line to end of string
                 // This gives us a good starting point to start
                 // editing.
-                fallback: fallback.formattingBlankLineEnding()
+                fallback: fallback
             )
             .map({ detail in
                 AppAction.updateDetail(
