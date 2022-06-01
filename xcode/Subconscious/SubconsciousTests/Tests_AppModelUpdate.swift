@@ -160,10 +160,10 @@ class Tests_AppModelUpdate: XCTestCase {
 
     func testShowRenameSheet() throws {
         let state = AppModel()
-        let slug = Slug("floop-the-pig")!
+        let link = EntryLink(title: "Floop the Pig")!
         let update = AppModel.update(
             state: state,
-            action: .showRenameSheet(slug),
+            action: .showRenameSheet(link),
             environment: environment
         )
 
@@ -174,7 +174,7 @@ class Tests_AppModelUpdate: XCTestCase {
         )
         XCTAssertEqual(
             update.state.entryToRename,
-            slug,
+            link,
             "slugToRename was set"
         )
     }
