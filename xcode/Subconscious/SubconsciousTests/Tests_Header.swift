@@ -304,4 +304,40 @@ class Tests_Header: XCTestCase {
             "setDefault sets when no header with that name is present"
         )
     }
+
+    func testHeaderIndexMerge() throws {
+        let a = HeaderIndex(
+            [
+                Header(name: "content-type", value: "text/subtext"),
+                Header(name: "title", value: "Leaves of Grass"),
+            ]
+        )
+        let b = HeaderIndex(
+            [
+                Header(name: "content-type", value: "text/subtext"),
+                Header(name: "title", value: "Wrong title"),
+                Header(name: "author", value: "Walt Whitman"),
+            ]
+        )
+        let c = a.merge(b)
+        XCTAssertEqual(
+            c.index.count,
+            3,
+            "Merge results in correct number of headers"
+        )
+        XCTAssertEqual(
+            c["content-type"],
+            "text/subtext"
+        )
+        XCTAssertEqual(
+            c["title"],
+            "Leaves of Grass",
+            "Does not overwrite old headers (self wins)"
+        )
+        XCTAssertEqual(
+            c["author"],
+            "Walt Whitman",
+            "Merges in new headers"
+        )
+    }
 }

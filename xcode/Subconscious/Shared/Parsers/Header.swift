@@ -188,7 +188,7 @@ struct Headers: Hashable, CustomStringConvertible, Sequence {
     }
 }
 
-struct HeaderIndex: Hashable, CustomStringConvertible {
+struct HeaderIndex: Hashable, Sequence, CustomStringConvertible {
     private(set) var index: OrderedDictionary<String, String>
 
     init(_ headers: [Header] = []) {
@@ -213,6 +213,11 @@ struct HeaderIndex: Hashable, CustomStringConvertible {
         }
     }
 
+    /// Conform to Sequence
+    func makeIterator() -> OrderedDictionary<String, String>.Iterator {
+        index.makeIterator()
+    }
+
     var description: String {
         index
             .map({ name, value in
@@ -222,18 +227,6 @@ struct HeaderIndex: Hashable, CustomStringConvertible {
             .appending("\n")
     }
 
-    /// Merge headers together, returning a new HeaderIndex.
-    /// In case of conflicts between header keys, `self` wins.
-    func merge(_ index: HeaderIndex) -> Self {
-        var this = self
-        for (key, value) in self.index {
-            if this.index[key] == nil {
-                this.index[key] = value
-            }
-        }
-        return this
-    }
-
     /// Set a header value only if a header of the same name
     /// does not already exist.
     mutating func setDefault(name: String, value: String) {
@@ -241,6 +234,16 @@ struct HeaderIndex: Hashable, CustomStringConvertible {
         if self.index[name] == nil {
             self.index[name] = value
         }
+    }
+
+    /// Merge headers together, returning a new HeaderIndex.
+    /// In case of conflicts between header keys, `self` wins.
+    func merge(_ other: HeaderIndex) -> Self {
+        var this = self
+        for (name, value) in other {
+            this.setDefault(name: name, value: value)
+        }
+        return this
     }
 
     static let empty = HeaderIndex()
