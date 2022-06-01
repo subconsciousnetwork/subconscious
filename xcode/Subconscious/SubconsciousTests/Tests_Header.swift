@@ -291,8 +291,24 @@ class Tests_Header: XCTestCase {
                 Header(name: "content-type", value: "text/subtext"),
             ]
         )
-        index.setDefault(name: "Content-Type", value: "fail")
-        index.setDefault(name: "author", value: "Walt Whitman")
+        let contentType = index.setDefault(
+            name: "Content-Type",
+            value: "fail"
+        )
+        let author = index.setDefault(
+            name: "author",
+            value: "Walt Whitman"
+        )
+        XCTAssertEqual(
+            contentType,
+            "text/subtext",
+            "Returns existing value for existing headers"
+        )
+        XCTAssertEqual(
+            author,
+            "Walt Whitman",
+            "Returns default value for headers that do not exist"
+        )
         XCTAssertEqual(
             index.index["Content-Type"],
             "text/subtext",

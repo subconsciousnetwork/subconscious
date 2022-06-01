@@ -232,13 +232,14 @@ struct HeaderIndex: Hashable, Sequence, CustomStringConvertible {
     /// - Returns the current value of the header
     @discardableResult mutating func setDefault(
         name: String,
-        value: String
+        value defaultValue: String
     ) -> String {
         let name = Header.normalizeName(name)
-        if self.index[name] == nil {
-            self.index[name] = value
+        guard let value = self.index[name] else {
+            self.index[name] = defaultValue
+            return defaultValue
         }
-        return self.index[name]!
+        return value
     }
 
     /// Merge headers together, returning a new HeaderIndex.
