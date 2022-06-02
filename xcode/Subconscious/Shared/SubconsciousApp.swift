@@ -2136,12 +2136,10 @@ extension AppModel {
     /// Snapshot editor state in preparation for saving.
     /// Also mends header files.
     static func snapshotEditor(_ editor: Editor) -> SubtextFile? {
-        var editor = editor
-        editor.entryInfo?.mendHeaders()
         guard let entry = SubtextFile(editor) else {
             return nil
         }
-        return entry
+        return entry.modified(Date.now)
     }
 
     /// Save snapshot of entry
@@ -2153,21 +2151,10 @@ extension AppModel {
         guard state.editor.saveState != .saved else {
             return Update(state: state)
         }
-        guard var entryInfo = state.editor.entryInfo else {
-            environment.logger.log(
-                "Nothing to save. No entry selected."
-            )
-            return Update(state: state)
-        }
-
         var model = state
 
-        // Assign default headers, and update entry info before saving
-        entryInfo.mendHeaders()
-        model.editor.entryInfo = entryInfo
-
         // Derive entry from editor
-        guard let entry = SubtextFile(model.editor) else {
+        guard let entry = snapshotEditor(model.editor) else {
             let saveState = String(reflecting: state.editor.saveState)
             environment.logger.warning(
                 "Entry save state is marked \(saveState) but no entry could be derived for state. Doing nothing."
