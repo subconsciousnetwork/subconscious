@@ -292,102 +292,22 @@ class Tests_AppModelUpdate: XCTestCase {
         )
     }
 
-    func testSaveMendHeaders() throws {
-        let state = AppModel(
-            editor: Editor(
-                entryInfo: EditorEntryInfo(
-                    slug: Slug("floop-the-pig")!,
-                    headers: HeaderIndex(
-                        [
-                            Header(name: "Author", value: "Finn the Human")
-                        ]
-                    )
-                ),
-                saveState: .modified
-            )
-        )
-        let update = AppModel.update(
-            state: state,
-            action: .save,
-            environment: environment
-        )
-        guard let entryInfo = update.state.editor.entryInfo else {
-            XCTFail("No entry info found")
-            return
-        }
-        XCTAssertEqual(
-            entryInfo.headers["content-type"],
-            "text/subtext",
-            "Sets default headers"
-        )
-        XCTAssertEqual(
-            entryInfo.headers["title"],
-            "Floop the pig",
-            "Sets default headers"
-        )
-        XCTAssertNotNil(
-            entryInfo.headers["modified"],
-            "Sets default headers"
-        )
-        XCTAssertNotNil(
-            entryInfo.headers["created"],
-            "Sets default headers"
-        )
-        XCTAssertEqual(
-            entryInfo.headers["author"],
-            "Finn the Human",
-            "Retains existing headers"
-        )
-    }
-
-    func testSaveMendHeadersModifiedCreated() throws {
+    func testEditorSnapshotModified() throws {
         let state = AppModel(
             editor: Editor(
                 entryInfo: EditorEntryInfo(
                     slug: Slug("floop-the-pig")!
                 ),
-                saveState: .modified
+                saveState: .saved
             )
         )
-        let update = AppModel.update(
-            state: state,
-            action: .save,
-            environment: environment
-        )
-        var next = update.state
-        guard let entryInfo = update.state.editor.entryInfo else {
-            XCTFail("No entry info found")
+        guard let entry = AppModel.snapshotEditor(state.editor) else {
+            XCTFail("Failed to derive entry from editor")
             return
         }
-        let modified = entryInfo.headers["modified"]
-        let created = entryInfo.headers["created"]
-        next.editor.saveState = .modified
-        
-        let expectation = XCTestExpectation(
-            description: "Second save"
+        XCTAssertNotNil(
+            entry.headers["Modified"],
+            "Marks modified time"
         )
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            let update = AppModel.update(
-                state: next,
-                action: .save,
-                environment: self.environment
-            )
-            guard let entryInfo = update.state.editor.entryInfo else {
-                XCTFail("No entry info found")
-                return
-            }
-            XCTAssertNotEqual(
-                modified,
-                entryInfo.headers["modified"],
-                "Modified header is updated on save"
-            )
-            XCTAssertEqual(
-                created,
-                entryInfo.headers["created"],
-                "Created header remains the same"
-            )
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 1.1)
     }
 }
