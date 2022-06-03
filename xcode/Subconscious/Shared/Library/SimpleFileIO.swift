@@ -99,14 +99,24 @@ struct SimpleFileIO: SimpleFileIOProtocol {
     }
 }
 
-/// Mocking class for SimpleFileIOProtocol
+/// Mocking class for SimpleFileIOProtocol.
+/// Does not touch file system. Instead keeps a Dictionary of URL to data.
+/// Also records history of mutation calls, which is useful for testing order
+/// of mutations.
 class MockFileIO: SimpleFileIOProtocol {
     enum MockFileIOError: Error {
         case FileDoesNotExist
     }
 
+    enum Event: Hashable {
+        case write(url: URL)
+        case remove(url: URL)
+        case move(from: URL, to: URL)
+    }
+
     private let fileManager = FileManager.default
     private var files: Dictionary<URL, Data> = [:]
+    private(set) var history: [Event] = []
 
     func documentsDirectoryURL() -> URL? {
         fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
@@ -142,10 +152,12 @@ class MockFileIO: SimpleFileIOProtocol {
     /// Write `data` to `url`. Creates intermediate directories if needed.
     /// Writes atomically.
     func write(to url: URL, data: Data) throws {
+        history.append(.write(url: url))
         files[url] = data
     }
     
     func remove(at url: URL) throws {
+        history.append(.remove(url: url))
         files[url] = nil
     }
     
@@ -153,6 +165,7 @@ class MockFileIO: SimpleFileIOProtocol {
         guard files[srcURL] != nil else {
             throw MockFileIOError.FileDoesNotExist
         }
+        history.append(.move(from: srcURL, to: dstURL))
         files[dstURL] = files[srcURL]
         files[srcURL] = nil
     }
