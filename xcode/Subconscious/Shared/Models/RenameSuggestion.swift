@@ -34,3 +34,14 @@ enum RenameSuggestion:
         }
     }
 }
+
+extension EntryLink {
+    init(_ suggestion: RenameSuggestion) {
+        switch suggestion {
+        case .rename(let entryLink):
+            self = entryLink
+        case .merge(let entryLink):
+            self = entryLink
+        }
+    }
+}

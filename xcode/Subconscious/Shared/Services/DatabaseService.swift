@@ -212,7 +212,7 @@ struct DatabaseService {
     /// - Appends `from` to `to`
     /// - Writes the combined content to `to`
     /// - Deletes `from`
-    private func mergeEntryFile(from: Slug, to: Slug) throws {
+    private func mergeEntryFile(from: Slug, to: Slug) throws -> SubtextFile {
         let fromFile = try readEntry(slug: from).unwrap()
 
         let toFile = try readEntry(slug: to)
@@ -227,17 +227,27 @@ struct DatabaseService {
         try FileManager.default.removeItem(
             at: fromFile.url(directory: documentURL)
         )
+        return toFile
     }
 
     /// Rename or merge entry.
     /// Updates both database and file system.
+    ///
+    /// Logic:
+    /// - Read in both `from` and `to` entries
+    /// - If `to` exists, concat `from`, creating a `new` entry.
+    ///   Otherwise if `to` does not exist, use `from` as `new` entry.
+    /// - Create a temporary file
+    /// - Write `new` to temporary file atomically
+    /// - Move temp file to `from` location
+    /// - Move `from` location to `to` location (if different)
     func renameOrMergeEntry(
-        from: Slug,
+        from: EntryLink,
         to: EntryLink
     ) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
             // Succeed and do nothing if `from` and `to.slug` are the same.
-            guard from != to.slug else {
+            guard from != to else {
                 return
             }
 
@@ -250,14 +260,14 @@ struct DatabaseService {
             //  at its `.absolutePath`.
             //  2022-01-21 Gordon Brander
             if FileManager.default.fileExists(atPath: toURL.path) {
-                try mergeEntryFile(from: from, to: to.slug)
-                try writeEntryToDatabase(slug: to.slug)
-                try deleteEntryFromDatabase(slug: from)
+                let entry = try mergeEntryFile(from: from.slug, to: to.slug)
+                try writeEntryToDatabase(entry: entry)
+                try deleteEntryFromDatabase(slug: from.slug)
                 return
             } else {
-                try moveEntryFile(from: from, to: to)
+                try moveEntryFile(from: from.slug, to: to)
                 try writeEntryToDatabase(slug: to.slug)
-                try deleteEntryFromDatabase(slug: from)
+                try deleteEntryFromDatabase(slug: from.slug)
                 return
             }
         }

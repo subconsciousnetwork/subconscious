@@ -7,8 +7,9 @@
 
 import Foundation
 
-/// A EntryLink is a model that contains a title and slug description of a note
-/// suitable for list views.
+/// A EntryLink contains a slug, title, and linkable title.
+/// Linkable title is a title that is reducible to the slug,
+/// e.g. when used as a wikilink.
 struct EntryLink: Hashable, Equatable, Identifiable {
     let slug: Slug
     let title: String

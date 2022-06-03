@@ -104,7 +104,7 @@ enum AppAction {
     case setRenameSuggestions([RenameSuggestion])
     case renameSuggestionsFailure(String)
     /// Issue a rename action for an entry.
-    case renameEntry(from: Slug?, to: RenameSuggestion)
+    case renameEntry(from: EntryLink?, to: EntryLink)
     /// Rename entry succeeded. Lifecycle action.
     case succeedRenameEntry(from: Slug, to: Slug)
     /// Rename entry failed. Lifecycle action.
@@ -513,12 +513,12 @@ extension AppModel {
                 environment: environment,
                 error: error
             )
-        case let .renameEntry(from, suggestion):
+        case let .renameEntry(from, to):
             return renameEntry(
                 state: state,
                 environment: environment,
                 from: from,
-                suggestion: suggestion
+                to: to
             )
         case let .succeedRenameEntry(from, to):
             return succeedRenameEntry(
@@ -1527,8 +1527,8 @@ extension AppModel {
     static func renameEntry(
         state: AppModel,
         environment: AppEnvironment,
-        from: Slug?,
-        suggestion: RenameSuggestion
+        from: EntryLink?,
+        to: EntryLink
     ) -> Update<AppModel, AppAction> {
         guard let from = from else {
             let fx: Fx<AppAction> = Just(.hideRenameSheet)
@@ -1539,19 +1539,7 @@ extension AppModel {
             return Update(state: state, fx: fx)
         }
 
-        let to: EntryLink = Func.pipe(
-            suggestion,
-            through: { suggestion in
-                switch suggestion {
-                case .rename(let entryLink):
-                    return entryLink
-                case .merge(let entryLink):
-                    return entryLink
-                }
-            }
-        )
-
-        guard from != to.slug else {
+        guard from != to else {
             let fx: Fx<AppAction> = Just(.hideRenameSheet)
                 .eraseToAnyPublisher()
             environment.logger.log(
@@ -1564,7 +1552,7 @@ extension AppModel {
         let fx: Fx<AppAction> = environment.database
             .renameOrMergeEntry(from: from, to: to)
             .map({ _ in
-                AppAction.succeedRenameEntry(from: from, to: to.slug)
+                AppAction.succeedRenameEntry(from: from.slug, to: to.slug)
             })
             .catch({ error in
                 Just(
