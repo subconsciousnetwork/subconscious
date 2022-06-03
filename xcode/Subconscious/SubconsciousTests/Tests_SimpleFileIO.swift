@@ -1,5 +1,5 @@
 //
-//  Tests_SImpleFileIO.swift
+//  Tests_SimpleFileIO.swift
 //  SubconsciousTests
 //
 //  Created by Gordon Brander on 6/3/22.
@@ -8,7 +8,7 @@
 import XCTest
 @testable import Subconscious
 
-class Tests_SImpleFileIO: XCTestCase {
+class Tests_SimpleFileIO: XCTestCase {
     func testMockFileIOWriteReadRoundtrip() throws {
         let files = MockFileIO()
         guard let documents = files.documentsDirectoryURL() else {
