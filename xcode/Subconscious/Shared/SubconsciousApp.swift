@@ -1356,7 +1356,7 @@ extension AppModel {
         model.isDetailShowing = false
 
         let fx: Fx<AppAction> = environment.database
-            .deleteEntry(slug: slug)
+            .deleteEntryAsync(slug: slug)
             .map({ _ in
                 AppAction.deleteEntrySuccess(slug)
             })
@@ -2154,9 +2154,7 @@ extension AppModel {
         model.editor.saveState = .saving
 
         let fx: Fx<AppAction> = environment.database
-            .writeEntry(
-                entry: entry
-            )
+            .writeEntryAsync(entry)
             .map({ _ in
                 AppAction.succeedSave(entry)
             })

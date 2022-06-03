@@ -124,7 +124,8 @@ struct DatabaseService {
 
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        entry: SubtextFile
+        entry: SubtextFile,
+        fingerprint: FileFingerprint.Attributes
     ) throws {
         try database.execute(
             sql: """
@@ -140,29 +141,36 @@ struct DatabaseService {
                 .text(String(describing: entry.slug)),
                 .text(entry.title()),
                 .text(String(describing: entry)),
-                .date(entry.modified()),
-                .integer(entry.size)
+                .date(fingerprint.modifiedDate),
+                .integer(fingerprint.size)
             ]
         )
     }
 
     private func writeEntryToDatabase(slug: Slug) throws {
         let entry = try readEntry(slug: slug).unwrap()
-        try writeEntryToDatabase(entry: entry)
+        let fingerprint = try FileFingerprint
+            .Attributes(url: entry.url(directory: documentURL))
+            .unwrap()
+        try writeEntryToDatabase(entry: entry, fingerprint: fingerprint)
     }
 
-    func writeEntry(entry: SubtextFile) -> AnyPublisher<Void, Error> {
+    private func writeEntry(_ entry: SubtextFile) throws {
+        let modifiedEntry = entry.modified(Date.now)
+        try modifiedEntry.write(directory: documentURL)
+        // Read modified date from file system directly after writing
+        let fingerprint = try FileFingerprint
+            .Attributes(url: entry.url(directory: documentURL))
+            .unwrap()
+        try writeEntryToDatabase(
+            entry: modifiedEntry,
+            fingerprint: fingerprint
+        )
+    }
+
+    func writeEntryAsync(_ entry: SubtextFile) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
-            // Write contents to file
-            try entry.write(directory: documentURL)
-            // Read modified date from file system directly after writing
-            let fingerprint = try FileFingerprint
-                .Attributes(url: entry.url(directory: documentURL))
-                .unwrap()
-            // Set modified date on entry
-            return try writeEntryToDatabase(
-                entry: entry.modified(fingerprint.modifiedDate)
-            )
+            try writeEntry(entry)
         }
     }
 
@@ -178,17 +186,17 @@ struct DatabaseService {
         )
     }
 
-    /// Delete entry from file system
-    private func deleteEntryFile(slug: Slug) throws {
+    /// Delete entry from file system and database
+    private func deleteEntry(slug: Slug) throws {
         let url = slug.toURL(directory: documentURL, ext: "subtext")
         try FileManager.default.removeItem(at: url)
+        try deleteEntryFromDatabase(slug: slug)
     }
 
     /// Delete entry from file system and database
-    func deleteEntry(slug: Slug) -> AnyPublisher<Void, Error> {
+    func deleteEntryAsync(slug: Slug) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .background) {
-            try deleteEntryFile(slug: slug)
-            try deleteEntryFromDatabase(slug: slug)
+            try deleteEntry(slug: slug)
         }
     }
 
@@ -206,22 +214,21 @@ struct DatabaseService {
     /// - Appends `from` to `to`
     /// - Writes the combined content to `to`
     /// - Deletes `from`
-    private func mergeEntryFile(from: Slug, to: Slug) throws -> SubtextFile {
-        let fromFile = try readEntry(slug: from).unwrap()
+    private func mergeEntryFile(
+        parent: Slug,
+        child: Slug
+    ) throws {
+        let childEntry = try readEntry(slug: child).unwrap()
 
-        let toFile = try readEntry(slug: to)
+        let parentEntry = try readEntry(slug: parent)
             .unwrap()
-            .merge(fromFile)
+            .merge(childEntry)
 
         //  First write the merged file to "to" location
-        try toFile.write(directory: documentURL)
-        //  Then remove the file at "from" location.
-        //  We delete AFTER writing so that data loss cannot occur in
-        //  case of failure.
-        try FileManager.default.removeItem(
-            at: fromFile.url(directory: documentURL)
-        )
-        return toFile
+        try writeEntry(parentEntry)
+        //  Then delete child entry *afterwards*.
+        //  We do this last to avoid data loss in case of write errors.
+        try deleteEntry(slug: childEntry.slug)
     }
 
     /// Rename or merge entry.
@@ -254,9 +261,10 @@ struct DatabaseService {
             //  at its `.absolutePath`.
             //  2022-01-21 Gordon Brander
             if FileManager.default.fileExists(atPath: toURL.path) {
-                let entry = try mergeEntryFile(from: from.slug, to: to.slug)
-                try writeEntryToDatabase(entry: entry)
-                try deleteEntryFromDatabase(slug: from.slug)
+                try mergeEntryFile(
+                    parent: to.slug,
+                    child: from.slug
+                )
                 return
             } else {
                 try moveEntryFile(from: from.slug, to: to)
