@@ -147,14 +147,8 @@ struct DatabaseService {
     }
 
     private func writeEntryToDatabase(slug: Slug) throws {
-        let entry = try SubtextFile(slug: slug, directory: documentURL)
-            .unwrap()
-        let fingerprint = try FileFingerprint
-            .Attributes(url: entry.url(directory: documentURL))
-            .unwrap()
-        return try writeEntryToDatabase(
-            entry: entry.modified(fingerprint.modifiedDate)
-        )
+        let entry = try readEntry(slug: slug).unwrap()
+        try writeEntryToDatabase(entry: entry)
     }
 
     func writeEntry(entry: SubtextFile) -> AnyPublisher<Void, Error> {
@@ -637,7 +631,25 @@ struct DatabaseService {
     private func readEntry(
         slug: Slug
     ) -> SubtextFile? {
-        SubtextFile(slug: slug, directory: documentURL)?.mendingHeaders()
+        let url = slug.toURL(directory: documentURL, ext: "subtext")
+        guard let content = try? String(contentsOf: url, encoding: .utf8) else {
+            return nil
+        }
+        guard
+            let attributes = try? FileManager.default.attributesOfItem(
+                atPath: url.absoluteString
+            ),
+            let modified = attributes[.modificationDate] as? Date,
+            let created = attributes[.creationDate] as? Date
+        else {
+            return nil
+        }
+
+        return SubtextFile(slug: slug, content: content)
+            .mendingHeaders(
+                modified: modified,
+                created: created
+            )
     }
 
     /// Sync version of readEntryDetail

@@ -56,19 +56,6 @@ struct SubtextFile:
         self.body = String(envelope.body)
     }
 
-    /// Open existing document
-    init?(slug: Slug, directory: URL) {
-        let url = slug.toURL(directory: directory, ext: "subtext")
-        if let content = try? String(contentsOf: url, encoding: .utf8) {
-            self.init(
-                slug: slug,
-                content: content
-            )
-        } else {
-            return nil
-        }
-    }
-
     var dom: Subtext {
         Subtext.parse(markup: body)
     }
@@ -149,14 +136,20 @@ struct SubtextFile:
 
     /// Mend "blessed" headers, providing them with sensible default values
     func mendingHeaders(
-        modified: Date = Date.now
+        modified: Date = Date.now,
+        created: Date = Date.now
     ) -> Self {
         var this = self
         this.headers["Content-Type"] = "text/subtext"
         this.headers.setDefault(name: "Title", value: slug.toTitle())
-        let iso = modified.ISO8601Format()
-        this.headers.setDefault(name: "Modified", value: iso)
-        this.headers.setDefault(name: "Created", value: iso)
+        this.headers.setDefault(
+            name: "Modified",
+            value: modified.ISO8601Format()
+        )
+        this.headers.setDefault(
+            name: "Created",
+            value: created.ISO8601Format()
+        )
         return this
     }
 
