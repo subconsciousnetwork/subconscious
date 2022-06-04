@@ -12,6 +12,7 @@ import OrderedCollections
 
 struct DatabaseService {
     enum DatabaseServiceError: Error {
+        case fileExists
         case pathNotInFilePath
         case notFound
     }
@@ -147,6 +148,11 @@ struct DatabaseService {
         )
     }
 
+    private func entryFileExists(_ slug: Slug) -> Bool {
+        let url = slug.toURL(directory: documentURL, ext: "subtext")
+        return FileManager.default.fileExists(atPath: url.path)
+    }
+
     private func writeEntryToDatabase(slug: Slug) throws {
         let entry = try readEntry(slug: slug).unwrap()
         let fingerprint = try FileFingerprint
@@ -202,12 +208,20 @@ struct DatabaseService {
 
     /// Rename file in file system
     private func moveEntryFile(from: Slug, to: EntryLink) throws {
+        guard from != to.slug else {
+            throw DatabaseServiceError.fileExists
+        }
         let fromFile = try readEntry(slug: from).unwrap()
+        // Set new title and slug
         let toFile = fromFile.slugAndTitle(to)
-        try toFile.write(directory: documentURL)
-        try FileManager.default.removeItem(
-            at: fromFile.url(directory: documentURL)
-        )
+        // Make sure we're writing to an empty location
+        guard !entryFileExists(to.slug) else {
+            throw DatabaseServiceError.fileExists
+        }
+        // Write to new destination
+        try writeEntry(toFile)
+        // ...Then delete old entry
+        try deleteEntry(slug: fromFile.slug)
     }
 
     /// Merge two files together
@@ -233,15 +247,6 @@ struct DatabaseService {
 
     /// Rename or merge entry.
     /// Updates both database and file system.
-    ///
-    /// Logic:
-    /// - Read in both `from` and `to` entries
-    /// - If `to` exists, concat `from`, creating a `new` entry.
-    ///   Otherwise if `to` does not exist, use `from` as `new` entry.
-    /// - Create a temporary file
-    /// - Write `new` to temporary file atomically
-    /// - Move temp file to `from` location
-    /// - Move `from` location to `to` location (if different)
     func renameOrMergeEntry(
         from: EntryLink,
         to: EntryLink
@@ -252,15 +257,13 @@ struct DatabaseService {
                 return
             }
 
-            let toURL = to.slug.toURL(directory: documentURL, ext: "subtext")
-
             //  If file already exists, perform a merge.
             //  Otherwise, perform a rename.
             //  NOTE: It's important to use `.path` and not `.absolutePath`.
             //  For whatever reason, `.fileExists` will not find the file
             //  at its `.absolutePath`.
             //  2022-01-21 Gordon Brander
-            if FileManager.default.fileExists(atPath: toURL.path) {
+            if entryFileExists(to.slug) {
                 try mergeEntryFile(
                     parent: to.slug,
                     child: from.slug
