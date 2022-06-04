@@ -206,8 +206,8 @@ struct DatabaseService {
         }
     }
 
-    /// Rename file in file system
-    private func moveEntryFile(from: Slug, to: EntryLink) throws {
+    /// Rename file in file system and database
+    private func moveEntry(from: Slug, to: EntryLink) throws {
         guard from != to.slug else {
             throw DatabaseServiceError.fileExists
         }
@@ -270,9 +270,7 @@ struct DatabaseService {
                 )
                 return
             } else {
-                try moveEntryFile(from: from.slug, to: to)
-                try writeEntryToDatabase(slug: to.slug)
-                try deleteEntryFromDatabase(slug: from.slug)
+                try moveEntry(from: from.slug, to: to)
                 return
             }
         }
