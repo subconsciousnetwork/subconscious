@@ -150,6 +150,10 @@ struct DatabaseService {
 
     private func entryFileExists(_ slug: Slug) -> Bool {
         let url = slug.toURL(directory: documentURL, ext: "subtext")
+        //  NOTE: It's important to use `.path` and not `.absolutePath`.
+        //  For whatever reason, `.fileExists` will not find the file
+        //  at its `.absolutePath`.
+        //  2022-01-21 Gordon Brander
         return FileManager.default.fileExists(atPath: url.path)
     }
 
@@ -252,18 +256,17 @@ struct DatabaseService {
         to: EntryLink
     ) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
-            // Succeed and do nothing if `from` and `to.slug` are the same.
-            guard from != to else {
+            // If slug is the same, but titles have changed, change title
+            if from.slug == to.slug && from.linkableTitle != to.linkableTitle {
+                var entry = try readEntry(slug: to.slug)
+                    .unwrap(DatabaseServiceError.notFound)
+                entry.headers["Title"] = to.linkableTitle
+                try writeEntry(entry)
                 return
             }
-
             //  If file already exists, perform a merge.
             //  Otherwise, perform a rename.
-            //  NOTE: It's important to use `.path` and not `.absolutePath`.
-            //  For whatever reason, `.fileExists` will not find the file
-            //  at its `.absolutePath`.
-            //  2022-01-21 Gordon Brander
-            if entryFileExists(to.slug) {
+            else if entryFileExists(to.slug) {
                 try mergeEntryFile(
                     parent: to.slug,
                     child: from.slug
