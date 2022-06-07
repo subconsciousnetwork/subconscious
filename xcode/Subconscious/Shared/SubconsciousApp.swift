@@ -1705,7 +1705,7 @@ extension AppModel {
         return requestDetailAndRefreshAll(
             state: state,
             environment: environment,
-            slug: child.slug
+            slug: parent.slug
         )
     }
 
