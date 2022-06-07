@@ -11,10 +11,24 @@ import Combine
 import OrderedCollections
 
 struct DatabaseService {
-    enum DatabaseServiceError: Error {
-        case fileExists
+    enum DatabaseServiceError: Error, LocalizedError {
         case pathNotInFilePath
-        case notFound
+        case randomEntryFailed
+        case fileExists(Slug)
+        case fileNotFound(Slug)
+
+        var errorDescription: String? {
+            switch self {
+            case .pathNotInFilePath:
+                return "DatabaseServiceError.pathNotInFilePath"
+            case .randomEntryFailed:
+                return "DatabaseServiceError.randomEntryFailed"
+            case .fileExists(let slug):
+                return "DatabaseServiceError.fileExists(\(slug))"
+            case .fileNotFound(let slug):
+                return "DatabaseServiceError.notFound(\(slug))"
+            }
+        }
     }
 
     private var documentURL: URL
@@ -215,13 +229,14 @@ struct DatabaseService {
     /// Move entry to a new location, updating file system and database.
     private func moveEntry(from: EntryLink, to: EntryLink) throws {
         guard from.slug != to.slug else {
-            throw DatabaseServiceError.fileExists
+            throw DatabaseServiceError.fileExists(to.slug)
         }
         // Make sure we're writing to an empty location
         guard !entryFileExists(to.slug) else {
-            throw DatabaseServiceError.fileExists
+            throw DatabaseServiceError.fileExists(to.slug)
         }
-        let fromFile = try readEntry(slug: from.slug).unwrap()
+        let fromFile = try readEntry(slug: from.slug)
+            .unwrap(DatabaseServiceError.fileNotFound(from.slug))
         // Set new title and slug
         let toFile = fromFile.slugAndTitle(to)
         // Write to new destination
@@ -249,10 +264,11 @@ struct DatabaseService {
         parent: Slug,
         child: Slug
     ) throws {
-        let childEntry = try readEntry(slug: child).unwrap()
+        let childEntry = try readEntry(slug: child)
+            .unwrap(DatabaseServiceError.fileNotFound(child))
 
         let parentEntry = try readEntry(slug: parent)
-            .unwrap(DatabaseServiceError.notFound)
+            .unwrap(DatabaseServiceError.fileNotFound(parent))
             .merge(childEntry)
 
         //  First write the merged file to "to" location
@@ -285,7 +301,7 @@ struct DatabaseService {
             return
         }
         var entry = try readEntry(slug: from.slug)
-            .unwrap(DatabaseServiceError.notFound)
+            .unwrap(DatabaseServiceError.fileNotFound(from.slug))
         entry.headers["Title"] = to.linkableTitle
         try writeEntry(entry)
     }
@@ -820,7 +836,7 @@ struct DatabaseService {
                 row.get(0).flatMap({ string in Slug(string) })
             })
             .first
-            .unwrap(DatabaseServiceError.notFound)
+            .unwrap(DatabaseServiceError.randomEntryFailed)
         }
     }
 }
