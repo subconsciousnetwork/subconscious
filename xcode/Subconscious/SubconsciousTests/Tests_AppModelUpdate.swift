@@ -200,7 +200,11 @@ class Tests_AppModelUpdate: XCTestCase {
     }
     
     func testRenameField() throws {
-        let state = AppModel()
+        let state = AppModel(
+            entryToRename: EntryLink(
+                title: "Dawson spoke and there was music"
+            )!
+        )
         let update = AppModel.update(
             state: state,
             action: .setRenameField("Two pink faces turned in the flare of the tiny torch"),

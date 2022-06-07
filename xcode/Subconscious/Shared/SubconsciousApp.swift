@@ -104,11 +104,19 @@ enum AppAction {
     case setRenameSuggestions([RenameSuggestion])
     case renameSuggestionsFailure(String)
     /// Issue a rename action for an entry.
-    case renameEntry(from: EntryLink?, to: EntryLink)
-    /// Rename entry succeeded. Lifecycle action.
-    case succeedRenameEntry(from: Slug, to: Slug)
-    /// Rename entry failed. Lifecycle action.
-    case failRenameEntry(String)
+    case renameEntry(RenameSuggestion)
+    /// Move entry succeeded. Lifecycle action.
+    case succeedMoveEntry(from: EntryLink, to: EntryLink)
+    /// Move entry failed. Lifecycle action.
+    case failMoveEntry(String)
+    /// Merge entry succeeded. Lifecycle action.
+    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
+    /// Merge entry failed. Lifecycle action.
+    case failMergeEntry(String)
+    /// Retitle entry succeeded. Lifecycle action.
+    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+    /// Retitle entry failed. Lifecycle action.
+    case failRetitleEntry(String)
 
     //  Search
     /// Set search text (updated live as you type)
@@ -257,7 +265,7 @@ struct AppModel: Equatable {
     //  Note renaming
     /// Is rename sheet showing?
     var isRenameSheetShowing = false
-    /// Slug of the candidate for renaming
+    /// Link to the candidate for renaming
     var entryToRename: EntryLink?
     /// Text for slug rename TextField.
     /// Note this is the contents of the search text field, which
@@ -513,22 +521,47 @@ extension AppModel {
                 environment: environment,
                 error: error
             )
-        case let .renameEntry(from, to):
+        case let .renameEntry(suggestion):
             return renameEntry(
                 state: state,
                 environment: environment,
-                from: from,
-                to: to
+                suggestion: suggestion
             )
-        case let .succeedRenameEntry(from, to):
-            return succeedRenameEntry(
+        case let .succeedMoveEntry(from, to):
+            return succeedMoveEntry(
                 state: state,
                 environment: environment,
                 from: from,
                 to: to
             )
-        case let .failRenameEntry(error):
-            return failRenameEntry(
+        case let .failMoveEntry(error):
+            return failMoveEntry(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case let .succeedMergeEntry(parent, child):
+            return succeedMergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
+        case let .failMergeEntry(error):
+            return failMergeEntry(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case let .succeedRetitleEntry(from, to):
+            return succeedRetitleEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case let .failRetitleEntry(error):
+            return failRetitleEntry(
                 state: state,
                 environment: environment,
                 error: error
@@ -1228,6 +1261,24 @@ extension AppModel {
             })
     }
 
+    /// Reload and display detail for entry, and reload all list views
+    static func requestDetailAndRefreshAll(
+        state: AppModel,
+        environment: AppEnvironment,
+        slug: Slug
+    ) -> Update<AppModel, AppAction> {
+        requestDetail(
+            state: state,
+            environment: environment,
+            slug: slug,
+            fallback: "",
+            autofocus: false
+        )
+        .pipe({ state in
+            refreshAll(state: state, environment: environment)
+        })
+    }
+
     /// Insert search history event into database
     static func createSearchHistoryItem(
         state: AppModel,
@@ -1478,10 +1529,13 @@ extension AppModel {
     ) -> Update<AppModel, AppAction> {
         var model = state
         model.renameField = text
+        guard let current = state.entryToRename else {
+            return Update(state: state)
+        }
         let fx: Fx<AppAction> = environment.database
             .searchRenameSuggestions(
                 query: text,
-                current: state.entryToRename?.slug
+                current: current
             )
             .map({ suggestions in
                 AppAction.setRenameSuggestions(suggestions)
@@ -1527,76 +1581,202 @@ extension AppModel {
     static func renameEntry(
         state: AppModel,
         environment: AppEnvironment,
-        from: EntryLink?,
+        suggestion: RenameSuggestion
+    ) -> Update<AppModel, AppAction> {
+        switch suggestion {
+        case .move(let from, let to):
+            return moveEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case .merge(let parent, let child):
+            return mergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
+        case .retitle(let from, let to):
+            return retitleEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        }
+    }
+
+    /// Move entry
+    static func moveEntry(
+        state: AppModel,
+        environment: AppEnvironment,
+        from: EntryLink,
         to: EntryLink
     ) -> Update<AppModel, AppAction> {
-        guard let from = from else {
-            let fx: Fx<AppAction> = Just(.hideRenameSheet)
-                .eraseToAnyPublisher()
-            environment.logger.warning(
-                "Rename invoked without original slug. Doing nothing."
-            )
-            return Update(state: state, fx: fx)
-        }
-
-        guard from != to else {
-            let fx: Fx<AppAction> = Just(.hideRenameSheet)
-                .eraseToAnyPublisher()
-            environment.logger.log(
-                "Rename invoked with same name. Doing nothing."
-            )
-            return Update(state: state, fx: fx)
-                .animation(.easeOutCubic(duration: Duration.keyboard))
-        }
-
         let fx: Fx<AppAction> = environment.database
-            .renameOrMergeEntry(from: from, to: to)
+            .moveEntryAsync(from: from, to: to)
             .map({ _ in
-                AppAction.succeedRenameEntry(from: from.slug, to: to.slug)
+                AppAction.succeedMoveEntry(from: from, to: to)
             })
             .catch({ error in
                 Just(
-                    AppAction.failRenameEntry(
+                    AppAction.failMoveEntry(
                         error.localizedDescription
                     )
                 )
             })
-            .merge(with: Just(AppAction.hideRenameSheet))
             .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+        return hideRenameSheet(
+            state: state,
+            environment: environment
+        )
+        .mergeFx(fx)
+        .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
-    /// Rename success lifecycle handler.
+    /// Move success lifecycle handler.
     /// Updates UI in response.
-    static func succeedRenameEntry(
+    static func succeedMoveEntry(
         state: AppModel,
         environment: AppEnvironment,
-        from: Slug,
-        to: Slug
+        from: EntryLink,
+        to: EntryLink
     ) -> Update<AppModel, AppAction> {
-        environment.logger.log("Renamed entry from \(from) to \(to)")
-        let fx: Fx<AppAction> = Just(
-            AppAction.requestDetail(
-                slug: to,
-                fallback: "",
-                autofocus: false
-            )
+        environment.logger.log("Renamed entry from \(from.slug) to \(to.slug)")
+        return requestDetailAndRefreshAll(
+            state: state,
+            environment: environment,
+            slug: to.slug
         )
-        .merge(with: Just(AppAction.refreshAll))
-        .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
     }
 
-    /// Rename failure lifecycle handler.
+    /// Move failure lifecycle handler.
     //  TODO: in future consider triggering an alert.
-    static func failRenameEntry(
+    static func failMoveEntry(
         state: AppModel,
         environment: AppEnvironment,
         error: String
     ) -> Update<AppModel, AppAction> {
         environment.logger.warning(
-            "Failed to rename entry with error: \(error)"
+            "Failed to move entry with error: \(error)"
+        )
+        return Update(state: state)
+    }
+
+    /// Merge entry
+    static func mergeEntry(
+        state: AppModel,
+        environment: AppEnvironment,
+        parent: EntryLink,
+        child: EntryLink
+    ) -> Update<AppModel, AppAction> {
+        let fx: Fx<AppAction> = environment.database
+            .mergeEntryAsync(parent: parent, child: child)
+            .map({ _ in
+                AppAction.succeedMergeEntry(parent: parent, child: child)
+            })
+            .catch({ error in
+                Just(
+                    AppAction.failMergeEntry(error.localizedDescription)
+                )
+            })
+            .eraseToAnyPublisher()
+        return hideRenameSheet(
+            state: state,
+            environment: environment
+        )
+        .mergeFx(fx)
+        .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
+    /// Merge success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedMergeEntry(
+        state: AppModel,
+        environment: AppEnvironment,
+        parent: EntryLink,
+        child: EntryLink
+    ) -> Update<AppModel, AppAction> {
+        environment.logger.log(
+            "Merged entry \(child.slug) into \(parent.slug)"
+        )
+        return requestDetailAndRefreshAll(
+            state: state,
+            environment: environment,
+            slug: child.slug
+        )
+    }
+
+    /// Merge failure lifecycle handler.
+    //  TODO: in future consider triggering an alert.
+    static func failMergeEntry(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel, AppAction> {
+        environment.logger.warning(
+            "Failed to merge entry with error: \(error)"
+        )
+        return Update(state: state)
+    }
+
+    /// Retitle entry
+    static func retitleEntry(
+        state: AppModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<AppModel, AppAction> {
+        let fx: Fx<AppAction> = environment.database
+            .retitleEntryAsync(from: from, to: to)
+            .map({ _ in
+                AppAction.succeedRetitleEntry(from: from, to: to)
+            })
+            .catch({ error in
+                Just(
+                    AppAction.failRetitleEntry(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return hideRenameSheet(
+            state: state,
+            environment: environment
+        )
+        .mergeFx(fx)
+        .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
+    /// Retitle success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedRetitleEntry(
+        state: AppModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<AppModel, AppAction> {
+        environment.logger.log(
+            "Retitled entry \(from.slug) to \(to.linkableTitle)"
+        )
+        return requestDetailAndRefreshAll(
+            state: state,
+            environment: environment,
+            slug: from.slug
+        )
+    }
+
+    /// Retitle failure lifecycle handler.
+    //  TODO: in future consider triggering an alert.
+    static func failRetitleEntry(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel, AppAction> {
+        environment.logger.warning(
+            "Failed to retitle entry with error: \(error)"
         )
         return Update(state: state)
     }

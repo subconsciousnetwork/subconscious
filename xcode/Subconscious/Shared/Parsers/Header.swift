@@ -249,11 +249,7 @@ struct HeaderIndex: Hashable, Sequence, CustomStringConvertible {
         value defaultValue: String
     ) -> String {
         let name = Header.normalizeName(name)
-        guard let value = self.index[name] else {
-            self.index[name] = defaultValue
-            return defaultValue
-        }
-        return value
+        return self.index.setDefault(defaultValue, forKey: name)
     }
 
     /// Merge headers together, returning a new HeaderIndex.

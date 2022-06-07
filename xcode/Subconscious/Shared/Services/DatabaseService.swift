@@ -165,6 +165,8 @@ struct DatabaseService {
         try writeEntryToDatabase(entry: entry, fingerprint: fingerprint)
     }
 
+    /// Write entry to file system and database
+    /// Also sets modified header to now.
     private func writeEntry(_ entry: SubtextFile) throws {
         let modifiedEntry = entry.modified(Date.now)
         try modifiedEntry.write(directory: documentURL)
@@ -210,36 +212,47 @@ struct DatabaseService {
         }
     }
 
-    /// Rename file in file system and database
-    private func moveEntry(from: Slug, to: EntryLink) throws {
-        guard from != to.slug else {
+    /// Move entry to a new location, updating file system and database.
+    private func moveEntry(from: EntryLink, to: EntryLink) throws {
+        guard from.slug != to.slug else {
             throw DatabaseServiceError.fileExists
         }
-        let fromFile = try readEntry(slug: from).unwrap()
-        // Set new title and slug
-        let toFile = fromFile.slugAndTitle(to)
         // Make sure we're writing to an empty location
         guard !entryFileExists(to.slug) else {
             throw DatabaseServiceError.fileExists
         }
+        let fromFile = try readEntry(slug: from.slug).unwrap()
+        // Set new title and slug
+        let toFile = fromFile.slugAndTitle(to)
         // Write to new destination
         try writeEntry(toFile)
         // ...Then delete old entry
         try deleteEntry(slug: fromFile.slug)
     }
 
-    /// Merge two files together
-    /// - Appends `from` to `to`
-    /// - Writes the combined content to `to`
-    /// - Deletes `from`
-    private func mergeEntryFile(
+    /// Move entry to a new location, updating file system and database.
+    /// - Returns a combine publisher
+    func moveEntryAsync(
+        from: EntryLink,
+        to: EntryLink
+    ) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async {
+            try moveEntry(from: from, to: to)
+        }
+    }
+
+    /// Merge child entry into parent entry.
+    /// - Appends `child` to `parent`
+    /// - Writes the combined content to `parent`
+    /// - Deletes `child`
+    private func mergeEntry(
         parent: Slug,
         child: Slug
     ) throws {
         let childEntry = try readEntry(slug: child).unwrap()
 
         let parentEntry = try readEntry(slug: parent)
-            .unwrap()
+            .unwrap(DatabaseServiceError.notFound)
             .merge(childEntry)
 
         //  First write the merged file to "to" location
@@ -249,33 +262,42 @@ struct DatabaseService {
         try deleteEntry(slug: childEntry.slug)
     }
 
-    /// Rename or merge entry.
-    /// Updates both database and file system.
-    func renameOrMergeEntry(
+    /// Merge child entry into parent entry.
+    /// - Appends `child` to `parent`
+    /// - Writes the combined content to `parent`
+    /// - Deletes `child`
+    /// - Returns combine publisher
+    func mergeEntryAsync(
+        parent: EntryLink,
+        child: EntryLink
+    ) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async {
+            try mergeEntry(parent: parent.slug, child: child.slug)
+        }
+    }
+
+    /// Update the title of an entry, without changing its slug
+    private func retitleEntry(
+        from: EntryLink,
+        to: EntryLink
+    ) throws {
+        guard from.linkableTitle != to.linkableTitle else {
+            return
+        }
+        var entry = try readEntry(slug: from.slug)
+            .unwrap(DatabaseServiceError.notFound)
+        entry.headers["Title"] = to.linkableTitle
+        try writeEntry(entry)
+    }
+
+    /// Change title header of entry, without moving it.
+    /// - Returns combine publisher
+    func retitleEntryAsync(
         from: EntryLink,
         to: EntryLink
     ) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .utility) {
-            // If slug is the same, but titles have changed, change title
-            if from.slug == to.slug && from.linkableTitle != to.linkableTitle {
-                var entry = try readEntry(slug: to.slug)
-                    .unwrap(DatabaseServiceError.notFound)
-                entry.headers["Title"] = to.linkableTitle
-                try writeEntry(entry)
-                return
-            }
-            //  If file already exists, perform a merge.
-            //  Otherwise, perform a rename.
-            else if entryFileExists(to.slug) {
-                try mergeEntryFile(
-                    parent: to.slug,
-                    child: from.slug
-                )
-                return
-            } else {
-                try moveEntry(from: from.slug, to: to)
-                return
-            }
+        CombineUtilities.async {
+            try retitleEntry(from: from, to: to)
         }
     }
 
@@ -487,7 +509,7 @@ struct DatabaseService {
     /// We factor out this collation code to make it easier to test.
     ///
     /// - Returns an array of RenameSuggestion
-    func collateRenameSuggestions(
+    static func collateRenameSuggestions(
         current: EntryLink,
         query: EntryLink,
         results: [EntryLink]
@@ -503,6 +525,16 @@ struct DatabaseService {
                 forKey: query.slug
             )
         }
+        // If slug is the same but title changed, this is a retitle
+        else if query.linkableTitle != current.linkableTitle {
+            suggestions.updateValue(
+                .retitle(
+                    from: current,
+                    to: query
+                ),
+                forKey: current.slug
+            )
+        }
         // Then append results from existing entries, potentially overwriting
         // result for literal query if identical.
         for result in results {
@@ -512,16 +544,6 @@ struct DatabaseService {
                     .merge(
                         parent: result,
                         child: current
-                    ),
-                    forKey: result.slug
-                )
-            }
-            // If slug is the same but title changed, this is a retitle
-            else if result.linkableTitle != current.linkableTitle {
-                suggestions.updateValue(
-                    .retitle(
-                        from: current,
-                        to: result
                     ),
                     forKey: result.slug
                 )
@@ -567,7 +589,7 @@ struct DatabaseService {
                 return nil
             })
 
-            return collateRenameSuggestions(
+            return Self.collateRenameSuggestions(
                 current: current,
                 query: queryEntryLink,
                 results: results
