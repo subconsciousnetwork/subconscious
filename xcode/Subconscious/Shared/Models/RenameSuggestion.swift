@@ -13,35 +13,32 @@ enum RenameSuggestion:
     Identifiable,
     CustomStringConvertible
 {
-    case rename(EntryLink)
-    case merge(EntryLink)
+    /// Move entry from one location to another, also updating title
+    case move(from: EntryLink, to: EntryLink)
+    /// Merge child into parent
+    case merge(parent: EntryLink, child: EntryLink)
+    /// Update title without changing location
+    case retitle(from: EntryLink, to: EntryLink)
 
     var id: String {
         switch self {
-        case let .rename(link):
-            return "rename/\(link.id)"
-        case let .merge(link):
-            return "merge/\(link.id)"
+        case let .move(from, to):
+            return "move/\(from.id)/\(to.id)"
+        case let .merge(parent, child):
+            return "merge/\(parent.id)/\(child.id)"
+        case let .retitle(parent, child):
+            return "retitle/\(parent.id)/\(child.id)"
         }
     }
 
     var description: String {
         switch self {
-        case let .rename(stub):
-            return stub.title
-        case let .merge(stub):
-            return stub.title
-        }
-    }
-}
-
-extension EntryLink {
-    init(_ suggestion: RenameSuggestion) {
-        switch suggestion {
-        case .rename(let entryLink):
-            self = entryLink
-        case .merge(let entryLink):
-            self = entryLink
+        case let .move(_, to):
+            return to.linkableTitle
+        case let .merge(parent, _):
+            return parent.linkableTitle
+        case let .retitle(_, to):
+            return to.linkableTitle
         }
     }
 }
