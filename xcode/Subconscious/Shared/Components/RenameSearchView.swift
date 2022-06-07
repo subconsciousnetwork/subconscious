@@ -8,14 +8,13 @@
 import SwiftUI
 
 struct RenameSearchView: View {
-    /// Link of the note we are renaming
-    var link: EntryLink?
+    var current: EntryLink?
     var placeholder: String = "Enter name for idea"
     var suggestions: [RenameSuggestion]
     @Binding var text: String
     @Binding var focus: AppModel.Focus?
     var onCancel: () -> Void
-    var onSelect: (EntryLink?, EntryLink) -> Void
+    var onSelect: (RenameSuggestion) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -48,10 +47,7 @@ struct RenameSearchView: View {
             List(suggestions) { suggestion in
                 Button(
                     action: {
-                        onSelect(
-                            link,
-                            EntryLink(suggestion)
-                        )
+                        onSelect(suggestion)
                     },
                     label: {
                         RenameSuggestionLabelView(suggestion: suggestion)
@@ -69,25 +65,33 @@ struct RenameSearchView: View {
 struct RenameSearchView_Previews: PreviewProvider {
     static var previews: some View {
         RenameSearchView(
-            link: EntryLink(title: "Floop")!,
+            current: EntryLink(title: "Flop")!,
             suggestions: [
-                .rename(
-                    EntryLink(
-                        slug: Slug("floop")!,
-                        title: "Floop"
+                .move(
+                    from: EntryLink(
+                        slug: Slug("flop")!,
+                        title: "Flop"
+                    ),
+                    to: EntryLink(
+                        slug: Slug("zoom")!,
+                        title: "Zoom"
                     )
                 ),
                 .merge(
-                    EntryLink(
+                    parent: EntryLink(
                         slug: Slug("card-wars")!,
                         title: "Card wars"
+                    ),
+                    child: EntryLink(
+                        slug: Slug("floop")!,
+                        title: "Floop"
                     )
                 )
             ],
             text: .constant(""),
             focus: .constant(nil),
             onCancel: {},
-            onSelect: { slug, suggestion in
+            onSelect: { suggestion in
                 
             }
         )
