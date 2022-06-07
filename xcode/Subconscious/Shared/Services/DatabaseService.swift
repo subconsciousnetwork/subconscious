@@ -477,30 +477,71 @@ struct DatabaseService {
         }
     }
 
+    /// Given
+    /// - An entry link representing the current link for the file
+    /// - An entry link representing the search query
+    /// - And some results for existing entries
+    /// ...Return an array of unique RenameSuggestions,
+    /// sorted for presentation.
+    ///
+    /// We factor out this collation code to make it easier to test.
+    ///
+    /// - Returns an array of RenameSuggestion
+    func collateRenameSuggestions(
+        current: EntryLink,
+        query: EntryLink,
+        results: [EntryLink]
+    ) -> [RenameSuggestion] {
+        var suggestions: OrderedDictionary<Slug, RenameSuggestion> = [:]
+        // First append result for literal query
+        if query.slug != current.slug {
+            suggestions.updateValue(
+                .move(
+                    from: current,
+                    to: query
+                ),
+                forKey: query.slug
+            )
+        }
+        // Then append results from existing entries, potentially overwriting
+        // result for literal query if identical.
+        for result in results {
+            /// If slug changed, this is a move
+            if result.slug != current.slug {
+                suggestions.updateValue(
+                    .merge(
+                        parent: result,
+                        child: current
+                    ),
+                    forKey: result.slug
+                )
+            }
+            // If slug is the same but title changed, this is a retitle
+            else if result.linkableTitle != current.linkableTitle {
+                suggestions.updateValue(
+                    .retitle(
+                        from: current,
+                        to: result
+                    ),
+                    forKey: result.slug
+                )
+            }
+        }
+        return Array(suggestions.values)
+    }
+
     /// Given a query and a `current` slug, produce an array of suggestions
     /// for renaming the note.
     func searchRenameSuggestions(
         query: String,
-        current: Slug?
+        current: EntryLink
     ) -> AnyPublisher<[RenameSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             guard let queryEntryLink = EntryLink(title: query) else {
                 return []
             }
 
-            var suggestions: OrderedDictionary<Slug, RenameSuggestion> = [:]
-
-            //  If slug of literal query would be different from current slug
-            //  make this the first suggestion.
-            if queryEntryLink.slug != current {
-                let querySuggestion = RenameSuggestion.rename(queryEntryLink)
-                suggestions.updateValue(
-                    querySuggestion,
-                    forKey: queryEntryLink.slug
-                )
-            }
-
-            let entries: [EntryLink] = try database.execute(
+            let results: [EntryLink] = try database.execute(
                 sql: """
                 SELECT slug, title
                 FROM entry_search
@@ -526,16 +567,11 @@ struct DatabaseService {
                 return nil
             })
 
-            for entry in entries {
-                //  Do not suggest renaming to same name
-                if entry.slug != current {
-                    suggestions.updateValue(
-                        .merge(entry),
-                        forKey: entry.slug
-                    )
-                }
-            }
-            return Array(suggestions.values)
+            return collateRenameSuggestions(
+                current: current,
+                query: queryEntryLink,
+                results: results
+            )
         }
     }
 
