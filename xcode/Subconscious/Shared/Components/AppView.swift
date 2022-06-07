@@ -97,7 +97,7 @@ struct AppView: View {
                     height: geometry.size.height,
                     containerSize: geometry.size,
                     content: RenameSearchView(
-                        link: store.state.editor.entryInfo.map({ info in
+                        current: store.state.editor.entryInfo.map({ info in
                             EntryLink(info)
                         }),
                         suggestions: store.state.renameSuggestions,
@@ -117,12 +117,9 @@ struct AppView: View {
                         onCancel: {
                             store.send(.hideRenameSheet)
                         },
-                        onSelect: { from, to in
+                        onSelect: { suggestion in
                             store.send(
-                                .renameEntry(
-                                    from: from,
-                                    to: to
-                                )
+                                .renameEntry(suggestion)
                             )
                         }
                     )
