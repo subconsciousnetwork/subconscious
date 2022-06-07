@@ -723,7 +723,7 @@ struct DatabaseService {
         }
         guard
             let attributes = try? FileManager.default.attributesOfItem(
-                atPath: url.absoluteString
+                atPath: url.path
             ),
             let modified = attributes[.modificationDate] as? Date,
             let created = attributes[.creationDate] as? Date
