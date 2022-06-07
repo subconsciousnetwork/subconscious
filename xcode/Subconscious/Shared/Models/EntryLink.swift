@@ -10,7 +10,12 @@ import Foundation
 /// A EntryLink contains a slug, title, and linkable title.
 /// Linkable title is a title that is reducible to the slug,
 /// e.g. when used as a wikilink.
-struct EntryLink: Hashable, Equatable, Identifiable {
+struct EntryLink:
+    Hashable,
+    Equatable,
+    Identifiable,
+    CustomStringConvertible
+{
     let slug: Slug
     let title: String
     let linkableTitle: String
@@ -49,6 +54,7 @@ struct EntryLink: Hashable, Equatable, Identifiable {
     }
 
     var id: Slug { slug }
+    var description: String { linkableTitle }
 
     static func sanitizeTitle(_ text: String) -> String {
         text
