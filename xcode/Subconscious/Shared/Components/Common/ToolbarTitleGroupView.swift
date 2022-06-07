@@ -8,20 +8,19 @@
 import SwiftUI
 
 struct ToolbarTitleGroupView: View, Equatable {
-    var title: String
-    var slug: Slug?
-    var untitled = "Untitled"
+    var title: Text
+    var subtitle: Text
 
     var body: some View {
         HStack {
             Spacer()
             VStack(spacing: AppTheme.unit) {
-                Text(title.isEmpty ? untitled : title)
+                title
                     .font(Font(UIFont.appText))
                     .foregroundColor(Color.text)
                     .frame(height: AppTheme.textSize)
                     .lineLimit(1)
-                Text(slug?.description ?? untitled)
+                subtitle
                     .font(Font(UIFont.appCaption))
                     .frame(height: AppTheme.captionSize)
                     .foregroundColor(Color.secondaryText)
@@ -35,8 +34,8 @@ struct ToolbarTitleGroupView: View, Equatable {
 struct ToolbarTitleGroupView_Previews: PreviewProvider {
     static var previews: some View {
         ToolbarTitleGroupView(
-            title: "Floop",
-            slug: Slug("floop")
+            title: Text("Floop"),
+            subtitle: Text("floop")
         )
     }
 }

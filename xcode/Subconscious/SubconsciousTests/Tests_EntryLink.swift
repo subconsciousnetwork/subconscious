@@ -38,12 +38,78 @@ class Tests_EntryLink: XCTestCase {
         )
     }
 
+    func testSanitizeTitle() throws {
+        let title = EntryLink.sanitizeTitle("  RAND\nCorporation  ")
+        XCTAssertEqual(
+            title,
+            "RAND Corporation",
+            "Title is santized"
+        )
+    }
+
+    func testSanitizesTitle() throws {
+        guard let link = EntryLink(title: "  RAND\nCorporation    ") else {
+            XCTFail("Expected title to parse to slug successfully")
+            return
+        }
+        XCTAssertEqual(
+            link.title,
+            "RAND Corporation",
+            "Title is santized"
+        )
+        XCTAssertEqual(
+            String(link.slug),
+            "rand-corporation",
+            "Title is slugified correctly"
+        )
+    }
+
+    func testSanitizesLinkableTitle() throws {
+        let text = "  RAND\nCorporation    "
+        let link = EntryLink(
+            slug: Slug(formatting: text)!,
+            title: text
+        )
+        XCTAssertEqual(
+            link.title,
+            "RAND Corporation",
+            "Title is santized"
+        )
+        XCTAssertEqual(
+            String(link.linkableTitle),
+            "RAND Corporation",
+            "Linkable title is sanitized"
+        )
+        XCTAssertEqual(
+            String(link.slug),
+            "rand-corporation",
+            "Title is slugified correctly"
+        )
+    }
+
+    func testSanitizesNonLinkableTitle() throws {
+        let link = EntryLink(
+            slug: Slug("something")!,
+            title: "  Something else    "
+        )
+        XCTAssertEqual(
+            link.title,
+            "Something else",
+            "Title is santized"
+        )
+        XCTAssertEqual(
+            String(link.linkableTitle),
+            "Something",
+            "Linkable title is sanitized"
+        )
+    }
+
     func testSlugOnlyEntryLinkToLinkableSentence() throws {
         guard let slug = Slug("rand") else {
             XCTFail("Expected slug")
             return
         }
-        let title = EntryLink(slug: slug).toLinkableTitle()
+        let title = EntryLink(slug: slug).linkableTitle
         XCTAssertEqual(
             title,
             "Rand",
@@ -56,7 +122,7 @@ class Tests_EntryLink: XCTestCase {
             XCTFail("Expected title to parse to slug successfully")
             return
         }
-        let title = link.toLinkableTitle()
+        let title = link.linkableTitle
         XCTAssertEqual(
             title,
             "RAND",
@@ -73,7 +139,7 @@ class Tests_EntryLink: XCTestCase {
             slug: slug,
             title: "RAND Corporation"
         )
-        let title = link.toLinkableTitle()
+        let title = link.linkableTitle
         XCTAssertEqual(
             title,
             "Rand",

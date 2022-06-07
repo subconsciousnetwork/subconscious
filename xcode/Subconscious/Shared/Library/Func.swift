@@ -10,8 +10,8 @@ import Foundation
 struct Func {
     static func pipe<T, U>(
         _ value: T,
-        _ f: (T) -> U
+        through: (T) -> U
     ) -> U {
-        f(value)
+        through(value)
     }
 }

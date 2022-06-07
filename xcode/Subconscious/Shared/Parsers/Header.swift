@@ -10,15 +10,19 @@ import OrderedCollections
 
 /// A header
 struct Header: Hashable, CustomStringConvertible {
-    var name: String
-    var value: String
+    let name: String
+    let value: String
 
     init(
         name: String,
         value: String
     ) {
-        self.name = name
-        self.value = value
+        self.name = Self.normalizeName(name)
+        self.value = Self.normalizeValue(value)
+    }
+
+    var description: String {
+        "\(name): \(value)\n"
     }
 
     /// Normalize name by capitalizing first letter of each dashed word
@@ -27,16 +31,9 @@ struct Header: Hashable, CustomStringConvertible {
     /// content-type -> Content-Type
     /// TITLE -> Title
     ///
-    /// Headers are case-insensitive, but this format is in keeping with
+    /// Headers are case-insensitive. This normalization step lets us
+    /// compare header keys in a case-insensitive way, and matches
     /// typical HTTP header naming conventions.
-    var normalizedName: String {
-        Self.normalizeName(self.name)
-    }
-
-    var description: String {
-        "\(normalizedName): \(value)\n"
-    }
-
     static func normalizeName(
         _ string: String
     ) -> String {
@@ -48,6 +45,19 @@ struct Header: Hashable, CustomStringConvertible {
                 options: .regularExpression,
                 range: nil
             )
+    }
+
+    /// Normalize header value, removing newlines.
+    /// Headers are newline delimited, so you can't have newlines in them.
+    static func normalizeValue(
+        _ string: String
+    ) -> String {
+        string.replacingOccurrences(
+            of: #"[\r\n]"#,
+            with: " ",
+            options: .regularExpression,
+            range: nil
+        )
     }
 
     static func parseName(
@@ -132,7 +142,7 @@ struct Headers: Hashable, CustomStringConvertible, Sequence {
         let name = Header.normalizeName(name)
         return headers.first(
             where: { header in
-                header.normalizedName == name
+                header.name == name
             }
         )
     }
@@ -188,13 +198,13 @@ struct Headers: Hashable, CustomStringConvertible, Sequence {
     }
 }
 
-struct HeaderIndex: Hashable, CustomStringConvertible {
+struct HeaderIndex: Hashable, Sequence, CustomStringConvertible {
     private(set) var index: OrderedDictionary<String, String>
 
     init(_ headers: [Header] = []) {
         var headerIndex: OrderedDictionary<String, String> = [:]
         for header in headers {
-            let name = header.normalizedName
+            let name = header.name
             if headerIndex[name] == nil {
                 headerIndex[name] = header.value
             }
@@ -209,8 +219,17 @@ struct HeaderIndex: Hashable, CustomStringConvertible {
         }
         set {
             let name = Header.normalizeName(name)
-            self.index[name] = newValue
+            guard let value = newValue else {
+                self.index[name] = nil
+                return
+            }
+            self.index[name] = Header.normalizeValue(value)
         }
+    }
+
+    /// Conform to Sequence
+    func makeIterator() -> OrderedDictionary<String, String>.Iterator {
+        index.makeIterator()
     }
 
     var description: String {
@@ -222,25 +241,25 @@ struct HeaderIndex: Hashable, CustomStringConvertible {
             .appending("\n")
     }
 
-    /// Merge headers together, returning a new HeaderIndex.
-    /// In case of conflicts between header keys, `self` wins.
-    func merge(_ index: HeaderIndex) -> Self {
-        var this = self
-        for (key, value) in self.index {
-            if this.index[key] == nil {
-                this.index[key] = value
-            }
-        }
-        return this
-    }
-
     /// Set a header value only if a header of the same name
     /// does not already exist.
-    mutating func setDefault(name: String, value: String) {
+    /// - Returns the current value of the header
+    @discardableResult mutating func setDefault(
+        name: String,
+        value defaultValue: String
+    ) -> String {
         let name = Header.normalizeName(name)
-        if self.index[name] == nil {
-            self.index[name] = value
+        return self.index.setDefault(defaultValue, forKey: name)
+    }
+
+    /// Merge headers together, returning a new HeaderIndex.
+    /// In case of conflicts between header keys, `self` wins.
+    func merge(_ other: HeaderIndex) -> Self {
+        var this = self
+        for (name, value) in other {
+            this.setDefault(name: name, value: value)
         }
+        return this
     }
 
     static let empty = HeaderIndex()

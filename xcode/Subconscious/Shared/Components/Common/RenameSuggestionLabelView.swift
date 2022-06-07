@@ -12,11 +12,11 @@ struct RenameSuggestionLabelView: View, Equatable {
 
     var body: some View {
         switch suggestion {
-        case .merge(let entryLink):
+        case let .merge(parent, _):
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text(String(entryLink.slug)),
+                        title: Text(parent.linkableTitle),
                         subtitle: Text("Merge ideas")
                     )
                 },
@@ -24,12 +24,24 @@ struct RenameSuggestionLabelView: View, Equatable {
                     Image(systemName: "square.and.arrow.down.on.square")
                 }
             )
-        case .rename(let entryLink):
+        case let .move(_, to):
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text(String(entryLink.slug)),
+                        title: Text(to.linkableTitle),
                         subtitle: Text("Rename idea")
+                    )
+                },
+                icon: {
+                    Image(systemName: "pencil")
+                }
+            )
+        case let .retitle(_, to):
+            Label(
+                title: {
+                    TitleGroupView(
+                        title: Text(to.linkableTitle),
+                        subtitle: Text("Update title")
                     )
                 },
                 icon: {
@@ -43,10 +55,14 @@ struct RenameSuggestionLabelView: View, Equatable {
 struct RenameSuggestionLabel_Previews: PreviewProvider {
     static var previews: some View {
         RenameSuggestionLabelView(
-            suggestion: .rename(
-                EntryLink(
-                    slug: Slug("floop")!,
-                    title: "Floop the pig"
+            suggestion: .move(
+                from: EntryLink(
+                    slug: Slug("loomings")!,
+                    title: "Loomings"
+                ),
+                to: EntryLink(
+                    slug: Slug("the-lee-shore")!,
+                    title: "The Lee Shore"
                 )
             )
         )

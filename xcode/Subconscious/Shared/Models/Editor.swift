@@ -22,20 +22,11 @@ struct EditorEntryInfo: Hashable, Identifiable {
         }
         return slug.toTitle()
     }
+}
 
-    /// Sets standard headers.
-    mutating func mendHeaders() {
-        // Ensure content-type header
-        self.headers["Content-Type"] = "text/subtext"
-
-        // Derive title header from slug, if no title present
-        self.headers.setDefault(name: "Title", value: slug.toTitle())
-
-        let now = Date.now.ISO8601Format()
-        // Set modified time to now
-        self.headers["Modified"] = now
-        // Set created header to now, if not present
-        self.headers.setDefault(name: "Created", value: now)
+extension EntryLink {
+    init(_ info: EditorEntryInfo) {
+        self.init(slug: info.slug, title: info.title)
     }
 }
 
@@ -68,7 +59,7 @@ struct Editor: Hashable {
         }
         return (
             entryInfo.slug == entry.slug &&
-            text == entry.content
+            text == entry.body
         )
     }
 }
@@ -80,7 +71,7 @@ extension Editor {
             headers: detail.entry.headers,
             backlinks: detail.backlinks
         )
-        self.text = detail.entry.content
+        self.text = detail.entry.body
         self.saveState = .saved
         self.isLoading = false
     }
@@ -94,6 +85,6 @@ extension SubtextFile {
         }
         self.slug = info.slug
         self.headers = info.headers
-        self.content = editor.text
+        self.body = editor.text
     }
 }

@@ -7,24 +7,40 @@
 
 import Foundation
 
-/// A EntryLink is a model that contains a title and slug description of a note
-/// suitable for list views.
-struct EntryLink: Hashable, Equatable, Identifiable {
-    var slug: Slug
-    var title: String
+/// A EntryLink contains a slug, title, and linkable title.
+/// Linkable title is a title that is reducible to the slug,
+/// e.g. when used as a wikilink.
+struct EntryLink:
+    Hashable,
+    Equatable,
+    Identifiable,
+    CustomStringConvertible
+{
+    let slug: Slug
+    let title: String
+    let linkableTitle: String
 
     init(slug: Slug, title: String) {
         self.slug = slug
+        let title = Self.sanitizeTitle(title)
         self.title = title
+        let titleSlug = Slug(formatting: title)
+        self.linkableTitle = (
+            titleSlug != self.slug ?
+            Self.sanitizeTitle(slug.toTitle()) :
+            title
+        )
     }
 
     /// Construct an EntryLink from a string.
     /// Slug is generated for string using lossy approach.
     init?(title: String) {
+        let title = Self.sanitizeTitle(title)
         guard let slug = Slug(formatting: title) else {
             return nil
         }
         self.title = title
+        self.linkableTitle = title
         self.slug = slug
     }
 
@@ -32,22 +48,21 @@ struct EntryLink: Hashable, Equatable, Identifiable {
     /// Title is generated using `slug.toTitle()`.
     init(slug: Slug) {
         self.slug = slug
-        self.title = slug.toTitle()
+        let title = Self.sanitizeTitle(slug.toTitle())
+        self.title = title
+        self.linkableTitle = title
     }
 
     var id: Slug { slug }
+    var description: String { linkableTitle }
 
-    /// Returns a nice-name string that will format to a valid
-    /// slug for this entry.
-    func toLinkableTitle() -> String {
-        let titleSlug = Slug(formatting: self.title)
-        // If title slug matches actual slug, then we can use title as the
-        // nicename for the wikilink. This is better than sentence-ifying
-        // the slug, because it lets us include things like apostrophes,
-        // special case capitalization, etc.
-        if titleSlug == self.slug {
-            return self.title
-        }
-        return self.slug.toTitle()
+    static func sanitizeTitle(_ text: String) -> String {
+        text
+            .trimmingCharacters(in: .whitespaces)
+            .replacingOccurrences(
+                of: #"\s"#,
+                with: " ",
+                options: .regularExpression
+            )
     }
 }

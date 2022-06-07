@@ -9,10 +9,13 @@ import SwiftUI
 
 /// Toolbar for detail view
 struct DetailToolbarContent: ToolbarContent {
-    var title: String
-    var slug: Slug?
-    var onRename: (Slug?) -> Void
-    var onDelete: (Slug?) -> Void
+    /// Link to currently active entry, if any.
+    /// The toolbar decorator does not allow for control flow statements.
+    /// That means we have to deal with non-existence within this
+    /// toolbar content view, instead of within the toolbar decorator.
+    var link: EntryLink?
+    var onRename: (EntryLink) -> Void
+    var onDelete: (Slug) -> Void
 
     //  The Toolbar `.principal` position does not limit its own width.
     //  This results in titles that can overflow and cover up the back button.
@@ -28,14 +31,24 @@ struct DetailToolbarContent: ToolbarContent {
         ToolbarItem(placement: .principal) {
             Button(
                 action: {
-                    onRename(slug)
+                    if let link = link {
+                        onRename(link)
+                    }
                 }
             ) {
-                ToolbarTitleGroupView(
-                    title: title,
-                    slug: slug
-                )
-                .frame(maxWidth: titleMaxWidth)
+                if let link = link {
+                    ToolbarTitleGroupView(
+                        title: Text(link.title),
+                        subtitle: Text(String(describing: link.slug))
+                    )
+                    .frame(maxWidth: titleMaxWidth)
+                } else {
+                    ToolbarTitleGroupView(
+                        title: Text("Untitled"),
+                        subtitle: Text("")
+                    )
+                    .frame(maxWidth: titleMaxWidth)
+                }
             }
         }
         ToolbarItem(placement: .navigationBarTrailing) {
@@ -44,7 +57,9 @@ struct DetailToolbarContent: ToolbarContent {
                     Section {
                         Button(
                             action: {
-                                onRename(slug)
+                                if let link = link {
+                                    onRename(link)
+                                }
                             }
                         ) {
                             Label("Rename", systemImage: "pencil")
@@ -53,7 +68,9 @@ struct DetailToolbarContent: ToolbarContent {
                     Section {
                         Button(
                             action: {
-                                onDelete(slug)
+                                if let link = link {
+                                    onDelete(link.slug)
+                                }
                             }
                         ) {
                             Label("Delete", systemImage: "trash")

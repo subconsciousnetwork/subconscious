@@ -11,9 +11,24 @@ import Combine
 import OrderedCollections
 
 struct DatabaseService {
-    enum DatabaseServiceError: Error {
+    enum DatabaseServiceError: Error, LocalizedError {
         case pathNotInFilePath
-        case notFound
+        case randomEntryFailed
+        case fileExists(Slug)
+        case fileNotFound(Slug)
+
+        var errorDescription: String? {
+            switch self {
+            case .pathNotInFilePath:
+                return "DatabaseServiceError.pathNotInFilePath"
+            case .randomEntryFailed:
+                return "DatabaseServiceError.randomEntryFailed"
+            case .fileExists(let slug):
+                return "DatabaseServiceError.fileExists(\(slug))"
+            case .fileNotFound(let slug):
+                return "DatabaseServiceError.notFound(\(slug))"
+            }
+        }
     }
 
     private var documentURL: URL
@@ -124,7 +139,8 @@ struct DatabaseService {
 
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        entry: SubtextFile
+        entry: SubtextFile,
+        fingerprint: FileFingerprint.Attributes
     ) throws {
         try database.execute(
             sql: """
@@ -138,36 +154,49 @@ struct DatabaseService {
             """,
             parameters: [
                 .text(String(describing: entry.slug)),
-                .text(entry.title),
+                .text(entry.title()),
                 .text(String(describing: entry)),
-                .date(entry.modified),
-                .integer(entry.size)
+                .date(fingerprint.modifiedDate),
+                .integer(fingerprint.size)
             ]
         )
     }
 
+    private func entryFileExists(_ slug: Slug) -> Bool {
+        let url = slug.toURL(directory: documentURL, ext: "subtext")
+        //  NOTE: It's important to use `.path` and not `.absolutePath`.
+        //  For whatever reason, `.fileExists` will not find the file
+        //  at its `.absolutePath`.
+        //  2022-01-21 Gordon Brander
+        return FileManager.default.fileExists(atPath: url.path)
+    }
+
     private func writeEntryToDatabase(slug: Slug) throws {
-        var entry = try SubtextFile(slug: slug, directory: documentURL)
-            .unwrap()
+        let entry = try readEntry(slug: slug).unwrap()
         let fingerprint = try FileFingerprint
             .Attributes(url: entry.url(directory: documentURL))
             .unwrap()
-        entry.modified = fingerprint.modifiedDate
-        return try writeEntryToDatabase(entry: entry)
+        try writeEntryToDatabase(entry: entry, fingerprint: fingerprint)
     }
 
-    func writeEntry(entry: SubtextFile) -> AnyPublisher<Void, Error> {
+    /// Write entry to file system and database
+    /// Also sets modified header to now.
+    private func writeEntry(_ entry: SubtextFile) throws {
+        let modifiedEntry = entry.modified(Date.now)
+        try modifiedEntry.write(directory: documentURL)
+        // Read modified date from file system directly after writing
+        let fingerprint = try FileFingerprint
+            .Attributes(url: entry.url(directory: documentURL))
+            .unwrap()
+        try writeEntryToDatabase(
+            entry: modifiedEntry,
+            fingerprint: fingerprint
+        )
+    }
+
+    func writeEntryAsync(_ entry: SubtextFile) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
-            var entry = entry
-            // Write contents to file
-            try entry.write(directory: documentURL)
-            // Read modified date from file system directly after writing
-            let fingerprint = try FileFingerprint
-                .Attributes(url: entry.url(directory: documentURL))
-                .unwrap()
-            // Set modified date on entry
-            entry.modified = fingerprint.modifiedDate
-            return try writeEntryToDatabase(entry: entry)
+            try writeEntry(entry)
         }
     }
 
@@ -183,90 +212,108 @@ struct DatabaseService {
         )
     }
 
-    /// Delete entry from file system
-    private func deleteEntryFile(slug: Slug) throws {
+    /// Delete entry from file system and database
+    private func deleteEntry(slug: Slug) throws {
         let url = slug.toURL(directory: documentURL, ext: "subtext")
         try FileManager.default.removeItem(at: url)
+        try deleteEntryFromDatabase(slug: slug)
     }
 
     /// Delete entry from file system and database
-    func deleteEntry(slug: Slug) -> AnyPublisher<Void, Error> {
+    func deleteEntryAsync(slug: Slug) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .background) {
-            try deleteEntryFile(slug: slug)
-            try deleteEntryFromDatabase(slug: slug)
+            try deleteEntry(slug: slug)
         }
     }
 
-    /// Rename file in file system
-    private func moveEntryFile(from: Slug, to: Slug) throws {
-        let fromFile = try SubtextFile(slug: from, directory: documentURL)
-            .unwrap()
-        let toFile = SubtextFile(slug: to, content: fromFile.content)
-        try toFile.write(directory: documentURL)
-        try FileManager.default.removeItem(
-            at: fromFile.url(directory: documentURL)
-        )
+    /// Move entry to a new location, updating file system and database.
+    private func moveEntry(from: EntryLink, to: EntryLink) throws {
+        guard from.slug != to.slug else {
+            throw DatabaseServiceError.fileExists(to.slug)
+        }
+        // Make sure we're writing to an empty location
+        guard !entryFileExists(to.slug) else {
+            throw DatabaseServiceError.fileExists(to.slug)
+        }
+        let fromFile = try readEntry(slug: from.slug)
+            .unwrap(DatabaseServiceError.fileNotFound(from.slug))
+        // Set new title and slug
+        let toFile = fromFile.slugAndTitle(to)
+        // Write to new destination
+        try writeEntry(toFile)
+        // ...Then delete old entry
+        try deleteEntry(slug: fromFile.slug)
     }
 
-    /// Merge two files together
-    /// - Appends `from` to `to`
-    /// - Writes the combined content to `to`
-    /// - Deletes `from`
-    private func mergeEntryFile(from: Slug, to: Slug) throws {
-        let fromFile = try SubtextFile(
-            slug: from,
-            directory: documentURL
-        )
-        .unwrap()
+    /// Move entry to a new location, updating file system and database.
+    /// - Returns a combine publisher
+    func moveEntryAsync(
+        from: EntryLink,
+        to: EntryLink
+    ) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async {
+            try moveEntry(from: from, to: to)
+        }
+    }
 
-        let toFile = try SubtextFile(
-            slug: to,
-            directory: documentURL
-        )
-        .unwrap()
-        .appending(fromFile)
+    /// Merge child entry into parent entry.
+    /// - Appends `child` to `parent`
+    /// - Writes the combined content to `parent`
+    /// - Deletes `child`
+    private func mergeEntry(
+        parent: Slug,
+        child: Slug
+    ) throws {
+        let childEntry = try readEntry(slug: child)
+            .unwrap(DatabaseServiceError.fileNotFound(child))
+
+        let parentEntry = try readEntry(slug: parent)
+            .unwrap(DatabaseServiceError.fileNotFound(parent))
+            .merge(childEntry)
 
         //  First write the merged file to "to" location
-        try toFile.write(directory: documentURL)
-        //  Then remove the file at "from" location.
-        //  We delete AFTER writing so that data loss cannot occur in
-        //  case of failure.
-        try FileManager.default.removeItem(
-            at: fromFile.url(directory: documentURL)
-        )
+        try writeEntry(parentEntry)
+        //  Then delete child entry *afterwards*.
+        //  We do this last to avoid data loss in case of write errors.
+        try deleteEntry(slug: childEntry.slug)
     }
 
-    /// Rename or merge entry.
-    /// Updates both database and file system.
-    func renameOrMergeEntry(
-        from: Slug,
-        to: Slug
+    /// Merge child entry into parent entry.
+    /// - Appends `child` to `parent`
+    /// - Writes the combined content to `parent`
+    /// - Deletes `child`
+    /// - Returns combine publisher
+    func mergeEntryAsync(
+        parent: EntryLink,
+        child: EntryLink
     ) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .utility) {
-            // Succeed and do nothing if `from` and `to` are the same.
-            guard from != to else {
-                return
-            }
+        CombineUtilities.async {
+            try mergeEntry(parent: parent.slug, child: child.slug)
+        }
+    }
 
-            let toURL = to.toURL(directory: documentURL, ext: "subtext")
+    /// Update the title of an entry, without changing its slug
+    private func retitleEntry(
+        from: EntryLink,
+        to: EntryLink
+    ) throws {
+        guard from.linkableTitle != to.linkableTitle else {
+            return
+        }
+        var entry = try readEntry(slug: from.slug)
+            .unwrap(DatabaseServiceError.fileNotFound(from.slug))
+        entry.headers["Title"] = to.linkableTitle
+        try writeEntry(entry)
+    }
 
-            //  If file already exists, perform a merge.
-            //  Otherwise, perform a rename.
-            //  NOTE: It's important to use `.path` and not `.absolutePath`.
-            //  For whatever reason, `.fileExists` will not find the file
-            //  at its `.absolutePath`.
-            //  2022-01-21 Gordon Brander
-            if FileManager.default.fileExists(atPath: toURL.path) {
-                try mergeEntryFile(from: from, to: to)
-                try writeEntryToDatabase(slug: to)
-                try deleteEntryFromDatabase(slug: from)
-                return
-            } else {
-                try moveEntryFile(from: from, to: to)
-                try writeEntryToDatabase(slug: to)
-                try deleteEntryFromDatabase(slug: from)
-                return
-            }
+    /// Change title header of entry, without moving it.
+    /// - Returns combine publisher
+    func retitleEntryAsync(
+        from: EntryLink,
+        to: EntryLink
+    ) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async {
+            try retitleEntry(from: from, to: to)
         }
     }
 
@@ -296,26 +343,26 @@ struct DatabaseService {
             // are read-only teaser views.
             try database.execute(
                 sql: """
-                SELECT slug, body, title, modified
+                SELECT slug, body, modified
                 FROM entry_search
                 ORDER BY modified DESC
                 LIMIT 1000
                 """
             )
             .compactMap({ row in
-                if
+                guard
                     let slugString: String = row.get(0),
                     let slug = Slug(slugString),
                     let body: String = row.get(1),
-                    let title: String = row.get(2),
-                    let modified: Date = row.get(3)
-                {
-                    var entry = SubtextFile(slug: slug, content: body)
-                    entry.modified = modified
-                    entry.title = title
-                    return EntryStub(entry)
+                    let modified: Date = row.get(2)
+                else {
+                    return nil
                 }
-                return nil
+                /// Read entry and mend headers using information
+                /// from database.
+                let entry = SubtextFile(slug: slug, content: body)
+                    .mendingHeaders(modified: modified)
+                return EntryStub(entry)
             })
         }
     }
@@ -468,30 +515,71 @@ struct DatabaseService {
         }
     }
 
+    /// Given
+    /// - An entry link representing the current link for the file
+    /// - An entry link representing the search query
+    /// - And some results for existing entries
+    /// ...Return an array of unique RenameSuggestions,
+    /// sorted for presentation.
+    ///
+    /// We factor out this collation code to make it easier to test.
+    ///
+    /// - Returns an array of RenameSuggestion
+    static func collateRenameSuggestions(
+        current: EntryLink,
+        query: EntryLink,
+        results: [EntryLink]
+    ) -> [RenameSuggestion] {
+        var suggestions: OrderedDictionary<Slug, RenameSuggestion> = [:]
+        // First append result for literal query
+        if query.slug != current.slug {
+            suggestions.updateValue(
+                .move(
+                    from: current,
+                    to: query
+                ),
+                forKey: query.slug
+            )
+        }
+        // If slug is the same but title changed, this is a retitle
+        else if query.linkableTitle != current.linkableTitle {
+            suggestions.updateValue(
+                .retitle(
+                    from: current,
+                    to: query
+                ),
+                forKey: current.slug
+            )
+        }
+        // Then append results from existing entries, potentially overwriting
+        // result for literal query if identical.
+        for result in results {
+            /// If slug changed, this is a move
+            if result.slug != current.slug {
+                suggestions.updateValue(
+                    .merge(
+                        parent: result,
+                        child: current
+                    ),
+                    forKey: result.slug
+                )
+            }
+        }
+        return Array(suggestions.values)
+    }
+
     /// Given a query and a `current` slug, produce an array of suggestions
     /// for renaming the note.
     func searchRenameSuggestions(
         query: String,
-        current: Slug?
+        current: EntryLink
     ) -> AnyPublisher<[RenameSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             guard let queryEntryLink = EntryLink(title: query) else {
                 return []
             }
 
-            var suggestions: OrderedDictionary<Slug, RenameSuggestion> = [:]
-
-            //  If slug of literal query would be different from current slug
-            //  make this the first suggestion.
-            if queryEntryLink.slug != current {
-                let querySuggestion = RenameSuggestion.rename(queryEntryLink)
-                suggestions.updateValue(
-                    querySuggestion,
-                    forKey: queryEntryLink.slug
-                )
-            }
-
-            let entries: [EntryLink] = try database.execute(
+            let results: [EntryLink] = try database.execute(
                 sql: """
                 SELECT slug, title
                 FROM entry_search
@@ -517,16 +605,11 @@ struct DatabaseService {
                 return nil
             })
 
-            for entry in entries {
-                //  Do not suggest renaming to same name
-                if entry.slug != current {
-                    suggestions.updateValue(
-                        .merge(entry),
-                        forKey: entry.slug
-                    )
-                }
-            }
-            return Array(suggestions.values)
+            return Self.collateRenameSuggestions(
+                current: current,
+                query: queryEntryLink,
+                results: results
+            )
         }
     }
 
@@ -627,15 +710,32 @@ struct DatabaseService {
         }
     }
 
+    /// Read an entry from the file system.
     /// Private syncronous API to read a Subtext file via its Slug
     /// Used by public async APIs.
+    /// - Returns a SubtextFile with mended headers.
     private func readEntry(
         slug: Slug
     ) -> SubtextFile? {
-        SubtextFile(
-            slug: slug,
-            directory: documentURL
-        )
+        let url = slug.toURL(directory: documentURL, ext: "subtext")
+        guard let content = try? String(contentsOf: url, encoding: .utf8) else {
+            return nil
+        }
+        guard
+            let attributes = try? FileManager.default.attributesOfItem(
+                atPath: url.path
+            ),
+            let modified = attributes[.modificationDate] as? Date,
+            let created = attributes[.creationDate] as? Date
+        else {
+            return nil
+        }
+
+        return SubtextFile(slug: slug, content: content)
+            .mendingHeaders(
+                modified: modified,
+                created: created
+            )
     }
 
     /// Sync version of readEntryDetail
@@ -671,13 +771,17 @@ struct DatabaseService {
             return EntryStub(entry)
         })
         // Retreive top entry from file system to ensure it is fresh.
-        // If no file exists, return a draft with fallback content.
+        // If no file exists, return a draft, using fallback for title.
         guard let entry = readEntry(slug: slug) else {
+            let now = Date.now
             return EntryDetail(
                 saveState: .draft,
                 entry: SubtextFile(
                     slug: slug,
-                    content: fallback
+                    title: fallback,
+                    modified: now,
+                    created: now,
+                    body: ""
                 ),
                 backlinks: backlinks
             )
@@ -709,7 +813,7 @@ struct DatabaseService {
         template: Slug
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .utility) {
-            let fallback = readEntry(slug: template)?.content ?? ""
+            let fallback = readEntry(slug: template)?.body ?? ""
             return try readEntryDetail(
                 slug: slug,
                 fallback: fallback
@@ -732,7 +836,7 @@ struct DatabaseService {
                 row.get(0).flatMap({ string in Slug(string) })
             })
             .first
-            .unwrap(DatabaseServiceError.notFound)
+            .unwrap(DatabaseServiceError.randomEntryFailed)
         }
     }
 }
