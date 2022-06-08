@@ -36,19 +36,9 @@ struct DetailToolbarContent: ToolbarContent {
                     }
                 }
             ) {
-                if let link = link {
-                    ToolbarTitleGroupView(
-                        title: Text(link.title),
-                        subtitle: Text(String(describing: link.slug))
-                    )
+                Text(link?.title ?? "Untitled")
                     .frame(maxWidth: titleMaxWidth)
-                } else {
-                    ToolbarTitleGroupView(
-                        title: Text("Untitled"),
-                        subtitle: Text("")
-                    )
-                    .frame(maxWidth: titleMaxWidth)
-                }
+                    .foregroundColor(Color.text)
             }
         }
         ToolbarItem(placement: .navigationBarTrailing) {
