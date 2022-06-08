@@ -115,13 +115,15 @@ class Tests_SubtextFile: XCTestCase {
             author: Robert Frost
 
             Some say the world will end in fire,
+            
+            
             Some say in ice.
             """
         )
         XCTAssertEqual(
             entry.excerpt(),
-            "Some say the world will end in fire,",
-            "Excerpt pulls first line of body"
+            "Some say the world will end in fire, Some say in ice.",
+            "Excerpt pulls first few content blocks and skips empty blocks"
         )
     }
 
