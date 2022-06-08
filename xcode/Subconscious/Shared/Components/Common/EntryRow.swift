@@ -39,20 +39,11 @@ struct EntryRow: View, Equatable {
                 .font(Font(UIFont.appTextSmall))
                 .foregroundColor(Color.secondaryText)
             }
-            Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
+            Text(!entry.excerpt.isEmpty ? entry.excerpt : emptyExcerpt)
                 .font(Font(UIFont.appText))
-                .lineLimit(1)
+                .lineLimit(2)
                 .multilineTextAlignment(.leading)
                 .foregroundColor(Color.secondaryText)
-            HStack(spacing: AppTheme.unit) {
-                Image(systemName: "doc")
-                    .font(.system(size: 12))
-                Text(entry.slug.description)
-            }
-            .font(Font(UIFont.appText))
-            .lineLimit(1)
-            .foregroundColor(Color.secondaryText)
-            .multilineTextAlignment(.leading)
         }
     }
 }
