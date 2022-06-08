@@ -26,9 +26,6 @@ struct EntryRow: View, Equatable {
                 .lineLimit(1)
                 .foregroundColor(Color.text)
                 .multilineTextAlignment(.leading)
-                // Aligns this text's vertical center to icon vertical
-                // center in a label.
-                .frame(minHeight: AppTheme.icon)
                 Spacer()
                 Text(
                     NiceDateFormatter.shared.string(
