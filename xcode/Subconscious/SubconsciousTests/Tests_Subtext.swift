@@ -23,7 +23,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "> Some text"
         let dom = Subtext.parse(markup: markup)
 
-        guard case .quote(_, _) = dom.blocks[0] else {
+        guard case .quote(_) = dom.blocks[0] else {
             XCTFail("Expected quote")
             return
         }
@@ -33,7 +33,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "- Some text"
         let dom = Subtext.parse(markup: markup)
 
-        guard case .list(_, _) = dom.blocks[0] else {
+        guard case .list(_) = dom.blocks[0] else {
             XCTFail("Expected list")
             return
         }
@@ -43,7 +43,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "Some text"
         let dom = Subtext.parse(markup: markup)
 
-        guard case .text(_, _) = dom.blocks[0] else {
+        guard case .text(_) = dom.blocks[0] else {
             XCTFail("Expected text")
             return
         }
@@ -71,7 +71,7 @@ class Tests_Subtext: XCTestCase {
         """
         let dom = Subtext.parse(markup: markup)
 
-        guard case .text(_, _) = dom.blocks[0] else {
+        guard case .text(_) = dom.blocks[0] else {
             XCTFail("Expected text")
             return
         }
@@ -1027,41 +1027,36 @@ class Tests_Subtext: XCTestCase {
         """
         let dom = Subtext.parse(markup: markup)
 
-        guard case .text(let text, _) = dom.blocks[0] else {
+        guard case .text(let text) = dom.blocks[0] else {
             XCTFail("Expected text")
             return
         }
-        XCTAssertEqual(text.first, "S")
-        XCTAssertEqual(text.last, "k")
+        XCTAssertEqual(String(text.span), "Some text after an empty block")
 
         guard case .empty(let empty) = dom.blocks[1] else {
             XCTFail("Expected empty")
             return
         }
-        XCTAssertEqual(empty.count, 0)
-        XCTAssertEqual(empty.first, nil)
-        XCTAssertEqual(empty.last, nil)
+        XCTAssertEqual(empty.span.count, 0)
+        XCTAssertEqual(String(empty.span), "")
 
         guard case .heading(let heading) = dom.blocks[2] else {
             XCTFail("Expected heading")
             return
         }
-        XCTAssertEqual(heading.first, "#")
-        XCTAssertEqual(heading.last, "k")
+        XCTAssertEqual(String(heading.span), "# A heading block")
 
-        guard case .list(let list, _) = dom.blocks[3] else {
+        guard case .list(let list) = dom.blocks[3] else {
             XCTFail("Expected list")
             return
         }
-        XCTAssertEqual(list.first, "-")
-        XCTAssertEqual(list.last, "]")
+        XCTAssertEqual(String(list.span), "- A list block [[with a wikilink]]")
 
-        guard case .quote(let quote, _) = dom.blocks[4] else {
+        guard case .quote(let quote) = dom.blocks[4] else {
             XCTFail("Expected quote")
             return
         }
-        XCTAssertEqual(quote.first, ">")
-        XCTAssertEqual(quote.last, "k")
+        XCTAssertEqual(String(quote.span), "> A quote block /with-slashlink")
     }
 
     func testAppend() throws {

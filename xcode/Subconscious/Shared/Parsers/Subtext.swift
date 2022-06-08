@@ -33,22 +33,79 @@ struct Subtext: Hashable, Equatable, CustomStringConvertible {
     /// Empty document
     static let empty = Self.parse(markup: "")
 
+    struct TextBlock: Hashable {
+        var span: Substring
+        var inline: [Inline]
+
+        /// Get the substring for the text portion of the block,
+        /// without sigil.
+        func body() -> Substring {
+            span.trimming(" ")
+        }
+    }
+
+    struct ListBlock: Hashable {
+        var span: Substring
+        var inline: [Inline]
+
+        /// Get the substring for the text portion of the block,
+        /// without sigil.
+        func body() -> Substring {
+            span.dropFirst().trimming(" ")
+        }
+    }
+
+    struct QuoteBlock: Hashable {
+        var span: Substring
+        var inline: [Inline]
+
+        /// Get the substring for the text portion of the block,
+        /// without sigil.
+        func body() -> Substring {
+            span.dropFirst().trimming(" ")
+        }
+    }
+
+    struct HeadingBlock: Hashable {
+        var span: Substring
+
+        /// Get the substring for the text portion of the block,
+        /// without sigil.
+        func body() -> Substring {
+            span.dropFirst().trimming(" ")
+        }
+    }
+
+    struct EmptyBlock: Hashable {
+        var span: Substring
+
+        /// Get the substring for the text portion of the block,
+        /// without sigil.
+        func body() -> Substring {
+            span
+        }
+    }
+
     enum Block: Hashable, Equatable {
-        case text(span: Substring, inline: [Inline])
-        case list(span: Substring, inline: [Inline])
-        case quote(span: Substring, inline: [Inline])
-        case heading(span: Substring)
-        case empty(span: Substring)
+        case text(TextBlock)
+        case list(ListBlock)
+        case quote(QuoteBlock)
+        case heading(HeadingBlock)
+        case empty(EmptyBlock)
 
         /// Returns the body of a block, without the leading sigil
         func body() -> Substring {
             switch self {
-            case .text(let span, _):
-                return span.trimming(" ")
-            case .empty(let span):
-                return span
-            case .quote(let span, _), .list(let span, _), .heading(let span):
-                return span.dropFirst().trimming(" ")
+            case .text(let block):
+                return block.body()
+            case .list(let block):
+                return block.body()
+            case .quote(let block):
+                return block.body()
+            case .heading(let block):
+                return block.body()
+            case .empty(let block):
+                return block.body()
             }
         }
     }
@@ -374,25 +431,25 @@ struct Subtext: Hashable, Equatable, CustomStringConvertible {
 
     private static func parseBlock(_ line: Substring) -> Block {
         if line.hasPrefix("#") {
-            return Block.heading(span: line)
+            return Block.heading(HeadingBlock(span: line))
         } else if line.hasPrefix(">") {
             var tape = Tape(line)
             // Discard prefix
             tape.advance()
             let inline = parseInline(tape: &tape)
-            return Block.quote(span: line, inline: inline)
+            return Block.quote(QuoteBlock(span: line, inline: inline))
         } else if line.hasPrefix("-") {
             var tape = Tape(line)
             // Discard prefix
             tape.advance()
             let inline = parseInline(tape: &tape)
-            return Block.list(span: line, inline: inline)
+            return Block.list(ListBlock(span: line, inline: inline))
         } else if line == "" {
-            return Block.empty(span: line)
+            return Block.empty(EmptyBlock(span: line))
         } else {
             var tape = Tape(line)
             let inline = parseInline(tape: &tape)
-            return Block.text(span: line, inline: inline)
+            return Block.text(TextBlock(span: line, inline: inline))
         }
     }
 
@@ -566,37 +623,37 @@ extension Subtext {
             switch block {
             case .empty:
                 break
-            case let .heading(line):
-                let nsRange = NSRange(line.range, in: dom.base)
+            case let .heading(block):
+                let nsRange = NSRange(block.span.range, in: dom.base)
                 attributedString.addAttribute(
                     .font,
                     value: UIFont.appTextMonoBold,
                     range: nsRange
                 )
-            case .list(_, let inline):
-                for inline in inline {
+            case .list(let block):
+                for inline in block.inline {
                     renderInlineAttributeOf(
                         attributedString,
                         inline: inline,
                         url: url
                     )
                 }
-            case .quote(let line, let inline):
-                let nsRange = NSRange(line.range, in: dom.base)
+            case .quote(let block):
+                let nsRange = NSRange(block.span.range, in: dom.base)
                 attributedString.addAttribute(
                     .font,
                     value: UIFont.appTextMonoItalic,
                     range: nsRange
                 )
-                for inline in inline {
+                for inline in block.inline {
                     renderInlineAttributeOf(
                         attributedString,
                         inline: inline,
                         url: url
                     )
                 }
-            case .text(_, let inline):
-                for inline in inline {
+            case .text(let block):
+                for inline in block.inline {
                     renderInlineAttributeOf(
                         attributedString,
                         inline: inline,
@@ -640,11 +697,25 @@ extension Subtext {
     }
 
     /// Derive an excerpt
+    /// Takes a small number of content blocks, cleans, and concatenates them
+    /// into a short string.
     func excerpt() -> String {
-        for block in blocks {
-            return String(block.body())
-        }
-        return ""
+        blocks.lazy.compactMap({ block in
+            switch block {
+            case .text(let block):
+                return String(block.body())
+            case .list(let block):
+                return String(block.body())
+            case .quote(let block):
+                return String(block.body())
+            case .heading(let block):
+                return String(block.body())
+            default:
+                return nil
+            }
+        })
+        .prefix(3)
+        .joined(separator: " ")
     }
 }
 
@@ -659,11 +730,12 @@ extension Subtext.Block {
     /// Get inline ranges from a block of any type
     var inline: [Subtext.Inline] {
         switch self {
-        case
-            .text(_, let inline),
-            .list(_, let inline),
-            .quote(_, let inline):
-            return inline
+        case .text(let block):
+            return block.inline
+        case .list(let block):
+            return block.inline
+        case .quote(let block):
+            return block.inline
         default:
             return []
         }
