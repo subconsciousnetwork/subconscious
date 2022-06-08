@@ -28,7 +28,7 @@ struct BacklinksView: View {
                             onSelect(
                                 EntryLink(
                                     slug: entry.slug,
-                                    title: entry.title
+                                    title: entry.linkableTitle
                                 )
                             )
                         },

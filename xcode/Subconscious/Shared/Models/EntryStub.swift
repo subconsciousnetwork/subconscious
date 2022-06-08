@@ -20,7 +20,7 @@ struct EntryStub:
     let modified: Date
 
     var slug: Slug { link.slug }
-    var title: String { link.linkableTitle }
+    var linkableTitle: String { link.linkableTitle }
     var id: Slug { slug }
     var debugDescription: String {
         "Subconscious.EntryStub(\(slug))"

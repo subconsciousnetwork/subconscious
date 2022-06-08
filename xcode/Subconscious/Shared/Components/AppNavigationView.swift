@@ -20,7 +20,7 @@ struct AppNavigationView: View {
                         store.send(
                             .requestDetail(
                                 slug: entry.slug,
-                                fallback: entry.title,
+                                fallback: entry.linkableTitle,
                                 autofocus: false
                             )
                         )
