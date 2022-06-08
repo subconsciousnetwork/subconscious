@@ -15,19 +15,9 @@ struct EntryStub:
     Identifiable,
     CustomDebugStringConvertible
 {
-    var link: EntryLink
-    var excerpt: String
-    var modified: Date
-
-    init(
-        link: EntryLink,
-        excerpt: String,
-        modified: Date
-    ) {
-        self.link = link
-        self.excerpt = excerpt
-        self.modified = modified
-    }
+    let link: EntryLink
+    let excerpt: String
+    let modified: Date
 
     var slug: Slug { link.slug }
     var title: String { link.linkableTitle }
