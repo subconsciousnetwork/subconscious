@@ -61,8 +61,7 @@ struct BacklinksView_Previews: PreviewProvider {
             BacklinksView(
                 backlinks: [
                     EntryStub(
-                        slug: Slug("floop")!,
-                        title: "Floop",
+                        link: EntryLink(title: "Floop")!,
                         excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
                         modified: Date.now
                     )
