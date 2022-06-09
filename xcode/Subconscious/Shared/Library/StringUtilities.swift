@@ -99,7 +99,7 @@ extension String {
 extension String {
     /// - Returns string or fallback if string is empty
     func orUntitled(_ fallback: String) -> String {
-        return !self.isEmpty ? self : fallback
+        !self.isEmpty ? self : fallback
     }
 }
 
