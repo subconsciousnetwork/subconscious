@@ -1082,4 +1082,40 @@ class Tests_Subtext: XCTestCase {
             "Append concatenates two subtext instances, joining them with a single newline"
         )
     }
+
+    func testExcerpt() throws {
+        let doc = Subtext.parse(
+            markup: """
+            # Here comes the sun
+
+            Here comes the sun, doo da doo doo
+
+            Here comes the sun, and I say
+            """
+        )
+        let excerpt = doc.excerpt()
+        XCTAssertEqual(
+            excerpt,
+            "Here comes the sun Here comes the sun, doo da doo doo Here comes the sun, and I say",
+            "Excerpt pulls first three blocks by default"
+        )
+    }
+
+    func testExcerptCustomLength() throws {
+        let doc = Subtext.parse(
+            markup: """
+            # Here comes the sun
+
+            Here comes the sun, doo da doo doo
+
+            Here comes the sun, and I say
+            """
+        )
+        let excerpt = doc.excerpt(max: 1)
+        XCTAssertEqual(
+            excerpt,
+            "Here comes the sun",
+            "Excerpt pulls number of blocks requested"
+        )
+    }
 }
