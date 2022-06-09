@@ -88,6 +88,28 @@ extension String {
     }
 }
 
+extension String {
+    /// Get localized version of a string.
+    /// Uses NSLocalizedString under the hood.
+    func localized(withComment comment: String) -> String {
+        NSLocalizedString(self, comment: comment)
+    }
+}
+
+extension String {
+    /// - Returns string or fallback if string is empty
+    func orUntitled(_ fallback: String) -> String {
+        return !self.isEmpty ? self : fallback
+    }
+}
+
+extension Optional where Wrapped == String {
+    /// - Returns string, or fallback if string is nil or empty
+    func orUntitled(_ fallback: String) -> String {
+        self?.orUntitled(fallback) ?? fallback
+    }
+}
+
 extension StringProtocol {
     /// Capitalize first letter in string.
     func capitalizingFirst() -> String {

@@ -72,4 +72,20 @@ class Tests_StringUtilities: XCTestCase {
             "The quick brown fox jumped over the lazy dog"
         )
     }
+
+    func testOrUntitled() {
+        let string = ""
+        XCTAssertEqual(
+            string.orUntitled("Untitled"),
+            "Untitled"
+        )
+    }
+
+    func testOrUntitled2() {
+        let string: String? = nil
+        XCTAssertEqual(
+            string.orUntitled("Untitled"),
+            "Untitled"
+        )
+    }
 }
