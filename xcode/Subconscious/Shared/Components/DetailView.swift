@@ -17,6 +17,7 @@ enum DetailAction {
     case setFocus(AppModel.Focus?)
     case setEditorText(String)
     case setEditorSelection(NSRange)
+    case openEditorURL(URL)
     case selectBacklink(EntryLink)
     case requestRename(EntryLink)
     case requestConfirmDelete(Slug)
@@ -35,12 +36,6 @@ struct DetailView: View {
     var linkSuggestions: [LinkSuggestion]
     @Binding var isLinkSheetPresented: Bool
     @Binding var linkSearchText: String
-    var onEditorLink: (
-        URL,
-        NSAttributedString,
-        NSRange,
-        UITextItemInteraction
-    ) -> Bool
     var keyboardToolbar: DetailKeyboardToolbarView
 
     private var isKeyboardUp: Bool {
@@ -86,7 +81,10 @@ struct DetailView: View {
                                 field: .editor,
                                 frame: geometry.frame(in: .local),
                                 renderAttributesOf: Subtext.renderAttributesOf,
-                                onLink: onEditorLink,
+                                onLink: { url, _, _, _ in
+                                    store.send(.openEditorURL(url))
+                                    return false
+                                },
                                 logger: Logger.editor
                             )
                             .insets(

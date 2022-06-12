@@ -49,7 +49,7 @@ enum AppAction {
 
     //  URL handlers
     case openURL(URL)
-    case openEditorURL(url: URL, range: NSRange)
+    case openEditorURL(URL)
 
     /// Set focus from a particular field
     case setFocus(
@@ -362,8 +362,8 @@ extension AppModel {
         case let .openURL(url):
             UIApplication.shared.open(url)
             return Update(state: state)
-        case let .openEditorURL(url, range):
-            return openEditorURL(state: state, url: url, range: range)
+        case let .openEditorURL(url):
+            return openEditorURL(state: state, url: url)
         case let .setFocus(focus, field):
             return setFocus(
                 state: state,
@@ -1049,8 +1049,7 @@ extension AppModel {
 
     static func openEditorURL(
         state: AppModel,
-        url: URL,
-        range: NSRange
+        url: URL
     ) -> Update<AppModel, AppAction> {
         // Follow ordinary links when not in edit mode
         guard SubURL.isSubEntryURL(url) else {
@@ -2435,6 +2434,8 @@ extension AppAction {
             return .showRenameSheet(link)
         case .requestConfirmDelete(let slug):
             return .confirmDelete(slug)
+        case .openEditorURL(let url):
+            return .openEditorURL(url)
         }
     }
 }

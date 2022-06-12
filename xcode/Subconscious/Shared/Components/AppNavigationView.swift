@@ -67,15 +67,6 @@ struct AppNavigationView: View {
                                 get: \.linkSearchText,
                                 tag: AppAction.setLinkSearch
                             ),
-                            onEditorLink: { url, _, range, _ in
-                                store.send(
-                                    .openEditorURL(
-                                        url: url,
-                                        range: range
-                                    )
-                                )
-                                return false
-                            },
                             keyboardToolbar: DetailKeyboardToolbarView(
                                 isSheetPresented: store.binding(
                                     get: \.isLinkSheetPresented,
