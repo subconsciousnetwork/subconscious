@@ -57,6 +57,10 @@ enum AppAction {
         field: AppModel.Focus
     )
 
+    /// Set focus from editor
+    /// In addition to setting focus, this saves content on blur.
+    case setEditorFocus(AppModel.Focus?)
+
     //  Database
     /// Get database ready for interaction
     case readyDatabase
@@ -370,6 +374,12 @@ extension AppModel {
                 environment: environment,
                 focus: focus,
                 field: field
+            )
+        case let .setEditorFocus(focus):
+            return setEditorFocus(
+                state: state,
+                environment: environment,
+                focus: focus
             )
         case .readyDatabase:
             return readyDatabase(state: state, environment: environment)
@@ -1101,6 +1111,30 @@ extension AppModel {
             )
             return Update(state: state)
         }
+    }
+
+    /// Manage focus while in an editing session.
+    /// Does the same thing as `setFocus`, but also saves when editor
+    /// loses focus.
+    static func setEditorFocus(
+        state: AppModel,
+        environment: AppEnvironment,
+        focus: AppModel.Focus?
+    ) -> Update<AppModel, AppAction> {
+        let update = setFocus(
+            state: state,
+            environment: environment,
+            focus: focus,
+            field: .editor
+        )
+        // If focus is being set to editor, return early.
+        guard focus != .editor else {
+            return update
+        }
+        // If editor is being blurred, save contents.
+        return update.pipe({ state in
+            save(state: state, environment: environment)
+        })
     }
 
     /// Make database ready.
@@ -2420,10 +2454,7 @@ extension AppAction {
         case .setEditorSelection(let selection):
             return .setEditorSelection(selection)
         case .setFocus(let focus):
-            return .setFocus(
-                focus: focus,
-                field: .editor
-            )
+            return .setEditorFocus(focus)
         case .selectBacklink(let link):
             return .requestDetail(
                 slug: link.slug,
