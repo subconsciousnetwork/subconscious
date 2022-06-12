@@ -15,13 +15,14 @@ struct EntryStub:
     Identifiable,
     CustomDebugStringConvertible
 {
+    let link: EntryLink
+    let excerpt: String
+    let modified: Date
+
+    var slug: Slug { link.slug }
+    var linkableTitle: String { link.linkableTitle }
+    var id: Slug { slug }
     var debugDescription: String {
         "Subconscious.EntryStub(\(slug))"
     }
-
-    var slug: Slug
-    var title: String
-    var excerpt: String
-    var modified: Date
-    var id: Slug { slug }
 }

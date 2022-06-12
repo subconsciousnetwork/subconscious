@@ -206,8 +206,7 @@ extension EntryLink {
 
 extension EntryStub {
     init(_ entry: SubtextFile) {
-        self.slug = entry.slug
-        self.title = entry.title()
+        self.link = EntryLink(entry)
         self.excerpt = entry.excerpt()
         self.modified = entry.modified()
     }

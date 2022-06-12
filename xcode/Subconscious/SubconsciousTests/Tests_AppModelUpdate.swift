@@ -111,26 +111,23 @@ class Tests_AppModelUpdate: XCTestCase {
     }
 
     func testDeleteEntry() throws {
-        let slugA = Slug("a")!
-        let slugB = Slug("b")!
-        let slugC = Slug("c")!
+        let a = EntryLink(title: "A")!
+        let b = EntryLink(title: "B")!
+        let c = EntryLink(title: "C")!
         let state = AppModel(
             recent: [
                 EntryStub(
-                    slug: slugA,
-                    title: "A",
+                    link: a,
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
                     modified: Date.now
                 ),
                 EntryStub(
-                    slug: slugB,
-                    title: "b",
+                    link: b,
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
                     modified: Date.now
                 ),
                 EntryStub(
-                    slug: slugC,
-                    title: "C",
+                    link: c,
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
                     modified: Date.now
                 )
@@ -138,7 +135,7 @@ class Tests_AppModelUpdate: XCTestCase {
         )
         let update = AppModel.update(
             state: state,
-            action: .deleteEntry(slugB),
+            action: .deleteEntry(b.slug),
             environment: environment
         )
         XCTAssertEqual(
@@ -148,12 +145,12 @@ class Tests_AppModelUpdate: XCTestCase {
         )
         XCTAssertEqual(
             update.state.recent![0].id,
-            slugA,
+            a.id,
             "Slug A is still first"
         )
         XCTAssertEqual(
             update.state.recent![1].id,
-            slugC,
+            c.id,
             "Slug C moved up because slug B was removed"
         )
     }
