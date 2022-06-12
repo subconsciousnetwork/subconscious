@@ -33,9 +33,6 @@ struct DetailView: View {
     }
 
     var store: ViewStore<DetailModel, DetailAction>
-    var linkSuggestions: [LinkSuggestion]
-    @Binding var isLinkSheetPresented: Bool
-    @Binding var linkSearchText: String
     var keyboardToolbar: DetailKeyboardToolbarView
 
     private var isKeyboardUp: Bool {

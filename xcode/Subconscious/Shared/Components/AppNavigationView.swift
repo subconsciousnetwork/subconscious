@@ -58,15 +58,6 @@ struct AppNavigationView: View {
                                 get: AppModel.getDetail,
                                 tag: AppAction.tagDetail
                             ),
-                            linkSuggestions: store.state.linkSuggestions,
-                            isLinkSheetPresented: store.binding(
-                                get: \.isLinkSheetPresented,
-                                tag: AppAction.setLinkSheetPresented
-                            ),
-                            linkSearchText: store.binding(
-                                get: \.linkSearchText,
-                                tag: AppAction.setLinkSearch
-                            ),
                             keyboardToolbar: DetailKeyboardToolbarView(
                                 isSheetPresented: store.binding(
                                     get: \.isLinkSheetPresented,
