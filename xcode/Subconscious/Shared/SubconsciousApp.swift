@@ -1127,11 +1127,12 @@ extension AppModel {
             focus: focus,
             field: .editor
         )
-        // If focus is being set to editor, return early.
-        guard focus != .editor else {
+        // Check that focus was editor, and is being set to something else.
+        // If not, return early.
+        guard state.focus == .editor && focus != .editor else {
             return update
         }
-        // If editor is being blurred, save contents.
+        // Editor lost focus, save.
         return update.pipe({ state in
             save(state: state, environment: environment)
         })
