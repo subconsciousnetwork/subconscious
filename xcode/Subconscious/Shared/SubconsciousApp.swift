@@ -2399,6 +2399,46 @@ extension AppModel {
     }
 }
 
+//  MARK: Mapping and tagging functions
+
+extension AppModel {
+    static func getDetail(_ model: AppModel) -> DetailModel {
+        DetailModel(
+            focus: model.focus,
+            editor: model.editor
+        )
+    }
+}
+
+extension AppAction {
+    static func tagDetail(_ action: DetailAction) -> Self {
+        switch action {
+        case .setEditorText(let text):
+            return .setEditor(
+                text: text,
+                saveState: .modified
+            )
+        case .setEditorSelection(let selection):
+            return .setEditorSelection(selection)
+        case .setFocus(let focus):
+            return .setFocus(
+                focus: focus,
+                field: .editor
+            )
+        case .selectBacklink(let link):
+            return .requestDetail(
+                slug: link.slug,
+                fallback: link.linkableTitle,
+                autofocus: false
+            )
+        case .requestRename(let link):
+            return .showRenameSheet(link)
+        case .requestConfirmDelete(let slug):
+            return .confirmDelete(slug)
+        }
+    }
+}
+
 //  MARK: Environment
 /// A place for constants and services
 struct AppEnvironment {

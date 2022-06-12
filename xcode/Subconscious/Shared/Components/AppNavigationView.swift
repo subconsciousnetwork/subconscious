@@ -55,38 +55,8 @@ struct AppNavigationView: View {
                     destination: {
                         DetailView(
                             store: store.viewStore(
-                                get: { model in
-                                    DetailModel(
-                                        focus: model.focus,
-                                        editor: model.editor
-                                    )
-                                },
-                                tag: { action in
-                                    switch action {
-                                    case .setEditorText(let text):
-                                        return .setEditor(
-                                            text: text,
-                                            saveState: .modified
-                                        )
-                                    case .setEditorSelection(let selection):
-                                        return .setEditorSelection(selection)
-                                    case .setFocus(let focus):
-                                        return .setFocus(
-                                            focus: focus,
-                                            field: .editor
-                                        )
-                                    case .selectBacklink(let link):
-                                        return .requestDetail(
-                                            slug: link.slug,
-                                            fallback: link.linkableTitle,
-                                            autofocus: false
-                                        )
-                                    case .requestRename(let link):
-                                        return .showRenameSheet(link)
-                                    case .requestConfirmDelete(let slug):
-                                        return .confirmDelete(slug)
-                                    }
-                                }
+                                get: AppModel.getDetail,
+                                tag: AppAction.tagDetail
                             ),
                             linkSuggestions: store.state.linkSuggestions,
                             isLinkSheetPresented: store.binding(
