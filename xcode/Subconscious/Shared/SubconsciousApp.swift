@@ -49,13 +49,17 @@ enum AppAction {
 
     //  URL handlers
     case openURL(URL)
-    case openEditorURL(url: URL, range: NSRange)
+    case openEditorURL(URL)
 
     /// Set focus from a particular field
     case setFocus(
         focus: AppModel.Focus?,
         field: AppModel.Focus
     )
+
+    /// Set focus from editor
+    /// In addition to setting focus, this saves content on blur.
+    case setEditorFocus(AppModel.Focus?)
 
     //  Database
     /// Get database ready for interaction
@@ -362,14 +366,20 @@ extension AppModel {
         case let .openURL(url):
             UIApplication.shared.open(url)
             return Update(state: state)
-        case let .openEditorURL(url, range):
-            return openEditorURL(state: state, url: url, range: range)
+        case let .openEditorURL(url):
+            return openEditorURL(state: state, url: url)
         case let .setFocus(focus, field):
             return setFocus(
                 state: state,
                 environment: environment,
                 focus: focus,
                 field: field
+            )
+        case let .setEditorFocus(focus):
+            return setEditorFocus(
+                state: state,
+                environment: environment,
+                focus: focus
             )
         case .readyDatabase:
             return readyDatabase(state: state, environment: environment)
@@ -1049,8 +1059,7 @@ extension AppModel {
 
     static func openEditorURL(
         state: AppModel,
-        url: URL,
-        range: NSRange
+        url: URL
     ) -> Update<AppModel, AppAction> {
         // Follow ordinary links when not in edit mode
         guard SubURL.isSubEntryURL(url) else {
@@ -1102,6 +1111,31 @@ extension AppModel {
             )
             return Update(state: state)
         }
+    }
+
+    /// Manage focus while in an editing session.
+    /// Does the same thing as `setFocus`, but also saves when editor
+    /// loses focus.
+    static func setEditorFocus(
+        state: AppModel,
+        environment: AppEnvironment,
+        focus: AppModel.Focus?
+    ) -> Update<AppModel, AppAction> {
+        let update = setFocus(
+            state: state,
+            environment: environment,
+            focus: focus,
+            field: .editor
+        )
+        // Check that focus was editor, and is being set to something else.
+        // If not, return early.
+        guard state.focus == .editor && focus != .editor else {
+            return update
+        }
+        // Editor lost focus, save.
+        return update.pipe({ state in
+            save(state: state, environment: environment)
+        })
     }
 
     /// Make database ready.
@@ -2396,6 +2430,45 @@ extension AppModel {
         var model = state
         model.editor.saveState = .modified
         return Update(state: model)
+    }
+}
+
+//  MARK: Mapping and tagging functions
+
+extension AppModel {
+    static func getDetail(_ model: AppModel) -> DetailModel {
+        DetailModel(
+            focus: model.focus,
+            editor: model.editor
+        )
+    }
+}
+
+extension AppAction {
+    static func tagDetail(_ action: DetailAction) -> Self {
+        switch action {
+        case .setEditorText(let text):
+            return .setEditor(
+                text: text,
+                saveState: .modified
+            )
+        case .setEditorSelection(let selection):
+            return .setEditorSelection(selection)
+        case .setFocus(let focus):
+            return .setEditorFocus(focus)
+        case .selectBacklink(let link):
+            return .requestDetail(
+                slug: link.slug,
+                fallback: link.linkableTitle,
+                autofocus: false
+            )
+        case .requestRename(let link):
+            return .showRenameSheet(link)
+        case .requestConfirmDelete(let slug):
+            return .confirmDelete(slug)
+        case .openEditorURL(let url):
+            return .openEditorURL(url)
+        }
     }
 }
 

@@ -54,78 +54,37 @@ struct AppNavigationView: View {
                     ),
                     destination: {
                         DetailView(
-                            entryInfo: store.state.editor.entryInfo,
-                            isLoading: store.state.editor.isLoading,
-                            linkSuggestions: store.state.linkSuggestions,
-                            selectedEntryLinkMarkup:
-                                store.state.editor.selectedEntryLinkMarkup,
-                            focus: store.binding(
-                                get: \.focus,
-                                tag: { focus in
-                                    AppAction.setFocus(
-                                        focus: focus,
-                                        field: .editor
-                                    )
+                            store: store.viewStore(
+                                get: AppModel.getDetail,
+                                tag: AppAction.tagDetail
+                            ),
+                            keyboardToolbar: DetailKeyboardToolbarView(
+                                isSheetPresented: store.binding(
+                                    get: \.isLinkSheetPresented,
+                                    tag: AppAction.setLinkSheetPresented
+                                ),
+                                selectedEntryLinkMarkup:
+                                    store.state.editor.selectedEntryLinkMarkup,
+                                suggestions: store.state.linkSuggestions,
+                                onSelectLinkCompletion: { link in
+                                    store.send(.selectLinkCompletion(link))
+                                },
+                                onInsertWikilink: {
+                                    store.send(.insertEditorWikilinkAtSelection)
+                                },
+                                onInsertBold: {
+                                    store.send(.insertEditorBoldAtSelection)
+                                },
+                                onInsertItalic: {
+                                    store.send(.insertEditorItalicAtSelection)
+                                },
+                                onInsertCode: {
+                                    store.send(.insertEditorCodeAtSelection)
+                                },
+                                onDoneEditing: {
+                                    store.send(.selectDoneEditing)
                                 }
-                            ),
-                            editorText: store.binding(
-                                get: \.editor.text,
-                                tag: AppAction.modifyEditor
-                            ),
-                            editorSelection: store.binding(
-                                get: \.editor.selection,
-                                tag: AppAction.setEditorSelection
-                            ),
-                            isLinkSheetPresented: store.binding(
-                                get: \.isLinkSheetPresented,
-                                tag: AppAction.setLinkSheetPresented
-                            ),
-                            linkSearchText: store.binding(
-                                get: \.linkSearchText,
-                                tag: AppAction.setLinkSearch
-                            ),
-                            onDone: {
-                                store.send(.selectDoneEditing)
-                            },
-                            onEditorLink: { url, _, range, _ in
-                                store.send(
-                                    .openEditorURL(
-                                        url: url,
-                                        range: range
-                                    )
-                                )
-                                return false
-                            },
-                            onSelectBacklink: { entryLink in
-                                store.send(
-                                    .requestDetail(
-                                        slug: entryLink.slug,
-                                        fallback: entryLink.title,
-                                        autofocus: false
-                                    )
-                                )
-                            },
-                            onSelectLinkCompletion: { link in
-                                store.send(.selectLinkCompletion(link))
-                            },
-                            onInsertWikilink: {
-                                store.send(.insertEditorWikilinkAtSelection)
-                            },
-                            onInsertBold: {
-                                store.send(.insertEditorBoldAtSelection)
-                            },
-                            onInsertItalic: {
-                                store.send(.insertEditorItalicAtSelection)
-                            },
-                            onInsertCode: {
-                                store.send(.insertEditorCodeAtSelection)
-                            },
-                            onRename: { slug in
-                                store.send(.showRenameSheet(slug))
-                            },
-                            onDelete: { slug in
-                                store.send(.confirmDelete(slug))
-                            }
+                            )
                         )
                     },
                     label: {

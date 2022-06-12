@@ -96,6 +96,35 @@ class Tests_AppModelUpdate: XCTestCase {
         )
     }
 
+    func testSetEditorFocus() throws {
+        let state = AppModel(
+            focus: .editor,
+            editor: Editor(
+                entryInfo: EditorEntryInfo(
+                    slug: Slug("great-expectations")!
+                ),
+                saveState: .modified,
+                isLoading: false,
+                text: "Mr. Pumblechook’s premises in the High Street of the market town, were of a peppercorny and farinaceous character."
+            )
+        )
+        let update = AppModel.update(
+            state: state,
+            action: .setEditorFocus(nil),
+            environment: environment
+        )
+        XCTAssertEqual(
+            update.state.focus,
+            nil,
+            "Focus was set"
+        )
+        XCTAssertEqual(
+            update.state.editor.saveState,
+            .saving,
+            "Editor was marked saving"
+        )
+    }
+
     func testEntryCount() throws {
         let state = AppModel()
         let update = AppModel.update(

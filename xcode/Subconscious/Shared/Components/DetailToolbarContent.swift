@@ -14,8 +14,8 @@ struct DetailToolbarContent: ToolbarContent {
     /// That means we have to deal with non-existence within this
     /// toolbar content view, instead of within the toolbar decorator.
     var link: EntryLink?
-    var onRename: (EntryLink) -> Void
-    var onDelete: (Slug) -> Void
+    var onRename: () -> Void
+    var onDelete: () -> Void
 
     //  The Toolbar `.principal` position does not limit its own width.
     //  This results in titles that can overflow and cover up the back button.
@@ -30,11 +30,7 @@ struct DetailToolbarContent: ToolbarContent {
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
             Button(
-                action: {
-                    if let link = link {
-                        onRename(link)
-                    }
-                }
+                action: onRename
             ) {
                 if let link = link {
                     ToolbarTitleGroupView(
@@ -56,22 +52,14 @@ struct DetailToolbarContent: ToolbarContent {
                 content: {
                     Section {
                         Button(
-                            action: {
-                                if let link = link {
-                                    onRename(link)
-                                }
-                            }
+                            action: onRename
                         ) {
                             Label("Rename", systemImage: "pencil")
                         }
                     }
                     Section {
                         Button(
-                            action: {
-                                if let link = link {
-                                    onDelete(link.slug)
-                                }
-                            }
+                            action: onDelete
                         ) {
                             Label("Delete", systemImage: "trash")
                         }

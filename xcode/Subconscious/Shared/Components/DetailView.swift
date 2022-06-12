@@ -8,6 +8,21 @@
 import SwiftUI
 import os
 
+struct DetailModel: Equatable {
+    var focus: AppModel.Focus?
+    var editor: Editor
+}
+
+enum DetailAction {
+    case setFocus(AppModel.Focus?)
+    case setEditorText(String)
+    case setEditorSelection(NSRange)
+    case openEditorURL(URL)
+    case selectBacklink(EntryLink)
+    case requestRename(EntryLink)
+    case requestConfirmDelete(Slug)
+}
+
 struct DetailView: View {
     private static func calcTextFieldHeight(
         containerHeight: CGFloat,
@@ -17,39 +32,20 @@ struct DetailView: View {
         UIFont.appTextMono.lineHeight * 8
     }
 
-    /// If we have a Slug, we're ready to edit.
-    /// If we don't, we have nothing to edit.
-    var entryInfo: EditorEntryInfo?
-    var isLoading: Bool
-    var linkSuggestions: [LinkSuggestion]
-    var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
-    @Binding var focus: AppModel.Focus?
-    @Binding var editorText: String
-    @Binding var editorSelection: NSRange
-    @Binding var isLinkSheetPresented: Bool
-    @Binding var linkSearchText: String
-    var onDone: () -> Void
-    var onEditorLink: (
-        URL,
-        NSAttributedString,
-        NSRange,
-        UITextItemInteraction
-    ) -> Bool
-    var onSelectBacklink: (EntryLink) -> Void
-    var onSelectLinkCompletion: (EntryLink) -> Void
-    var onInsertWikilink: () -> Void
-    var onInsertBold: () -> Void
-    var onInsertItalic: () -> Void
-    var onInsertCode: () -> Void
-    var onRename: (EntryLink) -> Void
-    var onDelete: (Slug) -> Void
+    var store: ViewStore<DetailModel, DetailAction>
+    var keyboardToolbar: DetailKeyboardToolbarView
 
     private var isKeyboardUp: Bool {
-        focus == .editor
+        store.state.focus == .editor
+    }
+
+    var isReady: Bool {
+        let state = store.state
+        return !state.editor.isLoading && state.editor.entryInfo?.slug != nil
     }
 
     private var backlinks: [EntryStub] {
-        guard let backlinks = entryInfo?.backlinks else {
+        guard let backlinks = store.state.editor.entryInfo?.backlinks else {
             return []
         }
         return backlinks
@@ -63,13 +59,29 @@ struct DetailView: View {
                     ScrollView(.vertical) {
                         VStack(spacing: 0) {
                             MarkupTextViewRepresentable(
-                                text: $editorText,
-                                selection: $editorSelection,
-                                focus: $focus,
+                                text: store.binding(
+                                    get: \.editor.text,
+                                    tag: { text in
+                                        .setEditorText(text)
+                                    }
+                                ),
+                                selection: store.binding(
+                                    get: { model in model.editor.selection },
+                                    tag: { selection in
+                                        .setEditorSelection(selection)
+                                    }
+                                ),
+                                focus: store.binding(
+                                    get: { model in model.focus },
+                                    tag: { focus in .setFocus(focus) }
+                                ),
                                 field: .editor,
                                 frame: geometry.frame(in: .local),
                                 renderAttributesOf: Subtext.renderAttributesOf,
-                                onLink: onEditorLink,
+                                onLink: { url, _, _, _ in
+                                    store.send(.openEditorURL(url))
+                                    return false
+                                },
                                 logger: Logger.editor
                             )
                             .insets(
@@ -91,24 +103,15 @@ struct DetailView: View {
                                 .padding(.bottom, AppTheme.unit4)
                             BacklinksView(
                                 backlinks: backlinks,
-                                onSelect: onSelectBacklink
+                                onSelect: { link in
+                                    store.send(.selectBacklink(link))
+                                }
                             )
                         }
                     }
                 }
                 if isKeyboardUp {
-                    DetailKeyboardToolbarView(
-                        isSheetPresented: $isLinkSheetPresented,
-                        selectedEntryLinkMarkup: selectedEntryLinkMarkup,
-                        suggestions: linkSuggestions,
-                        onSelectLinkCompletion: onSelectLinkCompletion,
-                        onInsertWikilink: onInsertWikilink,
-                        onInsertBold: onInsertBold,
-                        onInsertItalic: onInsertItalic,
-                        onInsertCode: onInsertCode,
-                        onDoneEditing: onDone
-                    )
-                    .transition(
+                    keyboardToolbar.transition(
                         .asymmetric(
                             insertion: .opacity.animation(
                                 .easeOutCubic(duration: Duration.normal)
@@ -122,7 +125,7 @@ struct DetailView: View {
                 }
             }
             .zIndex(1)
-            if isLoading || entryInfo?.slug == nil {
+            if !isReady {
                 Color.background
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .transition(
@@ -138,9 +141,19 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             DetailToolbarContent(
-                link: entryInfo.map({ info in EntryLink(info) }),
-                onRename: onRename,
-                onDelete: onDelete
+                link: store.state.editor.entryInfo.map({ info in
+                    EntryLink(info)
+                }),
+                onRename: {
+                    if let info = store.state.editor.entryInfo {
+                        store.send(.requestRename(EntryLink(info)))
+                    }
+                },
+                onDelete: {
+                    if let slug = store.state.editor.entryInfo?.slug {
+                        store.send(.requestConfirmDelete(slug))
+                    }
+                }
             )
         }
     }
