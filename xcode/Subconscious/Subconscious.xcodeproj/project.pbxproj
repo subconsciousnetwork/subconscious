@@ -61,6 +61,10 @@
 		B839A78E282090A0007143E4 /* Tests_AppModelUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B839A78D282090A0007143E4 /* Tests_AppModelUpdate.swift */; };
 		B83E91D727692EC600045C6A /* FABButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E91D627692EC600045C6A /* FABButtonStyle.swift */; };
 		B83E91D827692EC600045C6A /* FABButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83E91D627692EC600045C6A /* FABButtonStyle.swift */; };
+		B840EFED285650C800238811 /* ResultRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B840EFEC285650C800238811 /* ResultRowView.swift */; };
+		B840EFEE285650C800238811 /* ResultRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B840EFEC285650C800238811 /* ResultRowView.swift */; };
+		B840EFF02856557800238811 /* ResultCompactRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B840EFEF2856557800238811 /* ResultCompactRowView.swift */; };
+		B840EFF12856557800238811 /* ResultCompactRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B840EFEF2856557800238811 /* ResultCompactRowView.swift */; };
 		B84AD8DF280F3659006B3153 /* Tests_EntryLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8DE280F3659006B3153 /* Tests_EntryLink.swift */; };
 		B84AD8E1280F7A19006B3153 /* Tests_StringUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E0280F7A19006B3153 /* Tests_StringUtilities.swift */; };
 		B84AD8E3281073CE006B3153 /* InlineFormattingBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E2281073CE006B3153 /* InlineFormattingBarView.swift */; };
@@ -264,6 +268,8 @@
 		B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Header.swift; sourceTree = "<group>"; };
 		B839A78D282090A0007143E4 /* Tests_AppModelUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_AppModelUpdate.swift; sourceTree = "<group>"; };
 		B83E91D627692EC600045C6A /* FABButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FABButtonStyle.swift; sourceTree = "<group>"; };
+		B840EFEC285650C800238811 /* ResultRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultRowView.swift; sourceTree = "<group>"; };
+		B840EFEF2856557800238811 /* ResultCompactRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultCompactRowView.swift; sourceTree = "<group>"; };
 		B84AD8DE280F3659006B3153 /* Tests_EntryLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_EntryLink.swift; sourceTree = "<group>"; };
 		B84AD8E0280F7A19006B3153 /* Tests_StringUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_StringUtilities.swift; sourceTree = "<group>"; };
 		B84AD8E2281073CE006B3153 /* InlineFormattingBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineFormattingBarView.swift; sourceTree = "<group>"; };
@@ -627,12 +633,15 @@
 				B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */,
 				B8AC648B278F757B0099E96B /* ProgressScrimView.swift */,
 				B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */,
+				B840EFEF2856557800238811 /* ResultCompactRowView.swift */,
+				B840EFEC285650C800238811 /* ResultRowView.swift */,
 				B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */,
 				B8AE34BE276BD61400777FF0 /* RowButtonStyle.swift */,
 				B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */,
 				B8CC433C27A07CE10079D2F9 /* ScrimView.swift */,
 				B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */,
 				B8AE34C7276BF77000777FF0 /* SearchTextField.swift */,
+				B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */,
 				B8AE34C1276BD77C00777FF0 /* SuggestionLabelStyle.swift */,
 				B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */,
 				B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */,
@@ -641,7 +650,6 @@
 				B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */,
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
-				B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -963,6 +971,7 @@
 				B8DEBF222798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
 				B8DEBF1F2798EC23007CB528 /* TitleGroupView.swift in Sources */,
 				B8AE34BF276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
+				B840EFF02856557800238811 /* ResultCompactRowView.swift in Sources */,
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
 				B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
@@ -975,6 +984,7 @@
 				B83E91D727692EC600045C6A /* FABButtonStyle.swift in Sources */,
 				B8EC568C26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
 				B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
+				B840EFED285650C800238811 /* ResultRowView.swift in Sources */,
 				B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 				B8AF47252841656B001973FB /* Editor.swift in Sources */,
 			);
@@ -1000,6 +1010,7 @@
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8AE34A8276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
 				B85BF47927BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
+				B840EFF12856557800238811 /* ResultCompactRowView.swift in Sources */,
 				B866868E27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift in Sources */,
 				B81EACD927B724A000B3B8DC /* ThickDividerView.swift in Sources */,
 				B82FD4572730A62C002CB641 /* EntryRow.swift in Sources */,
@@ -1049,6 +1060,7 @@
 				B877A6E627A1C2BC00F11A90 /* KeyboardService.swift in Sources */,
 				B8EB2A2426F27797006E97C3 /* AppView.swift in Sources */,
 				B82C3A6026F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
+				B840EFEE285650C800238811 /* ResultRowView.swift in Sources */,
 				B8EC568D26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
 				B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 			);

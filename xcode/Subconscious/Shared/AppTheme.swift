@@ -20,6 +20,8 @@ extension AppTheme {
     static let icon: CGFloat = unit * 6
     static let textSize: CGFloat = 16
     static let captionSize: CGFloat = 12
+    /// Minimum iOS hit target (44pt)
+    static let minHitTarget: CGFloat = unit * 11
     // Unlike in CSS, line-spacing is not described as the total height of a
     // line. Instead, it is is measured as leading,
     // from bottom of one line to top of the next.
