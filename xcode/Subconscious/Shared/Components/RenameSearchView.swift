@@ -51,7 +51,6 @@ struct RenameSearchView: View {
                     },
                     label: {
                         RenameSuggestionLabelView(suggestion: suggestion)
-                            .equatable()
                     }
                 )
                 .modifier(SuggestionViewModifier())
