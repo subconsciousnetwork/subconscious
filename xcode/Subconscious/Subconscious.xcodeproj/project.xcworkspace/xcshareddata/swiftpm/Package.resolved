@@ -26,6 +26,15 @@
         "branch" : "main",
         "revision" : "ee189b02b3a00515c3dacd9354c0f6c277415cc8"
       }
+    },
+    {
+      "identity" : "tracery",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/BenziAhamed/Tracery",
+      "state" : {
+        "revision" : "2714eabbbd287fe7969314d5a915c61c2d549ef9",
+        "version" : "0.0.2"
+      }
     }
   ],
   "version" : 2

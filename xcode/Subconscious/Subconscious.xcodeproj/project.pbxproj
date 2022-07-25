@@ -174,6 +174,7 @@
 		B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */; };
 		B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7E8BD2809F19500E439DC /* Markup.swift */; };
 		B8C7E8C0280A2B7700E439DC /* Test_Markup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */; };
+		B8CA8F1A288F038C005F8802 /* Tracery in Frameworks */ = {isa = PBXBuildFile; productRef = B8CA8F19288F038C005F8802 /* Tracery */; };
 		B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433C27A07CE10079D2F9 /* ScrimView.swift */; };
 		B8CC433E27A07CE10079D2F9 /* ScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433C27A07CE10079D2F9 /* ScrimView.swift */; };
 		B8CC434027A07DF10079D2F9 /* DialogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433F27A07DF10079D2F9 /* DialogView.swift */; };
@@ -381,6 +382,7 @@
 				B822F18B27C9615600943C6B /* ObservableStore in Frameworks */,
 				B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */,
 				B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */,
+				B8CA8F1A288F038C005F8802 /* Tracery in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -695,6 +697,7 @@
 				B82C3A7026F6B1C000833CC8 /* OrderedCollections */,
 				B8579B6427C561E900D8B4BC /* SwiftSubsurface */,
 				B822F18A27C9615600943C6B /* ObservableStore */,
+				B8CA8F19288F038C005F8802 /* Tracery */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B8EB29FB26F27797006E97C3 /* Subconscious.app */;
@@ -796,6 +799,7 @@
 				B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				B8579B6327C561E900D8B4BC /* XCRemoteSwiftPackageReference "SwiftSubsurface" */,
 				B822F18927C9615600943C6B /* XCRemoteSwiftPackageReference "ObservableStore" */,
+				B8CA8F18288F038C005F8802 /* XCRemoteSwiftPackageReference "Tracery" */,
 			);
 			productRefGroup = B8EB29FC26F27797006E97C3 /* Products */;
 			projectDirPath = "";
@@ -1587,6 +1591,14 @@
 				kind = branch;
 			};
 		};
+		B8CA8F18288F038C005F8802 /* XCRemoteSwiftPackageReference "Tracery" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/BenziAhamed/Tracery";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.2;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1624,6 +1636,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B8579B6327C561E900D8B4BC /* XCRemoteSwiftPackageReference "SwiftSubsurface" */;
 			productName = SwiftSubsurface;
+		};
+		B8CA8F19288F038C005F8802 /* Tracery */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B8CA8F18288F038C005F8802 /* XCRemoteSwiftPackageReference "Tracery" */;
+			productName = Tracery;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

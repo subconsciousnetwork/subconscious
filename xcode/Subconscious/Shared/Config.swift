@@ -44,4 +44,7 @@ struct Config: Equatable {
         Slug("decision")!,
         Slug("person")!
     ]
+
+    /// Toggle on/off simple Tracery-based Geists
+    var traceryGeistsEnabled = false
 }
