@@ -46,8 +46,8 @@ struct Config: Equatable {
     ]
 
     /// Toggle on/off simple Tracery-based Geists
-    var traceryGeistsEnabled = false
-    var traceryZettelkasten = "Data/Geists/zettelkasten"
+    var traceryGeistsEnabled = true
+    var traceryZettelkasten = "zettelkasten"
 }
 
 extension Config {

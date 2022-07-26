@@ -2514,10 +2514,12 @@ struct AppEnvironment {
         self.keyboard = KeyboardService()
 
         self.zettelkasten = try! TraceryGeistService(
-            resource: "zettelkasten"
+            resource: Config.default.traceryZettelkasten
         )
-
-        print("!!!", zettelkasten.expand())
+        let story = zettelkasten.expand()
+        self.logger.info(
+            "Zettelkasten: \(story)"
+        )
     }
 }
 

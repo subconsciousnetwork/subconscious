@@ -178,6 +178,7 @@
 		B8CA8F1E288F07F9005F8802 /* zettelkasten.json in Resources */ = {isa = PBXBuildFile; fileRef = B8CA8F1D288F07F9005F8802 /* zettelkasten.json */; };
 		B8CA8F20288F1875005F8802 /* TraceryGeistService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA8F1F288F1875005F8802 /* TraceryGeistService.swift */; };
 		B8CA8F2428908D65005F8802 /* BundleUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA8F2328908D65005F8802 /* BundleUtilities.swift */; };
+		B8CA8F2628909E66005F8802 /* FeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CA8F2528909E66005F8802 /* FeedView.swift */; };
 		B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433C27A07CE10079D2F9 /* ScrimView.swift */; };
 		B8CC433E27A07CE10079D2F9 /* ScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433C27A07CE10079D2F9 /* ScrimView.swift */; };
 		B8CC434027A07DF10079D2F9 /* DialogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433F27A07DF10079D2F9 /* DialogView.swift */; };
@@ -343,6 +344,7 @@
 		B8CA8F1D288F07F9005F8802 /* zettelkasten.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = zettelkasten.json; sourceTree = "<group>"; };
 		B8CA8F1F288F1875005F8802 /* TraceryGeistService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TraceryGeistService.swift; sourceTree = "<group>"; };
 		B8CA8F2328908D65005F8802 /* BundleUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleUtilities.swift; sourceTree = "<group>"; };
+		B8CA8F2528909E66005F8802 /* FeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedView.swift; sourceTree = "<group>"; };
 		B8CC433C27A07CE10079D2F9 /* ScrimView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrimView.swift; sourceTree = "<group>"; };
 		B8CC433F27A07DF10079D2F9 /* DialogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogView.swift; sourceTree = "<group>"; };
 		B8CC434227A0815E0079D2F9 /* ModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalView.swift; sourceTree = "<group>"; };
@@ -606,6 +608,7 @@
 				B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */,
 				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 				B8AE34BB276AB3D400777FF0 /* SearchView.swift */,
+				B8CA8F2528909E66005F8802 /* FeedView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1003,6 +1006,7 @@
 				B8DEBF222798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
 				B8DEBF1F2798EC23007CB528 /* TitleGroupView.swift in Sources */,
 				B8AE34BF276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
+				B8CA8F2628909E66005F8802 /* FeedView.swift in Sources */,
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
 				B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,

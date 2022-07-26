@@ -29,8 +29,13 @@ struct AppView: View {
                 Color.background
                     .edgesIgnoringSafeArea(.all)
                     .zIndex(0)
-                AppNavigationView(store: store)
-                    .zIndex(1)
+
+                if Config.default.traceryGeistsEnabled {
+                    FeedView(store: store)
+                } else {
+                    AppNavigationView(store: store)
+                        .zIndex(1)
+                }
                 PinTrailingBottom(
                     content: Button(
                         action: {
