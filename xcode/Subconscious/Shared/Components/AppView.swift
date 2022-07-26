@@ -43,8 +43,7 @@ struct AppView: View {
                     )
                     .buttonStyle(
                         FABButtonStyle(
-                            orbShaderEnabled:
-                                store.state.config.orbShaderEnabled
+                            orbShaderEnabled: Config.default.orbShaderEnabled
                         )
                     )
                     .padding()

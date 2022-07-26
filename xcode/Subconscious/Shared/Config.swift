@@ -9,8 +9,8 @@ import Foundation
 
 /// Feature flags and settings
 struct Config: Equatable {
-    static let rdns = "com.subconscious.Subconscious"
-    let debug = false
+    let rdns = "com.subconscious.Subconscious"
+    var debug = false
 
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
@@ -47,5 +47,9 @@ struct Config: Equatable {
 
     /// Toggle on/off simple Tracery-based Geists
     var traceryGeistsEnabled = false
-    static let traceryZettelkasten = "Data/Geists/zettelkasten"
+    var traceryZettelkasten = "Data/Geists/zettelkasten"
+}
+
+extension Config {
+    static let `default` = Config()
 }

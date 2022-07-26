@@ -239,9 +239,6 @@ struct AppModel: Equatable {
         case ready
     }
 
-    /// Feature flags
-    var config = Config()
-
     /// Current state of keyboard
     var keyboardWillShow = false
     var keyboardEventualHeight: CGFloat = 0
@@ -331,7 +328,7 @@ extension AppModel {
             action: action,
             environment: environment
         )
-        if state.config.debug {
+        if Config.default.debug {
             Logger.state.debug("\(String(describing: next.state))")
         }
         return next
@@ -1035,7 +1032,7 @@ extension AppModel {
             .eraseToAnyPublisher()
 
         let pollFx: Fx<AppAction> = AppEnvironment.poll(
-            every: state.config.pollingInterval
+            every: Config.default.pollingInterval
         )
         .map({ date in
             AppAction.poll(date)
@@ -1846,11 +1843,11 @@ extension AppModel {
             .searchSuggestions(
                 query: text,
                 isJournalSuggestionEnabled:
-                    state.config.journalSuggestionEnabled,
+                    Config.default.journalSuggestionEnabled,
                 isScratchSuggestionEnabled:
-                    state.config.scratchSuggestionEnabled,
+                    Config.default.scratchSuggestionEnabled,
                 isRandomSuggestionEnabled:
-                    state.config.randomSuggestionEnabled
+                    Config.default.randomSuggestionEnabled
             )
             .map({ suggestions in
                 AppAction.setSuggestions(suggestions)
@@ -1969,7 +1966,7 @@ extension AppModel {
             let fx: Fx<AppAction> = Just(
                 AppAction.requestTemplateDetail(
                     slug: entryLink.slug,
-                    template: state.config.journalTemplate,
+                    template: Config.default.journalTemplate,
                     // Autofocus note because we're creating it from scratch
                     autofocus: true
                 )
@@ -2241,9 +2238,7 @@ extension AppModel {
         )
 
         // Get fallback link suggestions
-        let fallback = environment.database.readDefaultLinkSuggestions(
-            config: model.config
-        )
+        let fallback = environment.database.readDefaultLinkSuggestions()
 
         // Search link suggestions
         let fx: Fx<AppAction> = environment.database
