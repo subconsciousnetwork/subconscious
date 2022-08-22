@@ -13,9 +13,9 @@ struct StoryView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
+            HStack(spacing: AppTheme.unit) {
                 Text("@cdata")
-                Text("posted at")
+                Text("at")
                     .foregroundColor(Color.secondary)
                 Text(entry.modified().formatted())
                     .foregroundColor(Color.secondary)
