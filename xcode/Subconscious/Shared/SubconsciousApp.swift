@@ -2514,11 +2514,12 @@ struct AppEnvironment {
         self.keyboard = KeyboardService()
 
         self.zettelkasten = try! RandomPromptGeist(
+            database: database,
             resource: Config.default.traceryZettelkasten
         )
         let story = zettelkasten.expand()
         self.logger.info(
-            "Zettelkasten: \(story)"
+            "Zettelkasten: \(String(describing: story))"
         )
     }
 }

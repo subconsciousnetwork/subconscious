@@ -11,23 +11,6 @@ import Tracery
 typealias TraceryRules = [String]
 typealias TraceryGrammar = [String: TraceryRules]
 
-struct StoryPrompt: Hashable, Identifiable, CustomStringConvertible {
-    var entry: EntryStub
-    var prompt: String
-
-    var description: String {
-        """
-        \(prompt)
-        
-        \(String(describing: entry))
-        """
-    }
-
-    var id: String {
-        "/story/prompt/\(entry.slug)"
-    }
-}
-
 struct RandomPromptGeist {
     private let database: DatabaseService
     private let tracery: Tracery
