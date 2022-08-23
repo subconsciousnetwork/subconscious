@@ -28,6 +28,7 @@ struct StoryPrompt: Hashable, Identifiable, CustomStringConvertible {
 /// A story is a single update within the FeedView
 struct StoryPromptView: View {
     var story: StoryPrompt
+    var onOpen: (EntryLink) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -44,14 +45,24 @@ struct StoryPromptView: View {
             .frame(height: AppTheme.unit * 11)
             Divider()
             VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                Text(story.prompt)
-                TranscludeView(entry: story.entry)
+                Text(story.prompt).font(Font.title3)
+                Button(
+                    action: {
+                        onOpen(story.entry.link)
+                    },
+                    label: {
+                        TranscludeView(entry: story.entry)
+                    }
+                )
+                .buttonStyle(.plain)
             }
             .padding()
             Divider()
             HStack {
                 Button(
-                    action: {},
+                    action: {
+                        onOpen(story.entry.link)
+                    },
                     label: {
                         Text("Open")
                     }
@@ -83,7 +94,8 @@ struct StoryView_Previews: PreviewProvider {
                     )
                 ),
                 prompt: "Can I invert this?"
-            )
+            ),
+            onOpen: { entry in }
         )
     }
 }
