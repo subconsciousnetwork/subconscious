@@ -43,8 +43,9 @@ struct StoryPromptView: View {
             .padding()
             .frame(height: AppTheme.unit * 11)
             Divider()
-            VStack {
-                Text("Hello World")
+            VStack(alignment: .leading, spacing: AppTheme.unit2) {
+                Text(story.prompt)
+                TranscludeView(entry: story.entry)
             }
             .padding()
             Divider()

@@ -137,6 +137,8 @@
 		B8A41D4F2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */; };
 		B8A41D512811F87C0096D2E7 /* SlashlinkBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */; };
 		B8A41D522811F87C0096D2E7 /* SlashlinkBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */; };
+		B8A59D6028B51D000010DB2F /* TranscludeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A59D5F28B51D000010DB2F /* TranscludeView.swift */; };
+		B8A59D6128B51D000010DB2F /* TranscludeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A59D5F28B51D000010DB2F /* TranscludeView.swift */; };
 		B8AC648A278F53920099E96B /* EntryStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC6489278F53920099E96B /* EntryStub.swift */; };
 		B8AC648C278F757B0099E96B /* ProgressScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC648B278F757B0099E96B /* ProgressScrimView.swift */; };
 		B8AC648D278F757B0099E96B /* ProgressScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC648B278F757B0099E96B /* ProgressScrimView.swift */; };
@@ -319,6 +321,7 @@
 		B89D296727E832DC009E0DED /* LoggerUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerUtilities.swift; sourceTree = "<group>"; };
 		B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikilinkBarView.swift; sourceTree = "<group>"; };
 		B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlashlinkBarView.swift; sourceTree = "<group>"; };
+		B8A59D5F28B51D000010DB2F /* TranscludeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeView.swift; sourceTree = "<group>"; };
 		B8AC6489278F53920099E96B /* EntryStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryStub.swift; sourceTree = "<group>"; };
 		B8AC648B278F757B0099E96B /* ProgressScrimView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressScrimView.swift; sourceTree = "<group>"; };
 		B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackLabelStyle.swift; sourceTree = "<group>"; };
@@ -611,7 +614,6 @@
 				B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */,
 				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 				B8AE34BB276AB3D400777FF0 /* SearchView.swift */,
-				B8CA8F2728909FBA005F8802 /* StoryPromptView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -673,6 +675,9 @@
 				B8CC433C27A07CE10079D2F9 /* ScrimView.swift */,
 				B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */,
 				B8AE34C7276BF77000777FF0 /* SearchTextField.swift */,
+				B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */,
+				B8CA8F2728909FBA005F8802 /* StoryPromptView.swift */,
+				B8A59D5F28B51D000010DB2F /* TranscludeView.swift */,
 				B8AE34C1276BD77C00777FF0 /* SuggestionLabelStyle.swift */,
 				B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */,
 				B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */,
@@ -681,7 +686,6 @@
 				B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */,
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
-				B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1022,6 +1026,7 @@
 				B86DFF3927C15B77002E57ED /* Config.swift in Sources */,
 				B83E91D727692EC600045C6A /* FABButtonStyle.swift in Sources */,
 				B8EC568C26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
+				B8A59D6028B51D000010DB2F /* TranscludeView.swift in Sources */,
 				B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
 				B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 				B8CA8F2428908D65005F8802 /* BundleUtilities.swift in Sources */,
@@ -1043,6 +1048,7 @@
 				B83E91D827692EC600045C6A /* FABButtonStyle.swift in Sources */,
 				B88CC959284FF59900994928 /* OrderedCollectionUtilities.swift in Sources */,
 				B8AF47262841656B001973FB /* Editor.swift in Sources */,
+				B8A59D6128B51D000010DB2F /* TranscludeView.swift in Sources */,
 				B840EFF42856739D00238811 /* ViewStore.swift in Sources */,
 				B8249DA127E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
 				B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
