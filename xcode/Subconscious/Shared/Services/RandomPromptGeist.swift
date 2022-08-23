@@ -11,7 +11,24 @@ import Tracery
 typealias TraceryRules = [String]
 typealias TraceryGrammar = [String: TraceryRules]
 
-struct TraceryGeistService {
+struct StoryPrompt: Hashable, Identifiable, CustomStringConvertible {
+    var entry: EntryStub
+    var prompt: String
+
+    var description: String {
+        """
+        \(prompt)
+        
+        \(String(describing: entry))
+        """
+    }
+
+    var id: String {
+        "/story/prompt/\(entry.slug)"
+    }
+}
+
+struct RandomPromptGeist {
     private let database: DatabaseService
     private let tracery: Tracery
 
@@ -23,12 +40,16 @@ struct TraceryGeistService {
         self.tracery = Tracery(rules: { grammar })
     }
 
-    func expand() -> String {
-        tracery.expand("#origin#")
+    func expand() -> StoryPrompt? {
+        guard let stub = database.readRandomEntry() else {
+            return nil
+        }
+        let prompt = tracery.expand("#origin#")
+        return StoryPrompt(entry: stub, prompt: prompt)
     }
 }
 
-extension TraceryGeistService {
+extension RandomPromptGeist {
     init(
         database: DatabaseService,
         data: Data

@@ -2476,7 +2476,7 @@ struct AppEnvironment {
     var logger: Logger
     var keyboard: KeyboardService
     var database: DatabaseService
-    var zettelkasten: TraceryGeistService
+    var zettelkasten: RandomPromptGeist
 
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
@@ -2513,7 +2513,7 @@ struct AppEnvironment {
 
         self.keyboard = KeyboardService()
 
-        self.zettelkasten = try! TraceryGeistService(
+        self.zettelkasten = try! RandomPromptGeist(
             resource: Config.default.traceryZettelkasten
         )
         let story = zettelkasten.expand()

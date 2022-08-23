@@ -823,6 +823,60 @@ struct DatabaseService {
         }
     }
 
+    /// Select a random entry
+    func readRandomEntry() -> EntryStub? {
+        try? database.execute(
+            sql: """
+            SELECT slug, body
+            FROM entry
+            ORDER BY RANDOM()
+            LIMIT 1
+            """
+        )
+        .compactMap({ row in
+            guard
+                let slugString: String = row.get(0),
+                let slug = Slug(slugString),
+                let body: String = row.get(1)
+            else {
+                return nil
+            }
+            let entry = SubtextFile(slug: slug, content: body)
+            return EntryStub(entry)
+        })
+        .first
+    }
+
+    /// Select a random entry who's body matches a query string
+    func readRandomEntryMatching(
+        query: String
+    ) -> EntryStub? {
+        try? database.execute(
+            sql: """
+            SELECT slug, body
+            FROM entry_search
+            entry_search.body MATCH ?
+            ORDER BY RANDOM()
+            LIMIT 1
+            """,
+            parameters: [
+                .queryFTS5(query)
+            ]
+        )
+        .compactMap({ row in
+            guard
+                let slugString: String = row.get(0),
+                let slug = Slug(slugString),
+                let body: String = row.get(1)
+            else {
+                return nil
+            }
+            let entry = SubtextFile(slug: slug, content: body)
+            return EntryStub(entry)
+        })
+        .first
+    }
+
     /// Choose a random entry and read detailz
     func readRandomEntrySlug() -> AnyPublisher<Slug, Error> {
         CombineUtilities.async(qos: .userInteractive) {
