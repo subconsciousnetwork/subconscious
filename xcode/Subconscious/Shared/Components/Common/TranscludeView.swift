@@ -11,11 +11,18 @@ struct TranscludeView: View {
     var entry: EntryStub
 
     var body: some View {
-        VStack(alignment: .leading) {
-            Text(entry.linkableTitle)
-                .bold()
+        VStack(alignment: .leading, spacing: AppTheme.unit2) {
+            HStack {
+                Text(entry.linkableTitle)
+                    .bold()
+                Spacer()
+            }
             Text(entry.excerpt)
         }
+        .padding(.vertical, AppTheme.unit3)
+        .padding(.horizontal, AppTheme.unit4)
+        .background(Color.secondaryBackground)
+        .cornerRadius(AppTheme.cornerRadius)
     }
 }
 
