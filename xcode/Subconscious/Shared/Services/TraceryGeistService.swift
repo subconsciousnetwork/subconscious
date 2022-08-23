@@ -12,9 +12,14 @@ typealias TraceryRules = [String]
 typealias TraceryGrammar = [String: TraceryRules]
 
 struct TraceryGeistService {
+    private let database: DatabaseService
     private let tracery: Tracery
 
-    init(grammar: TraceryGrammar) {
+    init(
+        database: DatabaseService,
+        grammar: TraceryGrammar
+    ) {
+        self.database = database
         self.tracery = Tracery(rules: { grammar })
     }
 
@@ -24,15 +29,28 @@ struct TraceryGeistService {
 }
 
 extension TraceryGeistService {
-    init(data: Data) throws {
+    init(
+        database: DatabaseService,
+        data: Data
+    ) throws {
         let decoder = JSONDecoder()
         let grammar = try decoder.decode(TraceryGrammar.self, from: data)
-        self.init(grammar: grammar)
+        self.init(
+            database: database,
+            grammar: grammar
+        )
     }
 
     /// Convenience initializer that reads JSON from bundle
-    init(resource: String, withExtension ext: String = "json") throws {
+    init(
+        database: DatabaseService,
+        resource: String,
+        withExtension ext: String = "json"
+    ) throws {
         let data = try Bundle.main.read(resource: resource, withExtension: ext)
-        try self.init(data: data)
+        try self.init(
+            database: database,
+            data: data
+        )
     }
 }
