@@ -11,7 +11,7 @@ struct TranscludeView: View {
     var entry: EntryStub
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit2) {
+        VStack(alignment: .leading, spacing: AppTheme.unit) {
             HStack {
                 Text(entry.linkableTitle)
                     .bold()

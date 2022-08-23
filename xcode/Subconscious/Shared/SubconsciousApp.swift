@@ -2513,13 +2513,13 @@ struct AppEnvironment {
 
         self.keyboard = KeyboardService()
 
+        let zettelkastenGrammar = try! Bundle.main.read(
+            resource: Config.default.traceryZettelkasten,
+            withExtension: "json"
+        )
         self.zettelkasten = try! RandomPromptGeist(
             database: database,
-            resource: Config.default.traceryZettelkasten
-        )
-        let story = zettelkasten.expand()
-        self.logger.info(
-            "Zettelkasten: \(String(describing: story))"
+            data: zettelkastenGrammar
         )
     }
 }

@@ -44,17 +44,4 @@ extension RandomPromptGeist {
             grammar: grammar
         )
     }
-
-    /// Convenience initializer that reads JSON from bundle
-    init(
-        database: DatabaseService,
-        resource: String,
-        withExtension ext: String = "json"
-    ) throws {
-        let data = try Bundle.main.read(resource: resource, withExtension: ext)
-        try self.init(
-            database: database,
-            data: data
-        )
-    }
 }
