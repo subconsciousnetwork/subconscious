@@ -89,6 +89,11 @@ enum AppAction {
     /// Fail to get count of existing entries
     case failEntryCount(Error)
 
+    // Feed
+    case fetchFeed
+    case setFeed([StoryPrompt])
+    case fetchFeedFailure(String)
+
     // List entries
     case listRecent
     case setRecent([EntryStub])
@@ -285,6 +290,9 @@ struct AppModel: Equatable {
     // Editor
     var editor = Editor()
 
+    /// Feed of stories
+    var feed = Feed()
+
     /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
     var linkSearchText = ""
@@ -450,6 +458,11 @@ extension AppModel {
                 state: state,
                 environment: environment,
                 error: error
+            )
+        case .fetchFeed:
+            return fetchFeed(
+                state: state,
+                environment: environment
             )
         case .listRecent:
             return listRecent(
@@ -1381,6 +1394,13 @@ extension AppModel {
         var model = state
         model.entryCount = count
         return Update(state: model)
+    }
+
+    static func fetchFeed(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel, AppAction> {
+        
     }
 
     static func listRecent(
@@ -2476,7 +2496,7 @@ struct AppEnvironment {
     var logger: Logger
     var keyboard: KeyboardService
     var database: DatabaseService
-    var zettelkasten: RandomPromptGeist
+    var feed: FeedService
 
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
@@ -2513,14 +2533,17 @@ struct AppEnvironment {
 
         self.keyboard = KeyboardService()
 
+        self.feed = FeedService()
+
         let zettelkastenGrammar = try! Bundle.main.read(
             resource: Config.default.traceryZettelkasten,
             withExtension: "json"
         )
-        self.zettelkasten = try! RandomPromptGeist(
+        let zettelkastenGeist = try! RandomPromptGeist(
             database: database,
             data: zettelkastenGrammar
         )
+        self.feed.register(name: "zettelkasten", geist: zettelkastenGeist)
     }
 }
 

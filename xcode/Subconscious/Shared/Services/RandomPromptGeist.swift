@@ -11,7 +11,7 @@ import Tracery
 typealias TraceryRules = [String]
 typealias TraceryGrammar = [String: TraceryRules]
 
-struct RandomPromptGeist {
+struct RandomPromptGeist: Geist {
     private let database: DatabaseService
     private let tracery: Tracery
 
@@ -23,12 +23,12 @@ struct RandomPromptGeist {
         self.tracery = Tracery(rules: { grammar })
     }
 
-    func expand() -> StoryPrompt? {
+    func ask(query: String) -> Story? {
         guard let stub = database.readRandomEntry() else {
             return nil
         }
         let prompt = tracery.expand("#origin#")
-        return StoryPrompt(entry: stub, prompt: prompt)
+        return Story.prompt(StoryPrompt(entry: stub, prompt: prompt))
     }
 }
 

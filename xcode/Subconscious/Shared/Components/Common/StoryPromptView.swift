@@ -7,28 +7,10 @@
 
 import SwiftUI
 
-/// Story prompt model
-struct StoryPrompt: Hashable, Identifiable, CustomStringConvertible {
-    var entry: EntryStub
-    var prompt: String
-
-    var description: String {
-        """
-        \(prompt)
-        
-        \(String(describing: entry))
-        """
-    }
-
-    var id: String {
-        "/story/prompt/\(entry.slug)"
-    }
-}
-
 /// A story is a single update within the FeedView
 struct StoryPromptView: View {
     var story: StoryPrompt
-    var onOpen: (EntryLink) -> Void
+    var action: (EntryLink) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -48,7 +30,7 @@ struct StoryPromptView: View {
                 Text(story.prompt).font(Font.title3)
                 Button(
                     action: {
-                        onOpen(story.entry.link)
+                        action(story.entry.link)
                     },
                     label: {
                         TranscludeView(entry: story.entry)
@@ -61,7 +43,7 @@ struct StoryPromptView: View {
             HStack {
                 Button(
                     action: {
-                        onOpen(story.entry.link)
+                        action(story.entry.link)
                     },
                     label: {
                         Text("Open")
@@ -76,7 +58,7 @@ struct StoryPromptView: View {
     }
 }
 
-struct StoryView_Previews: PreviewProvider {
+struct StoryPromptView_Previews: PreviewProvider {
     static var previews: some View {
         StoryPromptView(
             story: StoryPrompt(
@@ -95,7 +77,7 @@ struct StoryView_Previews: PreviewProvider {
                 ),
                 prompt: "Can I invert this?"
             ),
-            onOpen: { entry in }
+            action: { entry in }
         )
     }
 }
