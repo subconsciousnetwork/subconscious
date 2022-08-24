@@ -9,6 +9,7 @@ import Foundation
 
 /// Story prompt model
 struct StoryPrompt: Hashable, Identifiable, CustomStringConvertible {
+    var id = UUID()
     var entry: EntryStub
     var prompt: String
 
@@ -18,9 +19,5 @@ struct StoryPrompt: Hashable, Identifiable, CustomStringConvertible {
         
         \(String(describing: entry))
         """
-    }
-
-    var id: String {
-        "/story/prompt/\(entry.slug)"
     }
 }

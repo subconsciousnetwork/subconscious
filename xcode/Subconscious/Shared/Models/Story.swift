@@ -11,7 +11,7 @@ import Foundation
 enum Story: Hashable, Identifiable {
     case prompt(StoryPrompt)
 
-    var id: String {
+    var id: UUID {
         switch self {
         case .prompt(let prompt):
             return prompt.id
