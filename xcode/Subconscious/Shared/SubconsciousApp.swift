@@ -95,7 +95,7 @@ enum AppAction {
     /// Set stories
     case setFeed([Story])
     /// Fetch feed failed
-    case fetchFeedFailure(Error)
+    case failFetchFeed(Error)
 
     // List entries
     case listRecent
@@ -473,7 +473,7 @@ extension AppModel {
                 environment: environment,
                 stories: stories
             )
-        case .fetchFeedFailure(let error):
+        case .failFetchFeed(let error):
             return log(state: state, environment: environment, error: error)
         case .listRecent:
             return listRecent(
@@ -1423,7 +1423,15 @@ extension AppModel {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
-        
+        let fx: Fx<AppAction> = environment.feed.generate(max: 10)
+            .map({ stories in
+                AppAction.setFeed(stories)
+            })
+            .catch({ error in
+                Just(AppAction.failFetchFeed(error))
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
 
     /// Set feed response
@@ -1432,7 +1440,9 @@ extension AppModel {
         environment: AppEnvironment,
         stories: [Story]
     ) -> Update<AppModel, AppAction> {
-        
+        var model = state
+        model.feed.stories = stories
+        return Update(state: model)
     }
 
     static func listRecent(

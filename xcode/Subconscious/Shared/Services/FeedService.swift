@@ -24,7 +24,7 @@ struct FeedService {
     /// TODO: currently this is just a random selection.
     /// We should consider other approaches, including using a tracery grammar.
     /// Eventually, we want to do something based on follows.
-    func generate(max: Int) -> AnyPublisher<[Story], Never> {
+    func generate(max: Int) -> AnyPublisher<[Story], Error> {
         CombineUtilities.async {
             let geists = geists.values
             var stories: [Story] = []
