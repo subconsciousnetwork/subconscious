@@ -1,3 +1,36 @@
 {
-  "origin": ["cats", "dogs"]
+  "origin": [
+      "What does this build upon?",
+      "What other ideas does this support?",
+      "Can I combine this with another idea to create something new?",
+      "How does this change my understanding?",
+      "What does this remind me of? #similar_followup#",
+      "What topics does this remind me of? #similar_followup#",
+      "What is this similar to? #similar_followup#",
+      "What does this disconfirm?",
+      "What does this contradict?",
+      "What does this correct?",
+      "What is this different from? How?",
+      "By what mechanism? #mechanism_followup#",
+      "What questions are triggered by this?",
+      "What might this be true of?",
+      "#questions#"
+  ],
+  "questions": [
+      "What questions do I have about this?",
+      "What questions does this answer?",
+      "What new questions does this trigger?"
+  ],
+  "similar_followup": [
+      "What are the differences between these things?",
+      "In what ways are they similar?",
+      "How do they connect?"
+  ],
+  "mechanism_followup": [
+      "Can mechanisms be combined?",
+      "Can a mechanism be substituted for something else?",
+      "Are there multiple mechanisms? In what ways might they be related?",
+      "Can a mechanism be substituted for something else?",
+      "Can you take a mechanism from here and apply it elsewhere?"
+  ]
 }
