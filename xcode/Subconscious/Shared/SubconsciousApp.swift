@@ -90,9 +90,12 @@ enum AppAction {
     case failEntryCount(Error)
 
     // Feed
+    /// Fetch stories for feed
     case fetchFeed
-    case setFeed([StoryPrompt])
-    case fetchFeedFailure(String)
+    /// Set stories
+    case setFeed([Story])
+    /// Fetch feed failed
+    case fetchFeedFailure(Error)
 
     // List entries
     case listRecent
@@ -464,6 +467,14 @@ extension AppModel {
                 state: state,
                 environment: environment
             )
+        case .setFeed(let stories):
+            return setFeed(
+                state: state,
+                environment: environment,
+                stories: stories
+            )
+        case .fetchFeedFailure(let error):
+            return log(state: state, environment: environment, error: error)
         case .listRecent:
             return listRecent(
                 state: state,
@@ -779,6 +790,17 @@ extension AppModel {
         }
     }
 
+    /// Log error at log level
+    static func log(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: Error
+    ) -> Update<AppModel, AppAction> {
+        environment.logger.log("\(error.localizedDescription)")
+        return Update(state: state)
+    }
+
+    /// Log error at warning level
     static func warn(
         state: AppModel,
         environment: AppEnvironment,
@@ -1396,9 +1418,19 @@ extension AppModel {
         return Update(state: model)
     }
 
+    /// Fetch latest from feed
     static func fetchFeed(
         state: AppModel,
         environment: AppEnvironment
+    ) -> Update<AppModel, AppAction> {
+        
+    }
+
+    /// Set feed response
+    static func setFeed(
+        state: AppModel,
+        environment: AppEnvironment,
+        stories: [Story]
     ) -> Update<AppModel, AppAction> {
         
     }
