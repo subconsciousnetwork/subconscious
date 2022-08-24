@@ -220,6 +220,8 @@ extension AppAction {
             return "setRenameSuggestions(...) (\(items.count) items)"
         case .updateDetail(let detail, _):
             return "updateDetail(\(detail.slug)) (saved state: \(detail.saveState))"
+        case .setFeed(let items):
+            return "setFeed(...) (\(items.count) items)"
         default:
             return String(describing: self)
         }
@@ -1074,6 +1076,9 @@ extension AppModel {
         })
         .eraseToAnyPublisher()
 
+        let feedFx: Fx<AppAction> = Just(AppAction.fetchFeed)
+            .eraseToAnyPublisher()
+
         // Subscribe to keyboard events
         let fx: Fx<AppAction> = environment
             .keyboard.state
@@ -1082,7 +1087,8 @@ extension AppModel {
             })
             .merge(
                 with: pollFx,
-                countFx
+                countFx,
+                feedFx
             )
             .eraseToAnyPublisher()
 
