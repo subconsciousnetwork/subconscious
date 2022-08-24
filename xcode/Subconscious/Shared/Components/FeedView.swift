@@ -11,14 +11,22 @@ struct FeedView: View {
     @ObservedObject var store: AppStore
 
     var body: some View {
-        VStack {
-            ForEach(store.state.feed.stories) { story in
-                StoryView(
-                    story: story,
-                    action: { link in
-                    
-                    }
-                )
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVStack {
+                ForEach(store.state.feed.stories) { story in
+                    StoryView(
+                        story: story,
+                        action: { link in
+                            store.send(
+                                AppAction.requestDetail(
+                                    slug: link.slug,
+                                    fallback: link.linkableTitle,
+                                    autofocus: false
+                                )
+                            )
+                        }
+                    )
+                }
             }
         }
     }
