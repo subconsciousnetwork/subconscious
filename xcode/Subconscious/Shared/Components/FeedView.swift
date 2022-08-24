@@ -11,6 +11,15 @@ struct FeedView: View {
     @ObservedObject var store: AppStore
 
     var body: some View {
-        Text("Hello, Feed!")
+        VStack {
+            ForEach(store.state.feed.stories) { story in
+                StoryView(
+                    story: story,
+                    action: { link in
+                    
+                    }
+                )
+            }
+        }
     }
 }
