@@ -11,7 +11,7 @@ struct LinkSearchView: View {
     var placeholder: String
     var suggestions: [LinkSuggestion]
     @Binding var text: String
-    @Binding var focus: AppModel.Focus?
+    @Binding var focus: AppFocus?
     var onCancel: () -> Void
     var onSelect: (LinkSuggestion) -> Void
 

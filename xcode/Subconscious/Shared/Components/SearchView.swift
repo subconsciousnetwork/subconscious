@@ -17,7 +17,7 @@ struct SearchView: View {
     /// present.
     var suggestionHeight: CGFloat = 56
     @Binding var text: String
-    @Binding var focus: AppModel.Focus?
+    @Binding var focus: AppFocus?
     @Binding var suggestions: [Suggestion]
     /// Select suggestion
     var onSelect: (Suggestion) -> Void

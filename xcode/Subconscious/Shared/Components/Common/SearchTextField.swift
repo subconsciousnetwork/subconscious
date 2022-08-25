@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct SearchTextField: View {
-    @FocusState private var viewFocus: AppModel.Focus?
+    @FocusState private var viewFocus: AppFocus?
     var placeholder: String
     @Binding var text: String
-    @Binding var focus: AppModel.Focus?
-    var field: AppModel.Focus
+    @Binding var focus: AppFocus?
+    var field: AppFocus
 
     var body: some View {
         TextField(placeholder, text: $text)

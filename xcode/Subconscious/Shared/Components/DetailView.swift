@@ -9,12 +9,12 @@ import SwiftUI
 import os
 
 struct DetailModel: Equatable {
-    var focus: AppModel.Focus?
+    var focus: AppFocus?
     var editor: Editor
 }
 
 enum DetailAction {
-    case setFocus(AppModel.Focus?)
+    case setFocus(AppFocus?)
     case setEditorText(String)
     case setEditorSelection(NSRange)
     case openEditorURL(URL)

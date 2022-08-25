@@ -12,7 +12,7 @@ struct RenameSearchView: View {
     var placeholder: String = "Enter name for idea"
     var suggestions: [RenameSuggestion]
     @Binding var text: String
-    @Binding var focus: AppModel.Focus?
+    @Binding var focus: AppFocus?
     var onCancel: () -> Void
     var onSelect: (RenameSuggestion) -> Void
 
