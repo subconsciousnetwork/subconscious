@@ -14,14 +14,21 @@ struct AppView: View {
 
     var body: some View {
         TabView {
-            FeedView(store: store)
-                .tabItem {
-                    Label("Feed", systemImage: "newspaper")
-                }
-            NotebookView(store: store)
-                .tabItem {
-                    Label("Notes", systemImage: "folder")
-                }
+            FeedView(
+                store: store
+            )
+            .tabItem {
+                Label("Feed", systemImage: "newspaper")
+            }
+            NotebookView(
+                store: store.viewStore(
+                    get: \.notebook,
+                    tag: AppAction.tagNotebook
+                )
+            )
+            .tabItem {
+                Label("Notes", systemImage: "folder")
+            }
         }
         .disabled(!store.state.isReadyForInteraction)
         .font(Font(UIFont.appText))

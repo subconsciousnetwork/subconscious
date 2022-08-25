@@ -61,6 +61,13 @@ enum AppAction {
 }
 
 extension AppAction {
+    /// Tag notebook actions
+    static func tagNotebook(_ action: NotebookAction) -> AppAction {
+        AppAction.notebook(action)
+    }
+}
+
+extension AppAction {
     /// Generates a short (approximately 1 line) loggable string for action.
     func toLogString() -> String {
         switch self {
@@ -104,7 +111,7 @@ struct AppModel: Equatable {
     var databaseState = DatabaseState.initial
 
     /// Feed of stories
-    var feed = Feed()
+    var feed = FeedModel()
 
     var notebook = NotebookModel()
 

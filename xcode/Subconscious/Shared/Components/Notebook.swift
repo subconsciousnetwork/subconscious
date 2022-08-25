@@ -50,14 +50,6 @@ enum NotebookAction {
     /// Fail to get count of existing entries
     case failEntryCount(Error)
 
-    // Feed
-    /// Fetch stories for feed
-    case fetchFeed
-    /// Set stories
-    case setFeed([Story])
-    /// Fetch feed failed
-    case failFetchFeed(Error)
-
     // List entries
     case listRecent
     case setRecent([EntryStub])
@@ -209,8 +201,6 @@ extension NotebookAction {
             return "setRenameSuggestions(...) (\(items.count) items)"
         case .updateDetail(let detail, _):
             return "updateDetail(\(detail.slug)) (saved state: \(detail.saveState))"
-        case .setFeed(let items):
-            return "setFeed(...) (\(items.count) items)"
         default:
             return String(describing: self)
         }
@@ -220,7 +210,10 @@ extension NotebookAction {
 
 //  MARK: Model
 /// Model containing state for the notebook tab.
-struct NotebookModel: Equatable {
+struct NotebookModel: Hashable, Equatable {
+    /// State reflecting global app focus state.
+    var focus: AppFocus?
+
     /// Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
 
@@ -344,19 +337,6 @@ extension NotebookModel {
                 environment: environment,
                 error: error
             )
-        case .fetchFeed:
-            return fetchFeed(
-                state: state,
-                environment: environment
-            )
-        case .setFeed(let stories):
-            return setFeed(
-                state: state,
-                environment: environment,
-                stories: stories
-            )
-        case .failFetchFeed(let error):
-            return log(state: state, environment: environment, error: error)
         case .listRecent:
             return listRecent(
                 state: state,
@@ -956,7 +936,7 @@ extension NotebookModel {
     static func setEditorFocus(
         state: NotebookModel,
         environment: AppEnvironment,
-        focus: NotebookModel.Focus?
+        focus: AppFocus?
     ) -> Update<NotebookModel, NotebookAction> {
         let update = setFocus(
             state: state,
@@ -1093,33 +1073,6 @@ extension NotebookModel {
     ) -> Update<NotebookModel, NotebookAction> {
         var model = state
         model.entryCount = count
-        return Update(state: model)
-    }
-
-    /// Fetch latest from feed
-    static func fetchFeed(
-        state: NotebookModel,
-        environment: AppEnvironment
-    ) -> Update<NotebookModel, NotebookAction> {
-        let fx: Fx<NotebookAction> = environment.feed.generate(max: 10)
-            .map({ stories in
-                NotebookAction.setFeed(stories)
-            })
-            .catch({ error in
-                Just(NotebookAction.failFetchFeed(error))
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
-    }
-
-    /// Set feed response
-    static func setFeed(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        stories: [Story]
-    ) -> Update<NotebookModel, NotebookAction> {
-        var model = state
-        model.feed.stories = stories
         return Update(state: model)
     }
 
