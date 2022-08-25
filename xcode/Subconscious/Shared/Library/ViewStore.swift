@@ -37,6 +37,17 @@ struct ViewStore<State, Action> {
             set: { value in self.send(tag(value)) }
         )
     }
+
+    /// Create a ViewStore from this Store
+    func viewStore<LocalState, LocalAction>(
+        get: @escaping (State) -> LocalState,
+        tag: @escaping (LocalAction) -> Action
+    ) -> ViewStore<LocalState, LocalAction> {
+        ViewStore<LocalState, LocalAction>(
+            get: { get(self.state) },
+            send: { action in self.send(tag(action)) }
+        )
+    }
 }
 
 extension Store {
