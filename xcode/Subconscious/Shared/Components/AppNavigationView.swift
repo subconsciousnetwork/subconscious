@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AppNavigationView: View {
-    @ObservedObject var store: AppStore
+    var store: ViewStore<NotebookModel, NotebookAction>
 
     var body: some View {
         NavigationView {
@@ -34,7 +34,7 @@ struct AppNavigationView: View {
                     "Are you sure?",
                     isPresented: store.binding(
                         get: \.isConfirmDeleteShowing,
-                        tag: AppAction.setConfirmDeleteShowing
+                        tag: NotebookAction.setConfirmDeleteShowing
                     ),
                     presenting: store.state.entryToDelete
                 ) { slug in
@@ -50,18 +50,18 @@ struct AppNavigationView: View {
                 NavigationLink(
                     isActive: store.binding(
                         get: \.isDetailShowing,
-                        tag: AppAction.showDetail
+                        tag: NotebookAction.showDetail
                     ),
                     destination: {
                         DetailView(
                             store: store.viewStore(
-                                get: AppModel.getDetail,
-                                tag: AppAction.tagDetail
+                                get: NotebookModel.getDetail,
+                                tag: NotebookAction.tagDetail
                             ),
                             keyboardToolbar: DetailKeyboardToolbarView(
                                 isSheetPresented: store.binding(
                                     get: \.isLinkSheetPresented,
-                                    tag: AppAction.setLinkSheetPresented
+                                    tag: NotebookAction.setLinkSheetPresented
                                 ),
                                 selectedEntryLinkMarkup:
                                     store.state.editor.selectedEntryLinkMarkup,
