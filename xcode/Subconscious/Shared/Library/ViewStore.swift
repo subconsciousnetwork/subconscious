@@ -51,3 +51,21 @@ extension Store {
         )
     }
 }
+
+struct Cursor {
+    static func update<State, LocalState, Action, LocalAction, Environment>(
+        with up: (LocalState, LocalAction, Environment) -> Update<LocalState, LocalAction>,
+        get: (State) -> LocalState,
+        set: (State, LocalState) -> State,
+        tag: @escaping (LocalAction) -> Action,
+        state: State,
+        action localAction: LocalAction,
+        environment: Environment
+    ) -> Update<State, Action> {
+        let localState = get(state)
+        let update = up(localState, localAction, environment)
+        let next = set(state, update.state)
+        let nextFx = update.fx.map(tag).eraseToAnyPublisher()
+        return Update(state: next, fx: nextFx)
+    }
+}

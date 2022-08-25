@@ -151,8 +151,20 @@ extension AppModel {
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
         switch action {
-        case .notebook(let notebookAction):
-            <#code#>
+        case .notebook(let action):
+            return Cursor.update(
+                with: NotebookModel.update,
+                get: { state in state.notebook },
+                set: { state, notebook in
+                    var model = state
+                    model.notebook = notebook
+                    return model
+                },
+                tag: AppAction.tagNotebook,
+                state: state,
+                action: action,
+                environment: environment
+            )
         case let .scenePhaseChange(phase):
             return scenePhaseChange(
                 state: state,
