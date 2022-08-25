@@ -28,12 +28,8 @@ struct NotebookView: View {
                 Color.background
                     .edgesIgnoringSafeArea(.all)
                     .zIndex(0)
-
-                if Config.default.traceryGeistsEnabled {
-                } else {
-                    AppNavigationView(store: store)
-                        .zIndex(1)
-                }
+                AppNavigationView(store: store)
+                    .zIndex(1)
                 PinTrailingBottom(
                     content: Button(
                         action: {
@@ -161,5 +157,6 @@ struct NotebookView: View {
                 .zIndex(4)
             }
         }
+        .background(.red)
     }
 }
