@@ -154,12 +154,8 @@ extension AppModel {
         case .notebook(let action):
             return Cursor.update(
                 with: NotebookModel.update,
-                get: { state in state.notebook },
-                set: { state, notebook in
-                    var model = state
-                    model.notebook = notebook
-                    return model
-                },
+                get: AppModel.getNotebook,
+                set: AppModel.setNotebook,
                 tag: AppAction.tagNotebook,
                 state: state,
                 action: action,
@@ -178,7 +174,9 @@ extension AppModel {
         case .poll:
             // Auto-save entry currently being edited, if any.
             let fx: Fx<AppAction> = Just(
-                AppAction.save
+                AppAction.notebook(
+                    NotebookAction.save
+                )
             )
             .eraseToAnyPublisher()
             return Update(state: state, fx: fx)
@@ -219,6 +217,20 @@ extension AppModel {
             )
             return Update(state: state)
         }
+    }
+
+    /// Get notebook model from app model
+    static func getNotebook(state: AppModel) -> NotebookModel {
+        state.notebook
+    }
+
+    /// Set notebook on app model
+    static func setNotebook(
+        state: AppModel,
+        notebook: NotebookModel
+    ) -> AppModel {
+        var model = state
+        model.notebook = notebook
     }
 
     /// Change state of keyboard
@@ -272,8 +284,10 @@ extension AppModel {
             "Documents: \(environment.documentURL)"
         )
 
-        let countFx: Fx<AppAction> = Just(AppAction.countEntries)
-            .eraseToAnyPublisher()
+        let countFx: Fx<AppAction> = Just(
+            AppAction.notebook(.appear)
+        )
+        .eraseToAnyPublisher()
 
         let pollFx: Fx<AppAction> = AppEnvironment.poll(
             every: Config.default.pollingInterval

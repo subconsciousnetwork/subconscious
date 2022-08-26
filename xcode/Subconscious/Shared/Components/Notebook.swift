@@ -29,6 +29,9 @@ enum NotebookAction {
         field: AppFocus
     )
 
+    /// On appear. We rely on parent to notify us of this event.
+    case appear
+
     /// Set focus from editor
     /// In addition to setting focus, this saves content on blur.
     case setEditorFocus(AppFocus?)
@@ -299,6 +302,11 @@ extension NotebookModel {
                 state: state,
                 environment: environment,
                 focus: focus
+            )
+        case .appear:
+            return appear(
+                state: state,
+                environment: environment
             )
         case .refreshAll:
             return refreshAll(state: state, environment: environment)
@@ -670,6 +678,16 @@ extension NotebookModel {
     ) -> Update<NotebookModel, NotebookAction> {
         environment.logger.warning("\(error.localizedDescription)")
         return Update(state: state)
+    }
+
+    /// Appear (when view first renders)
+    static func appear(
+        state: NotebookModel,
+        environment: AppEnvironment
+    ) -> Update<NotebookModel, NotebookAction> {
+        let fx: Fx<NotebookAction> = Just(NotebookAction.countEntries)
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
 
     /// Set all editor properties to initial values
