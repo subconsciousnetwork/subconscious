@@ -11,6 +11,7 @@ import Combine
 
 //  MARK: Action
 enum FeedAction {
+    case appear
     // Feed
     /// Fetch stories for feed
     case fetchFeed
@@ -46,6 +47,11 @@ extension FeedModel {
         environment: AppEnvironment
     ) -> Update<FeedModel, FeedAction> {
         switch action {
+        case .appear:
+            return appear(
+                state: state,
+                environment: environment
+            )
         case .fetchFeed:
             return fetchFeed(
                 state: state,
@@ -80,6 +86,15 @@ extension FeedModel {
     ) -> Update<FeedModel, FeedAction> {
         environment.logger.warning("\(error.localizedDescription)")
         return Update(state: state)
+    }
+
+    /// Handle appear lifecycle action.
+    /// Currently this just calls out to `fetchFeed`. In future it may do more.
+    static func appear(
+        state: FeedModel,
+        environment: AppEnvironment
+    ) -> Update<FeedModel, FeedAction> {
+        return fetchFeed(state: state, environment: environment)
     }
 
     /// Fetch latest from feed

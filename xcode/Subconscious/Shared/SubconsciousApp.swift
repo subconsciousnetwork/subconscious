@@ -46,10 +46,6 @@ enum AppAction {
     case scenePhaseChange(ScenePhase)
     case appear
 
-    //  URL handlers
-    case openURL(URL)
-    case openEditorURL(URL)
-
     //  Database
     /// Get database ready for interaction
     case readyDatabase
@@ -88,6 +84,7 @@ struct NotebookCursor {
     ) -> AppModel {
         var model = state
         model.notebook = notebook
+        return model
     }
 
     /// Tag notebook actions
@@ -126,15 +123,15 @@ enum AppFocus: Hashable, Equatable {
     case rename
 }
 
+enum AppDatabaseState {
+    case initial
+    case migrating
+    case broken
+    case ready
+}
+
 //  MARK: Model
 struct AppModel: Equatable {
-    enum DatabaseState {
-        case initial
-        case migrating
-        case broken
-        case ready
-    }
-
     /// Current state of keyboard
     var keyboardWillShow = false
     var keyboardEventualHeight: CGFloat = 0
@@ -143,7 +140,7 @@ struct AppModel: Equatable {
     var focus: AppFocus? = nil
 
     /// Is database connected and migrated?
-    var databaseState = DatabaseState.initial
+    var databaseState = AppDatabaseState.initial
 
     /// Feed of stories
     var feed = FeedModel()
@@ -315,11 +312,6 @@ extension AppModel {
             "Documents: \(environment.documentURL)"
         )
 
-        let countFx: Fx<AppAction> = Just(
-            AppAction.notebook(.appear)
-        )
-        .eraseToAnyPublisher()
-
         let pollFx: Fx<AppAction> = AppEnvironment.poll(
             every: Config.default.pollingInterval
         )
@@ -328,7 +320,10 @@ extension AppModel {
         })
         .eraseToAnyPublisher()
 
-        let feedFx: Fx<AppAction> = Just(AppAction.fetchFeed)
+        let feedFx: Fx<AppAction> = Just(AppAction.feed(.appear))
+            .eraseToAnyPublisher()
+
+        let notebookFx: Fx<AppAction> = Just(AppAction.notebook(.appear))
             .eraseToAnyPublisher()
 
         // Subscribe to keyboard events
@@ -339,8 +334,8 @@ extension AppModel {
             })
             .merge(
                 with: pollFx,
-                countFx,
-                feedFx
+                feedFx,
+                notebookFx
             )
             .eraseToAnyPublisher()
 
@@ -400,9 +395,6 @@ extension AppModel {
         let fx: Fx<AppAction> = Just(
             AppAction.sync
         )
-        // Refresh all from database immediately while sync happens
-        // in background.
-        .merge(with: Just(.refreshAll))
         .eraseToAnyPublisher()
         if success.from != success.to {
             environment.logger.log(
@@ -468,7 +460,7 @@ extension AppModel {
         // This ensures that files which were deleted outside the app
         // are removed from lists once sync is complete.
         let fx: Fx<AppAction> = Just(
-            AppAction.refreshAll
+            AppAction.notebook(.refreshAll)
         )
         .eraseToAnyPublisher()
 
