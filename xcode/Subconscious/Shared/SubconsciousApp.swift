@@ -31,6 +31,8 @@ typealias AppStore = Store<AppModel, AppAction, AppEnvironment>
 enum AppAction {
     /// Wrapper for notebook actions
     case notebook(NotebookAction)
+    /// Wrapper for feed actions
+    case feed(FeedAction)
 
     ///  KeyboardService state change
     case changeKeyboardState(KeyboardState)
@@ -61,13 +63,6 @@ enum AppAction {
 }
 
 extension AppAction {
-    /// Tag notebook actions
-    static func tagNotebook(_ action: NotebookAction) -> AppAction {
-        AppAction.notebook(action)
-    }
-}
-
-extension AppAction {
     /// Generates a short (approximately 1 line) loggable string for action.
     func toLogString() -> String {
         switch self {
@@ -76,6 +71,46 @@ extension AppAction {
         default:
             return String(describing: self)
         }
+    }
+}
+
+/// Cursor functions for mapping notebook updates to app updates
+struct NotebookCursor {
+    /// Get notebook model from app model
+    static func get(state: AppModel) -> NotebookModel {
+        state.notebook
+    }
+
+    /// Set notebook on app model
+    static func set(
+        state: AppModel,
+        notebook: NotebookModel
+    ) -> AppModel {
+        var model = state
+        model.notebook = notebook
+    }
+
+    /// Tag notebook actions
+    static func tag(_ action: NotebookAction) -> AppAction {
+        AppAction.notebook(action)
+    }
+}
+
+/// Cursor functions for mapping feed updates to app updates
+struct FeedCursor {
+    static func get(state: AppModel) -> FeedModel {
+        state.feed
+    }
+
+    static func set(state: AppModel, inner: FeedModel) -> AppModel {
+        var model = state
+        model.feed = inner
+        return model
+    }
+
+    /// Tag feed action
+    static func tag(_ action: FeedAction) -> AppAction {
+        AppAction.feed(action)
     }
 }
 
@@ -154,9 +189,19 @@ extension AppModel {
         case .notebook(let action):
             return Cursor.update(
                 with: NotebookModel.update,
-                get: AppModel.getNotebook,
-                set: AppModel.setNotebook,
-                tag: AppAction.tagNotebook,
+                get: NotebookCursor.get,
+                set: NotebookCursor.set,
+                tag: NotebookCursor.tag,
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case .feed(let action):
+            return Cursor.update(
+                with: FeedModel.update,
+                get: FeedCursor.get,
+                set: FeedCursor.set,
+                tag: FeedCursor.tag,
                 state: state,
                 action: action,
                 environment: environment
@@ -217,20 +262,6 @@ extension AppModel {
             )
             return Update(state: state)
         }
-    }
-
-    /// Get notebook model from app model
-    static func getNotebook(state: AppModel) -> NotebookModel {
-        state.notebook
-    }
-
-    /// Set notebook on app model
-    static func setNotebook(
-        state: AppModel,
-        notebook: NotebookModel
-    ) -> AppModel {
-        var model = state
-        model.notebook = notebook
     }
 
     /// Change state of keyboard
