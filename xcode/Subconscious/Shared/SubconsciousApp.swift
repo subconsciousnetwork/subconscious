@@ -71,7 +71,7 @@ extension AppAction {
 }
 
 /// Cursor functions for mapping notebook updates to app updates
-struct NotebookCursor {
+struct NotebookCursor: CursorProtocol {
     /// Get notebook model from app model
     static func get(state: AppModel) -> NotebookModel {
         state.notebook
@@ -80,7 +80,7 @@ struct NotebookCursor {
     /// Set notebook on app model
     static func set(
         state: AppModel,
-        notebook: NotebookModel
+        inner notebook: NotebookModel
     ) -> AppModel {
         var model = state
         model.notebook = notebook
@@ -88,25 +88,25 @@ struct NotebookCursor {
     }
 
     /// Tag notebook actions
-    static func tag(_ action: NotebookAction) -> AppAction {
+    static func tag(action: NotebookAction) -> AppAction {
         AppAction.notebook(action)
     }
 }
 
 /// Cursor functions for mapping feed updates to app updates
-struct FeedCursor {
+struct FeedCursor: CursorProtocol {
     static func get(state: AppModel) -> FeedModel {
         state.feed
     }
 
-    static func set(state: AppModel, inner: FeedModel) -> AppModel {
+    static func set(state: AppModel, inner feed: FeedModel) -> AppModel {
         var model = state
-        model.feed = inner
+        model.feed = feed
         return model
     }
 
     /// Tag feed action
-    static func tag(_ action: FeedAction) -> AppAction {
+    static func tag(action: FeedAction) -> AppAction {
         AppAction.feed(action)
     }
 }
@@ -180,21 +180,15 @@ extension AppModel {
     ) -> Update<AppModel, AppAction> {
         switch action {
         case .notebook(let action):
-            return Cursor.update(
+            return NotebookCursor.update(
                 with: NotebookModel.update,
-                get: NotebookCursor.get,
-                set: NotebookCursor.set,
-                tag: NotebookCursor.tag,
                 state: state,
                 action: action,
                 environment: environment
             )
         case .feed(let action):
-            return Cursor.update(
+            return FeedCursor.update(
                 with: FeedModel.update,
-                get: FeedCursor.get,
-                set: FeedCursor.set,
-                tag: FeedCursor.tag,
                 state: state,
                 action: action,
                 environment: environment
