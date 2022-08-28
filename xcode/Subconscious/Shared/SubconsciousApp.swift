@@ -132,10 +132,6 @@ enum AppDatabaseState {
 
 //  MARK: Model
 struct AppModel: Equatable {
-    /// Current state of keyboard
-    var keyboardWillShow = false
-    var keyboardEventualHeight: CGFloat = 0
-
     /// What is focused? (nil means nothing is focused)
     var focus: AppFocus? = nil
 
@@ -267,23 +263,12 @@ extension AppModel {
         state: AppModel,
         keyboard: KeyboardState
     ) -> Update<AppModel, AppAction> {
-        switch keyboard {
-        case
-            .willShow(let size, _),
-            .didShow(let size),
-            .didChangeFrame(let size):
-            var model = state
-            model.keyboardWillShow = true
-            model.keyboardEventualHeight = size.height
-            return Update(state: model)
-        case .willHide:
-            return Update(state: state)
-        case .didHide:
-            var model = state
-            model.keyboardWillShow = false
-            model.keyboardEventualHeight = 0
-            return Update(state: model)
-        }
+        /// Forward keyboard change action down to Notebook component
+        let fx: Fx<AppAction> = Just(
+            AppAction.notebook(.changeKeyboardState(keyboard))
+        )
+        .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
 
     /// Handle scene phase change

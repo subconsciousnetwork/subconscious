@@ -23,7 +23,7 @@ struct AppView: View {
             NotebookView(
                 store: store.viewStore(
                     get: \.notebook,
-                    tag: AppAction.tagNotebook
+                    tag: NotebookCursor.tag
                 )
             )
             .tabItem {
@@ -42,9 +42,5 @@ struct AppView: View {
         .onAppear {
             store.send(.appear)
         }
-        .environment(\.openURL, OpenURLAction { url in
-            store.send(.openURL(url))
-            return .handled
-        })
     }
 }

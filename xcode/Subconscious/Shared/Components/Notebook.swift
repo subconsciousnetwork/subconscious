@@ -29,6 +29,10 @@ enum NotebookAction {
         field: AppFocus
     )
 
+    /// KeyboardService state change.
+    /// Action passed down from parent component.
+    case changeKeyboardState(KeyboardState)
+
     /// On appear. We rely on parent to notify us of this event.
     case appear
 
@@ -217,6 +221,12 @@ struct NotebookModel: Hashable, Equatable {
     /// State reflecting global app focus state.
     var focus: AppFocus?
 
+    //  Current state of keyboard
+    /// Keyboard preparing to show
+    var keyboardWillShow = false
+    /// Keyboard height at end of animation
+    var keyboardEventualHeight: CGFloat = 0
+
     /// Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
 
@@ -303,6 +313,8 @@ extension NotebookModel {
                 environment: environment,
                 focus: focus
             )
+        case let .changeKeyboardState(keyboard):
+            return changeKeyboardState(state: state, keyboard: keyboard)
         case .appear:
             return appear(
                 state: state,
@@ -678,6 +690,31 @@ extension NotebookModel {
     ) -> Update<NotebookModel, NotebookAction> {
         environment.logger.warning("\(error.localizedDescription)")
         return Update(state: state)
+    }
+
+    /// Change state of keyboard
+    /// Actions come from `KeyboardService`
+    static func changeKeyboardState(
+        state: NotebookModel,
+        keyboard: KeyboardState
+    ) -> Update<NotebookModel, NotebookAction> {
+        switch keyboard {
+        case
+            .willShow(let size, _),
+            .didShow(let size),
+            .didChangeFrame(let size):
+            var model = state
+            model.keyboardWillShow = true
+            model.keyboardEventualHeight = size.height
+            return Update(state: model)
+        case .willHide:
+            return Update(state: state)
+        case .didHide:
+            var model = state
+            model.keyboardWillShow = false
+            model.keyboardEventualHeight = 0
+            return Update(state: model)
+        }
     }
 
     /// Appear (when view first renders)
@@ -2303,5 +2340,9 @@ struct NotebookView: View {
             }
         }
         .background(.red)
+        .environment(\.openURL, OpenURLAction { url in
+            store.send(.openURL(url))
+            return .handled
+        })
     }
 }
