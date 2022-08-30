@@ -110,7 +110,12 @@ class Tests_NotebookUpdate: XCTestCase {
     }
 
     func testUpdateDetailFocus() throws {
-        let state = NotebookModel()
+        let store = Store(
+            update: NotebookModel.update,
+            state: NotebookModel(),
+            environment: environment
+        )
+
         let slug = try Slug("example").unwrap()
         let detail = EntryDetail(
             saveState: .saved,
@@ -119,19 +124,21 @@ class Tests_NotebookUpdate: XCTestCase {
                 content: "Example text"
             )
         )
-        let update = NotebookModel.update(
-            state: state,
-            action: .updateDetail(
-                detail: detail,
-                autofocus: true
-            ),
-            environment: environment
+
+        store.send(.updateDetail(detail: detail, autofocus: true))
+
+        let expectation = XCTestExpectation(
+            description: "Autofocus sets editor focus"
         )
-        XCTAssertEqual(
-            update.state.focus,
-            .editor,
-            "Autofocus sets editor focus"
-        )
+        DispatchQueue.main.asyncAfter(deadline: .now()) {
+            XCTAssertEqual(
+                store.state.focus,
+                .editor,
+                "Autofocus sets editor focus"
+            )
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 0.2)
     }
 
     func testUpdateDetailBlur() throws {
