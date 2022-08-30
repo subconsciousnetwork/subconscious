@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import ObservableStore
 @testable import Subconscious
 
 /// Tests for Notebook.update
@@ -158,33 +159,43 @@ class Tests_NotebookUpdate: XCTestCase {
         )
     }
 
-    func testSetEditorFocus() throws {
-        let state = NotebookModel(
-            focus: .editor,
-            editor: Editor(
-                entryInfo: EditorEntryInfo(
-                    slug: Slug("great-expectations")!
-                ),
-                saveState: .modified,
-                isLoading: false,
-                text: "Mr. Pumblechook’s premises in the High Street of the market town, were of a peppercorny and farinaceous character."
-            )
-        )
-        let update = NotebookModel.update(
-            state: state,
-            action: .setEditorFocus(nil),
+    func testSetEditorFocus() {
+        let store = Store(
+            update: NotebookModel.update,
+            state: NotebookModel(
+                focus: .editor,
+                editor: Editor(
+                    entryInfo: EditorEntryInfo(
+                        slug: Slug("great-expectations")!
+                    ),
+                    saveState: .modified,
+                    isLoading: false,
+                    text: "Mr. Pumblechook’s premises in the High Street of the market town, were of a peppercorny and farinaceous character."
+                )
+            ),
             environment: environment
         )
+
+        store.send(.setEditorFocus(nil))
+
         XCTAssertEqual(
-            update.state.focus,
-            nil,
-            "Focus was set"
-        )
-        XCTAssertEqual(
-            update.state.editor.saveState,
+            store.state.editor.saveState,
             .saving,
             "Editor was marked saving"
         )
+
+        let expectation = XCTestExpectation(
+            description: "focus set to nil"
+        )
+        DispatchQueue.main.asyncAfter(deadline: .now()) {
+            XCTAssertEqual(
+                store.state.focus,
+                nil,
+                "Focus was set"
+            )
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 0.2)
     }
 
     func testEntryCount() throws {
