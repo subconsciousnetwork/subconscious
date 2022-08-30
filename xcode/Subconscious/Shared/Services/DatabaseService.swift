@@ -496,6 +496,7 @@ struct DatabaseService {
 
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
+    //  TODO: Replace flag arguments with direct references feature flags
     func searchSuggestions(
         query: String,
         isJournalSuggestionEnabled: Bool,
