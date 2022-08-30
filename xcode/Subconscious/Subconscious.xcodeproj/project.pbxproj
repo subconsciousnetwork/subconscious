@@ -79,6 +79,8 @@
 		B85BF47627BB3D6E00F55730 /* ToolbarTitleGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */; };
 		B85BF47827BC2B4700F55730 /* DetailToolbarContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */; };
 		B85BF47927BC2B4700F55730 /* DetailToolbarContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */; };
+		B85D5E3D28BE4B2C00EE0078 /* Tests_NotebookUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85D5E3C28BE4B2C00EE0078 /* Tests_NotebookUpdate.swift */; };
+		B85D5E3F28BE4B4600EE0078 /* Tests_FeedUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85D5E3E28BE4B4600EE0078 /* Tests_FeedUpdate.swift */; };
 		B866868127AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */; };
 		B866868227AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */; };
 		B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */; };
@@ -298,6 +300,8 @@
 		B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowViewModifier.swift; sourceTree = "<group>"; };
 		B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarTitleGroupView.swift; sourceTree = "<group>"; };
 		B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailToolbarContent.swift; sourceTree = "<group>"; };
+		B85D5E3C28BE4B2C00EE0078 /* Tests_NotebookUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_NotebookUpdate.swift; sourceTree = "<group>"; };
+		B85D5E3E28BE4B4600EE0078 /* Tests_FeedUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FeedUpdate.swift; sourceTree = "<group>"; };
 		B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSRangeUtilities.swift; sourceTree = "<group>"; };
 		B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailKeyboardToolbarView.swift; sourceTree = "<group>"; };
 		B866868C27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MarkupTextViewRepresentable.swift; sourceTree = "<group>"; };
@@ -451,7 +455,9 @@
 				B88CC955284FCF8C00994928 /* Tests_DatabaseService.swift */,
 				B8AF472728418285001973FB /* Tests_Editor.swift */,
 				B84AD8DE280F3659006B3153 /* Tests_EntryLink.swift */,
+				B85D5E3E28BE4B4600EE0078 /* Tests_FeedUpdate.swift */,
 				B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */,
+				B85D5E3C28BE4B2C00EE0078 /* Tests_NotebookUpdate.swift */,
 				B88CC95A284FF64300994928 /* Tests_OrderedCollectionUtilities.swift */,
 				B82BB7FD28243F32000C9FCC /* Tests_Parser.swift */,
 				B80057F327DC35BE002C0129 /* Tests_Slug.swift */,
@@ -947,12 +953,14 @@
 				B82BB7FE28243F32000C9FCC /* Tests_Parser.swift in Sources */,
 				B84AD8E82811C827006B3153 /* Tests_URLComponentsUtilities.swift in Sources */,
 				B839A78E282090A0007143E4 /* Tests_AppModelUpdate.swift in Sources */,
+				B85D5E3D28BE4B2C00EE0078 /* Tests_NotebookUpdate.swift in Sources */,
 				B8682DCD2804C379001CD8DD /* Tests_CollectionUtilities.swift in Sources */,
 				B8AF472828418285001973FB /* Tests_Editor.swift in Sources */,
 				B88CC95B284FF64300994928 /* Tests_OrderedCollectionUtilities.swift in Sources */,
 				B8242B1628567FB70014C760 /* Tests_ViewStore.swift in Sources */,
 				B80057F427DC35BE002C0129 /* Tests_Slug.swift in Sources */,
 				B831BDBC2825A4E700C4CE92 /* Tests_Header.swift in Sources */,
+				B85D5E3F28BE4B4600EE0078 /* Tests_FeedUpdate.swift in Sources */,
 				B80057EB27DC355E002C0129 /* SubconsciousTests.swift in Sources */,
 				B84AD8DF280F3659006B3153 /* Tests_EntryLink.swift in Sources */,
 				B8682DCB2804BF04001CD8DD /* Tests_Subtext.swift in Sources */,
