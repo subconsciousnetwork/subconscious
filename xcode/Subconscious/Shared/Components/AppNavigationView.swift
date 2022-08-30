@@ -55,8 +55,8 @@ struct AppNavigationView: View {
                     destination: {
                         DetailView(
                             store: store.viewStore(
-                                get: NotebookModel.getDetail,
-                                tag: NotebookAction.tagDetail
+                                get: NotebookDetailCursor.get,
+                                tag: NotebookDetailCursor.tag
                             ),
                             keyboardToolbar: DetailKeyboardToolbarView(
                                 isSheetPresented: store.binding(

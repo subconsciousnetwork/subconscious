@@ -167,34 +167,6 @@ enum NotebookAction {
 }
 
 extension NotebookAction {
-    static func tagDetail(_ action: DetailAction) -> Self {
-        switch action {
-        case .setEditorText(let text):
-            return .setEditor(
-                text: text,
-                saveState: .modified
-            )
-        case .setEditorSelection(let selection):
-            return .setEditorSelection(selection)
-        case .setFocus(let focus):
-            return .setEditorFocus(focus)
-        case .selectBacklink(let link):
-            return .requestDetail(
-                slug: link.slug,
-                fallback: link.linkableTitle,
-                autofocus: false
-            )
-        case .requestRename(let link):
-            return .showRenameSheet(link)
-        case .requestConfirmDelete(let slug):
-            return .confirmDelete(slug)
-        case .openEditorURL(let url):
-            return .openEditorURL(url)
-        }
-    }
-}
-
-extension NotebookAction {
     /// Generates a short (approximately 1 line) loggable string for action.
     func toLogString() -> String {
         switch self {
@@ -2176,14 +2148,46 @@ extension NotebookModel {
     }
 }
 
-//  MARK: Mapping and tagging functions
+//  MARK: Cursors
 
-extension NotebookModel {
-    static func getDetail(_ model: NotebookModel) -> DetailModel {
+/// Cursor for detail view
+//  TODO: Make this a standard cursor conforming to `CursorProtocol`
+//  This is a non-standard cursor because Detail is not yet factored out
+//  into a stand-alone component. Instead, we just have a handful of actions
+//  we map to/from and a model we construct on the fly. We should factor
+//  out detail into a proper component.
+struct NotebookDetailCursor {
+    static func get(state: NotebookModel) -> DetailModel {
         DetailModel(
-            focus: model.focus,
-            editor: model.editor
+            focus: state.focus,
+            editor: state.editor
         )
+    }
+
+    static func tag(action: DetailAction) -> NotebookAction {
+        switch action {
+        case .setEditorText(let text):
+            return .setEditor(
+                text: text,
+                saveState: .modified
+            )
+        case .setEditorSelection(let selection):
+            return .setEditorSelection(selection)
+        case .setFocus(let focus):
+            return .setEditorFocus(focus)
+        case .selectBacklink(let link):
+            return .requestDetail(
+                slug: link.slug,
+                fallback: link.linkableTitle,
+                autofocus: false
+            )
+        case .requestRename(let link):
+            return .showRenameSheet(link)
+        case .requestConfirmDelete(let slug):
+            return .confirmDelete(slug)
+        case .openEditorURL(let url):
+            return .openEditorURL(url)
+        }
     }
 }
 
