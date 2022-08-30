@@ -520,15 +520,11 @@ extension NotebookModel {
             var model = state
             model.isSearchShowing = true
             model.searchText = ""
-            return Update(state: model)
-                .pipe({ state in
-                    setFocus(
-                        state: state,
-                        environment: environment,
-                        focus: AppFocus.search,
-                        field: AppFocus.search
-                    )
-                })
+            let fx: Fx<NotebookAction> = Just(
+                NotebookAction.setFocus(focus: .search, field: .search)
+            )
+            .eraseToAnyPublisher()
+            return Update(state: model, fx: fx)
                 .animation(.easeOutCubic(duration: Duration.keyboard))
         case .hideSearch:
             return hideSearch(
@@ -965,12 +961,11 @@ extension NotebookModel {
         environment: AppEnvironment,
         focus: AppFocus?
     ) -> Update<NotebookModel, NotebookAction> {
-        let update = setFocus(
-            state: state,
-            environment: environment,
-            focus: focus,
-            field: .editor
+        let fx: Fx<NotebookAction> = Just(
+            NotebookAction.setFocus(focus: focus, field: .editor)
         )
+        .eraseToAnyPublisher()
+        let update = Update(state: state, fx: fx)
         // Check that focus was editor, and is being set to something else.
         // If not, return early.
         guard state.focus == .editor && focus != .editor else {
@@ -1220,7 +1215,12 @@ extension NotebookModel {
 
         let title = entry.linkableTitle
 
-        return Update(state: model)
+        let fx: Fx<NotebookAction> = Just(
+            NotebookAction.setFocus(focus: .rename, field: .rename)
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: model, fx: fx)
             //  Save entry in preperation for any merge/move.
             .pipe({ state in
                 save(state: state, environment: environment)
@@ -1231,15 +1231,6 @@ extension NotebookModel {
                     state: state,
                     environment: environment,
                     text: title
-                )
-            })
-            //  Set focus on rename field
-            .pipe({ state in
-                setFocus(
-                    state: state,
-                    environment: environment,
-                    focus: .rename,
-                    field: .rename
                 )
             })
     }
@@ -1254,20 +1245,17 @@ extension NotebookModel {
         model.isRenameSheetShowing = false
         model.entryToRename = nil
 
-        return Update(state: model)
+        let fx: Fx<NotebookAction> = Just(
+            NotebookAction.setFocus(focus: nil, field: .rename)
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: model, fx: fx)
             .pipe({ state in
                 setRenameField(
                     state: state,
                     environment: environment,
                     text: ""
-                )
-            })
-            .pipe({ state in
-                setFocus(
-                    state: state,
-                    environment: environment,
-                    focus: nil,
-                    field: .rename
                 )
             })
     }
@@ -1537,18 +1525,18 @@ extension NotebookModel {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel, NotebookAction> {
-        return save(
-            state: state,
-            environment: environment
+        let fx: Fx<NotebookAction> = Just(
+            NotebookAction.setFocus(focus: nil, field: .editor)
         )
-        .pipe({ state in
-            setFocus(
-                state: state,
-                environment: environment,
-                focus: nil,
-                field: .editor
-            )
-        })
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+            .pipe({ model in
+                save(
+                    state: state,
+                    environment: environment
+                )
+            })
     }
 
     /// Set search text for main search input
@@ -1587,15 +1575,13 @@ extension NotebookModel {
         var model = state
         model.isSearchShowing = false
         model.searchText = ""
-        return Update(state: model)
-            .pipe({ state in
-                setFocus(
-                    state: state,
-                    environment: environment,
-                    focus: nil,
-                    field: .search
-                )
-            })
+
+        let fx: Fx<NotebookAction> = Just(
+            NotebookAction.setFocus(focus: nil, field: .search)
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: model, fx: fx)
             .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
@@ -1891,15 +1877,11 @@ extension NotebookModel {
         // If editor is not meant to be focused, return early, setting focus
         // to nil.
         guard autofocus else {
-            return update
-                .pipe({ state in
-                    setFocus(
-                        state: state,
-                        environment: environment,
-                        focus: nil,
-                        field: .editor
-                    )
-                })
+            let focusFx: Fx<NotebookAction> = Just(
+                NotebookAction.setFocus(focus: nil, field: .editor)
+            )
+            .eraseToAnyPublisher()
+            return update.mergeFx(focusFx)
         }
 
         // Otherwise, set editor selection and focus to end of document.
@@ -1907,6 +1889,12 @@ extension NotebookModel {
         // edit it, not browse it.
         // We focus the editor and place the cursor at the end so you can just
         // start typing
+
+        let focusFx: Fx<NotebookAction> = Just(
+            NotebookAction.setFocus(focus: .editor, field: .editor)
+        )
+        .eraseToAnyPublisher()
+
         return update
             .pipe({ state in
                 setEditorSelectionEnd(
@@ -1914,14 +1902,7 @@ extension NotebookModel {
                     environment: environment
                 )
             })
-            .pipe({ state in
-                setFocus(
-                    state: state,
-                    environment: environment,
-                    focus: .editor,
-                    field: .editor
-                )
-            })
+            .mergeFx(focusFx)
     }
 
     static func setLinkSheetPresented(
@@ -1929,14 +1910,16 @@ extension NotebookModel {
         environment: AppEnvironment,
         isPresented: Bool
     ) -> Update<NotebookModel, NotebookAction> {
-        var update = setFocus(
-            state: state,
-            environment: environment,
-            focus: isPresented ? .linkSearch : .editor,
-            field: .linkSearch
+        let fx: Fx<NotebookAction> = Just(
+            NotebookAction.setFocus(
+                focus: isPresented ? .linkSearch : .editor,
+                field: .linkSearch
+            )
         )
-        update.state.isLinkSheetPresented = isPresented
-        return update
+        .eraseToAnyPublisher()
+        var model = state
+        model.isLinkSheetPresented = isPresented
+        return Update(state: model, fx: fx)
     }
 
     static func setLinkSearch(
