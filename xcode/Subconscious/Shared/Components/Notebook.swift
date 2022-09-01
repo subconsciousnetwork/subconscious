@@ -17,6 +17,9 @@ import Combine
 /// For action naming convention, see
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
 enum NotebookAction {
+    // Tagged action for detail
+    case detail(DetailAction)
+
     case noop
 
     //  URL handlers
@@ -202,6 +205,9 @@ struct NotebookModel: Hashable, Equatable {
     /// Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
 
+    /// Entry detail
+    var detail = DetailModel()
+
     /// Count of entries
     var entryCount: Int? = nil
 
@@ -265,6 +271,13 @@ extension NotebookModel {
         environment: AppEnvironment
     ) -> Update<NotebookModel, NotebookAction> {
         switch action {
+        case .detail(let action):
+            return NotebookDetailCursor.update(
+                with: DetailModel.update,
+                state: state,
+                action: action,
+                environment: environment
+            )
         case .noop:
             return Update(state: state)
         case let .openURL(url):
@@ -2139,25 +2152,21 @@ extension NotebookModel {
 //  into a stand-alone component. Instead, we just have a handful of actions
 //  we map to/from and a model we construct on the fly. We should factor
 //  out detail into a proper component.
-struct NotebookDetailCursor {
+struct NotebookDetailCursor: CursorProtocol {
     static func get(state: NotebookModel) -> DetailModel {
-        DetailModel(
-            focus: state.focus,
-            editor: state.editor
-        )
+        state.detail
+    }
+
+    static func set(state: NotebookModel, inner: DetailModel) -> NotebookModel {
+        var model = state
+        model.detail = inner
+        return model
     }
 
     static func tag(action: DetailAction) -> NotebookAction {
         switch action {
-        case .setEditorText(let text):
-            return .setEditor(
-                text: text,
-                saveState: .modified
-            )
-        case .setEditorSelection(let selection):
-            return .setEditorSelection(selection)
-        case .setFocus(let focus):
-            return .setEditorFocus(focus)
+        case .openEditorURL(let url):
+            return .openEditorURL(url)
         case .selectBacklink(let link):
             return .requestDetail(
                 slug: link.slug,
@@ -2168,8 +2177,8 @@ struct NotebookDetailCursor {
             return .showRenameSheet(link)
         case .requestConfirmDelete(let slug):
             return .confirmDelete(slug)
-        case .openEditorURL(let url):
-            return .openEditorURL(url)
+        default:
+            return .detail(action)
         }
     }
 }
