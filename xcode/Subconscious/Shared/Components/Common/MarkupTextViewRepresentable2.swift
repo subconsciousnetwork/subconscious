@@ -108,9 +108,9 @@ where Focus: Hashable
     typealias Model = Self
     typealias Action = MarkupTextAction<Focus>
 
-    var focus: FocusModel<Focus>
-    var text: String
-    var selection: NSRange
+    var focus = FocusModel<Focus>()
+    var text = ""
+    var selection = NSMakeRange(0, 0)
 
     //  MARK: Update
     static func update(
@@ -188,15 +188,12 @@ where Focus: Hashable
         /// that would cause feedback cycles where an update triggers an event,
         /// which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
-        // Dirty flag signaling if focus change has been requested already
-        var isAwaitingFocusChange: Bool
         var representable: MarkupTextViewRepresentable2
 
         init(
             representable: MarkupTextViewRepresentable2
         ) {
             self.isUIViewUpdating = false
-            self.isAwaitingFocusChange = false
             self.representable = representable
         }
 
@@ -302,6 +299,11 @@ where Focus: Hashable
     //  MARK: Properties
     var store: ViewStore<MarkupTextModel<Focus>, MarkupTextAction<Focus>>
     var field: Focus
+    /// Frame needed to determine textview height.
+    /// Use `GeometryView` to find container width.
+    var frame: CGRect
+    var textColor: UIColor = UIColor(.primary)
+    var textContainerInset: UIEdgeInsets = .zero
     /// Function to render NSAttributedString attributes from a markup string.
     /// The renderer will use these attributes to style the string.
     var renderAttributesOf: (NSMutableAttributedString) -> Void
@@ -312,11 +314,6 @@ where Focus: Hashable
         UITextItemInteraction
     ) -> Bool
     var logger: Logger?
-    /// Frame needed to determine textview height.
-    /// Use `GeometryView` to find container width.
-    var frame: CGRect
-    var textColor: UIColor = UIColor(.primary)
-    var textContainerInset: UIEdgeInsets = .zero
 
     //  MARK: makeUIView
     func makeUIView(context: Context) -> MarkupTextView {
