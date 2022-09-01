@@ -7,27 +7,91 @@
 
 import SwiftUI
 import os
+import ObservableStore
 
-struct DetailModel: Equatable {
-    var focus: AppFocus?
-    var editor: Editor
-    var markupEditor: MarkupTextModel<AppFocus>
-}
-
-enum DetailAction {
+enum DetailAction: Hashable {
     case markupEditor(MarkupTextAction<AppFocus>)
-
-    case setFocus(AppFocus?)
-    case setEditorText(String)
-    case setEditorSelection(NSRange)
     case openEditorURL(URL)
     case selectBacklink(EntryLink)
     case requestRename(EntryLink)
     case requestConfirmDelete(Slug)
 }
 
+struct DetailModel: Hashable {
+    var focus: AppFocus?
+    var editor = Editor()
+    var markupEditor = MarkupTextModel<AppFocus>()
+
+    static func update(
+        state: DetailModel,
+        action: DetailAction,
+        environment: AppEnvironment
+    ) -> Update<DetailModel, DetailAction> {
+        switch action {
+        case .markupEditor(let action):
+            return DetailMarkupEditorCursor.update(
+                with: MarkupTextModel.update,
+                state: state,
+                action: action,
+                environment: ()
+            )
+        case .openEditorURL(_):
+            return debug(
+                state: state,
+                environment: environment,
+                message: "openEditorURL should be handled by parent component"
+            )
+        case .selectBacklink(_):
+            return debug(
+                state: state,
+                environment: environment,
+                message: "selectBacklink should be handled by parent component"
+            )
+        case .requestRename(_):
+            return debug(
+                state: state,
+                environment: environment,
+                message: "selectBacklink should be handled by parent component"
+            )
+        case .requestConfirmDelete(_):
+            return debug(
+                state: state,
+                environment: environment,
+                message: "requestConfirmDelete should be handled by parent component"
+            )
+        }
+    }
+
+    static func debug(
+        state: DetailModel,
+        environment: AppEnvironment,
+        message: String
+    ) -> Update<DetailModel, DetailAction> {
+        environment.logger.debug("\(message)")
+        return Update(state: state)
+    }
+}
+
+/// Editor cursor
 struct DetailMarkupEditorCursor: CursorProtocol {
+    typealias OuterState = DetailModel
+    typealias InnerState = MarkupTextModel<AppFocus>
+    typealias OuterAction = DetailAction
+    typealias InnerAction = MarkupTextAction<AppFocus>
+
+    static func get(state: OuterState) -> InnerState {
+        state.markupEditor
+    }
+
+    static func set(state: OuterState, inner: InnerState) -> OuterState {
+        var model = state
+        model.markupEditor = inner
+        return model
+    }
     
+    static func tag(action: InnerAction) -> OuterAction {
+        .markupEditor(action)
+    }
 }
 
 struct DetailView: View {
@@ -65,22 +129,10 @@ struct DetailView: View {
                 GeometryReader { geometry in
                     ScrollView(.vertical) {
                         VStack(spacing: 0) {
-                            MarkupTextViewRepresentable(
-                                text: store.binding(
-                                    get: \.editor.text,
-                                    tag: { text in
-                                        .setEditorText(text)
-                                    }
-                                ),
-                                selection: store.binding(
-                                    get: { model in model.editor.selection },
-                                    tag: { selection in
-                                        .setEditorSelection(selection)
-                                    }
-                                ),
-                                focus: store.binding(
-                                    get: { model in model.focus },
-                                    tag: { focus in .setFocus(focus) }
+                            MarkupTextViewRepresentable2(
+                                store: store.viewStore(
+                                    get: DetailMarkupEditorCursor.get,
+                                    tag: DetailMarkupEditorCursor.tag
                                 ),
                                 field: .editor,
                                 frame: geometry.frame(in: .local),
