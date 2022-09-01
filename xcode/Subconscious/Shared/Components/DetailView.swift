@@ -11,9 +11,12 @@ import os
 struct DetailModel: Equatable {
     var focus: AppFocus?
     var editor: Editor
+    var markupEditor: MarkupTextModel<AppFocus>
 }
 
 enum DetailAction {
+    case markupEditor(MarkupTextAction<AppFocus>)
+
     case setFocus(AppFocus?)
     case setEditorText(String)
     case setEditorSelection(NSRange)
@@ -21,6 +24,10 @@ enum DetailAction {
     case selectBacklink(EntryLink)
     case requestRename(EntryLink)
     case requestConfirmDelete(Slug)
+}
+
+struct DetailMarkupEditorCursor: CursorProtocol {
+    
 }
 
 struct DetailView: View {

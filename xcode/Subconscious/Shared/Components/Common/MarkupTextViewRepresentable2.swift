@@ -38,6 +38,7 @@ where Focus: Hashable
 {
     /// Request a state-driven focus change
     case requestFocus(Focus?)
+    /// Notify that focus request was scheduled
     case focusRequestScheduled
     /// Notify of a focus change from the UI
     case focusChange(Focus?)
@@ -79,74 +80,52 @@ where Focus: Hashable
     }
 }
 
-struct MarkupTextFocusCursor<Focus>: CursorProtocol
-where Focus: Hashable
-{
-    static func get(state: MarkupTextModel<Focus>) -> FocusModel<Focus> {
-        <#code#>
-    }
-    
-    static func set(state: MarkupTextModel<Focus>, inner: FocusModel<Focus>) -> MarkupTextModel<Focus> {
-        <#code#>
-    }
-    
-    static func tag(action: FocusAction<Focus>) -> MarkupTextAction<Focus> {
-        <#code#>
-    }
-    
-    typealias OuterState = MarkupTextModel<Focus>
-    typealias InnerState = FocusModel<Focus>
-    typealias OuterAction = MarkupTextAction<Focus>
-    typealias InnerAction = FocusAction<Focus>
-    
-    
-}
-
+//  MARK: Action
 enum MarkupTextAction<Focus>: Hashable
 where Focus: Hashable
 {
-    /// Request a state-driven focus change
-    case requestFocus(Focus?)
-    case focusRequestScheduled
-    /// Notify of a focus change from the UI
-    case notifyFocus(Focus?)
+    case focus(FocusAction<Focus>)
     case setText(String)
     case setSelection(NSRange)
+
+    static func requestFocus(_ focus: Focus?) -> Self {
+        return Self.focus(.requestFocus(focus))
+    }
+
+    static var focusRequestScheduled: Self {
+        Self.focus(.focusRequestScheduled)
+    }
+
+    static func focusChange(_ focus: Focus?) -> Self {
+        return Self.focus(.focusChange(focus))
+    }
 }
 
+//  MARK: Model
 struct MarkupTextModel<Focus>: Hashable
 where Focus: Hashable
 {
     typealias Model = Self
     typealias Action = MarkupTextAction<Focus>
 
-    var focusRequestScheduled = false
-    var focusRequest: Focus?
-    var focusState: Focus?
+    var focus: FocusModel<Focus>
     var text: String
     var selection: NSRange
 
+    //  MARK: Update
     static func update(
         state: Model,
         action: Action,
         environment: Void
     ) -> Update<Model, Action> {
         switch action {
-        case .requestFocus(let focus):
-            var model = state
-            model.focusRequestScheduled = false
-            model.focusRequest = focus
-            return Update(state: model)
-        case .focusRequestScheduled:
-            var model = state
-            model.focusRequestScheduled = true
-            return Update(state: model)
-        case .notifyFocus(let focus):
-            var model = state
-            model.focusRequestScheduled = false
-            model.focusState = focus
-            model.focusRequest = focus
-            return Update(state: model)
+        case .focus(let action):
+            return MarkupTextFocusCursor.update(
+                with: FocusModel.update,
+                state: state,
+                action: action,
+                environment: environment
+            )
         case .setText(let text):
             var model = state
             model.text = text
@@ -156,6 +135,31 @@ where Focus: Hashable
             model.selection = selection
             return Update(state: model)
         }
+    }
+}
+
+//  MARK: Cursor
+//  Cursor for markup text
+struct MarkupTextFocusCursor<Focus>: CursorProtocol
+where Focus: Hashable
+{
+    typealias OuterState = MarkupTextModel<Focus>
+    typealias InnerState = FocusModel<Focus>
+    typealias OuterAction = MarkupTextAction<Focus>
+    typealias InnerAction = FocusAction<Focus>
+
+    static func get(state: OuterState) -> InnerState {
+        state.focus
+    }
+    
+    static func set(state: OuterState, inner: InnerState) -> OuterState {
+        var model = state
+        model.focus = inner
+        return model
+    }
+    
+    static func tag(action: InnerAction) -> OuterAction {
+        OuterAction.focus(action)
     }
 }
 
@@ -263,7 +267,7 @@ where Focus: Hashable
                 )
                 return
             }
-            self.representable.store.send(.notifyFocus(representable.field))
+            self.representable.store.send(.focusChange(representable.field))
         }
 
         /// Handle editing end (blur)
@@ -274,7 +278,7 @@ where Focus: Hashable
                 )
                 return
             }
-            self.representable.store.send(.notifyFocus(nil))
+            self.representable.store.send(.focusChange(nil))
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
@@ -396,10 +400,10 @@ where Focus: Hashable
     /// more than once.
     func updateUIViewFocus(_ view: MarkupTextView, context: Context) {
         // Focus is clean, do nothing
-        guard store.state.focusRequest != store.state.focusState else {
+        guard store.state.focus.focusRequest != store.state.focus.focus else {
             return
         }
-        guard !store.state.focusRequestScheduled else {
+        guard !store.state.focus.focusRequestScheduled else {
             logger?.debug(
                 "updateUIViewFocus: Focus is dirty but focus change already scheduled. Skipping."
             )
@@ -416,8 +420,8 @@ where Focus: Hashable
         DispatchQueue.main.async {
             // Check again in this tick to make sure we still need to
             // change first responder state.
-            if store.state.focusRequest != store.state.focusState {
-                if store.state.focusRequest == field {
+            if store.state.focus.focusRequest != store.state.focus.focus {
+                if store.state.focus.focusRequest == field {
                     logger?.debug(
                         "async: call becomeFirstResponder"
                     )
