@@ -493,13 +493,6 @@ extension NotebookModel {
                 environment: environment,
                 autofocus: autofocus
             )
-        case let .updateDetail(results, autofocus):
-            return updateDetail(
-                state: state,
-                environment: environment,
-                detail: results,
-                autofocus: autofocus
-            )
         case let .failDetail(message):
             environment.logger.log(
                 "Failed to get details for search: \(message)"
@@ -1497,86 +1490,6 @@ extension NotebookModel {
             })
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
-    }
-
-    /// Update entry detail.
-    /// This case gets hit after requesting detail for an entry.
-    static func updateDetail(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        detail: EntryDetail,
-        autofocus: Bool
-    ) -> Update<NotebookModel, NotebookAction> {
-        var model = state
-        model.editor = Editor(detail)
-
-        // Schedule save for ~ after the transition animation completes.
-        // If we save immediately, it causes list view to update while the
-        // panel animates in, creating much visual noise.
-        // By delaying the fx, we do this out of sight.
-        // We don't actually know the exact time that the sliding panel
-        // animation takes in NavigationView, so we estimate a time by which
-        // the transition animation should be complete.
-        // 2022-03-24 Gordon Brander
-        let approximateNavigationViewAnimationCompleteDuration: Double = 1
-        let fx: Fx<NotebookAction> = Just(NotebookAction.save)
-            .delay(
-                for: .seconds(
-                    approximateNavigationViewAnimationCompleteDuration
-                ),
-                scheduler: DispatchQueue.main
-            )
-            .eraseToAnyPublisher()
-
-        let update = Update(
-            state: model,
-            fx: fx
-        )
-        .pipe({ state in
-            showDetail(
-                state: state,
-                environment: environment,
-                isShowing: true
-            )
-        })
-        .pipe({ state in
-            setEditor(
-                state: state,
-                environment: environment,
-                text: detail.entry.body,
-                saveState: detail.saveState
-            )
-        })
-
-        // If editor is not meant to be focused, return early, setting focus
-        // to nil.
-        guard autofocus else {
-            let focusFx: Fx<NotebookAction> = Just(
-                NotebookAction.setFocus(focus: nil, field: .editor)
-            )
-            .eraseToAnyPublisher()
-            return update.mergeFx(focusFx)
-        }
-
-        // Otherwise, set editor selection and focus to end of document.
-        // When you've just created a new note, chances are you want to
-        // edit it, not browse it.
-        // We focus the editor and place the cursor at the end so you can just
-        // start typing
-
-        let focusFx: Fx<NotebookAction> = Just(
-            NotebookAction.setFocus(focus: .editor, field: .editor)
-        )
-        .eraseToAnyPublisher()
-
-        return update
-            .pipe({ state in
-                setEditorSelectionEnd(
-                    state: state,
-                    environment: environment
-                )
-            })
-            .mergeFx(focusFx)
     }
 
     static func setLinkSheetPresented(

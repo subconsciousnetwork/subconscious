@@ -16,6 +16,8 @@ enum DetailAction: Hashable {
     /// Invokes save and blurs editor
     case selectDoneEditing
 
+    /// Request show detail
+    case showDetail
     /// Update entry being displayed
     case updateDetail(detail: EntryDetail, autofocus: Bool)
 
@@ -111,7 +113,19 @@ struct DetailModel: Hashable {
                 state: state,
                 environment: environment
             )
-        case 
+        case .showDetail:
+            return debug(
+                state: state,
+                environment: environment,
+                message: ".showDetail should be handled by parent component"
+            )
+        case let .updateDetail(results, autofocus):
+            return updateDetail(
+                state: state,
+                environment: environment,
+                detail: results,
+                autofocus: autofocus
+            )
         case .save:
             return save(
                 state: state,
@@ -341,6 +355,84 @@ struct DetailModel: Hashable {
                     environment: environment
                 )
             })
+    }
+
+    /// Update entry detail.
+    /// This case gets hit after requesting detail for an entry.
+    static func updateDetail(
+        state: DetailModel,
+        environment: AppEnvironment,
+        detail: EntryDetail,
+        autofocus: Bool
+    ) -> Update<DetailModel, DetailAction> {
+        var model = state
+        model.editor = Editor(detail)
+
+        // Schedule save for ~ after the transition animation completes.
+        // If we save immediately, it causes list view to update while the
+        // panel animates in, creating much visual noise.
+        // By delaying the fx, we do this out of sight.
+        // We don't actually know the exact time that the sliding panel
+        // animation takes in NavigationView, so we estimate a time by which
+        // the transition animation should be complete.
+        // 2022-03-24 Gordon Brander
+        let approximateNavigationViewAnimationCompleteDuration: Double = 1
+
+        let showDetailFx: Fx<DetailAction> = Just(DetailAction.showDetail)
+            .eraseToAnyPublisher()
+
+        let fx: Fx<DetailAction> = Just(DetailAction.save)
+            .delay(
+                for: .seconds(
+                    approximateNavigationViewAnimationCompleteDuration
+                ),
+                scheduler: DispatchQueue.main
+            )
+            .merge(with: showDetailFx)
+            .eraseToAnyPublisher()
+
+        let update = Update(
+            state: model,
+            fx: fx
+        )
+        .pipe({ state in
+            setEditor(
+                state: state,
+                environment: environment,
+                text: detail.entry.body,
+                saveState: detail.saveState
+            )
+        })
+
+        // If editor is not meant to be focused, return early, setting focus
+        // to nil.
+        guard autofocus else {
+            let focusFx: Fx<DetailAction> = Just(
+                DetailAction.requestFocus(nil)
+            )
+            .eraseToAnyPublisher()
+            return update.mergeFx(focusFx)
+        }
+
+        // Otherwise, set editor selection and focus to end of document.
+        // When you've just created a new note, chances are you want to
+        // edit it, not browse it.
+        // We focus the editor and place the cursor at the end so you can just
+        // start typing
+
+        let focusFx: Fx<DetailAction> = Just(
+            DetailAction.requestFocus(.editor)
+        )
+        .eraseToAnyPublisher()
+
+        return update
+            .pipe({ state in
+                setEditorSelectionEnd(
+                    state: state,
+                    environment: environment
+                )
+            })
+            .mergeFx(focusFx)
     }
 
     /// Save snapshot of entry
