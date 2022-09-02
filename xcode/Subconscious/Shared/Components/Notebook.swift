@@ -182,9 +182,6 @@ struct NotebookModel: Hashable, Equatable {
 
     /// Main search suggestions
     var suggestions: [Suggestion] = []
-
-    // Editor
-    var editor = Editor()
 }
 
 //  MARK: Update
@@ -431,13 +428,6 @@ extension NotebookModel {
         let fx: Fx<NotebookAction> = Just(NotebookAction.countEntries)
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
-    }
-
-    /// Set all editor properties to initial values
-    static func resetEditor(state: NotebookModel) -> NotebookModel {
-        var model = state
-        model.editor = Editor()
-        return model
     }
 
     /// Toggle detail view showing or hiding
@@ -694,21 +684,26 @@ extension NotebookModel {
         environment.logger.log("Deleted entry: \(slug)")
         //  Refresh lists in search fields after delete.
         //  This ensures they don't show the deleted entry.
-        let fx: Fx<NotebookAction> = Just(NotebookAction.refreshAll)
+        let refreshFx: Fx<NotebookAction> = Just(NotebookAction.refreshAll)
             .eraseToAnyPublisher()
 
-        var model = state
-        // If we just deleted the entry currently being edited,
-        // reset the editor to initial state (nothing is being edited).
-        if state.editor.entryInfo?.slug == slug {
-            model = resetEditor(state: model)
-            model.isDetailShowing = false
+        guard state.detail.slug == slug else {
+            return Update(state: state, fx: refreshFx)
         }
 
-        return Update(
-            state: model,
-            fx: fx
+        // If we just deleted the entry currently being edited,
+        // reset the editor to initial state (nothing is being edited).
+        let fx: Fx<NotebookAction> = Just(
+            NotebookAction.detail(.resetDetail)
         )
+        .merge(with: refreshFx)
+        .eraseToAnyPublisher()
+
+        // Hide detail
+        var model = state
+        model.isDetailShowing = false
+
+        return Update(state: model, fx: fx)
     }
 
     /// Set search text for main search input

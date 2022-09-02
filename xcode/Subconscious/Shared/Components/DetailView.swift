@@ -37,6 +37,8 @@ enum DetailAction: Hashable {
     case showDetail(Bool)
     /// Update entry being displayed
     case updateDetail(detail: EntryDetail, autofocus: Bool)
+    /// Set detail to initial conditions
+    case resetDetail
 
     //  Saving entry
     /// Trigger autosave of current state
@@ -118,7 +120,20 @@ enum DetailAction: Hashable {
 //  MARK: Model
 struct DetailModel: Hashable {
     var focus: AppFocus?
-    var editor = Editor()
+
+    var slug: Slug?
+    var headers: HeaderIndex = .empty
+    var backlinks: [EntryStub] = []
+
+    /// Is editor saved?
+    var saveState = SaveState.saved
+
+    /// Is editor in loading state?
+    var isLoading = true
+
+    /// The entry link within the text
+    var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
+
     var markupEditor = MarkupTextModel<AppFocus>()
 
     /// Link suggestions for modal and bar in edit mode
@@ -137,6 +152,19 @@ struct DetailModel: Hashable {
     var renameField: String = ""
     /// Suggestions for renaming note.
     var renameSuggestions: [RenameSuggestion] = []
+
+    /// Given a particular entry value, does the editor's state
+    /// currently match it, such that we could say the editor is
+    /// displaying that entry?
+    func stateMatches(entry: SubtextFile) -> Bool {
+        guard let slug = self.slug else {
+            return false
+        }
+        return (
+            slug == entry.slug &&
+            markupEditor.text == entry.body
+        )
+    }
 
     //  MARK: Update
     static func update(
@@ -228,6 +256,11 @@ struct DetailModel: Hashable {
                 environment: environment,
                 detail: results,
                 autofocus: autofocus
+            )
+        case .resetDetail:
+            return resetDetail(
+                state: state,
+                environment: environment
             )
         case .autosave:
             return autosave(
@@ -366,28 +399,28 @@ struct DetailModel: Hashable {
             return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.editor.selection,
+                range: state.markupEditor.selection,
                 with: { text in Markup.Wikilink(text: text) }
             )
         case .insertEditorBoldAtSelection:
             return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.editor.selection,
+                range: state.markupEditor.selection,
                 with: { text in Markup.Bold(text: text) }
             )
         case .insertEditorItalicAtSelection:
             return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.editor.selection,
+                range: state.markupEditor.selection,
                 with: { text in Markup.Italic(text: text) }
             )
         case .insertEditorCodeAtSelection:
             return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.editor.selection,
+                range: state.markupEditor.selection,
                 with: { text in Markup.Code(text: text) }
             )
         case .refreshAll:
@@ -436,24 +469,16 @@ struct DetailModel: Hashable {
         text: String,
         saveState: SaveState = .modified
     ) -> Update<DetailModel, DetailAction> {
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.markupEditor(.setText(text))
+        )
+        .eraseToAnyPublisher()
+
         var model = state
-        model.editor.text = text
         // Mark save state
-        model.editor.saveState = saveState
-        let dom = Subtext.parse(markup: text)
-        let link = dom.entryLinkFor(range: state.editor.selection)
-        model.editor.selectedEntryLinkMarkup = link
+        model.saveState = saveState
 
-        let linkSearchText = link?.toTitle() ?? ""
-
-        return Update(state: model)
-            .pipe({ state in
-                setLinkSearch(
-                    state: state,
-                    environment: environment,
-                    text: linkSearchText
-                )
-            })
+        return Update(state: model, fx: fx)
     }
 
     /// Set editor selection.
@@ -462,17 +487,20 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         range nsRange: NSRange
     ) -> Update<DetailModel, DetailAction> {
-        var model = state
-        model.editor.selection = nsRange
-        let dom = Subtext.parse(markup: model.editor.text)
-        let link = dom.entryLinkFor(
-            range: model.editor.selection
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.markupEditor(.setSelection(nsRange))
         )
-        model.editor.selectedEntryLinkMarkup = link
+        .eraseToAnyPublisher()
+
+        var model = state
+
+        let dom = Subtext.parse(markup: state.markupEditor.text)
+        let link = dom.entryLinkFor(range: nsRange)
+        model.selectedEntryLinkMarkup = link
 
         let linkSearchText = link?.toTitle() ?? ""
 
-        return Update(state: model)
+        return Update(state: model, fx: fx)
             .pipe({ state in
                 setLinkSearch(
                     state: state,
@@ -488,8 +516,8 @@ struct DetailModel: Hashable {
         environment: AppEnvironment
     ) -> Update<DetailModel, DetailAction> {
         let range = NSRange(
-            state.editor.text.endIndex...,
-            in: state.editor.text
+            state.markupEditor.text.endIndex...,
+            in: state.markupEditor.text
         )
 
         return setEditorSelection(
@@ -506,7 +534,7 @@ struct DetailModel: Hashable {
         text: String,
         range nsRange: NSRange
     ) -> Update<DetailModel, DetailAction> {
-        guard let range = Range(nsRange, in: state.editor.text) else {
+        guard let range = Range(nsRange, in: state.markupEditor.text) else {
             environment.logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
@@ -514,7 +542,7 @@ struct DetailModel: Hashable {
         }
 
         // Replace selected range with committed link search text.
-        let markup = state.editor.text.replacingCharacters(
+        let markup = state.markupEditor.text.replacingCharacters(
             in: range,
             with: text
         )
@@ -571,7 +599,7 @@ struct DetailModel: Hashable {
         slug: Slug
     ) -> Update<DetailModel, DetailAction> {
         var model = state
-        model.editor.isLoading = true
+        model.isLoading = true
 
         return Update(state: model)
             .animation(.easeOutCubic(duration: Duration.keyboard))
@@ -736,7 +764,11 @@ struct DetailModel: Hashable {
             .eraseToAnyPublisher()
 
         var model = state
-        model.editor = Editor(detail)
+        model.slug = detail.slug
+        model.headers = detail.entry.headers
+        model.backlinks = detail.backlinks
+        model.saveState = .saved
+        model.isLoading = false
 
         let update = Update(
             state: model,
@@ -782,6 +814,20 @@ struct DetailModel: Hashable {
             .mergeFx(focusFx)
     }
 
+    /// Reset model to "none" condition
+    static func resetDetail(
+        state: DetailModel,
+        environment: AppEnvironment
+    ) -> Update<DetailModel, DetailAction> {
+        var model = state
+        model.slug = nil
+        model.markupEditor = MarkupTextModel<AppFocus>()
+        model.backlinks = []
+        model.isLoading = true
+        model.saveState = .saved
+        return Update(state: state)
+    }
+
     static func autosave(
         state: DetailModel,
         environment: AppEnvironment
@@ -801,12 +847,12 @@ struct DetailModel: Hashable {
         entry: SubtextFile?
     ) -> Update<DetailModel, DetailAction> {
         // If editor dom is already saved, noop
-        guard state.editor.saveState != .saved else {
+        guard state.saveState != .saved else {
             return Update(state: state)
         }
         // If there is no entry, nothing to save
         guard let entry = entry else {
-            let saveState = String(reflecting: state.editor.saveState)
+            let saveState = String(reflecting: state.saveState)
             environment.logger.warning(
                 "Entry save state is marked \(saveState) but no entry could be derived for state. Doing nothing."
             )
@@ -816,7 +862,7 @@ struct DetailModel: Hashable {
         var model = state
 
         // Mark saving in-progress
-        model.editor.saveState = .saving
+        model.saveState = .saving
 
         let fx: Fx<DetailAction> = environment.database
             .writeEntryAsync(entry)
@@ -858,10 +904,10 @@ struct DetailModel: Hashable {
         // new changes.
         // 2022-02-09 Gordon Brander
         if
-            model.editor.saveState == .saving &&
-            model.editor.stateMatches(entry: entry)
+            model.saveState == .saving &&
+            model.stateMatches(entry: entry)
         {
-            model.editor.saveState = .saved
+            model.saveState = .saved
         }
 
         return Update(state: model, fx: fx)
@@ -879,7 +925,7 @@ struct DetailModel: Hashable {
         )
         // Mark modified, since we failed to save
         var model = state
-        model.editor.saveState = .modified
+        model.saveState = .modified
         return Update(state: model)
     }
 
@@ -910,8 +956,8 @@ struct DetailModel: Hashable {
         model.linkSearchText = text
 
         // Omit current slug from results
-        let omitting = state.editor.entryInfo.mapOr(
-            { info in Set([info.slug]) },
+        let omitting = state.slug.mapOr(
+            { slug in Set([slug]) },
             default: Set()
         )
 
@@ -960,14 +1006,14 @@ struct DetailModel: Hashable {
         // If there is a selected link, use that range
         // instead of selection
         let (range, replacement): (NSRange, String) = Func.pipe(
-            state.editor.selectedEntryLinkMarkup,
+            state.selectedEntryLinkMarkup,
             through: { markup in
                 switch markup {
                 case .slashlink(let slashlink):
                     let replacement = link.slug.toSlashlink()
                     let range = NSRange(
                         slashlink.span.range,
-                        in: state.editor.text
+                        in: state.markupEditor.text
                     )
                     return (range, replacement)
                 case .wikilink(let wikilink):
@@ -975,13 +1021,13 @@ struct DetailModel: Hashable {
                     let replacement = Markup.Wikilink(text: text).markup
                     let range = NSRange(
                         wikilink.span.range,
-                        in: state.editor.text
+                        in: state.markupEditor.text
                     )
                     return (range, replacement)
                 case .none:
                     let text = link.linkableTitle
                     let replacement = Markup.Wikilink(text: text).markup
-                    return (state.editor.selection, replacement)
+                    return (state.markupEditor.selection, replacement)
                 }
             }
         )
@@ -1347,18 +1393,18 @@ struct DetailModel: Hashable {
     ) -> Update<DetailModel, DetailAction>
     where T: TaggedMarkup
     {
-        guard let range = Range(nsRange, in: state.editor.text) else {
+        guard let range = Range(nsRange, in: state.markupEditor.text) else {
             environment.logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
             return Update(state: state)
         }
 
-        let selectedText = String(state.editor.text[range])
+        let selectedText = String(state.markupEditor.text[range])
         let markup = withMarkup(selectedText)
 
         // Replace selected range with committed link search text.
-        let editorText = state.editor.text.replacingCharacters(
+        let editorText = state.markupEditor.text.replacingCharacters(
             in: range,
             with: String(describing: markup)
         )
@@ -1402,19 +1448,28 @@ struct DetailModel: Hashable {
     }
 }
 
+extension EntryLink {
+    init?(_ detail: DetailModel) {
+        guard let slug = detail.slug else {
+            return nil
+        }
+        guard let title = detail.headers["title"] else {
+            self.init(slug: slug)
+            return
+        }
+        self.init(slug: slug, title: title)
+    }
+}
+
 extension SubtextFile {
     /// Initialize SubtextFile from DetailModel.
     /// We use this to snapshot the current state of detail for saving.
     init?(_ detail: DetailModel) {
-        // TODO: refactor slug to belong to detail
-        guard
-            let slug = detail.editor.entryInfo?.slug,
-            let headers = detail.editor.entryInfo?.headers
-        else {
+        guard let slug = detail.slug else {
             return nil
         }
         self.slug = slug
-        self.headers = headers
+        self.headers = detail.headers
         self.body = detail.markupEditor.text
     }
 }
@@ -1459,14 +1514,7 @@ struct DetailView: View {
 
     var isReady: Bool {
         let state = store.state
-        return !state.editor.isLoading && state.editor.entryInfo?.slug != nil
-    }
-
-    private var backlinks: [EntryStub] {
-        guard let backlinks = store.state.editor.entryInfo?.backlinks else {
-            return []
-        }
-        return backlinks
+        return !state.isLoading && state.slug != nil
     }
 
     var body: some View {
@@ -1502,13 +1550,13 @@ struct DetailView: View {
                                     minHeight: Self.calcTextFieldHeight(
                                         containerHeight: geometry.size.height,
                                         isKeyboardUp: isKeyboardUp,
-                                        hasBacklinks: backlinks.count > 0
+                                        hasBacklinks: store.state.backlinks.count > 0
                                     )
                                 )
                                 ThickDividerView()
                                     .padding(.bottom, AppTheme.unit4)
                                 BacklinksView(
-                                    backlinks: backlinks,
+                                    backlinks: store.state.backlinks,
                                     onSelect: { link in
                                         store.send(.selectBacklink(link))
                                     }
@@ -1522,7 +1570,7 @@ struct DetailView: View {
                                 tag: DetailAction.setLinkSheetPresented
                             ),
                             selectedEntryLinkMarkup:
-                                store.state.editor.selectedEntryLinkMarkup,
+                                store.state.selectedEntryLinkMarkup,
                             suggestions: store.state.linkSuggestions,
                             onSelectLinkCompletion: { link in
                                 store.send(.selectLinkCompletion(link))
@@ -1594,9 +1642,7 @@ struct DetailView: View {
                     height: geometry.size.height,
                     containerSize: geometry.size,
                     content: RenameSearchView(
-                        current: store.state.editor.entryInfo.map({ info in
-                            EntryLink(info)
-                        }),
+                        current: EntryLink(store.state),
                         suggestions: store.state.renameSuggestions,
                         text: store.binding(
                             get: \.renameField,
@@ -1636,16 +1682,12 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             DetailToolbarContent(
-                link: store.state.editor.entryInfo.map({ info in
-                    EntryLink(info)
-                }),
+                link: EntryLink(store.state),
                 onRename: {
-                    if let info = store.state.editor.entryInfo {
-                        store.send(.showRenameSheet(EntryLink(info)))
-                    }
+                    store.send(.showRenameSheet(EntryLink(store.state)))
                 },
                 onDelete: {
-                    if let slug = store.state.editor.entryInfo?.slug {
+                    if let slug = store.state.slug {
                         store.send(.requestConfirmDelete(slug))
                     }
                 }
