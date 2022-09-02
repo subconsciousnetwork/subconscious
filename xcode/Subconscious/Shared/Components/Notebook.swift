@@ -19,6 +19,7 @@ import Combine
 enum NotebookAction {
     // Tagged action for detail
     case detail(DetailAction)
+    case showDetail(Bool)
 
     case noop
 
@@ -68,27 +69,6 @@ enum NotebookAction {
     case deleteEntrySuccess(Slug)
     case deleteEntryFailure(String)
 
-    // Rename
-    case showRenameSheet(EntryLink?)
-    case hideRenameSheet
-    case setRenameField(String)
-    case setRenameSuggestions([RenameSuggestion])
-    case renameSuggestionsFailure(String)
-    /// Issue a rename action for an entry.
-    case renameEntry(RenameSuggestion)
-    /// Move entry succeeded. Lifecycle action.
-    case succeedMoveEntry(from: EntryLink, to: EntryLink)
-    /// Move entry failed. Lifecycle action.
-    case failMoveEntry(String)
-    /// Merge entry succeeded. Lifecycle action.
-    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
-    /// Merge entry failed. Lifecycle action.
-    case failMergeEntry(String)
-    /// Retitle entry succeeded. Lifecycle action.
-    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
-    /// Retitle entry failed. Lifecycle action.
-    case failRetitleEntry(String)
-
     //  Search
     /// Set search text (updated live as you type)
     case setSearch(String)
@@ -103,22 +83,41 @@ enum NotebookAction {
     case setSuggestions([Suggestion])
     case suggestionsFailure(String)
 
-    // Detail
-    case requestDetail(
+    /// Forward requestDetail action to detail
+    static func requestDetail(
         slug: Slug?,
         fallback: String,
         autofocus: Bool
-    )
+    ) -> Self {
+        .detail(
+            .requestDetail(
+                slug: slug,
+                fallback: fallback,
+                autofocus: autofocus
+            )
+        )
+    }
+
     /// request detail for slug, using template file as a fallback
-    case requestTemplateDetail(
+    static func requestTemplateDetail(
         slug: Slug,
         template: Slug,
         autofocus: Bool
-    )
-    case requestRandomDetail(autofocus: Bool)
-    case failDetail(String)
-    case failRandomDetail(Error)
-    case showDetail(Bool)
+    ) -> Self {
+        .detail(
+            .requestTemplateDetail(
+                slug: slug,
+                template: template,
+                autofocus: autofocus
+            )
+        )
+    }
+
+    static func requestRandomDetail(autofocus: Bool) -> Self {
+        .detail(
+            .requestRandomDetail(autofocus: autofocus)
+        )
+    }
 
     /// Send autosave to detail
     static let autosave = Self.detail(.autosave)
@@ -140,8 +139,6 @@ extension NotebookAction {
             return "setRecent(...) (\(items.count) items)"
         case .setSuggestions(let items):
             return "setSuggestions(...) (\(items.count) items)"
-        case .setRenameSuggestions(let items):
-            return "setRenameSuggestions(...) (\(items.count) items)"
         default:
             return String(describing: self)
         }
@@ -178,18 +175,6 @@ struct NotebookModel: Hashable, Equatable {
     var entryToDelete: Slug? = nil
     /// Delete confirmation action sheet
     var isConfirmDeleteShowing = false
-
-    //  Note renaming
-    /// Is rename sheet showing?
-    var isRenameSheetShowing = false
-    /// Link to the candidate for renaming
-    var entryToRename: EntryLink?
-    /// Text for slug rename TextField.
-    /// Note this is the contents of the search text field, which
-    /// is different from the actual candidate slug to be renamed.
-    var renameField: String = ""
-    /// Suggestions for renaming note.
-    var renameSuggestions: [RenameSuggestion] = []
 
     /// Live search bar text
     var searchText = ""
@@ -342,76 +327,6 @@ extension NotebookModel {
         case let .deleteEntryFailure(error):
             environment.logger.log("Failed to delete entry: \(error)")
             return Update(state: state)
-        case let .showRenameSheet(entry):
-            return showRenameSheet(
-                state: state,
-                environment: environment,
-                entry: entry
-            )
-        case .hideRenameSheet:
-            return hideRenameSheet(
-                state: state,
-                environment: environment
-            )
-        case let .setRenameField(text):
-            return setRenameField(
-                state: state,
-                environment: environment,
-                text: text
-            )
-        case let .setRenameSuggestions(suggestions):
-            return setRenameSuggestions(state: state, suggestions: suggestions)
-        case let .renameSuggestionsFailure(error):
-            return renameSuggestionsError(
-                state: state,
-                environment: environment,
-                error: error
-            )
-        case let .renameEntry(suggestion):
-            return renameEntry(
-                state: state,
-                environment: environment,
-                suggestion: suggestion
-            )
-        case let .succeedMoveEntry(from, to):
-            return succeedMoveEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
-        case let .failMoveEntry(error):
-            return failMoveEntry(
-                state: state,
-                environment: environment,
-                error: error
-            )
-        case let .succeedMergeEntry(parent, child):
-            return succeedMergeEntry(
-                state: state,
-                environment: environment,
-                parent: parent,
-                child: child
-            )
-        case let .failMergeEntry(error):
-            return failMergeEntry(
-                state: state,
-                environment: environment,
-                error: error
-            )
-        case let .succeedRetitleEntry(from, to):
-            return succeedRetitleEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
-        case let .failRetitleEntry(error):
-            return failRetitleEntry(
-                state: state,
-                environment: environment,
-                error: error
-            )
         case let .showDetail(isShowing):
             return showDetail(
                 state: state,
@@ -460,39 +375,6 @@ extension NotebookModel {
                 "Suggest failed: \(message)"
             )
             return Update(state: state)
-        case let .requestDetail(slug, fallback, autofocus):
-            return requestDetail(
-                state: state,
-                environment: environment,
-                slug: slug,
-                fallback: fallback,
-                autofocus: autofocus
-            )
-        case let .requestTemplateDetail(slug, template, autofocus):
-            return requestTemplateDetail(
-                state: state,
-                environment: environment,
-                slug: slug,
-                template: template,
-                autofocus: autofocus
-            )
-        case let .requestRandomDetail(autofocus):
-            return requestRandomDetail(
-                state: state,
-                environment: environment,
-                autofocus: autofocus
-            )
-        case let .failDetail(message):
-            environment.logger.log(
-                "Failed to get details for search: \(message)"
-            )
-            return Update(state: state)
-        case .failRandomDetail(let error):
-            return warn(
-                state: state,
-                environment: environment,
-                error: error
-            )
         }
     }
 
@@ -657,24 +539,6 @@ extension NotebookModel {
                     environment: environment
                 )
             })
-    }
-
-    /// Reload and display detail for entry, and reload all list views
-    static func requestDetailAndRefreshAll(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        slug: Slug
-    ) -> Update<NotebookModel, NotebookAction> {
-        requestDetail(
-            state: state,
-            environment: environment,
-            slug: slug,
-            fallback: "",
-            autofocus: false
-        )
-        .pipe({ state in
-            refreshAll(state: state, environment: environment)
-        })
     }
 
     /// Insert search history event into database
@@ -847,331 +711,6 @@ extension NotebookModel {
         )
     }
 
-    /// Show rename sheet.
-    /// Do rename-flow-related setup.
-    static func showRenameSheet(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        entry: EntryLink?
-    ) -> Update<NotebookModel, NotebookAction> {
-        guard let entry = entry else {
-            environment.logger.warning(
-                "Rename sheet invoked on missing entry"
-            )
-            return Update(state: state)
-        }
-
-        var model = state
-        model.isRenameSheetShowing = true
-        model.entryToRename = entry
-
-        let title = entry.linkableTitle
-
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.setFocus(focus: .rename, field: .rename)
-        )
-        .eraseToAnyPublisher()
-
-        return Update(state: model, fx: fx)
-            //  Save entry in preperation for any merge/move.
-            .pipe({ state in
-                save(state: state, environment: environment)
-            })
-            //  Set rename slug field text
-            .pipe({ state in
-                setRenameField(
-                    state: state,
-                    environment: environment,
-                    text: title
-                )
-            })
-    }
-
-    /// Hide rename sheet.
-    /// Do rename-flow-related teardown.
-    static func hideRenameSheet(
-        state: NotebookModel,
-        environment: AppEnvironment
-    ) -> Update<NotebookModel, NotebookAction> {
-        var model = state
-        model.isRenameSheetShowing = false
-        model.entryToRename = nil
-
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.setFocus(focus: nil, field: .rename)
-        )
-        .eraseToAnyPublisher()
-
-        return Update(state: model, fx: fx)
-            .pipe({ state in
-                setRenameField(
-                    state: state,
-                    environment: environment,
-                    text: ""
-                )
-            })
-    }
-
-    /// Set text of slug field
-    static func setRenameField(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        text: String
-    ) -> Update<NotebookModel, NotebookAction> {
-        var model = state
-        model.renameField = text
-        guard let current = state.entryToRename else {
-            return Update(state: state)
-        }
-        let fx: Fx<NotebookAction> = environment.database
-            .searchRenameSuggestions(
-                query: text,
-                current: current
-            )
-            .map({ suggestions in
-                NotebookAction.setRenameSuggestions(suggestions)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.renameSuggestionsFailure(
-                        error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: model, fx: fx)
-    }
-
-    /// Set rename suggestions
-    static func setRenameSuggestions(
-        state: NotebookModel,
-        suggestions: [RenameSuggestion]
-    ) -> Update<NotebookModel, NotebookAction> {
-        var model = state
-        model.renameSuggestions = suggestions
-        return Update(state: model)
-    }
-
-    /// Handle rename suggestions error.
-    /// This case can happen e.g. if the database fails to respond.
-    static func renameSuggestionsError(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        error: String
-    ) -> Update<NotebookModel, NotebookAction> {
-        environment.logger.warning(
-            "Failed to read suggestions from database: \(error)"
-        )
-        return Update(state: state)
-    }
-
-    /// Rename an entry (change its slug).
-    /// If `next` does not already exist, this will change the slug
-    /// and move the file.
-    /// If next exists, this will merge documents.
-    static func renameEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        suggestion: RenameSuggestion
-    ) -> Update<NotebookModel, NotebookAction> {
-        switch suggestion {
-        case .move(let from, let to):
-            return moveEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
-        case .merge(let parent, let child):
-            return mergeEntry(
-                state: state,
-                environment: environment,
-                parent: parent,
-                child: child
-            )
-        case .retitle(let from, let to):
-            return retitleEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
-        }
-    }
-
-    /// Move entry
-    static func moveEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
-    ) -> Update<NotebookModel, NotebookAction> {
-        let fx: Fx<NotebookAction> = environment.database
-            .moveEntryAsync(from: from, to: to)
-            .map({ _ in
-                NotebookAction.succeedMoveEntry(from: from, to: to)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.failMoveEntry(
-                        error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-        return hideRenameSheet(
-            state: state,
-            environment: environment
-        )
-        .mergeFx(fx)
-        .animation(.easeOutCubic(duration: Duration.keyboard))
-    }
-
-    /// Move success lifecycle handler.
-    /// Updates UI in response.
-    static func succeedMoveEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
-    ) -> Update<NotebookModel, NotebookAction> {
-        environment.logger.log("Renamed entry from \(from.slug) to \(to.slug)")
-        return requestDetailAndRefreshAll(
-            state: state,
-            environment: environment,
-            slug: to.slug
-        )
-    }
-
-    /// Move failure lifecycle handler.
-    //  TODO: in future consider triggering an alert.
-    static func failMoveEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        error: String
-    ) -> Update<NotebookModel, NotebookAction> {
-        environment.logger.warning(
-            "Failed to move entry with error: \(error)"
-        )
-        return Update(state: state)
-    }
-
-    /// Merge entry
-    static func mergeEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        parent: EntryLink,
-        child: EntryLink
-    ) -> Update<NotebookModel, NotebookAction> {
-        let fx: Fx<NotebookAction> = environment.database
-            .mergeEntryAsync(parent: parent, child: child)
-            .map({ _ in
-                NotebookAction.succeedMergeEntry(parent: parent, child: child)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.failMergeEntry(error.localizedDescription)
-                )
-            })
-            .eraseToAnyPublisher()
-        return hideRenameSheet(
-            state: state,
-            environment: environment
-        )
-        .mergeFx(fx)
-        .animation(.easeOutCubic(duration: Duration.keyboard))
-    }
-
-    /// Merge success lifecycle handler.
-    /// Updates UI in response.
-    static func succeedMergeEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        parent: EntryLink,
-        child: EntryLink
-    ) -> Update<NotebookModel, NotebookAction> {
-        environment.logger.log(
-            "Merged entry \(child.slug) into \(parent.slug)"
-        )
-        return requestDetailAndRefreshAll(
-            state: state,
-            environment: environment,
-            slug: parent.slug
-        )
-    }
-
-    /// Merge failure lifecycle handler.
-    //  TODO: in future consider triggering an alert.
-    static func failMergeEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        error: String
-    ) -> Update<NotebookModel, NotebookAction> {
-        environment.logger.warning(
-            "Failed to merge entry with error: \(error)"
-        )
-        return Update(state: state)
-    }
-
-    /// Retitle entry
-    static func retitleEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
-    ) -> Update<NotebookModel, NotebookAction> {
-        let fx: Fx<NotebookAction> = environment.database
-            .retitleEntryAsync(from: from, to: to)
-            .map({ _ in
-                NotebookAction.succeedRetitleEntry(from: from, to: to)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.failRetitleEntry(
-                        error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-        return hideRenameSheet(
-            state: state,
-            environment: environment
-        )
-        .mergeFx(fx)
-        .animation(.easeOutCubic(duration: Duration.keyboard))
-    }
-
-    /// Retitle success lifecycle handler.
-    /// Updates UI in response.
-    static func succeedRetitleEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
-    ) -> Update<NotebookModel, NotebookAction> {
-        environment.logger.log(
-            "Retitled entry \(from.slug) to \(to.linkableTitle)"
-        )
-        return requestDetailAndRefreshAll(
-            state: state,
-            environment: environment,
-            slug: from.slug
-        )
-    }
-
-    /// Retitle failure lifecycle handler.
-    //  TODO: in future consider triggering an alert.
-    static func failRetitleEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        error: String
-    ) -> Update<NotebookModel, NotebookAction> {
-        environment.logger.warning(
-            "Failed to retitle entry with error: \(error)"
-        )
-        return Update(state: state)
-    }
-
     /// Set search text for main search input
     static func setSearch(
         state: NotebookModel,
@@ -1337,122 +876,6 @@ extension NotebookModel {
             return update.mergeFx(fx)
         }
     }
-
-    /// Factors out the non-get-detail related aspects
-    /// of requesting a detail view.
-    /// Used by a few request detail implementations.
-    private static func prepareRequestDetail(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        slug: Slug
-    ) -> Update<NotebookModel, NotebookAction> {
-        var model = state
-        model.editor.isLoading = true
-
-        return Update(state: model)
-            .animation(.easeOutCubic(duration: Duration.keyboard))
-    }
-
-    /// Request detail view for entry.
-    /// Fall back on string (typically query string) when no detail
-    /// exists for this slug yet.
-    static func requestDetail(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        slug: Slug?,
-        fallback: String,
-        autofocus: Bool
-    ) -> Update<NotebookModel, NotebookAction> {
-        // If nil slug was requested, do nothing
-        guard let slug = slug else {
-            environment.logger.log(
-                "Detail requested for nil slug. Doing nothing."
-            )
-            return Update(state: state)
-        }
-
-        let fx: Fx<NotebookAction> = environment.database
-            .readEntryDetail(
-                slug: slug,
-                // Trim whitespace and add blank line to end of string
-                // This gives us a good starting point to start
-                // editing.
-                fallback: fallback
-            )
-            .map({ detail in
-                NotebookAction.updateDetail(
-                    detail: detail,
-                    autofocus: autofocus
-                )
-            })
-            .catch({ error in
-                Just(NotebookAction.failDetail(error.localizedDescription))
-            })
-            .merge(
-                with: Just(NotebookAction.setSearch("")),
-                Just(NotebookAction.createSearchHistoryItem(fallback))
-            )
-            .eraseToAnyPublisher()
-
-        return prepareRequestDetail(
-            state: state,
-            environment: environment,
-            slug: slug
-        )
-        .mergeFx(fx)
-    }
-
-    /// Request detail view for entry.
-    /// Fall back on contents of template file when no detail
-    /// exists for this slug yet.
-    static func requestTemplateDetail(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        slug: Slug,
-        template: Slug,
-        autofocus: Bool
-    ) -> Update<NotebookModel, NotebookAction> {
-        let fx: Fx<NotebookAction> = environment.database
-            .readEntryDetail(slug: slug, template: template)
-            .map({ detail in
-                NotebookAction.updateDetail(
-                    detail: detail,
-                    autofocus: autofocus
-                )
-            })
-            .catch({ error in
-                Just(NotebookAction.failDetail(error.localizedDescription))
-            })
-            .eraseToAnyPublisher()
-
-        return prepareRequestDetail(
-            state: state,
-            environment: environment,
-            slug: slug
-        )
-        .mergeFx(fx)
-    }
-
-    /// Request detail for a random entry
-    static func requestRandomDetail(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        autofocus: Bool
-    ) -> Update<NotebookModel, NotebookAction> {
-        let fx: Fx<NotebookAction> = environment.database.readRandomEntrySlug()
-            .map({ slug in
-                NotebookAction.requestDetail(
-                    slug: slug,
-                    fallback: slug.toTitle(),
-                    autofocus: autofocus
-                )
-            })
-            .catch({ error in
-                Just(NotebookAction.failRandomDetail(error))
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
-    }
 }
 
 //  MARK: Cursors
@@ -1478,6 +901,8 @@ struct NotebookDetailCursor: CursorProtocol {
         switch action {
         case .refreshAll:
             return .refreshAll
+        case .showDetail(let isShowing):
+            return .showDetail(isShowing)
         case .openEditorURL(let url):
             return .openEditorURL(url)
         case .selectBacklink(let link):
@@ -1486,8 +911,6 @@ struct NotebookDetailCursor: CursorProtocol {
                 fallback: link.linkableTitle,
                 autofocus: false
             )
-        case .requestRename(let link):
-            return .showRenameSheet(link)
         case .requestConfirmDelete(let slug):
             return .confirmDelete(slug)
         default:
@@ -1578,42 +1001,6 @@ struct NotebookView: View {
                     keyboardHeight: store.state.keyboardEventualHeight
                 )
                 .zIndex(3)
-                BottomSheetView(
-                    isPresented: store.binding(
-                        get: \.isRenameSheetShowing,
-                        tag: { _ in NotebookAction.hideRenameSheet }
-                    ),
-                    height: geometry.size.height,
-                    containerSize: geometry.size,
-                    content: RenameSearchView(
-                        current: store.state.editor.entryInfo.map({ info in
-                            EntryLink(info)
-                        }),
-                        suggestions: store.state.renameSuggestions,
-                        text: store.binding(
-                            get: \.renameField,
-                            tag: NotebookAction.setRenameField
-                        ),
-                        focus: store.binding(
-                            get: \.focus,
-                            tag: { focus in
-                                NotebookAction.setFocus(
-                                    focus: focus,
-                                    field: .rename
-                                )
-                            }
-                        ),
-                        onCancel: {
-                            store.send(.hideRenameSheet)
-                        },
-                        onSelect: { suggestion in
-                            store.send(
-                                .renameEntry(suggestion)
-                            )
-                        }
-                    )
-                )
-                .zIndex(4)
             }
         }
         .background(.red)

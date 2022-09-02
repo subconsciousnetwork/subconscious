@@ -17,8 +17,24 @@ enum DetailAction: Hashable {
     /// Invokes save and blurs editor
     case selectDoneEditing
 
-    /// Request show detail
-    case showDetail
+
+    // Detail
+    /// Load detail
+    case requestDetail(
+        slug: Slug?,
+        fallback: String,
+        autofocus: Bool
+    )
+    /// request detail for slug, using template file as a fallback
+    case requestTemplateDetail(
+        slug: Slug,
+        template: Slug,
+        autofocus: Bool
+    )
+    case requestRandomDetail(autofocus: Bool)
+    case failDetail(String)
+    case failRandomDetail(String)
+    case showDetail(Bool)
     /// Update entry being displayed
     case updateDetail(detail: EntryDetail, autofocus: Bool)
 
@@ -40,8 +56,28 @@ enum DetailAction: Hashable {
     case setLinkSuggestions([LinkSuggestion])
     case linkSuggestionsFailure(String)
 
+    // Rename
+    case showRenameSheet(EntryLink?)
+    case hideRenameSheet
+    case setRenameField(String)
+    case setRenameSuggestions([RenameSuggestion])
+    case renameSuggestionsFailure(String)
+    /// Issue a rename action for an entry.
+    case renameEntry(RenameSuggestion)
+    /// Move entry succeeded. Lifecycle action.
+    case succeedMoveEntry(from: EntryLink, to: EntryLink)
+    /// Move entry failed. Lifecycle action.
+    case failMoveEntry(String)
+    /// Merge entry succeeded. Lifecycle action.
+    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
+    /// Merge entry failed. Lifecycle action.
+    case failMergeEntry(String)
+    /// Retitle entry succeeded. Lifecycle action.
+    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+    /// Retitle entry failed. Lifecycle action.
+    case failRetitleEntry(String)
+
     case selectBacklink(EntryLink)
-    case requestRename(EntryLink)
     case requestConfirmDelete(Slug)
 
     // Editor
@@ -90,6 +126,18 @@ struct DetailModel: Hashable {
     var linkSearchText = ""
     var linkSuggestions: [LinkSuggestion] = []
 
+    //  Note renaming
+    /// Is rename sheet showing?
+    var isRenameSheetShowing = false
+    /// Link to the candidate for renaming
+    var entryToRename: EntryLink?
+    /// Text for slug rename TextField.
+    /// Note this is the contents of the search text field, which
+    /// is different from the actual candidate slug to be renamed.
+    var renameField: String = ""
+    /// Suggestions for renaming note.
+    var renameSuggestions: [RenameSuggestion] = []
+
     //  MARK: Update
     static func update(
         state: DetailModel,
@@ -105,7 +153,7 @@ struct DetailModel: Hashable {
                 environment: ()
             )
         case .openEditorURL(_):
-            return debug(
+            return logDebug(
                 state: state,
                 environment: environment,
                 message: "openEditorURL should be handled by parent component"
@@ -136,10 +184,43 @@ struct DetailModel: Hashable {
                 environment: environment
             )
         case .showDetail:
-            return debug(
+            return logDebug(
                 state: state,
                 environment: environment,
                 message: ".showDetail should be handled by parent component"
+            )
+        case let .requestDetail(slug, fallback, autofocus):
+            return requestDetail(
+                state: state,
+                environment: environment,
+                slug: slug,
+                fallback: fallback,
+                autofocus: autofocus
+            )
+        case let .requestTemplateDetail(slug, template, autofocus):
+            return requestTemplateDetail(
+                state: state,
+                environment: environment,
+                slug: slug,
+                template: template,
+                autofocus: autofocus
+            )
+        case let .requestRandomDetail(autofocus):
+            return requestRandomDetail(
+                state: state,
+                environment: environment,
+                autofocus: autofocus
+            )
+        case let .failDetail(message):
+            environment.logger.log(
+                "Failed to get details for search: \(message)"
+            )
+            return Update(state: state)
+        case .failRandomDetail(let message):
+            return logWarning(
+                state: state,
+                environment: environment,
+                message: message
             )
         case let .updateDetail(results, autofocus):
             return updateDetail(
@@ -199,20 +280,84 @@ struct DetailModel: Hashable {
                 "Link suggest failed: \(message)"
             )
             return Update(state: state)
-        case .selectBacklink(_):
-            return debug(
+        case let .showRenameSheet(entry):
+            return showRenameSheet(
                 state: state,
                 environment: environment,
-                message: "selectBacklink should be handled by parent component"
+                entry: entry
             )
-        case .requestRename(_):
-            return debug(
+        case .hideRenameSheet:
+            return hideRenameSheet(
+                state: state,
+                environment: environment
+            )
+        case let .setRenameField(text):
+            return setRenameField(
+                state: state,
+                environment: environment,
+                text: text
+            )
+        case let .setRenameSuggestions(suggestions):
+            return setRenameSuggestions(state: state, suggestions: suggestions)
+        case let .renameSuggestionsFailure(error):
+            return renameSuggestionsError(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case let .renameEntry(suggestion):
+            return renameEntry(
+                state: state,
+                environment: environment,
+                suggestion: suggestion
+            )
+        case let .succeedMoveEntry(from, to):
+            return succeedMoveEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case let .failMoveEntry(error):
+            return failMoveEntry(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case let .succeedMergeEntry(parent, child):
+            return succeedMergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
+        case let .failMergeEntry(error):
+            return failMergeEntry(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case let .succeedRetitleEntry(from, to):
+            return succeedRetitleEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case let .failRetitleEntry(error):
+            return failRetitleEntry(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .selectBacklink(_):
+            return logDebug(
                 state: state,
                 environment: environment,
                 message: "selectBacklink should be handled by parent component"
             )
         case .requestConfirmDelete(_):
-            return debug(
+            return logDebug(
                 state: state,
                 environment: environment,
                 message: "requestConfirmDelete should be handled by parent component"
@@ -246,7 +391,7 @@ struct DetailModel: Hashable {
                 with: { text in Markup.Code(text: text) }
             )
         case .refreshAll:
-            return debug(
+            return logDebug(
                 state: state,
                 environment: environment,
                 message: ".refreshAll should be handled by parent component"
@@ -255,12 +400,22 @@ struct DetailModel: Hashable {
     }
 
     /// Log debug
-    static func debug(
+    static func logDebug(
         state: DetailModel,
         environment: AppEnvironment,
         message: String
     ) -> Update<DetailModel, DetailAction> {
         environment.logger.debug("\(message)")
+        return Update(state: state)
+    }
+
+    /// Log debug
+    static func logWarning(
+        state: DetailModel,
+        environment: AppEnvironment,
+        message: String
+    ) -> Update<DetailModel, DetailAction> {
+        environment.logger.warning("\(message)")
         return Update(state: state)
     }
 
@@ -407,6 +562,144 @@ struct DetailModel: Hashable {
         return Update(state: state, fx: fx)
     }
 
+    /// Factors out the non-get-detail related aspects
+    /// of requesting a detail view.
+    /// Used by a few request detail implementations.
+    private static func prepareRequestDetail(
+        state: DetailModel,
+        environment: AppEnvironment,
+        slug: Slug
+    ) -> Update<DetailModel, DetailAction> {
+        var model = state
+        model.editor.isLoading = true
+
+        return Update(state: model)
+            .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
+    /// Request detail view for entry.
+    /// Fall back on string (typically query string) when no detail
+    /// exists for this slug yet.
+    static func requestDetail(
+        state: DetailModel,
+        environment: AppEnvironment,
+        slug: Slug?,
+        fallback: String,
+        autofocus: Bool
+    ) -> Update<DetailModel, DetailAction> {
+        // If nil slug was requested, do nothing
+        guard let slug = slug else {
+            environment.logger.log(
+                "Detail requested for nil slug. Doing nothing."
+            )
+            return Update(state: state)
+        }
+
+        let fx: Fx<DetailAction> = environment.database
+            .readEntryDetail(
+                slug: slug,
+                // Trim whitespace and add blank line to end of string
+                // This gives us a good starting point to start
+                // editing.
+                fallback: fallback
+            )
+            .map({ detail in
+                DetailAction.updateDetail(
+                    detail: detail,
+                    autofocus: autofocus
+                )
+            })
+            .catch({ error in
+                Just(DetailAction.failDetail(error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+
+        return prepareRequestDetail(
+            state: state,
+            environment: environment,
+            slug: slug
+        )
+        .mergeFx(fx)
+    }
+
+    /// Reload and display detail for entry, and reload all list views
+    static func requestDetailAndRefreshAll(
+        state: DetailModel,
+        environment: AppEnvironment,
+        slug: Slug
+    ) -> Update<DetailModel, DetailAction> {
+        let refreshFx: Fx<DetailAction> = Just(
+            DetailAction.refreshAll
+        )
+        .eraseToAnyPublisher()
+
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.requestDetail(
+                slug: slug,
+                fallback: "",
+                autofocus: false
+            )
+        )
+        .merge(
+            with: refreshFx
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    /// Request detail view for entry.
+    /// Fall back on contents of template file when no detail
+    /// exists for this slug yet.
+    static func requestTemplateDetail(
+        state: DetailModel,
+        environment: AppEnvironment,
+        slug: Slug,
+        template: Slug,
+        autofocus: Bool
+    ) -> Update<DetailModel, DetailAction> {
+        let fx: Fx<DetailAction> = environment.database
+            .readEntryDetail(slug: slug, template: template)
+            .map({ detail in
+                DetailAction.updateDetail(
+                    detail: detail,
+                    autofocus: autofocus
+                )
+            })
+            .catch({ error in
+                Just(DetailAction.failDetail(error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+
+        return prepareRequestDetail(
+            state: state,
+            environment: environment,
+            slug: slug
+        )
+        .mergeFx(fx)
+    }
+
+    /// Request detail for a random entry
+    static func requestRandomDetail(
+        state: DetailModel,
+        environment: AppEnvironment,
+        autofocus: Bool
+    ) -> Update<DetailModel, DetailAction> {
+        let fx: Fx<DetailAction> = environment.database.readRandomEntrySlug()
+            .map({ slug in
+                DetailAction.requestDetail(
+                    slug: slug,
+                    fallback: slug.toTitle(),
+                    autofocus: autofocus
+                )
+            })
+            .catch({ error in
+                Just(DetailAction.failRandomDetail(error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
     /// Update entry detail.
     /// This case gets hit after requesting detail for an entry.
     static func updateDetail(
@@ -415,8 +708,10 @@ struct DetailModel: Hashable {
         detail: EntryDetail,
         autofocus: Bool
     ) -> Update<DetailModel, DetailAction> {
-        let showDetailFx: Fx<DetailAction> = Just(DetailAction.showDetail)
-            .eraseToAnyPublisher()
+        let showDetailFx: Fx<DetailAction> = Just(
+            DetailAction.showDetail(true)
+        )
+        .eraseToAnyPublisher()
 
         // Schedule save for ~ after the transition animation completes.
         // If we save immediately, it causes list view to update while the
@@ -713,6 +1008,335 @@ struct DetailModel: Hashable {
             .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
+    /// Show rename sheet.
+    /// Do rename-flow-related setup.
+    static func showRenameSheet(
+        state: DetailModel,
+        environment: AppEnvironment,
+        entry: EntryLink?
+    ) -> Update<DetailModel, DetailAction> {
+        guard let entry = entry else {
+            environment.logger.warning(
+                "Rename sheet invoked on missing entry"
+            )
+            return Update(state: state)
+        }
+
+        var model = state
+        model.isRenameSheetShowing = true
+        model.entryToRename = entry
+
+        let title = entry.linkableTitle
+
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.requestFocus(.rename)
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: model, fx: fx)
+            //  Save entry in preperation for any merge/move.
+            .pipe({ state in
+                autosave(
+                    state: state,
+                    environment: environment
+                )
+            })
+            //  Set rename slug field text
+            .pipe({ state in
+                setRenameField(
+                    state: state,
+                    environment: environment,
+                    text: title
+                )
+            })
+    }
+
+    /// Hide rename sheet.
+    /// Do rename-flow-related teardown.
+    static func hideRenameSheet(
+        state: DetailModel,
+        environment: AppEnvironment
+    ) -> Update<DetailModel, DetailAction> {
+        var model = state
+        model.isRenameSheetShowing = false
+        model.entryToRename = nil
+
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.requestFocus(nil)
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: model, fx: fx)
+            .pipe({ state in
+                setRenameField(
+                    state: state,
+                    environment: environment,
+                    text: ""
+                )
+            })
+    }
+
+    /// Set text of slug field
+    static func setRenameField(
+        state: DetailModel,
+        environment: AppEnvironment,
+        text: String
+    ) -> Update<DetailModel, DetailAction> {
+        var model = state
+        model.renameField = text
+        guard let current = state.entryToRename else {
+            return Update(state: state)
+        }
+        let fx: Fx<DetailAction> = environment.database
+            .searchRenameSuggestions(
+                query: text,
+                current: current
+            )
+            .map({ suggestions in
+                DetailAction.setRenameSuggestions(suggestions)
+            })
+            .catch({ error in
+                Just(
+                    DetailAction.renameSuggestionsFailure(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: model, fx: fx)
+    }
+
+    /// Set rename suggestions
+    static func setRenameSuggestions(
+        state: DetailModel,
+        suggestions: [RenameSuggestion]
+    ) -> Update<DetailModel, DetailAction> {
+        var model = state
+        model.renameSuggestions = suggestions
+        return Update(state: model)
+    }
+
+    /// Handle rename suggestions error.
+    /// This case can happen e.g. if the database fails to respond.
+    static func renameSuggestionsError(
+        state: DetailModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<DetailModel, DetailAction> {
+        environment.logger.warning(
+            "Failed to read suggestions from database: \(error)"
+        )
+        return Update(state: state)
+    }
+
+    /// Rename an entry (change its slug).
+    /// If `next` does not already exist, this will change the slug
+    /// and move the file.
+    /// If next exists, this will merge documents.
+    static func renameEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        suggestion: RenameSuggestion
+    ) -> Update<DetailModel, DetailAction> {
+        switch suggestion {
+        case .move(let from, let to):
+            return moveEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case .merge(let parent, let child):
+            return mergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
+        case .retitle(let from, let to):
+            return retitleEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        }
+    }
+
+    /// Move entry
+    static func moveEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<DetailModel, DetailAction> {
+        let fx: Fx<DetailAction> = environment.database
+            .moveEntryAsync(from: from, to: to)
+            .map({ _ in
+                DetailAction.succeedMoveEntry(from: from, to: to)
+            })
+            .catch({ error in
+                Just(
+                    DetailAction.failMoveEntry(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return hideRenameSheet(
+            state: state,
+            environment: environment
+        )
+        .mergeFx(fx)
+        .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
+    /// Move success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedMoveEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<DetailModel, DetailAction> {
+        environment.logger.log("Renamed entry from \(from.slug) to \(to.slug)")
+        return requestDetailAndRefreshAll(
+            state: state,
+            environment: environment,
+            slug: to.slug
+        )
+    }
+
+    /// Move failure lifecycle handler.
+    //  TODO: in future consider triggering an alert.
+    static func failMoveEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<DetailModel, DetailAction> {
+        environment.logger.warning(
+            "Failed to move entry with error: \(error)"
+        )
+        return Update(state: state)
+    }
+
+    /// Merge entry
+    static func mergeEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        parent: EntryLink,
+        child: EntryLink
+    ) -> Update<DetailModel, DetailAction> {
+        let fx: Fx<DetailAction> = environment.database
+            .mergeEntryAsync(parent: parent, child: child)
+            .map({ _ in
+                DetailAction.succeedMergeEntry(parent: parent, child: child)
+            })
+            .catch({ error in
+                Just(
+                    DetailAction.failMergeEntry(error.localizedDescription)
+                )
+            })
+            .eraseToAnyPublisher()
+        return hideRenameSheet(
+            state: state,
+            environment: environment
+        )
+        .mergeFx(fx)
+        .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
+    /// Merge success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedMergeEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        parent: EntryLink,
+        child: EntryLink
+    ) -> Update<DetailModel, DetailAction> {
+        environment.logger.log(
+            "Merged entry \(child.slug) into \(parent.slug)"
+        )
+        return requestDetailAndRefreshAll(
+            state: state,
+            environment: environment,
+            slug: parent.slug
+        )
+    }
+
+    /// Merge failure lifecycle handler.
+    //  TODO: in future consider triggering an alert.
+    static func failMergeEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<DetailModel, DetailAction> {
+        environment.logger.warning(
+            "Failed to merge entry with error: \(error)"
+        )
+        return Update(state: state)
+    }
+
+    /// Retitle entry
+    static func retitleEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<DetailModel, DetailAction> {
+        let fx: Fx<DetailAction> = environment.database
+            .retitleEntryAsync(from: from, to: to)
+            .map({ _ in
+                DetailAction.succeedRetitleEntry(from: from, to: to)
+            })
+            .catch({ error in
+                Just(
+                    DetailAction.failRetitleEntry(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return hideRenameSheet(
+            state: state,
+            environment: environment
+        )
+        .mergeFx(fx)
+        .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
+    /// Retitle success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedRetitleEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<DetailModel, DetailAction> {
+        environment.logger.log(
+            "Retitled entry \(from.slug) to \(to.linkableTitle)"
+        )
+        return requestDetailAndRefreshAll(
+            state: state,
+            environment: environment,
+            slug: from.slug
+        )
+    }
+
+    /// Retitle failure lifecycle handler.
+    //  TODO: in future consider triggering an alert.
+    static func failRetitleEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<DetailModel, DetailAction> {
+        environment.logger.warning(
+            "Failed to retitle entry with error: \(error)"
+        )
+        return Update(state: state)
+    }
+
+
     /// Insert wikilink markup into editor, begining at previous range
     /// and wrapping the contents of previous range
     static func insertTaggedMarkup<T>(
@@ -962,6 +1586,39 @@ struct DetailView: View {
                     )
                 )
                 .zIndex(4)
+                BottomSheetView(
+                    isPresented: store.binding(
+                        get: \.isRenameSheetShowing,
+                        tag: { _ in DetailAction.hideRenameSheet }
+                    ),
+                    height: geometry.size.height,
+                    containerSize: geometry.size,
+                    content: RenameSearchView(
+                        current: store.state.editor.entryInfo.map({ info in
+                            EntryLink(info)
+                        }),
+                        suggestions: store.state.renameSuggestions,
+                        text: store.binding(
+                            get: \.renameField,
+                            tag: DetailAction.setRenameField
+                        ),
+                        focus: store.binding(
+                            get: \.focus,
+                            tag: { focus in
+                                DetailAction.requestFocus(.rename)
+                            }
+                        ),
+                        onCancel: {
+                            store.send(.hideRenameSheet)
+                        },
+                        onSelect: { suggestion in
+                            store.send(
+                                .renameEntry(suggestion)
+                            )
+                        }
+                    )
+                )
+                .zIndex(4)
                 if !isReady {
                     Color.background
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -984,7 +1641,7 @@ struct DetailView: View {
                 }),
                 onRename: {
                     if let info = store.state.editor.entryInfo {
-                        store.send(.requestRename(EntryLink(info)))
+                        store.send(.showRenameSheet(EntryLink(info)))
                     }
                 },
                 onDelete: {
