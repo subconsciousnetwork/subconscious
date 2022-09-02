@@ -33,53 +33,6 @@ import os
 import SwiftUI
 import ObservableStore
 
-enum FocusAction<Focus>: Hashable
-where Focus: Hashable
-{
-    /// Request a state-driven focus change
-    case requestFocus(Focus?)
-    /// Notify that focus request was scheduled
-    case focusRequestScheduled
-    /// Notify of a focus change from the UI
-    case focusChange(Focus?)
-}
-
-struct FocusModel<Focus>: Hashable
-where Focus: Hashable
-{
-    typealias Model = Self
-    typealias Action = FocusAction<Focus>
-
-    var focusRequestScheduled = false
-    var focusRequest: Focus?
-    var focus: Focus?
-
-    static func update(
-        state: Model,
-        action: Action,
-        environment: Void
-    ) -> Update<Model, Action> {
-        switch action {
-        case .requestFocus(let focus):
-            var model = state
-            model.focusRequestScheduled = false
-            model.focusRequest = focus
-            return Update(state: model)
-        case .focusRequestScheduled:
-            var model = state
-            model.focusRequestScheduled = true
-            return Update(state: model)
-        /// UI-driven focus changes always win
-        case .focusChange(let focus):
-            var model = state
-            model.focusRequestScheduled = false
-            model.focusRequest = focus
-            model.focus = focus
-            return Update(state: model)
-        }
-    }
-}
-
 //  MARK: Action
 enum MarkupTextAction<Focus>: Hashable
 where Focus: Hashable

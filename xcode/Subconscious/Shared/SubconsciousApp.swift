@@ -123,6 +123,13 @@ enum AppFocus: Hashable, Equatable {
     case rename
 }
 
+/// Wrapper for focus-related state, including
+/// - Current focus
+/// - Desired focus
+/// - Dirty flag indicating whether a refocus has been scheduled
+typealias AppFocusModel = FocusModel<AppFocus>
+typealias AppFocusAction = FocusAction<AppFocus>
+
 enum AppDatabaseState {
     case initial
     case migrating
@@ -132,8 +139,8 @@ enum AppDatabaseState {
 
 //  MARK: Model
 struct AppModel: Equatable {
-    /// What is focused? (nil means nothing is focused)
-    var focus: AppFocus? = nil
+    /// Global focus state
+    var focus = AppFocusModel()
 
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial

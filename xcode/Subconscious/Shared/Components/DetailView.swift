@@ -12,7 +12,16 @@ import Combine
 
 //  MARK: Action
 enum DetailAction: Hashable {
+    case focus(AppFocusAction)
     case markupEditor(MarkupTextAction<AppFocus>)
+
+    /// Request a model-driven focus change
+    case requestFocus(AppFocus?)
+    /// Focus change request scheduled
+    case focusRequestScheduled
+    /// Focus change from the UI. UI-driven focus always wins.
+    case focusChange(AppFocus?)
+
     case openEditorURL(URL)
     /// Invokes save and blurs editor
     case selectDoneEditing
@@ -102,10 +111,6 @@ enum DetailAction: Hashable {
     /// Refresh after save
     case refreshAll
 
-    static func requestFocus(_ focus: AppFocus?) -> Self {
-        .markupEditor(.requestFocus(focus))
-    }
-
     /// Update editor dom and always mark modified
     static func modifyEditor(text: String) -> Self {
         Self.setEditor(text: text, saveState: .modified)
@@ -117,9 +122,67 @@ enum DetailAction: Hashable {
     }
 }
 
+//  MARK: Cursors
+/// Editor cursor
+struct DetailMarkupEditorCursor: CursorProtocol {
+    typealias OuterState = DetailModel
+    typealias InnerState = MarkupTextModel<AppFocus>
+    typealias OuterAction = DetailAction
+    typealias InnerAction = MarkupTextAction<AppFocus>
+
+    static func get(state: OuterState) -> InnerState {
+        state.markupEditor
+    }
+
+    static func set(state: OuterState, inner: InnerState) -> OuterState {
+        var model = state
+        model.markupEditor = inner
+        return model
+    }
+
+    static func tag(action: InnerAction) -> OuterAction {
+        switch action {
+        /// Intercept focus in markup editor and address at this level
+        case .focus(let action):
+            switch action {
+            case .focusChange(let focus):
+                return .focusChange(focus)
+            case .focusRequestScheduled:
+                return .focusRequestScheduled
+            case .requestFocus(let focus):
+                return .requestFocus(focus)
+            }
+        default:
+            return .markupEditor(action)
+        }
+    }
+}
+
+struct DetailFocusCursor: CursorProtocol {
+    typealias OuterState = DetailModel
+    typealias InnerState = AppFocusModel
+    typealias OuterAction = DetailAction
+    typealias InnerAction = AppFocusAction
+
+    static func get(state: DetailModel) -> AppFocusModel {
+        state.focus
+    }
+
+    static func set(state: DetailModel, inner: AppFocusModel) -> DetailModel {
+        var model = state
+        model.focus = inner
+        return model
+    }
+
+    static func tag(action: AppFocusAction) -> DetailAction {
+        .focus(action)
+    }
+}
+
 //  MARK: Model
 struct DetailModel: Hashable {
-    var focus: AppFocus?
+    /// Local copy of app focus
+    var focus = AppFocusModel()
 
     var slug: Slug?
     var headers: HeaderIndex = .empty
@@ -173,12 +236,36 @@ struct DetailModel: Hashable {
         environment: AppEnvironment
     ) -> Update<DetailModel, DetailAction> {
         switch action {
+        case .focus(let action):
+            return DetailFocusCursor.update(
+                with: FocusModel.update,
+                state: state,
+                action: action,
+                environment: ()
+            )
         case .markupEditor(let action):
             return DetailMarkupEditorCursor.update(
                 with: MarkupTextModel.update,
                 state: state,
                 action: action,
                 environment: ()
+            )
+        case .requestFocus(let focus):
+            return requestFocus(
+                state: state,
+                environment: environment,
+                focus: focus
+            )
+        case .focusRequestScheduled:
+            return focusRequestScheduled(
+                state: state,
+                environment: environment
+            )
+        case .focusChange(let focus):
+            return focusChange(
+                state: state,
+                environment: environment,
+                focus: focus
             )
         case .openEditorURL(_):
             return logDebug(
@@ -450,6 +537,68 @@ struct DetailModel: Hashable {
     ) -> Update<DetailModel, DetailAction> {
         environment.logger.warning("\(message)")
         return Update(state: state)
+    }
+
+    /// Handle requestFocus and send to both child components
+    /// that need focus information.
+    static func requestFocus(
+        state: DetailModel,
+        environment: AppEnvironment,
+        focus: AppFocus?
+    ) -> Update<DetailModel, DetailAction> {
+        let focusFx: Fx<DetailAction> = Just(
+            DetailAction.focus(.requestFocus(focus))
+        )
+        .eraseToAnyPublisher()
+
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.markupEditor(.requestFocus(focus))
+        )
+        .merge(with: focusFx)
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    /// Handle focusRequestScheduled and send to both child components
+    /// that need focus information.
+    static func focusRequestScheduled(
+        state: DetailModel,
+        environment: AppEnvironment
+    ) -> Update<DetailModel, DetailAction> {
+        let focusFx: Fx<DetailAction> = Just(
+            DetailAction.focus(.focusRequestScheduled)
+        )
+        .eraseToAnyPublisher()
+
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.markupEditor(.focusRequestScheduled)
+        )
+        .merge(with: focusFx)
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    /// Handle focusChange and send to both child components
+    /// that need focus information.
+    static func focusChange(
+        state: DetailModel,
+        environment: AppEnvironment,
+        focus: AppFocus?
+    ) -> Update<DetailModel, DetailAction> {
+        let focusFx: Fx<DetailAction> = Just(
+            DetailAction.focus(.focusChange(focus))
+        )
+        .eraseToAnyPublisher()
+
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.markupEditor(.focusChange(focus))
+        )
+        .merge(with: focusFx)
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
     }
 
     /// Set the contents of the editor.
@@ -1474,28 +1623,6 @@ extension SubtextFile {
     }
 }
 
-/// Editor cursor
-struct DetailMarkupEditorCursor: CursorProtocol {
-    typealias OuterState = DetailModel
-    typealias InnerState = MarkupTextModel<AppFocus>
-    typealias OuterAction = DetailAction
-    typealias InnerAction = MarkupTextAction<AppFocus>
-
-    static func get(state: OuterState) -> InnerState {
-        state.markupEditor
-    }
-
-    static func set(state: OuterState, inner: InnerState) -> OuterState {
-        var model = state
-        model.markupEditor = inner
-        return model
-    }
-    
-    static func tag(action: InnerAction) -> OuterAction {
-        .markupEditor(action)
-    }
-}
-
 //  MARK: View
 struct DetailView: View {
     private static func calcTextFieldHeight(
@@ -1509,7 +1636,7 @@ struct DetailView: View {
     var store: ViewStore<DetailModel, DetailAction>
 
     private var isKeyboardUp: Bool {
-        store.state.focus == .editor
+        store.state.focus.focus == .editor
     }
 
     var isReady: Bool {
@@ -1620,7 +1747,7 @@ struct DetailView: View {
                             tag: DetailAction.setLinkSearch
                         ),
                         focus: store.binding(
-                            get: \.focus,
+                            get: \.focus.focus,
                             tag: { focus in
                                 DetailAction.requestFocus(.linkSearch)
                             }
@@ -1649,7 +1776,7 @@ struct DetailView: View {
                             tag: DetailAction.setRenameField
                         ),
                         focus: store.binding(
-                            get: \.focus,
+                            get: \.focus.focus,
                             tag: { focus in
                                 DetailAction.requestFocus(.rename)
                             }
