@@ -120,19 +120,12 @@ enum NotebookAction {
     case failRandomDetail(Error)
     case showDetail(Bool)
 
-    // Link suggestions
-    case setLinkSheetPresented(Bool)
-    case setLinkSearch(String)
-    case selectLinkSuggestion(LinkSuggestion)
-    case setLinkSuggestions([LinkSuggestion])
-    case linkSuggestionsFailure(String)
-
     static func updateDetail(detail: EntryDetail, autofocus: Bool) -> Self {
         Self.detail(.updateDetail(detail: detail, autofocus: autofocus))
     }
 
-    static func selectLinkCompletion(_ link: EntryLink) -> Self {
-        .selectLinkSuggestion(.entry(link))
+    static func setLinkSearch(_ query: String) -> Self {
+        .detail(.setLinkSearch(query))
     }
 }
 
@@ -144,8 +137,6 @@ extension NotebookAction {
             return "setRecent(...) (\(items.count) items)"
         case .setSuggestions(let items):
             return "setSuggestions(...) (\(items.count) items)"
-        case .setLinkSuggestions(let items):
-            return "setLinkSuggestions(...) (\(items.count) items)"
         case .setRenameSuggestions(let items):
             return "setRenameSuggestions(...) (\(items.count) items)"
         default:
@@ -206,11 +197,6 @@ struct NotebookModel: Hashable, Equatable {
 
     // Editor
     var editor = Editor()
-
-    /// Link suggestions for modal and bar in edit mode
-    var isLinkSheetPresented = false
-    var linkSearchText = ""
-    var linkSuggestions: [LinkSuggestion] = []
 }
 
 //  MARK: Update
@@ -504,33 +490,6 @@ extension NotebookModel {
                 environment: environment,
                 error: error
             )
-        case let .setLinkSheetPresented(isPresented):
-            return setLinkSheetPresented(
-                state: state,
-                environment: environment,
-                isPresented: isPresented
-            )
-        case let .setLinkSearch(text):
-            return setLinkSearch(
-                state: state,
-                environment: environment,
-                text: text
-            )
-        case let .selectLinkSuggestion(suggestion):
-            return selectLinkSuggestion(
-                state: state,
-                environment: environment,
-                suggestion: suggestion
-            )
-        case let .setLinkSuggestions(suggestions):
-            var model = state
-            model.linkSuggestions = suggestions
-            return Update(state: model)
-        case let .linkSuggestionsFailure(message):
-            environment.logger.debug(
-                "Link suggest failed: \(message)"
-            )
-            return Update(state: state)
         }
     }
 
@@ -1491,134 +1450,6 @@ extension NotebookModel {
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
-
-    static func setLinkSheetPresented(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        isPresented: Bool
-    ) -> Update<NotebookModel, NotebookAction> {
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.setFocus(
-                focus: isPresented ? .linkSearch : .editor,
-                field: .linkSearch
-            )
-        )
-        .eraseToAnyPublisher()
-        var model = state
-        model.isLinkSheetPresented = isPresented
-        return Update(state: model, fx: fx)
-    }
-
-    static func setLinkSearch(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        text: String
-    ) -> Update<NotebookModel, NotebookAction> {
-        /// Only change links if text has changed
-        guard text != state.linkSearchText else {
-            return Update(state: state)
-        }
-        var model = state
-        model.linkSearchText = text
-
-        // Omit current slug from results
-        let omitting = state.editor.entryInfo.mapOr(
-            { info in Set([info.slug]) },
-            default: Set()
-        )
-
-        // Get fallback link suggestions
-        let fallback = environment.database.readDefaultLinkSuggestions()
-
-        // Search link suggestions
-        let fx: Fx<NotebookAction> = environment.database
-            .searchLinkSuggestions(
-                query: text,
-                omitting: omitting,
-                fallback: fallback
-            )
-            .map({ suggestions in
-                NotebookAction.setLinkSuggestions(suggestions)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.linkSuggestionsFailure(
-                        error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-
-        return Update(state: model, fx: fx)
-    }
-
-    static func selectLinkSuggestion(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        suggestion: LinkSuggestion
-    ) -> Update<NotebookModel, NotebookAction> {
-        let link: EntryLink = Func.pipe(
-            suggestion,
-            through: { suggestion in
-                switch suggestion {
-                case .entry(let link):
-                    return link
-                case .new(let link):
-                    return link
-                }
-            }
-        )
-
-        // If there is a selected link, use that range
-        // instead of selection
-        let (range, replacement): (NSRange, String) = Func.pipe(
-            state.editor.selectedEntryLinkMarkup,
-            through: { markup in
-                switch markup {
-                case .slashlink(let slashlink):
-                    let replacement = link.slug.toSlashlink()
-                    let range = NSRange(
-                        slashlink.span.range,
-                        in: state.editor.text
-                    )
-                    return (range, replacement)
-                case .wikilink(let wikilink):
-                    let text = link.linkableTitle
-                    let replacement = Markup.Wikilink(text: text).markup
-                    let range = NSRange(
-                        wikilink.span.range,
-                        in: state.editor.text
-                    )
-                    return (range, replacement)
-                case .none:
-                    let text = link.linkableTitle
-                    let replacement = Markup.Wikilink(text: text).markup
-                    return (state.editor.selection, replacement)
-                }
-            }
-        )
-
-        var model = state
-        model.linkSearchText = ""
-
-        return Update(state: model)
-            .pipe({ state in
-                setLinkSheetPresented(
-                    state: state,
-                    environment: environment,
-                    isPresented: false
-                )
-            })
-            .pipe({ state in
-                insertEditorText(
-                    state: state,
-                    environment: environment,
-                    text: replacement,
-                    range: range
-                )
-            })
-            .animation(.easeOutCubic(duration: Duration.keyboard))
-    }
 }
 
 //  MARK: Cursors
@@ -1774,38 +1605,6 @@ struct NotebookView: View {
                             store.send(
                                 .renameEntry(suggestion)
                             )
-                        }
-                    )
-                )
-                .zIndex(4)
-                BottomSheetView(
-                    isPresented: store.binding(
-                        get: \.isLinkSheetPresented,
-                        tag: NotebookAction.setLinkSheetPresented
-                    ),
-                    height: geometry.size.height,
-                    containerSize: geometry.size,
-                    content: LinkSearchView(
-                        placeholder: "Search or create...",
-                        suggestions: store.state.linkSuggestions,
-                        text: store.binding(
-                            get: \.linkSearchText,
-                            tag: NotebookAction.setLinkSearch
-                        ),
-                        focus: store.binding(
-                            get: \.focus,
-                            tag: { focus in
-                                NotebookAction.setFocus(
-                                    focus: focus,
-                                    field: .linkSearch
-                                )
-                            }
-                        ),
-                        onCancel: {
-                            store.send(.setLinkSheetPresented(false))
-                        },
-                        onSelect: { suggestion in
-                            store.send(.selectLinkSuggestion(suggestion))
                         }
                     )
                 )

@@ -10,6 +10,7 @@ import os
 import ObservableStore
 import Combine
 
+//  MARK: Action
 enum DetailAction: Hashable {
     case markupEditor(MarkupTextAction<AppFocus>)
     case openEditorURL(URL)
@@ -29,6 +30,13 @@ enum DetailAction: Hashable {
         slug: Slug,
         message: String
     )
+
+    // Link suggestions
+    case setLinkSheetPresented(Bool)
+    case setLinkSearch(String)
+    case selectLinkSuggestion(LinkSuggestion)
+    case setLinkSuggestions([LinkSuggestion])
+    case linkSuggestionsFailure(String)
 
     case selectBacklink(EntryLink)
     case requestRename(EntryLink)
@@ -62,13 +70,25 @@ enum DetailAction: Hashable {
     static func modifyEditor(text: String) -> Self {
         Self.setEditor(text: text, saveState: .modified)
     }
+
+    /// Select a link completion
+    static func selectLinkCompletion(_ link: EntryLink) -> Self {
+        .selectLinkSuggestion(.entry(link))
+    }
 }
 
+//  MARK: Model
 struct DetailModel: Hashable {
     var focus: AppFocus?
     var editor = Editor()
     var markupEditor = MarkupTextModel<AppFocus>()
 
+    /// Link suggestions for modal and bar in edit mode
+    var isLinkSheetPresented = false
+    var linkSearchText = ""
+    var linkSuggestions: [LinkSuggestion] = []
+
+    //  MARK: Update
     static func update(
         state: DetailModel,
         action: DetailAction,
@@ -144,6 +164,33 @@ struct DetailModel: Hashable {
                 slug: slug,
                 message: message
             )
+        case let .setLinkSheetPresented(isPresented):
+            return setLinkSheetPresented(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
+        case let .setLinkSearch(text):
+            return setLinkSearch(
+                state: state,
+                environment: environment,
+                text: text
+            )
+        case let .selectLinkSuggestion(suggestion):
+            return selectLinkSuggestion(
+                state: state,
+                environment: environment,
+                suggestion: suggestion
+            )
+        case let .setLinkSuggestions(suggestions):
+            var model = state
+            model.linkSuggestions = suggestions
+            return Update(state: model)
+        case let .linkSuggestionsFailure(message):
+            environment.logger.debug(
+                "Link suggest failed: \(message)"
+            )
+            return Update(state: state)
         case .selectBacklink(_):
             return debug(
                 state: state,
@@ -523,6 +570,131 @@ struct DetailModel: Hashable {
         return Update(state: model)
     }
 
+    static func setLinkSheetPresented(
+        state: DetailModel,
+        environment: AppEnvironment,
+        isPresented: Bool
+    ) -> Update<DetailModel, DetailAction> {
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.requestFocus(isPresented ? .linkSearch : .editor)
+        )
+        .eraseToAnyPublisher()
+        var model = state
+        model.isLinkSheetPresented = isPresented
+        return Update(state: model, fx: fx)
+    }
+
+    static func setLinkSearch(
+        state: DetailModel,
+        environment: AppEnvironment,
+        text: String
+    ) -> Update<DetailModel, DetailAction> {
+        /// Only change links if text has changed
+        guard text != state.linkSearchText else {
+            return Update(state: state)
+        }
+        var model = state
+        model.linkSearchText = text
+
+        // Omit current slug from results
+        let omitting = state.editor.entryInfo.mapOr(
+            { info in Set([info.slug]) },
+            default: Set()
+        )
+
+        // Get fallback link suggestions
+        let fallback = environment.database.readDefaultLinkSuggestions()
+
+        // Search link suggestions
+        let fx: Fx<DetailAction> = environment.database
+            .searchLinkSuggestions(
+                query: text,
+                omitting: omitting,
+                fallback: fallback
+            )
+            .map({ suggestions in
+                DetailAction.setLinkSuggestions(suggestions)
+            })
+            .catch({ error in
+                Just(
+                    DetailAction.linkSuggestionsFailure(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+
+        return Update(state: model, fx: fx)
+    }
+
+    static func selectLinkSuggestion(
+        state: DetailModel,
+        environment: AppEnvironment,
+        suggestion: LinkSuggestion
+    ) -> Update<DetailModel, DetailAction> {
+        let link: EntryLink = Func.pipe(
+            suggestion,
+            through: { suggestion in
+                switch suggestion {
+                case .entry(let link):
+                    return link
+                case .new(let link):
+                    return link
+                }
+            }
+        )
+
+        // If there is a selected link, use that range
+        // instead of selection
+        let (range, replacement): (NSRange, String) = Func.pipe(
+            state.editor.selectedEntryLinkMarkup,
+            through: { markup in
+                switch markup {
+                case .slashlink(let slashlink):
+                    let replacement = link.slug.toSlashlink()
+                    let range = NSRange(
+                        slashlink.span.range,
+                        in: state.editor.text
+                    )
+                    return (range, replacement)
+                case .wikilink(let wikilink):
+                    let text = link.linkableTitle
+                    let replacement = Markup.Wikilink(text: text).markup
+                    let range = NSRange(
+                        wikilink.span.range,
+                        in: state.editor.text
+                    )
+                    return (range, replacement)
+                case .none:
+                    let text = link.linkableTitle
+                    let replacement = Markup.Wikilink(text: text).markup
+                    return (state.editor.selection, replacement)
+                }
+            }
+        )
+
+        var model = state
+        model.linkSearchText = ""
+
+        return Update(state: model)
+            .pipe({ state in
+                setLinkSheetPresented(
+                    state: state,
+                    environment: environment,
+                    isPresented: false
+                )
+            })
+            .pipe({ state in
+                insertEditorText(
+                    state: state,
+                    environment: environment,
+                    text: replacement,
+                    range: range
+                )
+            })
+            .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
     /// Insert wikilink markup into editor, begining at previous range
     /// and wrapping the contents of previous range
     static func insertTaggedMarkup<T>(
@@ -610,6 +782,7 @@ struct DetailMarkupEditorCursor: CursorProtocol {
     }
 }
 
+//  MARK: View
 struct DetailView: View {
     private static func calcTextFieldHeight(
         containerHeight: CGFloat,
@@ -639,103 +812,132 @@ struct DetailView: View {
 
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
-                Divider()
-                GeometryReader { geometry in
-                    ScrollView(.vertical) {
-                        VStack(spacing: 0) {
-                            MarkupTextViewRepresentable2(
-                                store: store.viewStore(
-                                    get: DetailMarkupEditorCursor.get,
-                                    tag: DetailMarkupEditorCursor.tag
-                                ),
-                                field: .editor,
-                                frame: geometry.frame(in: .local),
-                                renderAttributesOf: Subtext.renderAttributesOf,
-                                onLink: { url, _, _, _ in
-                                    store.send(.openEditorURL(url))
-                                    return false
-                                },
-                                logger: Logger.editor
-                            )
-                            .insets(
-                                EdgeInsets(
-                                    top: AppTheme.padding,
-                                    leading: AppTheme.padding,
-                                    bottom: AppTheme.padding,
-                                    trailing: AppTheme.padding
+            GeometryReader { geometry in
+                VStack(spacing: 0) {
+                    Divider()
+                        ScrollView(.vertical) {
+                            VStack(spacing: 0) {
+                                MarkupTextViewRepresentable2(
+                                    store: store.viewStore(
+                                        get: DetailMarkupEditorCursor.get,
+                                        tag: DetailMarkupEditorCursor.tag
+                                    ),
+                                    field: .editor,
+                                    frame: geometry.frame(in: .local),
+                                    renderAttributesOf: Subtext.renderAttributesOf,
+                                    onLink: { url, _, _, _ in
+                                        store.send(.openEditorURL(url))
+                                        return false
+                                    },
+                                    logger: Logger.editor
                                 )
-                            )
-                            .frame(
-                                minHeight: Self.calcTextFieldHeight(
-                                    containerHeight: geometry.size.height,
-                                    isKeyboardUp: isKeyboardUp,
-                                    hasBacklinks: backlinks.count > 0
+                                .insets(
+                                    EdgeInsets(
+                                        top: AppTheme.padding,
+                                        leading: AppTheme.padding,
+                                        bottom: AppTheme.padding,
+                                        trailing: AppTheme.padding
+                                    )
                                 )
-                            )
-                            ThickDividerView()
-                                .padding(.bottom, AppTheme.unit4)
-                            BacklinksView(
-                                backlinks: backlinks,
-                                onSelect: { link in
-                                    store.send(.selectBacklink(link))
-                                }
-                            )
+                                .frame(
+                                    minHeight: Self.calcTextFieldHeight(
+                                        containerHeight: geometry.size.height,
+                                        isKeyboardUp: isKeyboardUp,
+                                        hasBacklinks: backlinks.count > 0
+                                    )
+                                )
+                                ThickDividerView()
+                                    .padding(.bottom, AppTheme.unit4)
+                                BacklinksView(
+                                    backlinks: backlinks,
+                                    onSelect: { link in
+                                        store.send(.selectBacklink(link))
+                                    }
+                                )
+                            }
                         }
+                    if isKeyboardUp {
+                        DetailKeyboardToolbarView(
+                            isSheetPresented: store.binding(
+                                get: \.isLinkSheetPresented,
+                                tag: DetailAction.setLinkSheetPresented
+                            ),
+                            selectedEntryLinkMarkup:
+                                store.state.editor.selectedEntryLinkMarkup,
+                            suggestions: store.state.linkSuggestions,
+                            onSelectLinkCompletion: { link in
+                                store.send(.selectLinkCompletion(link))
+                            },
+                            onInsertWikilink: {
+                                store.send(.insertEditorWikilinkAtSelection)
+                            },
+                            onInsertBold: {
+                                store.send(.insertEditorBoldAtSelection)
+                            },
+                            onInsertItalic: {
+                                store.send(.insertEditorItalicAtSelection)
+                            },
+                            onInsertCode: {
+                                store.send(.insertEditorCodeAtSelection)
+                            },
+                            onDoneEditing: {
+                                store.send(.selectDoneEditing)
+                            }
+                        )
+                        .transition(
+                            .asymmetric(
+                                insertion: .opacity.animation(
+                                    .easeOutCubic(duration: Duration.normal)
+                                    .delay(Duration.keyboard)
+                                ),
+                                removal: .opacity.animation(
+                                    .easeOutCubic(duration: Duration.normal)
+                                )
+                            )
+                        )
                     }
                 }
-                if isKeyboardUp {
-                    DetailKeyboardToolbarView(
-                        isSheetPresented: store.binding(
-                            get: \.isLinkSheetPresented,
-                            tag: NotebookAction.setLinkSheetPresented
-                        ),
-                        selectedEntryLinkMarkup:
-                            store.state.editor.selectedEntryLinkMarkup,
+                .zIndex(1)
+                BottomSheetView(
+                    isPresented: store.binding(
+                        get: \.isLinkSheetPresented,
+                        tag: DetailAction.setLinkSheetPresented
+                    ),
+                    height: geometry.size.height,
+                    containerSize: geometry.size,
+                    content: LinkSearchView(
+                        placeholder: "Search or create...",
                         suggestions: store.state.linkSuggestions,
-                        onSelectLinkCompletion: { link in
-                            store.send(.selectLinkCompletion(link))
+                        text: store.binding(
+                            get: \.linkSearchText,
+                            tag: DetailAction.setLinkSearch
+                        ),
+                        focus: store.binding(
+                            get: \.focus,
+                            tag: { focus in
+                                DetailAction.requestFocus(.linkSearch)
+                            }
+                        ),
+                        onCancel: {
+                            store.send(.setLinkSheetPresented(false))
                         },
-                        onInsertWikilink: {
-                            store.send(.insertEditorWikilinkAtSelection)
-                        },
-                        onInsertBold: {
-                            store.send(.insertEditorBoldAtSelection)
-                        },
-                        onInsertItalic: {
-                            store.send(.insertEditorItalicAtSelection)
-                        },
-                        onInsertCode: {
-                            store.send(.insertEditorCodeAtSelection)
-                        },
-                        onDoneEditing: {
-                            store.send(.selectDoneEditing)
+                        onSelect: { suggestion in
+                            store.send(.selectLinkSuggestion(suggestion))
                         }
                     )
-                    .transition(
-                        .asymmetric(
-                            insertion: .opacity.animation(
-                                .easeOutCubic(duration: Duration.normal)
-                                .delay(Duration.keyboard)
-                            ),
-                            removal: .opacity.animation(
-                                .easeOutCubic(duration: Duration.normal)
+                )
+                .zIndex(4)
+                if !isReady {
+                    Color.background
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .transition(
+                            .asymmetric(
+                                insertion: .opacity.animation(.none),
+                                removal: .opacity.animation(.default)
                             )
                         )
-                    )
+                        .zIndex(2)
                 }
-            }
-            .zIndex(1)
-            if !isReady {
-                Color.background
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .transition(
-                        .asymmetric(
-                            insertion: .opacity.animation(.none),
-                            removal: .opacity.animation(.default)
-                        )
-                    )
-                    .zIndex(2)
             }
         }
         .navigationTitle("")
