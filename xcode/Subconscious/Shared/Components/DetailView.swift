@@ -175,7 +175,14 @@ struct DetailFocusCursor: CursorProtocol {
     }
 
     static func tag(action: AppFocusAction) -> DetailAction {
-        .focus(action)
+        switch action {
+        case .focusChange(let focus):
+            return .focusChange(focus)
+        case .focusRequestScheduled:
+            return .focusRequestScheduled
+        case .requestFocus(let focus):
+            return .requestFocus(focus)
+        }
     }
 }
 

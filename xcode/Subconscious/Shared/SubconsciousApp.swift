@@ -140,21 +140,30 @@ enum AppDatabaseState {
 //  MARK: Model
 struct AppModel: Equatable {
     /// Global focus state
-    var focus = AppFocusModel()
+    var focus: AppFocusModel
 
     /// Is database connected and migrated?
-    var databaseState = AppDatabaseState.initial
+    var databaseState: AppDatabaseState
 
     /// Feed of stories
-    var feed = FeedModel()
-
-    var notebook = NotebookModel()
+    var feed: FeedModel
+    /// Your notebook containing all your notes
+    var notebook: NotebookModel
 
     /// Determine if the interface is ready for user interaction,
     /// even if all of the data isn't refreshed yet.
     /// This is the point at which the main interface is ready to be shown.
     var isReadyForInteraction: Bool {
         self.databaseState == .ready
+    }
+
+    init() {
+        let focus = AppFocusModel()
+        self.focus =  focus
+        self.databaseState = .initial
+        self.feed = FeedModel()
+        // Init notebook with focus state
+        self.notebook = NotebookModel(focus: focus)
     }
 }
 
