@@ -120,6 +120,9 @@ enum NotebookAction {
     case failRandomDetail(Error)
     case showDetail(Bool)
 
+    /// Send autosave to detail
+    static let autosave = Self.detail(.autosave)
+
     static func updateDetail(detail: EntryDetail, autofocus: Bool) -> Self {
         Self.detail(.updateDetail(detail: detail, autofocus: autofocus))
     }
@@ -629,19 +632,23 @@ extension NotebookModel {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel, NotebookAction> {
-        return listRecent(state: state, environment: environment)
+        let detailRefreshFx: Fx<NotebookAction> = Just(
+            .detail(DetailAction.refreshAll)
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: detailRefreshFx)
+            .pipe({ state in
+                listRecent(
+                    state: state,
+                    environment: environment
+                )
+            })
             .pipe({ state in
                 setSearch(
                     state: state,
                     environment: environment,
                     text: state.searchText
-                )
-            })
-            .pipe({ state in
-                setLinkSearch(
-                    state: state,
-                    environment: environment,
-                    text: state.linkSearchText
                 )
             })
             .pipe({ state in
@@ -1342,12 +1349,8 @@ extension NotebookModel {
         var model = state
         model.editor.isLoading = true
 
-        // Save current state before we blow it away
-        return save(
-            state: model,
-            environment: environment
-        )
-        .animation(.easeOutCubic(duration: Duration.keyboard))
+        return Update(state: model)
+            .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
     /// Request detail view for entry.
@@ -1473,6 +1476,8 @@ struct NotebookDetailCursor: CursorProtocol {
 
     static func tag(action: DetailAction) -> NotebookAction {
         switch action {
+        case .refreshAll:
+            return .refreshAll
         case .openEditorURL(let url):
             return .openEditorURL(url)
         case .selectBacklink(let link):

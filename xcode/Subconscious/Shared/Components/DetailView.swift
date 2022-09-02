@@ -23,8 +23,10 @@ enum DetailAction: Hashable {
     case updateDetail(detail: EntryDetail, autofocus: Bool)
 
     //  Saving entry
+    /// Trigger autosave of current state
+    case autosave
     /// Save an entry at a particular snapshot value
-    case save
+    case save(SubtextFile?)
     case succeedSave(SubtextFile)
     case failSave(
         slug: Slug,
@@ -146,10 +148,16 @@ struct DetailModel: Hashable {
                 detail: results,
                 autofocus: autofocus
             )
-        case .save:
-            return save(
+        case .autosave:
+            return autosave(
                 state: state,
                 environment: environment
+            )
+        case .save(let entry):
+            return save(
+                state: state,
+                environment: environment,
+                entry: entry
             )
         case let .succeedSave(entry):
             return succeedSave(
@@ -393,15 +401,10 @@ struct DetailModel: Hashable {
         let fx: Fx<DetailAction> = Just(
             DetailAction.requestFocus(nil)
         )
+        .merge(with: Just(DetailAction.autosave))
         .eraseToAnyPublisher()
 
         return Update(state: state, fx: fx)
-            .pipe({ model in
-                save(
-                    state: state,
-                    environment: environment
-                )
-            })
     }
 
     /// Update entry detail.
@@ -412,8 +415,8 @@ struct DetailModel: Hashable {
         detail: EntryDetail,
         autofocus: Bool
     ) -> Update<DetailModel, DetailAction> {
-        var model = state
-        model.editor = Editor(detail)
+        let showDetailFx: Fx<DetailAction> = Just(DetailAction.showDetail)
+            .eraseToAnyPublisher()
 
         // Schedule save for ~ after the transition animation completes.
         // If we save immediately, it causes list view to update while the
@@ -425,10 +428,9 @@ struct DetailModel: Hashable {
         // 2022-03-24 Gordon Brander
         let approximateNavigationViewAnimationCompleteDuration: Double = 1
 
-        let showDetailFx: Fx<DetailAction> = Just(DetailAction.showDetail)
-            .eraseToAnyPublisher()
-
-        let fx: Fx<DetailAction> = Just(DetailAction.save)
+        // Snapshot entry and schedule a save before we replace it.
+        let snapshot = state.snapshotEntry()
+        let fx: Fx<DetailAction> = Just(DetailAction.save(snapshot))
             .delay(
                 for: .seconds(
                     approximateNavigationViewAnimationCompleteDuration
@@ -437,6 +439,9 @@ struct DetailModel: Hashable {
             )
             .merge(with: showDetailFx)
             .eraseToAnyPublisher()
+
+        var model = state
+        model.editor = Editor(detail)
 
         let update = Update(
             state: model,
@@ -482,25 +487,38 @@ struct DetailModel: Hashable {
             .mergeFx(focusFx)
     }
 
+    static func autosave(
+        state: DetailModel,
+        environment: AppEnvironment
+    ) -> Update<DetailModel, DetailAction> {
+        let entry = state.snapshotEntry()
+        return save(
+            state: state,
+            environment: environment,
+            entry: entry
+        )
+    }
+
     /// Save snapshot of entry
     static func save(
         state: DetailModel,
-        environment: AppEnvironment
+        environment: AppEnvironment,
+        entry: SubtextFile?
     ) -> Update<DetailModel, DetailAction> {
         // If editor dom is already saved, noop
         guard state.editor.saveState != .saved else {
             return Update(state: state)
         }
-        var model = state
-
-        // Derive entry from editor
-        guard let entry = snapshotEditor(model.editor) else {
+        // If there is no entry, nothing to save
+        guard let entry = entry else {
             let saveState = String(reflecting: state.editor.saveState)
             environment.logger.warning(
                 "Entry save state is marked \(saveState) but no entry could be derived for state. Doing nothing."
             )
             return Update(state: state)
         }
+
+        var model = state
 
         // Mark saving in-progress
         model.editor.saveState = .saving
@@ -752,11 +770,28 @@ struct DetailModel: Hashable {
 
     /// Snapshot editor state in preparation for saving.
     /// Also mends header files.
-    static func snapshotEditor(_ editor: Editor) -> SubtextFile? {
-        guard let entry = SubtextFile(editor) else {
+    func snapshotEntry() -> SubtextFile? {
+        guard let entry = SubtextFile(self) else {
             return nil
         }
         return entry.modified(Date.now)
+    }
+}
+
+extension SubtextFile {
+    /// Initialize SubtextFile from DetailModel.
+    /// We use this to snapshot the current state of detail for saving.
+    init?(_ detail: DetailModel) {
+        // TODO: refactor slug to belong to detail
+        guard
+            let slug = detail.editor.entryInfo?.slug,
+            let headers = detail.editor.entryInfo?.headers
+        else {
+            return nil
+        }
+        self.slug = slug
+        self.headers = headers
+        self.body = detail.markupEditor.text
     }
 }
 

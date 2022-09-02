@@ -207,7 +207,7 @@ extension AppModel {
             // Auto-save entry currently being edited, if any.
             let fx: Fx<AppAction> = Just(
                 AppAction.notebook(
-                    NotebookAction.save
+                    NotebookAction.autosave
                 )
             )
             .eraseToAnyPublisher()
