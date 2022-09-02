@@ -189,7 +189,7 @@ struct DetailFocusCursor: CursorProtocol {
 //  MARK: Model
 struct DetailModel: Hashable {
     /// Local copy of app focus
-    var focus = AppFocusModel()
+    var focus: AppFocusModel
 
     var slug: Slug?
     var headers: HeaderIndex = .empty

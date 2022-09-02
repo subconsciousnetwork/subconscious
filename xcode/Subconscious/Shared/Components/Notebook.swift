@@ -164,7 +164,7 @@ struct NotebookModel: Hashable, Equatable {
     var isDetailShowing = false
 
     /// Entry detail
-    var detail = DetailModel()
+    var detail: DetailModel
 
     /// Count of entries
     var entryCount: Int? = nil
@@ -184,6 +184,13 @@ struct NotebookModel: Hashable, Equatable {
 
     /// Main search suggestions
     var suggestions: [Suggestion] = []
+
+    init(
+        focus: AppFocusModel
+    ) {
+        self.focus = focus
+        self.detail = DetailModel(focus: focus)
+    }
 }
 
 //  MARK: Update
