@@ -204,7 +204,7 @@ struct DetailModel: Hashable {
     /// The entry link within the text
     var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
 
-    var markupEditor = MarkupTextModel<AppFocus>()
+    var markupEditor: MarkupTextModel<AppFocus>
 
     /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
@@ -222,6 +222,15 @@ struct DetailModel: Hashable {
     var renameField: String = ""
     /// Suggestions for renaming note.
     var renameSuggestions: [RenameSuggestion] = []
+
+    init(
+        focus: AppFocusModel
+    ) {
+        self.focus = focus
+        self.markupEditor = MarkupTextModel<AppFocus>(
+            focus: focus
+        )
+    }
 
     /// Given a particular entry value, does the editor's state
     /// currently match it, such that we could say the editor is
