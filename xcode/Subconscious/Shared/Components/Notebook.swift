@@ -39,10 +39,6 @@ enum NotebookAction {
     /// On appear. We rely on parent to notify us of this event.
     case appear
 
-    /// Set focus from editor
-    /// In addition to setting focus, this saves content on blur.
-    case setEditorFocus(AppFocus?)
-
     /// Refresh the state of all lists by reloading from database.
     /// This also sets searches to their zero-query state.
     case refreshAll
@@ -120,28 +116,9 @@ enum NotebookAction {
         autofocus: Bool
     )
     case requestRandomDetail(autofocus: Bool)
-    case updateDetail(detail: EntryDetail, autofocus: Bool)
     case failDetail(String)
     case failRandomDetail(Error)
     case showDetail(Bool)
-
-    // Editor
-    /// Invokes save and blurs editor
-    case selectDoneEditing
-    /// Update editor dom and mark if this state is saved or not
-    case setEditor(text: String, saveState: SaveState)
-    /// Set selected range in editor
-    case setEditorSelection(NSRange)
-    /// Insert text into editor, replacing range
-    case insertEditorText(
-        text: String,
-        range: NSRange
-    )
-    /// Insert wikilink markup, wrapping range
-    case insertEditorWikilinkAtSelection
-    case insertEditorBoldAtSelection
-    case insertEditorItalicAtSelection
-    case insertEditorCodeAtSelection
 
     // Link suggestions
     case setLinkSheetPresented(Bool)
@@ -150,18 +127,8 @@ enum NotebookAction {
     case setLinkSuggestions([LinkSuggestion])
     case linkSuggestionsFailure(String)
 
-    //  Saving entries
-    /// Save an entry at a particular snapshot value
-    case save
-    case succeedSave(SubtextFile)
-    case failSave(
-        slug: Slug,
-        message: String
-    )
-
-    /// Update editor dom and always mark modified
-    static func modifyEditor(text: String) -> Self {
-        Self.setEditor(text: text, saveState: .modified)
+    static func updateDetail(detail: EntryDetail, autofocus: Bool) -> Self {
+        Self.detail(.updateDetail(detail: detail, autofocus: autofocus))
     }
 
     static func selectLinkCompletion(_ link: EntryLink) -> Self {
@@ -181,8 +148,6 @@ extension NotebookAction {
             return "setLinkSuggestions(...) (\(items.count) items)"
         case .setRenameSuggestions(let items):
             return "setRenameSuggestions(...) (\(items.count) items)"
-        case .updateDetail(let detail, _):
-            return "updateDetail(\(detail.slug)) (saved state: \(detail.saveState))"
         default:
             return String(describing: self)
         }
@@ -291,12 +256,6 @@ extension NotebookModel {
                 environment: environment,
                 focus: focus,
                 field: field
-            )
-        case let .setEditorFocus(focus):
-            return setEditorFocus(
-                state: state,
-                environment: environment,
-                focus: focus
             )
         case let .changeKeyboardState(keyboard):
             return changeKeyboardState(state: state, keyboard: keyboard)
@@ -464,59 +423,6 @@ extension NotebookModel {
                 environment: environment,
                 error: error
             )
-        case .selectDoneEditing:
-            return selectDoneEditing(
-                state: state,
-                environment: environment
-            )
-        case let .setEditor(text, saveState):
-            return setEditor(
-                state: state,
-                environment: environment,
-                text: text,
-                saveState: saveState
-            )
-        case let .setEditorSelection(range):
-            return setEditorSelection(
-                state: state,
-                environment: environment,
-                range: range
-            )
-        case let .insertEditorText(text, range):
-            return insertEditorText(
-                state: state,
-                environment: environment,
-                text: text,
-                range: range
-            )
-        case .insertEditorWikilinkAtSelection:
-            return insertTaggedMarkup(
-                state: state,
-                environment: environment,
-                range: state.editor.selection,
-                with: { text in Markup.Wikilink(text: text) }
-            )
-        case .insertEditorBoldAtSelection:
-            return insertTaggedMarkup(
-                state: state,
-                environment: environment,
-                range: state.editor.selection,
-                with: { text in Markup.Bold(text: text) }
-            )
-        case .insertEditorItalicAtSelection:
-            return insertTaggedMarkup(
-                state: state,
-                environment: environment,
-                range: state.editor.selection,
-                with: { text in Markup.Italic(text: text) }
-            )
-        case .insertEditorCodeAtSelection:
-            return insertTaggedMarkup(
-                state: state,
-                environment: environment,
-                range: state.editor.selection,
-                with: { text in Markup.Code(text: text) }
-            )
         case let .showDetail(isShowing):
             return showDetail(
                 state: state,
@@ -632,24 +538,6 @@ extension NotebookModel {
                 "Link suggest failed: \(message)"
             )
             return Update(state: state)
-        case .save:
-            return save(
-                state: state,
-                environment: environment
-            )
-        case let .succeedSave(entry):
-            return succeedSave(
-                state: state,
-                environment: environment,
-                entry: entry
-            )
-        case let .failSave(slug, message):
-            return failSave(
-                state: state,
-                environment: environment,
-                slug: slug,
-                message: message
-            )
         }
     }
 
@@ -713,190 +601,6 @@ extension NotebookModel {
         var model = state
         model.editor = Editor()
         return model
-    }
-
-    /// Set the contents of the editor.
-    ///
-    /// if `isSaved` is `false`, the editor state will be flagged as unsaved,
-    /// allowing other processes to save it to disk later.
-    /// When setting a `dom` that represents the current saved-to-disk state
-    /// mark `isSaved` true.
-    ///
-    /// - Parameters:
-    ///   - state: the state of the app
-    ///   - dom: the Subtext DOM that should be rendered and set
-    ///   - isSaved: is this text state saved already?
-    static func setEditor(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        text: String,
-        saveState: SaveState = .modified
-    ) -> Update<NotebookModel, NotebookAction> {
-        var model = state
-        model.editor.text = text
-        // Mark save state
-        model.editor.saveState = saveState
-        let dom = Subtext.parse(markup: text)
-        let link = dom.entryLinkFor(range: state.editor.selection)
-        model.editor.selectedEntryLinkMarkup = link
-
-        let linkSearchText = link?.toTitle() ?? ""
-
-        return Update(state: model)
-            .pipe({ state in
-                setLinkSearch(
-                    state: state,
-                    environment: environment,
-                    text: linkSearchText
-                )
-            })
-    }
-
-    /// Set editor selection.
-    static func setEditorSelection(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        range nsRange: NSRange
-    ) -> Update<NotebookModel, NotebookAction> {
-        var model = state
-        model.editor.selection = nsRange
-        let dom = Subtext.parse(markup: model.editor.text)
-        let link = dom.entryLinkFor(
-            range: model.editor.selection
-        )
-        model.editor.selectedEntryLinkMarkup = link
-
-        let linkSearchText = link?.toTitle() ?? ""
-
-        return Update(state: model)
-            .pipe({ state in
-                setLinkSearch(
-                    state: state,
-                    environment: environment,
-                    text: linkSearchText
-                )
-            })
-    }
-
-    /// Set text cursor at end of editor
-    static func setEditorSelectionEnd(
-        state: NotebookModel,
-        environment: AppEnvironment
-    ) -> Update<NotebookModel, NotebookAction> {
-        let range = NSRange(
-            state.editor.text.endIndex...,
-            in: state.editor.text
-        )
-
-        return setEditorSelection(
-            state: state,
-            environment: environment,
-            range: range
-        )
-    }
-
-    /// Insert text in editor at range
-    static func insertEditorText(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        text: String,
-        range nsRange: NSRange
-    ) -> Update<NotebookModel, NotebookAction> {
-        guard let range = Range(nsRange, in: state.editor.text) else {
-            environment.logger.log(
-                "Cannot replace text. Invalid range: \(nsRange))"
-            )
-            return Update(state: state)
-        }
-
-        // Replace selected range with committed link search text.
-        let markup = state.editor.text.replacingCharacters(
-            in: range,
-            with: text
-        )
-
-        // Find new cursor position
-        guard let cursor = markup.index(
-            range.lowerBound,
-            offsetBy: text.count,
-            limitedBy: markup.endIndex
-        ) else {
-            environment.logger.log(
-                "Could not find new cursor position. Aborting text insert."
-            )
-            return Update(state: state)
-        }
-
-        // Set editor dom and editor selection immediately in same
-        // Update.
-        return setEditor(
-            state: state,
-            environment: environment,
-            text: markup,
-            saveState: .modified
-        )
-        .pipe({ state in
-            setEditorSelection(
-                state: state,
-                environment: environment,
-                range: NSRange(cursor..<cursor, in: markup)
-            )
-        })
-    }
-
-    /// Insert wikilink markup into editor, begining at previous range
-    /// and wrapping the contents of previous range
-    static func insertTaggedMarkup<T>(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        range nsRange: NSRange,
-        with withMarkup: (String) -> T
-    ) -> Update<NotebookModel, NotebookAction>
-    where T: TaggedMarkup
-    {
-        guard let range = Range(nsRange, in: state.editor.text) else {
-            environment.logger.log(
-                "Cannot replace text. Invalid range: \(nsRange))"
-            )
-            return Update(state: state)
-        }
-
-        let selectedText = String(state.editor.text[range])
-        let markup = withMarkup(selectedText)
-
-        // Replace selected range with committed link search text.
-        let editorText = state.editor.text.replacingCharacters(
-            in: range,
-            with: String(describing: markup)
-        )
-
-        // Find new cursor position
-        guard let cursor = editorText.index(
-            range.lowerBound,
-            offsetBy: markup.markupWithoutClosingTag.count,
-            limitedBy: editorText.endIndex
-        ) else {
-            environment.logger.log(
-                "Could not find new cursor position. Aborting text insert."
-            )
-            return Update(state: state)
-        }
-
-        // Set editor dom and editor selection immediately in same
-        // Update.
-        return setEditor(
-            state: state,
-            environment: environment,
-            text: editorText,
-            saveState: .modified
-        )
-        .pipe({ state in
-            setEditorSelection(
-                state: state,
-                environment: environment,
-                range: NSRange(cursor..<cursor, in: editorText)
-            )
-        })
     }
 
     /// Toggle detail view showing or hiding
@@ -964,30 +668,6 @@ extension NotebookModel {
             )
             return Update(state: state)
         }
-    }
-
-    /// Manage focus while in an editing session.
-    /// Does the same thing as `setFocus`, but also saves when editor
-    /// loses focus.
-    static func setEditorFocus(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        focus: AppFocus?
-    ) -> Update<NotebookModel, NotebookAction> {
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.setFocus(focus: focus, field: .editor)
-        )
-        .eraseToAnyPublisher()
-        let update = Update(state: state, fx: fx)
-        // Check that focus was editor, and is being set to something else.
-        // If not, return early.
-        guard state.focus == .editor && focus != .editor else {
-            return update
-        }
-        // Editor lost focus, save.
-        return update.pipe({ state in
-            save(state: state, environment: environment)
-        })
     }
 
     /// Refresh all lists in the app from database
@@ -1533,25 +1213,6 @@ extension NotebookModel {
         return Update(state: state)
     }
 
-    /// Unfocus editor and save current state
-    static func selectDoneEditing(
-        state: NotebookModel,
-        environment: AppEnvironment
-    ) -> Update<NotebookModel, NotebookAction> {
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.setFocus(focus: nil, field: .editor)
-        )
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
-            .pipe({ model in
-                save(
-                    state: state,
-                    environment: environment
-                )
-            })
-    }
-
     /// Set search text for main search input
     static func setSearch(
         state: NotebookModel,
@@ -2044,103 +1705,6 @@ extension NotebookModel {
                 )
             })
             .animation(.easeOutCubic(duration: Duration.keyboard))
-    }
-
-    /// Snapshot editor state in preparation for saving.
-    /// Also mends header files.
-    static func snapshotEditor(_ editor: Editor) -> SubtextFile? {
-        guard let entry = SubtextFile(editor) else {
-            return nil
-        }
-        return entry.modified(Date.now)
-    }
-
-    /// Save snapshot of entry
-    static func save(
-        state: NotebookModel,
-        environment: AppEnvironment
-    ) -> Update<NotebookModel, NotebookAction> {
-        // If editor dom is already saved, noop
-        guard state.editor.saveState != .saved else {
-            return Update(state: state)
-        }
-        var model = state
-
-        // Derive entry from editor
-        guard let entry = snapshotEditor(model.editor) else {
-            let saveState = String(reflecting: state.editor.saveState)
-            environment.logger.warning(
-                "Entry save state is marked \(saveState) but no entry could be derived for state. Doing nothing."
-            )
-            return Update(state: state)
-        }
-
-        // Mark saving in-progress
-        model.editor.saveState = .saving
-
-        let fx: Fx<NotebookAction> = environment.database
-            .writeEntryAsync(entry)
-            .map({ _ in
-                NotebookAction.succeedSave(entry)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.failSave(
-                        slug: entry.slug,
-                        message: error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: model, fx: fx)
-    }
-
-    /// Log save success and perform refresh of various lists.
-    static func succeedSave(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        entry: SubtextFile
-    ) -> Update<NotebookModel, NotebookAction> {
-        environment.logger.debug(
-            "Saved entry: \(entry.slug)"
-        )
-        let fx = Just(NotebookAction.refreshAll)
-            .eraseToAnyPublisher()
-
-        var model = state
-
-        // If editor state is still the state we invoked save with,
-        // then mark the current editor state as "saved".
-        // We check before setting in case changes happened between the
-        // time we invoked save and the time it completed.
-        // If changes did happen in that time, we want to mark the current
-        // state modified, giving other processes a chance to save the
-        // new changes.
-        // 2022-02-09 Gordon Brander
-        if
-            model.editor.saveState == .saving &&
-            model.editor.stateMatches(entry: entry)
-        {
-            model.editor.saveState = .saved
-        }
-
-        return Update(state: model, fx: fx)
-    }
-
-    static func failSave(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        slug: Slug,
-        message: String
-    ) -> Update<NotebookModel, NotebookAction> {
-        //  TODO: show user a "try again" banner
-        environment.logger.warning(
-            "Save failed for entry (\(slug)) with error: \(message)"
-        )
-        // Mark modified, since we failed to save
-        var model = state
-        model.editor.saveState = .modified
-        return Update(state: model)
     }
 }
 

@@ -57,33 +57,6 @@ struct AppNavigationView: View {
                             store: store.viewStore(
                                 get: NotebookDetailCursor.get,
                                 tag: NotebookDetailCursor.tag
-                            ),
-                            keyboardToolbar: DetailKeyboardToolbarView(
-                                isSheetPresented: store.binding(
-                                    get: \.isLinkSheetPresented,
-                                    tag: NotebookAction.setLinkSheetPresented
-                                ),
-                                selectedEntryLinkMarkup:
-                                    store.state.editor.selectedEntryLinkMarkup,
-                                suggestions: store.state.linkSuggestions,
-                                onSelectLinkCompletion: { link in
-                                    store.send(.selectLinkCompletion(link))
-                                },
-                                onInsertWikilink: {
-                                    store.send(.insertEditorWikilinkAtSelection)
-                                },
-                                onInsertBold: {
-                                    store.send(.insertEditorBoldAtSelection)
-                                },
-                                onInsertItalic: {
-                                    store.send(.insertEditorItalicAtSelection)
-                                },
-                                onInsertCode: {
-                                    store.send(.insertEditorCodeAtSelection)
-                                },
-                                onDoneEditing: {
-                                    store.send(.selectDoneEditing)
-                                }
                             )
                         )
                     },
