@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct EntryDetail {
+struct EntryDetail: Hashable {
     var saveState: SaveState
     var entry: SubtextFile
     var backlinks: [EntryStub] = []
