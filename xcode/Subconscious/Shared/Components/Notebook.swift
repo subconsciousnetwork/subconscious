@@ -977,6 +977,13 @@ struct NotebookDetailCursor: CursorProtocol {
 
     static func tag(action: DetailAction) -> NotebookAction {
         switch action {
+        /// Intercept focus in detail and address at this level
+        case .focusChange(let focus):
+            return .focusChange(focus)
+        case .focusRequestScheduled:
+            return .focusRequestScheduled
+        case .requestFocus(let focus):
+            return .requestFocus(focus)
         case .refreshAll:
             return .refreshAll
         case .showDetail(let isShowing):

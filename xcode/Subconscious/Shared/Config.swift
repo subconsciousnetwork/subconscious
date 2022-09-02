@@ -10,7 +10,7 @@ import Foundation
 /// Feature flags and settings
 struct Config: Equatable {
     let rdns = "com.subconscious.Subconscious"
-    var debug = true
+    var debug = false
 
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15

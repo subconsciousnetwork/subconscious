@@ -143,15 +143,12 @@ struct DetailMarkupEditorCursor: CursorProtocol {
     static func tag(action: InnerAction) -> OuterAction {
         switch action {
         /// Intercept focus in markup editor and address at this level
-        case .focus(let action):
-            switch action {
-            case .focusChange(let focus):
-                return .focusChange(focus)
-            case .focusRequestScheduled:
-                return .focusRequestScheduled
-            case .requestFocus(let focus):
-                return .requestFocus(focus)
-            }
+        case .focusChange(let focus):
+            return .focusChange(focus)
+        case .focusRequestScheduled:
+            return .focusRequestScheduled
+        case .requestFocus(let focus):
+            return .requestFocus(focus)
         default:
             return .markupEditor(action)
         }
@@ -986,7 +983,9 @@ struct DetailModel: Hashable {
     ) -> Update<DetailModel, DetailAction> {
         var model = state
         model.slug = nil
-        model.markupEditor = MarkupTextModel<AppFocus>()
+        model.markupEditor = MarkupTextModel<AppFocus>(
+            focus: model.focus
+        )
         model.backlinks = []
         model.isLoading = true
         model.saveState = .saved

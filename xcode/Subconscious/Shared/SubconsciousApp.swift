@@ -29,6 +29,8 @@ struct SubconsciousApp: App {
 typealias AppStore = Store<AppModel, AppAction, AppEnvironment>
 
 enum AppAction {
+    /// Wrapper for top-level app focus
+    case focus(AppFocusAction)
     /// Wrapper for notebook actions
     case notebook(NotebookAction)
     /// Wrapper for feed actions
@@ -36,6 +38,13 @@ enum AppAction {
 
     ///  KeyboardService state change
     case changeKeyboardState(KeyboardState)
+
+    /// Request a model-driven focus change
+    case requestFocus(AppFocus?)
+    /// Focus change request scheduled
+    case focusRequestScheduled
+    /// Focus change from the UI. UI-driven focus always wins.
+    case focusChange(AppFocus?)
 
     /// Poll service
     case poll(Date)
@@ -70,6 +79,32 @@ extension AppAction {
     }
 }
 
+//  MARK: Cursors
+
+/// Cursor for top-level app focus state
+struct AppFocusCursor: CursorProtocol {
+    static func get(state: AppModel) -> AppFocusModel {
+        state.focus
+    }
+
+    static func set(state: AppModel, inner: AppFocusModel) -> AppModel {
+        var model = state
+        model.focus = inner
+        return model
+    }
+
+    static func tag(action: AppFocusAction) -> AppAction {
+        switch action {
+        case .focusRequestScheduled:
+            return .focusRequestScheduled
+        case .requestFocus(let focus):
+            return .requestFocus(focus)
+        case .focusChange(let focus):
+            return .focusChange(focus)
+        }
+    }
+}
+
 /// Cursor functions for mapping notebook updates to app updates
 struct NotebookCursor: CursorProtocol {
     /// Get notebook model from app model
@@ -89,7 +124,16 @@ struct NotebookCursor: CursorProtocol {
 
     /// Tag notebook actions
     static func tag(action: NotebookAction) -> AppAction {
-        AppAction.notebook(action)
+        switch action {
+        case .requestFocus(let focus):
+            return .requestFocus(focus)
+        case .focusRequestScheduled:
+            return .focusRequestScheduled
+        case .focusChange(let focus):
+            return .focusChange(focus)
+        default:
+            return .notebook(action)
+        }
     }
 }
 
@@ -195,6 +239,13 @@ extension AppModel {
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
         switch action {
+        case .focus(let action):
+            return AppFocusCursor.update(
+                with: AppFocusModel.update,
+                state: state,
+                action: action,
+                environment: ()
+            )
         case .notebook(let action):
             return NotebookCursor.update(
                 with: NotebookModel.update,
@@ -217,6 +268,23 @@ extension AppModel {
             )
         case .appear:
             return appear(state: state, environment: environment)
+        case .requestFocus(let focus):
+            return requestFocus(
+                state: state,
+                environment: environment,
+                focus: focus
+            )
+        case .focusRequestScheduled:
+            return focusRequestScheduled(
+                state: state,
+                environment: environment
+            )
+        case .focusChange(let focus):
+            return focusChange(
+                state: state,
+                environment: environment,
+                focus: focus
+            )
         case let .changeKeyboardState(keyboard):
             return changeKeyboardState(state: state, keyboard: keyboard)
         case .poll:
@@ -337,6 +405,67 @@ extension AppModel {
         return Update(state: state, fx: fx)
     }
 
+    /// Handle requestFocus and send to both child components
+    /// that need focus information.
+    static func requestFocus(
+        state: AppModel,
+        environment: AppEnvironment,
+        focus: AppFocus?
+    ) -> Update<AppModel, AppAction> {
+        let focusFx: Fx<AppAction> = Just(
+            AppAction.focus(.requestFocus(focus))
+        )
+        .eraseToAnyPublisher()
+
+        let fx: Fx<AppAction> = Just(
+            AppAction.notebook(.requestFocus(focus))
+        )
+        .merge(with: focusFx)
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    /// Handle focusRequestScheduled and send to both child components
+    /// that need focus information.
+    static func focusRequestScheduled(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel, AppAction> {
+        let focusFx: Fx<AppAction> = Just(
+            AppAction.focus(.focusRequestScheduled)
+        )
+        .eraseToAnyPublisher()
+
+        let fx: Fx<AppAction> = Just(
+            AppAction.notebook(.focusRequestScheduled)
+        )
+        .merge(with: focusFx)
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    /// Handle focusChange and send to both child components
+    /// that need focus information.
+    static func focusChange(
+        state: AppModel,
+        environment: AppEnvironment,
+        focus: AppFocus?
+    ) -> Update<AppModel, AppAction> {
+        let focusFx: Fx<AppAction> = Just(
+            AppAction.focus(.focusChange(focus))
+        )
+        .eraseToAnyPublisher()
+
+        let fx: Fx<AppAction> = Just(
+            AppAction.notebook(.focusChange(focus))
+        )
+        .merge(with: focusFx)
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
 
     /// Make database ready.
     /// This will kick off a migration IF a successful migration

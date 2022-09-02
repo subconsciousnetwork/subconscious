@@ -31,6 +31,7 @@
 //  2022-03-17 Gordon Brander
 import os
 import SwiftUI
+import Combine
 import ObservableStore
 
 //  MARK: Action
@@ -38,20 +39,11 @@ enum MarkupTextAction<Focus>: Hashable
 where Focus: Hashable
 {
     case focus(FocusAction<Focus>)
+    case requestFocus(Focus?)
+    case focusRequestScheduled
+    case focusChange(Focus?)
     case setText(String)
     case setSelection(NSRange)
-
-    static func requestFocus(_ focus: Focus?) -> Self {
-        return Self.focus(.requestFocus(focus))
-    }
-
-    static var focusRequestScheduled: Self {
-        Self.focus(.focusRequestScheduled)
-    }
-
-    static func focusChange(_ focus: Focus?) -> Self {
-        return Self.focus(.focusChange(focus))
-    }
 }
 
 //  MARK: Model
@@ -61,7 +53,7 @@ where Focus: Hashable
     typealias Model = Self
     typealias Action = MarkupTextAction<Focus>
 
-    var focus = FocusModel<Focus>()
+    var focus: FocusModel<Focus>
     var text = ""
     var selection = NSMakeRange(0, 0)
 
@@ -79,6 +71,20 @@ where Focus: Hashable
                 action: action,
                 environment: environment
             )
+        case .requestFocus(let focus):
+            return requestFocus(
+                state: state,
+                focus: focus
+            )
+        case .focusRequestScheduled:
+            return focusRequestScheduled(
+                state: state
+            )
+        case .focusChange(let focus):
+            return focusChange(
+                state: state,
+                focus: focus
+            )
         case .setText(let text):
             var model = state
             model.text = text
@@ -88,6 +94,46 @@ where Focus: Hashable
             model.selection = selection
             return Update(state: model)
         }
+    }
+
+    /// Handle requestFocus and send to child component
+    static func requestFocus(
+        state: Model,
+        focus: Focus?
+    ) -> Update<Model, Action> {
+        let fx: Fx<Action> = Just(
+            Action.focus(.requestFocus(focus))
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    /// Handle focusRequestScheduled and send to both child components
+    /// that need focus information.
+    static func focusRequestScheduled(
+        state: Model
+    ) -> Update<Model, Action> {
+        let fx: Fx<Action> = Just(
+            Action.focus(.focusRequestScheduled)
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    /// Handle focusChange and send to both child components
+    /// that need focus information.
+    static func focusChange(
+        state: Model,
+        focus: Focus?
+    ) -> Update<Model, Action> {
+        let fx: Fx<Action> = Just(
+            Action.focus(.focusChange(focus))
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
     }
 }
 
