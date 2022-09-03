@@ -37,7 +37,8 @@ struct RenameSearchView: View {
             SearchTextField(
                 placeholder: placeholder,
                 text: $text,
-                autofocus: true
+                autofocus: true,
+                autofocusDelay: 0.5
             )
             .submitLabel(.done)
             .padding(.bottom, AppTheme.padding)

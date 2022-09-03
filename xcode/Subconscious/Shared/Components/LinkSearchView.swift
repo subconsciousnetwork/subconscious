@@ -22,7 +22,8 @@ struct LinkSearchView: View {
                 SearchTextField(
                     placeholder: "Search links",
                     text: $text,
-                    autofocus: true
+                    autofocus: true,
+                    autofocusDelay: 0.5
                 )
                 Button(
                     action: onCancel,

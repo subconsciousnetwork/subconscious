@@ -12,13 +12,21 @@ struct SearchTextField: View {
     var placeholder: String
     @Binding var text: String
     var autofocus: Bool = false
+    /// Add delay to autofocus.
+    /// Useful for working around a bug in bottom sheets that requires
+    /// a ~ half a second delay after appear to autofocus.
+    var autofocusDelay: Double = 0.0
 
     var body: some View {
         TextField(placeholder, text: $text)
             .focused($focusState)
             .task {
                 if autofocus {
-                    self.focusState = true
+                    DispatchQueue.main.asyncAfter(
+                        deadline: .now() + autofocusDelay
+                    ) {
+                        self.focusState = true
+                    }
                 }
             }
             .modifier(RoundedTextFieldViewModifier())

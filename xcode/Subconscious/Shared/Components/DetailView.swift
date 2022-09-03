@@ -1582,54 +1582,6 @@ struct DetailView: View {
                     }
                 }
                 .zIndex(1)
-                BottomSheetView(
-                    isPresented: store.binding(
-                        get: \.isLinkSheetPresented,
-                        tag: DetailAction.setLinkSheetPresented
-                    ),
-                    height: geometry.size.height,
-                    containerSize: geometry.size,
-                    content: LinkSearchView(
-                        placeholder: "Search or create...",
-                        suggestions: store.state.linkSuggestions,
-                        text: store.binding(
-                            get: \.linkSearchText,
-                            tag: DetailAction.setLinkSearch
-                        ),
-                        onCancel: {
-                            store.send(.setLinkSheetPresented(false))
-                        },
-                        onSelect: { suggestion in
-                            store.send(.selectLinkSuggestion(suggestion))
-                        }
-                    )
-                )
-                .zIndex(4)
-                BottomSheetView(
-                    isPresented: store.binding(
-                        get: \.isRenameSheetShowing,
-                        tag: { _ in DetailAction.hideRenameSheet }
-                    ),
-                    height: geometry.size.height,
-                    containerSize: geometry.size,
-                    content: RenameSearchView(
-                        current: EntryLink(store.state),
-                        suggestions: store.state.renameSuggestions,
-                        text: store.binding(
-                            get: \.renameField,
-                            tag: DetailAction.setRenameField
-                        ),
-                        onCancel: {
-                            store.send(.hideRenameSheet)
-                        },
-                        onSelect: { suggestion in
-                            store.send(
-                                .renameEntry(suggestion)
-                            )
-                        }
-                    )
-                )
-                .zIndex(4)
                 if !isReady {
                     Color.background
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -1645,6 +1597,50 @@ struct DetailView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(
+            isPresented: store.binding(
+                get: \.isLinkSheetPresented,
+                tag: DetailAction.setLinkSheetPresented
+            )
+        ) {
+            LinkSearchView(
+                placeholder: "Search or create...",
+                suggestions: store.state.linkSuggestions,
+                text: store.binding(
+                    get: \.linkSearchText,
+                    tag: DetailAction.setLinkSearch
+                ),
+                onCancel: {
+                    store.send(.setLinkSheetPresented(false))
+                },
+                onSelect: { suggestion in
+                    store.send(.selectLinkSuggestion(suggestion))
+                }
+            )
+        }
+        .sheet(
+            isPresented: store.binding(
+                get: \.isRenameSheetShowing,
+                tag: { _ in DetailAction.hideRenameSheet }
+            )
+        ) {
+            RenameSearchView(
+                current: EntryLink(store.state),
+                suggestions: store.state.renameSuggestions,
+                text: store.binding(
+                    get: \.renameField,
+                    tag: DetailAction.setRenameField
+                ),
+                onCancel: {
+                    store.send(.hideRenameSheet)
+                },
+                onSelect: { suggestion in
+                    store.send(
+                        .renameEntry(suggestion)
+                    )
+                }
+            )
+        }
         .toolbar {
             DetailToolbarContent(
                 link: EntryLink(store.state),
