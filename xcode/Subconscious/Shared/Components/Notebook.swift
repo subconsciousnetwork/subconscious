@@ -31,7 +31,7 @@ enum NotebookAction {
     /// Request a model-driven focus change
     case requestFocus(AppFocus?)
     /// Focus change request scheduled
-    case focusRequestScheduled
+    case focusChangeScheduled
     /// Focus change from the UI. UI-driven focus always wins.
     case focusChange(AppFocus?)
 
@@ -238,8 +238,8 @@ extension NotebookModel {
                 environment: environment,
                 focus: focus
             )
-        case .focusRequestScheduled:
-            return focusRequestScheduled(
+        case .focusChangeScheduled:
+            return focusChangeScheduled(
                 state: state,
                 environment: environment
             )
@@ -442,19 +442,19 @@ extension NotebookModel {
         return Update(state: state, fx: fx)
     }
 
-    /// Handle focusRequestScheduled and send to both child components
+    /// Handle focusChangeScheduled and send to both child components
     /// that need focus information.
-    static func focusRequestScheduled(
+    static func focusChangeScheduled(
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel, NotebookAction> {
         let focusFx: Fx<NotebookAction> = Just(
-            NotebookAction.focus(.focusRequestScheduled)
+            NotebookAction.focus(.focusChangeScheduled)
         )
         .eraseToAnyPublisher()
 
         let fx: Fx<NotebookAction> = Just(
-            NotebookAction.detail(.focusRequestScheduled)
+            NotebookAction.detail(.focusChangeScheduled)
         )
         .merge(with: focusFx)
         .eraseToAnyPublisher()
@@ -951,8 +951,8 @@ struct NotebookFocusCursor: CursorProtocol {
         switch action {
         case .focusChange(let focus):
             return .focusChange(focus)
-        case .focusRequestScheduled:
-            return .focusRequestScheduled
+        case .focusChangeScheduled:
+            return .focusChangeScheduled
         case .requestFocus(let focus):
             return .requestFocus(focus)
         }
@@ -980,8 +980,8 @@ struct NotebookDetailCursor: CursorProtocol {
         /// Intercept focus in detail and address at this level
         case .focusChange(let focus):
             return .focusChange(focus)
-        case .focusRequestScheduled:
-            return .focusRequestScheduled
+        case .focusChangeScheduled:
+            return .focusChangeScheduled
         case .requestFocus(let focus):
             return .requestFocus(focus)
         case .refreshAll:

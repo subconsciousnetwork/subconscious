@@ -40,7 +40,7 @@ where Focus: Hashable
 {
     case focus(FocusAction<Focus>)
     case requestFocus(Focus?)
-    case focusRequestScheduled
+    case focusChangeScheduled
     case focusChange(Focus?)
     case setText(String)
     case setSelection(NSRange)
@@ -76,8 +76,8 @@ where Focus: Hashable
                 state: state,
                 focus: focus
             )
-        case .focusRequestScheduled:
-            return focusRequestScheduled(
+        case .focusChangeScheduled:
+            return focusChangeScheduled(
                 state: state
             )
         case .focusChange(let focus):
@@ -109,13 +109,13 @@ where Focus: Hashable
         return Update(state: state, fx: fx)
     }
 
-    /// Handle focusRequestScheduled and send to both child components
+    /// Handle focusChangeScheduled and send to both child components
     /// that need focus information.
-    static func focusRequestScheduled(
+    static func focusChangeScheduled(
         state: Model
     ) -> Update<Model, Action> {
         let fx: Fx<Action> = Just(
-            Action.focus(.focusRequestScheduled)
+            Action.focus(.focusChangeScheduled)
         )
         .eraseToAnyPublisher()
 
@@ -396,19 +396,19 @@ where Focus: Hashable
     /// more than once.
     func updateUIViewFocus(_ view: MarkupTextView, context: Context) {
         // Focus is clean, do nothing
-        guard store.state.focus.focusRequest != store.state.focus.focus else {
+        guard store.state.focus.isDirty else {
             return
         }
-        guard !store.state.focus.focusRequestScheduled else {
-            logger?.debug(
-                "updateUIViewFocus: Focus is dirty but focus change already scheduled. Skipping."
-            )
+        /// If focus is unrelated to editor, return
+        guard store.state.focus.readFocusRequestFor(field: field) != nil else {
             return
         }
-        logger?.debug(
-            "updateUIViewFocus: scheduling first responder change"
-        )
-        store.send(.focusRequestScheduled)
+        /// If focus change is already scheduled, return
+        guard !store.state.focus.isScheduled else {
+            logger?.debug("scheduleResignFocus: Focus is dirty but focus change already scheduled. Skipping.")
+            return
+        }
+        store.send(.focusChangeScheduled)
         // Call for first responder change needs to be async,
         // or else we get an AttributeGraph cycle warning from SwiftUI.
         // This is true for both becomeFirstResponder and resignFirstResponder.
@@ -416,21 +416,21 @@ where Focus: Hashable
         DispatchQueue.main.async {
             // Check again in this tick to make sure we still need to
             // change first responder state.
-            if store.state.focus.focusRequest != store.state.focus.focus {
-                if store.state.focus.focusRequest == field {
-                    logger?.debug(
-                        "async: call becomeFirstResponder"
-                    )
-                    view.becomeFirstResponder()
-                } else {
-                    logger?.debug(
-                        "async: call resignFirstResponder"
-                    )
-                    view.resignFirstResponder()
-                }
+            guard
+                let isFocus = store.state.focus.readFocusRequestFor(
+                    field: field
+                )
+            else {
+                return
+            }
+            if isFocus {
+                logger?.debug("async: call becomeFirstResponder")
+                view.becomeFirstResponder()
+            } else if store.state.focus.focusRequest == nil {
+                logger?.debug("async: call resignFirstResponder")
+                view.resignFirstResponder()
             }
         }
-        return
     }
 
     func makeCoordinator() -> Self.Coordinator {

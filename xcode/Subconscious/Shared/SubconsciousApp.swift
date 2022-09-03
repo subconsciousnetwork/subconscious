@@ -42,7 +42,7 @@ enum AppAction {
     /// Request a model-driven focus change
     case requestFocus(AppFocus?)
     /// Focus change request scheduled
-    case focusRequestScheduled
+    case focusChangeScheduled
     /// Focus change from the UI. UI-driven focus always wins.
     case focusChange(AppFocus?)
 
@@ -95,8 +95,8 @@ struct AppFocusCursor: CursorProtocol {
 
     static func tag(action: AppFocusAction) -> AppAction {
         switch action {
-        case .focusRequestScheduled:
-            return .focusRequestScheduled
+        case .focusChangeScheduled:
+            return .focusChangeScheduled
         case .requestFocus(let focus):
             return .requestFocus(focus)
         case .focusChange(let focus):
@@ -127,8 +127,8 @@ struct NotebookCursor: CursorProtocol {
         switch action {
         case .requestFocus(let focus):
             return .requestFocus(focus)
-        case .focusRequestScheduled:
-            return .focusRequestScheduled
+        case .focusChangeScheduled:
+            return .focusChangeScheduled
         case .focusChange(let focus):
             return .focusChange(focus)
         default:
@@ -274,8 +274,8 @@ extension AppModel {
                 environment: environment,
                 focus: focus
             )
-        case .focusRequestScheduled:
-            return focusRequestScheduled(
+        case .focusChangeScheduled:
+            return focusChangeScheduled(
                 state: state,
                 environment: environment
             )
@@ -426,19 +426,19 @@ extension AppModel {
         return Update(state: state, fx: fx)
     }
 
-    /// Handle focusRequestScheduled and send to both child components
+    /// Handle focusChangeScheduled and send to both child components
     /// that need focus information.
-    static func focusRequestScheduled(
+    static func focusChangeScheduled(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
         let focusFx: Fx<AppAction> = Just(
-            AppAction.focus(.focusRequestScheduled)
+            AppAction.focus(.focusChangeScheduled)
         )
         .eraseToAnyPublisher()
 
         let fx: Fx<AppAction> = Just(
-            AppAction.notebook(.focusRequestScheduled)
+            AppAction.notebook(.focusChangeScheduled)
         )
         .merge(with: focusFx)
         .eraseToAnyPublisher()

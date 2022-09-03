@@ -18,7 +18,7 @@ enum DetailAction: Hashable {
     /// Request a model-driven focus change
     case requestFocus(AppFocus?)
     /// Focus change request scheduled
-    case focusRequestScheduled
+    case focusChangeScheduled
     /// Focus change from the UI. UI-driven focus always wins.
     case focusChange(AppFocus?)
 
@@ -145,8 +145,8 @@ struct DetailMarkupEditorCursor: CursorProtocol {
         /// Intercept focus in markup editor and address at this level
         case .focusChange(let focus):
             return .focusChange(focus)
-        case .focusRequestScheduled:
-            return .focusRequestScheduled
+        case .focusChangeScheduled:
+            return .focusChangeScheduled
         case .requestFocus(let focus):
             return .requestFocus(focus)
         default:
@@ -175,8 +175,8 @@ struct DetailFocusCursor: CursorProtocol {
         switch action {
         case .focusChange(let focus):
             return .focusChange(focus)
-        case .focusRequestScheduled:
-            return .focusRequestScheduled
+        case .focusChangeScheduled:
+            return .focusChangeScheduled
         case .requestFocus(let focus):
             return .requestFocus(focus)
         }
@@ -269,8 +269,8 @@ struct DetailModel: Hashable {
                 environment: environment,
                 focus: focus
             )
-        case .focusRequestScheduled:
-            return focusRequestScheduled(
+        case .focusChangeScheduled:
+            return focusChangeScheduled(
                 state: state,
                 environment: environment
             )
@@ -573,19 +573,19 @@ struct DetailModel: Hashable {
         return Update(state: state, fx: fx)
     }
 
-    /// Handle focusRequestScheduled and send to both child components
+    /// Handle focusChangeScheduled and send to both child components
     /// that need focus information.
-    static func focusRequestScheduled(
+    static func focusChangeScheduled(
         state: DetailModel,
         environment: AppEnvironment
     ) -> Update<DetailModel, DetailAction> {
         let focusFx: Fx<DetailAction> = Just(
-            DetailAction.focus(.focusRequestScheduled)
+            DetailAction.focus(.focusChangeScheduled)
         )
         .eraseToAnyPublisher()
 
         let fx: Fx<DetailAction> = Just(
-            DetailAction.markupEditor(.focusRequestScheduled)
+            DetailAction.markupEditor(.focusChangeScheduled)
         )
         .merge(with: focusFx)
         .eraseToAnyPublisher()
