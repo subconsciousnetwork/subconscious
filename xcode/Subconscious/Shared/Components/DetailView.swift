@@ -1666,7 +1666,7 @@ struct DetailView: View {
                     Divider()
                         ScrollView(.vertical) {
                             VStack(spacing: 0) {
-                                MarkupTextViewRepresentable2(
+                                MarkupTextViewRepresentable(
                                     store: store.viewStore(
                                         get: DetailMarkupEditorCursor.get,
                                         tag: DetailMarkupEditorCursor.tag

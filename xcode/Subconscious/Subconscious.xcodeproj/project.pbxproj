@@ -11,8 +11,8 @@
 		B80057F427DC35BE002C0129 /* Tests_Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80057F327DC35BE002C0129 /* Tests_Slug.swift */; };
 		B8109C2827A8879C00CD2B6D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8109C2727A8879C00CD2B6D /* AppTheme.swift */; };
 		B8109C2927A8879C00CD2B6D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8109C2727A8879C00CD2B6D /* AppTheme.swift */; };
-		B813749A28BFCCCA00CCC6FB /* MarkupTextViewRepresentable2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B813749928BFCCCA00CCC6FB /* MarkupTextViewRepresentable2.swift */; };
-		B813749B28BFCCCA00CCC6FB /* MarkupTextViewRepresentable2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B813749928BFCCCA00CCC6FB /* MarkupTextViewRepresentable2.swift */; };
+		B813749A28BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B813749928BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift */; };
+		B813749B28BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B813749928BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift */; };
 		B81A535C27275138001A6268 /* Tape.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A535B27275138001A6268 /* Tape.swift */; };
 		B81A535D27275138001A6268 /* Tape.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A535B27275138001A6268 /* Tape.swift */; };
 		B81A535F272751EE001A6268 /* Subtext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A535E272751EE001A6268 /* Subtext.swift */; };
@@ -90,8 +90,6 @@
 		B866868227AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */; };
 		B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */; };
 		B866868B27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */; };
-		B866868D27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868C27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift */; };
-		B866868E27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868C27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift */; };
 		B8682DCB2804BF04001CD8DD /* Tests_Subtext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8682DCA2804BF04001CD8DD /* Tests_Subtext.swift */; };
 		B8682DCD2804C379001CD8DD /* Tests_CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */; };
 		B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
@@ -265,7 +263,7 @@
 		B80057EA27DC355E002C0129 /* SubconsciousTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubconsciousTests.swift; sourceTree = "<group>"; };
 		B80057F327DC35BE002C0129 /* Tests_Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Slug.swift; sourceTree = "<group>"; };
 		B8109C2727A8879C00CD2B6D /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
-		B813749928BFCCCA00CCC6FB /* MarkupTextViewRepresentable2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkupTextViewRepresentable2.swift; sourceTree = "<group>"; };
+		B813749928BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkupTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B81A535B27275138001A6268 /* Tape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tape.swift; sourceTree = "<group>"; };
 		B81A535E272751EE001A6268 /* Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext.swift; sourceTree = "<group>"; };
 		B81EACD727B724A000B3B8DC /* ThickDividerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThickDividerView.swift; sourceTree = "<group>"; };
@@ -310,7 +308,6 @@
 		B85D5E3E28BE4B4600EE0078 /* Tests_FeedUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FeedUpdate.swift; sourceTree = "<group>"; };
 		B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSRangeUtilities.swift; sourceTree = "<group>"; };
 		B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailKeyboardToolbarView.swift; sourceTree = "<group>"; };
-		B866868C27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MarkupTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B8682DCA2804BF04001CD8DD /* Tests_Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Subtext.swift; sourceTree = "<group>"; };
 		B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_CollectionUtilities.swift; sourceTree = "<group>"; };
 		B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionUtilities.swift; sourceTree = "<group>"; };
@@ -703,8 +700,7 @@
 				B83E91D627692EC600045C6A /* FABButtonStyle.swift */,
 				B84AD8E2281073CE006B3153 /* InlineFormattingBarView.swift */,
 				B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */,
-				B866868C27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift */,
-				B813749928BFCCCA00CCC6FB /* MarkupTextViewRepresentable2.swift */,
+				B813749928BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift */,
 				B8CC434227A0815E0079D2F9 /* ModalView.swift */,
 				B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */,
 				B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */,
@@ -1012,7 +1008,7 @@
 				B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
 				B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */,
 				B851AC4C28C1138800643157 /* Cursor.swift in Sources */,
-				B813749A28BFCCCA00CCC6FB /* MarkupTextViewRepresentable2.swift in Sources */,
+				B813749A28BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift in Sources */,
 				B8A59D6628B690B20010DB2F /* FeedService.swift in Sources */,
 				B8CC434327A0815E0079D2F9 /* ModalView.swift in Sources */,
 				B85BF47527BB3D6E00F55730 /* ToolbarTitleGroupView.swift in Sources */,
@@ -1025,7 +1021,6 @@
 				B840EFF32856739D00238811 /* ViewStore.swift in Sources */,
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8A59D7528B694C40010DB2F /* Geist.swift in Sources */,
-				B866868D27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift in Sources */,
 				B8AE34BC276AB3D500777FF0 /* SearchView.swift in Sources */,
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
 				B8CC434027A07DF10079D2F9 /* DialogView.swift in Sources */,
@@ -1101,7 +1096,7 @@
 				B8DEBF202798EC23007CB528 /* TitleGroupView.swift in Sources */,
 				B81EBB0A27025C1500B87594 /* BacklinkButtonStyle.swift in Sources */,
 				B82C3A6326F576FC00833CC8 /* URLUtilities.swift in Sources */,
-				B813749B28BFCCCA00CCC6FB /* MarkupTextViewRepresentable2.swift in Sources */,
+				B813749B28BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift in Sources */,
 				B83E91D827692EC600045C6A /* FABButtonStyle.swift in Sources */,
 				B88CC959284FF59900994928 /* OrderedCollectionUtilities.swift in Sources */,
 				B8A59D6128B51D000010DB2F /* TranscludeView.swift in Sources */,
@@ -1113,7 +1108,6 @@
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8AE34A8276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
 				B85BF47927BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
-				B866868E27AC8C0100A03A55 /* MarkupTextViewRepresentable.swift in Sources */,
 				B81EACD927B724A000B3B8DC /* ThickDividerView.swift in Sources */,
 				B89966C828B6EE2300DF1F8C /* Notebook.swift in Sources */,
 				B82FD4572730A62C002CB641 /* EntryRow.swift in Sources */,
