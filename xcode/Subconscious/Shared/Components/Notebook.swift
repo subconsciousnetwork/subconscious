@@ -17,7 +17,6 @@ import Combine
 /// For action naming convention, see
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
 enum NotebookAction {
-    case focus(AppFocusAction)
     // Tagged action for detail
     case detail(DetailAction)
     case showDetail(Bool)
@@ -27,13 +26,6 @@ enum NotebookAction {
     //  URL handlers
     case openURL(URL)
     case openEditorURL(URL)
-
-    /// Request a model-driven focus change
-    case requestFocus(AppFocus?)
-    /// Focus change request scheduled
-    case focusChangeScheduled
-    /// Focus change from the UI. UI-driven focus always wins.
-    case focusChange(AppFocus?)
 
     /// KeyboardService state change.
     /// Action passed down from parent component.
@@ -151,20 +143,19 @@ extension NotebookAction {
 //  MARK: Model
 /// Model containing state for the notebook tab.
 struct NotebookModel: Hashable, Equatable {
-    /// State reflecting global app focus state.
-    var focus: AppFocusModel
-
     //  Current state of keyboard
     /// Keyboard preparing to show
     var keyboardWillShow = false
     /// Keyboard height at end of animation
     var keyboardEventualHeight: CGFloat = 0
 
+    var isFabShowing = true
+
     /// Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
 
     /// Entry detail
-    var detail: DetailModel
+    var detail = DetailModel()
 
     /// Count of entries
     var entryCount: Int? = nil
@@ -184,13 +175,6 @@ struct NotebookModel: Hashable, Equatable {
 
     /// Main search suggestions
     var suggestions: [Suggestion] = []
-
-    init(
-        focus: AppFocusModel
-    ) {
-        self.focus = focus
-        self.detail = DetailModel(focus: focus)
-    }
 }
 
 //  MARK: Update
@@ -216,13 +200,6 @@ extension NotebookModel {
         environment: AppEnvironment
     ) -> Update<NotebookModel, NotebookAction> {
         switch action {
-        case .focus(let action):
-            return NotebookFocusCursor.update(
-                with: AppFocusModel.update,
-                state: state,
-                action: action,
-                environment: ()
-            )
         case .detail(let action):
             return NotebookDetailCursor.update(
                 with: DetailModel.update,
@@ -232,23 +209,6 @@ extension NotebookModel {
             )
         case .noop:
             return Update(state: state)
-        case .requestFocus(let focus):
-            return requestFocus(
-                state: state,
-                environment: environment,
-                focus: focus
-            )
-        case .focusChangeScheduled:
-            return focusChangeScheduled(
-                state: state,
-                environment: environment
-            )
-        case .focusChange(let focus):
-            return focusChange(
-                state: state,
-                environment: environment,
-                focus: focus
-            )
         case let .openURL(url):
             UIApplication.shared.open(url)
             return Update(state: state)
@@ -366,11 +326,7 @@ extension NotebookModel {
             var model = state
             model.isSearchShowing = true
             model.searchText = ""
-            let fx: Fx<NotebookAction> = Just(
-                NotebookAction.requestFocus(.search)
-            )
-            .eraseToAnyPublisher()
-            return Update(state: model, fx: fx)
+            return Update(state: model)
                 .animation(.easeOutCubic(duration: Duration.keyboard))
         case .hideSearch:
             return hideSearch(
@@ -419,68 +375,6 @@ extension NotebookModel {
     ) -> Update<NotebookModel, NotebookAction> {
         environment.logger.warning("\(error.localizedDescription)")
         return Update(state: state)
-    }
-
-    /// Handle requestFocus and send to both child components
-    /// that need focus information.
-    static func requestFocus(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        focus: AppFocus?
-    ) -> Update<NotebookModel, NotebookAction> {
-        let focusFx: Fx<NotebookAction> = Just(
-            NotebookAction.focus(.requestFocus(focus))
-        )
-        .eraseToAnyPublisher()
-
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.detail(.requestFocus(focus))
-        )
-        .merge(with: focusFx)
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
-    }
-
-    /// Handle focusChangeScheduled and send to both child components
-    /// that need focus information.
-    static func focusChangeScheduled(
-        state: NotebookModel,
-        environment: AppEnvironment
-    ) -> Update<NotebookModel, NotebookAction> {
-        let focusFx: Fx<NotebookAction> = Just(
-            NotebookAction.focus(.focusChangeScheduled)
-        )
-        .eraseToAnyPublisher()
-
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.detail(.focusChangeScheduled)
-        )
-        .merge(with: focusFx)
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
-    }
-
-    /// Handle focusChange and send to both child components
-    /// that need focus information.
-    static func focusChange(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        focus: AppFocus?
-    ) -> Update<NotebookModel, NotebookAction> {
-        let focusFx: Fx<NotebookAction> = Just(
-            NotebookAction.focus(.focusChange(focus))
-        )
-        .eraseToAnyPublisher()
-
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.detail(.focusChange(focus))
-        )
-        .merge(with: focusFx)
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
     }
 
     /// Change state of keyboard
@@ -797,12 +691,7 @@ extension NotebookModel {
         model.isSearchShowing = false
         model.searchText = ""
 
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.requestFocus(nil)
-        )
-        .eraseToAnyPublisher()
-
-        return Update(state: model, fx: fx)
+        return Update(state: model)
             .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
@@ -929,36 +818,6 @@ extension NotebookModel {
 
 //  MARK: Cursors
 
-/// Cursor for local copy of app focus
-struct NotebookFocusCursor: CursorProtocol {
-    static func get(state: NotebookModel) -> AppFocusModel {
-        state.focus
-    }
-
-    static func set(
-        state: NotebookModel,
-        inner: AppFocusModel
-    ) -> NotebookModel {
-        var model = state
-        model.focus = inner
-        return model
-    }
-
-    /// Tag notebook focus actions.
-    /// - Unboxes focus actions so we can forward them to
-    ///   multiple sub-components.
-    static func tag(action: AppFocusAction) -> NotebookAction {
-        switch action {
-        case .focusChange(let focus):
-            return .focusChange(focus)
-        case .focusChangeScheduled:
-            return .focusChangeScheduled
-        case .requestFocus(let focus):
-            return .requestFocus(focus)
-        }
-    }
-}
-
 /// Cursor for detail view
 //  This is a non-standard cursor because Detail is not yet factored out
 //  into a stand-alone component. Instead, we just have a handful of actions
@@ -977,13 +836,6 @@ struct NotebookDetailCursor: CursorProtocol {
 
     static func tag(action: DetailAction) -> NotebookAction {
         switch action {
-        /// Intercept focus in detail and address at this level
-        case .focusChange(let focus):
-            return .focusChange(focus)
-        case .focusChangeScheduled:
-            return .focusChangeScheduled
-        case .requestFocus(let focus):
-            return .requestFocus(focus)
         case .refreshAll:
             return .refreshAll
         case .showDetail(let isShowing):
@@ -1008,10 +860,6 @@ struct NotebookDetailCursor: CursorProtocol {
 /// The file view for notes
 struct NotebookView: View {
     var store: ViewStore<NotebookModel, NotebookAction>
-
-    var isFabPresented: Bool {
-        store.state.focus.focus == nil
-    }
 
     var body: some View {
         // Give each element in this ZStack an explicit z-index.
@@ -1045,7 +893,7 @@ struct NotebookView: View {
                         )
                     )
                     .padding()
-                    .disabled(!isFabPresented)
+                    .disabled(!store.state.isFabShowing)
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
                 .zIndex(2)
