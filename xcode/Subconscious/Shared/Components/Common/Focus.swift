@@ -14,6 +14,9 @@ where Focus: Hashable
 {
     /// Request a model-driven focus change
     case requestFocus(Focus?)
+    /// Request a model-driven focus change and toggle focus change scheduled
+    /// at the same time.
+    case requestFocusImmediate(Focus?)
     /// Focus change request scheduled
     case focusChangeScheduled
     /// Focus change from the UI. UI-driven focus always wins.
@@ -65,6 +68,11 @@ where Focus: Hashable
         case .requestFocus(let focus):
             var model = state
             model.isScheduled = false
+            model.focusRequest = focus
+            return Update(state: model)
+        case .requestFocusImmediate(let focus):
+            var model = state
+            model.isScheduled = true
             model.focusRequest = focus
             return Update(state: model)
         case .focusChangeScheduled:

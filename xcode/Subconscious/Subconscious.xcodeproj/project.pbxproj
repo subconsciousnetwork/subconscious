@@ -67,6 +67,7 @@
 		B840EFF32856739D00238811 /* ViewStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B840EFF22856739D00238811 /* ViewStore.swift */; };
 		B840EFF42856739D00238811 /* ViewStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B840EFF22856739D00238811 /* ViewStore.swift */; };
 		B847AE3528C2702500444810 /* Focus.swift in Sources */ = {isa = PBXBuildFile; fileRef = B847AE3428C2702500444810 /* Focus.swift */; };
+		B847AE3728C3A68400444810 /* SearchTextField2.swift in Sources */ = {isa = PBXBuildFile; fileRef = B847AE3628C3A68400444810 /* SearchTextField2.swift */; };
 		B84AD8DF280F3659006B3153 /* Tests_EntryLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8DE280F3659006B3153 /* Tests_EntryLink.swift */; };
 		B84AD8E1280F7A19006B3153 /* Tests_StringUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E0280F7A19006B3153 /* Tests_StringUtilities.swift */; };
 		B84AD8E3281073CE006B3153 /* InlineFormattingBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E2281073CE006B3153 /* InlineFormattingBarView.swift */; };
@@ -294,6 +295,7 @@
 		B83E91D627692EC600045C6A /* FABButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FABButtonStyle.swift; sourceTree = "<group>"; };
 		B840EFF22856739D00238811 /* ViewStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewStore.swift; sourceTree = "<group>"; };
 		B847AE3428C2702500444810 /* Focus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Focus.swift; sourceTree = "<group>"; };
+		B847AE3628C3A68400444810 /* SearchTextField2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTextField2.swift; sourceTree = "<group>"; };
 		B84AD8DE280F3659006B3153 /* Tests_EntryLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_EntryLink.swift; sourceTree = "<group>"; };
 		B84AD8E0280F7A19006B3153 /* Tests_StringUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_StringUtilities.swift; sourceTree = "<group>"; };
 		B84AD8E2281073CE006B3153 /* InlineFormattingBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineFormattingBarView.swift; sourceTree = "<group>"; };
@@ -714,6 +716,7 @@
 				B8CC433C27A07CE10079D2F9 /* ScrimView.swift */,
 				B8EC568526F41A3C00AC64E5 /* SearchbarRepresentable.swift */,
 				B8AE34C7276BF77000777FF0 /* SearchTextField.swift */,
+				B847AE3628C3A68400444810 /* SearchTextField2.swift */,
 				B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */,
 				B8CA8F2728909FBA005F8802 /* StoryPromptView.swift */,
 				B8A59D7128B693100010DB2F /* StoryView.swift */,
@@ -996,6 +999,7 @@
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8A59D7228B693100010DB2F /* StoryView.swift in Sources */,
 				B84AD8EA2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
+				B847AE3728C3A68400444810 /* SearchTextField2.swift in Sources */,
 				B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */,
 				B81EBB0927025C1500B87594 /* BacklinkButtonStyle.swift in Sources */,
 				B8A59D6C28B692A00010DB2F /* Story.swift in Sources */,
