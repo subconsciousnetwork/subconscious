@@ -1,5 +1,5 @@
 //
-//  MarkupTextViewRepresentable2.swift
+//  MarkupTextViewRepresentable.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 7/6/21.

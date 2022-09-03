@@ -11,7 +11,6 @@ struct LinkSearchView: View {
     var placeholder: String
     var suggestions: [LinkSuggestion]
     @Binding var text: String
-    @Binding var focus: AppFocus?
     var onCancel: () -> Void
     var onSelect: (LinkSuggestion) -> Void
 
@@ -23,8 +22,7 @@ struct LinkSearchView: View {
                 SearchTextField(
                     placeholder: "Search links",
                     text: $text,
-                    focus: $focus,
-                    field: .linkSearch
+                    autofocus: true
                 )
                 Button(
                     action: onCancel,
@@ -60,7 +58,6 @@ struct LinkSearchView_Previews: PreviewProvider {
             placeholder: "Search or create...",
             suggestions: [],
             text: .constant(""),
-            focus: .constant(nil),
             onCancel: {},
             onSelect: { slug in }
         )

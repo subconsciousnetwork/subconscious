@@ -1761,12 +1761,6 @@ struct DetailView: View {
                             get: \.linkSearchText,
                             tag: DetailAction.setLinkSearch
                         ),
-                        focus: store.binding(
-                            get: \.focus.focus,
-                            tag: { focus in
-                                DetailAction.requestFocus(.linkSearch)
-                            }
-                        ),
                         onCancel: {
                             store.send(.setLinkSheetPresented(false))
                         },
@@ -1789,12 +1783,6 @@ struct DetailView: View {
                         text: store.binding(
                             get: \.renameField,
                             tag: DetailAction.setRenameField
-                        ),
-                        focus: store.binding(
-                            get: \.focus.focus,
-                            tag: { focus in
-                                DetailAction.requestFocus(.rename)
-                            }
                         ),
                         onCancel: {
                             store.send(.hideRenameSheet)

@@ -12,7 +12,6 @@ struct RenameSearchView: View {
     var placeholder: String = "Enter name for idea"
     var suggestions: [RenameSuggestion]
     @Binding var text: String
-    @Binding var focus: AppFocus?
     var onCancel: () -> Void
     var onSelect: (RenameSuggestion) -> Void
 
@@ -38,8 +37,7 @@ struct RenameSearchView: View {
             SearchTextField(
                 placeholder: placeholder,
                 text: $text,
-                focus: $focus,
-                field: .rename
+                autofocus: true
             )
             .submitLabel(.done)
             .padding(.bottom, AppTheme.padding)
@@ -88,7 +86,6 @@ struct RenameSearchView_Previews: PreviewProvider {
                 )
             ],
             text: .constant(""),
-            focus: .constant(nil),
             onCancel: {},
             onSelect: { suggestion in
                 

@@ -17,7 +17,6 @@ struct SearchView: View {
     /// present.
     var suggestionHeight: CGFloat = 56
     @Binding var text: String
-    @Binding var focus: AppFocus?
     @Binding var suggestions: [Suggestion]
     /// Select suggestion
     var onSelect: (Suggestion) -> Void
@@ -41,8 +40,7 @@ struct SearchView: View {
                 SearchTextField(
                     placeholder: "Search or create...",
                     text: $text,
-                    focus: $focus,
-                    field: .search
+                    autofocus: true
                 )
                 .submitLabel(.go)
                 .onSubmit {
@@ -96,7 +94,6 @@ struct SearchView_Previews: PreviewProvider {
         SearchView(
             placeholder: "",
             text: .constant(""),
-            focus: .constant(nil),
             suggestions: .constant([]),
             onSelect: { suggestion in },
             onSubmit: { query in },

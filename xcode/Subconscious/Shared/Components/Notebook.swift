@@ -1060,10 +1060,6 @@ struct NotebookView: View {
                             get: \.searchText,
                             tag: NotebookAction.setSearch
                         ),
-                        focus: store.binding(
-                            get: \.focus.focus,
-                            tag: NotebookAction.requestFocus
-                        ),
                         suggestions: store.binding(
                             get: \.suggestions,
                             tag: NotebookAction.setSuggestions
