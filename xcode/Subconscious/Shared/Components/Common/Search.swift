@@ -13,20 +13,24 @@ import ObservableStore
 
 //  MARK: Action
 enum SearchAction: Hashable {
+    case setPresented(Bool)
     case setQuery(String)
     /// Hit submit ("go") while focused on search field
     case submitQuery(String)
     case setSuggestions([Suggestion])
     case failSuggestions(String)
     case activateSuggestion(Suggestion)
+    case setKeyboardHeight(CGFloat)
     case cancel
 }
 
 //  MARK: Model
 struct SearchModel: Hashable {
+    var isPresented = true
     var placeholder = ""
     var query = ""
     var suggestions: [Suggestion] = []
+    var keyboardHeight: CGFloat = 350
 
     //  MARK: Update
     static func update(
@@ -35,6 +39,11 @@ struct SearchModel: Hashable {
         environment: AppEnvironment
     ) -> Update<SearchModel, SearchAction> {
         switch action {
+        case .setPresented(let isPresented):
+            var model = state
+            model.isPresented = isPresented
+            return Update(state: model)
+                .animation(.easeOutCubic(duration: Duration.keyboard))
         case .setQuery(let query):
             let fx: Fx<SearchAction> = environment.database
                 .searchSuggestions(
@@ -78,6 +87,10 @@ struct SearchModel: Hashable {
                 ".activateSuggestion should be handled by parent component"
             )
             return Update(state: state)
+        case .setKeyboardHeight(let keyboardHeight):
+            var model = state
+            model.keyboardHeight = keyboardHeight
+            return Update(state: model)
         case .cancel:
             environment.logger.debug(
                 ".cancel should be handled by parent component"
@@ -103,62 +116,69 @@ struct SearchView2: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                SearchTextField(
-                    placeholder: "Search or create...",
-                    text: store.binding(
-                        get: \.query,
-                        tag: SearchAction.setQuery
-                    ),
-                    autofocus: true
-                )
-                .submitLabel(.go)
-                .onSubmit {
-                    store.send(.submitQuery(store.state.query))
-                }
-                Button(
-                    action: {
-                        store.send(.cancel)
-                    },
-                    label: {
-                        Text("Cancel")
-                    }
-                )
-            }
-            .frame(height: AppTheme.unit * 10)
-            .padding(AppTheme.tightPadding)
-            List(store.state.suggestions) { suggestion in
-                Button(
-                    action: {
-                        store.send(.activateSuggestion(suggestion))
-                    },
-                    label: {
-                        SuggestionLabelView(suggestion: suggestion)
-                    }
-                )
-                .modifier(
-                    SuggestionViewModifier(
-                        // Set suggestion height explicitly so we can
-                        // rely on it for our search modal height
-                        // calculations.
-                        // 2022-02-17 Gordon Brander
-                        height: suggestionHeight
+        ModalView(
+            isPresented: store.binding(
+                get: \.isPresented,
+                tag: SearchAction.setPresented
+            ),
+            content: VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    SearchTextField(
+                        placeholder: "Search or create...",
+                        text: store.binding(
+                            get: \.query,
+                            tag: SearchAction.setQuery
+                        ),
+                        autofocus: true
                     )
-                )
+                    .submitLabel(.go)
+                    .onSubmit {
+                        store.send(.submitQuery(store.state.query))
+                    }
+                    Button(
+                        action: {
+                            store.send(.cancel)
+                        },
+                        label: {
+                            Text("Cancel")
+                        }
+                    )
+                }
+                .frame(height: AppTheme.unit * 10)
+                .padding(AppTheme.tightPadding)
+                List(store.state.suggestions) { suggestion in
+                    Button(
+                        action: {
+                            store.send(.activateSuggestion(suggestion))
+                        },
+                        label: {
+                            SuggestionLabelView(suggestion: suggestion)
+                        }
+                    )
+                    .modifier(
+                        SuggestionViewModifier(
+                            // Set suggestion height explicitly so we can
+                            // rely on it for our search modal height
+                            // calculations.
+                            // 2022-02-17 Gordon Brander
+                            height: suggestionHeight
+                        )
+                    )
+                }
+                // Fix the height of the scrollview based on the number of
+                // elements present.
+                //
+                // This allows us to shrink the modal when there are only a
+                // few elements to show.
+                //
+                // 2022-01-28 Gordon Brander
+                .frame(maxHeight: calcMaxHeight())
+                .listStyle(.plain)
+                .padding(.bottom, AppTheme.tightPadding)
             }
-            // Fix the height of the scrollview based on the number of
-            // elements present.
-            //
-            // This allows us to shrink the modal when there are only a
-            // few elements to show.
-            //
-            // 2022-01-28 Gordon Brander
-            .frame(maxHeight: calcMaxHeight())
-            .listStyle(.plain)
-            .padding(.bottom, AppTheme.tightPadding)
-        }
-        .background(Color.background)
+            .background(Color.background),
+            keyboardHeight: store.state.keyboardHeight
+        )
     }
 }
 
