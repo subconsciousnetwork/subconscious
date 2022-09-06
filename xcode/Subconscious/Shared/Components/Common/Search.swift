@@ -60,7 +60,7 @@ struct SearchModel: Hashable {
 
             var model = state
             model.query = query
-            return Update(state: state, fx: fx)
+            return Update(state: model, fx: fx)
         case .submitQuery:
             environment.logger.debug(
                 ".submitQuery should be handled by parent component"
@@ -69,7 +69,7 @@ struct SearchModel: Hashable {
         case .setSuggestions(let suggestions):
             var model = state
             model.suggestions = suggestions
-            return Update(state: state)
+            return Update(state: model)
         case .failSuggestions(let message):
             environment.logger.warning("\(message)")
             return Update(state: state)
