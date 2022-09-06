@@ -10,7 +10,7 @@ import ObservableStore
 
 /// LensProtocol defines a way to get and set inner values in an outer
 /// data container.
-protocol LensProtocol {
+public protocol LensProtocol {
     associatedtype OuterState
     associatedtype InnerState
 
@@ -19,7 +19,7 @@ protocol LensProtocol {
 }
 
 /// TagProtocol defines how to box a value
-protocol TaggableActionProtocol {
+public protocol TaggableActionProtocol {
     associatedtype OuterAction
     associatedtype InnerAction
 
@@ -28,12 +28,16 @@ protocol TaggableActionProtocol {
 
 /// A cursor combines a lens and a taggable action to provide a complete
 /// description of how to map from one component level to another.
-protocol CursorProtocol: LensProtocol, TaggableActionProtocol {}
+public protocol CursorProtocol: LensProtocol, TaggableActionProtocol {}
 
 extension CursorProtocol {
     /// Update state through cursor
-    static func update<Environment>(
-        with update: (InnerState, InnerAction, Environment) -> Update<InnerState, InnerAction>,
+    public static func update<Environment>(
+        with update: (
+            InnerState,
+            InnerAction,
+            Environment
+        ) -> Update<InnerState, InnerAction>,
         state: OuterState,
         action innerAction: InnerAction,
         environment: Environment

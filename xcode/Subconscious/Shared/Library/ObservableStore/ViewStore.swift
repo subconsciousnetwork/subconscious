@@ -21,10 +21,18 @@ import ObservableStore
 /// I suspect this has something to do with either the guts of SwiftUI or the
 /// guts of UIViewRepresentable.
 /// 2022-06-12 Gordon Brander
-struct ViewStore<State, Action> {
-    var get: () -> State
-    var send: (Action) -> Void
+public struct ViewStore<State, Action> {
+    let get: () -> State
+    let send: (Action) -> Void
     var state: State { self.get() }
+
+    public init(
+        get: @escaping () -> State,
+        send: @escaping (Action) -> Void
+    ) {
+        self.get = get
+        self.send = send
+    }
 
     /// Create a binding that can update the store.
     /// Sets send actions to the store, rather than setting values directly.
@@ -39,11 +47,11 @@ struct ViewStore<State, Action> {
     }
 
     /// Create a ViewStore from this Store
-    func viewStore<LocalState, LocalAction>(
-        get: @escaping (State) -> LocalState,
-        tag: @escaping (LocalAction) -> Action
-    ) -> ViewStore<LocalState, LocalAction> {
-        ViewStore<LocalState, LocalAction>(
+    public func viewStore<InnerState, InnerAction>(
+        get: @escaping (State) -> InnerState,
+        tag: @escaping (InnerAction) -> Action
+    ) -> ViewStore<InnerState, InnerAction> {
+        ViewStore<InnerState, InnerAction>(
             get: { get(self.state) },
             send: { action in self.send(tag(action)) }
         )
@@ -52,10 +60,10 @@ struct ViewStore<State, Action> {
 
 extension Store {
     /// Create a ViewStore from this Store
-    func viewStore<LocalState, LocalAction>(
-        get: @escaping (State) -> LocalState,
-        tag: @escaping (LocalAction) -> Action
-    ) -> ViewStore<LocalState, LocalAction> {
+    public func viewStore<InnerState, InnerAction>(
+        get: @escaping (State) -> InnerState,
+        tag: @escaping (InnerAction) -> Action
+    ) -> ViewStore<InnerState, InnerAction> {
         ViewStore(
             get: { get(self.state) },
             send: { action in self.send(tag(action)) }
