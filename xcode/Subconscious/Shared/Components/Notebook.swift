@@ -17,7 +17,9 @@ import Combine
 /// For action naming convention, see
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
 enum NotebookAction {
-    // Tagged action for detail
+    /// Tagged action for search HUD
+    case search(SearchAction)
+    /// Tagged action for detail
     case detail(DetailAction)
     case showDetail(Bool)
 
@@ -139,6 +141,61 @@ extension NotebookAction {
     }
 }
 
+//  MARK: Cursors
+
+/// Cursor for detail view
+//  This is a non-standard cursor because Detail is not yet factored out
+//  into a stand-alone component. Instead, we just have a handful of actions
+//  we map to/from and a model we construct on the fly. We should factor
+//  out detail into a proper component.
+struct NotebookDetailCursor: CursorProtocol {
+    static func get(state: NotebookModel) -> DetailModel {
+        state.detail
+    }
+
+    static func set(state: NotebookModel, inner: DetailModel) -> NotebookModel {
+        var model = state
+        model.detail = inner
+        return model
+    }
+
+    static func tag(action: DetailAction) -> NotebookAction {
+        switch action {
+        case .refreshAll:
+            return .refreshAll
+        case .showDetail(let isShowing):
+            return .showDetail(isShowing)
+        case .openEditorURL(let url):
+            return .openEditorURL(url)
+        case .selectBacklink(let link):
+            return .requestDetail(
+                slug: link.slug,
+                fallback: link.linkableTitle,
+                autofocus: false
+            )
+        case .requestConfirmDelete(let slug):
+            return .confirmDelete(slug)
+        default:
+            return .detail(action)
+        }
+    }
+}
+
+struct NotebookSearchCursor: CursorProtocol {
+    static func get(state: NotebookModel) -> SearchModel {
+        state.search
+    }
+
+    static func set(state: NotebookModel, inner: SearchModel) -> NotebookModel {
+        var model = state
+        model.search = inner
+        return model
+    }
+
+    static func tag(action: SearchAction) -> NotebookAction {
+        .search(action)
+    }
+}
 
 //  MARK: Model
 /// Model containing state for the notebook tab.
@@ -150,6 +207,9 @@ struct NotebookModel: Hashable, Equatable {
     var keyboardEventualHeight: CGFloat = 0
 
     var isFabShowing = true
+
+    /// Search HUD
+    var search = SearchModel()
 
     /// Is the detail view (edit and details for an entry) showing?
     var isDetailShowing = false
@@ -200,6 +260,13 @@ extension NotebookModel {
         environment: AppEnvironment
     ) -> Update<NotebookModel, NotebookAction> {
         switch action {
+        case .search(let action):
+            return NotebookSearchCursor.update(
+                with: SearchModel.update,
+                state: state,
+                action: action,
+                environment: environment
+            )
         case .detail(let action):
             return NotebookDetailCursor.update(
                 with: DetailModel.update,
@@ -816,46 +883,6 @@ extension NotebookModel {
     }
 }
 
-//  MARK: Cursors
-
-/// Cursor for detail view
-//  This is a non-standard cursor because Detail is not yet factored out
-//  into a stand-alone component. Instead, we just have a handful of actions
-//  we map to/from and a model we construct on the fly. We should factor
-//  out detail into a proper component.
-struct NotebookDetailCursor: CursorProtocol {
-    static func get(state: NotebookModel) -> DetailModel {
-        state.detail
-    }
-
-    static func set(state: NotebookModel, inner: DetailModel) -> NotebookModel {
-        var model = state
-        model.detail = inner
-        return model
-    }
-
-    static func tag(action: DetailAction) -> NotebookAction {
-        switch action {
-        case .refreshAll:
-            return .refreshAll
-        case .showDetail(let isShowing):
-            return .showDetail(isShowing)
-        case .openEditorURL(let url):
-            return .openEditorURL(url)
-        case .selectBacklink(let link):
-            return .requestDetail(
-                slug: link.slug,
-                fallback: link.linkableTitle,
-                autofocus: false
-            )
-        case .requestConfirmDelete(let slug):
-            return .confirmDelete(slug)
-        default:
-            return .detail(action)
-        }
-    }
-}
-
 //  MARK: View
 /// The file view for notes
 struct NotebookView: View {
@@ -871,61 +898,66 @@ struct NotebookView: View {
         // See https://stackoverflow.com/a/58512696
         // 2021-12-16 Gordon Brander
         ZStack {
-            GeometryReader { geometry in
-                Color.background
-                    .edgesIgnoringSafeArea(.all)
-                    .zIndex(0)
-                AppNavigationView(store: store)
-                    .zIndex(1)
-                PinTrailingBottom(
-                    content: Button(
-                        action: {
-                            store.send(.showSearch)
-                        },
-                        label: {
-                            Image(systemName: "doc.text.magnifyingglass")
-                                .font(.system(size: 20))
-                        }
-                    )
-                    .buttonStyle(
-                        FABButtonStyle(
-                            orbShaderEnabled: Config.default.orbShaderEnabled
-                        )
-                    )
-                    .padding()
-                    .disabled(!store.state.isFabShowing)
+            Color.background
+                .edgesIgnoringSafeArea(.all)
+                .zIndex(0)
+            AppNavigationView(store: store)
+                .zIndex(1)
+            PinTrailingBottom(
+                content: Button(
+                    action: {
+                        store.send(.showSearch)
+                    },
+                    label: {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.system(size: 20))
+                    }
                 )
-                .ignoresSafeArea(.keyboard, edges: .bottom)
-                .zIndex(2)
-                ModalView(
-                    isPresented: store.binding(
-                        get: \.isSearchShowing,
-                        tag: { _ in NotebookAction.hideSearch }
-                    ),
-                    content: SearchView(
-                        placeholder: "Search or create...",
-                        text: store.binding(
-                            get: \.searchText,
-                            tag: NotebookAction.setSearch
-                        ),
-                        suggestions: store.binding(
-                            get: \.suggestions,
-                            tag: NotebookAction.setSuggestions
-                        ),
-                        onSelect: { suggestion in
-                            store.send(.selectSuggestion(suggestion))
-                        },
-                        onSubmit: { query in
-                            store.send(.submitSearch(query))
-                        },
-                        onCancel: {
-                            store.send(.hideSearch)
-                        }
-                    ),
-                    keyboardHeight: store.state.keyboardEventualHeight
+                .buttonStyle(
+                    FABButtonStyle(
+                        orbShaderEnabled: Config.default.orbShaderEnabled
+                    )
                 )
-                .zIndex(3)
-            }
+                .padding()
+                .disabled(!store.state.isFabShowing)
+            )
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .zIndex(2)
+            ModalView(
+                isPresented: store.binding(
+                    get: \.isSearchShowing,
+                    tag: { _ in NotebookAction.hideSearch }
+                ),
+                content: SearchView(
+                    placeholder: "Search or create...",
+                    text: store.binding(
+                        get: \.searchText,
+                        tag: NotebookAction.setSearch
+                    ),
+                    suggestions: store.binding(
+                        get: \.suggestions,
+                        tag: NotebookAction.setSuggestions
+                    ),
+                    onSelect: { suggestion in
+                        store.send(.selectSuggestion(suggestion))
+                    },
+                    onSubmit: { query in
+                        store.send(.submitSearch(query))
+                    },
+                    onCancel: {
+                        store.send(.hideSearch)
+                    }
+                ),
+                keyboardHeight: store.state.keyboardEventualHeight
+            )
+            .zIndex(3)
+            SearchView2(
+                store: store.viewStore(
+                    get: NotebookSearchCursor.get,
+                    tag: NotebookSearchCursor.tag
+                )
+            )
+            .zIndex(4)
         }
         .background(.red)
         .environment(\.openURL, OpenURLAction { url in
