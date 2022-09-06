@@ -13,21 +13,29 @@ import ObservableStore
 
 //  MARK: Action
 enum SearchAction: Hashable {
+    /// Set search presented state
     case setPresented(Bool)
+    /// Cancel search `(proxy for isPresented(false)`)
+    case cancel
+    /// Set query (text in input) live as you type
     case setQuery(String)
     /// Hit submit ("go") while focused on search field
     case submitQuery(String)
     case setSuggestions([Suggestion])
     case failSuggestions(String)
+    /// Refresh results by re-submitting query
+    case refreshSuggestions
     case activateSuggestion(Suggestion)
     case setKeyboardHeight(CGFloat)
-    case cancel
 }
 
 //  MARK: Model
 struct SearchModel: Hashable {
+    /// Is search HUD showing?
     var isPresented = true
+    /// Placeholder text when empty
     var placeholder = ""
+    /// Live input text
     var query = ""
     var suggestions: [Suggestion] = []
     var keyboardHeight: CGFloat = 350
@@ -40,41 +48,34 @@ struct SearchModel: Hashable {
     ) -> Update<SearchModel, SearchAction> {
         switch action {
         case .setPresented(let isPresented):
-            var model = state
-            model.isPresented = isPresented
-            return Update(state: model)
-                .animation(.easeOutCubic(duration: Duration.keyboard))
-        case .setQuery(let query):
-            let fx: Fx<SearchAction> = environment.database
-                .searchSuggestions(
-                    query: query,
-                    isJournalSuggestionEnabled:
-                        Config.default.journalSuggestionEnabled,
-                    isScratchSuggestionEnabled:
-                        Config.default.scratchSuggestionEnabled,
-                    isRandomSuggestionEnabled:
-                        Config.default.randomSuggestionEnabled
-                )
-                .map({ suggestions in
-                    SearchAction.setSuggestions(suggestions)
-                })
-                .catch({ error in
-                    Just(
-                        SearchAction.failSuggestions(
-                            error.localizedDescription
-                        )
-                    )
-                })
-                .eraseToAnyPublisher()
-
-            var model = state
-            model.query = query
-            return Update(state: model, fx: fx)
-        case .submitQuery:
-            environment.logger.debug(
-                ".submitQuery should be handled by parent component"
+            return setPresented(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
             )
-            return Update(state: state)
+        case .cancel:
+            return setPresented(
+                state: state,
+                environment: environment,
+                isPresented: false
+            )
+        case .setQuery(let query):
+            return setQuery(
+                state: state,
+                environment: environment,
+                query: query
+            )
+        case .refreshSuggestions:
+            return setQuery(
+                state: state,
+                environment: environment,
+                query: state.query
+            )
+        case .submitQuery:
+            /// Hide after submit
+            let fx: Fx<SearchAction> = Just(SearchAction.setPresented(false))
+                .eraseToAnyPublisher()
+            return Update(state: state, fx: fx)
         case .setSuggestions(let suggestions):
             var model = state
             model.suggestions = suggestions
@@ -83,20 +84,58 @@ struct SearchModel: Hashable {
             environment.logger.warning("\(message)")
             return Update(state: state)
         case .activateSuggestion:
-            environment.logger.debug(
-                ".activateSuggestion should be handled by parent component"
-            )
-            return Update(state: state)
+            /// Hide after activating suggestion
+            let fx: Fx<SearchAction> = Just(SearchAction.setPresented(false))
+                .eraseToAnyPublisher()
+            return Update(state: state, fx: fx)
         case .setKeyboardHeight(let keyboardHeight):
             var model = state
             model.keyboardHeight = keyboardHeight
             return Update(state: model)
-        case .cancel:
-            environment.logger.debug(
-                ".cancel should be handled by parent component"
-            )
-            return Update(state: state)
         }
+    }
+
+    static func setPresented(
+        state: SearchModel,
+        environment: AppEnvironment,
+        isPresented: Bool
+    ) -> Update<SearchModel, SearchAction> {
+        var model = state
+        model.isPresented = isPresented
+        return Update(state: model)
+            .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
+    static func setQuery(
+        state: SearchModel,
+        environment: AppEnvironment,
+        query: String
+    ) -> Update<SearchModel, SearchAction> {
+        let fx: Fx<SearchAction> = environment.database
+            .searchSuggestions(
+                query: query,
+                isJournalSuggestionEnabled:
+                    Config.default.journalSuggestionEnabled,
+                isScratchSuggestionEnabled:
+                    Config.default.scratchSuggestionEnabled,
+                isRandomSuggestionEnabled:
+                    Config.default.randomSuggestionEnabled
+            )
+            .map({ suggestions in
+                SearchAction.setSuggestions(suggestions)
+            })
+            .catch({ error in
+                Just(
+                    SearchAction.failSuggestions(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+
+        var model = state
+        model.query = query
+        return Update(state: model, fx: fx)
     }
 }
 
@@ -186,7 +225,7 @@ struct SearchView2_Previews: PreviewProvider {
     static var previews: some View {
         SearchView2(
             store: ViewStore.constant(
-                state: SearchModel()
+                state: SearchModel(isPresented: true)
             )
         )
     }

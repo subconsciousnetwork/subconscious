@@ -66,18 +66,22 @@ enum NotebookAction {
     case deleteEntryFailure(String)
 
     //  Search
-    /// Set search text (updated live as you type)
-    case setSearch(String)
-    case showSearch
-    case hideSearch
     /// Hit submit ("go") while focused on search field
     case submitSearch(String)
 
     // Search suggestions
     /// Submit search suggestion
     case selectSuggestion(Suggestion)
-    case setSuggestions([Suggestion])
-    case suggestionsFailure(String)
+
+    /// Set search query
+    static func setSearch(_ query: String) -> NotebookAction {
+        .search(.setQuery(query))
+    }
+
+    /// Show/hide the search HUD
+    static func setSearchPresented(_ isPresented: Bool) -> NotebookAction {
+        .search(.setPresented(isPresented))
+    }
 
     /// Forward requestDetail action to detail
     static func requestDetail(
@@ -133,8 +137,6 @@ extension NotebookAction {
         switch self {
         case .setRecent(let items):
             return "setRecent(...) (\(items.count) items)"
-        case .setSuggestions(let items):
-            return "setSuggestions(...) (\(items.count) items)"
         default:
             return String(describing: self)
         }
@@ -193,7 +195,14 @@ struct NotebookSearchCursor: CursorProtocol {
     }
 
     static func tag(action: SearchAction) -> NotebookAction {
-        .search(action)
+        switch action {
+        case .submitQuery(let query):
+            return .submitSearch(query)
+        case .activateSuggestion(let suggestion):
+            return .selectSuggestion(suggestion)
+        default:
+            return .search(action)
+        }
     }
 }
 
@@ -228,13 +237,6 @@ struct NotebookModel: Hashable, Equatable {
     var entryToDelete: Slug? = nil
     /// Delete confirmation action sheet
     var isConfirmDeleteShowing = false
-
-    /// Live search bar text
-    var searchText = ""
-    var isSearchShowing = false
-
-    /// Main search suggestions
-    var suggestions: [Suggestion] = []
 }
 
 //  MARK: Update
@@ -383,23 +385,6 @@ extension NotebookModel {
                 environment: environment,
                 isShowing: isShowing
             )
-        case let .setSearch(text):
-            return setSearch(
-                state: state,
-                environment: environment,
-                text: text
-            )
-        case .showSearch:
-            var model = state
-            model.isSearchShowing = true
-            model.searchText = ""
-            return Update(state: model)
-                .animation(.easeOutCubic(duration: Duration.keyboard))
-        case .hideSearch:
-            return hideSearch(
-                state: state,
-                environment: environment
-            )
         case .submitSearch(let query):
             return submitSearch(
                 state: state,
@@ -412,15 +397,6 @@ extension NotebookModel {
                 environment: environment,
                 suggestion: suggestion
             )
-        case let .setSuggestions(suggestions):
-            var model = state
-            model.suggestions = suggestions
-            return Update(state: model)
-        case let .suggestionsFailure(message):
-            environment.logger.debug(
-                "Suggest failed: \(message)"
-            )
-            return Update(state: state)
         }
     }
 
@@ -524,18 +500,17 @@ extension NotebookModel {
         )
         .eraseToAnyPublisher()
 
-        return Update(state: state, fx: detailRefreshFx)
+        let fx: Fx<NotebookAction> = Just(
+            NotebookAction.search(.refreshSuggestions)
+        )
+        .merge(with: detailRefreshFx)
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
             .pipe({ state in
                 listRecent(
                     state: state,
                     environment: environment
-                )
-            })
-            .pipe({ state in
-                setSearch(
-                    state: state,
-                    environment: environment,
-                    text: state.searchText
                 )
             })
             .pipe({ state in
@@ -721,47 +696,6 @@ extension NotebookModel {
         return Update(state: model, fx: fx)
     }
 
-    /// Set search text for main search input
-    static func setSearch(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        text: String
-    ) -> Update<NotebookModel, NotebookAction> {
-        var model = state
-        model.searchText = text
-        let fx: Fx<NotebookAction> = environment.database
-            .searchSuggestions(
-                query: text,
-                isJournalSuggestionEnabled:
-                    Config.default.journalSuggestionEnabled,
-                isScratchSuggestionEnabled:
-                    Config.default.scratchSuggestionEnabled,
-                isRandomSuggestionEnabled:
-                    Config.default.randomSuggestionEnabled
-            )
-            .map({ suggestions in
-                NotebookAction.setSuggestions(suggestions)
-            })
-            .catch({ error in
-                Just(.suggestionsFailure(error.localizedDescription))
-            })
-            .eraseToAnyPublisher()
-        return Update(state: model, fx: fx)
-    }
-
-    /// Set search HUD to hidden state
-    static func hideSearch(
-        state: NotebookModel,
-        environment: AppEnvironment
-    ) -> Update<NotebookModel, NotebookAction> {
-        var model = state
-        model.isSearchShowing = false
-        model.searchText = ""
-
-        return Update(state: model)
-            .animation(.easeOutCubic(duration: Duration.keyboard))
-    }
-
     /// Submit a search query (typically by hitting "go" on keyboard)
     static func submitSearch(
         state: NotebookModel,
@@ -772,11 +706,11 @@ extension NotebookModel {
         let duration = Duration.keyboard
         let delay = duration + 0.03
 
-        let update = hideSearch(
-            state: state,
-            environment: environment
+        /// We intercepted this action, so create an Fx to forward it down.
+        let submitFx: Fx<NotebookAction> = Just(
+            NotebookAction.search(.submitQuery(query))
         )
-        .animation(.easeOutCubic(duration: duration))
+        .eraseToAnyPublisher()
 
         // Derive slug. If we can't (e.g. invalid query such as empty string),
         // just hide the search HUD and do nothing.
@@ -784,7 +718,7 @@ extension NotebookModel {
             environment.logger.log(
                 "Query could not be converted to slug: \(query)"
             )
-            return update
+            return Update(state: state, fx: submitFx)
         }
 
         let fx: Fx<NotebookAction> = Just(
@@ -796,9 +730,10 @@ extension NotebookModel {
         )
         // Request detail AFTER animaiton completes
         .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+        .merge(with: submitFx)
         .eraseToAnyPublisher()
 
-        return update.mergeFx(fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Handle user select search suggestion
@@ -811,11 +746,10 @@ extension NotebookModel {
         let duration = Duration.keyboard
         let delay = duration + 0.03
 
-        let update = hideSearch(
-            state: state,
-            environment: environment
+        let hideSearchFx: Fx<NotebookAction> = Just(
+            NotebookAction.setSearchPresented(false)
         )
-        .animation(.easeOutCubic(duration: duration))
+        .eraseToAnyPublisher()
 
         switch suggestion {
         case .entry(let entryLink):
@@ -828,9 +762,10 @@ extension NotebookModel {
             )
             // Request detail AFTER animaiton completes
             .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .merge(with: hideSearchFx)
             .eraseToAnyPublisher()
 
-            return update.mergeFx(fx)
+            return Update(state: state, fx: fx)
         case .search(let entryLink):
             let fx: Fx<NotebookAction> = Just(
                 NotebookAction.requestDetail(
@@ -842,9 +777,10 @@ extension NotebookModel {
             )
             // Request detail AFTER animaiton completes
             .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .merge(with: hideSearchFx)
             .eraseToAnyPublisher()
 
-            return update.mergeFx(fx)
+            return Update(state: state, fx: fx)
         case .journal(let entryLink):
             let fx: Fx<NotebookAction> = Just(
                 NotebookAction.requestTemplateDetail(
@@ -856,9 +792,10 @@ extension NotebookModel {
             )
             // Request detail AFTER animaiton completes
             .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .merge(with: hideSearchFx)
             .eraseToAnyPublisher()
 
-            return update.mergeFx(fx)
+            return Update(state: state, fx: fx)
         case .scratch(let entryLink):
             let fx: Fx<NotebookAction> = Just(
                 NotebookAction.requestDetail(
@@ -868,17 +805,19 @@ extension NotebookModel {
                 )
             )
             .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .merge(with: hideSearchFx)
             .eraseToAnyPublisher()
 
-            return update.mergeFx(fx)
+            return Update(state: state, fx: fx)
         case .random:
             let fx: Fx<NotebookAction> = Just(
                 NotebookAction.requestRandomDetail(autofocus: false)
             )
             .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .merge(with: hideSearchFx)
             .eraseToAnyPublisher()
 
-            return update.mergeFx(fx)
+            return Update(state: state, fx: fx)
         }
     }
 }
@@ -906,7 +845,7 @@ struct NotebookView: View {
             PinTrailingBottom(
                 content: Button(
                     action: {
-                        store.send(.showSearch)
+                        store.send(.setSearchPresented(true))
                     },
                     label: {
                         Image(systemName: "doc.text.magnifyingglass")
@@ -923,41 +862,13 @@ struct NotebookView: View {
             )
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
-            ModalView(
-                isPresented: store.binding(
-                    get: \.isSearchShowing,
-                    tag: { _ in NotebookAction.hideSearch }
-                ),
-                content: SearchView(
-                    placeholder: "Search or create...",
-                    text: store.binding(
-                        get: \.searchText,
-                        tag: NotebookAction.setSearch
-                    ),
-                    suggestions: store.binding(
-                        get: \.suggestions,
-                        tag: NotebookAction.setSuggestions
-                    ),
-                    onSelect: { suggestion in
-                        store.send(.selectSuggestion(suggestion))
-                    },
-                    onSubmit: { query in
-                        store.send(.submitSearch(query))
-                    },
-                    onCancel: {
-                        store.send(.hideSearch)
-                    }
-                ),
-                keyboardHeight: store.state.keyboardEventualHeight
-            )
-            .zIndex(3)
             SearchView2(
                 store: store.viewStore(
                     get: NotebookSearchCursor.get,
                     tag: NotebookSearchCursor.tag
                 )
             )
-            .zIndex(4)
+            .zIndex(3)
         }
         .background(.red)
         .environment(\.openURL, OpenURLAction { url in
