@@ -58,6 +58,17 @@ public struct ViewStore<State, Action> {
     }
 }
 
+extension ViewStore {
+    public static func constant(
+        state: State
+    ) -> ViewStore<State, Action> {
+        ViewStore<State, Action>(
+            get: { state },
+            send: { action in }
+        )
+    }
+}
+
 extension Store {
     /// Create a ViewStore from this Store
     public func viewStore<InnerState, InnerAction>(
