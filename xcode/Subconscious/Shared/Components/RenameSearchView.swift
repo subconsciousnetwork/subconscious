@@ -9,7 +9,7 @@ import SwiftUI
 
 struct RenameSearchView: View {
     var current: EntryLink?
-    var placeholder: String = "Enter name for idea"
+    var placeholder: String = "Enter name for note"
     var suggestions: [RenameSuggestion]
     @Binding var text: String
     var onCancel: () -> Void

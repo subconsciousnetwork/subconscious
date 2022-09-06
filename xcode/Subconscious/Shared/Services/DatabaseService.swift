@@ -434,7 +434,7 @@ struct DatabaseService {
         }
 
         if isRandomSuggestionEnabled {
-            // Insert an option to load a random idea if there are any ideas.
+            // Insert an option to load a random note if there are any notes.
             if suggestions.count > 2 {
                 special.append(.random)
             }

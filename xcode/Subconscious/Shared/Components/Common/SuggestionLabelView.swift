@@ -70,7 +70,7 @@ struct SuggestionLabelView: View, Equatable {
                 title: {
                     TitleGroupView(
                         title: Text("Random"),
-                        subtitle: Text("Display a random idea")
+                        subtitle: Text("Display a random note")
                     )
                 },
                 icon: {

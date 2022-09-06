@@ -70,7 +70,7 @@ struct AppNavigationView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .principal) {
                     HStack {
-                        Text("Ideas").font(Font(UIFont.appTextMedium))
+                        Text("Notes").font(Font(UIFont.appTextMedium))
                         CountChip(count: store.state.entryCount)
                     }
                     .frame(minWidth: 200, maxWidth: .infinity)
