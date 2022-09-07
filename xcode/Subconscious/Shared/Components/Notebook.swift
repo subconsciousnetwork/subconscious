@@ -23,8 +23,6 @@ enum NotebookAction {
     case detail(DetailAction)
     case showDetail(Bool)
 
-    case noop
-
     //  URL handlers
     case openURL(URL)
     case openEditorURL(URL)
@@ -39,12 +37,6 @@ enum NotebookAction {
     /// Refresh the state of all lists by reloading from database.
     /// This also sets searches to their zero-query state.
     case refreshAll
-
-    //  Search history
-    /// Write a search history event to the database
-    case createSearchHistoryItem(String)
-    case createSearchHistoryItemSuccess(String)
-    case createSearchHistoryItemFailure(String)
 
     /// Read entry count from DB
     case countEntries
@@ -70,8 +62,8 @@ enum NotebookAction {
     case submitSearch(String)
 
     // Search suggestions
-    /// Submit search suggestion
-    case selectSuggestion(Suggestion)
+    /// Search suggestion was activated
+    case activatedSuggestion(Suggestion)
 
     /// Set search query
     static func setSearch(_ query: String) -> NotebookAction {
@@ -198,8 +190,8 @@ struct NotebookSearchCursor: CursorProtocol {
         switch action {
         case .submitQuery(let query):
             return .submitSearch(query)
-        case .activateSuggestion(let suggestion):
-            return .selectSuggestion(suggestion)
+        case .activatedSuggestion(let suggestion):
+            return .activatedSuggestion(suggestion)
         default:
             return .search(action)
         }
@@ -276,8 +268,6 @@ extension NotebookModel {
                 action: action,
                 environment: environment
             )
-        case .noop:
-            return Update(state: state)
         case let .openURL(url):
             UIApplication.shared.open(url)
             return Update(state: state)
@@ -292,24 +282,6 @@ extension NotebookModel {
             )
         case .refreshAll:
             return refreshAll(state: state, environment: environment)
-        case let .createSearchHistoryItem(query):
-            return createSearchHistoryItem(
-                state: state,
-                environment: environment,
-                query: query
-            )
-        case let .createSearchHistoryItemSuccess(query):
-            return createSearchHistoryItemSuccess(
-                state: state,
-                environment: environment,
-                query: query
-            )
-        case let .createSearchHistoryItemFailure(error):
-            return createSearchHistoryItemFailure(
-                state: state,
-                environment: environment,
-                error: error
-            )
         case .countEntries:
             return countEntries(
                 state: state,
@@ -391,8 +363,8 @@ extension NotebookModel {
                 environment: environment,
                 query: query
             )
-        case let .selectSuggestion(suggestion):
-            return selectSuggestion(
+        case let .activatedSuggestion(suggestion):
+            return activatedSuggestion(
                 state: state,
                 environment: environment,
                 suggestion: suggestion
@@ -519,52 +491,6 @@ extension NotebookModel {
                     environment: environment
                 )
             })
-    }
-
-    /// Insert search history event into database
-    static func createSearchHistoryItem(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        query: String
-    ) -> Update<NotebookModel, NotebookAction> {
-        let fx: Fx<NotebookAction> = environment.database
-            .createSearchHistoryItem(query: query)
-            .map({ result in
-                NotebookAction.noop
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.createSearchHistoryItemFailure(
-                        error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
-    }
-
-    /// Handle success case for search history item creation
-    static func createSearchHistoryItemSuccess(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        query: String
-    ) -> Update<NotebookModel, NotebookAction> {
-        environment.logger.log(
-            "Created search history entry: \(query)"
-        )
-        return Update(state: state)
-    }
-
-    /// Handle failure case for search history item creation
-    static func createSearchHistoryItemFailure(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        error: String
-    ) -> Update<NotebookModel, NotebookAction> {
-        environment.logger.warning(
-            "Failed to create search history entry: \(error)"
-        )
-        return Update(state: state)
     }
 
     /// Read entry count from db
@@ -737,20 +663,11 @@ extension NotebookModel {
     }
 
     /// Handle user select search suggestion
-    static func selectSuggestion(
+    static func activatedSuggestion(
         state: NotebookModel,
         environment: AppEnvironment,
         suggestion: Suggestion
     ) -> Update<NotebookModel, NotebookAction> {
-        // Duration of keyboard animation
-        let duration = Duration.keyboard
-        let delay = duration + 0.03
-
-        let hideSearchFx: Fx<NotebookAction> = Just(
-            NotebookAction.setSearchPresented(false)
-        )
-        .eraseToAnyPublisher()
-
         switch suggestion {
         case .entry(let entryLink):
             let fx: Fx<NotebookAction> = Just(
@@ -760,11 +677,7 @@ extension NotebookModel {
                     autofocus: false
                 )
             )
-            // Request detail AFTER animaiton completes
-            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
-            .merge(with: hideSearchFx)
             .eraseToAnyPublisher()
-
             return Update(state: state, fx: fx)
         case .search(let entryLink):
             let fx: Fx<NotebookAction> = Just(
@@ -775,11 +688,7 @@ extension NotebookModel {
                     autofocus: true
                 )
             )
-            // Request detail AFTER animaiton completes
-            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
-            .merge(with: hideSearchFx)
             .eraseToAnyPublisher()
-
             return Update(state: state, fx: fx)
         case .journal(let entryLink):
             let fx: Fx<NotebookAction> = Just(
@@ -790,11 +699,7 @@ extension NotebookModel {
                     autofocus: true
                 )
             )
-            // Request detail AFTER animaiton completes
-            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
-            .merge(with: hideSearchFx)
             .eraseToAnyPublisher()
-
             return Update(state: state, fx: fx)
         case .scratch(let entryLink):
             let fx: Fx<NotebookAction> = Just(
@@ -804,19 +709,13 @@ extension NotebookModel {
                     autofocus: true
                 )
             )
-            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
-            .merge(with: hideSearchFx)
             .eraseToAnyPublisher()
-
             return Update(state: state, fx: fx)
         case .random:
             let fx: Fx<NotebookAction> = Just(
                 NotebookAction.requestRandomDetail(autofocus: false)
             )
-            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
-            .merge(with: hideSearchFx)
             .eraseToAnyPublisher()
-
             return Update(state: state, fx: fx)
         }
     }

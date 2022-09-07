@@ -25,8 +25,16 @@ enum SearchAction: Hashable {
     case failSuggestions(String)
     /// Refresh results by re-submitting query
     case refreshSuggestions
+    /// Handle user activation of suggestion
     case activateSuggestion(Suggestion)
+    /// Notify parent of suggeston activation
+    case activatedSuggestion(Suggestion)
     case setKeyboardHeight(CGFloat)
+    //  Search history
+    /// Write a search history event to the database
+    case createSearchHistoryItem(String)
+    case succeedCreateSearchHistoryItem(String)
+    case failCreateSearchHistoryItem(String)
 }
 
 //  MARK: Model
@@ -71,9 +79,14 @@ struct SearchModel: Hashable {
                 environment: environment,
                 query: state.query
             )
-        case .submitQuery:
+        case .submitQuery(let query):
+            let searchHistoryFx: Fx<SearchAction> = Just(
+                SearchAction.createSearchHistoryItem(query)
+            )
+            .eraseToAnyPublisher()
             /// Hide after submit
             let fx: Fx<SearchAction> = Just(SearchAction.setPresented(false))
+                .merge(with: searchHistoryFx)
                 .eraseToAnyPublisher()
             return Update(state: state, fx: fx)
         case .setSuggestions(let suggestions):
@@ -83,15 +96,39 @@ struct SearchModel: Hashable {
         case .failSuggestions(let message):
             environment.logger.warning("\(message)")
             return Update(state: state)
-        case .activateSuggestion:
-            /// Hide after activating suggestion
-            let fx: Fx<SearchAction> = Just(SearchAction.setPresented(false))
-                .eraseToAnyPublisher()
-            return Update(state: state, fx: fx)
+        case .activateSuggestion(let suggestion):
+            return activateSuggestion(
+                state: state,
+                environment: environment,
+                suggestion: suggestion
+            )
+        case .activatedSuggestion:
+            environment.logger.debug(
+                ".activatedSuggestion should be handled by parent component"
+            )
+            return Update(state: state)
         case .setKeyboardHeight(let keyboardHeight):
             var model = state
             model.keyboardHeight = keyboardHeight
             return Update(state: model)
+        case let .createSearchHistoryItem(query):
+            return createSearchHistoryItem(
+                state: state,
+                environment: environment,
+                query: query
+            )
+        case let .succeedCreateSearchHistoryItem(query):
+            return succeedCreateSearchHistoryItem(
+                state: state,
+                environment: environment,
+                query: query
+            )
+        case let .failCreateSearchHistoryItem(error):
+            return failCreateSearchHistoryItem(
+                state: state,
+                environment: environment,
+                error: error
+            )
         }
     }
 
@@ -136,6 +173,101 @@ struct SearchModel: Hashable {
         var model = state
         model.query = query
         return Update(state: model, fx: fx)
+    }
+
+    /// Handle suggestion tapped
+    static func activateSuggestion(
+        state: SearchModel,
+        environment: AppEnvironment,
+        suggestion: Suggestion
+    ) -> Update<SearchModel, SearchAction> {
+        let link: EntryLink? = Func.pipe(suggestion) { suggestion  in
+            switch suggestion {
+            case .entry(let entryLink):
+                return entryLink
+            case .search(let entryLink):
+                return entryLink
+            case .journal(let entryLink):
+                return entryLink
+            case .scratch(let entryLink):
+                return entryLink
+            default:
+                return nil
+            }
+        }
+
+        let historyFx: Fx<SearchAction> = Func.pipe(link) { link in
+            guard let link = link else {
+                return Empty().eraseToAnyPublisher()
+            }
+            return Just(SearchAction.createSearchHistoryItem(link.title))
+                .eraseToAnyPublisher()
+        }
+
+        let hideSearchFx: Fx<SearchAction> = Just(
+            SearchAction.setPresented(false)
+        )
+        .eraseToAnyPublisher()
+
+        // Duration of keyboard animation
+        let duration = Duration.keyboard
+        let delay = duration + 0.03
+
+        let fx: Fx<SearchAction> = Just(
+            SearchAction.activatedSuggestion(suggestion)
+        )
+        // Request detail AFTER hide animaiton completes
+        .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+        .merge(with: historyFx, hideSearchFx)
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    /// Insert search history event into database
+    static func createSearchHistoryItem(
+        state: SearchModel,
+        environment: AppEnvironment,
+        query: String
+    ) -> Update<SearchModel, SearchAction> {
+        let fx: Fx<SearchAction> = environment.database
+            .createSearchHistoryItem(query: query)
+            .map({ query in
+                SearchAction.succeedCreateSearchHistoryItem(query)
+            })
+            .catch({ error in
+                Just(
+                    SearchAction.failCreateSearchHistoryItem(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    /// Handle success case for search history item creation
+    static func succeedCreateSearchHistoryItem(
+        state: SearchModel,
+        environment: AppEnvironment,
+        query: String
+    ) -> Update<SearchModel, SearchAction> {
+        environment.logger.log(
+            "Created search history entry: \(query)"
+        )
+        return Update(state: state)
+    }
+
+    /// Handle failure case for search history item creation
+    static func failCreateSearchHistoryItem(
+        state: SearchModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<SearchModel, SearchAction> {
+        environment.logger.warning(
+            "Failed to create search history entry: \(error)"
+        )
+        return Update(state: state)
     }
 }
 

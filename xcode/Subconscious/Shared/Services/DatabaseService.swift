@@ -693,10 +693,10 @@ struct DatabaseService {
     }
 
     /// Log a search query in search history db
-    func createSearchHistoryItem(query: String) -> AnyPublisher<Void, Error> {
+    func createSearchHistoryItem(query: String) -> AnyPublisher<String, Error> {
         CombineUtilities.async(qos: .utility) {
             guard !query.isWhitespace else {
-                return
+                return query
             }
 
             // Log search in database, along with number of hits
@@ -710,6 +710,8 @@ struct DatabaseService {
                     .text(query)
                 ]
             )
+
+            return query
         }
     }
 
