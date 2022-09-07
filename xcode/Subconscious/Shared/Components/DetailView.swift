@@ -133,7 +133,14 @@ struct DetailMarkupEditorCursor: CursorProtocol {
     }
 
     static func tag(action: MarkupTextAction) -> DetailAction {
-        .markupEditor(action)
+        switch action {
+        /// Intercept text set action so we can mark all text-sets
+        /// as dirty
+        case .setText(let text):
+            return .setEditor(text: text, saveState: .modified)
+        default:
+            return .markupEditor(action)
+        }
     }
 }
 
