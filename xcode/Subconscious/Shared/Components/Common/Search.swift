@@ -40,7 +40,7 @@ enum SearchAction: Hashable {
 //  MARK: Model
 struct SearchModel: Hashable {
     /// Is search HUD showing?
-    var isPresented = true
+    var isPresented = false
     /// Placeholder text when empty
     var placeholder = ""
     /// Live input text
