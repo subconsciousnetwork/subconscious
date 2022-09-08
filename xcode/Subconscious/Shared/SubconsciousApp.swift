@@ -28,7 +28,7 @@ struct SubconsciousApp: App {
 //  MARK: Store typealias
 typealias AppStore = Store<AppModel, AppAction, AppEnvironment>
 
-enum AppAction {
+enum AppAction: CustomLogStringConvertible {
     /// Wrapper for notebook actions
     case notebook(NotebookAction)
     /// Wrapper for feed actions
@@ -57,14 +57,15 @@ enum AppAction {
     case syncSuccess([FileSync.Change])
     case syncFailure(String)
     case refreshAll
-}
 
-extension AppAction {
-    /// Generates a short (approximately 1 line) loggable string for action.
-    func toLogString() -> String {
+    var logDescription: String {
         switch self {
-        case .notebook(let action):
-            return action.toLogString()
+        case .notebook(let notebookAction):
+            return "notebook(\(String.loggable(notebookAction)))"
+        case .feed(let feedAction):
+            return "feed(\(String.loggable(feedAction)))"
+        case .poll(_):
+            return "poll"
         default:
             return String(describing: self)
         }
@@ -148,7 +149,8 @@ extension AppModel {
         action: AppAction,
         environment: AppEnvironment
     ) -> Update<AppModel, AppAction> {
-        Logger.action.debug("\(action.toLogString())")
+        let message = String.loggable(action)
+        Logger.action.debug("\(message)")
         // Generate next state and effect
         let next = update(
             state: state,

@@ -123,12 +123,15 @@ enum NotebookAction {
     }
 }
 
-extension NotebookAction {
-    /// Generates a short (approximately 1 line) loggable string for action.
-    func toLogString() -> String {
+extension NotebookAction: CustomLogStringConvertible {
+    var logDescription: String {
         switch self {
+        case .detail(let action):
+            return "detail(\(String.loggable(action)))"
+        case .search(let action):
+            return "search(\(String.loggable(action)))"
         case .setRecent(let items):
-            return "setRecent(...) (\(items.count) items)"
+            return "setRecent(\(items.count) items)"
         default:
             return String(describing: self)
         }

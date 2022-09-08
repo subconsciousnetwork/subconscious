@@ -21,12 +21,11 @@ enum FeedAction {
     case failFetchFeed(Error)
 }
 
-extension FeedAction {
-    /// Generates a short (approximately 1 line) loggable string for action.
-    func toLogString() -> String {
+extension FeedAction: CustomLogStringConvertible {
+    var logDescription: String {
         switch self {
         case .setFeed(let items):
-            return "setFeed(...) (\(items.count) items)"
+            return "setFeed(\(items.count) items)"
         default:
             return String(describing: self)
         }

@@ -12,7 +12,7 @@ import Combine
 import ObservableStore
 
 //  MARK: Action
-enum SearchAction: Hashable {
+enum SearchAction: Hashable, CustomLogStringConvertible {
     /// Set search presented state
     case setPresented(Bool)
     /// Cancel search `(proxy for isPresented(false)`)
@@ -35,6 +35,15 @@ enum SearchAction: Hashable {
     case createSearchHistoryItem(String)
     case succeedCreateSearchHistoryItem(String)
     case failCreateSearchHistoryItem(String)
+
+    var logDescription: String {
+        switch self {
+        case .setSuggestions(let suggestions):
+            return "setSuggestions(\(suggestions.count) items)"
+        default:
+            return String(describing: self)
+        }
+    }
 }
 
 //  MARK: Model

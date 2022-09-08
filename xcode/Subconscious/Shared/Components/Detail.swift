@@ -11,7 +11,7 @@ import ObservableStore
 import Combine
 
 //  MARK: Action
-enum DetailAction: Hashable {
+enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Wrapper for editor actions
     case markupEditor(MarkupTextAction)
 
@@ -118,6 +118,19 @@ enum DetailAction: Hashable {
     /// Select a link completion
     static func selectLinkCompletion(_ link: EntryLink) -> Self {
         .selectLinkSuggestion(.entry(link))
+    }
+
+    var logDescription: String {
+        switch self {
+        case .setLinkSuggestions(let suggestions):
+            return "setLinkSuggestions(\(suggestions.count) items)"
+        case .setRenameSuggestions(let suggestions):
+            return "setRenameSuggestions(\(suggestions.count) items)"
+        case .markupEditor(let action):
+            return "markupEditor(\(String.loggable(action)))"
+        default:
+            return String(describing: self)
+        }
     }
 }
 
