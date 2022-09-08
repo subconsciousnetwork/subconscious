@@ -272,7 +272,7 @@ struct SearchModel: Hashable {
 }
 
 //  MARK: View
-struct SearchView2: View {
+struct SearchView: View {
     var store: ViewStore<SearchModel, SearchAction>
     var suggestionHeight: CGFloat = 56
 
@@ -355,7 +355,7 @@ struct SearchView2: View {
 
 struct SearchView2_Previews: PreviewProvider {
     static var previews: some View {
-        SearchView2(
+        SearchView(
             store: ViewStore.constant(
                 state: SearchModel(isPresented: true)
             )
