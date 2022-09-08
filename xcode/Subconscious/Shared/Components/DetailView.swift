@@ -1392,11 +1392,19 @@ struct DetailModel: Hashable {
         environment.logger.log(
             "Retitled entry \(from.slug) to \(to.linkableTitle)"
         )
-        return requestDetailAndRefreshAll(
-            state: state,
-            environment: environment,
-            slug: from.slug
+
+        /// Refresh lists since we changed the title
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.refreshAll
         )
+        .eraseToAnyPublisher()
+
+        /// We succeeded in updating title header on disk.
+        /// Now set it in the view, so we see the updated state.
+        var model = state
+        model.headers["title"] = to.linkableTitle
+
+        return Update(state: model, fx: fx)
     }
 
     /// Retitle failure lifecycle handler.
