@@ -460,7 +460,7 @@ extension NotebookModel {
         return Update(state: state, fx: fx)
     }
 
-    /// Refresh all lists in the app from database
+    /// Refresh all lists in the notebook tab from database.
     /// Typically invoked after creating/deleting an entry, or performing
     /// some other action that would invalidate the state of various lists.
     static func refreshAll(
@@ -472,25 +472,23 @@ extension NotebookModel {
         )
         .eraseToAnyPublisher()
 
+        let countFx: Fx<NotebookAction> = Just(
+            NotebookAction.countEntries
+        )
+        .eraseToAnyPublisher()
+
+        let listFx: Fx<NotebookAction> = Just(
+            NotebookAction.listRecent
+        )
+        .eraseToAnyPublisher()
+
         let fx: Fx<NotebookAction> = Just(
             NotebookAction.search(.refreshSuggestions)
         )
-        .merge(with: detailRefreshFx)
+        .merge(with: detailRefreshFx, countFx, listFx)
         .eraseToAnyPublisher()
 
         return Update(state: state, fx: fx)
-            .pipe({ state in
-                listRecent(
-                    state: state,
-                    environment: environment
-                )
-            })
-            .pipe({ state in
-                countEntries(
-                    state: state,
-                    environment: environment
-                )
-            })
     }
 
     /// Read entry count from db

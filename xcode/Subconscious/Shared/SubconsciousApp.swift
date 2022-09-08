@@ -56,6 +56,7 @@ enum AppAction {
     case sync
     case syncSuccess([FileSync.Change])
     case syncFailure(String)
+    case refreshAll
 }
 
 extension AppAction {
@@ -235,6 +236,11 @@ extension AppModel {
                 "File sync failed: \(message)"
             )
             return Update(state: state)
+        case .refreshAll:
+            return refreshAll(
+                state: state,
+                environment: environment
+            )
         }
     }
 
@@ -425,10 +431,24 @@ extension AppModel {
         // This ensures that files which were deleted outside the app
         // are removed from lists once sync is complete.
         let fx: Fx<AppAction> = Just(
-            AppAction.notebook(.refreshAll)
+            AppAction.refreshAll
         )
         .eraseToAnyPublisher()
 
+        return Update(state: state, fx: fx)
+    }
+
+    /// Refresh all lists in the app.
+    /// Typically done after a save or a delete to ensure old notes
+    /// aren't showing up anymore.
+    static func refreshAll(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel, AppAction> {
+        let fx: Fx<AppAction> = Just(
+            AppAction.notebook(.refreshAll)
+        )
+        .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
 }

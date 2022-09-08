@@ -56,6 +56,7 @@ enum DetailAction: Hashable {
     // Link suggestions
     case setLinkSheetPresented(Bool)
     case setLinkSearch(String)
+    case refreshLinkSuggestions
     case selectLinkSuggestion(LinkSuggestion)
     case setLinkSuggestions([LinkSuggestion])
     case linkSuggestionsFailure(String)
@@ -64,6 +65,7 @@ enum DetailAction: Hashable {
     case showRenameSheet(EntryLink?)
     case hideRenameSheet
     case setRenameField(String)
+    case refreshRenameSuggestions
     case setRenameSuggestions([RenameSuggestion])
     case renameSuggestionsFailure(String)
     /// Issue a rename action for an entry.
@@ -159,6 +161,7 @@ struct DetailModel: Hashable {
     /// The entry link within the text
     var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
 
+    /// The text editor
     var markupEditor = MarkupTextModel()
 
     /// Link suggestions for modal and bar in edit mode
@@ -323,6 +326,12 @@ struct DetailModel: Hashable {
                 environment: environment,
                 text: text
             )
+        case .refreshLinkSuggestions:
+            return setLinkSearch(
+                state: state,
+                environment: environment,
+                text: state.linkSearchText
+            )
         case let .selectLinkSuggestion(suggestion):
             return selectLinkSuggestion(
                 state: state,
@@ -354,6 +363,12 @@ struct DetailModel: Hashable {
                 state: state,
                 environment: environment,
                 text: text
+            )
+        case .refreshRenameSuggestions:
+            return setRenameField(
+                state: state,
+                environment: environment,
+                text: state.renameField
             )
         case let .setRenameSuggestions(suggestions):
             return setRenameSuggestions(state: state, suggestions: suggestions)
@@ -449,10 +464,9 @@ struct DetailModel: Hashable {
                 with: { text in Markup.Code(text: text) }
             )
         case .refreshAll:
-            return logDebug(
+            return refreshAll(
                 state: state,
-                environment: environment,
-                message: ".refreshAll should be handled by parent component"
+                environment: environment
             )
         }
     }
@@ -978,10 +992,6 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         text: String
     ) -> Update<DetailModel, DetailAction> {
-        /// Only change links if text has changed
-        guard text != state.linkSearchText else {
-            return Update(state: state)
-        }
         var model = state
         model.linkSearchText = text
 
@@ -1456,6 +1466,21 @@ struct DetailModel: Hashable {
                 range: NSRange(cursor..<cursor, in: editorText)
             )
         })
+    }
+
+    /// Dispatch refresh actions
+    static func refreshAll(
+        state: DetailModel,
+        environment: AppEnvironment
+    ) -> Update<DetailModel, DetailAction> {
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.refreshRenameSuggestions
+        )
+        .merge(
+            with: Just(DetailAction.refreshLinkSuggestions)
+        )
+        .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
 
     /// Snapshot editor state in preparation for saving.
