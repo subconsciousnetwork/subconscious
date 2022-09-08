@@ -625,9 +625,7 @@ struct DetailModel: Hashable {
     ) -> Update<DetailModel, DetailAction> {
         var model = state
         model.isLoading = true
-
-        return Update(state: model)
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+        return autosave(state: model, environment: environment)
     }
 
     /// Request detail view for entry.
@@ -761,10 +759,22 @@ struct DetailModel: Hashable {
         detail: EntryDetail,
         autofocus: Bool
     ) -> Update<DetailModel, DetailAction> {
-        let showDetailFx: Fx<DetailAction> = Just(
+        let fx: Fx<DetailAction> = Just(
             DetailAction.showDetail(true)
         )
         .eraseToAnyPublisher()
+
+        // If we just loaded the detail we're already editing, do not
+        // blow it away. Just mark loading complete and show detail.
+        // The in-memory version we are editing should win.
+        guard state.slug != detail.slug else {
+            environment.logger.log(
+                "Entry already being edited. Using in-memory version."
+            )
+            var model = state
+            model.isLoading = false
+            return Update(state: model, fx: fx)
+        }
 
         // Schedule save for ~ after the transition animation completes.
         // If we save immediately, it causes list view to update while the
@@ -778,26 +788,25 @@ struct DetailModel: Hashable {
 
         // Snapshot entry and schedule a save before we replace it.
         let snapshot = state.snapshotEntry()
-        let fx: Fx<DetailAction> = Just(DetailAction.save(snapshot))
+        let saveFx: Fx<DetailAction> = Just(DetailAction.save(snapshot))
             .delay(
                 for: .seconds(
                     approximateNavigationViewAnimationCompleteDuration
                 ),
                 scheduler: DispatchQueue.main
             )
-            .merge(with: showDetailFx)
             .eraseToAnyPublisher()
 
         var model = state
+        model.isLoading = false
         model.slug = detail.slug
         model.headers = detail.entry.headers
         model.backlinks = detail.backlinks
         model.saveState = .saved
-        model.isLoading = false
 
         let update = Update(
             state: model,
-            fx: fx
+            fx: fx.merge(with: saveFx).eraseToAnyPublisher()
         )
         .pipe({ state in
             setEditor(
