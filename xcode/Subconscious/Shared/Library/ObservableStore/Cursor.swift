@@ -42,10 +42,11 @@ extension CursorProtocol {
         action innerAction: InnerAction,
         environment: Environment
     ) -> Update<OuterState, OuterAction> {
-        let innerState = get(state: state)
-        let up = update(innerState, innerAction, environment)
-        let nextState = set(state: state, inner: up.state)
-        let nextFx = up.fx.map(tag).eraseToAnyPublisher()
-        return Update(state: nextState, fx: nextFx)
+        let next = update(get(state: state), innerAction, environment)
+        return Update(
+            state: set(state: state, inner: next.state),
+            fx: next.fx.map(tag).eraseToAnyPublisher(),
+            transaction: next.transaction
+        )
     }
 }
