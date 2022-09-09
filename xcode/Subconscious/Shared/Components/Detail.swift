@@ -90,7 +90,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Update editor dom and mark if this state is saved or not
     case setEditor(text: String, saveState: SaveState)
     /// Set selected range in editor
-    case setEditorSelection(NSRange)
+    case setEditorSelection(range: NSRange, text: String)
     /// Insert text into editor, replacing range
     case insertEditorText(
         text: String,
@@ -134,6 +134,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "updateDetail(\(detail.slug))"
         case .setEditor(_, let saveState):
             return "setEditor(text: ..., saveState: \(String(describing: saveState)))"
+        case let .setEditorSelection(range, _):
+            return "setEditorSelection(range: \(range), text: ...)"
         default:
             return String(describing: self)
         }
@@ -161,8 +163,8 @@ struct DetailMarkupEditorCursor: CursorProtocol {
             return .setEditor(text: text, saveState: .modified)
         // Intercept setSelection, so we can set link suggestions based on
         // cursor position.
-        case .setSelection(let nsRange):
-            return .setEditorSelection(nsRange)
+        case let .setSelection(nsRange, text):
+            return .setEditorSelection(range: nsRange, text: text)
         default:
             return .markupEditor(action)
         }
@@ -244,11 +246,12 @@ struct DetailModel: Hashable {
                 text: text,
                 saveState: saveState
             )
-        case let .setEditorSelection(range):
+        case let .setEditorSelection(range, text):
             return setEditorSelection(
                 state: state,
                 environment: environment,
-                range: range
+                range: range,
+                text: text
             )
         case let .insertEditorText(text, range):
             return insertEditorText(
@@ -549,18 +552,19 @@ struct DetailModel: Hashable {
     static func setEditorSelection(
         state: DetailModel,
         environment: AppEnvironment,
-        range nsRange: NSRange
+        range nsRange: NSRange,
+        text: String
     ) -> Update<DetailModel, DetailAction> {
         // Send setSelection down immediately
         var update = DetailMarkupEditorCursor.update(
             with: MarkupTextModel.update,
             state: state,
-            action: .setSelection(nsRange),
+            action: .setSelection(range: nsRange, text: text),
             environment: ()
         )
 
         // Set entry link based on selection
-        let dom = Subtext.parse(markup: update.state.markupEditor.text)
+        let dom = Subtext.parse(markup: text)
         let link = dom.entryLinkFor(range: nsRange)
         update.state.selectedEntryLinkMarkup = link
 
@@ -588,7 +592,8 @@ struct DetailModel: Hashable {
         return setEditorSelection(
             state: state,
             environment: environment,
-            range: range
+            range: range,
+            text: state.markupEditor.text
         )
     }
 
@@ -636,7 +641,8 @@ struct DetailModel: Hashable {
             setEditorSelection(
                 state: state,
                 environment: environment,
-                range: NSRange(cursor..<cursor, in: markup)
+                range: NSRange(cursor..<cursor, in: markup),
+                text: state.markupEditor.text
             )
         })
     }
@@ -1497,7 +1503,8 @@ struct DetailModel: Hashable {
             setEditorSelection(
                 state: state,
                 environment: environment,
-                range: NSRange(cursor..<cursor, in: editorText)
+                range: NSRange(cursor..<cursor, in: state.markupEditor.text),
+                text: state.markupEditor.text
             )
         })
     }

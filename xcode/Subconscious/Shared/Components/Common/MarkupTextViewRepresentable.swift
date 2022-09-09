@@ -40,7 +40,7 @@ enum MarkupTextAction: Hashable, CustomLogStringConvertible {
     case scheduleFocusChange
     case focusChange(Bool)
     case setText(String)
-    case setSelection(NSRange)
+    case setSelection(range: NSRange, text: String)
 
     var logDescription: String {
         switch self {
@@ -92,7 +92,7 @@ struct MarkupTextModel: Hashable {
             var model = state
             model.text = text
             return Update(state: model)
-        case .setSelection(let selection):
+        case .setSelection(let selection, _):
             var model = state
             model.selection = selection
             return Update(state: model)
@@ -227,7 +227,12 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                 )
                 return
             }
-            representable.store.send(.setSelection(textView.selectedRange))
+            representable.store.send(
+                .setSelection(
+                    range: textView.selectedRange,
+                    text: textView.text
+                )
+            )
         }
     }
 
