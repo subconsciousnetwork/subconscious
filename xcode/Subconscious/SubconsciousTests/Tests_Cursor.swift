@@ -76,7 +76,7 @@ class Tests_Cursor: XCTestCase {
             case .setText(let string):
                 var model = state
                 model.text = string
-                return Update(state: state)
+                return Update(state: model)
                     .animation(.default)
             }
         }
