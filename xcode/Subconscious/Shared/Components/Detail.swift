@@ -132,6 +132,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "succeedSave(\(entry.slug))"
         case .updateDetail(let detail, _):
             return "updateDetail(\(detail.slug))"
+        case .setEditor(_, let saveState):
+            return "setEditor(text: ..., saveState: \(String(describing: saveState)))"
         default:
             return String(describing: self)
         }
@@ -529,16 +531,18 @@ struct DetailModel: Hashable {
         text: String,
         saveState: SaveState = .modified
     ) -> Update<DetailModel, DetailAction> {
-        let fx: Fx<DetailAction> = Just(
-            DetailAction.markupEditor(.setText(text))
+        // Send setText down immediately.
+        var update = DetailMarkupEditorCursor.update(
+            with: MarkupTextModel.update,
+            state: state,
+            action: .setText(text),
+            environment: ()
         )
-        .eraseToAnyPublisher()
 
-        var model = state
         // Mark save state
-        model.saveState = saveState
+        update.state.saveState = saveState
 
-        return Update(state: model, fx: fx)
+        return update
     }
 
     /// Set editor selection.
@@ -547,7 +551,7 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         range nsRange: NSRange
     ) -> Update<DetailModel, DetailAction> {
-        // Send setSelection down
+        // Send setSelection down immediately
         var update = DetailMarkupEditorCursor.update(
             with: MarkupTextModel.update,
             state: state,
