@@ -22,7 +22,7 @@ import ObservableStore
 /// guts of UIViewRepresentable.
 /// 2022-06-12 Gordon Brander
 public struct ViewStore<State, Action> {
-    let get: () -> State
+    private let get: () -> State
     let send: (Action) -> Void
     var state: State { self.get() }
 
