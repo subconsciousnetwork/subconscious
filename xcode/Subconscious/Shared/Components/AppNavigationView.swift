@@ -13,7 +13,6 @@ struct AppNavigationView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                Divider()
                 EntryListView(
                     entries: store.state.recent,
                     onEntryPress: { entry in
