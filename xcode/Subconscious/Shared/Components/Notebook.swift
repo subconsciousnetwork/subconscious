@@ -737,9 +737,6 @@ struct NotebookView: View {
         // See https://stackoverflow.com/a/58512696
         // 2021-12-16 Gordon Brander
         ZStack {
-            Color.background
-                .edgesIgnoringSafeArea(.all)
-                .zIndex(0)
             AppNavigationView(store: store)
                 .zIndex(1)
             PinTrailingBottom(
@@ -770,7 +767,6 @@ struct NotebookView: View {
             )
             .zIndex(3)
         }
-        .background(.red)
         .environment(\.openURL, OpenURLAction { url in
             store.send(.openURL(url))
             return .handled
