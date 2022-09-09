@@ -128,6 +128,10 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "setRenameSuggestions(\(suggestions.count) items)"
         case .markupEditor(let action):
             return "markupEditor(\(String.loggable(action)))"
+        case .succeedSave(let entry):
+            return "succeedSave(\(entry.slug))"
+        case .updateDetail(let detail, _):
+            return "updateDetail(\(detail.slug))"
         default:
             return String(describing: self)
         }
@@ -543,27 +547,28 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         range nsRange: NSRange
     ) -> Update<DetailModel, DetailAction> {
-        let fx: Fx<DetailAction> = Just(
-            DetailAction.markupEditor(.setSelection(nsRange))
+        // Send setSelection down
+        var update = DetailMarkupEditorCursor.update(
+            with: MarkupTextModel.update,
+            state: state,
+            action: .setSelection(nsRange),
+            environment: ()
         )
-        .eraseToAnyPublisher()
 
-        var model = state
-
-        let dom = Subtext.parse(markup: state.markupEditor.text)
+        // Set entry link based on selection
+        let dom = Subtext.parse(markup: update.state.markupEditor.text)
         let link = dom.entryLinkFor(range: nsRange)
-        model.selectedEntryLinkMarkup = link
+        update.state.selectedEntryLinkMarkup = link
 
         let linkSearchText = link?.toTitle() ?? ""
 
-        return Update(state: model, fx: fx)
-            .pipe({ state in
-                setLinkSearch(
-                    state: state,
-                    environment: environment,
-                    text: linkSearchText
-                )
-            })
+        return update.pipe({ state in
+            setLinkSearch(
+                state: state,
+                environment: environment,
+                text: linkSearchText
+            )
+        })
     }
 
     /// Set text cursor at end of editor
