@@ -35,12 +35,21 @@ import Combine
 import ObservableStore
 
 //  MARK: Action
-enum MarkupTextAction: Hashable {
+enum MarkupTextAction: Hashable, CustomLogStringConvertible {
     case requestFocus(Bool)
     case scheduleFocusChange
     case focusChange(Bool)
     case setText(String)
     case setSelection(NSRange)
+
+    var logDescription: String {
+        switch self {
+        case .setText(_):
+            return "setText(...)"
+        default:
+            return String(describing: self)
+        }
+    }
 }
 
 //  MARK: Model
