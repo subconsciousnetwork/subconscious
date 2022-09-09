@@ -11,7 +11,7 @@ import SwiftUI
 struct SlashlinkBarView: View {
     var links: [EntryLink]
     var onSelectLink: (EntryLink) -> Void
-    var max = 2
+    var max = 1
 
     var body: some View {
         HStack(alignment: .center, spacing: AppTheme.unit4) {
@@ -25,7 +25,6 @@ struct SlashlinkBarView: View {
                             .lineLimit(1)
                     }
                 )
-                Divider()
             }
         }
     }
