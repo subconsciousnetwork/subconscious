@@ -32,80 +32,19 @@ class Tests_NotebookUpdate: XCTestCase {
             environment: environment
         )
         XCTAssertEqual(
-            update.state.editor.isLoading,
+            update.state.detail.isLoading,
             false,
             "isDetailLoading set to false"
         )
         XCTAssertEqual(
-            update.state.editor.entryInfo?.slug,
+            update.state.detail.slug,
             detail.slug,
             "Sets the slug"
         )
         XCTAssertEqual(
-            update.state.editor.text,
+            update.state.detail.markupEditor.text,
             "Example text",
             "Sets editor text"
-        )
-    }
-
-    func testSave() throws {
-        let state = NotebookModel(
-            editor: Editor(
-                entryInfo: EditorEntryInfo(
-                    slug: Slug("floop-the-pig")!
-                ),
-                saveState: .modified
-            )
-        )
-        let update = NotebookModel.update(
-            state: state,
-            action: .save,
-            environment: environment
-        )
-        XCTAssertEqual(
-            update.state.editor.saveState,
-            .saving,
-            "Sets editor save state to saving when not already saved"
-        )
-    }
-
-    func testSaveAlreadySaved() throws {
-        let state = NotebookModel(
-            editor: Editor(
-                entryInfo: EditorEntryInfo(
-                    slug: Slug("floop-the-pig")!
-                ),
-                saveState: .saved
-            )
-        )
-        let update = NotebookModel.update(
-            state: state,
-            action: .save,
-            environment: environment
-        )
-        XCTAssertEqual(
-            update.state.editor.saveState,
-            .saved,
-            "Leaves editor save state as saved if already saved"
-        )
-    }
-
-    func testEditorSnapshotModified() throws {
-        let state = NotebookModel(
-            editor: Editor(
-                entryInfo: EditorEntryInfo(
-                    slug: Slug("floop-the-pig")!
-                ),
-                saveState: .saved
-            )
-        )
-        guard let entry = NotebookModel.snapshotEditor(state.editor) else {
-            XCTFail("Failed to derive entry from editor")
-            return
-        }
-        XCTAssertNotNil(
-            entry.headers["Modified"],
-            "Marks modified time"
         )
     }
 
@@ -132,8 +71,8 @@ class Tests_NotebookUpdate: XCTestCase {
         )
         DispatchQueue.main.asyncAfter(deadline: .now()) {
             XCTAssertEqual(
-                store.state.focus,
-                .editor,
+                store.state.detail.markupEditor.focusRequest,
+                true,
                 "Autofocus sets editor focus"
             )
             expectation.fulfill()
@@ -160,8 +99,8 @@ class Tests_NotebookUpdate: XCTestCase {
             environment: environment
         )
         XCTAssertEqual(
-            update.state.focus,
-            nil,
+            update.state.detail.markupEditor.focusRequest,
+            false,
             "Autofocus sets editor focus"
         )
     }
@@ -170,7 +109,7 @@ class Tests_NotebookUpdate: XCTestCase {
         let store = Store(
             update: NotebookModel.update,
             state: NotebookModel(
-                focus: .editor,
+                
                 editor: Editor(
                     entryInfo: EditorEntryInfo(
                         slug: Slug("great-expectations")!
