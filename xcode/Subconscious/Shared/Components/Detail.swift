@@ -149,10 +149,14 @@ struct DetailMarkupEditorCursor: CursorProtocol {
 
     static func tag(action: MarkupTextAction) -> DetailAction {
         switch action {
-        /// Intercept text set action so we can mark all text-sets
-        /// as dirty
+        // Intercept text set action so we can mark all text-sets
+        // as dirty.
         case .setText(let text):
             return .setEditor(text: text, saveState: .modified)
+        // Intercept setSelection, so we can set link suggestions based on
+        // cursor position.
+        case .setSelection(let nsRange):
+            return .setEditorSelection(nsRange)
         default:
             return .markupEditor(action)
         }
