@@ -362,7 +362,7 @@ struct SearchView: View {
     }
 }
 
-struct SearchView2_Previews: PreviewProvider {
+struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
         SearchView(
             store: ViewStore.constant(
