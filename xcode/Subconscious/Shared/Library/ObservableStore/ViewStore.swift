@@ -60,6 +60,9 @@ public struct ViewStore<State, Action>: StoreProtocol {
         )
     }
 
+    /// Initialize a ViewStore from a store of some type, and a cursor.
+    /// - Store can be any type conforming to `StoreProtocol`
+    /// - Cursor can be any type conforming to `CursorProtocol`
     public init<Store, Cursor>(store: Store, cursor: Cursor.Type)
     where
         Store: StoreProtocol,
@@ -79,8 +82,10 @@ public struct ViewStore<State, Action>: StoreProtocol {
         )
     }
 
+    /// Get current state
     public var state: State { self._get() }
 
+    /// Send an action. Calls underlying send closure.
     public func send(_ action: Action) {
         self._send(action)
     }
