@@ -53,9 +53,9 @@ struct AppNavigationView: View {
                     ),
                     destination: {
                         DetailView(
-                            store: store.viewStore(
-                                get: NotebookDetailCursor.get,
-                                tag: NotebookDetailCursor.tag
+                            store: ViewStore(
+                                store: store,
+                                cursor: NotebookDetailCursor.self
                             )
                         )
                     },

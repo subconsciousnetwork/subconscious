@@ -21,9 +21,9 @@ struct AppView: View {
                 Label("Feed", systemImage: "newspaper")
             }
             NotebookView(
-                store: store.viewStore(
-                    get: \.notebook,
-                    tag: NotebookCursor.tag
+                store: ViewStore(
+                    store: store,
+                    cursor: NotebookCursor.self
                 )
             )
             .tabItem {

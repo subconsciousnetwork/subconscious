@@ -1585,9 +1585,9 @@ struct DetailView: View {
                         ScrollView(.vertical) {
                             VStack(spacing: 0) {
                                 MarkupTextViewRepresentable(
-                                    store: store.viewStore(
-                                        get: DetailMarkupEditorCursor.get,
-                                        tag: DetailMarkupEditorCursor.tag
+                                    store: ViewStore(
+                                        store: store,
+                                        cursor: DetailMarkupEditorCursor.self
                                     ),
                                     frame: geometry.frame(in: .local),
                                     renderAttributesOf: Subtext.renderAttributesOf,

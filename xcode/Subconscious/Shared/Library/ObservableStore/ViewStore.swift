@@ -8,6 +8,18 @@
 import SwiftUI
 import ObservableStore
 
+public protocol StoreProtocol {
+    associatedtype State
+    associatedtype Action
+
+    var state: State { get }
+
+    func send(_ action: Action) -> Void
+}
+
+/// Implement StoreProtocol for Store
+extension Store: StoreProtocol {}
+
 /// ViewStore is a local projection of a Store that can be passed down to
 /// a child view.
 ///
@@ -21,17 +33,56 @@ import ObservableStore
 /// I suspect this has something to do with either the guts of SwiftUI or the
 /// guts of UIViewRepresentable.
 /// 2022-06-12 Gordon Brander
-public struct ViewStore<State, Action> {
-    private let get: () -> State
-    let send: (Action) -> Void
-    var state: State { self.get() }
+public struct ViewStore<State, Action>: StoreProtocol {
+    private let _get: () -> State
+    private let _send: (Action) -> Void
 
     public init(
         get: @escaping () -> State,
         send: @escaping (Action) -> Void
     ) {
-        self.get = get
-        self.send = send
+        self._get = get
+        self._send = send
+    }
+
+    public init<Store: StoreProtocol>(
+        store: Store,
+        get: @escaping (Store.State) -> State,
+        tag: @escaping (Action) -> Store.Action
+    ) {
+        self.init(
+            get: {
+                get(store.state)
+            },
+            send: { action in
+                store.send(tag(action))
+            }
+        )
+    }
+
+    public init<Store, Cursor>(store: Store, cursor: Cursor.Type)
+    where
+        Store: StoreProtocol,
+        Cursor: CursorProtocol,
+        Store.State == Cursor.OuterState,
+        Store.Action == Cursor.OuterAction,
+        State == Cursor.InnerState,
+        Action == Cursor.InnerAction
+    {
+        self.init(
+            get: {
+                Cursor.get(state: store.state)
+            },
+            send: { action in
+                store.send(Cursor.tag(action: action))
+            }
+        )
+    }
+
+    public var state: State { self._get() }
+
+    public func send(_ action: Action) {
+        self._send(action)
     }
 
     /// Create a binding that can update the store.
@@ -45,15 +96,17 @@ public struct ViewStore<State, Action> {
             set: { value in self.send(tag(value)) }
         )
     }
+}
 
-    /// Create a ViewStore from this Store
-    public func viewStore<InnerState, InnerAction>(
-        get: @escaping (State) -> InnerState,
-        tag: @escaping (InnerAction) -> Action
-    ) -> ViewStore<InnerState, InnerAction> {
-        ViewStore<InnerState, InnerAction>(
-            get: { get(self.state) },
-            send: { action in self.send(tag(action)) }
+extension Binding {
+    init<Store: StoreProtocol>(
+        store: Store,
+        get: @escaping (Store.State) -> Value,
+        tag: @escaping (Value) -> Store.Action
+    ) {
+        self.init(
+            get: { get(store.state) },
+            set: { value in store.send(tag(value)) }
         )
     }
 }
@@ -65,19 +118,6 @@ extension ViewStore {
         ViewStore<State, Action>(
             get: { state },
             send: { action in }
-        )
-    }
-}
-
-extension Store {
-    /// Create a ViewStore from this Store
-    public func viewStore<InnerState, InnerAction>(
-        get: @escaping (State) -> InnerState,
-        tag: @escaping (InnerAction) -> Action
-    ) -> ViewStore<InnerState, InnerAction> {
-        ViewStore(
-            get: { get(self.state) },
-            send: { action in self.send(tag(action)) }
         )
     }
 }

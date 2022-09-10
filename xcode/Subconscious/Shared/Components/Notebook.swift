@@ -760,9 +760,9 @@ struct NotebookView: View {
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
             SearchView(
-                store: store.viewStore(
-                    get: NotebookSearchCursor.get,
-                    tag: NotebookSearchCursor.tag
+                store: ViewStore(
+                    store: store,
+                    cursor: NotebookSearchCursor.self
                 )
             )
             .zIndex(3)
