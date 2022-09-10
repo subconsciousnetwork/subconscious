@@ -31,7 +31,8 @@ struct AppNavigationView: View {
                 .ignoresSafeArea(.keyboard, edges: .bottom)
                 .confirmationDialog(
                     "Are you sure?",
-                    isPresented: store.binding(
+                    isPresented: Binding(
+                        store: store,
                         get: \.isConfirmDeleteShowing,
                         tag: NotebookAction.setConfirmDeleteShowing
                     ),
@@ -47,7 +48,8 @@ struct AppNavigationView: View {
                     }
                 }
                 NavigationLink(
-                    isActive: store.binding(
+                    isActive: Binding(
+                        store: store,
                         get: \.isDetailShowing,
                         tag: NotebookAction.showDetail
                     ),

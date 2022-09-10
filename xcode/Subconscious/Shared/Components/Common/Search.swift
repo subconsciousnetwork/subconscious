@@ -297,7 +297,8 @@ struct SearchView: View {
 
     var body: some View {
         ModalView(
-            isPresented: store.binding(
+            isPresented: Binding(
+                store: store,
                 get: \.isPresented,
                 tag: SearchAction.setPresented
             ),
@@ -305,7 +306,8 @@ struct SearchView: View {
                 HStack {
                     SearchTextField(
                         placeholder: "Search or create...",
-                        text: store.binding(
+                        text: Binding(
+                            store: store,
                             get: \.query,
                             tag: SearchAction.setQuery
                         ),

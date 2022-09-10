@@ -84,18 +84,6 @@ public struct ViewStore<State, Action>: StoreProtocol {
     public func send(_ action: Action) {
         self._send(action)
     }
-
-    /// Create a binding that can update the store.
-    /// Sets send actions to the store, rather than setting values directly.
-    public func binding<Value>(
-        get: @escaping (State) -> Value,
-        tag: @escaping (Value) -> Action
-    ) -> Binding<Value> {
-        Binding(
-            get: { get(self.state) },
-            set: { value in self.send(tag(value)) }
-        )
-    }
 }
 
 extension Binding {

@@ -1624,7 +1624,8 @@ struct DetailView: View {
                         }
                     if store.state.markupEditor.focus {
                         DetailKeyboardToolbarView(
-                            isSheetPresented: store.binding(
+                            isSheetPresented: Binding(
+                                store: store,
                                 get: \.isLinkSheetPresented,
                                 tag: DetailAction.setLinkSheetPresented
                             ),
@@ -1680,7 +1681,8 @@ struct DetailView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(
-            isPresented: store.binding(
+            isPresented: Binding(
+                store: store,
                 get: \.isLinkSheetPresented,
                 tag: DetailAction.setLinkSheetPresented
             )
@@ -1688,7 +1690,8 @@ struct DetailView: View {
             LinkSearchView(
                 placeholder: "Search or create...",
                 suggestions: store.state.linkSuggestions,
-                text: store.binding(
+                text: Binding(
+                    store: store,
                     get: \.linkSearchText,
                     tag: DetailAction.setLinkSearch
                 ),
@@ -1701,7 +1704,8 @@ struct DetailView: View {
             )
         }
         .sheet(
-            isPresented: store.binding(
+            isPresented: Binding(
+                store: store,
                 get: \.isRenameSheetShowing,
                 tag: { _ in DetailAction.hideRenameSheet }
             )
@@ -1709,7 +1713,8 @@ struct DetailView: View {
             RenameSearchView(
                 current: EntryLink(store.state),
                 suggestions: store.state.renameSuggestions,
-                text: store.binding(
+                text: Binding(
+                    store: store,
                     get: \.renameField,
                     tag: DetailAction.setRenameField
                 ),
