@@ -106,9 +106,9 @@ class Tests_Cursor: XCTestCase {
             environment: ()
         )
 
-        let viewStore: ViewStore<ChildModel, ChildAction> = store.viewStore(
-            get: ParentChildCursor.get,
-            tag: ParentChildCursor.tag
+        let viewStore: ViewStore<ChildModel, ChildAction> = ViewStore(
+            store: store,
+            cursor: ParentChildCursor.self
         )
 
         viewStore.send(.setText("Foo"))

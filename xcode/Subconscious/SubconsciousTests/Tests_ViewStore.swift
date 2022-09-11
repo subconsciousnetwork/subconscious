@@ -16,7 +16,7 @@ class TestsViewStore: XCTestCase {
 
     struct ParentEnvironment {}
 
-    struct ParentModel: Equatable {
+    struct ParentModel: Hashable {
         var text: String = ""
         var edits: Int = 0
 
@@ -35,7 +35,7 @@ class TestsViewStore: XCTestCase {
         }
     }
 
-    struct ChildModel {
+    struct ChildModel: Hashable {
         var text: String
     }
 
@@ -50,7 +50,8 @@ class TestsViewStore: XCTestCase {
             environment: ParentEnvironment()
         )
 
-        let viewStore: ViewStore<ChildModel, ChildAction> = store.viewStore(
+        let viewStore: ViewStore<ChildModel, ChildAction> = ViewStore(
+            store: store,
             get: { model in
                 ChildModel(text: model.text)
             },
