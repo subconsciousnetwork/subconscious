@@ -20,17 +20,24 @@ public protocol StoreProtocol: Equatable {
     func send(_ action: Action) -> Void
 }
 
-/// Implement StoreProtocol for Store
-extension Store: StoreProtocol {
+extension StoreProtocol {
+    /// Implement equatable for StoreProtocol
     public static func == (
-        lhs: Store<State, Action, Environment>,
-        rhs: Store<State, Action, Environment>
+        lhs: Self,
+        rhs: Self
     ) -> Bool {
         lhs.state == rhs.state
     }
 }
 
+/// Implement StoreProtocol for Store
+extension Store: StoreProtocol {}
+
 extension Binding {
+    /// Initialize a Binding from a store.
+    /// - `get` reads the store state to a binding value.
+    /// - `tag` transforms the value into an action.
+    /// - Returns a binding suitable for use in a vanilla SwiftUI view.
     init<Store: StoreProtocol>(
         store: Store,
         get: @escaping (Store.State) -> Value,
@@ -112,13 +119,6 @@ extension CursorProtocol {
 public struct ViewStore<State, Action>: StoreProtocol, Equatable
 where State: Equatable
 {
-    public static func == (
-        lhs: ViewStore<State, Action>,
-        rhs: ViewStore<State, Action>
-    ) -> Bool {
-        lhs.state == rhs.state
-    }
-
     private let _get: () -> State
     private let _send: (Action) -> Void
 
