@@ -155,7 +155,7 @@ struct DetailMarkupEditorCursor: CursorProtocol {
         return model
     }
 
-    static func tag(action: MarkupTextAction) -> DetailAction {
+    static func tag(_ action: MarkupTextAction) -> DetailAction {
         switch action {
         // Intercept text set action so we can mark all text-sets
         // as dirty.

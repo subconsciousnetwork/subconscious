@@ -53,12 +53,13 @@ public protocol LensProtocol {
     static func set(state: OuterState, inner: InnerState) -> OuterState
 }
 
-/// TaggableActionProtocol defines how to box an action
+/// TaggableActionProtocol defines a way to box an action for passing
+/// between domains.
 public protocol TaggableActionProtocol {
     associatedtype OuterAction
     associatedtype InnerAction
 
-    static func tag(action: InnerAction) -> OuterAction
+    static func tag(_ action: InnerAction) -> OuterAction
 }
 
 /// A cursor combines a lens and a taggable action to provide a complete
@@ -169,7 +170,7 @@ extension ViewStore {
     {
         self.init(
             get: { Cursor.get(state: store.state) },
-            send: { action in store.send(Cursor.tag(action: action)) }
+            send: { action in store.send(Cursor.tag(action)) }
         )
     }
 }

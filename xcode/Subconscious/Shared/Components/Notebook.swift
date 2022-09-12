@@ -156,7 +156,7 @@ struct NotebookDetailCursor: CursorProtocol {
         return model
     }
 
-    static func tag(action: DetailAction) -> NotebookAction {
+    static func tag(_ action: DetailAction) -> NotebookAction {
         switch action {
         case .refreshAll:
             return .refreshAll
@@ -189,7 +189,7 @@ struct NotebookSearchCursor: CursorProtocol {
         return model
     }
 
-    static func tag(action: SearchAction) -> NotebookAction {
+    static func tag(_ action: SearchAction) -> NotebookAction {
         switch action {
         case .submitQuery(let query):
             return .submitSearch(query)

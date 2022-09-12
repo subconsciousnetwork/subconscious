@@ -57,7 +57,7 @@ class TestsViewStore: XCTestCase {
             return model
         }
 
-        static func tag(action: ChildAction) -> ParentAction {
+        static func tag(_ action: ChildAction) -> ParentAction {
             switch action {
             case .setText(let string):
                 return .setText(string)

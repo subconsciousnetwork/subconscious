@@ -92,7 +92,7 @@ struct NotebookCursor: CursorProtocol {
     }
 
     /// Tag notebook actions
-    static func tag(action: NotebookAction) -> AppAction {
+    static func tag(_ action: NotebookAction) -> AppAction {
         .notebook(action)
     }
 }
@@ -110,7 +110,7 @@ struct FeedCursor: CursorProtocol {
     }
 
     /// Tag feed action
-    static func tag(action: FeedAction) -> AppAction {
+    static func tag(_ action: FeedAction) -> AppAction {
         AppAction.feed(action)
     }
 }
