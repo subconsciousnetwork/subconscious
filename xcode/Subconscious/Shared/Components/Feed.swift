@@ -34,17 +34,15 @@ extension FeedAction: CustomLogStringConvertible {
 
 //  MARK: Model
 /// A feed of stories
-struct FeedModel: Hashable, Equatable {
+struct FeedModel: ModelProtocol {
     var stories: [Story] = []
-}
 
-//  MARK: Update
-extension FeedModel {
+    //  MARK: Update
     static func update(
         state: FeedModel,
         action: FeedAction,
         environment: AppEnvironment
-    ) -> Update<FeedModel, FeedAction> {
+    ) -> Update<FeedModel> {
         switch action {
         case .appear:
             return appear(
@@ -72,7 +70,7 @@ extension FeedModel {
         state: FeedModel,
         environment: AppEnvironment,
         error: Error
-    ) -> Update<FeedModel, FeedAction> {
+    ) -> Update<FeedModel> {
         environment.logger.log("\(error.localizedDescription)")
         return Update(state: state)
     }
@@ -82,7 +80,7 @@ extension FeedModel {
         state: FeedModel,
         environment: AppEnvironment,
         error: Error
-    ) -> Update<FeedModel, FeedAction> {
+    ) -> Update<FeedModel> {
         environment.logger.warning("\(error.localizedDescription)")
         return Update(state: state)
     }
@@ -92,7 +90,7 @@ extension FeedModel {
     static func appear(
         state: FeedModel,
         environment: AppEnvironment
-    ) -> Update<FeedModel, FeedAction> {
+    ) -> Update<FeedModel> {
         return fetchFeed(state: state, environment: environment)
     }
 
@@ -100,7 +98,7 @@ extension FeedModel {
     static func fetchFeed(
         state: FeedModel,
         environment: AppEnvironment
-    ) -> Update<FeedModel, FeedAction> {
+    ) -> Update<FeedModel> {
         let fx: Fx<FeedAction> = environment.feed.generate(max: 10)
             .map({ stories in
                 FeedAction.setFeed(stories)
@@ -117,7 +115,7 @@ extension FeedModel {
         state: FeedModel,
         environment: AppEnvironment,
         stories: [Story]
-    ) -> Update<FeedModel, FeedAction> {
+    ) -> Update<FeedModel> {
         var model = state
         model.stories = stories
         return Update(state: model)
@@ -126,12 +124,12 @@ extension FeedModel {
 
 //  MARK: View
 struct FeedView: View {
-    @ObservedObject var store: AppStore
+    var store: ViewStore<FeedModel>
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             LazyVStack {
-                ForEach(store.state.feed.stories) { story in
+                ForEach(store.state.stories) { story in
                     StoryView(
                         story: story,
                         action: { link in

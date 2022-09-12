@@ -6,16 +6,20 @@
 //
 
 import SwiftUI
+import ObservableStore
 
 /// Top-level view for app
 struct AppView: View {
-    @ObservedObject var store: AppStore
+    @ObservedObject var store: Store<AppModel>
     @Environment(\.scenePhase) var scenePhase: ScenePhase
 
     var body: some View {
         TabView {
             FeedView(
-                store: store
+                store: ViewStore(
+                    store: store,
+                    cursor: FeedCursor.self
+                )
             )
             .tabItem {
                 Label("Feed", systemImage: "newspaper")

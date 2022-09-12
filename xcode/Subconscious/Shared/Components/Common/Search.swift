@@ -47,7 +47,7 @@ enum SearchAction: Hashable, CustomLogStringConvertible {
 }
 
 //  MARK: Model
-struct SearchModel: Hashable {
+struct SearchModel: ModelProtocol {
     /// Is search HUD showing?
     var isPresented = false
     /// Placeholder text when empty
@@ -62,7 +62,7 @@ struct SearchModel: Hashable {
         state: SearchModel,
         action: SearchAction,
         environment: AppEnvironment
-    ) -> Update<SearchModel, SearchAction> {
+    ) -> Update<SearchModel> {
         switch action {
         case .setPresented(let isPresented):
             return setPresented(
@@ -145,7 +145,7 @@ struct SearchModel: Hashable {
         state: SearchModel,
         environment: AppEnvironment,
         isPresented: Bool
-    ) -> Update<SearchModel, SearchAction> {
+    ) -> Update<SearchModel> {
         var model = state
         model.isPresented = isPresented
         return Update(state: model)
@@ -156,7 +156,7 @@ struct SearchModel: Hashable {
         state: SearchModel,
         environment: AppEnvironment,
         query: String
-    ) -> Update<SearchModel, SearchAction> {
+    ) -> Update<SearchModel> {
         let fx: Fx<SearchAction> = environment.database
             .searchSuggestions(
                 query: query,
@@ -189,7 +189,7 @@ struct SearchModel: Hashable {
         state: SearchModel,
         environment: AppEnvironment,
         suggestion: Suggestion
-    ) -> Update<SearchModel, SearchAction> {
+    ) -> Update<SearchModel> {
         let link: EntryLink? = Func.pipe(suggestion) { suggestion  in
             switch suggestion {
             case .entry(let entryLink):
@@ -238,7 +238,7 @@ struct SearchModel: Hashable {
         state: SearchModel,
         environment: AppEnvironment,
         query: String
-    ) -> Update<SearchModel, SearchAction> {
+    ) -> Update<SearchModel> {
         let fx: Fx<SearchAction> = environment.database
             .createSearchHistoryItem(query: query)
             .map({ query in
@@ -260,7 +260,7 @@ struct SearchModel: Hashable {
         state: SearchModel,
         environment: AppEnvironment,
         query: String
-    ) -> Update<SearchModel, SearchAction> {
+    ) -> Update<SearchModel> {
         environment.logger.log(
             "Created search history entry: \(query)"
         )
@@ -272,7 +272,7 @@ struct SearchModel: Hashable {
         state: SearchModel,
         environment: AppEnvironment,
         error: String
-    ) -> Update<SearchModel, SearchAction> {
+    ) -> Update<SearchModel> {
         environment.logger.warning(
             "Failed to create search history entry: \(error)"
         )
@@ -282,7 +282,7 @@ struct SearchModel: Hashable {
 
 //  MARK: View
 struct SearchView: View {
-    var store: ViewStore<SearchModel, SearchAction>
+    var store: ViewStore<SearchModel>
     var suggestionHeight: CGFloat = 56
 
     /// Calculate maxHeight given number of suggestions.

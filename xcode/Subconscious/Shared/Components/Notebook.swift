@@ -203,7 +203,7 @@ struct NotebookSearchCursor: CursorProtocol {
 
 //  MARK: Model
 /// Model containing state for the notebook tab.
-struct NotebookModel: Hashable, Equatable {
+struct NotebookModel: ModelProtocol {
     //  Current state of keyboard
     /// Keyboard preparing to show
     var keyboardWillShow = false
@@ -232,41 +232,38 @@ struct NotebookModel: Hashable, Equatable {
     var entryToDelete: Slug? = nil
     /// Delete confirmation action sheet
     var isConfirmDeleteShowing = false
-}
 
-//  MARK: Update
-//  !!!: Combine publishers can cause segfaults in Swift compiler
-//  Combine publishers have complex types and must be marked up carefully
-//  to avoid frequent segfaults in Swift compiler due to type inference
-//  (as of 2022-01-14).
-//
-//  We found the following mitigation/solution:
-//  - Mark publisher variables with explicit type annotations.
-//  - Beware Publishers.Merge and variants. Use publisher.merge instead.
-//    Publishers.Merge produces a more complex type signature, and this seems
-//    to be what was crashing the Swift compiler.
-//
-//  2022-01-14 Gordon Brander
-/// AppUpdate is a namespace where we keep the main app update function,
-/// as well as the sub-update functions it calls out to.
-extension NotebookModel {
+    //  MARK: Update
+    //  !!!: Combine publishers can cause segfaults in Swift compiler
+    //  Combine publishers have complex types and must be marked up carefully
+    //  to avoid frequent segfaults in Swift compiler due to type inference
+    //  (as of 2022-01-14).
+    //
+    //  We found the following mitigation/solution:
+    //  - Mark publisher variables with explicit type annotations.
+    //  - Beware Publishers.Merge and variants. Use publisher.merge instead.
+    //    Publishers.Merge produces a more complex type signature, and this seems
+    //    to be what was crashing the Swift compiler.
+    //
+    //  2022-01-14 Gordon Brander
+    /// AppUpdate is a namespace where we keep the main app update function,
+    /// as well as the sub-update functions it calls out to.
+
     /// Main update function
     static func update(
         state: NotebookModel,
         action: NotebookAction,
         environment: AppEnvironment
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         switch action {
         case .search(let action):
             return NotebookSearchCursor.update(
-                with: SearchModel.update,
                 state: state,
                 action: action,
                 environment: environment
             )
         case .detail(let action):
             return NotebookDetailCursor.update(
-                with: DetailModel.update,
                 state: state,
                 action: action,
                 environment: environment
@@ -380,7 +377,7 @@ extension NotebookModel {
         state: NotebookModel,
         environment: AppEnvironment,
         error: Error
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         environment.logger.log("\(error.localizedDescription)")
         return Update(state: state)
     }
@@ -390,7 +387,7 @@ extension NotebookModel {
         state: NotebookModel,
         environment: AppEnvironment,
         error: Error
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         environment.logger.warning("\(error.localizedDescription)")
         return Update(state: state)
     }
@@ -400,7 +397,7 @@ extension NotebookModel {
     static func changeKeyboardState(
         state: NotebookModel,
         keyboard: KeyboardState
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         switch keyboard {
         case
             .willShow(let size, _),
@@ -424,7 +421,7 @@ extension NotebookModel {
     static func appear(
         state: NotebookModel,
         environment: AppEnvironment
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         let fx: Fx<NotebookAction> = Just(NotebookAction.countEntries)
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
@@ -435,7 +432,7 @@ extension NotebookModel {
         state: NotebookModel,
         environment: AppEnvironment,
         isShowing: Bool
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         var model = state
         model.isDetailShowing = isShowing
         return Update(state: model)
@@ -444,7 +441,7 @@ extension NotebookModel {
     static func openEditorURL(
         state: NotebookModel,
         url: URL
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         // Follow ordinary links when not in edit mode
         guard SubURL.isSubEntryURL(url) else {
             UIApplication.shared.open(url)
@@ -469,7 +466,7 @@ extension NotebookModel {
     static func refreshAll(
         state: NotebookModel,
         environment: AppEnvironment
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         let detailRefreshFx: Fx<NotebookAction> = Just(
             .detail(DetailAction.refreshAll)
         )
@@ -498,7 +495,7 @@ extension NotebookModel {
     static func countEntries(
         state: NotebookModel,
         environment: AppEnvironment
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         let fx: Fx<NotebookAction> = environment.database.countEntries()
             .map({ count in
                 NotebookAction.setEntryCount(count)
@@ -515,7 +512,7 @@ extension NotebookModel {
         state: NotebookModel,
         environment: AppEnvironment,
         count: Int
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         var model = state
         model.entryCount = count
         return Update(state: model)
@@ -524,7 +521,7 @@ extension NotebookModel {
     static func listRecent(
         state: NotebookModel,
         environment: AppEnvironment
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         let fx: Fx<NotebookAction> = environment.database
             .listRecentEntries()
             .map({ entries in
@@ -546,7 +543,7 @@ extension NotebookModel {
         state: NotebookModel,
         environment: AppEnvironment,
         slug: Slug
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         var model = state
 
         // If we have recent entries, and can find this slug,
@@ -597,7 +594,7 @@ extension NotebookModel {
         state: NotebookModel,
         environment: AppEnvironment,
         slug: Slug
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         environment.logger.log("Deleted entry: \(slug)")
         //  Refresh lists in search fields after delete.
         //  This ensures they don't show the deleted entry.
@@ -628,7 +625,7 @@ extension NotebookModel {
         state: NotebookModel,
         environment: AppEnvironment,
         query: String
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         // Duration of keyboard animation
         let duration = Duration.keyboard
         let delay = duration + 0.03
@@ -668,7 +665,7 @@ extension NotebookModel {
         state: NotebookModel,
         environment: AppEnvironment,
         suggestion: Suggestion
-    ) -> Update<NotebookModel, NotebookAction> {
+    ) -> Update<NotebookModel> {
         switch suggestion {
         case .entry(let entryLink):
             let fx: Fx<NotebookAction> = Just(
@@ -725,7 +722,7 @@ extension NotebookModel {
 //  MARK: View
 /// The file view for notes
 struct NotebookView: View {
-    var store: ViewStore<NotebookModel, NotebookAction>
+    var store: ViewStore<NotebookModel>
 
     var body: some View {
         // Give each element in this ZStack an explicit z-index.

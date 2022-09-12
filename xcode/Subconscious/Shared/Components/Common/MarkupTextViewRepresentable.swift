@@ -53,10 +53,7 @@ enum MarkupTextAction: Hashable, CustomLogStringConvertible {
 }
 
 //  MARK: Model
-struct MarkupTextModel: Hashable {
-    typealias Model = Self
-    typealias Action = MarkupTextAction
-
+struct MarkupTextModel: ModelProtocol {
     var isFocusChangeScheduled = false
     var focusRequest = false
     var focus = false
@@ -65,10 +62,10 @@ struct MarkupTextModel: Hashable {
 
     //  MARK: Update
     static func update(
-        state: Model,
-        action: Action,
+        state: MarkupTextModel,
+        action: MarkupTextAction,
         environment: Void
-    ) -> Update<Model, Action> {
+    ) -> Update<MarkupTextModel> {
         switch action {
         case .requestFocus(let focus):
             var model = state
@@ -237,7 +234,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     }
 
     //  MARK: Properties
-    var store: ViewStore<MarkupTextModel, MarkupTextAction>
+    var store: ViewStore<MarkupTextModel>
     /// Frame needed to determine textview height.
     /// Use `GeometryView` to find container width.
     var frame: CGRect

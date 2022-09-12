@@ -4,11 +4,11 @@
 //
 //  Created by Gordon Brander on 9/20/21.
 //
-
 import SwiftUI
+import ObservableStore
 
 struct AppNavigationView: View {
-    var store: ViewStore<NotebookModel, NotebookAction>
+    var store: ViewStore<NotebookModel>
 
     var body: some View {
         NavigationView {

@@ -12,8 +12,7 @@ import ObservableStore
 
 @main
 struct SubconsciousApp: App {
-    @StateObject private var store: AppStore = Store(
-        update: AppModel.updateAndLog,
+    @StateObject private var store = Store(
         state: AppModel(),
         environment: AppEnvironment()
     )
@@ -24,9 +23,6 @@ struct SubconsciousApp: App {
         }
     }
 }
-
-//  MARK: Store typealias
-typealias AppStore = Store<AppModel, AppAction, AppEnvironment>
 
 enum AppAction: CustomLogStringConvertible {
     /// Wrapper for notebook actions
@@ -123,7 +119,7 @@ enum AppDatabaseState {
 }
 
 //  MARK: Model
-struct AppModel: Equatable {
+struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
 
@@ -138,21 +134,19 @@ struct AppModel: Equatable {
     var isReadyForInteraction: Bool {
         self.databaseState == .ready
     }
-}
 
-//  MARK: Update
-extension AppModel {
+    //  MARK: Update
     /// Call through to main update function and log updates
     /// when `state.config.debug` is `true`.
-    static func updateAndLog(
+    static func update(
         state: AppModel,
         action: AppAction,
         environment: AppEnvironment
-    ) -> Update<AppModel, AppAction> {
+    ) -> Update<AppModel> {
         let message = String.loggable(action)
         Logger.action.debug("\(message)")
         // Generate next state and effect
-        let next = update(
+        let next = updateApp(
             state: state,
             action: action,
             environment: environment
@@ -163,22 +157,21 @@ extension AppModel {
         return next
     }
 
-    static func update(
+    /// Main update function
+    static func updateApp(
         state: AppModel,
         action: AppAction,
         environment: AppEnvironment
-    ) -> Update<AppModel, AppAction> {
+    ) -> Update<AppModel> {
         switch action {
         case .notebook(let action):
             return NotebookCursor.update(
-                with: NotebookModel.update,
                 state: state,
                 action: action,
                 environment: environment
             )
         case .feed(let action):
             return FeedCursor.update(
-                with: FeedModel.update,
                 state: state,
                 action: action,
                 environment: environment
@@ -251,7 +244,7 @@ extension AppModel {
     static func changeKeyboardState(
         state: AppModel,
         keyboard: KeyboardState
-    ) -> Update<AppModel, AppAction> {
+    ) -> Update<AppModel> {
         /// Forward keyboard change action down to Notebook component
         let fx: Fx<AppAction> = Just(
             AppAction.notebook(.changeKeyboardState(keyboard))
@@ -265,7 +258,7 @@ extension AppModel {
         state: AppModel,
         phase: ScenePhase,
         environment: AppEnvironment
-    ) -> Update<AppModel, AppAction> {
+    ) -> Update<AppModel> {
         switch phase {
         case .active:
             let fx: Fx<AppAction> = Just(
@@ -281,7 +274,7 @@ extension AppModel {
     static func appear(
         state: AppModel,
         environment: AppEnvironment
-    ) -> Update<AppModel, AppAction> {
+    ) -> Update<AppModel> {
         environment.logger.debug(
             "Documents: \(environment.documentURL)"
         )
@@ -322,7 +315,7 @@ extension AppModel {
     static func readyDatabase(
         state: AppModel,
         environment: AppEnvironment
-    ) -> Update<AppModel, AppAction> {
+    ) -> Update<AppModel> {
         switch state.databaseState {
         case .initial:
             environment.logger.log("Readying database")
@@ -362,7 +355,7 @@ extension AppModel {
         state: AppModel,
         environment: AppEnvironment,
         success: SQLite3Migrations.MigrationSuccess
-    ) -> Update<AppModel, AppAction> {
+    ) -> Update<AppModel> {
         var model = state
         model.databaseState = .ready
         let fx: Fx<AppAction> = Just(
@@ -380,7 +373,7 @@ extension AppModel {
     static func rebuildDatabase(
         state: AppModel,
         environment: AppEnvironment
-    ) -> Update<AppModel, AppAction> {
+    ) -> Update<AppModel> {
         environment.logger.warning(
             "Database is broken or has wrong schema. Attempting to rebuild."
         )
@@ -405,7 +398,7 @@ extension AppModel {
     static func sync(
         state: AppModel,
         environment: AppEnvironment
-    ) -> Update<AppModel, AppAction> {
+    ) -> Update<AppModel> {
         environment.logger.log("File sync started")
         let fx: Fx<AppAction> = environment.database
             .syncDatabase()
@@ -424,7 +417,7 @@ extension AppModel {
         state: AppModel,
         environment: AppEnvironment,
         changes: [FileSync.Change]
-    ) -> Update<AppModel, AppAction> {
+    ) -> Update<AppModel> {
         environment.logger.debug(
             "File sync finished: \(changes)"
         )
@@ -446,7 +439,7 @@ extension AppModel {
     static func refreshAll(
         state: AppModel,
         environment: AppEnvironment
-    ) -> Update<AppModel, AppAction> {
+    ) -> Update<AppModel> {
         let fx: Fx<AppAction> = Just(
             AppAction.notebook(.refreshAll)
         )

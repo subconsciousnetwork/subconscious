@@ -172,7 +172,7 @@ struct DetailMarkupEditorCursor: CursorProtocol {
 }
 
 //  MARK: Model
-struct DetailModel: Hashable {
+struct DetailModel: ModelProtocol {
     var slug: Slug?
     var headers: HeaderIndex = .empty
     var backlinks: [EntryStub] = []
@@ -224,11 +224,10 @@ struct DetailModel: Hashable {
         state: DetailModel,
         action: DetailAction,
         environment: AppEnvironment
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         switch action {
         case .markupEditor(let action):
             return DetailMarkupEditorCursor.update(
-                with: MarkupTextModel.update,
                 state: state,
                 action: action,
                 environment: ()
@@ -502,7 +501,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         message: String
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         environment.logger.debug("\(message)")
         return Update(state: state)
     }
@@ -512,7 +511,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         message: String
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         environment.logger.warning("\(message)")
         return Update(state: state)
     }
@@ -533,10 +532,9 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         text: String,
         saveState: SaveState = .modified
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         // Send setText down immediately.
         var update = DetailMarkupEditorCursor.update(
-            with: MarkupTextModel.update,
             state: state,
             action: .setText(text),
             environment: ()
@@ -554,10 +552,9 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         range nsRange: NSRange,
         text: String
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         // Send setSelection down immediately
         var update = DetailMarkupEditorCursor.update(
-            with: MarkupTextModel.update,
             state: state,
             action: .setSelection(range: nsRange, text: text),
             environment: ()
@@ -583,7 +580,7 @@ struct DetailModel: Hashable {
     static func setEditorSelectionEnd(
         state: DetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         let range = NSRange(
             state.markupEditor.text.endIndex...,
             in: state.markupEditor.text
@@ -603,7 +600,7 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         text: String,
         range nsRange: NSRange
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         guard let range = Range(nsRange, in: state.markupEditor.text) else {
             environment.logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
@@ -651,7 +648,7 @@ struct DetailModel: Hashable {
     static func selectDoneEditing(
         state: DetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = Just(
             DetailAction.requestEditorFocus(false)
         )
@@ -668,7 +665,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         slug: Slug
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         var model = state
         model.isLoading = true
         return autosave(state: model, environment: environment)
@@ -683,7 +680,7 @@ struct DetailModel: Hashable {
         slug: Slug?,
         fallback: String,
         autofocus: Bool
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         // If nil slug was requested, do nothing
         guard let slug = slug else {
             environment.logger.log(
@@ -724,7 +721,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         slug: Slug
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         let refreshFx: Fx<DetailAction> = Just(
             DetailAction.refreshAll
         )
@@ -754,7 +751,7 @@ struct DetailModel: Hashable {
         slug: Slug,
         template: Slug,
         autofocus: Bool
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = environment.database
             .readEntryDetail(slug: slug, template: template)
             .map({ detail in
@@ -781,7 +778,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         autofocus: Bool
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = environment.database.readRandomEntrySlug()
             .map({ slug in
                 DetailAction.requestDetail(
@@ -804,7 +801,7 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         detail: EntryDetail,
         autofocus: Bool
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = Just(
             DetailAction.showDetail(true)
         )
@@ -898,7 +895,7 @@ struct DetailModel: Hashable {
     static func resetDetail(
         state: DetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         var model = state
         model.slug = nil
         model.markupEditor = MarkupTextModel()
@@ -911,7 +908,7 @@ struct DetailModel: Hashable {
     static func autosave(
         state: DetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         let entry = state.snapshotEntry()
         return save(
             state: state,
@@ -925,7 +922,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         entry: SubtextFile?
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         // If editor dom is already saved, noop
         guard state.saveState != .saved else {
             return Update(state: state)
@@ -966,7 +963,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         entry: SubtextFile
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         environment.logger.debug(
             "Saved entry: \(entry.slug)"
         )
@@ -998,7 +995,7 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         slug: Slug,
         message: String
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         //  TODO: show user a "try again" banner
         environment.logger.warning(
             "Save failed for entry (\(slug)) with error: \(message)"
@@ -1013,7 +1010,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         isPresented: Bool
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         var model = state
         model.isLinkSheetPresented = isPresented
         return Update(state: model)
@@ -1023,7 +1020,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         text: String
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         var model = state
         model.linkSearchText = text
 
@@ -1062,7 +1059,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         suggestion: LinkSuggestion
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         let link: EntryLink = Func.pipe(
             suggestion,
             through: { suggestion in
@@ -1132,7 +1129,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         entry: EntryLink?
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         guard let entry = entry else {
             environment.logger.warning(
                 "Rename sheet invoked on missing entry"
@@ -1169,7 +1166,7 @@ struct DetailModel: Hashable {
     static func hideRenameSheet(
         state: DetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         var model = state
         model.isRenameSheetShowing = false
         model.entryToRename = nil
@@ -1189,7 +1186,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         text: String
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         var model = state
         model.renameField = text
         guard let current = state.entryToRename else {
@@ -1218,7 +1215,7 @@ struct DetailModel: Hashable {
     static func setRenameSuggestions(
         state: DetailModel,
         suggestions: [RenameSuggestion]
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         var model = state
         model.renameSuggestions = suggestions
         return Update(state: model)
@@ -1230,7 +1227,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         error: String
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         environment.logger.warning(
             "Failed to read suggestions from database: \(error)"
         )
@@ -1245,7 +1242,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         suggestion: RenameSuggestion
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         switch suggestion {
         case .move(let from, let to):
             return moveEntry(
@@ -1277,7 +1274,7 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         from: EntryLink,
         to: EntryLink
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = environment.database
             .moveEntryAsync(from: from, to: to)
             .map({ _ in
@@ -1306,7 +1303,7 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         from: EntryLink,
         to: EntryLink
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         environment.logger.log("Renamed entry from \(from.slug) to \(to.slug)")
         return requestDetailAndRefreshAll(
             state: state,
@@ -1321,7 +1318,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         error: String
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         environment.logger.warning(
             "Failed to move entry with error: \(error)"
         )
@@ -1334,7 +1331,7 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         parent: EntryLink,
         child: EntryLink
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = environment.database
             .mergeEntryAsync(parent: parent, child: child)
             .map({ _ in
@@ -1361,7 +1358,7 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         parent: EntryLink,
         child: EntryLink
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         environment.logger.log(
             "Merged entry \(child.slug) into \(parent.slug)"
         )
@@ -1378,7 +1375,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         error: String
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         environment.logger.warning(
             "Failed to merge entry with error: \(error)"
         )
@@ -1391,7 +1388,7 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         from: EntryLink,
         to: EntryLink
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = environment.database
             .retitleEntryAsync(from: from, to: to)
             .map({ _ in
@@ -1420,7 +1417,7 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         from: EntryLink,
         to: EntryLink
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         environment.logger.log(
             "Retitled entry \(from.slug) to \(to.linkableTitle)"
         )
@@ -1445,7 +1442,7 @@ struct DetailModel: Hashable {
         state: DetailModel,
         environment: AppEnvironment,
         error: String
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         environment.logger.warning(
             "Failed to retitle entry with error: \(error)"
         )
@@ -1460,7 +1457,7 @@ struct DetailModel: Hashable {
         environment: AppEnvironment,
         range nsRange: NSRange,
         with withMarkup: (String) -> T
-    ) -> Update<DetailModel, DetailAction>
+    ) -> Update<DetailModel>
     where T: TaggedMarkup
     {
         guard let range = Range(nsRange, in: state.markupEditor.text) else {
@@ -1513,7 +1510,7 @@ struct DetailModel: Hashable {
     static func refreshAll(
         state: DetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel, DetailAction> {
+    ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = Just(
             DetailAction.refreshRenameSuggestions
         )
@@ -1570,7 +1567,7 @@ struct DetailView: View {
         UIFont.appTextMono.lineHeight * 8
     }
 
-    var store: ViewStore<DetailModel, DetailAction>
+    var store: ViewStore<DetailModel>
 
     var isReady: Bool {
         let state = store.state
