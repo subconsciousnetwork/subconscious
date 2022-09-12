@@ -73,8 +73,6 @@
 		B84AD8E82811C827006B3153 /* Tests_URLComponentsUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E72811C827006B3153 /* Tests_URLComponentsUtilities.swift */; };
 		B84AD8EA2811C863006B3153 /* URLComponentsUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */; };
 		B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */; };
-		B851AC4C28C1138800643157 /* Cursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B851AC4B28C1138800643157 /* Cursor.swift */; };
-		B851AC4D28C1138800643157 /* Cursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B851AC4B28C1138800643157 /* Cursor.swift */; };
 		B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */ = {isa = PBXBuildFile; productRef = B8579B6427C561E900D8B4BC /* SwiftSubsurface */; };
 		B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */; };
 		B85BF47027BB0FA800F55730 /* RowViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */; };
@@ -297,7 +295,6 @@
 		B84AD8E52810B74E006B3153 /* Tests_SubURLs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_SubURLs.swift; sourceTree = "<group>"; };
 		B84AD8E72811C827006B3153 /* Tests_URLComponentsUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_URLComponentsUtilities.swift; sourceTree = "<group>"; };
 		B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLComponentsUtilities.swift; sourceTree = "<group>"; };
-		B851AC4B28C1138800643157 /* Cursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cursor.swift; sourceTree = "<group>"; };
 		B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowViewModifier.swift; sourceTree = "<group>"; };
 		B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarTitleGroupView.swift; sourceTree = "<group>"; };
 		B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailToolbarContent.swift; sourceTree = "<group>"; };
@@ -485,15 +482,6 @@
 			path = Parsers;
 			sourceTree = "<group>";
 		};
-		B851AC4A28C1134C00643157 /* ObservableStore */ = {
-			isa = PBXGroup;
-			children = (
-				B840EFF22856739D00238811 /* ViewStore.swift */,
-				B851AC4B28C1138800643157 /* Cursor.swift */,
-			);
-			path = ObservableStore;
-			sourceTree = "<group>";
-		};
 		B8879E9B26F8F3BD00A0B4FF /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -659,11 +647,12 @@
 		B8EC568026F4156F00AC64E5 /* Library */ = {
 			isa = PBXGroup;
 			children = (
-				B851AC4A28C1134C00643157 /* ObservableStore */,
 				B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */,
+				B8CA8F2328908D65005F8802 /* BundleUtilities.swift */,
 				B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */,
 				B8AE34AF276A9F9C00777FF0 /* ColorUtilities.swift */,
 				B82C3A5526F529EF00833CC8 /* CombineUtilities.swift */,
+				B839029E28CA246A007A3A3F /* CustomLogStringConvertible.swift */,
 				B86DFF3627C09CA2002E57ED /* DateUtilities.swift */,
 				B82C3A5E26F576C600833CC8 /* FileManagerUtilities.swift */,
 				B82C3A5826F5761700833CC8 /* FileSync.swift */,
@@ -680,9 +669,8 @@
 				B824FDD326FAB1BC00B81BBD /* Truncate.swift */,
 				B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
+				B840EFF22856739D00238811 /* ViewStore.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
-				B8CA8F2328908D65005F8802 /* BundleUtilities.swift */,
-				B839029E28CA246A007A3A3F /* CustomLogStringConvertible.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -1007,7 +995,6 @@
 				B8109C2827A8879C00CD2B6D /* AppTheme.swift in Sources */,
 				B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
 				B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */,
-				B851AC4C28C1138800643157 /* Cursor.swift in Sources */,
 				B813749A28BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift in Sources */,
 				B8A59D6628B690B20010DB2F /* FeedService.swift in Sources */,
 				B8CC434327A0815E0079D2F9 /* ModalView.swift in Sources */,
@@ -1088,7 +1075,6 @@
 			files = (
 				B82C3A6626F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8AC6490278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
-				B851AC4D28C1138800643157 /* Cursor.swift in Sources */,
 				B866868227AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */,
 				B85BF47627BB3D6E00F55730 /* ToolbarTitleGroupView.swift in Sources */,
 				B8DEBF202798EC23007CB528 /* TitleGroupView.swift in Sources */,
