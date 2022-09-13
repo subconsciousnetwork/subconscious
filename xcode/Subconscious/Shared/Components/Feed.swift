@@ -86,6 +86,8 @@ struct FeedDetailCursor: CursorProtocol {
     
     static func tag(_ action: DetailAction) -> FeedAction {
         switch action {
+        case .showDetail(let isShowing):
+            return .showDetail(isShowing)
         default:
             return .detail(action)
         }
