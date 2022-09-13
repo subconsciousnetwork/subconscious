@@ -120,6 +120,39 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         .selectLinkSuggestion(.entry(link))
     }
 
+    /// Generate a detail request from a suggestion
+    static func fromSuggestion(_ suggestion: Suggestion) -> Self {
+        switch suggestion {
+        case .entry(let entryLink):
+            return .requestDetail(
+                slug: entryLink.slug,
+                fallback: entryLink.linkableTitle,
+                autofocus: false
+            )
+        case .search(let entryLink):
+            return .requestDetail(
+                slug: entryLink.slug,
+                fallback: entryLink.linkableTitle,
+                autofocus: true
+            )
+        case .journal(let entryLink):
+            return .requestTemplateDetail(
+                slug: entryLink.slug,
+                template: Config.default.journalTemplate,
+                // Autofocus note because we're creating it from scratch
+                autofocus: true
+            )
+        case .scratch(let entryLink):
+            return .requestDetail(
+                slug: entryLink.slug,
+                fallback: entryLink.linkableTitle,
+                autofocus: true
+            )
+        case .random:
+            return .requestRandomDetail(autofocus: false)
+        }
+    }
+
     var logDescription: String {
         switch self {
         case .setLinkSuggestions(let suggestions):

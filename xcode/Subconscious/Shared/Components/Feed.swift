@@ -22,6 +22,7 @@ enum FeedAction {
     case setFeed([Story])
     /// Fetch feed failed
     case failFetchFeed(Error)
+    case activatedSuggestion(Suggestion)
     case openStory(EntryLink)
     
     /// Show/hide the search HUD
@@ -33,6 +34,10 @@ enum FeedAction {
 extension FeedAction: CustomLogStringConvertible {
     var logDescription: String {
         switch self {
+        case .detail(let action):
+            return "feed(\(String.loggable(action)))"
+        case .search(let action):
+            return "search(\(String.loggable(action)))"
         case .setFeed(let items):
             return "setFeed(\(items.count) items)"
         default:
@@ -57,6 +62,8 @@ struct FeedSearchCursor: CursorProtocol {
 
     static func tag(_ action: SearchAction) -> FeedAction {
         switch action {
+        case .activatedSuggestion(let suggestion):
+            return .activatedSuggestion(suggestion)
         default:
             return .search(action)
         }
@@ -137,6 +144,12 @@ struct FeedModel: ModelProtocol {
             )
         case .failFetchFeed(let error):
             return log(state: state, environment: environment, error: error)
+        case .activatedSuggestion(let suggestion):
+            return FeedDetailCursor.update(
+                state: state,
+                action: DetailAction.fromSuggestion(suggestion),
+                environment: environment
+            )
         case .openStory(_):
             return Update(state: state)
         }
