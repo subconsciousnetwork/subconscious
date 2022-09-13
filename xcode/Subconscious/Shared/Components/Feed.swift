@@ -29,13 +29,18 @@ enum FeedAction {
     static func setSearchPresented(_ isPresented: Bool) -> FeedAction {
         .search(.setPresented(isPresented))
     }
+
+    /// Show/hide the search HUD
+    static var autosave: FeedAction {
+        .detail(.autosave)
+    }
 }
 
 extension FeedAction: CustomLogStringConvertible {
     var logDescription: String {
         switch self {
         case .detail(let action):
-            return "feed(\(String.loggable(action)))"
+            return "detail(\(String.loggable(action)))"
         case .search(let action):
             return "search(\(String.loggable(action)))"
         case .setFeed(let items):
