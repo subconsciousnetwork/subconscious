@@ -26,8 +26,8 @@ struct StoryPromptView: View {
             .padding()
             .frame(height: AppTheme.unit * 11)
             Divider()
-            VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                Text(story.prompt).font(Font.title3)
+            VStack(alignment: .leading, spacing: AppTheme.unit4) {
+                Text(story.prompt)
                 Button(
                     action: {
                         action(story.entry.link)

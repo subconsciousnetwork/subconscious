@@ -19,6 +19,7 @@ enum FeedAction {
     case setFeed([Story])
     /// Fetch feed failed
     case failFetchFeed(Error)
+    case openStory(EntryLink)
 }
 
 extension FeedAction: CustomLogStringConvertible {
@@ -62,6 +63,8 @@ struct FeedModel: ModelProtocol {
             )
         case .failFetchFeed(let error):
             return log(state: state, environment: environment, error: error)
+        case .openStory(_):
+            return Update(state: state)
         }
     }
 
@@ -127,16 +130,20 @@ struct FeedView: View {
     var store: ViewStore<FeedModel>
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack {
-                ForEach(store.state.stories) { story in
-                    StoryView(
-                        story: story,
-                        action: { link in
-                        }
-                    )
+        NavigationView {
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack {
+                    ForEach(store.state.stories) { story in
+                        StoryView(
+                            story: story,
+                            action: { link in
+                                store.send(FeedAction.openStory(link))
+                            }
+                        )
+                    }
                 }
             }
+            .navigationTitle(Text("Latest"))
         }
     }
 }
