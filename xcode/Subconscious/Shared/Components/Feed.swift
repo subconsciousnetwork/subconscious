@@ -157,8 +157,16 @@ struct FeedModel: ModelProtocol {
                 action: DetailAction.fromSuggestion(suggestion),
                 environment: environment
             )
-        case .openStory(_):
-            return Update(state: state)
+        case .openStory(let entryLink):
+            return FeedDetailCursor.update(
+                state: state,
+                action: .requestDetail(
+                    slug: entryLink.slug,
+                    fallback: entryLink.linkableTitle,
+                    autofocus: true
+                ),
+                environment: environment
+            )
         }
     }
 
