@@ -8,6 +8,26 @@
 import SwiftUI
 import SwiftSubsurface
 
+/// Wraps
+struct FABView: View {
+    var image: Image = Image(systemName: "doc.text.magnifyingglass")
+    var action: () -> Void
+
+    var body: some View {
+        Button(
+            action: action,
+            label: {
+                image.font(.system(size: 20))
+            }
+        )
+        .buttonStyle(
+            FABButtonStyle(
+                orbShaderEnabled: Config.default.orbShaderEnabled
+            )
+        )
+    }
+}
+
 struct FABButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     var orbShaderEnabled: Bool

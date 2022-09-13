@@ -11,6 +11,7 @@ import Combine
 
 //  MARK: Action
 enum FeedAction {
+    case search(SearchAction)
     case appear
     // Feed
     /// Fetch stories for feed
@@ -20,6 +21,11 @@ enum FeedAction {
     /// Fetch feed failed
     case failFetchFeed(Error)
     case openStory(EntryLink)
+    
+    /// Show/hide the search HUD
+    static func setSearchPresented(_ isPresented: Bool) -> FeedAction {
+        .search(.setPresented(isPresented))
+    }
 }
 
 extension FeedAction: CustomLogStringConvertible {
@@ -33,9 +39,32 @@ extension FeedAction: CustomLogStringConvertible {
     }
 }
 
+struct FeedSearchCursor: CursorProtocol {
+    typealias Model = FeedModel
+    typealias ViewModel = SearchModel
+
+    static func get(state: FeedModel) -> SearchModel {
+        state.search
+    }
+
+    static func set(state: FeedModel, inner: SearchModel) -> FeedModel {
+        var model = state
+        model.search = inner
+        return model
+    }
+
+    static func tag(_ action: SearchAction) -> FeedAction {
+        switch action {
+        default:
+            return .search(action)
+        }
+    }
+}
+
 //  MARK: Model
 /// A feed of stories
 struct FeedModel: ModelProtocol {
+    var search = SearchModel()
     var stories: [Story] = []
 
     //  MARK: Update
@@ -45,6 +74,12 @@ struct FeedModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<FeedModel> {
         switch action {
+        case .search(let action):
+            return FeedSearchCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
         case .appear:
             return appear(
                 state: state,
@@ -130,20 +165,40 @@ struct FeedView: View {
     var store: ViewStore<FeedModel>
 
     var body: some View {
-        NavigationView {
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack {
-                    ForEach(store.state.stories) { story in
-                        StoryView(
-                            story: story,
-                            action: { link in
-                                store.send(FeedAction.openStory(link))
-                            }
-                        )
+        ZStack {
+            NavigationView {
+                ScrollView(.vertical, showsIndicators: false) {
+                    LazyVStack {
+                        ForEach(store.state.stories) { story in
+                            StoryView(
+                                story: story,
+                                action: { link in
+                                    store.send(FeedAction.openStory(link))
+                                }
+                            )
+                        }
                     }
                 }
+                .navigationTitle(Text("Latest"))
             }
-            .navigationTitle(Text("Latest"))
+            .zIndex(1)
+            PinTrailingBottom(
+                content: FABView(
+                    action: {
+                        store.send(.setSearchPresented(true))
+                    }
+                )
+                .padding()
+            )
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .zIndex(2)
+            SearchView(
+                store: ViewStore(
+                    store: store,
+                    cursor: FeedSearchCursor.self
+                )
+            )
+            .zIndex(3)
         }
     }
 }

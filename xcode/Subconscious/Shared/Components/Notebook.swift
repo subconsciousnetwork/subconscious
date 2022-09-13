@@ -737,19 +737,10 @@ struct NotebookView: View {
             AppNavigationView(store: store)
                 .zIndex(1)
             PinTrailingBottom(
-                content: Button(
+                content: FABView(
                     action: {
                         store.send(.setSearchPresented(true))
-                    },
-                    label: {
-                        Image(systemName: "doc.text.magnifyingglass")
-                            .font(.system(size: 20))
                     }
-                )
-                .buttonStyle(
-                    FABButtonStyle(
-                        orbShaderEnabled: Config.default.orbShaderEnabled
-                    )
                 )
                 .padding()
                 .disabled(!store.state.isFabShowing)
