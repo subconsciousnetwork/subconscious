@@ -187,14 +187,10 @@ struct AppModel: ModelProtocol {
         case let .changeKeyboardState(keyboard):
             return changeKeyboardState(state: state, keyboard: keyboard)
         case .poll:
-            // Auto-save entry currently being edited, if any.
-            let fx: Fx<AppAction> = Just(
-                AppAction.notebook(
-                    NotebookAction.autosave
-                )
+            return poll(
+                state: state,
+                environment: environment
             )
-            .eraseToAnyPublisher()
-            return Update(state: state, fx: fx)
         case .readyDatabase:
             return readyDatabase(state: state, environment: environment)
         case let .migrateDatabaseSuccess(success):
@@ -306,6 +302,24 @@ struct AppModel: ModelProtocol {
             )
             .eraseToAnyPublisher()
 
+        return Update(state: state, fx: fx)
+    }
+
+    static func poll(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        let feedPollFx: Fx<AppAction> = Just(
+            AppAction.feed(FeedAction.autosave)
+        )
+        .eraseToAnyPublisher()
+
+        // Auto-save entry currently being edited, if any.
+        let fx: Fx<AppAction> = Just(
+            AppAction.notebook(NotebookAction.autosave)
+        )
+        .merge(with: feedPollFx)
+        .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
 
