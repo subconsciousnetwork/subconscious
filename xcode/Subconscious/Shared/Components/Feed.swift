@@ -163,7 +163,7 @@ struct FeedModel: ModelProtocol {
                 action: .requestDetail(
                     slug: entryLink.slug,
                     fallback: entryLink.linkableTitle,
-                    autofocus: true
+                    autofocus: false
                 ),
                 environment: environment
             )
