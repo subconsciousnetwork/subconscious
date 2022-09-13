@@ -161,6 +161,12 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "setRenameSuggestions(\(suggestions.count) items)"
         case .markupEditor(let action):
             return "markupEditor(\(String.loggable(action)))"
+        case .save(let entry):
+            let slugString: String = entry.mapOr(
+                { entry in String(entry.slug) },
+                default: "nil"
+            )
+            return "save(\(slugString))"
         case .succeedSave(let entry):
             return "succeedSave(\(entry.slug))"
         case .updateDetail(let detail, _):
