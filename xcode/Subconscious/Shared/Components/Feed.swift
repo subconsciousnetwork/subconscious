@@ -12,6 +12,8 @@ import Combine
 //  MARK: Action
 enum FeedAction {
     case search(SearchAction)
+    case detail(DetailAction)
+    case showDetail(Bool)
     case appear
     // Feed
     /// Fetch stories for feed
@@ -61,10 +63,36 @@ struct FeedSearchCursor: CursorProtocol {
     }
 }
 
+struct FeedDetailCursor: CursorProtocol {
+    typealias Model = FeedModel
+    typealias ViewModel = DetailModel
+
+    static func get(state: FeedModel) -> DetailModel {
+        state.detail
+    }
+    
+    static func set(state: FeedModel, inner: DetailModel) -> FeedModel {
+        var model = state
+        model.detail = inner
+        return model
+    }
+    
+    static func tag(_ action: DetailAction) -> FeedAction {
+        switch action {
+        default:
+            return .detail(action)
+        }
+    }
+}
+
 //  MARK: Model
 /// A feed of stories
 struct FeedModel: ModelProtocol {
+    /// Search HUD
     var search = SearchModel()
+    /// Entry detail
+    var detail = DetailModel()
+    var isDetailShowing = false
     var stories: [Story] = []
 
     //  MARK: Update
@@ -79,6 +107,17 @@ struct FeedModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: environment
+            )
+        case .detail(let action):
+            return FeedDetailCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case .showDetail(let isShowing):
+            return showDetail(
+                state: state,
+                isShowing: isShowing
             )
         case .appear:
             return appear(
@@ -121,6 +160,15 @@ struct FeedModel: ModelProtocol {
     ) -> Update<FeedModel> {
         environment.logger.warning("\(error.localizedDescription)")
         return Update(state: state)
+    }
+
+    static func showDetail(
+        state: FeedModel,
+        isShowing: Bool
+    ) -> Update<FeedModel> {
+        var model = state
+        model.isDetailShowing = isShowing
+        return Update(state: model)
     }
 
     /// Handle appear lifecycle action.
@@ -167,17 +215,37 @@ struct FeedView: View {
     var body: some View {
         ZStack {
             NavigationView {
-                ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack {
-                        ForEach(store.state.stories) { story in
-                            StoryView(
-                                story: story,
-                                action: { link in
-                                    store.send(FeedAction.openStory(link))
-                                }
-                            )
+                VStack(spacing: 0) {
+                    ScrollView(.vertical, showsIndicators: false) {
+                        LazyVStack {
+                            ForEach(store.state.stories) { story in
+                                StoryView(
+                                    story: story,
+                                    action: { link in
+                                        store.send(FeedAction.openStory(link))
+                                    }
+                                )
+                            }
                         }
                     }
+                    NavigationLink(
+                        isActive: Binding(
+                            store: store,
+                            get: \.isDetailShowing,
+                            tag: FeedAction.showDetail
+                        ),
+                        destination: {
+                            DetailView(
+                                store: ViewStore(
+                                    store: store,
+                                    cursor: FeedDetailCursor.self
+                                )
+                            )
+                        },
+                        label: {
+                            EmptyView()
+                        }
+                    )
                 }
                 .navigationTitle(Text("Latest"))
             }
