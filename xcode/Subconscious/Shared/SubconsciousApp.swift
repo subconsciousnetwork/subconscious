@@ -54,6 +54,14 @@ enum AppAction: CustomLogStringConvertible {
     case syncFailure(String)
     case refreshAll
 
+    //  Entry deletion
+    /// Delete an entry
+    case deleteEntry(Slug)
+    /// Confirm entry deleted
+    case succeedDeleteEntry(Slug)
+    /// Notify entry deletion failed
+    case failDeleteEntry(String)
+
     var logDescription: String {
         switch self {
         case .notebook(let notebookAction):
@@ -232,7 +240,35 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .deleteEntry(let slug):
+            return deleteEntry(
+                state: state,
+                environment: environment,
+                slug: slug
+            )
+        case .succeedDeleteEntry(let slug):
+            return succeedDeleteEntry(
+                state: state,
+                environment: environment,
+                slug: slug
+            )
+        case .failDeleteEntry(let message):
+            return log(
+                state: state,
+                environment: environment,
+                message: message
+            )
         }
+    }
+
+    /// Log message and no-op
+    static func log(
+        state: AppModel,
+        environment: AppEnvironment,
+        message: String
+    ) -> Update<AppModel> {
+        environment.logger.log("\(message)")
+        return Update(state: state)
     }
 
     /// Change state of keyboard
@@ -459,6 +495,43 @@ struct AppModel: ModelProtocol {
         )
         .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
+    }
+
+    /// Entry delete succeeded
+    static func deleteEntry(
+        state: AppModel,
+        environment: AppEnvironment,
+        slug: Slug
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = environment.database
+            .deleteEntryAsync(slug: slug)
+            .map({ _ in
+                AppAction.succeedDeleteEntry(slug)
+            })
+            .catch({ error in
+                Just(
+                    AppAction.failDeleteEntry(error.localizedDescription)
+                )
+            })
+            .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    /// Entry delete succeeded
+    static func succeedDeleteEntry(
+        state: AppModel,
+        environment: AppEnvironment,
+        slug: Slug
+    ) -> Update<AppModel> {
+        environment.logger.log("Deleted entry: \(slug)")
+        /// Refresh all to make sure deleted entry doesn't show up in
+        /// lists anywhere.
+        return update(
+            state: state,
+            action: .refreshAll,
+            environment: environment
+        )
     }
 }
 
