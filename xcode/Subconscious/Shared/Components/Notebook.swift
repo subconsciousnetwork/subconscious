@@ -29,8 +29,8 @@ enum NotebookAction {
     /// On appear. We rely on parent to notify us of this event.
     case appear
 
-    /// Refresh the state of all lists by reloading from database.
-    /// This also sets searches to their zero-query state.
+    /// Refresh the state of all lists and child components by reloading
+    /// from database. This also sets searches to their zero-query state.
     case refreshAll
 
     /// Read entry count from DB
@@ -44,6 +44,14 @@ enum NotebookAction {
     case listRecent
     case setRecent([EntryStub])
     case listRecentFailure(String)
+
+    // Rename and merge
+    /// Move entry succeeded. Lifecycle action from Detail.
+    case succeedMoveEntry(from: EntryLink, to: EntryLink)
+    /// Merge entry succeeded. Lifecycle action from Detail.
+    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
+    /// Retitle entry succeeded. Lifecycle action from Detail.
+    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
 
     // Delete entries
     case confirmDelete(Slug?)
@@ -166,6 +174,12 @@ struct NotebookDetailCursor: CursorProtocol {
         switch action {
         case .refreshAll:
             return .refreshAll
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedRetitleEntry(from, to):
+            return .succeedRetitleEntry(from: from, to: to)
         case .requestDeleteEntry(let slug):
             return .requestDeleteEntry(slug)
         default:
@@ -340,6 +354,27 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 slug: slug
+            )
+        case let .succeedMoveEntry(from, to):
+            return succeedMoveEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case let .succeedMergeEntry(parent, child):
+            return succeedMergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
+        case let .succeedRetitleEntry(from, to):
+            return succeedRetitleEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
             )
         case .submitSearch(let query):
             return submitSearch(
@@ -556,6 +591,62 @@ struct NotebookModel: ModelProtocol {
             .eraseToAnyPublisher()
 
         return Update(state: state, fx: fx)
+    }
+
+    /// Handle and forward entry move action
+    static func succeedMoveEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<NotebookModel> {
+        update(
+            state: state,
+            actions: [
+                .detail(.succeedMoveEntry(from: from, to: to)),
+                .search(.refreshSuggestions),
+                .listRecent,
+                .countEntries
+            ],
+            environment: environment
+        )
+    }
+
+    /// Handle and forward entry merge action
+    static func succeedMergeEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        parent: EntryLink,
+        child: EntryLink
+    ) -> Update<NotebookModel> {
+        update(
+            state: state,
+            actions: [
+                .detail(.succeedMergeEntry(parent: parent, child: child)),
+                .search(.refreshSuggestions),
+                .listRecent,
+                .countEntries
+            ],
+            environment: environment
+        )
+    }
+
+    /// Handle and forward entry retitle action
+    static func succeedRetitleEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<NotebookModel> {
+        update(
+            state: state,
+            actions: [
+                .detail(.succeedRetitleEntry(from: from, to: to)),
+                .search(.refreshSuggestions),
+                .listRecent
+            ],
+            environment: environment
+        )
     }
 
     /// Submit a search query (typically by hitting "go" on keyboard)
