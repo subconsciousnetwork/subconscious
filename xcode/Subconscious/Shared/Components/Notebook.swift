@@ -538,10 +538,15 @@ struct NotebookModel: ModelProtocol {
         )
         .eraseToAnyPublisher()
 
-        //  Refresh lists in search fields after delete.
-        //  This ensures they don't show the deleted entry.
-        let fx: Fx<NotebookAction> = Just(NotebookAction.refreshAll)
-            .merge(with: detailFx)
+        //  Refresh notebook list after deletion.
+        let searchFx: Fx<NotebookAction> = Just(
+            NotebookAction.search(.entryDeleted(slug))
+        )
+        .eraseToAnyPublisher()
+
+        //  Refresh notebook list after deletion.
+        let fx: Fx<NotebookAction> = Just(NotebookAction.listRecent)
+            .merge(with: detailFx, searchFx)
             .eraseToAnyPublisher()
 
         return Update(state: state, fx: fx)
