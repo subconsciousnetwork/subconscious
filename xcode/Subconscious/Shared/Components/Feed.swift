@@ -13,7 +13,6 @@ import Combine
 enum FeedAction {
     case search(SearchAction)
     case detail(DetailAction)
-    case showDetail(Bool)
     case appear
 
     case refreshAll
@@ -35,6 +34,10 @@ enum FeedAction {
     /// Show/hide the search HUD
     static func setSearchPresented(_ isPresented: Bool) -> FeedAction {
         .search(.setPresented(isPresented))
+    }
+
+    static func presentDetail(_ isPresented: Bool) -> FeedAction {
+        .detail(.presentDetail(isPresented))
     }
 
     /// Show/hide the search HUD
@@ -98,8 +101,6 @@ struct FeedDetailCursor: CursorProtocol {
     
     static func tag(_ action: DetailAction) -> FeedAction {
         switch action {
-        case .presentDetail(let isShowing):
-            return .showDetail(isShowing)
         case .requestDeleteEntry(let slug):
             return .requestDeleteEntry(slug)
         default:
@@ -115,7 +116,6 @@ struct FeedModel: ModelProtocol {
     var search = SearchModel()
     /// Entry detail
     var detail = DetailModel()
-    var isDetailShowing = false
     var stories: [Story] = []
 
     //  MARK: Update
@@ -136,11 +136,6 @@ struct FeedModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: environment
-            )
-        case .showDetail(let isShowing):
-            return showDetail(
-                state: state,
-                isShowing: isShowing
             )
         case .appear:
             return appear(
@@ -213,15 +208,6 @@ struct FeedModel: ModelProtocol {
     ) -> Update<FeedModel> {
         environment.logger.warning("\(error.localizedDescription)")
         return Update(state: state)
-    }
-
-    static func showDetail(
-        state: FeedModel,
-        isShowing: Bool
-    ) -> Update<FeedModel> {
-        var model = state
-        model.isDetailShowing = isShowing
-        return Update(state: model)
     }
 
     /// Handle appear lifecycle action.
@@ -323,8 +309,8 @@ struct FeedView: View {
                     NavigationLink(
                         isActive: Binding(
                             store: store,
-                            get: \.isDetailShowing,
-                            tag: FeedAction.showDetail
+                            get: \.detail.isPresented,
+                            tag: FeedAction.presentDetail
                         ),
                         destination: {
                             DetailView(
