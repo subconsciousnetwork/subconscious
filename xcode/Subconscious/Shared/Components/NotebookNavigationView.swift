@@ -26,6 +26,9 @@ struct NotebookNavigationView: View {
                     },
                     onEntryDelete: { slug in
                         store.send(.confirmDelete(slug))
+                    },
+                    onRefresh: {
+                        store.send(.listRecent)
                     }
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
