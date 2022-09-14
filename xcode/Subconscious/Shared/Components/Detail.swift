@@ -85,8 +85,13 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Retitle entry failed. Lifecycle action.
     case failRetitleEntry(String)
 
+    //  Delete entry requests
+    /// Show/hide delete confirmation dialog
+    case showDeleteConfirmationDialog(Bool)
+    /// Request that parent delete entry
+    case requestDeleteEntry(Slug?)
+
     case selectBacklink(EntryLink)
-    case requestConfirmDelete(Slug)
 
     // Editor
     /// Update editor dom and mark if this state is saved or not
@@ -246,6 +251,9 @@ struct DetailModel: ModelProtocol {
     var renameField: String = ""
     /// Suggestions for renaming note.
     var renameSuggestions: [RenameSuggestion] = []
+
+    /// Is delete confirmation dialog presented?
+    var isDeleteConfirmationDialogShowing = false
 
     /// Given a particular entry value, does the editor's state
     /// currently match it, such that we could say the editor is
@@ -501,6 +509,18 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
+        case .showDeleteConfirmationDialog(let isPresented):
+            return presentDeleteConfirmationDialog(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
+        case .requestDeleteEntry(_):
+            return logDebug(
+                state: state,
+                environment: environment,
+                message: "requestDeleteEntry should be handled by parent component"
+            )
         case .selectBacklink(let link):
             return requestDetail(
                 state: state,
@@ -508,12 +528,6 @@ struct DetailModel: ModelProtocol {
                 slug: link.slug,
                 fallback: link.linkableTitle,
                 autofocus: false
-            )
-        case .requestConfirmDelete(_):
-            return logDebug(
-                state: state,
-                environment: environment,
-                message: "requestConfirmDelete should be handled by parent component"
             )
         case .insertEditorWikilinkAtSelection:
             return insertTaggedMarkup(
@@ -1556,6 +1570,17 @@ struct DetailModel: ModelProtocol {
         return Update(state: state)
     }
 
+    /// Show/hide entry delete confirmation dialog.
+    static func presentDeleteConfirmationDialog(
+        state: DetailModel,
+        environment: AppEnvironment,
+        isPresented: Bool
+    ) -> Update<DetailModel> {
+        var model = state
+        model.isDeleteConfirmationDialogShowing = isPresented
+        return Update(state: model)
+            .animation(.default)
+    }
 
     /// Insert wikilink markup into editor, begining at previous range
     /// and wrapping the contents of previous range
@@ -1837,6 +1862,23 @@ struct DetailView: View {
                 }
             )
         }
+        .confirmationDialog(
+            "Are you sure?",
+            isPresented: Binding(
+                store: store,
+                get: \.isDeleteConfirmationDialogShowing,
+                tag: DetailAction.showDeleteConfirmationDialog
+            )
+        ) {
+            Button(
+                role: .destructive,
+                action: {
+                    store.send(.requestDeleteEntry(store.state.slug))
+                }
+            ) {
+                Text("Delete Immediately")
+            }
+        }
         .toolbar {
             DetailToolbarContent(
                 link: EntryLink(store.state),
@@ -1844,9 +1886,7 @@ struct DetailView: View {
                     store.send(.showRenameSheet(EntryLink(store.state)))
                 },
                 onDelete: {
-                    if let slug = store.state.slug {
-                        store.send(.requestConfirmDelete(slug))
-                    }
+                    store.send(.showDeleteConfirmationDialog(true))
                 }
             )
         }
