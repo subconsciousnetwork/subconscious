@@ -36,6 +36,9 @@ enum SearchAction: Hashable, CustomLogStringConvertible {
     case succeedCreateSearchHistoryItem(String)
     case failCreateSearchHistoryItem(String)
 
+    /// Handle notification of entry delete from somewhere
+    case entryDeleted(Slug)
+
     var logDescription: String {
         switch self {
         case .setSuggestions(let suggestions):
@@ -137,6 +140,13 @@ struct SearchModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
+            )
+        case .entryDeleted(_):
+            // For now, we handle deletion by just refreshing suggestions.
+            return update(
+                state: state,
+                action: .refreshSuggestions,
+                environment: environment
             )
         }
     }
