@@ -158,7 +158,7 @@ struct NotebookDetailCursor: CursorProtocol {
             return .refreshAll
         case .showDetail(let isShowing):
             return .showDetail(isShowing)
-        case .requestConfirmDelete(let slug):
+        case .requestDeleteEntry(let slug):
             return .confirmDelete(slug)
         default:
             return .detail(action)
@@ -637,7 +637,7 @@ struct NotebookView: View {
         // See https://stackoverflow.com/a/58512696
         // 2021-12-16 Gordon Brander
         ZStack {
-            AppNavigationView(store: store)
+            NotebookNavigationView(store: store)
                 .zIndex(1)
             PinTrailingBottom(
                 content: FABView(

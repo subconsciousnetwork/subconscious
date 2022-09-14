@@ -97,8 +97,8 @@
 		B86F1AB828C77E8C00DA264E /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F1AB628C77E8C00DA264E /* Search.swift */; };
 		B877A6E527A1C2BC00F11A90 /* KeyboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */; };
 		B877A6E627A1C2BC00F11A90 /* KeyboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */; };
-		B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */; };
-		B8879EA126F90C5100A0B4FF /* AppNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */; };
+		B8879EA026F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */; };
+		B8879EA126F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */; };
 		B8879EA626F9348600A0B4FF /* SubURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA526F9348600A0B4FF /* SubURL.swift */; };
 		B8879EA726F9348600A0B4FF /* SubURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA526F9348600A0B4FF /* SubURL.swift */; };
 		B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */; };
@@ -307,7 +307,7 @@
 		B86DFF3827C15B77002E57ED /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		B86F1AB628C77E8C00DA264E /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
 		B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardService.swift; sourceTree = "<group>"; };
-		B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigationView.swift; sourceTree = "<group>"; };
+		B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookNavigationView.swift; sourceTree = "<group>"; };
 		B8879EA526F9348600A0B4FF /* SubURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubURL.swift; sourceTree = "<group>"; };
 		B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinksView.swift; sourceTree = "<group>"; };
 		B8879EAB26F944DA00A0B4FF /* Detail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Detail.swift; sourceTree = "<group>"; };
@@ -619,7 +619,7 @@
 		B8EB2A3826F27CD1006E97C3 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				B8879E9F26F90C5100A0B4FF /* AppNavigationView.swift */,
+				B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */,
 				B8EB29F526F27794006E97C3 /* AppView.swift */,
 				B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */,
 				B8EC568426F41A2C00AC64E5 /* Common */,
@@ -1026,7 +1026,7 @@
 				B82C3A5326F528B000833CC8 /* DatabaseService.swift in Sources */,
 				B877A6E527A1C2BC00F11A90 /* KeyboardService.swift in Sources */,
 				B8A41D512811F87C0096D2E7 /* SlashlinkBarView.swift in Sources */,
-				B8879EA026F90C5100A0B4FF /* AppNavigationView.swift in Sources */,
+				B8879EA026F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */,
 				B8EB2A2326F27797006E97C3 /* AppView.swift in Sources */,
 				B8B4D7EC27EA890B00633B5F /* ShadowStyle.swift in Sources */,
 				B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */,
@@ -1124,7 +1124,7 @@
 				B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
 				B8A41D4F2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,
 				B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
-				B8879EA126F90C5100A0B4FF /* AppNavigationView.swift in Sources */,
+				B8879EA126F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */,
 				B877A6E627A1C2BC00F11A90 /* KeyboardService.swift in Sources */,
 				B8EB2A2426F27797006E97C3 /* AppView.swift in Sources */,
 				B82C3A6026F576C600833CC8 /* FileManagerUtilities.swift in Sources */,

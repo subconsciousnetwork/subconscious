@@ -7,7 +7,7 @@
 import SwiftUI
 import ObservableStore
 
-struct AppNavigationView: View {
+struct NotebookNavigationView: View {
     var store: ViewStore<NotebookModel>
 
     var body: some View {
