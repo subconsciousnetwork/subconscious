@@ -164,12 +164,6 @@ struct NotebookDetailCursor: CursorProtocol {
             return .showDetail(isShowing)
         case .openEditorURL(let url):
             return .openEditorURL(url)
-        case .selectBacklink(let link):
-            return .requestDetail(
-                slug: link.slug,
-                fallback: link.linkableTitle,
-                autofocus: false
-            )
         case .requestConfirmDelete(let slug):
             return .confirmDelete(slug)
         default:

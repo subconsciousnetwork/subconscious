@@ -487,11 +487,13 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .selectBacklink(_):
-            return logDebug(
+        case .selectBacklink(let link):
+            return requestDetail(
                 state: state,
                 environment: environment,
-                message: "selectBacklink should be handled by parent component"
+                slug: link.slug,
+                fallback: link.linkableTitle,
+                autofocus: false
             )
         case .requestConfirmDelete(_):
             return logDebug(
