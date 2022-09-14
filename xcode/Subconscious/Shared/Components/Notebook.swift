@@ -544,9 +544,15 @@ struct NotebookModel: ModelProtocol {
         )
         .eraseToAnyPublisher()
 
+        // Update count
+        let countFx: Fx<NotebookAction> = Just(
+            NotebookAction.countEntries
+        )
+        .eraseToAnyPublisher()
+
         //  Refresh notebook list after deletion.
         let fx: Fx<NotebookAction> = Just(NotebookAction.listRecent)
-            .merge(with: detailFx, searchFx)
+            .merge(with: detailFx, searchFx, countFx)
             .eraseToAnyPublisher()
 
         return Update(state: state, fx: fx)
