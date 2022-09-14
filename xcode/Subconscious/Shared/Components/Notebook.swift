@@ -21,7 +21,6 @@ enum NotebookAction {
     case search(SearchAction)
     /// Tagged action for detail
     case detail(DetailAction)
-    case showDetail(Bool)
 
     /// KeyboardService state change.
     /// Action passed down from parent component.
@@ -49,9 +48,16 @@ enum NotebookAction {
     // Delete entries
     case confirmDelete(Slug?)
     case setConfirmDeleteShowing(Bool)
-    case deleteEntry(Slug)
-    case deleteEntrySuccess(Slug)
-    case deleteEntryFailure(String)
+    /// Stage an entry deletion immediately before requesting.
+    /// We do this for swipe-to-delete, where we must remove the entry
+    /// from the list before requesting delete for the animation to work.
+    case stageDeleteEntry(Slug)
+    /// Send entry delete request up to parent.
+    case requestDeleteEntry(Slug?)
+    /// Handle entry having been deleted.
+    /// This action is typically sent down from a parent component to notify
+    /// of a deletion having happened here or somewhere else.
+    case entryDeleted(Slug)
 
     //  Search
     /// Hit submit ("go") while focused on search field
@@ -110,6 +116,10 @@ enum NotebookAction {
     /// Send autosave to detail
     static let autosave = Self.detail(.autosave)
 
+    static func presentDetail(_ isPresented: Bool) -> Self {
+        .detail(.presentDetail(isPresented))
+    }
+
     static func updateDetail(detail: EntryDetail, autofocus: Bool) -> Self {
         Self.detail(.updateDetail(detail: detail, autofocus: autofocus))
     }
@@ -156,10 +166,8 @@ struct NotebookDetailCursor: CursorProtocol {
         switch action {
         case .refreshAll:
             return .refreshAll
-        case .showDetail(let isShowing):
-            return .showDetail(isShowing)
         case .requestDeleteEntry(let slug):
-            return .confirmDelete(slug)
+            return .requestDeleteEntry(slug)
         default:
             return .detail(action)
         }
@@ -202,9 +210,6 @@ struct NotebookModel: ModelProtocol {
 
     /// Search HUD
     var search = SearchModel()
-
-    /// Is the detail view (edit and details for an entry) showing?
-    var isDetailShowing = false
 
     /// Entry detail
     var detail = DetailModel()
@@ -319,26 +324,22 @@ struct NotebookModel: ModelProtocol {
                 model.entryToDelete = nil
             }
             return Update(state: model)
-        case let .deleteEntry(slug):
-            return deleteEntry(
+        case let .stageDeleteEntry(slug):
+            return stageDeleteEntry(
                 state: state,
                 environment: environment,
                 slug: slug
             )
-        case let .deleteEntrySuccess(slug):
-            return deleteEntrySuccess(
-                state: state,
-                environment: environment,
-                slug: slug
+        case .requestDeleteEntry(_):
+            environment.logger.debug(
+                "requestDeleteEntry should be handled by parent component"
             )
-        case let .deleteEntryFailure(error):
-            environment.logger.log("Failed to delete entry: \(error)")
             return Update(state: state)
-        case let .showDetail(isShowing):
-            return showDetail(
+        case let .entryDeleted(slug):
+            return entryDeleted(
                 state: state,
                 environment: environment,
-                isShowing: isShowing
+                slug: slug
             )
         case .submitSearch(let query):
             return submitSearch(
@@ -408,17 +409,6 @@ struct NotebookModel: ModelProtocol {
         let fx: Fx<NotebookAction> = Just(NotebookAction.countEntries)
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
-    }
-
-    /// Toggle detail view showing or hiding
-    static func showDetail(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        isShowing: Bool
-    ) -> Update<NotebookModel> {
-        var model = state
-        model.isDetailShowing = isShowing
-        return Update(state: model)
     }
 
     /// Refresh all lists in the notebook tab from database.
@@ -500,7 +490,7 @@ struct NotebookModel: ModelProtocol {
     }
 
     /// Delete entry with `slug`
-    static func deleteEntry(
+    static func stageDeleteEntry(
         state: NotebookModel,
         environment: AppEnvironment,
         slug: Slug
@@ -526,59 +516,35 @@ struct NotebookModel: ModelProtocol {
             model.recent = recent
         }
 
-        // Hide detail view.
-        // Delete may have been invoked from detail view
-        // in which case, we don't want it showing.
-        // If it was invoked from list view, then setting this to false
-        // is harmless.
-        model.isDetailShowing = false
+        let fx: Fx<NotebookAction> = Just(
+            NotebookAction.requestDeleteEntry(slug)
+        )
+        .eraseToAnyPublisher()
 
-        let fx: Fx<NotebookAction> = environment.database
-            .deleteEntryAsync(slug: slug)
-            .map({ _ in
-                NotebookAction.deleteEntrySuccess(slug)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.deleteEntryFailure(
-                        error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
         return Update(state: model, fx: fx)
             .animation(.default)
     }
 
     /// Handle completion of entry delete
-    static func deleteEntrySuccess(
+    static func entryDeleted(
         state: NotebookModel,
         environment: AppEnvironment,
         slug: Slug
     ) -> Update<NotebookModel> {
-        environment.logger.log("Deleted entry: \(slug)")
-        //  Refresh lists in search fields after delete.
-        //  This ensures they don't show the deleted entry.
-        let refreshFx: Fx<NotebookAction> = Just(NotebookAction.refreshAll)
-            .eraseToAnyPublisher()
-
-        guard state.detail.slug == slug else {
-            return Update(state: state, fx: refreshFx)
-        }
-
-        // If we just deleted the entry currently being edited,
-        // reset the editor to initial state (nothing is being edited).
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.detail(.resetDetail)
+        // Send down deleted notification so editor can reset itself if
+        // it is currently editing the deleted entry.
+        let detailFx: Fx<NotebookAction> = Just(
+            NotebookAction.detail(.entryDeleted(slug))
         )
-        .merge(with: refreshFx)
         .eraseToAnyPublisher()
 
-        // Hide detail
-        var model = state
-        model.isDetailShowing = false
+        //  Refresh lists in search fields after delete.
+        //  This ensures they don't show the deleted entry.
+        let fx: Fx<NotebookAction> = Just(NotebookAction.refreshAll)
+            .merge(with: detailFx)
+            .eraseToAnyPublisher()
 
-        return Update(state: model, fx: fx)
+        return Update(state: state, fx: fx)
     }
 
     /// Submit a search query (typically by hitting "go" on keyboard)

@@ -56,7 +56,7 @@ enum AppAction: CustomLogStringConvertible {
 
     //  Entry deletion
     /// Delete an entry
-    case deleteEntry(Slug)
+    case deleteEntry(Slug?)
     /// Confirm entry deleted
     case succeedDeleteEntry(Slug)
     /// Notify entry deletion failed
@@ -97,7 +97,12 @@ struct NotebookCursor: CursorProtocol {
 
     /// Tag notebook actions
     static func tag(_ action: NotebookAction) -> AppAction {
-        .notebook(action)
+        switch action {
+        case .requestDeleteEntry(let slug):
+            return .deleteEntry(slug)
+        default:
+            return .notebook(action)
+        }
     }
 }
 
@@ -115,7 +120,12 @@ struct FeedCursor: CursorProtocol {
 
     /// Tag feed action
     static func tag(_ action: FeedAction) -> AppAction {
-        AppAction.feed(action)
+        switch action {
+        case .requestDeleteEntry(let slug):
+            return .deleteEntry(slug)
+        default:
+            return .feed(action)
+        }
     }
 }
 
@@ -501,8 +511,14 @@ struct AppModel: ModelProtocol {
     static func deleteEntry(
         state: AppModel,
         environment: AppEnvironment,
-        slug: Slug
+        slug: Slug?
     ) -> Update<AppModel> {
+        guard let slug = slug else {
+            environment.logger.log(
+                "Delete requested for nil slug. Doing nothing."
+            )
+            return Update(state: state)
+        }
         let fx: Fx<AppAction> = environment.database
             .deleteEntryAsync(slug: slug)
             .map({ _ in
@@ -514,7 +530,6 @@ struct AppModel: ModelProtocol {
                 )
             })
             .eraseToAnyPublisher()
-
         return Update(state: state, fx: fx)
     }
 
@@ -525,13 +540,19 @@ struct AppModel: ModelProtocol {
         slug: Slug
     ) -> Update<AppModel> {
         environment.logger.log("Deleted entry: \(slug)")
-        /// Refresh all to make sure deleted entry doesn't show up in
-        /// lists anywhere.
-        return update(
-            state: state,
-            action: .refreshAll,
-            environment: environment
+
+        let feedFx: Fx<AppAction> = Just(
+            AppAction.feed(FeedAction.entryDeleted(slug))
         )
+        .eraseToAnyPublisher()
+
+        let fx: Fx<AppAction> = Just(
+            AppAction.notebook(NotebookAction.entryDeleted(slug))
+        )
+        .merge(with: feedFx)
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
     }
 }
 

@@ -41,7 +41,7 @@ struct NotebookNavigationView: View {
                     Button(
                         role: .destructive,
                         action: {
-                            store.send(.deleteEntry(slug))
+                            store.send(.stageDeleteEntry(slug))
                         }
                     ) {
                         Text("Delete Immediately")
@@ -50,8 +50,8 @@ struct NotebookNavigationView: View {
                 NavigationLink(
                     isActive: Binding(
                         store: store,
-                        get: \.isDetailShowing,
-                        tag: NotebookAction.showDetail
+                        get: \.detail.isPresented,
+                        tag: NotebookAction.presentDetail
                     ),
                     destination: {
                         DetailView(

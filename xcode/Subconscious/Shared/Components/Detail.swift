@@ -38,7 +38,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case requestRandomDetail(autofocus: Bool)
     case failDetail(String)
     case failRandomDetail(String)
-    case showDetail(Bool)
+    case presentDetail(Bool)
     /// Update entry being displayed
     case updateDetail(detail: EntryDetail, autofocus: Bool)
     /// Set detail to initial conditions
@@ -90,6 +90,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case showDeleteConfirmationDialog(Bool)
     /// Request that parent delete entry
     case requestDeleteEntry(Slug?)
+    case entryDeleted(Slug)
 
     case selectBacklink(EntryLink)
 
@@ -226,6 +227,8 @@ struct DetailModel: ModelProtocol {
     /// Is editor saved?
     var saveState = SaveState.saved
 
+    /// Is editor showing?
+    var isPresented = false
     /// Is editor in loading state?
     var isLoading = true
 
@@ -325,11 +328,11 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .showDetail:
-            return logDebug(
+        case .presentDetail(let isPresented):
+            return presentDetail(
                 state: state,
                 environment: environment,
-                message: ".showDetail should be handled by parent component"
+                isPresented: isPresented
             )
         case let .requestDetail(slug, fallback, autofocus):
             return requestDetail(
@@ -520,6 +523,12 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 message: "requestDeleteEntry should be handled by parent component"
+            )
+        case .entryDeleted(let slug):
+            return entryDeleted(
+                state: state,
+                environment: environment,
+                slug: slug
             )
         case .selectBacklink(let link):
             return requestDetail(
@@ -779,6 +788,17 @@ struct DetailModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
 
+    /// Toggle detail presentation
+    static func presentDetail(
+        state: DetailModel,
+        environment: AppEnvironment,
+        isPresented: Bool
+    ) -> Update<DetailModel> {
+        var model = state
+        model.isPresented = isPresented
+        return Update(state: model)
+    }
+
     /// Factors out the non-get-detail related aspects
     /// of requesting a detail view.
     /// Used by a few request detail implementations.
@@ -924,7 +944,7 @@ struct DetailModel: ModelProtocol {
         autofocus: Bool
     ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = Just(
-            DetailAction.showDetail(true)
+            DetailAction.presentDetail(true)
         )
         .eraseToAnyPublisher()
 
@@ -1580,6 +1600,34 @@ struct DetailModel: ModelProtocol {
         model.isDeleteConfirmationDialogShowing = isPresented
         return Update(state: model)
             .animation(.default)
+    }
+
+    static func entryDeleted(
+        state: DetailModel,
+        environment: AppEnvironment,
+        slug: Slug
+    ) -> Update<DetailModel> {
+        // If entry that was deleted was not this entry, then we don't
+        // have to do anything.
+        guard state.slug == slug else {
+            return Update(state: state)
+        }
+
+        // If the slug currently being edited was just deleted,
+        // - reset the editor
+        // - un-present detail
+        let resetFx: Fx<DetailAction> = Just(
+            DetailAction.resetDetail
+        )
+        .eraseToAnyPublisher()
+
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.presentDetail(false)
+        )
+        .merge(with: resetFx)
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
     }
 
     /// Insert wikilink markup into editor, begining at previous range

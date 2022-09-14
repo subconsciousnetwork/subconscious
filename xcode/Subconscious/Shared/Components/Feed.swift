@@ -15,6 +15,7 @@ enum FeedAction {
     case detail(DetailAction)
     case showDetail(Bool)
     case appear
+
     // Feed
     /// Fetch stories for feed
     case fetchFeed
@@ -24,7 +25,11 @@ enum FeedAction {
     case failFetchFeed(Error)
     case activatedSuggestion(Suggestion)
     case openStory(EntryLink)
-    
+
+    //  Entry deletion
+    case requestDeleteEntry(Slug?)
+    case entryDeleted(Slug)
+
     /// Show/hide the search HUD
     static func setSearchPresented(_ isPresented: Bool) -> FeedAction {
         .search(.setPresented(isPresented))
@@ -91,8 +96,10 @@ struct FeedDetailCursor: CursorProtocol {
     
     static func tag(_ action: DetailAction) -> FeedAction {
         switch action {
-        case .showDetail(let isShowing):
+        case .presentDetail(let isShowing):
             return .showDetail(isShowing)
+        case .requestDeleteEntry(let slug):
+            return .requestDeleteEntry(slug)
         default:
             return .detail(action)
         }
@@ -167,6 +174,17 @@ struct FeedModel: ModelProtocol {
                 ),
                 environment: environment
             )
+        case .requestDeleteEntry(_):
+            environment.logger.debug(
+                "requestDeleteEntry should be handled by parent component"
+            )
+            return Update(state: state)
+        case .entryDeleted(let slug):
+            return entryDeleted(
+                state: state,
+                environment: environment,
+                slug: slug
+            )
         }
     }
 
@@ -233,6 +251,20 @@ struct FeedModel: ModelProtocol {
         var model = state
         model.stories = stories
         return Update(state: model)
+    }
+
+    /// Handle entry deleted
+    static func entryDeleted(
+        state: FeedModel,
+        environment: AppEnvironment,
+        slug: Slug
+    ) -> Update<FeedModel> {
+        let fx: Fx<FeedAction> = Just(
+            FeedAction.detail(.entryDeleted(slug))
+        )
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
     }
 }
 

@@ -619,17 +619,17 @@
 		B8EB2A3826F27CD1006E97C3 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */,
 				B8EB29F526F27794006E97C3 /* AppView.swift */,
 				B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */,
 				B8EC568426F41A2C00AC64E5 /* Common */,
+				B8879EAB26F944DA00A0B4FF /* Detail.swift */,
 				B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */,
 				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
-				B8879EAB26F944DA00A0B4FF /* Detail.swift */,
 				B86DFF2C27C0280B002E57ED /* EntryListView.swift */,
 				B8CA8F2528909E66005F8802 /* Feed.swift */,
 				B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */,
 				B89966C628B6EE2300DF1F8C /* Notebook.swift */,
+				B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */,
 				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 			);
 			path = Components;
