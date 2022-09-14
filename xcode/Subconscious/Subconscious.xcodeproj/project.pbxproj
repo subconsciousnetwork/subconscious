@@ -199,6 +199,8 @@
 		B8CC434427A0815E0079D2F9 /* ModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC434227A0815E0079D2F9 /* ModalView.swift */; };
 		B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */; };
 		B8CC434A27A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */; };
+		B8CE40E728D2707D00819064 /* QueryPromptGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */; };
+		B8CE40E828D2707D00819064 /* QueryPromptGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */; };
 		B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */; };
 		B8D7F04027A4AD130042C7CF /* SuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */; };
 		B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */; };
@@ -367,6 +369,7 @@
 		B8CC433F27A07DF10079D2F9 /* DialogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogView.swift; sourceTree = "<group>"; };
 		B8CC434227A0815E0079D2F9 /* ModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalView.swift; sourceTree = "<group>"; };
 		B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationUtilities.swift; sourceTree = "<group>"; };
+		B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryPromptGeist.swift; sourceTree = "<group>"; };
 		B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionLabelView.swift; sourceTree = "<group>"; };
 		B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionViewModifier.swift; sourceTree = "<group>"; };
 		B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationToolbar.swift; sourceTree = "<group>"; };
@@ -480,6 +483,7 @@
 				B8A59D6528B690B20010DB2F /* FeedService.swift */,
 				B8A59D7428B694C40010DB2F /* Geist.swift */,
 				B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */,
+				B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */,
 				B8CA8F1F288F1875005F8802 /* RandomPromptGeist.swift */,
 			);
 			path = Services;
@@ -1013,6 +1017,7 @@
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8A59D6928B692900010DB2F /* StoryPrompt.swift in Sources */,
 				B84AD8E3281073CE006B3153 /* InlineFormattingBarView.swift in Sources */,
+				B8CE40E728D2707D00819064 /* QueryPromptGeist.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
@@ -1121,6 +1126,7 @@
 				B84AD8E4281073CE006B3153 /* InlineFormattingBarView.swift in Sources */,
 				B8AE34C6276BF72500777FF0 /* LinkSearchView.swift in Sources */,
 				B82C3A5426F528B000833CC8 /* DatabaseService.swift in Sources */,
+				B8CE40E828D2707D00819064 /* QueryPromptGeist.swift in Sources */,
 				B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
 				B8A41D4F2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,
 				B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
