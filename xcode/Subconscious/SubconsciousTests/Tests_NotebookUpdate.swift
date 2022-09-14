@@ -50,7 +50,6 @@ class Tests_NotebookUpdate: XCTestCase {
 
     func testUpdateDetailFocus() throws {
         let store = Store(
-            update: NotebookModel.update,
             state: NotebookModel(),
             environment: environment
         )

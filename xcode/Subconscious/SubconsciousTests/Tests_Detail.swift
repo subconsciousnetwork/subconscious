@@ -63,7 +63,6 @@ class Tests_Detail: XCTestCase {
 
     func testSetEditorFocus() {
         let store = Store(
-            update: DetailModel.update,
             state: DetailModel(
                 slug: Slug("great-expectations")!,
                 saveState: .modified,
@@ -152,4 +151,89 @@ class Tests_Detail: XCTestCase {
         )
     }
 
+    func testDetailActionFromEntrySuggestion() throws {
+        let entrySuggestion = Suggestion.entry(
+            EntryLink(
+                slug: Slug("systems-generating-systems")!,
+                title: "Systems Generating Systems"
+            )
+        )
+        let action = DetailAction.fromSuggestion(entrySuggestion)
+
+        XCTAssertEqual(
+            action,
+            DetailAction.requestDetail(
+                slug: Slug("systems-generating-systems")!,
+                fallback: "Systems Generating Systems",
+                autofocus: false
+            )
+        )
+    }
+
+    func testDetailActionFromSearchSuggestion() throws {
+        let entrySuggestion = Suggestion.search(
+            EntryLink(
+                slug: Slug("systems-generating-systems")!,
+                title: "Systems Generating Systems"
+            )
+        )
+        let action = DetailAction.fromSuggestion(entrySuggestion)
+
+        XCTAssertEqual(
+            action,
+            DetailAction.requestDetail(
+                slug: Slug("systems-generating-systems")!,
+                fallback: "Systems Generating Systems",
+                autofocus: true
+            )
+        )
+    }
+
+    func testDetailActionFromJournalSuggestion() throws {
+        let entrySuggestion = Suggestion.journal(
+            EntryLink(
+                slug: Slug("systems-generating-systems")!,
+                title: "Systems Generating Systems"
+            )
+        )
+        let action = DetailAction.fromSuggestion(entrySuggestion)
+
+        XCTAssertEqual(
+            action,
+            DetailAction.requestTemplateDetail(
+                slug: Slug("systems-generating-systems")!,
+                template: Config.default.journalTemplate,
+                autofocus: true
+            )
+        )
+    }
+
+    func testDetailActionFromScratchSuggestion() throws {
+        let entrySuggestion = Suggestion.scratch(
+            EntryLink(
+                slug: Slug("systems-generating-systems")!,
+                title: "Systems Generating Systems"
+            )
+        )
+        let action = DetailAction.fromSuggestion(entrySuggestion)
+
+        XCTAssertEqual(
+            action,
+            DetailAction.requestDetail(
+                slug: Slug("systems-generating-systems")!,
+                fallback: "Systems Generating Systems",
+                autofocus: true
+            )
+        )
+    }
+
+    func testDetailActionFromRandomSuggestion() throws {
+        let entrySuggestion = Suggestion.random
+        let action = DetailAction.fromSuggestion(entrySuggestion)
+
+        XCTAssertEqual(
+            action,
+            DetailAction.requestRandomDetail(autofocus: false)
+        )
+    }
 }
