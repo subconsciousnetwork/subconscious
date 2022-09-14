@@ -358,10 +358,10 @@ struct NotebookModel: ModelProtocol {
                 query: query
             )
         case let .activatedSuggestion(suggestion):
-            return activatedSuggestion(
+            return NotebookDetailCursor.update(
                 state: state,
-                environment: environment,
-                suggestion: suggestion
+                action: DetailAction.fromSuggestion(suggestion),
+                environment: environment
             )
         }
     }
@@ -652,64 +652,6 @@ struct NotebookModel: ModelProtocol {
         .eraseToAnyPublisher()
 
         return Update(state: state, fx: fx)
-    }
-
-    /// Handle user select search suggestion
-    static func activatedSuggestion(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        suggestion: Suggestion
-    ) -> Update<NotebookModel> {
-        switch suggestion {
-        case .entry(let entryLink):
-            let fx: Fx<NotebookAction> = Just(
-                NotebookAction.requestDetail(
-                    slug: entryLink.slug,
-                    fallback: entryLink.title,
-                    autofocus: false
-                )
-            )
-            .eraseToAnyPublisher()
-            return Update(state: state, fx: fx)
-        case .search(let entryLink):
-            let fx: Fx<NotebookAction> = Just(
-                NotebookAction.requestDetail(
-                    slug: entryLink.slug,
-                    fallback: entryLink.title,
-                    // Autofocus note because we're creating it from scratch
-                    autofocus: true
-                )
-            )
-            .eraseToAnyPublisher()
-            return Update(state: state, fx: fx)
-        case .journal(let entryLink):
-            let fx: Fx<NotebookAction> = Just(
-                NotebookAction.requestTemplateDetail(
-                    slug: entryLink.slug,
-                    template: Config.default.journalTemplate,
-                    // Autofocus note because we're creating it from scratch
-                    autofocus: true
-                )
-            )
-            .eraseToAnyPublisher()
-            return Update(state: state, fx: fx)
-        case .scratch(let entryLink):
-            let fx: Fx<NotebookAction> = Just(
-                NotebookAction.requestDetail(
-                    slug: entryLink.slug,
-                    fallback: entryLink.title,
-                    autofocus: true
-                )
-            )
-            .eraseToAnyPublisher()
-            return Update(state: state, fx: fx)
-        case .random:
-            let fx: Fx<NotebookAction> = Just(
-                NotebookAction.requestRandomDetail(autofocus: false)
-            )
-            .eraseToAnyPublisher()
-            return Update(state: state, fx: fx)
-        }
     }
 }
 
