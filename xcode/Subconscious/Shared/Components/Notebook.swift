@@ -23,10 +23,6 @@ enum NotebookAction {
     case detail(DetailAction)
     case showDetail(Bool)
 
-    //  URL handlers
-    case openURL(URL)
-    case openEditorURL(URL)
-
     /// KeyboardService state change.
     /// Action passed down from parent component.
     case changeKeyboardState(KeyboardState)
@@ -162,8 +158,6 @@ struct NotebookDetailCursor: CursorProtocol {
             return .refreshAll
         case .showDetail(let isShowing):
             return .showDetail(isShowing)
-        case .openEditorURL(let url):
-            return .openEditorURL(url)
         case .requestConfirmDelete(let slug):
             return .confirmDelete(slug)
         default:
@@ -262,11 +256,6 @@ struct NotebookModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
-        case let .openURL(url):
-            UIApplication.shared.open(url)
-            return Update(state: state)
-        case let .openEditorURL(url):
-            return openEditorURL(state: state, url: url)
         case let .changeKeyboardState(keyboard):
             return changeKeyboardState(state: state, keyboard: keyboard)
         case .appear:
@@ -430,28 +419,6 @@ struct NotebookModel: ModelProtocol {
         var model = state
         model.isDetailShowing = isShowing
         return Update(state: model)
-    }
-
-    static func openEditorURL(
-        state: NotebookModel,
-        url: URL
-    ) -> Update<NotebookModel> {
-        // Follow ordinary links when not in edit mode
-        guard SubURL.isSubEntryURL(url) else {
-            UIApplication.shared.open(url)
-            return Update(state: state)
-        }
-
-        let link = EntryLink.decodefromSubEntryURL(url)
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.requestDetail(
-                slug: link?.slug,
-                fallback: link?.title ?? "",
-                autofocus: false
-            )
-        )
-        .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
     }
 
     /// Refresh all lists in the notebook tab from database.
@@ -691,9 +658,5 @@ struct NotebookView: View {
             )
             .zIndex(3)
         }
-        .environment(\.openURL, OpenURLAction { url in
-            store.send(.openURL(url))
-            return .handled
-        })
     }
 }

@@ -15,6 +15,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Wrapper for editor actions
     case markupEditor(MarkupTextAction)
 
+    case openURL(URL)
+    case openBrowserURL(URL)
     case openEditorURL(URL)
     /// Invokes save and blurs editor
     case selectDoneEditing
@@ -271,11 +273,23 @@ struct DetailModel: ModelProtocol {
                 action: action,
                 environment: ()
             )
-        case .openEditorURL(_):
-            return logDebug(
+        case .openURL(let url):
+            return openURL(
                 state: state,
                 environment: environment,
-                message: "openEditorURL should be handled by parent component"
+                url: url
+            )
+        case .openBrowserURL(let url):
+            return openBrowserURL(
+                state: state,
+                environment: environment,
+                url: url
+            )
+        case .openEditorURL(let url):
+            return openEditorURL(
+                state: state,
+                environment: environment,
+                url: url
             )
         case let .setEditor(text, saveState):
             return setEditor(
@@ -555,6 +569,58 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         environment.logger.warning("\(message)")
         return Update(state: state)
+    }
+
+    /// Disambiguate URL opens and forward to specialized action types
+    static func openURL(
+        state: DetailModel,
+        environment: AppEnvironment,
+        url: URL
+    ) -> Update<DetailModel> {
+        // If link is not a sub:// link, then open it in browser
+        guard SubURL.isSubEntryURL(url) else {
+            return update(
+                state: state,
+                action: .openBrowserURL(url),
+                environment: environment
+            )
+        }
+        return update(
+            state: state,
+            action: .openEditorURL(url),
+            environment: environment
+        )
+    }
+
+    /// Open URL in browser
+    /// Request open URL in editor
+    static func openBrowserURL(
+        state: DetailModel,
+        environment: AppEnvironment,
+        url: URL
+    ) -> Update<DetailModel> {
+        /// Open in browser
+        UIApplication.shared.open(url)
+        return Update(state: state)
+    }
+
+    /// Request open URL in editor
+    static func openEditorURL(
+        state: DetailModel,
+        environment: AppEnvironment,
+        url: URL
+    ) -> Update<DetailModel> {
+        // Otherwise decode link from URL and request detail
+        let link = EntryLink.decodefromSubEntryURL(url)
+        return update(
+            state: state,
+            action: .requestDetail(
+                slug: link?.slug,
+                fallback: link?.title ?? "",
+                autofocus: false
+            ),
+            environment: environment
+        )
     }
 
     /// Set the contents of the editor.
@@ -1630,7 +1696,7 @@ struct DetailView: View {
                                     frame: geometry.frame(in: .local),
                                     renderAttributesOf: Subtext.renderAttributesOf,
                                     onLink: { url, _, _, _ in
-                                        store.send(.openEditorURL(url))
+                                        store.send(.openURL(url))
                                         return false
                                     },
                                     logger: Logger.editor
@@ -1718,6 +1784,11 @@ struct DetailView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        /// Catch link taps and handle them here
+        .environment(\.openURL, OpenURLAction { url in
+            store.send(.openURL(url))
+            return .handled
+        })
         .sheet(
             isPresented: Binding(
                 store: store,
