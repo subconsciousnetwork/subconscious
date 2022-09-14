@@ -143,7 +143,7 @@ class Tests_NotebookUpdate: XCTestCase {
         )
         let update = NotebookModel.update(
             state: state,
-            action: .deleteEntry(b.slug),
+            action: .stageDeleteEntry(b.slug),
             environment: environment
         )
         XCTAssertEqual(

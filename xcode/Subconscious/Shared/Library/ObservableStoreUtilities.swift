@@ -9,7 +9,9 @@ import Foundation
 import ObservableStore
 
 extension ModelProtocol {
-    static func update(
+    /// Update state through a sequence of actions.
+    /// This method is useful for composing or "multiplexing" actions.
+    public static func update(
         state: Self,
         actions: [Action],
         environment: Environment
@@ -18,7 +20,7 @@ extension ModelProtocol {
             Update(state: state),
             { result, action in
                 let next = update(
-                    state: state,
+                    state: result.state,
                     action: action,
                     environment: environment
                 )
