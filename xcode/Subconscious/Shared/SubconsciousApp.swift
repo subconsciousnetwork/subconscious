@@ -500,10 +500,17 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
+        let feedFx: Fx<AppAction> = Just(
+            AppAction.feed(.refreshAll)
+        )
+        .eraseToAnyPublisher()
+
         let fx: Fx<AppAction> = Just(
             AppAction.notebook(.refreshAll)
         )
+        .merge(with: feedFx)
         .eraseToAnyPublisher()
+
         return Update(state: state, fx: fx)
     }
 

@@ -16,6 +16,8 @@ enum FeedAction {
     case showDetail(Bool)
     case appear
 
+    case refreshAll
+
     // Feed
     /// Fetch stories for feed
     case fetchFeed
@@ -145,6 +147,11 @@ struct FeedModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .refreshAll:
+            return refreshAll(
+                state: state,
+                environment: environment
+            )
         case .fetchFeed:
             return fetchFeed(
                 state: state,
@@ -226,6 +233,25 @@ struct FeedModel: ModelProtocol {
         return fetchFeed(state: state, environment: environment)
     }
 
+    /// Refresh all list views from database
+    static func refreshAll(
+        state: FeedModel,
+        environment: AppEnvironment
+    ) -> Update<FeedModel> {
+        let searchFx: Fx<FeedAction> = Just(
+            FeedAction.search(.refreshSuggestions)
+        )
+        .eraseToAnyPublisher()
+
+        let fx: Fx<FeedAction> = Just(
+            FeedAction.fetchFeed
+        )
+        .merge(with: searchFx)
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
     /// Fetch latest from feed
     static func fetchFeed(
         state: FeedModel,
@@ -259,9 +285,15 @@ struct FeedModel: ModelProtocol {
         environment: AppEnvironment,
         slug: Slug
     ) -> Update<FeedModel> {
+        let searchFx: Fx<FeedAction> = Just(
+            FeedAction.search(.entryDeleted(slug))
+        )
+        .eraseToAnyPublisher()
+
         let fx: Fx<FeedAction> = Just(
             FeedAction.detail(.entryDeleted(slug))
         )
+            .merge(with: searchFx)
         .eraseToAnyPublisher()
 
         return Update(state: state, fx: fx)
