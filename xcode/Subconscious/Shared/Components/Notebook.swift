@@ -214,12 +214,6 @@ struct NotebookSearchCursor: CursorProtocol {
 //  MARK: Model
 /// Model containing state for the notebook tab.
 struct NotebookModel: ModelProtocol {
-    //  Current state of keyboard
-    /// Keyboard preparing to show
-    var keyboardWillShow = false
-    /// Keyboard height at end of animation
-    var keyboardEventualHeight: CGFloat = 0
-
     var isFabShowing = true
 
     /// Search HUD
@@ -276,7 +270,11 @@ struct NotebookModel: ModelProtocol {
                 environment: environment
             )
         case let .changeKeyboardState(keyboard):
-            return changeKeyboardState(state: state, keyboard: keyboard)
+            return changeKeyboardState(
+                state: state,
+                environment: environment,
+                keyboard: keyboard
+            )
         case .appear:
             return appear(
                 state: state,
@@ -415,6 +413,7 @@ struct NotebookModel: ModelProtocol {
     /// Actions come from `KeyboardService`
     static func changeKeyboardState(
         state: NotebookModel,
+        environment: AppEnvironment,
         keyboard: KeyboardState
     ) -> Update<NotebookModel> {
         switch keyboard {
@@ -422,17 +421,19 @@ struct NotebookModel: ModelProtocol {
             .willShow(let size, _),
             .didShow(let size),
             .didChangeFrame(let size):
-            var model = state
-            model.keyboardWillShow = true
-            model.keyboardEventualHeight = size.height
-            return Update(state: model)
+            return update(
+                state: state,
+                action: .search(.setKeyboardHeight(size.height)),
+                environment: environment
+            )
         case .willHide:
             return Update(state: state)
         case .didHide:
-            var model = state
-            model.keyboardWillShow = false
-            model.keyboardEventualHeight = 0
-            return Update(state: model)
+            return update(
+                state: state,
+                action: .search(.setKeyboardHeight(0)),
+                environment: environment
+            )
         }
     }
 
