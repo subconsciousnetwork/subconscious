@@ -28,9 +28,6 @@
 		B8249DA127E2668500BCDFBA /* PinTrailingBottom.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */; };
 		B8249DA327E2753800BCDFBA /* ViewUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8249DA227E2753800BCDFBA /* ViewUtilities.swift */; };
 		B8249DA427E2753800BCDFBA /* ViewUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8249DA227E2753800BCDFBA /* ViewUtilities.swift */; };
-		B824E08728D28B7000833449 /* ObservableStoreUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824E08628D28B7000833449 /* ObservableStoreUtilities.swift */; };
-		B824E08828D28B7000833449 /* ObservableStoreUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824E08628D28B7000833449 /* ObservableStoreUtilities.swift */; };
-		B824E08A28D2994700833449 /* Tests_ObservableStoreUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824E08928D2994700833449 /* Tests_ObservableStoreUtilities.swift */; };
 		B824FDCE26FA662200B81BBD /* SubtextFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDCD26FA662200B81BBD /* SubtextFile.swift */; };
 		B824FDD126FA98F300B81BBD /* EntryDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD026FA98F300B81BBD /* EntryDetail.swift */; };
 		B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B824FDD326FAB1BC00B81BBD /* Truncate.swift */; };
@@ -268,8 +265,6 @@
 		B822F18C27C9C0AB00943C6B /* CountChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountChip.swift; sourceTree = "<group>"; };
 		B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinTrailingBottom.swift; sourceTree = "<group>"; };
 		B8249DA227E2753800BCDFBA /* ViewUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewUtilities.swift; sourceTree = "<group>"; };
-		B824E08628D28B7000833449 /* ObservableStoreUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableStoreUtilities.swift; sourceTree = "<group>"; };
-		B824E08928D2994700833449 /* Tests_ObservableStoreUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_ObservableStoreUtilities.swift; sourceTree = "<group>"; };
 		B824FDCD26FA662200B81BBD /* SubtextFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtextFile.swift; sourceTree = "<group>"; };
 		B824FDD026FA98F300B81BBD /* EntryDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryDetail.swift; sourceTree = "<group>"; };
 		B824FDD326FAB1BC00B81BBD /* Truncate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Truncate.swift; sourceTree = "<group>"; };
@@ -456,7 +451,6 @@
 				B85D5E3E28BE4B4600EE0078 /* Tests_FeedUpdate.swift */,
 				B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */,
 				B85D5E3C28BE4B2C00EE0078 /* Tests_NotebookUpdate.swift */,
-				B824E08928D2994700833449 /* Tests_ObservableStoreUtilities.swift */,
 				B88CC95A284FF64300994928 /* Tests_OrderedCollectionUtilities.swift */,
 				B82BB7FD28243F32000C9FCC /* Tests_Parser.swift */,
 				B8AAAADA28CBDED800DBC8A9 /* Tests_Search.swift */,
@@ -671,7 +665,6 @@
 				B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
-				B824E08628D28B7000833449 /* ObservableStoreUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -949,7 +942,6 @@
 				B8AAAAD928CBD68600DBC8A9 /* Tests_Detail.swift in Sources */,
 				B8C7E8C0280A2B7700E439DC /* Test_Markup.swift in Sources */,
 				B8AF472A28453049001973FB /* Tests_SubtextFile.swift in Sources */,
-				B824E08A28D2994700833449 /* Tests_ObservableStoreUtilities.swift in Sources */,
 				B82BB7FE28243F32000C9FCC /* Tests_Parser.swift in Sources */,
 				B84AD8E82811C827006B3153 /* Tests_URLComponentsUtilities.swift in Sources */,
 				B8AAAADB28CBDED800DBC8A9 /* Tests_Search.swift in Sources */,
@@ -1052,7 +1044,6 @@
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
 				B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */,
 				B89966C728B6EE2300DF1F8C /* Notebook.swift in Sources */,
-				B824E08728D28B7000833449 /* ObservableStoreUtilities.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8A41D4E2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
@@ -1142,7 +1133,6 @@
 				B8879EA126F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */,
 				B877A6E627A1C2BC00F11A90 /* KeyboardService.swift in Sources */,
 				B8EB2A2426F27797006E97C3 /* AppView.swift in Sources */,
-				B824E08828D28B7000833449 /* ObservableStoreUtilities.swift in Sources */,
 				B82C3A6026F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8EC568D26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
 				B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
@@ -1653,7 +1643,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gordonbrander/ObservableStore";
 			requirement = {
-				branch = "v0.2.0-rc";
+				branch = "2022-09-15-update-actions-multi";
 				kind = branch;
 			};
 		};

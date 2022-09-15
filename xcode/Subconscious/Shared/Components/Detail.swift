@@ -683,27 +683,25 @@ struct DetailModel: ModelProtocol {
         range nsRange: NSRange,
         text: String
     ) -> Update<DetailModel> {
-        // Send setSelection down immediately
-        var update = DetailMarkupEditorCursor.update(
-            state: state,
-            action: .setSelection(range: nsRange, text: text),
-            environment: ()
-        )
-
         // Set entry link based on selection
         let dom = Subtext.parse(markup: text)
         let link = dom.entryLinkFor(range: nsRange)
-        update.state.selectedEntryLinkMarkup = link
+        var model = state
+        model.selectedEntryLinkMarkup = link
 
         let linkSearchText = link?.toTitle() ?? ""
 
-        return update.pipe({ state in
-            setLinkSearch(
-                state: state,
-                environment: environment,
-                text: linkSearchText
-            )
-        })
+        return DetailModel.update(
+            state: model,
+            actions: [
+                // Immediately send down setSelection
+                DetailAction.markupEditor(
+                    MarkupTextAction.setSelection(range: nsRange, text: text)
+                ),
+                DetailAction.setLinkSearch(linkSearchText)
+            ],
+            environment: environment
+        )
     }
 
     /// Set text cursor at end of editor
@@ -756,22 +754,18 @@ struct DetailModel: ModelProtocol {
             return Update(state: state)
         }
 
-        // Set editor dom and editor selection immediately in same
-        // Update.
-        return setEditor(
+        // Set editor dom and editor selection immediately in same Update.
+        return DetailModel.update(
             state: state,
-            environment: environment,
-            text: markup,
-            saveState: .modified
+            actions: [
+                .setEditor(text: markup, saveState: .modified),
+                .setEditorSelection(
+                    range: NSRange(cursor..<cursor, in: markup),
+                    text: markup
+                )
+            ],
+            environment: environment
         )
-        .pipe({ state in
-            setEditorSelection(
-                state: state,
-                environment: environment,
-                range: NSRange(cursor..<cursor, in: markup),
-                text: state.markupEditor.text
-            )
-        })
     }
 
     /// Unfocus editor and save current state
@@ -1245,23 +1239,15 @@ struct DetailModel: ModelProtocol {
         var model = state
         model.linkSearchText = ""
 
-        return Update(state: model)
-            .pipe({ state in
-                setLinkSheetPresented(
-                    state: state,
-                    environment: environment,
-                    isPresented: false
-                )
-            })
-            .pipe({ state in
-                insertEditorText(
-                    state: state,
-                    environment: environment,
-                    text: replacement,
-                    range: range
-                )
-            })
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+        return DetailModel.update(
+            state: model,
+            actions: [
+                .setLinkSheetPresented(false),
+                .insertEditorText(text: replacement, range: range)
+            ],
+            environment: environment
+        )
+        .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
     /// Show rename sheet.
@@ -1284,22 +1270,14 @@ struct DetailModel: ModelProtocol {
 
         let title = entry.linkableTitle
 
-        return Update(state: model)
-            //  Save entry in preperation for any merge/move.
-            .pipe({ state in
-                autosave(
-                    state: state,
-                    environment: environment
-                )
-            })
-            //  Set rename slug field text
-            .pipe({ state in
-                setRenameField(
-                    state: state,
-                    environment: environment,
-                    text: title
-                )
-            })
+        return DetailModel.update(
+            state: model,
+            actions: [
+                .autosave,
+                .setRenameField(title)
+            ],
+            environment: environment
+        )
     }
 
     /// Hide rename sheet.
@@ -1312,14 +1290,11 @@ struct DetailModel: ModelProtocol {
         model.isRenameSheetShowing = false
         model.entryToRename = nil
 
-        return Update(state: model)
-            .pipe({ state in
-                setRenameField(
-                    state: state,
-                    environment: environment,
-                    text: ""
-                )
-            })
+        return DetailModel.update(
+            state: model,
+            action: .setRenameField(""),
+            environment: environment
+        )
     }
 
     /// Set text of slug field
@@ -1669,22 +1644,17 @@ struct DetailModel: ModelProtocol {
             return Update(state: state)
         }
 
-        // Set editor dom and editor selection immediately in same
-        // Update.
-        return setEditor(
+        return DetailModel.update(
             state: state,
-            environment: environment,
-            text: editorText,
-            saveState: .modified
+            actions: [
+                .setEditor(text: editorText, saveState: .modified),
+                .setEditorSelection(
+                    range: NSRange(cursor..<cursor, in: editorText),
+                    text: editorText
+                )
+            ],
+            environment: environment
         )
-        .pipe({ state in
-            setEditorSelection(
-                state: state,
-                environment: environment,
-                range: NSRange(cursor..<cursor, in: state.markupEditor.text),
-                text: state.markupEditor.text
-            )
-        })
     }
 
     /// Dispatch refresh actions
