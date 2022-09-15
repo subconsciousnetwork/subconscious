@@ -96,7 +96,11 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     // Editor
     /// Update editor dom and mark if this state is saved or not
-    case setEditor(text: String, saveState: SaveState)
+    case setEditor(
+        text: String,
+        saveState: SaveState,
+        modified: Date
+    )
     /// Set selected range in editor
     case setEditorSelection(range: NSRange, text: String)
     case setEditorSelectionEnd
@@ -117,11 +121,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     static func requestEditorFocus(_ isFocused: Bool) -> Self {
         .markupEditor(.requestFocus(isFocused))
-    }
-
-    /// Update editor dom and always mark modified
-    static func modifyEditor(text: String) -> Self {
-        Self.setEditor(text: text, saveState: .modified)
     }
 
     /// Select a link completion
@@ -180,8 +179,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "succeedSave(\(entry.slug))"
         case .updateDetail(let detail, _):
             return "updateDetail(\(detail.slug))"
-        case .setEditor(_, let saveState):
-            return "setEditor(text: ..., saveState: \(String(describing: saveState)))"
+        case let .setEditor(_, saveState, modified):
+            return "setEditor(text: ..., saveState: \(String(describing: saveState)), modified: \(modified))"
         case let .setEditorSelection(range, _):
             return "setEditorSelection(range: \(range), text: ...)"
         default:
@@ -208,7 +207,11 @@ struct DetailMarkupEditorCursor: CursorProtocol {
         // Intercept text set action so we can mark all text-sets
         // as dirty.
         case .setText(let text):
-            return .setEditor(text: text, saveState: .modified)
+            return .setEditor(
+                text: text,
+                saveState: .modified,
+                modified: .now
+            )
         // Intercept setSelection, so we can set link suggestions based on
         // cursor position.
         case let .setSelection(nsRange, text):
@@ -227,6 +230,7 @@ struct DetailModel: ModelProtocol {
 
     /// Is editor saved?
     var saveState = SaveState.saved
+    var modified = Date.now
 
     /// Is editor showing?
     var isPresented = false
@@ -303,12 +307,13 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 url: url
             )
-        case let .setEditor(text, saveState):
+        case let .setEditor(text, saveState, modified):
             return setEditor(
                 state: state,
                 environment: environment,
                 text: text,
-                saveState: saveState
+                saveState: saveState,
+                modified: modified
             )
         case let .setEditorSelection(range, text):
             return setEditorSelection(
@@ -652,34 +657,22 @@ struct DetailModel: ModelProtocol {
         )
     }
 
-    /// Set the contents of the editor.
-    ///
-    /// if `isSaved` is `false`, the editor state will be flagged as unsaved,
-    /// allowing other processes to save it to disk later.
-    /// When setting a `dom` that represents the current saved-to-disk state
-    /// mark `isSaved` true.
-    ///
-    /// - Parameters:
-    ///   - state: the state of the app
-    ///   - dom: the Subtext DOM that should be rendered and set
-    ///   - isSaved: is this text state saved already?
+    /// Set the contents of the editor and mark save state and modified time.
     static func setEditor(
         state: DetailModel,
         environment: AppEnvironment,
         text: String,
-        saveState: SaveState = .modified
+        saveState: SaveState,
+        modified: Date
     ) -> Update<DetailModel> {
-        // Send setText down immediately.
-        var update = DetailMarkupEditorCursor.update(
-            state: state,
-            action: .setText(text),
-            environment: ()
+        var model = state
+        model.saveState = saveState
+        model.modified = modified
+        return update(
+            state: model,
+            action: .markupEditor(.setText(text)),
+            environment: environment
         )
-
-        // Mark save state
-        update.state.saveState = saveState
-
-        return update
     }
 
     /// Set editor selection.
@@ -764,7 +757,11 @@ struct DetailModel: ModelProtocol {
         return DetailModel.update(
             state: state,
             actions: [
-                .setEditor(text: markup, saveState: .modified),
+                .setEditor(
+                    text: markup,
+                    saveState: .modified,
+                    modified: .now
+                ),
                 .setEditorSelection(
                     range: NSRange(cursor..<cursor, in: markup),
                     text: markup
@@ -990,7 +987,8 @@ struct DetailModel: ModelProtocol {
                 actions: [
                     .setEditor(
                         text: detail.entry.body,
-                        saveState: detail.saveState
+                        saveState: detail.saveState,
+                        modified: detail.entry.modified()
                     ),
                     .presentDetail(true),
                     .requestEditorFocus(false)
@@ -1010,7 +1008,8 @@ struct DetailModel: ModelProtocol {
             actions: [
                 .setEditor(
                     text: detail.entry.body,
-                    saveState: detail.saveState
+                    saveState: detail.saveState,
+                    modified: detail.entry.modified()
                 ),
                 .presentDetail(true),
                 .setEditorSelectionEnd,
@@ -1631,7 +1630,11 @@ struct DetailModel: ModelProtocol {
         return DetailModel.update(
             state: state,
             actions: [
-                .setEditor(text: editorText, saveState: .modified),
+                .setEditor(
+                    text: editorText,
+                    saveState: .modified,
+                    modified: .now
+                ),
                 .setEditorSelection(
                     range: NSRange(cursor..<cursor, in: editorText),
                     text: editorText
