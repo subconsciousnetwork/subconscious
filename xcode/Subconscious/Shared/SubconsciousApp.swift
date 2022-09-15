@@ -62,6 +62,14 @@ enum AppAction: CustomLogStringConvertible {
     /// Notify entry deletion failed
     case failDeleteEntry(String)
 
+    // Rename and merge
+    /// Move entry succeeded. Lifecycle action from Detail.
+    case succeedMoveEntry(from: EntryLink, to: EntryLink)
+    /// Merge entry succeeded. Lifecycle action from Detail.
+    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
+    /// Retitle entry succeeded. Lifecycle action from Detail.
+    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+
     var logDescription: String {
         switch self {
         case .notebook(let notebookAction):
@@ -100,6 +108,12 @@ struct NotebookCursor: CursorProtocol {
         switch action {
         case .requestDeleteEntry(let slug):
             return .deleteEntry(slug)
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedRetitleEntry(from, to):
+            return .succeedRetitleEntry(from: from, to: to)
         default:
             return .notebook(action)
         }
@@ -123,6 +137,12 @@ struct FeedCursor: CursorProtocol {
         switch action {
         case .requestDeleteEntry(let slug):
             return .deleteEntry(slug)
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedRetitleEntry(from, to):
+            return .succeedRetitleEntry(from: from, to: to)
         default:
             return .feed(action)
         }
@@ -271,6 +291,36 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 message: message
+            )
+        case let .succeedMoveEntry(from, to):
+            // Dispatch move actions from anywhere down to sub-components
+            return update(
+                state: state,
+                actions: [
+                    .feed(.succeedMoveEntry(from: from, to: to)),
+                    .notebook(.succeedMoveEntry(from: from, to: to))
+                ],
+                environment: environment
+            )
+        case let .succeedMergeEntry(parent, child):
+            // Dispatch merge actions from anywhere down to sub-components
+            return update(
+                state: state,
+                actions: [
+                    .feed(.succeedMergeEntry(parent: parent, child: child)),
+                    .notebook(.succeedMergeEntry(parent: parent, child: child))
+                ],
+                environment: environment
+            )
+        case let .succeedRetitleEntry(from, to):
+            // Dispatch retitle actions from anywhere down to sub-components
+            return update(
+                state: state,
+                actions: [
+                    .feed(.succeedRetitleEntry(from: from, to: to)),
+                    .notebook(.succeedRetitleEntry(from: from, to: to))
+                ],
+                environment: environment
             )
         }
     }
