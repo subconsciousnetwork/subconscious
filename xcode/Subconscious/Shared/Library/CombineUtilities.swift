@@ -20,7 +20,6 @@ struct CombineUtilities {
                 promise(.success(result))
             })
         })
-        .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
     }
 
@@ -39,7 +38,6 @@ struct CombineUtilities {
                 }
             })
         })
-        .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
     }
 }
