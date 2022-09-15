@@ -92,15 +92,14 @@ struct SearchModel: ModelProtocol {
                 query: state.query
             )
         case .submitQuery(let query):
-            let searchHistoryFx: Fx<SearchAction> = Just(
-                SearchAction.createSearchHistoryItem(query)
+            return SearchModel.update(
+                state: state,
+                actions: [
+                    SearchAction.createSearchHistoryItem(query),
+                    SearchAction.setPresented(false)
+                ],
+                environment: environment
             )
-            .eraseToAnyPublisher()
-            /// Hide after submit
-            let fx: Fx<SearchAction> = Just(SearchAction.setPresented(false))
-                .merge(with: searchHistoryFx)
-                .eraseToAnyPublisher()
-            return Update(state: state, fx: fx)
         case .setSuggestions(let suggestions):
             var model = state
             model.suggestions = suggestions
@@ -215,19 +214,6 @@ struct SearchModel: ModelProtocol {
             }
         }
 
-        let historyFx: Fx<SearchAction> = Func.pipe(link) { link in
-            guard let link = link else {
-                return Empty().eraseToAnyPublisher()
-            }
-            return Just(SearchAction.createSearchHistoryItem(link.title))
-                .eraseToAnyPublisher()
-        }
-
-        let hideSearchFx: Fx<SearchAction> = Just(
-            SearchAction.setPresented(false)
-        )
-        .eraseToAnyPublisher()
-
         // Duration of keyboard animation
         let duration = Duration.keyboard
         let delay = duration + 0.03
@@ -237,10 +223,26 @@ struct SearchModel: ModelProtocol {
         )
         // Request detail AFTER hide animaiton completes
         .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
-        .merge(with: historyFx, hideSearchFx)
         .eraseToAnyPublisher()
 
-        return Update(state: state, fx: fx)
+        guard let link = link else {
+            return SearchModel.update(
+                state: state,
+                action: .setPresented(false),
+                environment: environment
+            )
+            .mergeFx(fx)
+        }
+
+        return SearchModel.update(
+            state: state,
+            actions: [
+                .createSearchHistoryItem(link.title),
+                .setPresented(false)
+            ],
+            environment: environment
+        )
+        .mergeFx(fx)
     }
 
     /// Insert search history event into database

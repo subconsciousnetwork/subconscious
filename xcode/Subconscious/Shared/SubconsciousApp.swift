@@ -355,18 +355,14 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let feedPollFx: Fx<AppAction> = Just(
-            AppAction.feed(FeedAction.autosave)
+        return AppModel.update(
+            state: state,
+            actions: [
+                .feed(.autosave),
+                .notebook(.autosave)
+            ],
+            environment: environment
         )
-        .eraseToAnyPublisher()
-
-        // Auto-save entry currently being edited, if any.
-        let fx: Fx<AppAction> = Just(
-            AppAction.notebook(NotebookAction.autosave)
-        )
-        .merge(with: feedPollFx)
-        .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
     }
 
     /// Make database ready.
@@ -485,12 +481,11 @@ struct AppModel: ModelProtocol {
         // Refresh lists after completing sync.
         // This ensures that files which were deleted outside the app
         // are removed from lists once sync is complete.
-        let fx: Fx<AppAction> = Just(
-            AppAction.refreshAll
+        return AppModel.update(
+            state: state,
+            action: .refreshAll,
+            environment: environment
         )
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
     }
 
     /// Refresh all lists in the app.
@@ -500,18 +495,14 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let feedFx: Fx<AppAction> = Just(
-            AppAction.feed(.refreshAll)
+        return AppModel.update(
+            state: state,
+            actions: [
+                .feed(.refreshAll),
+                .notebook(.refreshAll)
+            ],
+            environment: environment
         )
-        .eraseToAnyPublisher()
-
-        let fx: Fx<AppAction> = Just(
-            AppAction.notebook(.refreshAll)
-        )
-        .merge(with: feedFx)
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
     }
 
     /// Entry delete succeeded
@@ -547,19 +538,14 @@ struct AppModel: ModelProtocol {
         slug: Slug
     ) -> Update<AppModel> {
         environment.logger.log("Deleted entry: \(slug)")
-
-        let feedFx: Fx<AppAction> = Just(
-            AppAction.feed(FeedAction.entryDeleted(slug))
+        return AppModel.update(
+            state: state,
+            actions: [
+                .feed(.entryDeleted(slug)),
+                .notebook(.entryDeleted(slug))
+            ],
+            environment: environment
         )
-        .eraseToAnyPublisher()
-
-        let fx: Fx<AppAction> = Just(
-            AppAction.notebook(NotebookAction.entryDeleted(slug))
-        )
-        .merge(with: feedFx)
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
     }
 }
 

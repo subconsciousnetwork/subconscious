@@ -129,7 +129,7 @@ enum NotebookAction {
     }
 
     static func updateDetail(detail: EntryDetail, autofocus: Bool) -> Self {
-        Self.detail(.updateDetail(detail: detail, autofocus: autofocus))
+        .detail(.updateDetail(detail: detail, autofocus: autofocus))
     }
 
     static func setLinkSearch(_ query: String) -> Self {
@@ -453,28 +453,16 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        let detailRefreshFx: Fx<NotebookAction> = Just(
-            .detail(DetailAction.refreshAll)
+        return NotebookModel.update(
+            state: state,
+            actions: [
+                .detail(.refreshAll),
+                .search(.refreshSuggestions),
+                .countEntries,
+                .listRecent
+            ],
+            environment: environment
         )
-        .eraseToAnyPublisher()
-
-        let countFx: Fx<NotebookAction> = Just(
-            NotebookAction.countEntries
-        )
-        .eraseToAnyPublisher()
-
-        let listFx: Fx<NotebookAction> = Just(
-            NotebookAction.listRecent
-        )
-        .eraseToAnyPublisher()
-
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.search(.refreshSuggestions)
-        )
-        .merge(with: detailRefreshFx, countFx, listFx)
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
     }
 
     /// Read entry count from db
@@ -566,31 +554,16 @@ struct NotebookModel: ModelProtocol {
         environment: AppEnvironment,
         slug: Slug
     ) -> Update<NotebookModel> {
-        // Send down deleted notification so editor can reset itself if
-        // it is currently editing the deleted entry.
-        let detailFx: Fx<NotebookAction> = Just(
-            NotebookAction.detail(.entryDeleted(slug))
+        return NotebookModel.update(
+            state: state,
+            actions: [
+                .detail(.entryDeleted(slug)),
+                .search(.entryDeleted(slug)),
+                .countEntries,
+                .listRecent
+            ],
+            environment: environment
         )
-        .eraseToAnyPublisher()
-
-        //  Refresh notebook list after deletion.
-        let searchFx: Fx<NotebookAction> = Just(
-            NotebookAction.search(.entryDeleted(slug))
-        )
-        .eraseToAnyPublisher()
-
-        // Update count
-        let countFx: Fx<NotebookAction> = Just(
-            NotebookAction.countEntries
-        )
-        .eraseToAnyPublisher()
-
-        //  Refresh notebook list after deletion.
-        let fx: Fx<NotebookAction> = Just(NotebookAction.listRecent)
-            .merge(with: detailFx, searchFx, countFx)
-            .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
     }
 
     /// Handle and forward entry move action
@@ -660,10 +633,11 @@ struct NotebookModel: ModelProtocol {
         let delay = duration + 0.03
 
         /// We intercepted this action, so create an Fx to forward it down.
-        let submitFx: Fx<NotebookAction> = Just(
-            NotebookAction.search(.submitQuery(query))
+        let update = NotebookModel.update(
+            state: state,
+            action: .search(.submitQuery(query)),
+            environment: environment
         )
-        .eraseToAnyPublisher()
 
         // Derive slug. If we can't (e.g. invalid query such as empty string),
         // just hide the search HUD and do nothing.
@@ -671,7 +645,7 @@ struct NotebookModel: ModelProtocol {
             environment.logger.log(
                 "Query could not be converted to slug: \(query)"
             )
-            return Update(state: state, fx: submitFx)
+            return update
         }
 
         let fx: Fx<NotebookAction> = Just(
@@ -683,10 +657,9 @@ struct NotebookModel: ModelProtocol {
         )
         // Request detail AFTER animaiton completes
         .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
-        .merge(with: submitFx)
         .eraseToAnyPublisher()
 
-        return Update(state: state, fx: fx)
+        return update.mergeFx(fx)
     }
 }
 

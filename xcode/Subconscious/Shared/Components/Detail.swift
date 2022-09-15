@@ -99,6 +99,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case setEditor(text: String, saveState: SaveState)
     /// Set selected range in editor
     case setEditorSelection(range: NSRange, text: String)
+    case setEditorSelectionEnd
     /// Insert text into editor, replacing range
     case insertEditorText(
         text: String,
@@ -315,6 +316,11 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 range: range,
                 text: text
+            )
+        case .setEditorSelectionEnd:
+            return setEditorSelectionEnd(
+                state: state,
+                environment: environment
             )
         case let .insertEditorText(text, range):
             return insertEditorText(
@@ -773,13 +779,14 @@ struct DetailModel: ModelProtocol {
         state: DetailModel,
         environment: AppEnvironment
     ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = Just(
-            DetailAction.requestEditorFocus(false)
+        return DetailModel.update(
+            state: state,
+            actions: [
+                .requestEditorFocus(false),
+                .autosave
+            ],
+            environment: environment
         )
-        .merge(with: Just(DetailAction.autosave))
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
     }
 
     /// Toggle detail presentation
@@ -937,11 +944,6 @@ struct DetailModel: ModelProtocol {
         detail: EntryDetail,
         autofocus: Bool
     ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = Just(
-            DetailAction.presentDetail(true)
-        )
-        .eraseToAnyPublisher()
-
         // If we just loaded the detail we're already editing, do not
         // blow it away. Just mark loading complete and show detail.
         // The in-memory version we are editing should win.
@@ -951,7 +953,11 @@ struct DetailModel: ModelProtocol {
             )
             var model = state
             model.isLoading = false
-            return Update(state: model, fx: fx)
+            return update(
+                state: model,
+                action: .presentDetail(true),
+                environment: environment
+            )
         }
 
         // Schedule save for ~ after the transition animation completes.
@@ -980,29 +986,24 @@ struct DetailModel: ModelProtocol {
         model.slug = detail.slug
         model.headers = detail.entry.headers
         model.backlinks = detail.backlinks
-        model.saveState = .saved
-
-        let update = Update(
-            state: model,
-            fx: fx.merge(with: saveFx).eraseToAnyPublisher()
-        )
-        .pipe({ state in
-            setEditor(
-                state: state,
-                environment: environment,
-                text: detail.entry.body,
-                saveState: detail.saveState
-            )
-        })
+        model.saveState = detail.saveState
 
         // If editor is not meant to be focused, return early, setting focus
         // to nil.
         guard autofocus else {
-            let focusFx: Fx<DetailAction> = Just(
-                DetailAction.requestEditorFocus(false)
+            return DetailModel.update(
+                state: model,
+                actions: [
+                    .setEditor(
+                        text: detail.entry.body,
+                        saveState: detail.saveState
+                    ),
+                    .presentDetail(true),
+                    .requestEditorFocus(false)
+                ],
+                environment: environment
             )
-            .eraseToAnyPublisher()
-            return update.mergeFx(focusFx)
+            .mergeFx(saveFx)
         }
 
         // Otherwise, set editor selection and focus to end of document.
@@ -1010,20 +1011,20 @@ struct DetailModel: ModelProtocol {
         // edit it, not browse it.
         // We focus the editor and place the cursor at the end so you can just
         // start typing
-
-        let focusFx: Fx<DetailAction> = Just(
-            DetailAction.requestEditorFocus(true)
+        return DetailModel.update(
+            state: model,
+            actions: [
+                .setEditor(
+                    text: detail.entry.body,
+                    saveState: detail.saveState
+                ),
+                .presentDetail(true),
+                .setEditorSelectionEnd,
+                .requestEditorFocus(true)
+            ],
+            environment: environment
         )
-        .eraseToAnyPublisher()
-
-        return update
-            .pipe({ state in
-                setEditorSelectionEnd(
-                    state: state,
-                    environment: environment
-                )
-            })
-            .mergeFx(focusFx)
+        .mergeFx(saveFx)
     }
 
     /// Reset model to "none" condition
@@ -1592,18 +1593,14 @@ struct DetailModel: ModelProtocol {
         // If the slug currently being edited was just deleted,
         // - reset the editor
         // - un-present detail
-        let resetFx: Fx<DetailAction> = Just(
-            DetailAction.resetDetail
+        return DetailModel.update(
+            state: state,
+            actions: [
+                .resetDetail,
+                .presentDetail(false)
+            ],
+            environment: environment
         )
-        .eraseToAnyPublisher()
-
-        let fx: Fx<DetailAction> = Just(
-            DetailAction.presentDetail(false)
-        )
-        .merge(with: resetFx)
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
     }
 
     /// Insert wikilink markup into editor, begining at previous range

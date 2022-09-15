@@ -224,18 +224,14 @@ struct FeedModel: ModelProtocol {
         state: FeedModel,
         environment: AppEnvironment
     ) -> Update<FeedModel> {
-        let searchFx: Fx<FeedAction> = Just(
-            FeedAction.search(.refreshSuggestions)
+        return FeedModel.update(
+            state: state,
+            actions: [
+                .search(.refreshSuggestions),
+                .fetchFeed
+            ],
+            environment: environment
         )
-        .eraseToAnyPublisher()
-
-        let fx: Fx<FeedAction> = Just(
-            FeedAction.fetchFeed
-        )
-        .merge(with: searchFx)
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
     }
 
     /// Fetch latest from feed
@@ -271,18 +267,14 @@ struct FeedModel: ModelProtocol {
         environment: AppEnvironment,
         slug: Slug
     ) -> Update<FeedModel> {
-        let searchFx: Fx<FeedAction> = Just(
-            FeedAction.search(.entryDeleted(slug))
+        return FeedModel.update(
+            state: state,
+            actions: [
+                .search(.entryDeleted(slug)),
+                .detail(.entryDeleted(slug))
+            ],
+            environment: environment
         )
-        .eraseToAnyPublisher()
-
-        let fx: Fx<FeedAction> = Just(
-            FeedAction.detail(.entryDeleted(slug))
-        )
-            .merge(with: searchFx)
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
     }
 }
 
