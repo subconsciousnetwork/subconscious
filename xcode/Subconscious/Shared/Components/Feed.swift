@@ -31,6 +31,14 @@ enum FeedAction {
     case requestDeleteEntry(Slug?)
     case entryDeleted(Slug)
 
+    // Rename and merge
+    /// Move entry succeeded. Lifecycle action from Detail.
+    case succeedMoveEntry(from: EntryLink, to: EntryLink)
+    /// Merge entry succeeded. Lifecycle action from Detail.
+    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
+    /// Retitle entry succeeded. Lifecycle action from Detail.
+    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+
     /// Show/hide the search HUD
     static func setSearchPresented(_ isPresented: Bool) -> FeedAction {
         .search(.setPresented(isPresented))
@@ -109,6 +117,12 @@ struct FeedDetailCursor: CursorProtocol {
         switch action {
         case .requestDeleteEntry(let slug):
             return .requestDeleteEntry(slug)
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedRetitleEntry(from, to):
+            return .succeedRetitleEntry(from: from, to: to)
         default:
             return .detail(action)
         }
@@ -192,6 +206,33 @@ struct FeedModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 slug: slug
+            )
+        case let .succeedMoveEntry(from, to):
+            return update(
+                state: state,
+                actions: [
+                    .detail(.succeedMoveEntry(from: from, to: to)),
+                    .search(.refreshSuggestions)
+                ],
+                environment: environment
+            )
+        case let .succeedMergeEntry(parent, child):
+            return update(
+                state: state,
+                actions: [
+                    .detail(.succeedMergeEntry(parent: parent, child: child)),
+                    .search(.refreshSuggestions)
+                ],
+                environment: environment
+            )
+        case let .succeedRetitleEntry(from, to):
+            return update(
+                state: state,
+                actions: [
+                    .detail(.succeedRetitleEntry(from: from, to: to)),
+                    .search(.refreshSuggestions)
+                ],
+                environment: environment
             )
         }
     }
