@@ -1416,7 +1416,6 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
-        environment.logger.log("Renamed entry from \(from.slug) to \(to.slug)")
         return requestDetailAndRefreshAll(
             state: state,
             environment: environment,
@@ -1471,9 +1470,6 @@ struct DetailModel: ModelProtocol {
         parent: EntryLink,
         child: EntryLink
     ) -> Update<DetailModel> {
-        environment.logger.log(
-            "Merged entry \(child.slug) into \(parent.slug)"
-        )
         return requestDetailAndRefreshAll(
             state: state,
             environment: environment,
@@ -1530,10 +1526,6 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
-        environment.logger.log(
-            "Retitled entry \(from.slug) to \(to.linkableTitle)"
-        )
-
         /// We succeeded in updating title header on disk.
         /// Now set it in the view, so we see the updated state.
         var model = state
