@@ -864,24 +864,18 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         slug: Slug
     ) -> Update<DetailModel> {
-        let refreshFx: Fx<DetailAction> = Just(
-            DetailAction.refreshAll
+        return DetailModel.update(
+            state: state,
+            actions: [
+                .refreshAll,
+                .requestDetail(
+                    slug: slug,
+                    fallback: "",
+                    autofocus: false
+                )
+            ],
+            environment: environment
         )
-        .eraseToAnyPublisher()
-
-        let fx: Fx<DetailAction> = Just(
-            DetailAction.requestDetail(
-                slug: slug,
-                fallback: "",
-                autofocus: false
-            )
-        )
-        .merge(
-            with: refreshFx
-        )
-        .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
     }
 
     /// Request detail view for entry.
@@ -1103,9 +1097,6 @@ struct DetailModel: ModelProtocol {
         environment.logger.debug(
             "Saved entry: \(entry.slug)"
         )
-        let fx = Just(DetailAction.refreshAll)
-            .eraseToAnyPublisher()
-
         var model = state
 
         // If editor state is still the state we invoked save with,
@@ -1123,7 +1114,11 @@ struct DetailModel: ModelProtocol {
             model.saveState = .saved
         }
 
-        return Update(state: model, fx: fx)
+        return update(
+            state: model,
+            action: .refreshAll,
+            environment: environment
+        )
     }
 
     static func failSave(
@@ -1659,14 +1654,14 @@ struct DetailModel: ModelProtocol {
         state: DetailModel,
         environment: AppEnvironment
     ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = Just(
-            DetailAction.refreshRenameSuggestions
+        return DetailModel.update(
+            state: state,
+            actions: [
+                .refreshRenameSuggestions,
+                .refreshLinkSuggestions
+            ],
+            environment: environment
         )
-        .merge(
-            with: Just(DetailAction.refreshLinkSuggestions)
-        )
-        .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
     }
 
     /// Snapshot editor state in preparation for saving.

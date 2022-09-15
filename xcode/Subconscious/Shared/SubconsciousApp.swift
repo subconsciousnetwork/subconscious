@@ -203,7 +203,11 @@ struct AppModel: ModelProtocol {
         case .appear:
             return appear(state: state, environment: environment)
         case let .changeKeyboardState(keyboard):
-            return changeKeyboardState(state: state, keyboard: keyboard)
+            return changeKeyboardState(
+                state: state,
+                environment: environment,
+                keyboard: keyboard
+            )
         case .poll:
             return poll(
                 state: state,
@@ -285,14 +289,14 @@ struct AppModel: ModelProtocol {
     /// Actions come from `KeyboardService`
     static func changeKeyboardState(
         state: AppModel,
+        environment: AppEnvironment,
         keyboard: KeyboardState
     ) -> Update<AppModel> {
-        /// Forward keyboard change action down to Notebook component
-        let fx: Fx<AppAction> = Just(
-            AppAction.notebook(.changeKeyboardState(keyboard))
+        return update(
+            state: state,
+            action: .notebook(.changeKeyboardState(keyboard)),
+            environment: environment
         )
-        .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
     }
 
     /// Handle scene phase change
