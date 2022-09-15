@@ -344,31 +344,47 @@ struct NotebookModel: ModelProtocol {
             )
             return Update(state: state)
         case let .entryDeleted(slug):
-            return entryDeleted(
+            return NotebookModel.update(
                 state: state,
-                environment: environment,
-                slug: slug
+                actions: [
+                    .detail(.entryDeleted(slug)),
+                    .search(.entryDeleted(slug)),
+                    .countEntries,
+                    .listRecent
+                ],
+                environment: environment
             )
         case let .succeedMoveEntry(from, to):
-            return succeedMoveEntry(
+            return update(
                 state: state,
-                environment: environment,
-                from: from,
-                to: to
+                actions: [
+                    .detail(.succeedMoveEntry(from: from, to: to)),
+                    .search(.refreshSuggestions),
+                    .listRecent,
+                    .countEntries
+                ],
+                environment: environment
             )
         case let .succeedMergeEntry(parent, child):
-            return succeedMergeEntry(
+            return update(
                 state: state,
-                environment: environment,
-                parent: parent,
-                child: child
+                actions: [
+                    .detail(.succeedMergeEntry(parent: parent, child: child)),
+                    .search(.refreshSuggestions),
+                    .listRecent,
+                    .countEntries
+                ],
+                environment: environment
             )
         case let .succeedRetitleEntry(from, to):
-            return succeedRetitleEntry(
+            return update(
                 state: state,
-                environment: environment,
-                from: from,
-                to: to
+                actions: [
+                    .detail(.succeedRetitleEntry(from: from, to: to)),
+                    .search(.refreshSuggestions),
+                    .listRecent
+                ],
+                environment: environment
             )
         case .submitSearch(let query):
             return submitSearch(
@@ -515,80 +531,6 @@ struct NotebookModel: ModelProtocol {
 
         return Update(state: model, fx: fx)
             .animation(.default)
-    }
-
-    /// Handle completion of entry delete
-    static func entryDeleted(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        slug: Slug
-    ) -> Update<NotebookModel> {
-        return NotebookModel.update(
-            state: state,
-            actions: [
-                .detail(.entryDeleted(slug)),
-                .search(.entryDeleted(slug)),
-                .countEntries,
-                .listRecent
-            ],
-            environment: environment
-        )
-    }
-
-    /// Handle and forward entry move action
-    static func succeedMoveEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
-    ) -> Update<NotebookModel> {
-        update(
-            state: state,
-            actions: [
-                .detail(.succeedMoveEntry(from: from, to: to)),
-                .search(.refreshSuggestions),
-                .listRecent,
-                .countEntries
-            ],
-            environment: environment
-        )
-    }
-
-    /// Handle and forward entry merge action
-    static func succeedMergeEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        parent: EntryLink,
-        child: EntryLink
-    ) -> Update<NotebookModel> {
-        update(
-            state: state,
-            actions: [
-                .detail(.succeedMergeEntry(parent: parent, child: child)),
-                .search(.refreshSuggestions),
-                .listRecent,
-                .countEntries
-            ],
-            environment: environment
-        )
-    }
-
-    /// Handle and forward entry retitle action
-    static func succeedRetitleEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
-    ) -> Update<NotebookModel> {
-        update(
-            state: state,
-            actions: [
-                .detail(.succeedRetitleEntry(from: from, to: to)),
-                .search(.refreshSuggestions),
-                .listRecent
-            ],
-            environment: environment
-        )
     }
 
     /// Submit a search query (typically by hitting "go" on keyboard)
