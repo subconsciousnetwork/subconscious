@@ -292,11 +292,28 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         keyboard: KeyboardState
     ) -> Update<AppModel> {
-        return update(
-            state: state,
-            action: .notebook(.changeKeyboardState(keyboard)),
-            environment: environment
-        )
+        switch keyboard {
+        case .willShow(let size, _):
+            return update(
+                state: state,
+                actions: [
+                    .notebook(.setKeyboardHeight(size.height)),
+                    .feed(.setKeyboardHeight(size.height))
+                ],
+                environment: environment
+            )
+        case .didHide:
+            return update(
+                state: state,
+                actions: [
+                    .notebook(.setKeyboardHeight(0)),
+                    .feed(.setKeyboardHeight(0))
+                ],
+                environment: environment
+            )
+        default:
+            return Update(state: state)
+        }
     }
 
     /// Handle scene phase change

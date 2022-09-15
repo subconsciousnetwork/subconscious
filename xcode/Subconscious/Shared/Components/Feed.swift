@@ -40,6 +40,12 @@ enum FeedAction {
         .detail(.presentDetail(isPresented))
     }
 
+    /// Notify keyboard height change. Action sent down from parent component,
+    /// driven by KeyboardService.
+    static func setKeyboardHeight(_ height: CGFloat) -> Self {
+        .search(.setKeyboardHeight(height))
+    }
+
     /// Show/hide the search HUD
     static var autosave: FeedAction {
         .detail(.autosave)

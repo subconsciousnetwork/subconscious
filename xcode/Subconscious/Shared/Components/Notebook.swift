@@ -22,10 +22,6 @@ enum NotebookAction {
     /// Tagged action for detail
     case detail(DetailAction)
 
-    /// KeyboardService state change.
-    /// Action passed down from parent component.
-    case changeKeyboardState(KeyboardState)
-
     /// On appear. We rely on parent to notify us of this event.
     case appear
 
@@ -134,6 +130,12 @@ enum NotebookAction {
 
     static func setLinkSearch(_ query: String) -> Self {
         .detail(.setLinkSearch(query))
+    }
+
+    /// Notification passed down from parent component,
+    /// driven by KeyboardService.
+    static func setKeyboardHeight(_ height: CGFloat) -> Self {
+        .search(.setKeyboardHeight(height))
     }
 }
 
@@ -269,12 +271,6 @@ struct NotebookModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
-        case let .changeKeyboardState(keyboard):
-            return changeKeyboardState(
-                state: state,
-                environment: environment,
-                keyboard: keyboard
-            )
         case .appear:
             return appear(
                 state: state,
@@ -407,34 +403,6 @@ struct NotebookModel: ModelProtocol {
     ) -> Update<NotebookModel> {
         environment.logger.warning("\(error.localizedDescription)")
         return Update(state: state)
-    }
-
-    /// Change state of keyboard
-    /// Actions come from `KeyboardService`
-    static func changeKeyboardState(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        keyboard: KeyboardState
-    ) -> Update<NotebookModel> {
-        switch keyboard {
-        case
-            .willShow(let size, _),
-            .didShow(let size),
-            .didChangeFrame(let size):
-            return update(
-                state: state,
-                action: .search(.setKeyboardHeight(size.height)),
-                environment: environment
-            )
-        case .willHide:
-            return Update(state: state)
-        case .didHide:
-            return update(
-                state: state,
-                action: .search(.setKeyboardHeight(0)),
-                environment: environment
-            )
-        }
     }
 
     /// Appear (when view first renders)
