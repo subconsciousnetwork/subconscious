@@ -15,3 +15,13 @@ struct EntryDetail: Hashable {
         entry.slug
     }
 }
+
+extension FileFingerprint {
+    init(_ detail: EntryDetail) {
+        self.init(
+            slug: detail.slug,
+            modified: detail.entry.modified(),
+            text: detail.entry.body
+        )
+    }
+}

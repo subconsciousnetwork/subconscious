@@ -73,7 +73,17 @@ struct FileFingerprint: Hashable, Equatable, Identifiable {
             )
         )
     }
-    
+
+    init(slug: Slug, modified: Date, text: String) {
+        self.init(
+            slug: slug,
+            attributes: Attributes(
+                modified: modified,
+                size: text.lengthOfBytes(using: .utf8)
+            )
+        )
+    }
+
     init?(
         url: URL,
         relativeTo base: URL

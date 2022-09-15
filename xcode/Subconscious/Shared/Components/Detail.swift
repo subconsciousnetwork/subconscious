@@ -1682,6 +1682,21 @@ extension EntryLink {
     }
 }
 
+extension FileFingerprint {
+    /// Initialize FileFingerprint from DetailModel.
+    /// We use this to do last-write-wins.
+    init?(_ detail: DetailModel) {
+        guard let slug = detail.slug else {
+            return nil
+        }
+        self.init(
+            slug: slug,
+            modified: detail.modified,
+            text: detail.markupEditor.text
+        )
+    }
+}
+
 extension SubtextFile {
     /// Initialize SubtextFile from DetailModel.
     /// We use this to snapshot the current state of detail for saving.
