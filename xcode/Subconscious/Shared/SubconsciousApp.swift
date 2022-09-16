@@ -50,7 +50,7 @@ enum AppAction: CustomLogStringConvertible {
     case rebuildDatabaseFailure(String)
     /// Sync database with file system
     case sync
-    case syncSuccess([FileSync.Change])
+    case syncSuccess([FileFingerprintChange])
     case syncFailure(String)
     case refreshAll
 
@@ -543,7 +543,7 @@ struct AppModel: ModelProtocol {
     static func syncSuccess(
         state: AppModel,
         environment: AppEnvironment,
-        changes: [FileSync.Change]
+        changes: [FileFingerprintChange]
     ) -> Update<AppModel> {
         environment.logger.debug(
             "File sync finished: \(changes)"

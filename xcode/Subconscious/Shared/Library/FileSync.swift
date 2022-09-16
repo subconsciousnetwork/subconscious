@@ -102,6 +102,43 @@ struct FileFingerprint: Hashable, Equatable, Identifiable {
     }
 }
 
+enum FileFingerprintChange: Hashable, Equatable {
+    case leftOnly(`left`: FileFingerprint)
+    case rightOnly(`right`: FileFingerprint)
+    case leftNewer(`left`: FileFingerprint, `right`: FileFingerprint)
+    case rightNewer(`left`: FileFingerprint, `right`: FileFingerprint)
+    case same(`left`: FileFingerprint, `right`: FileFingerprint)
+    case conflict(`left`: FileFingerprint, `right`: FileFingerprint)
+
+    static func create(
+        left: FileFingerprint?,
+        right: FileFingerprint?
+    ) -> Self? {
+        if
+            let left = left,
+            let right = right
+        {
+            if left.id != right.id {
+                return nil
+            } else if left == right {
+                return .same(left: left, right: right)
+            } else if left.attributes.modified > right.attributes.modified {
+                return .leftNewer(left: left, right: right)
+            } else if left.attributes.modified < right.attributes.modified {
+                return .rightNewer(left: left, right: right)
+            /// Left and right have the same modified time, but a different size
+            } else {
+                return .conflict(left: left, right: right)
+            }
+        } else if let left = left {
+            return .leftOnly(left: left)
+        } else if let right = right {
+            return .rightOnly(right: right)
+        }
+        return nil
+    }
+}
+
 struct FileSync {
     /// Given an array of URLs, get an array of FileFingerprints.
     /// If we can't read a fingerprint for the file, we filter it out of the list.
@@ -130,55 +167,18 @@ struct FileSync {
         )
     }
 
-    enum Change: Hashable, Equatable {
-        case leftOnly(`left`: FileFingerprint)
-        case rightOnly(`right`: FileFingerprint)
-        case leftNewer(`left`: FileFingerprint, `right`: FileFingerprint)
-        case rightNewer(`left`: FileFingerprint, `right`: FileFingerprint)
-        case same(`left`: FileFingerprint, `right`: FileFingerprint)
-        case conflict(`left`: FileFingerprint, `right`: FileFingerprint)
-
-        static func create(
-            left: FileFingerprint?,
-            right: FileFingerprint?
-        ) -> Self? {
-            if
-                let left = left,
-                let right = right
-            {
-                if left.id != right.id {
-                    return nil
-                } else if left == right {
-                    return .same(left: left, right: right)
-                } else if left.attributes.modified > right.attributes.modified {
-                    return .leftNewer(left: left, right: right)
-                } else if left.attributes.modified < right.attributes.modified {
-                    return .rightNewer(left: left, right: right)
-                /// Left and right have the same modified time, but a different size
-                } else {
-                    return .conflict(left: left, right: right)
-                }
-            } else if let left = left {
-                return .leftOnly(left: left)
-            } else if let right = right {
-                return .rightOnly(right: right)
-            }
-            return nil
-        }
-    }
-
     /// Given a left and right set of FileFingerprints, returns a set of Changes.
     static func calcChanges(
         left: [FileFingerprint],
         right: [FileFingerprint]
-    ) -> [Change] {
+    ) -> [FileFingerprintChange] {
         let leftIndex = indexFileFingerprints(left)
         let rightIndex = indexFileFingerprints(right)
         let allKeys = Set(leftIndex.keys).union(rightIndex.keys)
 
-        var changes: [Change] = []
+        var changes: [FileFingerprintChange] = []
         for key in allKeys {
-            if let change = Change.create(
+            if let change = FileFingerprintChange.create(
                 left: leftIndex[key],
                 right: rightIndex[key]
             ) {

@@ -73,7 +73,7 @@ struct DatabaseService {
     /// Sync file system with database.
     /// Note file system is source-of-truth (leader).
     /// Syncing will never delete files on the file system.
-    func syncDatabase() -> AnyPublisher<[FileSync.Change], Error> {
+    func syncDatabase() -> AnyPublisher<[FileFingerprintChange], Error> {
         CombineUtilities.async(qos: .utility) {
             // Left = Leader (files)
             let left = try FileSync.readFileFingerprints(
