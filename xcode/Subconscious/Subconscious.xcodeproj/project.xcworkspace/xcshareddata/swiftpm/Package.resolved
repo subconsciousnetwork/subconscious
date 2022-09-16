@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gordonbrander/ObservableStore",
       "state" : {
-        "branch" : "2022-09-15-update-actions-multi",
-        "revision" : "50a0bf171bdfa98ca4fd5f390b572f2807e0ddf2"
+        "branch" : "v0.2.0-rc.2",
+        "revision" : "5ea1c8b520ee55ddf872be62a816d078361a1a21"
       }
     },
     {

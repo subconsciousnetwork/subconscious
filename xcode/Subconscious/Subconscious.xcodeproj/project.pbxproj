@@ -1639,7 +1639,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gordonbrander/ObservableStore";
 			requirement = {
-				branch = "2022-09-15-update-actions-multi";
+				branch = "v0.2.0-rc.2";
 				kind = branch;
 			};
 		};
