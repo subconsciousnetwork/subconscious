@@ -14,24 +14,16 @@ struct AppView: View {
     @Environment(\.scenePhase) var scenePhase: ScenePhase
 
     var body: some View {
-        TabView {
-            FeedView(
-                store: ViewStore(
-                    store: store,
-                    cursor: FeedCursor.self
+        VStack(spacing: 0) {
+            if Config.default.appTabs {
+                AppTabView(store: store)
+            } else {
+                NotebookView(
+                    store: ViewStore(
+                        store: store,
+                        cursor: NotebookCursor.self
+                    )
                 )
-            )
-            .tabItem {
-                Label("Feed", systemImage: "newspaper")
-            }
-            NotebookView(
-                store: ViewStore(
-                    store: store,
-                    cursor: NotebookCursor.self
-                )
-            )
-            .tabItem {
-                Label("Notes", systemImage: "folder")
             }
         }
         .disabled(!store.state.isReadyForInteraction)

@@ -12,6 +12,8 @@ struct Config: Equatable {
     let rdns = "com.subconscious.Subconscious"
     var debug = false
 
+    var appTabs = true
+
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
 
@@ -46,7 +48,6 @@ struct Config: Equatable {
     ]
 
     /// Toggle on/off simple Tracery-based Geists
-    var traceryGeistsEnabled = true
     var traceryZettelkasten = "zettelkasten"
 }
 
