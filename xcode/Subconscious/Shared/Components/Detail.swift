@@ -31,35 +31,28 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
     /// if detail is already loaded.
-    case loadDetailLastWriteWins(slug: Slug?, fallback: String)
-
+    case loadAndPresentDetail(slug: Slug?, fallback: String, autofocus: Bool)
     /// Unable to load detail
     case failLoadDetail(String)
-
-    /// Load detail
-    case requestDetail(
-        slug: Slug?,
-        fallback: String,
-        autofocus: Bool
-    )
-    /// request detail for slug, using template file as a fallback
-    case requestTemplateDetail(
-        slug: Slug,
-        template: Slug,
-        autofocus: Bool
-    )
-    case requestRandomDetail(autofocus: Bool)
-    /// Show detail panel
-    case presentDetail(Bool)
-    /// Update entry being displayed
-    case updateDetail(detail: EntryDetail, autofocus: Bool)
-    /// Set detail to initial conditions
-    case resetDetail
     /// Set entry detail
     case setDetail(EntryDetail)
     /// Set EntryDetail on DetailModel, but only if last modification happened
     /// more recently than DetailModel.
     case setDetailLastWriteWins(EntryDetail)
+    /// Set detail and present detail
+    case setAndPresentDetail(detail: EntryDetail, autofocus: Bool)
+    /// Load detail
+    /// request detail for slug, using template file as a fallback
+    case loadAndPresentTemplateDetail(
+        slug: Slug,
+        template: Slug,
+        autofocus: Bool
+    )
+    case loadAndPresentRandomDetail(autofocus: Bool)
+    /// Show detail panel
+    case presentDetail(Bool)
+    /// Set detail to initial conditions
+    case resetDetail
 
     //  Saving entry
     /// Trigger autosave of current state
@@ -149,32 +142,32 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     static func fromSuggestion(_ suggestion: Suggestion) -> Self {
         switch suggestion {
         case .entry(let entryLink):
-            return .requestDetail(
+            return .loadAndPresentDetail(
                 slug: entryLink.slug,
                 fallback: entryLink.linkableTitle,
                 autofocus: false
             )
         case .search(let entryLink):
-            return .requestDetail(
+            return .loadAndPresentDetail(
                 slug: entryLink.slug,
                 fallback: entryLink.linkableTitle,
                 autofocus: true
             )
         case .journal(let entryLink):
-            return .requestTemplateDetail(
+            return .loadAndPresentTemplateDetail(
                 slug: entryLink.slug,
                 template: Config.default.journalTemplate,
                 // Autofocus note because we're creating it from scratch
                 autofocus: true
             )
         case .scratch(let entryLink):
-            return .requestDetail(
+            return .loadAndPresentDetail(
                 slug: entryLink.slug,
                 fallback: entryLink.linkableTitle,
                 autofocus: true
             )
         case .random:
-            return .requestRandomDetail(autofocus: false)
+            return .loadAndPresentRandomDetail(autofocus: false)
         }
     }
 
@@ -194,8 +187,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "save(\(slugString))"
         case .succeedSave(let entry):
             return "succeedSave(\(entry.slug))"
-        case .updateDetail(let detail, _):
-            return "updateDetail(\(detail.slug))"
+        case .setAndPresentDetail(let detail, _):
+            return "setAndPresentDetail(\(detail.slug))"
         case let .setEditor(_, saveState, modified):
             return "setEditor(text: ..., saveState: \(String(describing: saveState)), modified: \(modified))"
         case let .setEditorSelection(range, _):
@@ -375,12 +368,13 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
-        case let .loadDetailLastWriteWins(slug, fallback):
-            return loadDetailLastWriteWins(
+        case let .loadAndPresentDetail(slug, fallback, autofocus):
+            return loadAndPresentDetail(
                 state: state,
                 environment: environment,
                 slug: slug,
-                fallback: fallback
+                fallback: fallback,
+                autofocus: autofocus
             )
         case let .failLoadDetail(message):
             return failLoadDetail(
@@ -394,39 +388,31 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 detail: detail
             )
+        case let .setAndPresentDetail(detail, autofocus):
+            return setAndPresentDetail(
+                state: state,
+                environment: environment,
+                detail: detail,
+                autofocus: autofocus
+            )
         case .setDetailLastWriteWins(let detail):
             return setDetailLastWriteWins(
                 state: state,
                 environment: environment,
                 detail: detail
             )
-        case let .requestDetail(slug, fallback, autofocus):
-            return requestDetail(
-                state: state,
-                environment: environment,
-                slug: slug,
-                fallback: fallback,
-                autofocus: autofocus
-            )
-        case let .requestTemplateDetail(slug, template, autofocus):
-            return requestTemplateDetail(
+        case let .loadAndPresentTemplateDetail(slug, template, autofocus):
+            return loadAndPresentTemplateDetail(
                 state: state,
                 environment: environment,
                 slug: slug,
                 template: template,
                 autofocus: autofocus
             )
-        case let .requestRandomDetail(autofocus):
-            return requestRandomDetail(
+        case let .loadAndPresentRandomDetail(autofocus):
+            return loadAndPresentRandomDetail(
                 state: state,
                 environment: environment,
-                autofocus: autofocus
-            )
-        case let .updateDetail(results, autofocus):
-            return updateDetail(
-                state: state,
-                environment: environment,
-                detail: results,
                 autofocus: autofocus
             )
         case .resetDetail:
@@ -586,12 +572,14 @@ struct DetailModel: ModelProtocol {
                 slug: slug
             )
         case .selectBacklink(let link):
-            return requestDetail(
+            return update(
                 state: state,
-                environment: environment,
-                slug: link.slug,
-                fallback: link.linkableTitle,
-                autofocus: false
+                action: .loadAndPresentDetail(
+                    slug: link.slug,
+                    fallback: link.linkableTitle,
+                    autofocus: false
+                ),
+                environment: environment
             )
         case .insertEditorWikilinkAtSelection:
             return insertTaggedMarkup(
@@ -726,7 +714,7 @@ struct DetailModel: ModelProtocol {
         let link = EntryLink.decodefromSubEntryURL(url)
         return update(
             state: state,
-            action: .requestDetail(
+            action: .loadAndPresentDetail(
                 slug: link?.slug,
                 fallback: link?.title ?? "",
                 autofocus: false
@@ -875,29 +863,17 @@ struct DetailModel: ModelProtocol {
         return Update(state: model)
     }
 
-    /// Factors out the non-get-detail related aspects
-    /// of requesting a detail view.
-    /// Used by a few request detail implementations.
-    private static func prepareRequestDetail(
-        state: DetailModel,
-        environment: AppEnvironment,
-        slug: Slug
-    ) -> Update<DetailModel> {
-        var model = state
-        model.isLoading = true
-        return autosave(state: model, environment: environment)
-    }
-
-    /// Load Detail from database
-    static func loadDetailLastWriteWins(
+    /// Load Detail from database and present detail
+    static func loadAndPresentDetail(
         state: DetailModel,
         environment: AppEnvironment,
         slug: Slug?,
-        fallback: String
+        fallback: String,
+        autofocus: Bool
     ) -> Update<DetailModel> {
         guard let slug = slug else {
             environment.logger.log(
-                ".loadDetailLastWriteWins called with nil slug. Doing nothing."
+                ".loadAndPresentDetail called with nil slug. Doing nothing."
             )
             return Update(state: state)
         }
@@ -909,13 +885,13 @@ struct DetailModel: ModelProtocol {
         let fx: Fx<DetailAction> = environment.database
             .readEntryDetail(
                 slug: slug,
-                // Trim whitespace and add blank line to end of string
-                // This gives us a good starting point to start
-                // editing.
                 fallback: fallback
             )
             .map({ detail in
-                DetailAction.setDetailLastWriteWins(detail)
+                DetailAction.setAndPresentDetail(
+                    detail: detail,
+                    autofocus: autofocus
+                )
             })
             .catch({ error in
                 Just(DetailAction.failLoadDetail(error.localizedDescription))
@@ -923,6 +899,42 @@ struct DetailModel: ModelProtocol {
             .eraseToAnyPublisher()
 
         return Update(state: model, fx: fx)
+    }
+
+    /// Handle detail load failure
+    static func failLoadDetail(
+        state: DetailModel,
+        environment: AppEnvironment,
+        message: String
+    ) -> Update<DetailModel> {
+        environment.logger.log("Detail load failed with message: \(message)")
+        return Update(state: state)
+    }
+
+    /// Set EntryDetail onto DetailModel
+    static func setDetail(
+        state: DetailModel,
+        environment: AppEnvironment,
+        detail: EntryDetail
+    ) -> Update<DetailModel> {
+        var modified = detail.entry.modified()
+        var model = state
+        model.isLoading = false
+        model.modified = modified
+        model.slug = detail.slug
+        model.headers = detail.entry.headers
+        model.backlinks = detail.backlinks
+        model.saveState = detail.saveState
+
+        return DetailModel.update(
+            state: model,
+            action: .setEditor(
+                text: detail.entry.body,
+                saveState: detail.saveState,
+                modified: detail.entry.modified()
+            ),
+            environment: environment
+        )
     }
 
     /// Set detail model.
@@ -986,84 +998,22 @@ struct DetailModel: ModelProtocol {
         }
     }
 
-    static func failLoadDetail(
+    /// Set and present detail
+    static func setAndPresentDetail(
         state: DetailModel,
         environment: AppEnvironment,
-        message: String
-    ) -> Update<DetailModel> {
-        environment.logger.log("Detail load failed with message: \(message)")
-        return Update(state: state)
-    }
-
-    /// Set EntryDetail onto DetailModel
-    static func setDetail(
-        state: DetailModel,
-        environment: AppEnvironment,
-        detail: EntryDetail
-    ) -> Update<DetailModel> {
-        var modified = detail.entry.modified()
-        var model = state
-        model.isLoading = false
-        model.modified = modified
-        model.slug = detail.slug
-        model.headers = detail.entry.headers
-        model.backlinks = detail.backlinks
-        model.saveState = detail.saveState
-
-        return DetailModel.update(
-            state: model,
-            action: .setEditor(
-                text: detail.entry.body,
-                saveState: detail.saveState,
-                modified: detail.entry.modified()
-            ),
-            environment: environment
-        )
-    }
-
-    /// Request detail view for entry.
-    /// Fall back on string (typically query string) when no detail
-    /// exists for this slug yet.
-    static func requestDetail(
-        state: DetailModel,
-        environment: AppEnvironment,
-        slug: Slug?,
-        fallback: String,
+        detail: EntryDetail,
         autofocus: Bool
     ) -> Update<DetailModel> {
-        // If nil slug was requested, do nothing
-        guard let slug = slug else {
-            environment.logger.log(
-                "Detail requested for nil slug. Doing nothing."
-            )
-            return Update(state: state)
-        }
-
-        let fx: Fx<DetailAction> = environment.database
-            .readEntryDetail(
-                slug: slug,
-                // Trim whitespace and add blank line to end of string
-                // This gives us a good starting point to start
-                // editing.
-                fallback: fallback
-            )
-            .map({ detail in
-                DetailAction.updateDetail(
-                    detail: detail,
-                    autofocus: autofocus
-                )
-            })
-            .catch({ error in
-                Just(DetailAction.failLoadDetail(error.localizedDescription))
-            })
-            .eraseToAnyPublisher()
-
-        return prepareRequestDetail(
+        update(
             state: state,
-            environment: environment,
-            slug: slug
+            actions: [
+                .presentDetail(true),
+                .setDetailLastWriteWins(detail),
+                .requestEditorFocus(autofocus)
+            ],
+            environment: environment
         )
-        .mergeFx(fx)
     }
 
     /// Reload and display detail for entry, and reload all list views
@@ -1076,7 +1026,7 @@ struct DetailModel: ModelProtocol {
             state: state,
             actions: [
                 .refreshAll,
-                .requestDetail(
+                .loadAndPresentDetail(
                     slug: slug,
                     fallback: "",
                     autofocus: false
@@ -1089,7 +1039,7 @@ struct DetailModel: ModelProtocol {
     /// Request detail view for entry.
     /// Fall back on contents of template file when no detail
     /// exists for this slug yet.
-    static func requestTemplateDetail(
+    static func loadAndPresentTemplateDetail(
         state: DetailModel,
         environment: AppEnvironment,
         slug: Slug,
@@ -1099,7 +1049,7 @@ struct DetailModel: ModelProtocol {
         let fx: Fx<DetailAction> = environment.database
             .readEntryDetail(slug: slug, template: template)
             .map({ detail in
-                DetailAction.updateDetail(
+                DetailAction.setAndPresentDetail(
                     detail: detail,
                     autofocus: autofocus
                 )
@@ -1109,23 +1059,21 @@ struct DetailModel: ModelProtocol {
             })
             .eraseToAnyPublisher()
 
-        return prepareRequestDetail(
-            state: state,
-            environment: environment,
-            slug: slug
-        )
-        .mergeFx(fx)
+        var model = state
+        model.isLoading = true
+
+        return Update(state: model, fx: fx)
     }
 
     /// Request detail for a random entry
-    static func requestRandomDetail(
+    static func loadAndPresentRandomDetail(
         state: DetailModel,
         environment: AppEnvironment,
         autofocus: Bool
     ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = environment.database.readRandomEntrySlug()
             .map({ slug in
-                DetailAction.requestDetail(
+                DetailAction.loadAndPresentDetail(
                     slug: slug,
                     fallback: slug.toTitle(),
                     autofocus: autofocus
@@ -1136,99 +1084,6 @@ struct DetailModel: ModelProtocol {
             })
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
-    }
-
-    /// Update entry detail.
-    /// This case gets hit after requesting detail for an entry.
-    static func updateDetail(
-        state: DetailModel,
-        environment: AppEnvironment,
-        detail: EntryDetail,
-        autofocus: Bool
-    ) -> Update<DetailModel> {
-        // If we just loaded the detail we're already editing, do not
-        // blow it away. Just mark loading complete and show detail.
-        // The in-memory version we are editing should win.
-        guard state.slug != detail.slug else {
-            environment.logger.log(
-                "Entry already being edited. Using in-memory version."
-            )
-            var model = state
-            model.isLoading = false
-            return update(
-                state: model,
-                action: .presentDetail(true),
-                environment: environment
-            )
-        }
-
-        // Schedule save for ~ after the transition animation completes.
-        // If we save immediately, it causes list view to update while the
-        // panel animates in, creating much visual noise.
-        // By delaying the fx, we do this out of sight.
-        // We don't actually know the exact time that the sliding panel
-        // animation takes in NavigationView, so we estimate a time by which
-        // the transition animation should be complete.
-        // 2022-03-24 Gordon Brander
-        let approximateNavigationViewAnimationCompleteDuration: Double = 1
-
-        // Snapshot entry and schedule a save before we replace it.
-        let snapshot = state.snapshotEntry()
-        let saveFx: Fx<DetailAction> = Just(DetailAction.save(snapshot))
-            .delay(
-                for: .seconds(
-                    approximateNavigationViewAnimationCompleteDuration
-                ),
-                scheduler: DispatchQueue.main
-            )
-            .eraseToAnyPublisher()
-
-        var model = state
-        model.isLoading = false
-        model.slug = detail.slug
-        model.headers = detail.entry.headers
-        model.backlinks = detail.backlinks
-        model.saveState = detail.saveState
-
-        // If editor is not meant to be focused, return early, setting focus
-        // to nil.
-        guard autofocus else {
-            return DetailModel.update(
-                state: model,
-                actions: [
-                    .setEditor(
-                        text: detail.entry.body,
-                        saveState: detail.saveState,
-                        modified: detail.entry.modified()
-                    ),
-                    .presentDetail(true),
-                    .requestEditorFocus(false)
-                ],
-                environment: environment
-            )
-            .mergeFx(saveFx)
-        }
-
-        // Otherwise, set editor selection and focus to end of document.
-        // When you've just created a new note, chances are you want to
-        // edit it, not browse it.
-        // We focus the editor and place the cursor at the end so you can just
-        // start typing
-        return DetailModel.update(
-            state: model,
-            actions: [
-                .setEditor(
-                    text: detail.entry.body,
-                    saveState: detail.saveState,
-                    modified: detail.entry.modified()
-                ),
-                .presentDetail(true),
-                .setEditorSelectionEnd,
-                .requestEditorFocus(true)
-            ],
-            environment: environment
-        )
-        .mergeFx(saveFx)
     }
 
     /// Reset model to "none" condition

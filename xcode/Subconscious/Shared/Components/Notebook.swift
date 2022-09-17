@@ -82,13 +82,13 @@ enum NotebookAction {
     }
 
     /// Forward requestDetail action to detail
-    static func requestDetail(
+    static func loadAndPresentDetail(
         slug: Slug?,
         fallback: String,
         autofocus: Bool
     ) -> Self {
         .detail(
-            .requestDetail(
+            .loadAndPresentDetail(
                 slug: slug,
                 fallback: fallback,
                 autofocus: autofocus
@@ -97,13 +97,13 @@ enum NotebookAction {
     }
 
     /// request detail for slug, using template file as a fallback
-    static func requestTemplateDetail(
+    static func loadAndPresentTemplateDetail(
         slug: Slug,
         template: Slug,
         autofocus: Bool
     ) -> Self {
         .detail(
-            .requestTemplateDetail(
+            .loadAndPresentTemplateDetail(
                 slug: slug,
                 template: template,
                 autofocus: autofocus
@@ -111,9 +111,9 @@ enum NotebookAction {
         )
     }
 
-    static func requestRandomDetail(autofocus: Bool) -> Self {
+    static func loadAndPresentRandomDetail(autofocus: Bool) -> Self {
         .detail(
-            .requestRandomDetail(autofocus: autofocus)
+            .loadAndPresentRandomDetail(autofocus: autofocus)
         )
     }
 
@@ -560,7 +560,7 @@ struct NotebookModel: ModelProtocol {
         }
 
         let fx: Fx<NotebookAction> = Just(
-            NotebookAction.requestDetail(
+            NotebookAction.loadAndPresentDetail(
                 slug: slug,
                 fallback: query,
                 autofocus: true

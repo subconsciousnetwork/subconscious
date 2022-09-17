@@ -162,7 +162,7 @@ class Tests_Detail: XCTestCase {
 
         XCTAssertEqual(
             action,
-            DetailAction.requestDetail(
+            DetailAction.loadAndPresentDetail(
                 slug: Slug("systems-generating-systems")!,
                 fallback: "Systems Generating Systems",
                 autofocus: false
@@ -181,7 +181,7 @@ class Tests_Detail: XCTestCase {
 
         XCTAssertEqual(
             action,
-            DetailAction.requestDetail(
+            DetailAction.loadAndPresentDetail(
                 slug: Slug("systems-generating-systems")!,
                 fallback: "Systems Generating Systems",
                 autofocus: true
@@ -200,7 +200,7 @@ class Tests_Detail: XCTestCase {
 
         XCTAssertEqual(
             action,
-            DetailAction.requestTemplateDetail(
+            DetailAction.loadAndPresentTemplateDetail(
                 slug: Slug("systems-generating-systems")!,
                 template: Config.default.journalTemplate,
                 autofocus: true
@@ -219,7 +219,7 @@ class Tests_Detail: XCTestCase {
 
         XCTAssertEqual(
             action,
-            DetailAction.requestDetail(
+            DetailAction.loadAndPresentDetail(
                 slug: Slug("systems-generating-systems")!,
                 fallback: "Systems Generating Systems",
                 autofocus: true
@@ -233,7 +233,7 @@ class Tests_Detail: XCTestCase {
 
         XCTAssertEqual(
             action,
-            DetailAction.requestRandomDetail(autofocus: false)
+            DetailAction.loadAndPresentRandomDetail(autofocus: false)
         )
     }
 }

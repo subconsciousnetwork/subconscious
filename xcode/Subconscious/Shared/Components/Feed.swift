@@ -189,7 +189,7 @@ struct FeedModel: ModelProtocol {
         case .openStory(let entryLink):
             return FeedDetailCursor.update(
                 state: state,
-                action: .requestDetail(
+                action: .loadAndPresentDetail(
                     slug: entryLink.slug,
                     fallback: entryLink.linkableTitle,
                     autofocus: false
