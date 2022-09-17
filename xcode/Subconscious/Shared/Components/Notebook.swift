@@ -124,10 +124,6 @@ enum NotebookAction {
         .detail(.presentDetail(isPresented))
     }
 
-    static func updateDetail(detail: EntryDetail, autofocus: Bool) -> Self {
-        .detail(.updateDetail(detail: detail, autofocus: autofocus))
-    }
-
     static func setLinkSearch(_ query: String) -> Self {
         .detail(.setLinkSearch(query))
     }

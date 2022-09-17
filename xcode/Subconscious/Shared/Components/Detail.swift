@@ -32,6 +32,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Load detail, using a last-write-wins strategy for replacement
     /// if detail is already loaded.
     case loadAndPresentDetail(slug: Slug?, fallback: String, autofocus: Bool)
+    case refreshDetail
     /// Unable to load detail
     case failLoadDetail(String)
     /// Set entry detail
@@ -376,6 +377,11 @@ struct DetailModel: ModelProtocol {
                 fallback: fallback,
                 autofocus: autofocus
             )
+        case .refreshDetail:
+            return refreshDetail(
+                state: state,
+                environment: environment
+            )
         case let .failLoadDetail(message):
             return failLoadDetail(
                 state: state,
@@ -656,7 +662,11 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         var model = state
         model.isAppearing = true
-        return Update(state: model)
+        return update(
+            state: model,
+            action: .refreshDetail,
+            environment: environment
+        )
     }
 
     /// Set view disappear state
@@ -901,6 +911,38 @@ struct DetailModel: ModelProtocol {
         return Update(state: model, fx: fx)
     }
 
+    /// Reload detail
+    static func refreshDetail(
+        state: DetailModel,
+        environment: AppEnvironment
+    ) -> Update<DetailModel> {
+        guard let slug = state.slug else {
+            environment.logger.log(
+                ".refresh called while editing nil slug. Doing nothing."
+            )
+            return Update(state: state)
+        }
+
+        var model = state
+        // Mark loading state
+        model.isLoading = true
+
+        let fx: Fx<DetailAction> = environment.database
+            .readEntryDetail(
+                slug: slug,
+                fallback: model.markupEditor.text
+            )
+            .map({ detail in
+                DetailAction.setDetailLastWriteWins(detail)
+            })
+            .catch({ error in
+                Just(DetailAction.failLoadDetail(error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+
+        return Update(state: model, fx: fx)
+    }
+
     /// Handle detail load failure
     static func failLoadDetail(
         state: DetailModel,
@@ -917,7 +959,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         detail: EntryDetail
     ) -> Update<DetailModel> {
-        var modified = detail.entry.modified()
+        let modified = detail.entry.modified()
         var model = state
         model.isLoading = false
         model.modified = modified
