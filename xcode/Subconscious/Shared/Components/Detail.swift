@@ -29,11 +29,9 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
 
     // Detail
-    /// Load detail
-    case loadDetail(
-        slug: Slug?,
-        fallback: String
-    )
+    /// Load detail, using a last-write-wins strategy for replacement
+    /// if detail is already loaded.
+    case loadDetailLastWriteWins(slug: Slug?, fallback: String)
 
     /// Unable to load detail
     case failLoadDetail(String)
@@ -251,7 +249,8 @@ struct DetailModel: ModelProtocol {
 
     /// Is editor saved?
     var saveState = SaveState.saved
-    var modified = Date.now
+    /// Initialize date with Unix Epoch
+    var modified = Date.distantPast
 
     /// Is editor sliding panel showing?
     var isPresented = false
@@ -378,8 +377,8 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
-        case let .loadDetail(slug, fallback):
-            return loadDetail(
+        case let .loadDetailLastWriteWins(slug, fallback):
+            return loadDetailLastWriteWins(
                 state: state,
                 environment: environment,
                 slug: slug,
@@ -390,6 +389,18 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 message: message
+            )
+        case .setDetail(let detail):
+            return setDetail(
+                state: state,
+                environment: environment,
+                detail: detail
+            )
+        case .setDetailLastWriteWins(let detail):
+            return setDetailLastWriteWins(
+                state: state,
+                environment: environment,
+                detail: detail
             )
         case let .requestDetail(slug, fallback, autofocus):
             return requestDetail(
@@ -435,18 +446,6 @@ struct DetailModel: ModelProtocol {
             return resetDetail(
                 state: state,
                 environment: environment
-            )
-        case .setDetailLastWriteWins(let detail):
-            return setDetailLastWriteWins(
-                state: state,
-                environment: environment,
-                detail: detail
-            )
-        case .setDetail(let detail):
-            return setDetail(
-                state: state,
-                environment: environment,
-                detail: detail
             )
         case .autosave:
             return autosave(
@@ -903,7 +902,7 @@ struct DetailModel: ModelProtocol {
     }
 
     /// Load Detail from database
-    static func loadDetail(
+    static func loadDetailLastWriteWins(
         state: DetailModel,
         environment: AppEnvironment,
         slug: Slug?,
@@ -911,7 +910,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         guard let slug = slug else {
             environment.logger.log(
-                ".loadDetail called with nil slug. Doing nothing."
+                ".loadDetailLastWriteWins called with nil slug. Doing nothing."
             )
             return Update(state: state)
         }
@@ -945,33 +944,40 @@ struct DetailModel: ModelProtocol {
         )
         // Last write wins strategy
         switch change {
+        // Our editor state is newer. Do nothing.
+        case .leftNewer:
+            return Update(state: state)
         case .rightNewer:
             return update(
                 state: state,
                 action: .setDetail(detail),
                 environment: environment
             )
+        case .leftOnly:
+            return Update(state: state)
         case .rightOnly:
             return update(
                 state: state,
                 action: .setDetail(detail),
                 environment: environment
             )
-        // Our editor state is newer. Do nothing.
-        case .leftNewer:
-            return Update(state: state)
-        // Somehow righthand FileFingerprint was nil. Do nothing.
-        case .leftOnly:
-            return Update(state: state)
-        // Same. Do nothing.
+        // No change. Do nothing.
         case .same:
             return Update(state: state)
-        // Same time, different sizes
+        // Same slug, same time, different sizes
         case .conflict:
             return Update(state: state)
-        /// Slugs don't match. Do nothing
+        /// Slugs don't match. Save current state and set new detail.
         case .none:
-            return Update(state: state)
+            let snapshot = SubtextFile(state)
+            return update(
+                state: state,
+                actions: [
+                    .save(snapshot),
+                    .setDetail(detail)
+                ],
+                environment: environment
+            )
         }
     }
 
@@ -1218,6 +1224,8 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         var model = state
         model.slug = nil
+        model.modified = Date.distantPast
+        model.headers = HeaderIndex()
         model.markupEditor = MarkupTextModel()
         model.backlinks = []
         model.isLoading = true
