@@ -15,6 +15,12 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Wrapper for editor actions
     case markupEditor(MarkupTextAction)
 
+    /// View did appear
+    case didAppear
+    /// View did disappear
+    case didDisappear
+
+    /// Link was tapped (disambiguates to browser or editor action)
     case openURL(URL)
     case openBrowserURL(URL)
     case openEditorURL(URL)
@@ -23,6 +29,15 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
 
     // Detail
+    /// Load detail
+    case loadDetail(
+        slug: Slug?,
+        fallback: String
+    )
+
+    /// Unable to load detail
+    case failLoadDetail(String)
+
     /// Load detail
     case requestDetail(
         slug: Slug?,
@@ -38,11 +53,17 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case requestRandomDetail(autofocus: Bool)
     case failDetail(String)
     case failRandomDetail(String)
+    /// Show detail panel
     case presentDetail(Bool)
     /// Update entry being displayed
     case updateDetail(detail: EntryDetail, autofocus: Bool)
     /// Set detail to initial conditions
     case resetDetail
+    /// Set entry detail
+    case setDetail(EntryDetail)
+    /// Set EntryDetail on DetailModel, but only if last modification happened
+    /// more recently than DetailModel.
+    case setDetailLastWriteWins(EntryDetail)
 
     //  Saving entry
     /// Trigger autosave of current state
@@ -232,8 +253,10 @@ struct DetailModel: ModelProtocol {
     var saveState = SaveState.saved
     var modified = Date.now
 
-    /// Is editor showing?
+    /// Is editor sliding panel showing?
     var isPresented = false
+    /// Is view being displayed
+    var isAppearing = false
     /// Is editor in loading state?
     var isLoading = true
 
@@ -288,6 +311,16 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: ()
+            )
+        case .didAppear:
+            return didAppear(
+                state: state,
+                environment: environment
+            )
+        case .didDisappear:
+            return didDisappear(
+                state: state,
+                environment: environment
             )
         case .openURL(let url):
             return openURL(
@@ -345,6 +378,19 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
+        case let .loadDetail(slug, fallback):
+            return loadDetail(
+                state: state,
+                environment: environment,
+                slug: slug,
+                fallback: fallback
+            )
+        case let .failLoadDetail(message):
+            return log(
+                state: state,
+                environment: environment,
+                message: message
+            )
         case let .requestDetail(slug, fallback, autofocus):
             return requestDetail(
                 state: state,
@@ -389,6 +435,18 @@ struct DetailModel: ModelProtocol {
             return resetDetail(
                 state: state,
                 environment: environment
+            )
+        case .setDetailLastWriteWins(let detail):
+            return setDetailLastWriteWins(
+                state: state,
+                environment: environment,
+                detail: detail
+            )
+        case .setDetail(let detail):
+            return setDetail(
+                state: state,
+                environment: environment,
+                detail: detail
             )
         case .autosave:
             return autosave(
@@ -586,6 +644,16 @@ struct DetailModel: ModelProtocol {
     }
 
     /// Log debug
+    static func log(
+        state: DetailModel,
+        environment: AppEnvironment,
+        message: String
+    ) -> Update<DetailModel> {
+        environment.logger.log("\(message)")
+        return Update(state: state)
+    }
+
+    /// Log debug
     static func logDebug(
         state: DetailModel,
         environment: AppEnvironment,
@@ -603,6 +671,30 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         environment.logger.warning("\(message)")
         return Update(state: state)
+    }
+
+    /// Set view appear state
+    /// We use onAppear/onDisappear to determine whether this detail
+    /// is currently active for the purpose of refreshing state from disk.
+    static func didAppear(
+        state: DetailModel,
+        environment: AppEnvironment
+    ) -> Update<DetailModel> {
+        var model = state
+        model.isAppearing = true
+        return Update(state: model)
+    }
+
+    /// Set view disappear state
+    /// We use onAppear/onDisappear to determine whether this detail
+    /// is currently active for the purpose of refreshing state from disk.
+    static func didDisappear(
+        state: DetailModel,
+        environment: AppEnvironment
+    ) -> Update<DetailModel> {
+        var model = state
+        model.isAppearing = false
+        return Update(state: model)
     }
 
     /// Disambiguate URL opens and forward to specialized action types
@@ -808,6 +900,105 @@ struct DetailModel: ModelProtocol {
         var model = state
         model.isLoading = true
         return autosave(state: model, environment: environment)
+    }
+
+    /// Load Detail from database
+    static func loadDetail(
+        state: DetailModel,
+        environment: AppEnvironment,
+        slug: Slug?,
+        fallback: String
+    ) -> Update<DetailModel> {
+        guard let slug = slug else {
+            environment.logger.log(
+                ".loadDetail called with nil slug. Doing nothing."
+            )
+            return Update(state: state)
+        }
+        let fx: Fx<DetailAction> = environment.database
+            .readEntryDetail(
+                slug: slug,
+                // Trim whitespace and add blank line to end of string
+                // This gives us a good starting point to start
+                // editing.
+                fallback: fallback
+            )
+            .map({ detail in
+                DetailAction.setDetailLastWriteWins(detail)
+            })
+            .catch({ error in
+                Just(DetailAction.failLoadDetail(error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    static func setDetailLastWriteWins(
+        state: DetailModel,
+        environment: AppEnvironment,
+        detail: EntryDetail
+    ) -> Update<DetailModel> {
+        let change = FileFingerprintChange.create(
+            left: FileFingerprint(state),
+            right: FileFingerprint(detail)
+        )
+        // Last write wins strategy
+        switch change {
+        case .rightNewer:
+            return update(
+                state: state,
+                action: .setDetail(detail),
+                environment: environment
+            )
+        case .rightOnly:
+            return update(
+                state: state,
+                action: .setDetail(detail),
+                environment: environment
+            )
+        // Our editor state is newer. Do nothing.
+        case .leftNewer:
+            return Update(state: state)
+        // Somehow righthand FileFingerprint was nil. Do nothing.
+        case .leftOnly:
+            return Update(state: state)
+        // Same. Do nothing.
+        case .same:
+            return Update(state: state)
+        // Same time, different sizes
+        case .conflict:
+            return Update(state: state)
+        /// Slugs don't match. Do nothing
+        case .none:
+            return Update(state: state)
+        }
+    }
+
+    /// Set EntryDetail onto DetailModel
+    static func setDetail(
+        state: DetailModel,
+        environment: AppEnvironment,
+        detail: EntryDetail
+    ) -> Update<DetailModel> {
+        var modified = detail.entry.modified()
+        var model = state
+        model.isLoading = false
+        model.modified = modified
+        model.slug = detail.slug
+        model.headers = detail.entry.headers
+        model.backlinks = detail.backlinks
+        model.saveState = detail.saveState
+
+        return DetailModel.update(
+            state: model,
+            action: .setEditor(
+                text: detail.entry.body,
+                saveState: detail.saveState,
+                modified: detail.entry.modified()
+            ),
+            environment: environment
+        )
     }
 
     /// Request detail view for entry.
@@ -1830,6 +2021,12 @@ struct DetailView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            store.send(.didAppear)
+        }
+        .onDisappear {
+            store.send(.didDisappear)
+        }
         /// Catch link taps and handle them here
         .environment(\.openURL, OpenURLAction { url in
             store.send(.openURL(url))
