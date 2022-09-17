@@ -49,8 +49,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         autofocus: Bool
     )
     case requestRandomDetail(autofocus: Bool)
-    case failDetail(String)
-    case failRandomDetail(String)
     /// Show detail panel
     case presentDetail(Bool)
     /// Update entry being displayed
@@ -385,7 +383,7 @@ struct DetailModel: ModelProtocol {
                 fallback: fallback
             )
         case let .failLoadDetail(message):
-            return log(
+            return failLoadDetail(
                 state: state,
                 environment: environment,
                 message: message
@@ -423,17 +421,6 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 autofocus: autofocus
-            )
-        case let .failDetail(message):
-            environment.logger.log(
-                "Failed to get details for search: \(message)"
-            )
-            return Update(state: state)
-        case .failRandomDetail(let message):
-            return logWarning(
-                state: state,
-                environment: environment,
-                message: message
             )
         case let .updateDetail(results, autofocus):
             return updateDetail(
@@ -914,6 +901,11 @@ struct DetailModel: ModelProtocol {
             )
             return Update(state: state)
         }
+
+        var model = state
+        // Mark loading state
+        model.isLoading = true
+
         let fx: Fx<DetailAction> = environment.database
             .readEntryDetail(
                 slug: slug,
@@ -930,14 +922,23 @@ struct DetailModel: ModelProtocol {
             })
             .eraseToAnyPublisher()
 
-        return Update(state: state, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
+    /// Set detail model.
+    /// - If details slugs are the same, uses a last-write-wins strategy
+    ///   for reconciling conflicts.
+    /// - If details are different, saves the previous detail and
+    ///   replaces it.
     static func setDetailLastWriteWins(
         state: DetailModel,
         environment: AppEnvironment,
         detail: EntryDetail
     ) -> Update<DetailModel> {
+        var model = state
+        // Mark loading finished
+        model.isLoading = false
+
         let change = FileFingerprintChange.create(
             left: FileFingerprint(state),
             right: FileFingerprint(detail)
@@ -946,32 +947,36 @@ struct DetailModel: ModelProtocol {
         switch change {
         // Our editor state is newer. Do nothing.
         case .leftNewer:
-            return Update(state: state)
+            return Update(state: model)
+        // The slugs are same, but loaded detail is newer. Replace.
         case .rightNewer:
             return update(
-                state: state,
+                state: model,
                 action: .setDetail(detail),
                 environment: environment
             )
+        // No loaded detail. Do nothing.
         case .leftOnly:
-            return Update(state: state)
+            return Update(state: model)
+        // No entry is currently being edited. Replace.
         case .rightOnly:
             return update(
                 state: state,
                 action: .setDetail(detail),
                 environment: environment
             )
+        // Same slug, same time, different sizes. Conflict. Do nothing.
+        case .conflict:
+            return Update(state: model)
         // No change. Do nothing.
         case .same:
-            return Update(state: state)
-        // Same slug, same time, different sizes
-        case .conflict:
-            return Update(state: state)
-        /// Slugs don't match. Save current state and set new detail.
+            return Update(state: model)
+        // Slugs don't match. Different entries.
+        // Save current state and set new detail.
         case .none:
-            let snapshot = SubtextFile(state)
+            let snapshot = SubtextFile(model)
             return update(
-                state: state,
+                state: model,
                 actions: [
                     .save(snapshot),
                     .setDetail(detail)
@@ -979,6 +984,15 @@ struct DetailModel: ModelProtocol {
                 environment: environment
             )
         }
+    }
+
+    static func failLoadDetail(
+        state: DetailModel,
+        environment: AppEnvironment,
+        message: String
+    ) -> Update<DetailModel> {
+        environment.logger.log("Detail load failed with message: \(message)")
+        return Update(state: state)
     }
 
     /// Set EntryDetail onto DetailModel
@@ -1040,7 +1054,7 @@ struct DetailModel: ModelProtocol {
                 )
             })
             .catch({ error in
-                Just(DetailAction.failDetail(error.localizedDescription))
+                Just(DetailAction.failLoadDetail(error.localizedDescription))
             })
             .eraseToAnyPublisher()
 
@@ -1091,7 +1105,7 @@ struct DetailModel: ModelProtocol {
                 )
             })
             .catch({ error in
-                Just(DetailAction.failDetail(error.localizedDescription))
+                Just(DetailAction.failLoadDetail(error.localizedDescription))
             })
             .eraseToAnyPublisher()
 
@@ -1118,7 +1132,7 @@ struct DetailModel: ModelProtocol {
                 )
             })
             .catch({ error in
-                Just(DetailAction.failRandomDetail(error.localizedDescription))
+                Just(DetailAction.failLoadDetail(error.localizedDescription))
             })
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
