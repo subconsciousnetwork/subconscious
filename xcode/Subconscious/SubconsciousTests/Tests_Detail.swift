@@ -12,6 +12,109 @@ import ObservableStore
 class Tests_Detail: XCTestCase {
     let environment = AppEnvironment()
 
+    func testsetAndPresentDetail() throws {
+        let state = DetailModel()
+        let slug = try Slug("example").unwrap()
+        let modified = Date.now
+
+        let entry = SubtextFile(
+            slug: slug,
+            content: "Example text"
+        )
+        .modified(modified)
+
+        let detail = EntryDetail(
+            saveState: .saved,
+            entry: entry
+        )
+
+        let update = DetailModel.update(
+            state: state,
+            action: .setAndPresentDetail(
+                detail: detail,
+                autofocus: true
+            ),
+            environment: environment
+        )
+
+        XCTAssertEqual(
+            update.state.isLoading,
+            false,
+            "isDetailLoading set to false"
+        )
+        XCTAssertEqual(
+            update.state.modified == modified,
+            false,
+            "Modified is set from entry"
+        )
+        XCTAssertEqual(
+            update.state.slug,
+            detail.slug,
+            "Sets the slug"
+        )
+        XCTAssertEqual(
+            update.state.markupEditor.text,
+            "Example text",
+            "Sets editor text"
+        )
+    }
+
+    func testUpdateDetailFocus() throws {
+        let store = Store(
+            state: DetailModel(),
+            environment: environment
+        )
+
+        let slug = try Slug("example").unwrap()
+        let detail = EntryDetail(
+            saveState: .saved,
+            entry: SubtextFile(
+                slug: slug,
+                content: "Example text"
+            )
+        )
+
+        store.send(.setAndPresentDetail(detail: detail, autofocus: true))
+
+        let expectation = XCTestExpectation(
+            description: "Autofocus sets editor focus"
+        )
+        DispatchQueue.main.asyncAfter(deadline: .now()) {
+            XCTAssertEqual(
+                store.state.markupEditor.focusRequest,
+                true,
+                "Autofocus sets editor focus"
+            )
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 0.2)
+    }
+
+    func testUpdateDetailBlur() throws {
+        let state = DetailModel()
+        let slug = try Slug("example").unwrap()
+        let detail = EntryDetail(
+            saveState: .saved,
+            entry: SubtextFile(
+                slug: slug,
+                content: "Example text"
+            )
+        )
+        let update = DetailModel.update(
+            state: state,
+            action: .setAndPresentDetail(
+                detail: detail,
+                autofocus: false
+            ),
+            environment: environment
+        )
+        XCTAssertEqual(
+            update.state.markupEditor.focusRequest,
+            false,
+            "Autofocus sets editor focus"
+        )
+    }
+
     func testAutosave() throws {
         let state = DetailModel(
             slug: Slug("floop-the-pig")!,
