@@ -229,7 +229,7 @@ struct DetailMarkupEditorCursor: CursorProtocol {
                 saveState: .modified,
                 modified: .now
             )
-        // Intercept requestFocus, so we can save on blur.
+        // Intercept focusChange, so we can save on blur.
         case let .focusChange(isFocused):
             return .editorFocusChange(isFocused)
         // Intercept setSelection, so we can set link suggestions based on

@@ -164,36 +164,6 @@ class Tests_Detail: XCTestCase {
         )
     }
 
-    func testSetEditorFocus() {
-        let store = Store(
-            state: DetailModel(
-                slug: Slug("great-expectations")!,
-                saveState: .modified,
-                isLoading: false,
-                markupEditor: MarkupTextModel(
-                    text: "Mr. Pumblechook’s premises in the High Street of the market town, were of a peppercorny and farinaceous character."
-                )
-            ),
-            environment: environment
-        )
-
-        store.send(.requestEditorFocus(true))
-
-        let expectation = XCTestExpectation(
-            description: "focus set to nil"
-        )
-        DispatchQueue.main.asyncAfter(deadline: .now()) {
-            XCTAssertEqual(
-                store.state.markupEditor.focusRequest,
-                true,
-                "Focus request was set"
-            )
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 0.2)
-    }
-
-
     func testShowRenameSheet() throws {
         let state = DetailModel()
         let link = EntryLink(title: "Floop the Pig")!
