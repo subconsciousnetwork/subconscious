@@ -15,11 +15,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Wrapper for editor actions
     case markupEditor(MarkupTextAction)
 
-    /// View did appear
-    case didAppear
-    /// View did disappear
-    case didDisappear
-
     /// Link was tapped (disambiguates to browser or editor action)
     case openURL(URL)
     case openBrowserURL(URL)
@@ -32,7 +27,9 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Load detail, using a last-write-wins strategy for replacement
     /// if detail is already loaded.
     case loadAndPresentDetail(slug: Slug?, fallback: String, autofocus: Bool)
+    /// Reload detail from source of truth
     case refreshDetail
+    case refreshDetailIfStale
     /// Unable to load detail
     case failLoadDetail(String)
     /// Set entry detail
@@ -246,10 +243,13 @@ struct DetailModel: ModelProtocol {
 
     /// Is editor sliding panel showing?
     var isPresented = false
-    /// Is view being displayed
-    var isAppearing = false
     /// Is editor in loading state?
     var isLoading = true
+    /// When was the last time the editor issued a fetch from source of truth?
+    var lastLoadStarted = Date.distantPast
+    /// Time interval after which a load is considered stale, and should be
+    /// reloaded to make sure it is fresh.
+    var loadStaleInterval: TimeInterval = 0.2
 
     /// The entry link within the text
     var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
@@ -302,16 +302,6 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: ()
-            )
-        case .didAppear:
-            return didAppear(
-                state: state,
-                environment: environment
-            )
-        case .didDisappear:
-            return didDisappear(
-                state: state,
-                environment: environment
             )
         case .openURL(let url):
             return openURL(
@@ -379,6 +369,11 @@ struct DetailModel: ModelProtocol {
             )
         case .refreshDetail:
             return refreshDetail(
+                state: state,
+                environment: environment
+            )
+        case .refreshDetailIfStale:
+            return refreshDetailIfStale(
                 state: state,
                 environment: environment
             )
@@ -653,34 +648,6 @@ struct DetailModel: ModelProtocol {
         return Update(state: state)
     }
 
-    /// Set view appear state
-    /// We use onAppear/onDisappear to determine whether this detail
-    /// is currently active for the purpose of refreshing state from disk.
-    static func didAppear(
-        state: DetailModel,
-        environment: AppEnvironment
-    ) -> Update<DetailModel> {
-        var model = state
-        model.isAppearing = true
-        return update(
-            state: model,
-            action: .refreshDetail,
-            environment: environment
-        )
-    }
-
-    /// Set view disappear state
-    /// We use onAppear/onDisappear to determine whether this detail
-    /// is currently active for the purpose of refreshing state from disk.
-    static func didDisappear(
-        state: DetailModel,
-        environment: AppEnvironment
-    ) -> Update<DetailModel> {
-        var model = state
-        model.isAppearing = false
-        return Update(state: model)
-    }
-
     /// Disambiguate URL opens and forward to specialized action types
     static func openURL(
         state: DetailModel,
@@ -873,6 +840,16 @@ struct DetailModel: ModelProtocol {
         return Update(state: model)
     }
 
+    /// Mark properties on model in preparation for detail load
+    static func prepareLoadDetail(_ state: DetailModel) -> DetailModel {
+        var model = state
+        // Mark loading state
+        model.isLoading = true
+        // Mark time of load start
+        model.lastLoadStarted = Date.now
+        return model
+    }
+
     /// Load Detail from database and present detail
     static func loadAndPresentDetail(
         state: DetailModel,
@@ -888,9 +865,7 @@ struct DetailModel: ModelProtocol {
             return Update(state: state)
         }
 
-        var model = state
-        // Mark loading state
-        model.isLoading = true
+        var model = prepareLoadDetail(state)
 
         let fx: Fx<DetailAction> = environment.database
             .readEntryDetail(
@@ -918,14 +893,12 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         guard let slug = state.slug else {
             environment.logger.log(
-                ".refresh called while editing nil slug. Doing nothing."
+                ".refreshDetail called while editing nil slug. Doing nothing."
             )
             return Update(state: state)
         }
 
-        var model = state
-        // Mark loading state
-        model.isLoading = true
+        var model = prepareLoadDetail(state)
 
         let fx: Fx<DetailAction> = environment.database
             .readEntryDetail(
@@ -941,6 +914,33 @@ struct DetailModel: ModelProtocol {
             .eraseToAnyPublisher()
 
         return Update(state: model, fx: fx)
+    }
+
+    static func refreshDetailIfStale(
+        state: DetailModel,
+        environment: AppEnvironment
+    ) -> Update<DetailModel> {
+        guard let slug = state.slug else {
+            environment.logger.debug(
+                ".refreshDetailIfStale called while editing nil slug. Doing nothing."
+            )
+            return Update(state: state)
+        }
+        let lastLoadElapsed = Date.now.timeIntervalSince(state.lastLoadStarted)
+        guard lastLoadElapsed > state.loadStaleInterval else {
+            environment.logger.debug(
+                ".refreshDetailIfStale. Detail is not stale. Doing nothing."
+            )
+            return Update(state: state)
+        }
+        environment.logger.log(
+            "Detail for \(slug) is stale. Refreshing."
+        )
+        return update(
+            state: state,
+            action: .refreshDetail,
+            environment: environment
+        )
     }
 
     /// Handle detail load failure
@@ -1941,10 +1941,7 @@ struct DetailView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            store.send(.didAppear)
-        }
-        .onDisappear {
-            store.send(.didDisappear)
+            store.send(.refreshDetailIfStale)
         }
         /// Catch link taps and handle them here
         .environment(\.openURL, OpenURLAction { url in
