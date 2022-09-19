@@ -1079,26 +1079,6 @@ struct DetailModel: ModelProtocol {
         )
     }
 
-    /// Reload and display detail for entry, and reload all list views
-    static func requestDetailAndRefreshAll(
-        state: DetailModel,
-        environment: AppEnvironment,
-        slug: Slug
-    ) -> Update<DetailModel> {
-        return DetailModel.update(
-            state: state,
-            actions: [
-                .refreshAll,
-                .loadAndPresentDetail(
-                    slug: slug,
-                    fallback: "",
-                    autofocus: false
-                )
-            ],
-            environment: environment
-        )
-    }
-
     /// Request detail view for entry.
     /// Fall back on contents of template file when no detail
     /// exists for this slug yet.
@@ -1544,10 +1524,14 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
-        return requestDetailAndRefreshAll(
+        return update(
             state: state,
-            environment: environment,
-            slug: to.slug
+            action: .loadAndPresentDetail(
+                slug: to.slug,
+                fallback: to.linkableTitle,
+                autofocus: false
+            ),
+            environment: environment
         )
     }
 
@@ -1598,10 +1582,14 @@ struct DetailModel: ModelProtocol {
         parent: EntryLink,
         child: EntryLink
     ) -> Update<DetailModel> {
-        return requestDetailAndRefreshAll(
+        return update(
             state: state,
-            environment: environment,
-            slug: parent.slug
+            action: .loadAndPresentDetail(
+                slug: parent.slug,
+                fallback: parent.linkableTitle,
+                autofocus: false
+            ),
+            environment: environment
         )
     }
 
