@@ -41,7 +41,8 @@ enum NotebookAction {
     case setRecent([EntryStub])
     case listRecentFailure(String)
 
-    // Rename and merge
+    // Entry CRUD actions
+    case succeedSaveEntry(SubtextFile)
     /// Move entry succeeded. Lifecycle action from Detail.
     case succeedMoveEntry(from: EntryLink, to: EntryLink)
     /// Merge entry succeeded. Lifecycle action from Detail.
@@ -170,8 +171,8 @@ struct NotebookDetailCursor: CursorProtocol {
 
     static func tag(_ action: DetailAction) -> NotebookAction {
         switch action {
-        case .refreshLists:
-            return .refreshAll
+        case let .succeedSave(entry):
+            return .succeedSaveEntry(entry)
         case let .succeedMoveEntry(from, to):
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedMergeEntry(parent, child):
@@ -347,6 +348,17 @@ struct NotebookModel: ModelProtocol {
                     .search(.entryDeleted(slug)),
                     .countEntries,
                     .listRecent
+                ],
+                environment: environment
+            )
+        case let .succeedSaveEntry(entry):
+            return update(
+                state: state,
+                actions: [
+                    .detail(.succeedSave(entry)),
+                    .search(.refreshSuggestions),
+                    .listRecent,
+                    .countEntries
                 ],
                 environment: environment
             )
