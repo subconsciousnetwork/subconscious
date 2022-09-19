@@ -130,7 +130,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case insertEditorCodeAtSelection
 
     /// Refresh after save
-    case refreshAll
+    case refreshLists
 
     /// Synonym for requesting editor blur.
     static var selectDoneEditing: Self {
@@ -623,8 +623,8 @@ struct DetailModel: ModelProtocol {
                 range: state.markupEditor.selection,
                 with: { text in Markup.Code(text: text) }
             )
-        case .refreshAll:
-            return refreshAll(
+        case .refreshLists:
+            return refreshLists(
                 state: state,
                 environment: environment
             )
@@ -1224,11 +1224,7 @@ struct DetailModel: ModelProtocol {
             model.saveState = .saved
         }
 
-        return update(
-            state: model,
-            action: .refreshAll,
-            environment: environment
-        )
+        return Update(state: model)
     }
 
     static func failSave(
@@ -1528,11 +1524,14 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         return update(
             state: state,
-            action: .loadAndPresentDetail(
-                slug: to.slug,
-                fallback: to.linkableTitle,
-                autofocus: false
-            ),
+            actions: [
+                .loadAndPresentDetail(
+                    slug: to.slug,
+                    fallback: to.linkableTitle,
+                    autofocus: false
+                ),
+                .refreshLists
+            ],
             environment: environment
         )
     }
@@ -1586,11 +1585,15 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         return update(
             state: state,
-            action: .loadAndPresentDetail(
-                slug: parent.slug,
-                fallback: parent.linkableTitle,
-                autofocus: false
-            ),
+            actions: [
+                .loadAndPresentDetail(
+                    slug: parent.slug,
+                    fallback: parent.linkableTitle,
+                    autofocus: false
+                ),
+                // Refresh list views since old entry no longer exists
+                .refreshLists
+            ],
             environment: environment
         )
     }
@@ -1651,10 +1654,7 @@ struct DetailModel: ModelProtocol {
 
         return update(
             state: state,
-            actions: [
-                .refreshLinkSuggestions,
-                .refreshRenameSuggestions
-            ],
+            action: .refreshLists,
             environment: environment
         )
     }
@@ -1689,10 +1689,14 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         slug: Slug
     ) -> Update<DetailModel> {
-        // If entry that was deleted was not this entry, then we don't
-        // have to do anything.
         guard state.slug == slug else {
-            return Update(state: state)
+            // If entry that was deleted was not this entry, then just
+            // refresh lists.
+            return update(
+                state: state,
+                action: .refreshLists,
+                environment: environment
+            )
         }
 
         // If the slug currently being edited was just deleted,
@@ -1702,6 +1706,7 @@ struct DetailModel: ModelProtocol {
             state: state,
             actions: [
                 .resetDetail,
+                .refreshLists,
                 .presentDetail(false)
             ],
             environment: environment
@@ -1764,7 +1769,7 @@ struct DetailModel: ModelProtocol {
     }
 
     /// Dispatch refresh actions
-    static func refreshAll(
+    static func refreshLists(
         state: DetailModel,
         environment: AppEnvironment
     ) -> Update<DetailModel> {

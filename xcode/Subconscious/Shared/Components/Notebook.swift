@@ -170,7 +170,7 @@ struct NotebookDetailCursor: CursorProtocol {
 
     static func tag(_ action: DetailAction) -> NotebookAction {
         switch action {
-        case .refreshAll:
+        case .refreshLists:
             return .refreshAll
         case let .succeedMoveEntry(from, to):
             return .succeedMoveEntry(from: from, to: to)
@@ -437,7 +437,7 @@ struct NotebookModel: ModelProtocol {
         return NotebookModel.update(
             state: state,
             actions: [
-                .detail(.refreshAll),
+                .detail(.refreshLists),
                 .search(.refreshSuggestions),
                 .countEntries,
                 .listRecent
