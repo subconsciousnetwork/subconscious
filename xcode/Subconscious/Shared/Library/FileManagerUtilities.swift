@@ -8,11 +8,6 @@
 import Foundation
 
 extension FileManager {
-    /// Get the URL for the user's document directory, if any.
-    var documentDirectoryUrl: URL? {
-        self.urls(for: .documentDirectory, in: .userDomainMask).first
-    }
-
     /// Recursively search for files under a directory
     /// Returns an array of file-URL paths that are not directories,
     /// if successful.

@@ -31,11 +31,74 @@
 //  2022-03-17 Gordon Brander
 import os
 import SwiftUI
+import Combine
+import ObservableStore
+
+//  MARK: Action
+enum MarkupTextAction: Hashable, CustomLogStringConvertible {
+    case requestFocus(Bool)
+    case scheduleFocusChange
+    case focusChange(Bool)
+    case setText(String)
+    case setSelection(range: NSRange, text: String)
+
+    var logDescription: String {
+        switch self {
+        case .setText(_):
+            return "setText(...)"
+        default:
+            return String(describing: self)
+        }
+    }
+}
+
+//  MARK: Model
+struct MarkupTextModel: ModelProtocol {
+    var isFocusChangeScheduled = false
+    var focusRequest = false
+    var focus = false
+    var text = ""
+    var selection = NSMakeRange(0, 0)
+
+    //  MARK: Update
+    static func update(
+        state: MarkupTextModel,
+        action: MarkupTextAction,
+        environment: Void
+    ) -> Update<MarkupTextModel> {
+        switch action {
+        case .requestFocus(let focus):
+            var model = state
+            model.isFocusChangeScheduled = false
+            model.focusRequest = focus
+            return Update(state: model)
+        case .scheduleFocusChange:
+            var model = state
+            model.isFocusChangeScheduled = true
+            return Update(state: model)
+        case .focusChange(let focus):
+            var model = state
+            // UI-driven focus changes always wins.
+            // - Toggle off any focus change request
+            // - Set desired focus to this focus
+            model.isFocusChangeScheduled = false
+            model.focusRequest = focus
+            model.focus = focus
+            return Update(state: model)
+        case .setText(let text):
+            var model = state
+            model.text = text
+            return Update(state: model)
+        case .setSelection(let selection, _):
+            var model = state
+            model.selection = selection
+            return Update(state: model)
+        }
+    }
+}
 
 /// A textview that grows to the height of its content
-struct MarkupTextViewRepresentable<Focus>: UIViewRepresentable
-where Focus: Hashable
-{
+struct MarkupTextViewRepresentable: UIViewRepresentable {
     //  MARK: UITextView subclass
     class MarkupTextView: UITextView {
         var fixedWidth: CGFloat = 0
@@ -57,15 +120,12 @@ where Focus: Hashable
         /// that would cause feedback cycles where an update triggers an event,
         /// which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
-        // Dirty flag signaling if focus change has been requested already
-        var isAwaitingFocusChange: Bool
         var representable: MarkupTextViewRepresentable
 
         init(
             representable: MarkupTextViewRepresentable
         ) {
             self.isUIViewUpdating = false
-            self.isAwaitingFocusChange = false
             self.representable = representable
         }
 
@@ -124,18 +184,7 @@ where Focus: Hashable
                 )
                 return
             }
-            guard representable.text != view.text else {
-                representable.logger?.debug(
-                    "textViewDidChange: text binding already in sync. Skipping."
-                )
-                return
-            }
-            if representable.text != view.text {
-                representable.logger?.debug(
-                    "textViewDidChange: set text binding"
-                )
-                representable.text = view.text
-            }
+            self.representable.store.send(.setText(view.text))
         }
 
         /// Handle editing begin (focus)
@@ -147,21 +196,7 @@ where Focus: Hashable
                 )
                 return
             }
-
-            // Mark focus clean
-            self.isAwaitingFocusChange = false
-
-            guard representable.focus != representable.field else {
-                representable.logger?.debug(
-                    "textViewDidBeginEditing: focus binding already in sync. Skipping."
-                )
-                return
-            }
-
-            representable.logger?.debug(
-                "textViewDidBeginEditing: set focus binding to focused state."
-            )
-            representable.focus = representable.field
+            self.representable.store.send(.focusChange(true))
         }
 
         /// Handle editing end (blur)
@@ -172,21 +207,7 @@ where Focus: Hashable
                 )
                 return
             }
-
-            // Mark focus clean
-            self.isAwaitingFocusChange = false
-
-            guard representable.focus == representable.field else {
-                representable.logger?.debug(
-                    "textViewDidEndEditing: focus binding already in sync. Skipping."
-                )
-                return
-            }
-
-            representable.logger?.debug(
-                "textViewDidEndEditing: set focus binding to nil."
-            )
-            representable.focus = nil
+            self.representable.store.send(.focusChange(false))
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
@@ -203,24 +224,17 @@ where Focus: Hashable
                 )
                 return
             }
-            guard textView.selectedRange != representable.selection else {
-                representable.logger?.debug(
-                    "textViewDidChangeSelection: selection binding already in sync. Skipping."
+            representable.store.send(
+                .setSelection(
+                    range: textView.selectedRange,
+                    text: textView.text
                 )
-                return
-            }
-            representable.logger?.debug(
-                "textViewDidChangeSelection: set selection binding."
             )
-            representable.$selection.wrappedValue = textView.selectedRange
         }
     }
 
     //  MARK: Properties
-    @Binding var text: String
-    @Binding var selection: NSRange
-    @Binding var focus: Focus?
-    var field: Focus
+    var store: ViewStore<MarkupTextModel>
     /// Frame needed to determine textview height.
     /// Use `GeometryView` to find container width.
     var frame: CGRect
@@ -236,10 +250,6 @@ where Focus: Hashable
         UITextItemInteraction
     ) -> Bool
     var logger: Logger?
-
-    var isFocused: Bool {
-        self.focus == field
-    }
 
     //  MARK: makeUIView
     func makeUIView(context: Context) -> MarkupTextView {
@@ -264,45 +274,6 @@ where Focus: Hashable
         view.backgroundColor = .clear
         view.textColor = textColor
         view.isScrollEnabled = false
-
-        // If view is out of sync with desired focus state,
-        // change first responder state synchronously.
-        //
-        // Note, that focus management code in `makeUIView` is synchronous,
-        // while focus management code in `updateUIView` is asynchronous.
-        //
-        // In `updateUIView` we call first responder methods asynchronously
-        // to prevent Attribute Graph cycle bugs. It is unclear how these bugs
-        // appear (the Apple framework is proprietary). However, we know we
-        // get them from calling first responder methods synchronously within
-        // `updateUIView`. However, this does not happen in `makeUIView`.
-        //
-        // However, calling keyboard asynchronously can cause "tearing" during
-        // animation, as keyboard animates in while the other animation is
-        // happening. This is especially difficult in cases were we create
-        // a `MarkupTextViewRepresentable` and immediately focus it
-        // (autofocus).
-        //
-        // Since calling focus methods in `makeUIView` is not triggering the
-        // attribute graph cycle issue, we use it as an opportunity to
-        // synchronously call focus methods.
-        // This allows us to create the view, immediately focus it,
-        // so that the keyboard follows the view during any animations,
-        // without tearing.
-        //
-        // See:
-        // https://github.com/gordonbrander/subconscious/issues/253
-        //
-        // 2022-03-26 Gordon Brander
-        if isFocused != view.isFirstResponder {
-            context.coordinator.isAwaitingFocusChange = true
-            if isFocused {
-                view.becomeFirstResponder()
-            } else {
-                view.resignFirstResponder()
-            }
-        }
-
         return view
     }
 
@@ -317,6 +288,7 @@ where Focus: Hashable
     /// out of sync with the binding before setting, using an if-statement
     /// or guard.
     func updateUIView(_ view: MarkupTextView, context: Context) {
+        logger?.debug("updateUIView")
         // Set updating flag on coordinator so that event callbacks
         // can know if they are being called during an update.
         context.coordinator.isUIViewUpdating = true
@@ -326,7 +298,10 @@ where Focus: Hashable
         }
 
         // Update text
-        self.updateUIViewText(view, context: context)
+        if view.text != store.state.text {
+            logger?.debug("updateUIView: set text")
+            view.text = store.state.text
+        }
 
         // Update width
         if view.fixedWidth != self.frame.width {
@@ -338,9 +313,9 @@ where Focus: Hashable
         self.updateUIViewFocus(view, context: context)
 
         // Set selection
-        if self.selection != view.selectedRange {
+        if store.state.selection != view.selectedRange {
             logger?.debug("updateUIView: set selection")
-            view.selectedRange = self.selection
+            view.selectedRange = self.store.state.selection
         }
 
         if self.textContainerInset != view.textContainerInset {
@@ -348,17 +323,6 @@ where Focus: Hashable
             // Set inner padding
             view.textContainerInset = self.textContainerInset
         }
-    }
-
-    /// Update UIView text state farom binding if necessary
-    /// Also invalidates intrinsic content size so that text view can
-    /// grow to contain new text contents.
-    func updateUIViewText(_ view: MarkupTextView, context: Context) {
-        guard view.text != self.text else {
-            return
-        }
-        logger?.debug("updateUIView: set text")
-        view.text = self.text
     }
 
     /// If representable focus state is out of sync
@@ -369,19 +333,15 @@ where Focus: Hashable
     /// more than once.
     func updateUIViewFocus(_ view: MarkupTextView, context: Context) {
         // Focus is clean, do nothing
-        guard isFocused != view.isFirstResponder else {
+        guard store.state.focus != store.state.focusRequest else {
             return
         }
-        guard !context.coordinator.isAwaitingFocusChange else {
-            logger?.debug(
-                "updateUIViewFocus: Focus is dirty but focus change already scheduled. Skipping."
-            )
+        /// If focus change is already scheduled, return
+        guard !store.state.isFocusChangeScheduled else {
+            logger?.debug("updateUIViewFocus: Focus is dirty but focus change already scheduled. Skipping.")
             return
         }
-        logger?.debug(
-            "updateUIViewFocus: scheduling first responder change"
-        )
-        context.coordinator.isAwaitingFocusChange = true
+        store.send(.scheduleFocusChange)
         // Call for first responder change needs to be async,
         // or else we get an AttributeGraph cycle warning from SwiftUI.
         // This is true for both becomeFirstResponder and resignFirstResponder.
@@ -389,21 +349,17 @@ where Focus: Hashable
         DispatchQueue.main.async {
             // Check again in this tick to make sure we still need to
             // change first responder state.
-            if isFocused != view.isFirstResponder {
-                if isFocused {
-                    logger?.debug(
-                        "async: call becomeFirstResponder"
-                    )
-                    view.becomeFirstResponder()
-                } else {
-                    logger?.debug(
-                        "async: call resignFirstResponder"
-                    )
-                    view.resignFirstResponder()
-                }
+            guard store.state.focus != store.state.focusRequest else {
+                return
+            }
+            if store.state.focusRequest {
+                logger?.debug("async: call becomeFirstResponder")
+                view.becomeFirstResponder()
+            } else {
+                logger?.debug("async: call resignFirstResponder")
+                view.resignFirstResponder()
             }
         }
-        return
     }
 
     func makeCoordinator() -> Self.Coordinator {

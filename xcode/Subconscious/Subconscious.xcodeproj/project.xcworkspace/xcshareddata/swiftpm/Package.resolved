@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gordonbrander/ObservableStore",
       "state" : {
-        "revision" : "546c7d013ea8631c0d3949ee831f032f2fdc3cc3",
-        "version" : "0.1.0"
+        "revision" : "5ea1c8b520ee55ddf872be62a816d078361a1a21",
+        "version" : "0.2.0"
       }
     },
     {
@@ -25,6 +25,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "ee189b02b3a00515c3dacd9354c0f6c277415cc8"
+      }
+    },
+    {
+      "identity" : "tracery",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/BenziAhamed/Tracery",
+      "state" : {
+        "revision" : "2714eabbbd287fe7969314d5a915c61c2d549ef9",
+        "version" : "0.0.2"
       }
     }
   ],

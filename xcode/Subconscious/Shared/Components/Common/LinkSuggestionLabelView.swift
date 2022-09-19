@@ -31,7 +31,7 @@ struct LinkSuggestionLabelView: View, Equatable {
                 title: {
                     TitleGroupView(
                         title: Text(link.title),
-                        subtitle: Text("Link to new idea")
+                        subtitle: Text("Link to new note")
                     )
                 },
                 icon: {

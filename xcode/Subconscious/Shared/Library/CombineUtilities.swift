@@ -19,7 +19,8 @@ struct CombineUtilities {
                 let result: T = execute()
                 promise(.success(result))
             })
-        }).eraseToAnyPublisher()
+        })
+        .eraseToAnyPublisher()
     }
 
     /// Run a throwing function asyncronously on the global DispatchQueue.
@@ -36,6 +37,7 @@ struct CombineUtilities {
                     promise(.failure(error))
                 }
             })
-        }).eraseToAnyPublisher()
+        })
+        .eraseToAnyPublisher()
     }
 }

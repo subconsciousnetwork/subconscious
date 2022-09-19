@@ -17,7 +17,7 @@ struct RenameSuggestionLabelView: View, Equatable {
                 title: {
                     TitleGroupView(
                         title: Text(parent.linkableTitle),
-                        subtitle: Text("Merge ideas")
+                        subtitle: Text("Merge notes")
                     )
                 },
                 icon: {
@@ -29,7 +29,7 @@ struct RenameSuggestionLabelView: View, Equatable {
                 title: {
                     TitleGroupView(
                         title: Text(to.linkableTitle),
-                        subtitle: Text("Rename idea")
+                        subtitle: Text("Rename note")
                     )
                 },
                 icon: {

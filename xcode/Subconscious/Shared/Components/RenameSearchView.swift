@@ -9,10 +9,9 @@ import SwiftUI
 
 struct RenameSearchView: View {
     var current: EntryLink?
-    var placeholder: String = "Enter name for idea"
+    var placeholder: String = "Enter name for note"
     var suggestions: [RenameSuggestion]
     @Binding var text: String
-    @Binding var focus: AppModel.Focus?
     var onCancel: () -> Void
     var onSelect: (RenameSuggestion) -> Void
 
@@ -38,8 +37,8 @@ struct RenameSearchView: View {
             SearchTextField(
                 placeholder: placeholder,
                 text: $text,
-                focus: $focus,
-                field: .rename
+                autofocus: true,
+                autofocusDelay: 0.5
             )
             .submitLabel(.done)
             .padding(.bottom, AppTheme.padding)
@@ -88,7 +87,6 @@ struct RenameSearchView_Previews: PreviewProvider {
                 )
             ],
             text: .constant(""),
-            focus: .constant(nil),
             onCancel: {},
             onSelect: { suggestion in
                 

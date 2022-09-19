@@ -12,6 +12,7 @@ struct EntryListView: View {
     var entries: [EntryStub]?
     var onEntryPress: (EntryStub) -> Void
     var onEntryDelete: (Slug) -> Void
+    var onRefresh: () -> Void
 
     var body: some View {
         if let entries = entries {
@@ -41,6 +42,7 @@ struct EntryListView: View {
                             }
                         }
                     }
+                    .background(Color.background)
                     // Add space at the bottom of the list so that FAB
                     // does not cover up swipe actions of last item.
                     Color.clear
@@ -54,6 +56,9 @@ struct EntryListView: View {
                 }
                 .animation(.easeOutCubic(), value: entries)
                 .transition(.opacity)
+                .refreshable {
+                    onRefresh()
+                }
                 .listStyle(.plain)
             } else {
                 VStack(spacing: AppTheme.unit * 6) {
@@ -97,7 +102,8 @@ struct EntryListView_Previews: PreviewProvider {
         EntryListView(
             entries: [],
             onEntryPress: { entry in },
-            onEntryDelete: { slug in }
+            onEntryDelete: { slug in },
+            onRefresh: {}
         )
     }
 }

@@ -73,7 +73,7 @@ struct DatabaseService {
     /// Sync file system with database.
     /// Note file system is source-of-truth (leader).
     /// Syncing will never delete files on the file system.
-    func syncDatabase() -> AnyPublisher<[FileSync.Change], Error> {
+    func syncDatabase() -> AnyPublisher<[FileFingerprintChange], Error> {
         CombineUtilities.async(qos: .utility) {
             // Left = Leader (files)
             let left = try FileSync.readFileFingerprints(
@@ -434,7 +434,7 @@ struct DatabaseService {
         }
 
         if isRandomSuggestionEnabled {
-            // Insert an option to load a random idea if there are any ideas.
+            // Insert an option to load a random note if there are any notes.
             if suggestions.count > 2 {
                 special.append(.random)
             }
@@ -496,6 +496,7 @@ struct DatabaseService {
 
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
+    //  TODO: Replace flag arguments with direct references feature flags
     func searchSuggestions(
         query: String,
         isJournalSuggestionEnabled: Bool,
@@ -613,13 +614,15 @@ struct DatabaseService {
         }
     }
 
-    func readDefaultLinkSuggestions(config: Config) -> [LinkSuggestion] {
+    func readDefaultLinkSuggestions() -> [LinkSuggestion] {
         // If default link suggestsions are toggled off, return empty array.
-        guard config.linksEnabled else {
+        guard Config.default.linksEnabled else {
             return []
         }
-        guard let linksEntry = readEntry(slug: config.linksTemplate) else {
-            return config.linksFallback.map({ slug in
+        guard
+            let linksEntry = readEntry(slug: Config.default.linksTemplate)
+        else {
+            return Config.default.linksFallback.map({ slug in
                 .entry(
                     EntryLink(slug: slug)
                 )
@@ -690,10 +693,10 @@ struct DatabaseService {
     }
 
     /// Log a search query in search history db
-    func createSearchHistoryItem(query: String) -> AnyPublisher<Void, Error> {
+    func createSearchHistoryItem(query: String) -> AnyPublisher<String, Error> {
         CombineUtilities.async(qos: .utility) {
             guard !query.isWhitespace else {
-                return
+                return query
             }
 
             // Log search in database, along with number of hits
@@ -707,6 +710,8 @@ struct DatabaseService {
                     .text(query)
                 ]
             )
+
+            return query
         }
     }
 
@@ -819,6 +824,60 @@ struct DatabaseService {
                 fallback: fallback
             )
         }
+    }
+
+    /// Select a random entry
+    func readRandomEntry() -> EntryStub? {
+        try? database.execute(
+            sql: """
+            SELECT slug, body
+            FROM entry
+            ORDER BY RANDOM()
+            LIMIT 1
+            """
+        )
+        .compactMap({ row in
+            guard
+                let slugString: String = row.get(0),
+                let slug = Slug(slugString),
+                let body: String = row.get(1)
+            else {
+                return nil
+            }
+            let entry = SubtextFile(slug: slug, content: body)
+            return EntryStub(entry)
+        })
+        .first
+    }
+
+    /// Select a random entry who's body matches a query string
+    func readRandomEntryMatching(
+        query: String
+    ) -> EntryStub? {
+        try? database.execute(
+            sql: """
+            SELECT slug, body
+            FROM entry_search
+            entry_search.body MATCH ?
+            ORDER BY RANDOM()
+            LIMIT 1
+            """,
+            parameters: [
+                .queryFTS5(query)
+            ]
+        )
+        .compactMap({ row in
+            guard
+                let slugString: String = row.get(0),
+                let slug = Slug(slugString),
+                let body: String = row.get(1)
+            else {
+                return nil
+            }
+            let entry = SubtextFile(slug: slug, content: body)
+            return EntryStub(entry)
+        })
+        .first
     }
 
     /// Choose a random entry and read detailz
