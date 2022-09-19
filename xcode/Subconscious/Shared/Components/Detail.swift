@@ -259,9 +259,6 @@ struct DetailModel: ModelProtocol {
     var isLoading = true
     /// When was the last time the editor issued a fetch from source of truth?
     var lastLoadStarted = Date.distantPast
-    /// Time interval after which a load is considered stale, and should be
-    /// reloaded to make sure it is fresh.
-    var loadStaleInterval: TimeInterval = 0.2
 
     /// The entry link within the text
     var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
@@ -288,6 +285,10 @@ struct DetailModel: ModelProtocol {
 
     /// Is delete confirmation dialog presented?
     var isDeleteConfirmationDialogShowing = false
+
+    /// Time interval after which a load is considered stale, and should be
+    /// reloaded to make sure it is fresh.
+    static let loadStaleInterval: TimeInterval = 0.2
 
     /// Given a particular entry value, does the editor's state
     /// currently match it, such that we could say the editor is
@@ -950,7 +951,7 @@ struct DetailModel: ModelProtocol {
             return Update(state: state)
         }
         let lastLoadElapsed = Date.now.timeIntervalSince(state.lastLoadStarted)
-        guard lastLoadElapsed > state.loadStaleInterval else {
+        guard lastLoadElapsed > Self.loadStaleInterval else {
             environment.logger.debug(
                 "Detail is fresh. No refresh needed. Skipping."
             )
