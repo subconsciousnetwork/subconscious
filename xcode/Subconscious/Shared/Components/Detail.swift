@@ -887,8 +887,6 @@ struct DetailModel: ModelProtocol {
             return Update(state: state)
         }
 
-        let model = prepareLoadDetail(state)
-
         let fx: Fx<DetailAction> = environment.database
             .readEntryDetail(
                 slug: slug,
@@ -905,6 +903,7 @@ struct DetailModel: ModelProtocol {
             })
             .eraseToAnyPublisher()
 
+        let model = prepareLoadDetail(state)
         return Update(state: model, fx: fx)
     }
 
@@ -1123,9 +1122,7 @@ struct DetailModel: ModelProtocol {
             })
             .eraseToAnyPublisher()
 
-        var model = state
-        model.isLoading = true
-
+        let model = prepareLoadDetail(state)
         return Update(state: model, fx: fx)
     }
 
