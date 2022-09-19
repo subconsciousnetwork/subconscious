@@ -29,8 +29,10 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case refreshDetailIfStale
     /// Unable to load detail
     case failLoadDetail(String)
-    /// Set entry detail
-    case setDetail(EntryDetail)
+    /// Set entry detail.
+    /// This actions will blow away any existing entry detail.
+    /// In most cases you want to use `setDetailLastWriteWins` instead.
+    case forceSetDetail(EntryDetail)
     /// Set EntryDetail on DetailModel, but only if last modification happened
     /// more recently than DetailModel.
     case setDetailLastWriteWins(EntryDetail)
@@ -394,8 +396,8 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 message: message
             )
-        case .setDetail(let detail):
-            return setDetail(
+        case .forceSetDetail(let detail):
+            return forceSetDetail(
                 state: state,
                 environment: environment,
                 detail: detail
@@ -975,7 +977,7 @@ struct DetailModel: ModelProtocol {
     }
 
     /// Set EntryDetail onto DetailModel
-    static func setDetail(
+    static func forceSetDetail(
         state: DetailModel,
         environment: AppEnvironment,
         detail: EntryDetail
@@ -1027,7 +1029,7 @@ struct DetailModel: ModelProtocol {
         case .rightNewer:
             return update(
                 state: model,
-                action: .setDetail(detail),
+                action: .forceSetDetail(detail),
                 environment: environment
             )
         // No loaded detail. Do nothing.
@@ -1037,7 +1039,7 @@ struct DetailModel: ModelProtocol {
         case .rightOnly:
             return update(
                 state: state,
-                action: .setDetail(detail),
+                action: .forceSetDetail(detail),
                 environment: environment
             )
         // Same slug, same time, different sizes. Conflict. Do nothing.
@@ -1054,7 +1056,7 @@ struct DetailModel: ModelProtocol {
                 state: model,
                 actions: [
                     .save(snapshot),
-                    .setDetail(detail)
+                    .forceSetDetail(detail)
                 ],
                 environment: environment
             )
