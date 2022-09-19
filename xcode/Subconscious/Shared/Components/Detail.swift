@@ -19,9 +19,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case openURL(URL)
     case openBrowserURL(URL)
     case openEditorURL(URL)
-    /// Invokes save and blurs editor
-    case selectDoneEditing
-
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
@@ -109,6 +106,12 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         saveState: SaveState,
         modified: Date
     )
+
+    /// Editor focus state changed.
+    /// We intercept this editor action to save editor contents
+    /// when editor focus changes to false.
+    case editorFocusChange(Bool)
+
     /// Set selected range in editor
     case setEditorSelection(range: NSRange, text: String)
     case setEditorSelectionEnd
@@ -127,8 +130,9 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Refresh after save
     case refreshAll
 
-    static func requestEditorFocus(_ isFocused: Bool) -> Self {
-        .markupEditor(.requestFocus(isFocused))
+    /// Synonym for requesting editor blur.
+    static var selectDoneEditing: Self {
+        .markupEditor(.requestFocus(false))
     }
 
     /// Select a link completion
@@ -220,6 +224,9 @@ struct DetailMarkupEditorCursor: CursorProtocol {
                 saveState: .modified,
                 modified: .now
             )
+        // Intercept requestFocus, so we can save on blur.
+        case let .focusChange(isFocused):
+            return .editorFocusChange(isFocused)
         // Intercept setSelection, so we can set link suggestions based on
         // cursor position.
         case let .setSelection(nsRange, text):
@@ -329,6 +336,12 @@ struct DetailModel: ModelProtocol {
                 saveState: saveState,
                 modified: modified
             )
+        case let .editorFocusChange(isFocused):
+            return editorFocusChange(
+                state: state,
+                environment: environment,
+                isFocused: isFocused
+            )
         case let .setEditorSelection(range, text):
             return setEditorSelection(
                 state: state,
@@ -347,11 +360,6 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 text: text,
                 range: range
-            )
-        case .selectDoneEditing:
-            return selectDoneEditing(
-                state: state,
-                environment: environment
             )
         case .presentDetail(let isPresented):
             return presentDetail(
@@ -718,6 +726,32 @@ struct DetailModel: ModelProtocol {
         )
     }
 
+    /// Handle editor focus request.
+    /// Saves editor state if blurred.
+    static func editorFocusChange(
+        state: DetailModel,
+        environment: AppEnvironment,
+        isFocused: Bool
+    ) -> Update<DetailModel> {
+        // If blur, then send focus request down and save
+        guard isFocused else {
+            return update(
+                state: state,
+                actions: [
+                    .markupEditor(.focusChange(false)),
+                    .autosave
+                ],
+                environment: environment
+            )
+        }
+        // Otherwise, just send down focus request
+        return update(
+            state: state,
+            action: .markupEditor(.focusChange(true)),
+            environment: environment
+        )
+    }
+
     /// Set editor selection.
     static func setEditorSelection(
         state: DetailModel,
@@ -814,21 +848,6 @@ struct DetailModel: ModelProtocol {
         )
     }
 
-    /// Unfocus editor and save current state
-    static func selectDoneEditing(
-        state: DetailModel,
-        environment: AppEnvironment
-    ) -> Update<DetailModel> {
-        return DetailModel.update(
-            state: state,
-            actions: [
-                .requestEditorFocus(false),
-                .autosave
-            ],
-            environment: environment
-        )
-    }
-
     /// Toggle detail presentation
     static func presentDetail(
         state: DetailModel,
@@ -865,7 +884,7 @@ struct DetailModel: ModelProtocol {
             return Update(state: state)
         }
 
-        var model = prepareLoadDetail(state)
+        let model = prepareLoadDetail(state)
 
         let fx: Fx<DetailAction> = environment.database
             .readEntryDetail(
@@ -898,7 +917,7 @@ struct DetailModel: ModelProtocol {
             return Update(state: state)
         }
 
-        var model = prepareLoadDetail(state)
+        let model = prepareLoadDetail(state)
 
         let fx: Fx<DetailAction> = environment.database
             .readEntryDetail(
@@ -1052,7 +1071,7 @@ struct DetailModel: ModelProtocol {
             actions: [
                 .presentDetail(true),
                 .setDetailLastWriteWins(detail),
-                .requestEditorFocus(autofocus)
+                .editorFocusChange(autofocus)
             ],
             environment: environment
         )
