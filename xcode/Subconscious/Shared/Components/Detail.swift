@@ -879,7 +879,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         guard let slug = slug else {
             environment.logger.log(
-                ".loadAndPresentDetail called with nil slug. Doing nothing."
+                "Load and present detail requested, but nothing was being edited. Skipping."
             )
             return Update(state: state)
         }
@@ -912,7 +912,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         guard let slug = state.slug else {
             environment.logger.log(
-                ".refreshDetail called while editing nil slug. Doing nothing."
+                "Refresh detail requested when nothing was being edited. Skipping."
             )
             return Update(state: state)
         }
@@ -941,14 +941,14 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         guard let slug = state.slug else {
             environment.logger.debug(
-                ".refreshDetailIfStale called while editing nil slug. Doing nothing."
+                "Refresh-detail-if-stale requested, but nothing was being edited. Skipping."
             )
             return Update(state: state)
         }
         let lastLoadElapsed = Date.now.timeIntervalSince(state.lastLoadStarted)
         guard lastLoadElapsed > state.loadStaleInterval else {
             environment.logger.debug(
-                ".refreshDetailIfStale. Detail is not stale. Doing nothing."
+                "Detail is fresh. No refresh needed. Skipping."
             )
             return Update(state: state)
         }
