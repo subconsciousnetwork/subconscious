@@ -16,6 +16,12 @@ struct EntryDetail: Hashable {
     }
 }
 
+extension EntryDetail: CustomLogStringConvertible {
+    var logDescription: String {
+        "EntryDetail(\(slug))"
+    }
+}
+
 extension FileFingerprint {
     init(_ detail: EntryDetail) {
         self.init(

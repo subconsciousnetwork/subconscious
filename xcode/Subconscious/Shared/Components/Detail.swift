@@ -173,6 +173,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         }
     }
 
+    // MARK: logDescription
     var logDescription: String {
         switch self {
         case .setLinkSuggestions(let suggestions):
@@ -181,6 +182,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "setRenameSuggestions(\(suggestions.count) items)"
         case .markupEditor(let action):
             return "markupEditor(\(String.loggable(action)))"
+        case let .setDetailLastWriteWins(detail):
+            return "setDetailLastWriteWins(\(String.loggable(detail)))"
         case .save(let entry):
             let slugString: String = entry.mapOr(
                 { entry in String(entry.slug) },
@@ -190,7 +193,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         case .succeedSave(let entry):
             return "succeedSave(\(entry.slug))"
         case .setAndPresentDetail(let detail, _):
-            return "setAndPresentDetail(\(detail.slug))"
+            return "setAndPresentDetail(\(String.loggable(detail)))"
         case let .setEditor(_, saveState, modified):
             return "setEditor(text: ..., saveState: \(String(describing: saveState)), modified: \(modified))"
         case let .setEditorSelection(range, _):
