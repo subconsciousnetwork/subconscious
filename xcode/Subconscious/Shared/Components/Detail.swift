@@ -1941,6 +1941,9 @@ struct DetailView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
+            // When an editor is presented, refresh if stale.
+            // This covers the case where the editor might have been in the
+            // background for a while, and the content changed in another tab.
             store.send(.refreshDetailIfStale)
         }
         /// Catch link taps and handle them here
