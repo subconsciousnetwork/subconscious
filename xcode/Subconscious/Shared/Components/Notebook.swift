@@ -145,6 +145,8 @@ extension NotebookAction: CustomLogStringConvertible {
             return "search(\(String.loggable(action)))"
         case .setRecent(let items):
             return "setRecent(\(items.count) items)"
+        case .succeedSaveEntry(let entry):
+            return "succeedSaveEntry(\(entry.slug))"
         default:
             return String(describing: self)
         }
