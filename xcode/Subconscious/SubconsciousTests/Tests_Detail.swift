@@ -57,6 +57,11 @@ class Tests_Detail: XCTestCase {
             "Example text",
             "Sets editor text"
         )
+        XCTAssertEqual(
+            update.state.markupEditor.focusRequest,
+            true,
+            "Focus request is set to true"
+        )
     }
 
     func testUpdateDetailFocus() throws {
