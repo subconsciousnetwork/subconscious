@@ -132,6 +132,11 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Refresh after save
     case refreshLists
 
+    /// Local action for requesting editor focus.
+    static func requestEditorFocus(_ focus: Bool) -> Self {
+        .markupEditor(.requestFocus(false))
+    }
+
     /// Synonym for requesting editor blur.
     static var selectDoneEditing: Self {
         .markupEditor(.requestFocus(false))
@@ -1076,7 +1081,7 @@ struct DetailModel: ModelProtocol {
             actions: [
                 .presentDetail(true),
                 .setDetailLastWriteWins(detail),
-                .editorFocusChange(autofocus)
+                .requestEditorFocus(autofocus)
             ],
             environment: environment
         )
