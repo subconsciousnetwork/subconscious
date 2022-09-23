@@ -134,7 +134,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     /// Local action for requesting editor focus.
     static func requestEditorFocus(_ focus: Bool) -> Self {
-        .markupEditor(.requestFocus(false))
+        .markupEditor(.requestFocus(focus))
     }
 
     /// Synonym for requesting editor blur.
