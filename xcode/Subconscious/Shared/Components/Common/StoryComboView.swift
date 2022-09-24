@@ -10,8 +10,7 @@ import SwiftUI
 /// A story is a single update within the FeedView
 struct StoryComboView: View {
     var story: StoryCombo
-    var viewAction: (EntryLink) -> Void
-    var synthesizeAction: (EntryLink, EntryLink) -> Void
+    var action: (EntryLink, String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -30,7 +29,7 @@ struct StoryComboView: View {
             VStack(alignment: .leading, spacing: AppTheme.unit4) {
                 Button(
                     action: {
-                        viewAction(story.entryA.link)
+                        action(story.entryA.link, story.entryA.linkableTitle)
                     },
                     label: {
                         TranscludeView(entry: story.entryA)
@@ -40,7 +39,7 @@ struct StoryComboView: View {
                 
                 Button(
                     action: {
-                        viewAction(story.entryB.link)
+                        action(story.entryB.link, story.entryB.linkableTitle)
                     },
                     label: {
                         TranscludeView(entry: story.entryB)
@@ -55,7 +54,7 @@ struct StoryComboView: View {
                 // pop open a new note with the other two notes already transcluded in it
                 Button(
                     action: {
-                        synthesizeAction(story.entryA.link, story.entryB.link)
+                        action(story.entryA.link, story.entryA.linkableTitle)
                     },
                     label: {
                         Text("Synthesize")
@@ -101,8 +100,7 @@ struct StoryComboView_Previews: PreviewProvider {
                     )
                 )
             ),
-            viewAction: { entryA in },
-            synthesizeAction: { entryA, entryB in }
+            action: { link, fallback in }
         )
     }
 }
