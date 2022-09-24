@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B58FE48A28DED93F00E000CC /* ComboGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48928DED93F00E000CC /* ComboGeist.swift */; };
+		B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48B28DED9B600E000CC /* StoryCombo.swift */; };
+		B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */; };
 		B80057EB27DC355E002C0129 /* SubconsciousTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80057EA27DC355E002C0129 /* SubconsciousTests.swift */; };
 		B80057F427DC35BE002C0129 /* Tests_Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80057F327DC35BE002C0129 /* Tests_Slug.swift */; };
 		B809AFF428D8E7BC00D0589A /* Tests_MarkupText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */; };
@@ -255,6 +258,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B58FE48928DED93F00E000CC /* ComboGeist.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComboGeist.swift; sourceTree = "<group>"; };
+		B58FE48B28DED9B600E000CC /* StoryCombo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryCombo.swift; sourceTree = "<group>"; };
+		B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryComboView.swift; sourceTree = "<group>"; };
 		B80057E827DC355E002C0129 /* SubconsciousTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SubconsciousTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B80057EA27DC355E002C0129 /* SubconsciousTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubconsciousTests.swift; sourceTree = "<group>"; };
 		B80057F327DC35BE002C0129 /* Tests_Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Slug.swift; sourceTree = "<group>"; };
@@ -488,6 +494,7 @@
 				B877A6E427A1C2BC00F11A90 /* KeyboardService.swift */,
 				B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */,
 				B8CA8F1F288F1875005F8802 /* RandomPromptGeist.swift */,
+				B58FE48928DED93F00E000CC /* ComboGeist.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -523,6 +530,7 @@
 				B8901CF227978FDE007C9021 /* Slug.swift */,
 				B8A59D6B28B692A00010DB2F /* Story.swift */,
 				B8A59D6828B692900010DB2F /* StoryPrompt.swift */,
+				B58FE48B28DED9B600E000CC /* StoryCombo.swift */,
 				B824FDCD26FA662200B81BBD /* SubtextFile.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
 			);
@@ -701,6 +709,7 @@
 				B8AE34C7276BF77000777FF0 /* SearchTextField.swift */,
 				B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */,
 				B8CA8F2728909FBA005F8802 /* StoryPromptView.swift */,
+				B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */,
 				B8A59D7128B693100010DB2F /* StoryView.swift */,
 				B8AE34C1276BD77C00777FF0 /* SuggestionLabelStyle.swift */,
 				B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */,
@@ -991,6 +1000,7 @@
 				B8109C2827A8879C00CD2B6D /* AppTheme.swift in Sources */,
 				B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
 				B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */,
+				B58FE48A28DED93F00E000CC /* ComboGeist.swift in Sources */,
 				B813749A28BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift in Sources */,
 				B8A59D6628B690B20010DB2F /* FeedService.swift in Sources */,
 				B8CC434327A0815E0079D2F9 /* ModalView.swift in Sources */,
@@ -998,6 +1008,7 @@
 				B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
 				B82F053728D60EE60025A8B5 /* AppTabView.swift in Sources */,
+				B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */,
 				B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B86DFF3327C072CD002E57ED /* Func.swift in Sources */,
 				B8901CF327978FDE007C9021 /* Slug.swift in Sources */,
@@ -1046,6 +1057,7 @@
 				B8DEBF1F2798EC23007CB528 /* TitleGroupView.swift in Sources */,
 				B8AE34BF276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
 				B8CA8F2628909E66005F8802 /* Feed.swift in Sources */,
+				B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */,
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
 				B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */,
 				B89966C728B6EE2300DF1F8C /* Notebook.swift in Sources */,
