@@ -882,7 +882,7 @@ struct DatabaseService {
 
     /// Choose a random entry and publish slug
     func readRandomEntryLink() -> AnyPublisher<EntryLink, Error> {
-        CombineUtilities.async(qos: .userInteractive) {
+        CombineUtilities.async(qos: .default) {
             try database.execute(
                 sql: """
                 SELECT slug, title
@@ -892,13 +892,17 @@ struct DatabaseService {
                 """
             )
             .compactMap({ row in
-                if
-                    let slug: Slug = row.get(0),
+                guard
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
                     let title: String = row.get(1)
-                {
-                    return EntryLink(slug: slug, title: title)
+                else {
+                    return nil
                 }
-                return nil
+                return EntryLink(
+                    slug: slug,
+                    title: title
+                )
             })
             .first
             .unwrap(DatabaseServiceError.randomEntryFailed)
