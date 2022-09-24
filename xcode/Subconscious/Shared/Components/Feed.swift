@@ -190,7 +190,7 @@ struct FeedModel: ModelProtocol {
             return FeedDetailCursor.update(
                 state: state,
                 action: .loadAndPresentDetail(
-                    slug: entryLink.slug,
+                    link: entryLink,
                     fallback: entryLink.linkableTitle,
                     autofocus: false
                 ),
