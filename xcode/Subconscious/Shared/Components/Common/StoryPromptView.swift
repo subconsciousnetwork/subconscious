@@ -10,7 +10,7 @@ import SwiftUI
 /// A story is a single update within the FeedView
 struct StoryPromptView: View {
     var story: StoryPrompt
-    var action: (EntryLink) -> Void
+    var action: (EntryLink, String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -30,7 +30,10 @@ struct StoryPromptView: View {
                 Text(story.prompt)
                 Button(
                     action: {
-                        action(story.entry.link)
+                        action(
+                            story.entry.link,
+                            story.entry.link.linkableTitle
+                        )
                     },
                     label: {
                         TranscludeView(entry: story.entry)
@@ -43,7 +46,10 @@ struct StoryPromptView: View {
             HStack {
                 Button(
                     action: {
-                        action(story.entry.link)
+                        action(
+                            story.entry.link,
+                            story.entry.link.linkableTitle
+                        )
                     },
                     label: {
                         Text("Open")
@@ -77,7 +83,7 @@ struct StoryPromptView_Previews: PreviewProvider {
                 ),
                 prompt: "Can I invert this?"
             ),
-            action: { entry in }
+            action: { link, fallback in }
         )
     }
 }

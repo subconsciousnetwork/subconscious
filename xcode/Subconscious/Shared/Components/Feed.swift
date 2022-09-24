@@ -25,7 +25,6 @@ enum FeedAction {
     /// Fetch feed failed
     case failFetchFeed(Error)
     case activatedSuggestion(Suggestion)
-    case openStory(EntryLink)
 
     //  Entry deletion
     case requestDeleteEntry(Slug?)
@@ -42,6 +41,20 @@ enum FeedAction {
     /// Show/hide the search HUD
     static func setSearchPresented(_ isPresented: Bool) -> FeedAction {
         .search(.setPresented(isPresented))
+    }
+
+    static func loadAndPresentDetail(
+        link: EntryLink?,
+        fallback: String,
+        autofocus: Bool
+    ) -> FeedAction {
+        .detail(
+            .loadAndPresentDetail(
+                link: link,
+                fallback: fallback,
+                autofocus: autofocus
+            )
+        )
     }
 
     static func presentDetail(_ isPresented: Bool) -> FeedAction {
@@ -186,16 +199,6 @@ struct FeedModel: ModelProtocol {
                 action: DetailAction.fromSuggestion(suggestion),
                 environment: environment
             )
-        case .openStory(let entryLink):
-            return FeedDetailCursor.update(
-                state: state,
-                action: .loadAndPresentDetail(
-                    link: entryLink,
-                    fallback: entryLink.linkableTitle,
-                    autofocus: false
-                ),
-                environment: environment
-            )
         case .requestDeleteEntry(_):
             environment.logger.debug(
                 "requestDeleteEntry should be handled by parent component"
@@ -338,8 +341,14 @@ struct FeedView: View {
                             ForEach(store.state.stories) { story in
                                 StoryView(
                                     story: story,
-                                    action: { link in
-                                        store.send(FeedAction.openStory(link))
+                                    action: { link, fallback in
+                                        store.send(
+                                            FeedAction.loadAndPresentDetail(
+                                                link: link,
+                                                fallback: fallback,
+                                                autofocus: false
+                                            )
+                                        )
                                     }
                                 )
                             }
