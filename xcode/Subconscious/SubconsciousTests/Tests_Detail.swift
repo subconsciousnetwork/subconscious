@@ -231,17 +231,14 @@ class Tests_Detail: XCTestCase {
 
     func testDetailActionFromEntrySuggestion() throws {
         let entrySuggestion = Suggestion.entry(
-            EntryLink(
-                slug: Slug("systems-generating-systems")!,
-                title: "Systems Generating Systems"
-            )
+            EntryLink(title: "Systems Generating Systems")!
         )
         let action = DetailAction.fromSuggestion(entrySuggestion)
 
         XCTAssertEqual(
             action,
             DetailAction.loadAndPresentDetail(
-                slug: Slug("systems-generating-systems")!,
+                link: EntryLink(title: "Systems Generating Systems")!,
                 fallback: "Systems Generating Systems",
                 autofocus: false
             )
@@ -260,7 +257,7 @@ class Tests_Detail: XCTestCase {
         XCTAssertEqual(
             action,
             DetailAction.loadAndPresentDetail(
-                slug: Slug("systems-generating-systems")!,
+                link: EntryLink(title: "Systems Generating Systems")!,
                 fallback: "Systems Generating Systems",
                 autofocus: true
             )
@@ -279,7 +276,7 @@ class Tests_Detail: XCTestCase {
         XCTAssertEqual(
             action,
             DetailAction.loadAndPresentTemplateDetail(
-                slug: Slug("systems-generating-systems")!,
+                link: EntryLink(title: "Systems Generating Systems")!,
                 template: Config.default.journalTemplate,
                 autofocus: true
             )
@@ -298,7 +295,7 @@ class Tests_Detail: XCTestCase {
         XCTAssertEqual(
             action,
             DetailAction.loadAndPresentDetail(
-                slug: Slug("systems-generating-systems")!,
+                link: EntryLink(title: "Systems Generating Systems")!,
                 fallback: "Systems Generating Systems",
                 autofocus: true
             )
