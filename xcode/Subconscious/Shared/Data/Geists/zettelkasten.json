@@ -21,6 +21,13 @@
       "What questions does this answer?",
       "What new questions does this trigger?"
   ],
+  "combo_followup": [
+      "How might these be connected?",
+      "What similarities can I see between these? Differences?",
+      "Can I combine these to create something new?",
+      "Can I find three ways in which these might be connected?",
+      "What could I add to these to form a set?"
+  ],
   "similar_followup": [
       "What are the differences between these things?",
       "In what ways are they similar?",
