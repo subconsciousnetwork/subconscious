@@ -55,6 +55,9 @@ enum SearchAction: Hashable, CustomLogStringConvertible {
 struct SearchModel: ModelProtocol {
     /// Is search HUD showing?
     var isPresented = false
+    /// Animation duration for hide/show
+    var presentAnimationDuration = Duration.keyboard
+
     /// Placeholder text when empty
     var placeholder = ""
     /// Live input text
@@ -76,21 +79,15 @@ struct SearchModel: ModelProtocol {
                 isPresented: isPresented
             )
         case .hideAndClearQuery:
-            return update(
+            return hideAndClearQuery(
                 state: state,
-                actions: [
-                    .setQuery(""),
-                    // setPresented goes after, because it contains an
-                    // animation, and we want its transition to win.
-                    .setPresented(false)
-                ],
                 environment: environment
             )
         case .cancel:
-            return setPresented(
+            return update(
                 state: state,
-                environment: environment,
-                isPresented: false
+                action: .hideAndClearQuery,
+                environment: environment
             )
         case .setQuery(let query):
             return setQuery(
@@ -171,7 +168,32 @@ struct SearchModel: ModelProtocol {
         var model = state
         model.isPresented = isPresented
         return Update(state: model)
-            .animation(.easeOutCubic(duration: Duration.keyboard))
+            .animation(
+                .easeOutCubic(
+                    duration: state.presentAnimationDuration
+                )
+            )
+    }
+
+    /// Hide search and clear query after animation completes
+    static func hideAndClearQuery(
+        state: SearchModel,
+        environment: AppEnvironment
+    ) -> Update<SearchModel> {
+        /// Delay search clearing until hide animation completes
+        let delay = state.presentAnimationDuration
+        let fx: Fx<SearchAction> = Just(
+            .setQuery("")
+        )
+        .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+        .eraseToAnyPublisher()
+
+        return update(
+            state: state,
+            action: .setPresented(false),
+            environment: environment
+        )
+        .mergeFx(fx)
     }
 
     static func setQuery(
