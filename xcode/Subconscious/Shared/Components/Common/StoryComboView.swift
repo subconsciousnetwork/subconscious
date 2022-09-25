@@ -27,6 +27,8 @@ struct StoryComboView: View {
             .frame(height: AppTheme.unit * 11)
             Divider()
             VStack(alignment: .leading, spacing: AppTheme.unit4) {
+                Text(story.prompt)
+                
                 Button(
                     action: {
                         action(story.entryA.link, story.entryA.linkableTitle)
@@ -73,6 +75,7 @@ struct StoryComboView_Previews: PreviewProvider {
     static var previews: some View {
         StoryComboView(
             story: StoryCombo(
+                prompt: "How are these similar?",
                 entryA: EntryStub(
                     SubtextFile(
                         slug: Slug("meme")!,

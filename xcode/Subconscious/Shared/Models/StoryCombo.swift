@@ -10,11 +10,14 @@ import Foundation
 /// Story prompt model
 struct StoryCombo: Hashable, Identifiable, CustomStringConvertible {
     var id = UUID()
+    var prompt: String
     var entryA: EntryStub
     var entryB: EntryStub
 
     var description: String {
         """
+        \(prompt)
+        
         \(entryA)
         +
         \(entryB)
