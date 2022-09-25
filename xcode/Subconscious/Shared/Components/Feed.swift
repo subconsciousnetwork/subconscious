@@ -133,7 +133,9 @@ struct FeedDetailCursor: CursorProtocol {
 /// A feed of stories
 struct FeedModel: ModelProtocol {
     /// Search HUD
-    var search = SearchModel()
+    var search = SearchModel(
+        placeholder: "Search or create..."
+    )
     /// Entry detail
     var detail = DetailModel()
     var stories: [Story] = []

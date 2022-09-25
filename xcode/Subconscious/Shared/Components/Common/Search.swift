@@ -15,6 +15,8 @@ import ObservableStore
 enum SearchAction: Hashable, CustomLogStringConvertible {
     /// Set search presented state
     case setPresented(Bool)
+    /// Set search presented to false, and clear query
+    case hideAndClearQuery
     /// Cancel search `(proxy for isPresented(false)`)
     case cancel
     /// Set query (text in input) live as you type
@@ -73,6 +75,17 @@ struct SearchModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
+        case .hideAndClearQuery:
+            return update(
+                state: state,
+                actions: [
+                    .setQuery(""),
+                    // setPresented goes after, because it contains an
+                    // animation, and we want its transition to win.
+                    .setPresented(false)
+                ],
+                environment: environment
+            )
         case .cancel:
             return setPresented(
                 state: state,
@@ -96,7 +109,7 @@ struct SearchModel: ModelProtocol {
                 state: state,
                 actions: [
                     SearchAction.createSearchHistoryItem(query),
-                    SearchAction.setPresented(false)
+                    SearchAction.hideAndClearQuery
                 ],
                 environment: environment
             )
@@ -209,7 +222,7 @@ struct SearchModel: ModelProtocol {
                 return entryLink
             case .scratch(let entryLink):
                 return entryLink
-            default:
+            case .random:
                 return nil
             }
         }
@@ -228,7 +241,7 @@ struct SearchModel: ModelProtocol {
         guard let link = link else {
             return SearchModel.update(
                 state: state,
-                action: .setPresented(false),
+                action: .hideAndClearQuery,
                 environment: environment
             )
             .mergeFx(fx)
@@ -238,7 +251,7 @@ struct SearchModel: ModelProtocol {
             state: state,
             actions: [
                 .createSearchHistoryItem(link.title),
-                .setPresented(false)
+                .hideAndClearQuery
             ],
             environment: environment
         )
@@ -317,7 +330,7 @@ struct SearchView: View {
             content: VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     SearchTextField(
-                        placeholder: "Search or create...",
+                        placeholder: store.state.placeholder,
                         text: Binding(
                             store: store,
                             get: \.query,
@@ -380,7 +393,10 @@ struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
         SearchView(
             store: ViewStore.constant(
-                state: SearchModel(isPresented: true)
+                state: SearchModel(
+                    isPresented: true,
+                    placeholder: "Search or create..."
+                )
             )
         )
     }

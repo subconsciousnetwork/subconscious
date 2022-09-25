@@ -218,7 +218,9 @@ struct NotebookModel: ModelProtocol {
     var isFabShowing = true
 
     /// Search HUD
-    var search = SearchModel()
+    var search = SearchModel(
+        placeholder: "Search or create..."
+    )
 
     /// Entry detail
     var detail = DetailModel()
