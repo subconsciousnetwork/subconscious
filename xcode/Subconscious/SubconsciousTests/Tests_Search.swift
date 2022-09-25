@@ -41,8 +41,9 @@ class Tests_Search: XCTestCase {
             "isPresented is false"
         )
     }
-    
-    func testSearchHideAndClearQuery() throws {
+
+    /// tests that .hideAndClearQueryUpdate has an animation transaction
+    func testSearchHideAndClearQueryUpdateHasTransaction() throws {
         let state = SearchModel(
             query: "I see red and orange and purple"
         )
@@ -51,20 +52,54 @@ class Tests_Search: XCTestCase {
             action: .hideAndClearQuery,
             environment: environment
         )
-        XCTAssertEqual(
-            update.state.isPresented,
-            false,
-            "Search is hidden"
-        )
-        XCTAssertEqual(
-            update.state.query,
-            "",
-            "Query is cleared"
-        )
+
         XCTAssertNotNil(
             update.transaction,
-            "Transaction is not nil (for hide animation)"
+            "Update has transaction (for hide animation)"
         )
+    }
+
+    /// Tests full .hideSearchAndClearQuery sequence, including running fx.
+    func testSearchHideAndClearQuery() throws {
+        let presentAnimationDuration = Duration.keyboard
+        let store = Store(
+            state: SearchModel(
+                presentAnimationDuration: presentAnimationDuration,
+                query: "I see red and orange and purple"
+            ),
+            environment: environment
+        )
+
+        store.send(.hideAndClearQuery)
+
+        XCTAssertEqual(
+            store.state.isPresented,
+            false,
+            "Search is hidden immediately"
+        )
+
+        XCTAssertEqual(
+            store.state.query,
+            "I see red and orange and purple",
+            "Query is not cleared immediately"
+        )
+
+        let expectation = XCTestExpectation(
+            description: "Query clears query after animation delay"
+        )
+
+        let timeout = presentAnimationDuration + 0.1
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + timeout
+        ) {
+            XCTAssertEqual(
+                store.state.query,
+                "",
+                "Query clears query after animation delay"
+            )
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: timeout)
     }
 
     /// Test search submit from keyboard "go" button
