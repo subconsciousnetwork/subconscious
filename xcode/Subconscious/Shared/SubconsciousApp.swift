@@ -678,7 +678,10 @@ struct AppEnvironment {
         )
         self.feed.register(name: "zettelkasten", geist: zettelkastenGeist)
         
-        let comboGeist = ComboGeist(database: database)
+        let comboGeist = try! ComboGeist(
+            database: database,
+            data: zettelkastenGrammar
+        )
         self.feed.register(name: "combo", geist: comboGeist)
     }
 }

@@ -6,22 +6,26 @@
 //
 
 import Foundation
+import Tracery
 
 struct ComboGeist: Geist {
     private let database: DatabaseService
+    private let tracery: Tracery
 
-    init(database: DatabaseService) {
+    init(database: DatabaseService, grammar: TraceryGrammar) {
         self.database = database
+        self.tracery = Tracery(rules: { grammar })
     }
 
     func ask(query: String) -> Story? {
+        let prompt = tracery.expand("#combo_followup#")
         guard let stubA = database.readRandomEntry() else {
             return nil
         }
         guard let stubB = database.readRandomEntry() else {
             return nil
         }
-        return Story.combo(StoryCombo(entryA: stubA, entryB: stubB))
+        return Story.combo(StoryCombo(prompt: prompt, entryA: stubA, entryB: stubB))
     }
 }
 
@@ -30,6 +34,11 @@ extension ComboGeist {
         database: DatabaseService,
         data: Data
     ) throws {
-        self.init(database: database)
+        let decoder = JSONDecoder()
+        let grammar = try decoder.decode(TraceryGrammar.self, from: data)
+        self.init(
+            database: database,
+            grammar: grammar
+        )
     }
 }
