@@ -120,7 +120,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     /// Set selected range in editor
     case setEditorSelection(range: NSRange, text: String)
-    case setEditorSelectionEnd
     /// Insert text into editor, replacing range
     case insertEditorText(
         text: String,
@@ -139,6 +138,10 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Local action for requesting editor focus.
     static func requestEditorFocus(_ focus: Bool) -> Self {
         .markupEditor(.requestFocus(focus))
+    }
+
+    static var setEditorSelectionAtEnd: Self {
+        .markupEditor(.setSelectionAtEnd)
     }
 
     /// Synonym for requesting editor blur.
@@ -363,11 +366,6 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 range: range,
                 text: text
-            )
-        case .setEditorSelectionEnd:
-            return setEditorSelectionEnd(
-                state: state,
-                environment: environment
             )
         case let .insertEditorText(text, range):
             return insertEditorText(
@@ -795,24 +793,6 @@ struct DetailModel: ModelProtocol {
         )
     }
 
-    /// Set text cursor at end of editor
-    static func setEditorSelectionEnd(
-        state: DetailModel,
-        environment: AppEnvironment
-    ) -> Update<DetailModel> {
-        let range = NSRange(
-            state.markupEditor.text.endIndex...,
-            in: state.markupEditor.text
-        )
-
-        return setEditorSelection(
-            state: state,
-            environment: environment,
-            range: range,
-            text: state.markupEditor.text
-        )
-    }
-
     /// Insert text in editor at range
     static func insertEditorText(
         state: DetailModel,
@@ -1074,18 +1054,39 @@ struct DetailModel: ModelProtocol {
     }
 
     /// Set and present detail
+    /// - state: the current state
+    /// - environment: the environment
+    /// - detail: the entry detail (usually we get this back from a service)
+    /// - autofocus: automatically focus the editor,
+    ///   and set cursor at end of document?
+    /// - Returns: an update
     static func setAndPresentDetail(
         state: DetailModel,
         environment: AppEnvironment,
         detail: EntryDetail,
         autofocus: Bool
     ) -> Update<DetailModel> {
-        update(
+        guard autofocus else {
+            // If autofocus is false, request blur if needed
+            return update(
+                state: state,
+                actions: [
+                    .presentDetail(true),
+                    .setDetailLastWriteWins(detail),
+                    .requestEditorFocus(false)
+                ],
+                environment: environment
+            )
+        }
+        // If autofocus is true, request focus, and also set selection to end
+        // of editor text.
+        return update(
             state: state,
             actions: [
                 .presentDetail(true),
                 .setDetailLastWriteWins(detail),
-                .requestEditorFocus(autofocus)
+                .requestEditorFocus(true),
+                .setEditorSelectionAtEnd
             ],
             environment: environment
         )

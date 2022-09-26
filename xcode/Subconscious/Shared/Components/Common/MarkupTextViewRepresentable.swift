@@ -41,6 +41,8 @@ enum MarkupTextAction: Hashable, CustomLogStringConvertible {
     case focusChange(Bool)
     case setText(String)
     case setSelection(range: NSRange, text: String)
+    /// Set selection at the end of the text
+    case setSelectionAtEnd
 
     var logDescription: String {
         switch self {
@@ -93,6 +95,16 @@ struct MarkupTextModel: ModelProtocol {
             var model = state
             model.selection = selection
             return Update(state: model)
+        case .setSelectionAtEnd:
+            let range = NSRange(
+                state.text.endIndex...,
+                in: state.text
+            )
+            return update(
+                state: state,
+                action: .setSelection(range: range, text: state.text),
+                environment: ()
+            )
         }
     }
 }
