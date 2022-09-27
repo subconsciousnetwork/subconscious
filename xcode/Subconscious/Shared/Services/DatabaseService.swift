@@ -746,7 +746,7 @@ struct DatabaseService {
     /// Sync version of readEntryDetail
     /// Use `readEntryDetail` API to call this async.
     private func readEntryDetail(
-        slug: Slug,
+        link: EntryLink,
         fallback: String
     ) throws -> EntryDetail {
         // Get backlinks.
@@ -760,8 +760,8 @@ struct DatabaseService {
             LIMIT 200
             """,
             parameters: [
-                .text(slug.description),
-                .queryFTS5(slug.description)
+                .text(link.slug.description),
+                .queryFTS5(link.slug.description)
             ]
         )
         .compactMap({ row in
@@ -777,16 +777,16 @@ struct DatabaseService {
         })
         // Retreive top entry from file system to ensure it is fresh.
         // If no file exists, return a draft, using fallback for title.
-        guard let entry = readEntry(slug: slug) else {
+        guard let entry = readEntry(slug: link.slug) else {
             let now = Date.now
             return EntryDetail(
                 saveState: .draft,
                 entry: SubtextFile(
-                    slug: slug,
-                    title: fallback,
+                    slug: link.slug,
+                    title: link.linkableTitle,
                     modified: now,
                     created: now,
-                    body: ""
+                    body: fallback
                 ),
                 backlinks: backlinks
             )
@@ -804,23 +804,23 @@ struct DatabaseService {
     /// Allowing any string allows us to retreive files that don't have a
     /// clean slug.
     func readEntryDetail(
-        slug: Slug,
+        link: EntryLink,
         fallback: String
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .utility) {
-            try readEntryDetail(slug: slug, fallback: fallback)
+            try readEntryDetail(link: link, fallback: fallback)
         }
     }
 
     /// Get entry and backlinks from slug, using template file as a fallback.
     func readEntryDetail(
-        slug: Slug,
+        link: EntryLink,
         template: Slug
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .utility) {
             let fallback = readEntry(slug: template)?.body ?? ""
             return try readEntryDetail(
-                slug: slug,
+                link: link,
                 fallback: fallback
             )
         }
@@ -880,19 +880,29 @@ struct DatabaseService {
         .first
     }
 
-    /// Choose a random entry and read detailz
-    func readRandomEntrySlug() -> AnyPublisher<Slug, Error> {
-        CombineUtilities.async(qos: .userInteractive) {
+    /// Choose a random entry and publish slug
+    func readRandomEntryLink() -> AnyPublisher<EntryLink, Error> {
+        CombineUtilities.async(qos: .default) {
             try database.execute(
                 sql: """
-                SELECT slug
+                SELECT slug, title
                 FROM entry
                 ORDER BY RANDOM()
                 LIMIT 1
                 """
             )
             .compactMap({ row in
-                row.get(0).flatMap({ string in Slug(string) })
+                guard
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
+                    let title: String = row.get(1)
+                else {
+                    return nil
+                }
+                return EntryLink(
+                    slug: slug,
+                    title: title
+                )
             })
             .first
             .unwrap(DatabaseServiceError.randomEntryFailed)

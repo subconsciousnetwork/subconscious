@@ -23,7 +23,11 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
     /// if detail is already loaded.
-    case loadAndPresentDetail(slug: Slug?, fallback: String, autofocus: Bool)
+    case loadAndPresentDetail(
+        link: EntryLink?,
+        fallback: String,
+        autofocus: Bool
+    )
     /// Reload detail from source of truth
     case refreshDetail
     case refreshDetailIfStale
@@ -41,7 +45,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Load detail
     /// request detail for slug, using template file as a fallback
     case loadAndPresentTemplateDetail(
-        slug: Slug,
+        link: EntryLink,
         template: Slug,
         autofocus: Bool
     )
@@ -116,7 +120,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     /// Set selected range in editor
     case setEditorSelection(range: NSRange, text: String)
-    case setEditorSelectionEnd
     /// Insert text into editor, replacing range
     case insertEditorText(
         text: String,
@@ -137,6 +140,10 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         .markupEditor(.requestFocus(focus))
     }
 
+    static var setEditorSelectionAtEnd: Self {
+        .markupEditor(.setSelectionAtEnd)
+    }
+
     /// Synonym for requesting editor blur.
     static var selectDoneEditing: Self {
         .markupEditor(.requestFocus(false))
@@ -152,26 +159,26 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         switch suggestion {
         case .entry(let entryLink):
             return .loadAndPresentDetail(
-                slug: entryLink.slug,
+                link: entryLink,
                 fallback: entryLink.linkableTitle,
                 autofocus: false
             )
         case .search(let entryLink):
             return .loadAndPresentDetail(
-                slug: entryLink.slug,
+                link: entryLink,
                 fallback: entryLink.linkableTitle,
                 autofocus: true
             )
         case .journal(let entryLink):
             return .loadAndPresentTemplateDetail(
-                slug: entryLink.slug,
+                link: entryLink,
                 template: Config.default.journalTemplate,
                 // Autofocus note because we're creating it from scratch
                 autofocus: true
             )
         case .scratch(let entryLink):
             return .loadAndPresentDetail(
-                slug: entryLink.slug,
+                link: entryLink,
                 fallback: entryLink.linkableTitle,
                 autofocus: true
             )
@@ -360,11 +367,6 @@ struct DetailModel: ModelProtocol {
                 range: range,
                 text: text
             )
-        case .setEditorSelectionEnd:
-            return setEditorSelectionEnd(
-                state: state,
-                environment: environment
-            )
         case let .insertEditorText(text, range):
             return insertEditorText(
                 state: state,
@@ -378,11 +380,11 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
-        case let .loadAndPresentDetail(slug, fallback, autofocus):
+        case let .loadAndPresentDetail(link, fallback, autofocus):
             return loadAndPresentDetail(
                 state: state,
                 environment: environment,
-                slug: slug,
+                link: link,
                 fallback: fallback,
                 autofocus: autofocus
             )
@@ -421,11 +423,11 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 detail: detail
             )
-        case let .loadAndPresentTemplateDetail(slug, template, autofocus):
+        case let .loadAndPresentTemplateDetail(link, template, autofocus):
             return loadAndPresentTemplateDetail(
                 state: state,
                 environment: environment,
-                slug: slug,
+                link: link,
                 template: template,
                 autofocus: autofocus
             )
@@ -595,7 +597,7 @@ struct DetailModel: ModelProtocol {
             return update(
                 state: state,
                 action: .loadAndPresentDetail(
-                    slug: link.slug,
+                    link: link,
                     fallback: link.linkableTitle,
                     autofocus: false
                 ),
@@ -711,8 +713,8 @@ struct DetailModel: ModelProtocol {
         return update(
             state: state,
             action: .loadAndPresentDetail(
-                slug: link?.slug,
-                fallback: link?.title ?? "",
+                link: link,
+                fallback: link?.linkableTitle ?? "",
                 autofocus: false
             ),
             environment: environment
@@ -791,24 +793,6 @@ struct DetailModel: ModelProtocol {
         )
     }
 
-    /// Set text cursor at end of editor
-    static func setEditorSelectionEnd(
-        state: DetailModel,
-        environment: AppEnvironment
-    ) -> Update<DetailModel> {
-        let range = NSRange(
-            state.markupEditor.text.endIndex...,
-            in: state.markupEditor.text
-        )
-
-        return setEditorSelection(
-            state: state,
-            environment: environment,
-            range: range,
-            text: state.markupEditor.text
-        )
-    }
-
     /// Insert text in editor at range
     static func insertEditorText(
         state: DetailModel,
@@ -884,11 +868,11 @@ struct DetailModel: ModelProtocol {
     static func loadAndPresentDetail(
         state: DetailModel,
         environment: AppEnvironment,
-        slug: Slug?,
+        link: EntryLink?,
         fallback: String,
         autofocus: Bool
     ) -> Update<DetailModel> {
-        guard let slug = slug else {
+        guard let link = link else {
             environment.logger.log(
                 "Load and present detail requested, but nothing was being edited. Skipping."
             )
@@ -897,7 +881,7 @@ struct DetailModel: ModelProtocol {
 
         let fx: Fx<DetailAction> = environment.database
             .readEntryDetail(
-                slug: slug,
+                link: link,
                 fallback: fallback
             )
             .map({ detail in
@@ -931,7 +915,7 @@ struct DetailModel: ModelProtocol {
 
         let fx: Fx<DetailAction> = environment.database
             .readEntryDetail(
-                slug: slug,
+                link: EntryLink(slug: slug),
                 fallback: model.markupEditor.text
             )
             .map({ detail in
@@ -1070,18 +1054,39 @@ struct DetailModel: ModelProtocol {
     }
 
     /// Set and present detail
+    /// - state: the current state
+    /// - environment: the environment
+    /// - detail: the entry detail (usually we get this back from a service)
+    /// - autofocus: automatically focus the editor,
+    ///   and set cursor at end of document?
+    /// - Returns: an update
     static func setAndPresentDetail(
         state: DetailModel,
         environment: AppEnvironment,
         detail: EntryDetail,
         autofocus: Bool
     ) -> Update<DetailModel> {
-        update(
+        guard autofocus else {
+            // If autofocus is false, request blur if needed
+            return update(
+                state: state,
+                actions: [
+                    .presentDetail(true),
+                    .setDetailLastWriteWins(detail),
+                    .requestEditorFocus(false)
+                ],
+                environment: environment
+            )
+        }
+        // If autofocus is true, request focus, and also set selection to end
+        // of editor text.
+        return update(
             state: state,
             actions: [
                 .presentDetail(true),
                 .setDetailLastWriteWins(detail),
-                .requestEditorFocus(autofocus)
+                .requestEditorFocus(true),
+                .setEditorSelectionAtEnd
             ],
             environment: environment
         )
@@ -1093,12 +1098,12 @@ struct DetailModel: ModelProtocol {
     static func loadAndPresentTemplateDetail(
         state: DetailModel,
         environment: AppEnvironment,
-        slug: Slug,
+        link: EntryLink,
         template: Slug,
         autofocus: Bool
     ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = environment.database
-            .readEntryDetail(slug: slug, template: template)
+            .readEntryDetail(link: link, template: template)
             .map({ detail in
                 DetailAction.setAndPresentDetail(
                     detail: detail,
@@ -1120,11 +1125,11 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         autofocus: Bool
     ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.database.readRandomEntrySlug()
-            .map({ slug in
+        let fx: Fx<DetailAction> = environment.database.readRandomEntryLink()
+            .map({ link in
                 DetailAction.loadAndPresentDetail(
-                    slug: slug,
-                    fallback: slug.toTitle(),
+                    link: link,
+                    fallback: link.linkableTitle,
                     autofocus: autofocus
                 )
             })
@@ -1532,7 +1537,7 @@ struct DetailModel: ModelProtocol {
             state: state,
             actions: [
                 .loadAndPresentDetail(
-                    slug: to.slug,
+                    link: to,
                     fallback: to.linkableTitle,
                     autofocus: false
                 ),
@@ -1593,7 +1598,7 @@ struct DetailModel: ModelProtocol {
             state: state,
             actions: [
                 .loadAndPresentDetail(
-                    slug: parent.slug,
+                    link: parent,
                     fallback: parent.linkableTitle,
                     autofocus: false
                 ),

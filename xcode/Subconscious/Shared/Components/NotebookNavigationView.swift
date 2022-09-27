@@ -18,7 +18,7 @@ struct NotebookNavigationView: View {
                     onEntryPress: { entry in
                         store.send(
                             .loadAndPresentDetail(
-                                slug: entry.slug,
+                                link: entry.link,
                                 fallback: entry.linkableTitle,
                                 autofocus: false
                             )

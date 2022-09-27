@@ -84,13 +84,13 @@ enum NotebookAction {
 
     /// Forward requestDetail action to detail
     static func loadAndPresentDetail(
-        slug: Slug?,
+        link: EntryLink?,
         fallback: String,
         autofocus: Bool
     ) -> Self {
         .detail(
             .loadAndPresentDetail(
-                slug: slug,
+                link: link,
                 fallback: fallback,
                 autofocus: autofocus
             )
@@ -99,13 +99,13 @@ enum NotebookAction {
 
     /// request detail for slug, using template file as a fallback
     static func loadAndPresentTemplateDetail(
-        slug: Slug,
+        link: EntryLink,
         template: Slug,
         autofocus: Bool
     ) -> Self {
         .detail(
             .loadAndPresentTemplateDetail(
-                slug: slug,
+                link: link,
                 template: template,
                 autofocus: autofocus
             )
@@ -564,16 +564,16 @@ struct NotebookModel: ModelProtocol {
 
         // Derive slug. If we can't (e.g. invalid query such as empty string),
         // just hide the search HUD and do nothing.
-        guard let slug = Slug(formatting: query) else {
+        guard let link = EntryLink(title: query) else {
             environment.logger.log(
-                "Query could not be converted to slug: \(query)"
+                "Query could not be converted to link: \(query)"
             )
             return update
         }
 
         let fx: Fx<NotebookAction> = Just(
             NotebookAction.loadAndPresentDetail(
-                slug: slug,
+                link: link,
                 fallback: query,
                 autofocus: true
             )
