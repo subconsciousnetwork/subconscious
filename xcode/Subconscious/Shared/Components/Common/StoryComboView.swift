@@ -11,6 +11,20 @@ import SwiftUI
 struct StoryComboView: View {
     var story: StoryCombo
     var action: (EntryLink, String) -> Void
+    
+    func synthesize() {
+        let slug = "combo/\(story.entryA.slug.description)/\(story.entryB.slug.description)"
+        let content =
+            """
+            \(story.prompt)
+            
+            \(story.entryA.slug.toSlashlink()) \(story.entryB.slug.toSlashlink())
+            """
+        
+        guard let link = EntryLink.init(title: slug) else { return }
+        
+        action(link, content)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -52,12 +66,8 @@ struct StoryComboView: View {
             .padding()
             Divider()
             HStack {
-                // TODO: make this actually do something
-                // pop open a new note with the other two notes already transcluded in it
                 Button(
-                    action: {
-                        action(story.entryA.link, story.entryA.linkableTitle)
-                    },
+                    action: { synthesize() },
                     label: {
                         Text("Create")
                     }
