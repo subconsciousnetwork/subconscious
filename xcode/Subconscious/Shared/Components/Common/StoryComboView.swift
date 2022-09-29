@@ -59,7 +59,7 @@ struct StoryComboView: View {
                         action(story.entryA.link, story.entryA.linkableTitle)
                     },
                     label: {
-                        Text("Open")
+                        Text("Create")
                     }
                 )
                 Spacer()
