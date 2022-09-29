@@ -12,13 +12,24 @@ struct StoryComboView: View {
     var story: StoryCombo
     var action: (EntryLink, String) -> Void
     
+    /// Sort entries by slug
+    /// (this should be factored out eventually)
+    func orderedSlugPair() -> (Slug, Slug) {
+        var entries = [story.entryA.slug, story.entryB.slug]
+        entries.sort(by: { $0.description < $1.description })
+        
+        return (entries[0], entries[1])
+    }
+    
+    /// Construct combined slug and default content, then open editor
     func synthesize() {
-        let slug = "combo/\(story.entryA.slug.description)/\(story.entryB.slug.description)"
+        let (first, second) = orderedSlugPair()
+        let slug = "\(first.description)-\(second.description)"
         let content =
             """
             \(story.prompt)
             
-            \(story.entryA.slug.toSlashlink()) \(story.entryB.slug.toSlashlink())
+            \(first.toSlashlink()) \(second.toSlashlink())
             """
         
         guard let link = EntryLink.init(title: slug) else { return }
