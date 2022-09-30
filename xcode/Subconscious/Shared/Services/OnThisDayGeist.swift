@@ -7,20 +7,71 @@
 
 import Foundation
 
+
+enum OnThisDayVariant: CaseIterable {
+    case inTheLastDay
+    case inTheLastWeek
+    case aYearAgo
+    case sixMonthsAgo
+    case aMonthAgo
+    
+    static func random() -> OnThisDayVariant {
+        // https://stackoverflow.com/questions/63189870/return-a-random-case-from-an-enum-in-swift
+        return allCases.randomElement()!
+    }
+}
+
 struct OnThisDayGeist: Geist {
     private let database: DatabaseService
 
     init(database: DatabaseService) {
         self.database = database
     }
+    
+    func transformDate(date: Date, component: Calendar.Component, value: Int) -> Date? {
+        guard let d = Calendar.current.date(byAdding: component, value: value, to: date) else { return nil }
+        return d
+    }
+    
+    func dateFromVariant(variant: OnThisDayVariant) -> (Date?, Date?) {
+        // Is there a better way?!
+        switch variant {
+            case .aYearAgo:
+                guard let lower = transformDate(date: Date.now, component: Calendar.Component.year, value: -1) else { return (nil, nil) }
+                guard let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1) else { return (lower, nil) }
+                return (lower, upper)
+            case .sixMonthsAgo:
+                guard let lower = transformDate(date: Date.now, component: Calendar.Component.month, value: -6) else { return (nil, nil) }
+                guard let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1) else { return (lower, nil) }
+                return (lower, upper)
+            case .aMonthAgo:
+                guard let lower = transformDate(date: Date.now, component: Calendar.Component.month, value: -1) else { return (nil, nil) }
+                guard let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1) else { return (lower, nil) }
+                return (lower, upper)
+            case .inTheLastWeek:
+                guard let lower = transformDate(date: Date.now, component: Calendar.Component.day, value: -7) else { return (nil, nil) }
+                guard let upper = transformDate(date: lower, component: Calendar.Component.day, value: 6) else { return (lower, nil) }
+                return (lower, upper)
+            case .inTheLastDay:
+                guard let lower = transformDate(date: Date.now, component: Calendar.Component.day, value: -1) else { return (nil, nil) }
+                guard let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1) else { return (lower, nil) }
+                return (lower, upper)
+        }
+    }
 
     func ask(query: String) -> Story? {
-        guard let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date.now) else { return nil }
-        guard let entry = database.readRandomEntryInDateRange(startDate: yesterday, endDate: Date.now) else {
+        let variant = OnThisDayVariant.random()
+        let (start, end) = dateFromVariant(variant: variant)
+        
+        // Is there a cleaner way?
+        guard (start != nil) else { return nil }
+        guard (end != nil) else { return nil }
+        
+        guard let entry = database.readRandomEntryInDateRange(startDate: start!, endDate: end!) else {
             return nil
         }
         
-        return Story.onThisDay(StoryOnThisDay(entry: entry, timespan: "6mo"))
+        return Story.onThisDay(StoryOnThisDay(entry: entry, timespan: variant))
     }
 }
 

@@ -11,7 +11,7 @@ import Foundation
 struct StoryOnThisDay: Hashable, Identifiable, CustomStringConvertible {
     var id = UUID()
     var entry: EntryStub
-    var timespan: String
+    var timespan: OnThisDayVariant
 
     var description: String {
         "\(entry) posted \(timespan) ago"
