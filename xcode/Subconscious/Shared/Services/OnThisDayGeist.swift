@@ -15,7 +15,8 @@ struct OnThisDayGeist: Geist {
     }
 
     func ask(query: String) -> Story? {
-        guard let entry = database.readRandomEntry() else {
+        guard let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date.now) else { return nil }
+        guard let entry = database.readRandomEntryInDateRange(startDate: yesterday, endDate: Date.now) else {
             return nil
         }
         
