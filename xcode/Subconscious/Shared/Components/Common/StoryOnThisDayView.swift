@@ -65,10 +65,10 @@ struct StoryOnThisDayView: View {
     }
 }
 
-struct StoryPromptView_Previews: PreviewProvider {
+struct StoryOnThisDayView_Previews: PreviewProvider {
     static var previews: some View {
-        StoryPromptView(
-            story: StoryPrompt(
+        StoryOnThisDayView(
+            story: StoryOnThisDay(
                 entry: EntryStub(
                     SubtextFile(
                         slug: Slug("meme")!,
@@ -82,7 +82,7 @@ struct StoryPromptView_Previews: PreviewProvider {
                         """
                     )
                 ),
-                prompt: "Can I invert this?"
+                timespan: "6mo"
             ),
             action: { link, fallback in }
         )

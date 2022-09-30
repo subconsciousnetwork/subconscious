@@ -19,7 +19,7 @@ struct ComboGeist: Geist {
             return nil
         }
         
-        return Story.onThisDay(StoryOnThisDay(entry: entry, timeSince: "6mo"))
+        return Story.onThisDay(StoryOnThisDay(entry: entry, timespan: "6mo"))
     }
 }
 
