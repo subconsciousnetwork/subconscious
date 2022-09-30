@@ -11,6 +11,9 @@
 		B58FE48A28DED93F00E000CC /* ComboGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48928DED93F00E000CC /* ComboGeist.swift */; };
 		B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48B28DED9B600E000CC /* StoryCombo.swift */; };
 		B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */; };
+		B54B922828E669D6003ACA1F /* OnThisDayGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54B922728E669D6003ACA1F /* OnThisDayGeist.swift */; };
+		B54B922A28E66A4A003ACA1F /* StoryOnThisDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54B922928E66A4A003ACA1F /* StoryOnThisDay.swift */; };
+		B54B922C28E66AA0003ACA1F /* StoryOnThisDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54B922B28E66AA0003ACA1F /* StoryOnThisDayView.swift */; };
 		B80057EB27DC355E002C0129 /* SubconsciousTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80057EA27DC355E002C0129 /* SubconsciousTests.swift */; };
 		B80057F427DC35BE002C0129 /* Tests_Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80057F327DC35BE002C0129 /* Tests_Slug.swift */; };
 		B809AFF428D8E7BC00D0589A /* Tests_MarkupText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */; };
@@ -265,6 +268,9 @@
 		B58FE48928DED93F00E000CC /* ComboGeist.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComboGeist.swift; sourceTree = "<group>"; };
 		B58FE48B28DED9B600E000CC /* StoryCombo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryCombo.swift; sourceTree = "<group>"; };
 		B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryComboView.swift; sourceTree = "<group>"; };
+		B54B922728E669D6003ACA1F /* OnThisDayGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnThisDayGeist.swift; sourceTree = "<group>"; };
+		B54B922928E66A4A003ACA1F /* StoryOnThisDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryOnThisDay.swift; sourceTree = "<group>"; };
+		B54B922B28E66AA0003ACA1F /* StoryOnThisDayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryOnThisDayView.swift; sourceTree = "<group>"; };
 		B80057E827DC355E002C0129 /* SubconsciousTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SubconsciousTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B80057EA27DC355E002C0129 /* SubconsciousTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubconsciousTests.swift; sourceTree = "<group>"; };
 		B80057F327DC35BE002C0129 /* Tests_Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Slug.swift; sourceTree = "<group>"; };
@@ -500,6 +506,7 @@
 				B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */,
 				B8CA8F1F288F1875005F8802 /* RandomPromptGeist.swift */,
 				B58FE48928DED93F00E000CC /* ComboGeist.swift */,
+				B54B922728E669D6003ACA1F /* OnThisDayGeist.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -536,6 +543,7 @@
 				B8A59D6B28B692A00010DB2F /* Story.swift */,
 				B8A59D6828B692900010DB2F /* StoryPrompt.swift */,
 				B58FE48B28DED9B600E000CC /* StoryCombo.swift */,
+				B54B922928E66A4A003ACA1F /* StoryOnThisDay.swift */,
 				B824FDCD26FA662200B81BBD /* SubtextFile.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
 			);
@@ -717,6 +725,7 @@
 				B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */,
 				B8CA8F2728909FBA005F8802 /* StoryPromptView.swift */,
 				B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */,
+				B54B922B28E66AA0003ACA1F /* StoryOnThisDayView.swift */,
 				B8A59D7128B693100010DB2F /* StoryView.swift */,
 				B8AE34C1276BD77C00777FF0 /* SuggestionLabelStyle.swift */,
 				B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */,
@@ -993,6 +1002,7 @@
 				B831BDB92825A28A00C4CE92 /* Header.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B88CC958284FF59900994928 /* OrderedCollectionUtilities.swift in Sources */,
+				B54B922C28E66AA0003ACA1F /* StoryOnThisDayView.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
@@ -1007,6 +1017,7 @@
 				B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */,
 				B81A535F272751EE001A6268 /* Subtext.swift in Sources */,
 				B8CA8F20288F1875005F8802 /* RandomPromptGeist.swift in Sources */,
+				B54B922A28E66A4A003ACA1F /* StoryOnThisDay.swift in Sources */,
 				B8109C2827A8879C00CD2B6D /* AppTheme.swift in Sources */,
 				B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
 				B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */,
@@ -1019,6 +1030,7 @@
 				B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
 				B82F053728D60EE60025A8B5 /* AppTabView.swift in Sources */,
 				B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */,
+				B54B922828E669D6003ACA1F /* OnThisDayGeist.swift in Sources */,
 				B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B86DFF3327C072CD002E57ED /* Func.swift in Sources */,
 				B8901CF327978FDE007C9021 /* Slug.swift in Sources */,
