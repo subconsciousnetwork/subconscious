@@ -34,39 +34,46 @@ struct OnThisDayGeist: Geist {
     }
     
     func dateFromVariant(variant: OnThisDayVariant) -> (Date?, Date?) {
-        // Is there a better way?!
         switch variant {
             case .aYearAgo:
-                guard let lower = transformDate(date: Date.now, component: Calendar.Component.year, value: -1) else { return (nil, nil) }
-                guard let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1) else { return (lower, nil) }
+                guard
+                    let lower = transformDate(date: Date.now, component: Calendar.Component.year, value: -1),
+                    let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1)
+                    else { return (nil, nil) }
                 return (lower, upper)
             case .sixMonthsAgo:
-                guard let lower = transformDate(date: Date.now, component: Calendar.Component.month, value: -6) else { return (nil, nil) }
-                guard let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1) else { return (lower, nil) }
+                guard
+                    let lower = transformDate(date: Date.now, component: Calendar.Component.month, value: -6),
+                    let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1)
+                    else { return (nil, nil) }
                 return (lower, upper)
             case .aMonthAgo:
-                guard let lower = transformDate(date: Date.now, component: Calendar.Component.month, value: -1) else { return (nil, nil) }
-                guard let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1) else { return (lower, nil) }
+                guard
+                    let lower = transformDate(date: Date.now, component: Calendar.Component.month, value: -1),
+                    let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1)
+                    else { return (nil, nil) }
                 return (lower, upper)
             case .inTheLastWeek:
-                guard let lower = transformDate(date: Date.now, component: Calendar.Component.day, value: -7) else { return (nil, nil) }
-                guard let upper = transformDate(date: lower, component: Calendar.Component.day, value: 6) else { return (lower, nil) }
+                guard
+                    let lower = transformDate(date: Date.now, component: Calendar.Component.day, value: -7),
+                    let upper = transformDate(date: lower, component: Calendar.Component.day, value: 6)
+                    else { return (nil, nil) }
                 return (lower, upper)
             case .inTheLastDay:
-                guard let lower = transformDate(date: Date.now, component: Calendar.Component.day, value: -1) else { return (nil, nil) }
-                guard let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1) else { return (lower, nil) }
+                guard
+                    let lower = transformDate(date: Date.now, component: Calendar.Component.day, value: -1),
+                    let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1)
+                    else { return (nil, nil) }
                 return (lower, upper)
         }
     }
 
     func ask(query: String) -> Story? {
         let variant = OnThisDayVariant.random()
+        
         let (start, end) = dateFromVariant(variant: variant)
-        
-        // Is there a cleaner way?
-        guard (start != nil) else { return nil }
-        guard (end != nil) else { return nil }
-        
+        guard start != nil, end != nil else { return nil }
+       
         guard let entry = database.readRandomEntryInDateRange(startDate: start!, endDate: end!) else {
             return nil
         }
