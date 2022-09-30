@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ComboGeist: Geist {
+struct OnThisDayGeist: Geist {
     private let database: DatabaseService
 
     init(database: DatabaseService) {

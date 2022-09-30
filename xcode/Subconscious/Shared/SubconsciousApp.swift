@@ -714,6 +714,9 @@ struct AppEnvironment {
         } catch {
             logger.debug("Failed to load project Geist: \(error)")
         }
+        
+        let onThisDayGeist = OnThisDayGeist(database: database)
+        self.feed.register(name: "onThisDay", geist: onThisDayGeist)
     }
 }
 
