@@ -24,7 +24,6 @@ struct StoryComboView: View {
     /// Construct combined slug and default content, then open editor
     func synthesize() {
         let (first, second) = orderedSlugPair()
-        let slug = "\(first.description)-\(second.description)"
         let content =
             """
             \(story.prompt)
@@ -32,7 +31,8 @@ struct StoryComboView: View {
             \(first.toSlashlink()) \(second.toSlashlink())
             """
         
-        guard let link = EntryLink.init(title: slug) else { return }
+        guard let slug = Slug(formatting: "\(first) \(second)") else { return }
+        let link = EntryLink.init(slug: slug)
         
         action(link, content)
     }
