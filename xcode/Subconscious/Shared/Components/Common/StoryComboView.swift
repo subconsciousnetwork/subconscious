@@ -29,7 +29,9 @@ struct StoryComboView: View {
             \(first.toSlashlink()) \(second.toSlashlink())
             """
         
-        guard let slug = Slug(formatting: "\(first) \(second)") else { return }
+        guard let slug = Slug(formatting: "\(first) \(second)") else {
+            return
+        }
         let link = EntryLink.init(slug: slug)
         
         action(link, content)
