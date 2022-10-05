@@ -678,9 +678,13 @@ struct AppEnvironment {
         )
         self.feed.register(name: "zettelkasten", geist: zettelkastenGeist)
         
+        let comboGrammar = try! Bundle.main.read(
+            resource: Config.default.traceryCombo,
+            withExtension: "json"
+        )
         let comboGeist = try! ComboGeist(
             database: database,
-            data: zettelkastenGrammar
+            data: comboGrammar
         )
         self.feed.register(name: "combo", geist: comboGeist)
     }
