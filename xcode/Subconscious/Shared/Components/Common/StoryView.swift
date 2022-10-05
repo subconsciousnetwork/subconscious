@@ -19,6 +19,11 @@ struct StoryView: View {
                 story: storyPrompt,
                 action: action
             )
+        case .combo(let combo):
+            StoryComboView(
+                story: combo,
+                action: action
+            )
         }
     }
 }
