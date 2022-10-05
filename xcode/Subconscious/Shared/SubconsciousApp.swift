@@ -668,25 +668,38 @@ struct AppEnvironment {
 
         self.feed = FeedService()
 
-        let zettelkastenGrammar = try! Bundle.main.read(
-            resource: Config.default.traceryZettelkasten,
-            withExtension: "json"
-        )
-        let zettelkastenGeist = try! RandomPromptGeist(
-            database: database,
-            data: zettelkastenGrammar
-        )
-        self.feed.register(name: "zettelkasten", geist: zettelkastenGeist)
+        // MARK: zettelkasten geist
+        do {
+            let zettelkastenGrammar = try Bundle.main.read(
+                resource: Config.default.traceryZettelkasten,
+                withExtension: "json"
+            )
+            let zettelkastenGeist = try RandomPromptGeist(
+                database: database,
+                data: zettelkastenGrammar
+            )
+            self.feed.register(name: "zettelkasten", geist: zettelkastenGeist)
+            logger.debug("Registered zettelkasten geist")
+        } catch {
+            logger.debug("Failed to load zettelkasten geist: \(error)")
+        }
         
-        let comboGrammar = try! Bundle.main.read(
-            resource: Config.default.traceryCombo,
-            withExtension: "json"
-        )
-        let comboGeist = try! ComboGeist(
-            database: database,
-            data: comboGrammar
-        )
-        self.feed.register(name: "combo", geist: comboGeist)
+        // MARK: combo geist
+        do {
+            let comboGrammar = try Bundle.main.read(
+                resource: Config.default.traceryCombo,
+                withExtension: "json"
+            )
+            let comboGeist = try ComboGeist(
+                database: database,
+                data: comboGrammar
+            )
+            
+            self.feed.register(name: "combo", geist: comboGeist)
+            logger.debug("Registered combo geist")
+        } catch {
+            logger.debug("Failed to load combo geist: \(error)")
+        }
     }
 }
 
