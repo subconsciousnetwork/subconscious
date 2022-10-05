@@ -12,9 +12,7 @@ struct StoryComboView: View {
     var story: StoryCombo
     var action: (EntryLink, String) -> Void
     
-    /// Sort entries by slug
-    /// (this should be factored out eventually)
-    func orderedSlugPair() -> (Slug, Slug) {
+    var orderedSlugPair: (Slug, Slug) {
         var entries = [story.entryA.slug, story.entryB.slug]
         entries.sort(by: { $0.description < $1.description })
         
@@ -23,7 +21,7 @@ struct StoryComboView: View {
     
     /// Construct combined slug and default content, then open editor
     func synthesize() {
-        let (first, second) = orderedSlugPair()
+        let (first, second) = orderedSlugPair
         let content =
             """
             \(story.prompt)
