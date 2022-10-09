@@ -26,7 +26,7 @@ struct Config: Equatable {
     var journalTemplate: Slug = Slug("_special/journal-template")!
 
     /// Toggle scratch note suggestion feature
-    var scratchSuggestionEnabled = false
+    var scratchSuggestionEnabled = true
 
     /// Toggle random suggestion feature
     var randomSuggestionEnabled = true

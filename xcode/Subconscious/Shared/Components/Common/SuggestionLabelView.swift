@@ -57,7 +57,7 @@ struct SuggestionLabelView: View, Equatable {
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text("Scratch note"),
+                        title: Text("Create note"),
                         subtitle: Text(String(entryLink.slug))
                     )
                 },
