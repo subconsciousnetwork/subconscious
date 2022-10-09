@@ -394,21 +394,19 @@ struct DatabaseService {
         })
 
         let now = Date.now
-        let dateTimeFormatter = ISO8601DateFormatter.internet()
-        let dateTime = dateTimeFormatter.string(from: now)
-        let dateFormatter = DateFormatter.yyyymmdd()
-        let date = dateFormatter.string(from: now)
+        let formatter = DateFormatter.scratchSlugFormatter()
+        let scratchSlugString = formatter.string(from: now)
 
         var special: [Suggestion] = []
 
         // Insert scratch
         if Config.default.scratchSuggestionEnabled {
-            if let slug = Slug(formatting: "inbox/\(dateTime)") {
+            if let slug = Slug(formatting: "inbox/\(scratchSlugString)") {
                 special.append(
                     .scratch(
                         EntryLink(
                             slug: slug,
-                            title: date
+                            title: scratchSlugString
                         )
                     )
                 )
