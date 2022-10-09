@@ -12,6 +12,10 @@ import Combine
 
 //  MARK: Action
 enum DetailAction: Hashable, CustomLogStringConvertible {
+    /// When scene phase changes.
+    /// E.g. when app is foregrounded, backgrounded, etc.
+    case scenePhaseChange(ScenePhase)
+
     /// Wrapper for editor actions
     case markupEditor(MarkupTextAction)
 
@@ -322,6 +326,12 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         switch action {
+        case .scenePhaseChange(let phase):
+            return scenePhaseChange(
+                state: state,
+                environment: environment,
+                phase: phase
+            )
         case .markupEditor(let action):
             return DetailMarkupEditorCursor.update(
                 state: state,
@@ -667,6 +677,25 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         environment.logger.warning("\(message)")
         return Update(state: state)
+    }
+
+    /// Handle scene phase change
+    /// We trigger an autosave when scene becomes inactive.
+    static func scenePhaseChange(
+        state: DetailModel,
+        environment: AppEnvironment,
+        phase: ScenePhase
+    ) -> Update<DetailModel> {
+        switch phase {
+        case .inactive:
+            return update(
+                state: state,
+                action: .autosave,
+                environment: environment
+            )
+        default:
+            return Update(state: state)
+        }
     }
 
     /// Disambiguate URL opens and forward to specialized action types
@@ -1856,6 +1885,7 @@ struct DetailView: View {
     }
 
     var store: ViewStore<DetailModel>
+    @Environment(\.scenePhase) var scenePhase: ScenePhase
 
     var isReady: Bool {
         let state = store.state
@@ -1976,6 +2006,13 @@ struct DetailView: View {
             store.send(.openURL(url))
             return .handled
         })
+        // Track changes to scene phase so we know when app gets
+        // foregrounded/backgrounded.
+        // See https://developer.apple.com/documentation/swiftui/scenephase
+        // 2022-02-08 Gordon Brander
+        .onChange(of: self.scenePhase) { phase in
+            store.send(DetailAction.scenePhaseChange(phase))
+        }
         .sheet(
             isPresented: Binding(
                 store: store,
