@@ -202,15 +202,7 @@ struct SearchModel: ModelProtocol {
         query: String
     ) -> Update<SearchModel> {
         let fx: Fx<SearchAction> = environment.database
-            .searchSuggestions(
-                query: query,
-                isJournalSuggestionEnabled:
-                    Config.default.journalSuggestionEnabled,
-                isScratchSuggestionEnabled:
-                    Config.default.scratchSuggestionEnabled,
-                isRandomSuggestionEnabled:
-                    Config.default.randomSuggestionEnabled
-            )
+            .searchSuggestions(query: query)
             .map({ suggestions in
                 SearchAction.setSuggestions(suggestions)
             })
@@ -239,8 +231,6 @@ struct SearchModel: ModelProtocol {
             case .entry(let entryLink):
                 return entryLink
             case .search(let entryLink):
-                return entryLink
-            case .journal(let entryLink):
                 return entryLink
             case .scratch(let entryLink):
                 return entryLink

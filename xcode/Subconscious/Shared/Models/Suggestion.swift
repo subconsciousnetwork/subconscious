@@ -10,7 +10,6 @@ import Foundation
 enum Suggestion: Hashable, Equatable, Identifiable {
     case entry(EntryLink)
     case search(EntryLink)
-    case journal(EntryLink)
     case scratch(EntryLink)
     case random
 
@@ -20,8 +19,6 @@ enum Suggestion: Hashable, Equatable, Identifiable {
             return "entry/\(link.id)"
         case let .search(link):
             return "search/\(link.id)"
-        case let .journal(link):
-            return "journal/\(link.id)"
         case let .scratch(link):
             return "scratch/\(link.id)"
         case .random:

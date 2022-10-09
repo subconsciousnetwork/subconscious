@@ -173,13 +173,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
                 fallback: entryLink.linkableTitle,
                 autofocus: true
             )
-        case .journal(let entryLink):
-            return .loadAndPresentTemplateDetail(
-                link: entryLink,
-                template: Config.default.journalTemplate,
-                // Autofocus note because we're creating it from scratch
-                autofocus: true
-            )
         case .scratch(let entryLink):
             return .loadAndPresentDetail(
                 link: entryLink,

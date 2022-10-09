@@ -264,25 +264,6 @@ class Tests_Detail: XCTestCase {
         )
     }
 
-    func testDetailActionFromJournalSuggestion() throws {
-        let entrySuggestion = Suggestion.journal(
-            EntryLink(
-                slug: Slug("systems-generating-systems")!,
-                title: "Systems Generating Systems"
-            )
-        )
-        let action = DetailAction.fromSuggestion(entrySuggestion)
-
-        XCTAssertEqual(
-            action,
-            DetailAction.loadAndPresentTemplateDetail(
-                link: EntryLink(title: "Systems Generating Systems")!,
-                template: Config.default.journalTemplate,
-                autofocus: true
-            )
-        )
-    }
-
     func testDetailActionFromScratchSuggestion() throws {
         let entrySuggestion = Suggestion.scratch(
             EntryLink(

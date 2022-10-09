@@ -41,18 +41,6 @@ struct SuggestionLabelView: View, Equatable {
                     Image(systemName: "square.and.pencil")
                 }
             )
-        case .journal(let entryLink):
-            Label(
-                title: {
-                    TitleGroupView(
-                        title: Text("Daily journal"),
-                        subtitle: Text(String(entryLink.slug))
-                    )
-                },
-                icon: {
-                    Image(systemName: "calendar")
-                }
-            )
         case .scratch(let entryLink):
             Label(
                 title: {

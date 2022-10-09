@@ -20,11 +20,6 @@ struct Config: Equatable {
     /// Subsurface "orb" shader on main FAB
     var orbShaderEnabled = true
 
-    /// Toggle journal suggestion feature
-    var journalSuggestionEnabled = true
-    /// Where to look for journal template
-    var journalTemplate: Slug = Slug("_special/journal-template")!
-
     /// Toggle scratch note suggestion feature
     var scratchSuggestionEnabled = true
 

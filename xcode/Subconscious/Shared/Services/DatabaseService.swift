@@ -367,11 +367,7 @@ struct DatabaseService {
         }
     }
 
-    private func searchSuggestionsForZeroQuery(
-        isJournalSuggestionEnabled: Bool,
-        isScratchSuggestionEnabled: Bool,
-        isRandomSuggestionEnabled: Bool
-    ) throws -> [Suggestion] {
+    private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
         let suggestions = try database.execute(
             sql: """
             SELECT slug, title
@@ -406,7 +402,7 @@ struct DatabaseService {
         var special: [Suggestion] = []
 
         // Insert scratch
-        if isScratchSuggestionEnabled {
+        if Config.default.scratchSuggestionEnabled {
             if let slug = Slug(formatting: "inbox/\(dateTime)") {
                 special.append(
                     .scratch(
@@ -419,21 +415,7 @@ struct DatabaseService {
             }
         }
 
-        // Insert journal
-        if isJournalSuggestionEnabled {
-            if let slug = Slug(formatting: "journal/\(date)") {
-                special.append(
-                    .journal(
-                        EntryLink(
-                            slug: slug,
-                            title: date
-                        )
-                    )
-                )
-            }
-        }
-
-        if isRandomSuggestionEnabled {
+        if Config.default.randomSuggestionEnabled {
             // Insert an option to load a random note if there are any notes.
             if suggestions.count > 2 {
                 special.append(.random)
@@ -498,18 +480,11 @@ struct DatabaseService {
     /// A whitespace query string will fetch zero-query suggestions.
     //  TODO: Replace flag arguments with direct references feature flags
     func searchSuggestions(
-        query: String,
-        isJournalSuggestionEnabled: Bool,
-        isScratchSuggestionEnabled: Bool,
-        isRandomSuggestionEnabled: Bool
+        query: String
     ) -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             if query.isWhitespace {
-                return try searchSuggestionsForZeroQuery(
-                    isJournalSuggestionEnabled: isJournalSuggestionEnabled,
-                    isScratchSuggestionEnabled: isScratchSuggestionEnabled,
-                    isRandomSuggestionEnabled: isRandomSuggestionEnabled
-                )
+                return try searchSuggestionsForZeroQuery()
             } else {
                 return try searchSuggestionsForQuery(query: query)
             }
