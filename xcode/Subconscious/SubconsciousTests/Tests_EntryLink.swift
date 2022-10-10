@@ -104,6 +104,22 @@ class Tests_EntryLink: XCTestCase {
         )
     }
 
+    /// In cases where the title *is* linkable, we want to make sure
+    /// the various sanitization steps don't somehow change the title.
+    func testLeavesLinkableTitleFormattingAlone() throws {
+        let stringDate = "2022-10-10 10:45:35"
+        guard let slug = Slug(formatting: stringDate) else {
+            XCTFail("Expected slug")
+            return
+        }
+        let link = EntryLink(
+            slug: slug,
+            title: stringDate
+        )
+        XCTAssertEqual(link.linkableTitle, stringDate)
+        XCTAssertEqual(link.title, stringDate)
+    }
+
     func testSlugOnlyEntryLinkToLinkableSentence() throws {
         guard let slug = Slug("rand") else {
             XCTFail("Expected slug")
