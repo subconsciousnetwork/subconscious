@@ -406,7 +406,7 @@ struct DatabaseService {
                     .scratch(
                         EntryLink(
                             slug: slug,
-                            title: "Untitled"
+                            title: Config.default.scratchDefaultTitle
                         )
                     )
                 )
