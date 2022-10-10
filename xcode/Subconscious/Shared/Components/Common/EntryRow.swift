@@ -18,8 +18,8 @@ struct EntryRow: View, Equatable {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(
-                    !entry.linkableTitle.isEmpty ?
-                    entry.linkableTitle :
+                    !entry.link.title.isEmpty ?
+                    entry.link.title :
                     emptyTitle
                 )
                 .font(Font(UIFont.appText))

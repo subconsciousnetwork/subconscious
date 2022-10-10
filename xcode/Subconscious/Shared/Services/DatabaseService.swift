@@ -367,11 +367,7 @@ struct DatabaseService {
         }
     }
 
-    private func searchSuggestionsForZeroQuery(
-        isJournalSuggestionEnabled: Bool,
-        isScratchSuggestionEnabled: Bool,
-        isRandomSuggestionEnabled: Bool
-    ) throws -> [Suggestion] {
+    private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
         let suggestions = try database.execute(
             sql: """
             SELECT slug, title
@@ -397,43 +393,27 @@ struct DatabaseService {
             Suggestion.entry(link)
         })
 
-        let now = Date.now
-        let dateTimeFormatter = ISO8601DateFormatter.internet()
-        let dateTime = dateTimeFormatter.string(from: now)
-        let dateFormatter = DateFormatter.yyyymmdd()
-        let date = dateFormatter.string(from: now)
-
         var special: [Suggestion] = []
 
         // Insert scratch
-        if isScratchSuggestionEnabled {
-            if let slug = Slug(formatting: "inbox/\(dateTime)") {
+        if Config.default.scratchSuggestionEnabled {
+            let now = Date.now
+            let formatter = DateFormatter.scratchDateFormatter()
+            if let slug = Slug(
+                formatting: "inbox/\(formatter.string(from: now))"
+            ) {
                 special.append(
                     .scratch(
                         EntryLink(
                             slug: slug,
-                            title: date
+                            title: Config.default.scratchDefaultTitle
                         )
                     )
                 )
             }
         }
 
-        // Insert journal
-        if isJournalSuggestionEnabled {
-            if let slug = Slug(formatting: "journal/\(date)") {
-                special.append(
-                    .journal(
-                        EntryLink(
-                            slug: slug,
-                            title: date
-                        )
-                    )
-                )
-            }
-        }
-
-        if isRandomSuggestionEnabled {
+        if Config.default.randomSuggestionEnabled {
             // Insert an option to load a random note if there are any notes.
             if suggestions.count > 2 {
                 special.append(.random)
@@ -498,18 +478,11 @@ struct DatabaseService {
     /// A whitespace query string will fetch zero-query suggestions.
     //  TODO: Replace flag arguments with direct references feature flags
     func searchSuggestions(
-        query: String,
-        isJournalSuggestionEnabled: Bool,
-        isScratchSuggestionEnabled: Bool,
-        isRandomSuggestionEnabled: Bool
+        query: String
     ) -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             if query.isWhitespace {
-                return try searchSuggestionsForZeroQuery(
-                    isJournalSuggestionEnabled: isJournalSuggestionEnabled,
-                    isScratchSuggestionEnabled: isScratchSuggestionEnabled,
-                    isRandomSuggestionEnabled: isRandomSuggestionEnabled
-                )
+                return try searchSuggestionsForZeroQuery()
             } else {
                 return try searchSuggestionsForQuery(query: query)
             }
@@ -783,7 +756,7 @@ struct DatabaseService {
                 saveState: .draft,
                 entry: SubtextFile(
                     slug: link.slug,
-                    title: link.linkableTitle,
+                    title: link.title,
                     modified: now,
                     created: now,
                     body: fallback

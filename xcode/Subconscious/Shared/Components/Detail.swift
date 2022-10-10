@@ -158,6 +158,12 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         .selectLinkSuggestion(.entry(link))
     }
 
+    private static func generateScratchFallback(date: Date) -> String {
+        let formatter = DateFormatter.yyyymmdd()
+        let yyyymmdd = formatter.string(from: date)
+        return "[[\(yyyymmdd)]]"
+    }
+
     /// Generate a detail request from a suggestion
     static func fromSuggestion(_ suggestion: Suggestion) -> Self {
         switch suggestion {
@@ -173,17 +179,10 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
                 fallback: entryLink.linkableTitle,
                 autofocus: true
             )
-        case .journal(let entryLink):
-            return .loadAndPresentTemplateDetail(
-                link: entryLink,
-                template: Config.default.journalTemplate,
-                // Autofocus note because we're creating it from scratch
-                autofocus: true
-            )
         case .scratch(let entryLink):
             return .loadAndPresentDetail(
                 link: entryLink,
-                fallback: entryLink.linkableTitle,
+                fallback: generateScratchFallback(date: Date.now),
                 autofocus: true
             )
         case .random:

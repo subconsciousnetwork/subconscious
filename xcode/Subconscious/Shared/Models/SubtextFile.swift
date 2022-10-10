@@ -37,7 +37,7 @@ struct SubtextFile:
         self.headers = HeaderIndex(
             [
                 Header(name: "Content-Type", value: "text/subtext"),
-                Header(name: "Title", value: link.linkableTitle),
+                Header(name: "Title", value: link.title),
                 Header(name: "Modified", value: modified.ISO8601Format()),
                 Header(name: "Created", value: created.ISO8601Format()),
             ]

@@ -45,6 +45,17 @@ extension DateFormatter {
     }
 }
 
+extension DateFormatter {
+    static func scratchDateFormatter(
+        locale: Locale = Locale.current
+    ) -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return formatter
+    }
+}
+
 extension ISO8601DateFormatter {
     static func internet(
         timeZone: TimeZone = TimeZone.current
