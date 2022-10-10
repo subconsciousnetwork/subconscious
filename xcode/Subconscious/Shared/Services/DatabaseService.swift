@@ -393,20 +393,20 @@ struct DatabaseService {
             Suggestion.entry(link)
         })
 
-        let now = Date.now
-        let formatter = DateFormatter.scratchSlugFormatter()
-        let scratchSlugString = formatter.string(from: now)
-
         var special: [Suggestion] = []
 
         // Insert scratch
         if Config.default.scratchSuggestionEnabled {
-            if let slug = Slug(formatting: "inbox/\(scratchSlugString)") {
+            let now = Date.now
+            let formatter = DateFormatter.scratchDateFormatter()
+            if let slug = Slug(
+                formatting: "inbox/\(formatter.string(from: now))"
+            ) {
                 special.append(
                     .scratch(
                         EntryLink(
                             slug: slug,
-                            title: scratchSlugString
+                            title: "Untitled"
                         )
                     )
                 )
@@ -756,7 +756,7 @@ struct DatabaseService {
                 saveState: .draft,
                 entry: SubtextFile(
                     slug: link.slug,
-                    title: link.linkableTitle,
+                    title: link.title,
                     modified: now,
                     created: now,
                     body: fallback

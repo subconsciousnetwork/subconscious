@@ -46,12 +46,12 @@ extension DateFormatter {
 }
 
 extension DateFormatter {
-    static func scratchSlugFormatter(
+    static func scratchDateFormatter(
         locale: Locale = Locale.current
     ) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.locale = locale
-        formatter.dateFormat = "yyyy-MM-dd-HH-mm-ss"
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         return formatter
     }
 }

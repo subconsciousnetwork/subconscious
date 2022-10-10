@@ -50,7 +50,7 @@ class Tests_SubtextFile: XCTestCase {
         )
         XCTAssertEqual(
             entry.headers["Title"],
-            "Fire and ice"
+            "Nonlinkable title"
         )
     }
 
