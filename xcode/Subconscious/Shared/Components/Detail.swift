@@ -161,10 +161,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     private static func generateScratchFallback(date: Date) -> String {
         let formatter = DateFormatter.yyyymmdd()
         let yyyymmdd = formatter.string(from: date)
-        return """
-        
-        [[\(yyyymmdd)]]
-        """
+        return "[[\(yyyymmdd)]]"
     }
 
     /// Generate a detail request from a suggestion
