@@ -642,7 +642,12 @@ extension Subtext {
     /// Derive an excerpt
     func excerpt() -> String {
         for block in blocks {
-            return String(block.body())
+            switch block {
+            case .empty:
+                continue
+            default:
+                return String(block.body())
+            }
         }
         return ""
     }
