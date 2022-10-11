@@ -609,36 +609,6 @@ extension Subtext {
 }
 
 extension Subtext {
-    /// A summary of a Subtext document, including title and excerpt
-    struct Summary {
-        var title: String?
-        var excerpt: String?
-    }
-
-    /// Derive a short summary of a Subtext document.
-    func summarize() -> Summary {
-        let content = blocks.filter({ block in
-            switch block {
-            case .empty:
-                return false
-            default:
-                return true
-            }
-        })
-        return Summary(
-            title: content.get(0).map({ block in String(block.body()) }),
-            excerpt: content.get(1).map({ block in String(block.body()) })
-        )
-    }
-
-    /// Derive a title
-    func title() -> String {
-        for block in blocks {
-            return String(block.body())
-        }
-        return ""
-    }
-
     /// Derive an excerpt
     func excerpt() -> String {
         for block in blocks {
