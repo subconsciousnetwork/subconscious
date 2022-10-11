@@ -141,6 +141,8 @@
 		B89966C728B6EE2300DF1F8C /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89966C628B6EE2300DF1F8C /* Notebook.swift */; };
 		B89966C828B6EE2300DF1F8C /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89966C628B6EE2300DF1F8C /* Notebook.swift */; };
 		B89D296827E832DC009E0DED /* LoggerUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89D296727E832DC009E0DED /* LoggerUtilities.swift */; };
+		B8A408A928F61BA000A5651D /* project.json in Resources */ = {isa = PBXBuildFile; fileRef = B8A408A828F61BA000A5651D /* project.json */; };
+		B8A408AA28F61BA000A5651D /* project.json in Resources */ = {isa = PBXBuildFile; fileRef = B8A408A828F61BA000A5651D /* project.json */; };
 		B8A41D4E2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */; };
 		B8A41D4F2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */; };
 		B8A41D512811F87C0096D2E7 /* SlashlinkBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */; };
@@ -341,6 +343,7 @@
 		B8901CF227978FDE007C9021 /* Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
 		B89966C628B6EE2300DF1F8C /* Notebook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notebook.swift; sourceTree = "<group>"; };
 		B89D296727E832DC009E0DED /* LoggerUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerUtilities.swift; sourceTree = "<group>"; };
+		B8A408A828F61BA000A5651D /* project.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = project.json; sourceTree = "<group>"; };
 		B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikilinkBarView.swift; sourceTree = "<group>"; };
 		B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlashlinkBarView.swift; sourceTree = "<group>"; };
 		B8A59D5F28B51D000010DB2F /* TranscludeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeView.swift; sourceTree = "<group>"; };
@@ -551,6 +554,7 @@
 			isa = PBXGroup;
 			children = (
 				B575834428ED8D9100F6EE88 /* combo.json */,
+				B8A408A828F61BA000A5651D /* project.json */,
 				B8CA8F1D288F07F9005F8802 /* zettelkasten.json */,
 			);
 			path = Geists;
@@ -910,6 +914,7 @@
 				B88C9781276425E800B27DF0 /* IBMPlexMono-Italic.ttf in Resources */,
 				B88C979F2764266A00B27DF0 /* IBMPlexSans-Medium.ttf in Resources */,
 				B88C97952764264300B27DF0 /* IBMPlexSans-Italic.ttf in Resources */,
+				B8A408A928F61BA000A5651D /* project.json in Resources */,
 				B575834528ED8D9100F6EE88 /* combo.json in Resources */,
 				B88C97992764264300B27DF0 /* IBMPlexSans-Bold.ttf in Resources */,
 			);
@@ -922,6 +927,7 @@
 				B88C97A32764270000B27DF0 /* LICENSE.txt in Resources */,
 				B88C979E2764266A00B27DF0 /* IBMPlexSans-Light.ttf in Resources */,
 				B88C97982764264300B27DF0 /* IBMPlexSans-BoldItalic.ttf in Resources */,
+				B8A408AA28F61BA000A5651D /* project.json in Resources */,
 				B88C9786276425E900B27DF0 /* IBMPlexMono-Bold.ttf in Resources */,
 				B88C9784276425E900B27DF0 /* IBMPlexMono-BoldItalic.ttf in Resources */,
 				B88C9788276425E900B27DF0 /* IBMPlexMono-Regular.ttf in Resources */,

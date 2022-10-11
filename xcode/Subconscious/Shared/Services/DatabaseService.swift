@@ -831,7 +831,7 @@ struct DatabaseService {
             sql: """
             SELECT slug, body
             FROM entry_search
-            entry_search.body MATCH ?
+            WHERE entry_search.body MATCH ?
             ORDER BY RANDOM()
             LIMIT 1
             """,

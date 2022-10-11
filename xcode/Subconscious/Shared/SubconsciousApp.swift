@@ -670,35 +670,49 @@ struct AppEnvironment {
 
         // MARK: zettelkasten geist
         do {
-            let zettelkastenGrammar = try Bundle.main.read(
+            let grammar = try Bundle.main.read(
                 resource: Config.default.traceryZettelkasten,
                 withExtension: "json"
             )
-            let zettelkastenGeist = try RandomPromptGeist(
+            let geist = try RandomPromptGeist(
                 database: database,
-                data: zettelkastenGrammar
+                data: grammar
             )
-            self.feed.register(name: "zettelkasten", geist: zettelkastenGeist)
-            logger.debug("Registered zettelkasten geist")
+            self.feed.register(name: "zettelkasten", geist: geist)
         } catch {
             logger.debug("Failed to load zettelkasten geist: \(error)")
         }
         
         // MARK: combo geist
         do {
-            let comboGrammar = try Bundle.main.read(
+            let grammar = try Bundle.main.read(
                 resource: Config.default.traceryCombo,
                 withExtension: "json"
             )
-            let comboGeist = try ComboGeist(
+            let geist = try ComboGeist(
                 database: database,
-                data: comboGrammar
+                data: grammar
             )
             
-            self.feed.register(name: "combo", geist: comboGeist)
-            logger.debug("Registered combo geist")
+            self.feed.register(name: "combo", geist: geist)
         } catch {
             logger.debug("Failed to load combo geist: \(error)")
+        }
+
+        // MARK: Project Geist
+        do {
+            let grammar = try Bundle.main.read(
+                resource: Config.default.traceryProject,
+                withExtension: "json"
+            )
+            let geist = try QueryPromptGeist(
+                database: database,
+                data: grammar,
+                query: "project"
+            )
+            self.feed.register(name: "project", geist: geist)
+        } catch {
+            logger.debug("Failed to load project Geist: \(error)")
         }
     }
 }

@@ -1,0 +1,151 @@
+{
+  "origin": [
+    "#purpose#",
+    "#principles#",
+    "#priorities#",
+    "#plan#",
+    "#disirability#",
+    "#feasibility#",
+    "#viability#",
+    "#heart#",
+    "#practical_step#",
+    "#build#",
+    "#story#",
+    "#ooda#",
+    "#morale#",
+    "#audience#",
+    "#you#",
+    "#strategy#",
+    "#selling#"
+  ],
+  "purpose": [
+    "What is the job to be done?",
+    "Why should this exist?",
+    "Where do we want to be in the future?",
+    "What will we deliver?",
+    "Write down why you started this.",
+    "What do you want out of this?"
+  ],
+  "principles": [
+    "What are the non-negotiables?",
+    "What are the key strategies?"
+  ],
+  "priorities": [
+    "How do we decide what to compromise?",
+    "What is the framework for tradeoffs?"
+  ],
+  "plan": [
+    "Do a workback",
+    "What are the known dates?",
+    "What are the forcing functions?",
+    "What are the bottlenecks?",
+    "What has to go right?"
+  ],
+  "people": [
+    "Who is accountable for it?",
+    "If you need it to happen, make it a job title.",
+    "Who is the absolute best in the world for this? What motivates them?",
+    "Work the rolodex.",
+    "Can I find a way to do it without the best people?"
+  ],
+  "heart": [
+    "What is the truth that I need to tell?",
+    "Find the fun",
+    "What am I drawn to?",
+    "Would this still exist if I disappeared tomorrow?",
+    "What is the right thing to do?",
+    "What truth needs to be heard?",
+    "What do I believe with a deep and abiding passion?",
+    "What do I want to see in this world?"
+  ],
+  "disirability": [
+    "What could I make that would cause burning desire?"
+  ],
+  "feasibility": [
+    "What is the bottleneck?"
+  ],
+  "viability": [
+    "Who wants to buy this?",
+    "Money is a constraint that defines how long you may operate."
+  ],
+  "practical_step": [
+    "Make a list.",
+    "Make a mind map."
+  ],
+  "morale": [
+    "What would build energy?",
+    "What would make progress quickly?"
+  ],
+  "build": [
+    "Start with a toy.",
+    "Do the simplest thing that could possibly work",
+    "Copy something with immaculate consistency.",
+    "Build to think.",
+    "Create some choices.",
+    "Modularize later.",
+    "Chewing gum and string.",
+    "Build one to throw away",
+    "Make progress as fast as possible.",
+    "Add one dissonant element.",
+    "Add one thing.",
+    "Remove one thing.",
+    "Add one surprise."
+  ],
+  "audience": [
+    "What would generate #emotion.lowercase#?",
+    "What do they want out of this?",
+    "What's in it for them?"
+  ],
+  "you": [
+    "What would provoke #emotion.lowercase#?",
+    "What do you want out of this?",
+    "What's in it for you?"
+  ],
+  "emotion": [
+    "Excitement",
+    "FOMO",
+    "Inspiration",
+    "Surprise",
+    "Delight"
+  ],
+  "story": [
+    "Tell a story about it in 3 parts: what is, what could be, call to action.",
+    "Summarize it in 5 bullet points",
+    "It's like X but for Y..."
+  ],
+  "ooda": [
+    "What phase of the OODA loop am I in now? Refocus tactics on that phase.",
+    "OODA: #observe#",
+    "OODA: #orient#",
+    "OODA: #decide#",
+    "OODA: #act#"
+  ],
+  "observe": [
+    "What are my go-to-tools for observation? What tools do others use?",
+    "What are the processess in play?",
+    "What is happening around me? Why?",
+    "Try shadowing someone.",
+    "Follow a process through to its end.",
+    "Walk the factory floor."
+  ],
+  "orient": [
+    "How do I orient when faced with a new problem space?"
+  ],
+  "decide": [
+    "Is it better to make decisions quickly or carefully?"
+  ],
+  "act": [
+    "How can you measure the outcome?",
+    "What are the key metrics?"
+  ],
+  "selling": [
+    "Ask for buy-in.",
+    "Ask people to work against their better judgement.",
+    "Ask people to go with their gut.",
+    "Ask a favor."
+  ],
+  "strategy": [
+    "Where can you go that no one else will?",
+    "An element of surprise."
+  ]
+}

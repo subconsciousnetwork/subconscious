@@ -46,6 +46,7 @@ struct Config: Equatable {
     /// Toggle on/off simple Tracery-based Geists
     var traceryZettelkasten = "zettelkasten"
     var traceryCombo = "combo"
+    var traceryProject = "project"
 }
 
 extension Config {
