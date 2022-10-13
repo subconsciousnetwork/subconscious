@@ -9,7 +9,12 @@ import Foundation
 
 /// A slug is a normalized identifier (basically "words-and-dashes")
 struct Slug:
-    Identifiable, Hashable, Equatable, Comparable, LosslessStringConvertible
+    Identifiable,
+    Hashable,
+    Equatable,
+    Comparable,
+    LosslessStringConvertible,
+    Codable
 {
     /// Compare slugs by alpha
     static func < (lhs: Slug, rhs: Slug) -> Bool {
