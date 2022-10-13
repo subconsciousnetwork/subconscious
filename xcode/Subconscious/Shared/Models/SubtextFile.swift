@@ -11,6 +11,7 @@ struct SubtextFile:
 {
     var slug: Slug
     var headers: HeaderIndex
+    /// The body portion only of the Subtext (everything except the headers)
     var body: String
 
     /// Initialize SubtextFile properties directly
