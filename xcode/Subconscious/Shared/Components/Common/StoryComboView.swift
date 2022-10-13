@@ -11,31 +11,6 @@ import SwiftUI
 struct StoryComboView: View {
     var story: StoryCombo
     var action: (EntryLink, String) -> Void
-    
-    var orderedSlugPair: (Slug, Slug) {
-        var entries = [story.entryA.slug, story.entryB.slug]
-        entries.sort(by: { $0.description < $1.description })
-        
-        return (entries[0], entries[1])
-    }
-    
-    /// Construct combined slug and default content, then open editor
-    func synthesize() {
-        let (first, second) = orderedSlugPair
-        let content =
-            """
-            \(story.prompt)
-            
-            \(first.toSlashlink()) \(second.toSlashlink())
-            """
-        
-        guard let slug = Slug(formatting: "\(first) \(second)") else {
-            return
-        }
-        let link = EntryLink.init(slug: slug)
-        
-        action(link, content)
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -78,7 +53,13 @@ struct StoryComboView: View {
             Divider()
             HStack {
                 Button(
-                    action: { synthesize() },
+                    action: {
+                        guard let entry = SubtextFile(story) else {
+                            return
+                        }
+                        let link = EntryLink(entry)
+                        self.action(link, entry.body)
+                    },
                     label: {
                         Text("Create")
                     }
