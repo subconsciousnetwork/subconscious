@@ -14,7 +14,8 @@ struct EntryLink:
     Hashable,
     Equatable,
     Identifiable,
-    CustomStringConvertible
+    CustomStringConvertible,
+    Codable
 {
     let slug: Slug
     let title: String
