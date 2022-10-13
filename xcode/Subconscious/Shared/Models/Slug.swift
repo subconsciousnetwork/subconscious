@@ -8,7 +8,14 @@
 import Foundation
 
 /// A slug is a normalized identifier (basically "words-and-dashes")
-struct Slug: Identifiable, Hashable, Equatable, LosslessStringConvertible {
+struct Slug:
+    Identifiable, Hashable, Equatable, Comparable, LosslessStringConvertible
+{
+    /// Compare slugs by alpha
+    static func < (lhs: Slug, rhs: Slug) -> Bool {
+        lhs.id < rhs.id
+    }
+
     /// Sanitize a string into a "slug string"-a string into a string that can
     /// be losslessly converted to and from a Slug.
     ///
