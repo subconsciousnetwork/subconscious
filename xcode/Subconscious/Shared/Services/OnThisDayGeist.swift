@@ -28,7 +28,7 @@ struct OnThisDayGeist: Geist {
         self.database = database
     }
     
-    func transformDate(date: Date, component: Calendar.Component, value: Int) -> Date? {
+    func addTo(date: Date, component: Calendar.Component, value: Int) -> Date? {
         guard let d = Calendar.current.date(byAdding: component, value: value, to: date) else {
             return nil
         }
@@ -42,34 +42,33 @@ struct OnThisDayGeist: Geist {
         switch variant {
             case .aYearAgo:
                 guard
-                    let lower = transformDate(date: Date.now, component: Calendar.Component.year, value: -1),
-                    let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1)
+                    let lower = addTo(date: Date.now, component: Calendar.Component.year, value: -1),
+                    let upper = addTo(date: lower, component: Calendar.Component.day, value: 1)
                     else { return nil }
                 return (lower, upper)
             case .sixMonthsAgo:
                 guard
-                    let lower = transformDate(date: Date.now, component: Calendar.Component.month, value: -6),
-                    let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1)
+                    let lower = addTo(date: Date.now, component: Calendar.Component.month, value: -6),
+                    let upper = addTo(date: lower, component: Calendar.Component.day, value: 1)
                     else { return nil }
                 return (lower, upper)
             case .aMonthAgo:
                 guard
-                    let lower = transformDate(date: Date.now, component: Calendar.Component.month, value: -1),
-                    let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1)
+                    let lower = addTo(date: Date.now, component: Calendar.Component.month, value: -1),
+                    let upper = addTo(date: lower, component: Calendar.Component.day, value: 1)
                     else { return nil }
                 return (lower, upper)
             case .inTheLastWeek:
                 guard
-                    let lower = transformDate(date: Date.now, component: Calendar.Component.day, value: -7),
-                    let upper = transformDate(date: lower, component: Calendar.Component.day, value: 6)
+                    let lower = addTo(date: Date.now, component: Calendar.Component.day, value: -7),
+                    let upper = addTo(date: lower, component: Calendar.Component.day, value: 6)
                     else { return nil }
                 return (lower, upper)
             case .inTheLastDay:
                 guard
-                    let lower = transformDate(date: Date.now, component: Calendar.Component.day, value: -1),
-                    let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1)
+                    let lower = addTo(date: Date.now, component: Calendar.Component.day, value: -1)
                     else { return nil }
-                return (lower, upper)
+                return (lower, Date.now)
         }
     }
 
