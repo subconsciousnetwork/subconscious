@@ -29,41 +29,46 @@ struct OnThisDayGeist: Geist {
     }
     
     func transformDate(date: Date, component: Calendar.Component, value: Int) -> Date? {
-        guard let d = Calendar.current.date(byAdding: component, value: value, to: date) else { return nil }
+        guard let d = Calendar.current.date(byAdding: component, value: value, to: date) else {
+            return nil
+        }
+        
         return d
     }
     
-    func dateFromVariant(variant: OnThisDayVariant) -> (Date?, Date?) {
+    func dateFromVariant(variant: OnThisDayVariant) -> (Date, Date)? {
+        // Verbose but easy to extend, allows for custom definition of the time window rather than
+        // locking us into a "day" being the only possible timespan.
         switch variant {
             case .aYearAgo:
                 guard
                     let lower = transformDate(date: Date.now, component: Calendar.Component.year, value: -1),
                     let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1)
-                    else { return (nil, nil) }
+                    else { return nil }
                 return (lower, upper)
             case .sixMonthsAgo:
                 guard
                     let lower = transformDate(date: Date.now, component: Calendar.Component.month, value: -6),
                     let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1)
-                    else { return (nil, nil) }
+                    else { return nil }
                 return (lower, upper)
             case .aMonthAgo:
                 guard
                     let lower = transformDate(date: Date.now, component: Calendar.Component.month, value: -1),
                     let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1)
-                    else { return (nil, nil) }
+                    else { return nil }
                 return (lower, upper)
             case .inTheLastWeek:
                 guard
                     let lower = transformDate(date: Date.now, component: Calendar.Component.day, value: -7),
                     let upper = transformDate(date: lower, component: Calendar.Component.day, value: 6)
-                    else { return (nil, nil) }
+                    else { return nil }
                 return (lower, upper)
             case .inTheLastDay:
                 guard
                     let lower = transformDate(date: Date.now, component: Calendar.Component.day, value: -1),
                     let upper = transformDate(date: lower, component: Calendar.Component.day, value: 1)
-                    else { return (nil, nil) }
+                    else { return nil }
                 return (lower, upper)
         }
     }
@@ -71,10 +76,11 @@ struct OnThisDayGeist: Geist {
     func ask(query: String) -> Story? {
         let variant = OnThisDayVariant.random()
         
-        let (start, end) = dateFromVariant(variant: variant)
-        guard start != nil, end != nil else { return nil }
+        guard let (start, end) = dateFromVariant(variant: <#T##OnThisDayVariant#>) else {
+            return nil
+        }
        
-        guard let entry = database.readRandomEntryInDateRange(startDate: start!, endDate: end!) else {
+        guard let entry = database.readRandomEntryInDateRange(startDate: start, endDate: end) else {
             return nil
         }
         
