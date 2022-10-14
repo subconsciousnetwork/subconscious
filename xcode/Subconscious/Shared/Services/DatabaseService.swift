@@ -804,7 +804,7 @@ struct DatabaseService {
             sql: """
             SELECT slug, body
             FROM entry
-            WHERE entry.modified BETWEEN date(?) AND date(?)
+            WHERE entry.modified BETWEEN ? AND ?
             ORDER BY RANDOM()
             LIMIT 1
             """,
