@@ -73,17 +73,22 @@ struct OnThisDayGeist: Geist {
     }
 
     func ask(query: String) -> Story? {
-        let variant = OnThisDayVariant.random()
+        // Check all possible variant cases and keep the ones that actually yield entries
+        let storyPool = OnThisDayVariant.allCases
+            .map({ variant -> Story? in
+                guard let (start, end) = dateFromVariant(variant: variant) else {
+                    return nil
+                }
+                
+                guard let entry = database.readRandomEntryInDateRange(startDate: start, endDate: end) else {
+                    return nil
+                }
+                
+                return Story.onThisDay(StoryOnThisDay(entry: entry, timespan: variant))
+            })
+            .compactMap({ $0 }) // Filter out nil cases
         
-        guard let (start, end) = dateFromVariant(variant: <#T##OnThisDayVariant#>) else {
-            return nil
-        }
-       
-        guard let entry = database.readRandomEntryInDateRange(startDate: start, endDate: end) else {
-            return nil
-        }
-        
-        return Story.onThisDay(StoryOnThisDay(entry: entry, timespan: variant))
+        return storyPool.randomElement()
     }
 }
 
