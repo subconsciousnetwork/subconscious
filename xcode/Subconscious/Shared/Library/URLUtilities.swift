@@ -60,6 +60,21 @@ extension String {
     }
 }
 
+extension String {
+    /// Append a file extension to a path-like string.
+    ///
+    /// The logic of this function is very simple, essentially a
+    /// concatenation, so avoid doing anything pathological.
+    ///
+    /// Foundation is inconsistent in its treatment of paths.
+    /// Some older APIs use strings. Newer APIs tend to use URLs.
+    ///
+    /// Having this utility is useful for e.g. converting slug to path.
+    func appendingPathExtension(_ ext: String) -> String {
+        "\(self).\(ext)"
+    }
+}
+
 extension Sequence where Iterator.Element == URL {
     func withPathExtension(_ ext: String) -> [URL] {
         self.filter({url in url.pathExtension == ext})
