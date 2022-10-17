@@ -191,6 +191,14 @@
 		B8B4250A28FB29A30081B8D5 /* JSONUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4250828FB29A30081B8D5 /* JSONUtilities.swift */; };
 		B8B4250C28FB43C90081B8D5 /* ContentType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4250B28FB43C90081B8D5 /* ContentType.swift */; };
 		B8B4250D28FB43C90081B8D5 /* ContentType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4250B28FB43C90081B8D5 /* ContentType.swift */; };
+		B8B4250F28FDE6960081B8D5 /* FileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4250E28FDE6960081B8D5 /* FileStore.swift */; };
+		B8B4251028FDE6960081B8D5 /* FileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4250E28FDE6960081B8D5 /* FileStore.swift */; };
+		B8B4251228FDE7780081B8D5 /* Mapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4251128FDE7780081B8D5 /* Mapping.swift */; };
+		B8B4251328FDE7780081B8D5 /* Mapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4251128FDE7780081B8D5 /* Mapping.swift */; };
+		B8B4251528FDE8570081B8D5 /* Memo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4251428FDE8570081B8D5 /* Memo.swift */; };
+		B8B4251628FDE8570081B8D5 /* Memo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4251428FDE8570081B8D5 /* Memo.swift */; };
+		B8B4251828FDE8AA0081B8D5 /* MemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4251728FDE8AA0081B8D5 /* MemoData.swift */; };
+		B8B4251928FDE8AA0081B8D5 /* MemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4251728FDE8AA0081B8D5 /* MemoData.swift */; };
 		B8B4D7EC27EA890B00633B5F /* ShadowStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4D7EB27EA890B00633B5F /* ShadowStyle.swift */; };
 		B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4D7ED27EA8AA000633B5F /* DragHandleView.swift */; };
 		B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3A271F6C8400B9B507 /* EntryLink.swift */; };
@@ -374,6 +382,10 @@
 		B8AF472928453049001973FB /* Tests_SubtextFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_SubtextFile.swift; sourceTree = "<group>"; };
 		B8B4250828FB29A30081B8D5 /* JSONUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONUtilities.swift; sourceTree = "<group>"; };
 		B8B4250B28FB43C90081B8D5 /* ContentType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentType.swift; sourceTree = "<group>"; };
+		B8B4250E28FDE6960081B8D5 /* FileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileStore.swift; sourceTree = "<group>"; };
+		B8B4251128FDE7780081B8D5 /* Mapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mapping.swift; sourceTree = "<group>"; };
+		B8B4251428FDE8570081B8D5 /* Memo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memo.swift; sourceTree = "<group>"; };
+		B8B4251728FDE8AA0081B8D5 /* MemoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoData.swift; sourceTree = "<group>"; };
 		B8B4D7EB27EA890B00633B5F /* ShadowStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShadowStyle.swift; sourceTree = "<group>"; };
 		B8B4D7ED27EA8AA000633B5F /* DragHandleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragHandleView.swift; sourceTree = "<group>"; };
 		B8B54F3A271F6C8400B9B507 /* EntryLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryLink.swift; sourceTree = "<group>"; };
@@ -545,6 +557,8 @@
 				B824FDCD26FA662200B81BBD /* SubtextFile.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
 				B8B4250B28FB43C90081B8D5 /* ContentType.swift */,
+				B8B4251428FDE8570081B8D5 /* Memo.swift */,
+				B8B4251728FDE8AA0081B8D5 /* MemoData.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -692,6 +706,8 @@
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
 				B8B4250828FB29A30081B8D5 /* JSONUtilities.swift */,
+				B8B4250E28FDE6960081B8D5 /* FileStore.swift */,
+				B8B4251128FDE7780081B8D5 /* Mapping.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -1012,6 +1028,7 @@
 				B8A59D6C28B692A00010DB2F /* Story.swift in Sources */,
 				B8249DA327E2753800BCDFBA /* ViewUtilities.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
+				B8B4251528FDE8570081B8D5 /* Memo.swift in Sources */,
 				B8B4250928FB29A30081B8D5 /* JSONUtilities.swift in Sources */,
 				B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */,
 				B81A535F272751EE001A6268 /* Subtext.swift in Sources */,
@@ -1027,6 +1044,7 @@
 				B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
 				B82F053728D60EE60025A8B5 /* AppTabView.swift in Sources */,
+				B8B4251828FDE8AA0081B8D5 /* MemoData.swift in Sources */,
 				B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */,
 				B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B86DFF3327C072CD002E57ED /* Func.swift in Sources */,
@@ -1034,6 +1052,7 @@
 				B86DFF3527C07438002E57ED /* LinkSuggestion.swift in Sources */,
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8A59D7528B694C40010DB2F /* Geist.swift in Sources */,
+				B8B4250F28FDE6960081B8D5 /* FileStore.swift in Sources */,
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
 				B8CC434027A07DF10079D2F9 /* DialogView.swift in Sources */,
 				B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
@@ -1081,6 +1100,7 @@
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
 				B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */,
 				B89966C728B6EE2300DF1F8C /* Notebook.swift in Sources */,
+				B8B4251228FDE7780081B8D5 /* Mapping.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8A41D4E2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
@@ -1133,6 +1153,7 @@
 				B8AE34C3276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B82C3A7726F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B8D7F04327A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
+				B8B4251028FDE6960081B8D5 /* FileStore.swift in Sources */,
 				B8EB2A2026F27797006E97C3 /* SubconsciousApp.swift in Sources */,
 				B81A535D27275138001A6268 /* Tape.swift in Sources */,
 				B8CC434427A0815E0079D2F9 /* ModalView.swift in Sources */,
@@ -1167,6 +1188,7 @@
 				B8CE40E828D2707D00819064 /* QueryPromptGeist.swift in Sources */,
 				B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
 				B8B4250A28FB29A30081B8D5 /* JSONUtilities.swift in Sources */,
+				B8B4251328FDE7780081B8D5 /* Mapping.swift in Sources */,
 				B8B4250D28FB43C90081B8D5 /* ContentType.swift in Sources */,
 				B8A41D4F2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,
 				B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */,
@@ -1175,7 +1197,9 @@
 				B8EB2A2426F27797006E97C3 /* AppView.swift in Sources */,
 				B82C3A6026F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8EC568D26F4206400AC64E5 /* SQLite3Migrations.swift in Sources */,
+				B8B4251628FDE8570081B8D5 /* Memo.swift in Sources */,
 				B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
+				B8B4251928FDE8AA0081B8D5 /* MemoData.swift in Sources */,
 				B8A59D6A28B692900010DB2F /* StoryPrompt.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
