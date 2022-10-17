@@ -50,7 +50,7 @@ class Tests_Header: XCTestCase {
     func testHeaderParse() throws {
         let doc = "Content-Type: text/subtext\nMalformed header: Husker knights\nTitle: Floop the Pig\n\nBody text\n"
         var tape = Tape(doc[...])
-        let header = Header.parse(&tape)
+        let header = Header(&tape)
         XCTAssertNotNil(header)
         XCTAssertEqual(
             String(describing: header!.name),
@@ -60,7 +60,7 @@ class Tests_Header: XCTestCase {
 
     func testHeaderParsedCleanValue() throws {
         var tape = Tape("Content-Type:    text/subtext\n")
-        let header = Header.parse(&tape)
+        let header = Header(&tape)
         XCTAssertNotNil(header)
         XCTAssertEqual(
             header!.value,
@@ -72,7 +72,7 @@ class Tests_Header: XCTestCase {
     func testParseHeaderMalformed() throws {
         let doc = "Malformed header You ganked my spirit walker\n"
         var tape = Tape(doc[...])
-        let header = Header.parse(&tape)
+        let header = Header(&tape)
         XCTAssertEqual(
             header,
             nil
@@ -81,7 +81,7 @@ class Tests_Header: XCTestCase {
 
     func testParseInvalidHeaderName() throws {
         var tape = Tape("Content Type: text/subtext\n")
-        let result = Header.parse(&tape)
+        let result = Header(&tape)
         XCTAssertEqual(
             result,
             nil
@@ -90,7 +90,7 @@ class Tests_Header: XCTestCase {
 
     func testParseHeaderEOL() throws {
         var tape = Tape("Content-Type: text/subtext")
-        let result = Header.parse(&tape)!
+        let result = Header(&tape)!
         XCTAssertEqual(
             result.value,
             "text/subtext"
@@ -99,7 +99,7 @@ class Tests_Header: XCTestCase {
 
     func testHeaderRender() throws {
         var tape = Tape("Content-Type: text/subtext\n")
-        let header = Header.parse(&tape)
+        let header = Header(&tape)
         XCTAssertNotNil(header)
         XCTAssertEqual(
             String(describing: header!),
@@ -112,7 +112,7 @@ class Tests_Header: XCTestCase {
     /// nice-to-have.
     func testHeaderRenderNormalized() throws {
         var tape = Tape("CONTENT-TYPE: text/subtext\n")
-        let header = Header.parse(&tape)
+        let header = Header(&tape)
         XCTAssertNotNil(header)
         XCTAssertEqual(
             String(describing: header!),
@@ -124,7 +124,7 @@ class Tests_Header: XCTestCase {
     func testHeadersParser() throws {
         let doc = "Content-Type: text/subtext\nMalformed header: Husker knights\nTitle: Floop the Pig\n\nBody text\n"
         var tape = Tape(doc[...])
-        let headers = Headers.parse(&tape)
+        let headers = Headers(&tape)
         XCTAssertEqual(
             String(describing: headers.headers[0].name),
             "Content-Type"
@@ -149,7 +149,7 @@ class Tests_Header: XCTestCase {
             Body text
             """
         )
-        let headers = Headers.parse(&tape)
+        let headers = Headers(&tape)
         XCTAssertEqual(headers.headers.count, 2)
         XCTAssertEqual(
             headers.headers[1].value,
@@ -168,7 +168,7 @@ class Tests_Header: XCTestCase {
             Body text
             """
         )
-        _ = Headers.parse(&tape)
+        _ = Headers(&tape)
         let next = tape.consume()
         XCTAssertEqual(
             next,
@@ -179,7 +179,7 @@ class Tests_Header: XCTestCase {
 
     func testParseNoHeaders() throws {
         var tape = Tape("\nBody text\n")
-        let headers = Headers.parse(&tape)
+        let headers = Headers(&tape)
         XCTAssertEqual(
             headers.headers.count,
             0
@@ -192,7 +192,7 @@ class Tests_Header: XCTestCase {
 
     func testParseMissingHeaders() throws {
         var tape = Tape("Body text\n")
-        let headers = Headers.parse(&tape)
+        let headers = Headers(&tape)
         XCTAssertEqual(
             headers.headers.count,
             0
@@ -214,7 +214,7 @@ class Tests_Header: XCTestCase {
             Body text
             """
         )
-        let headers = Headers.parse(&tape)
+        let headers = Headers(&tape)
         let header = headers.first(named: "content-type")
         XCTAssertNotNil(header)
         XCTAssertEqual(header!.value, "text/subtext")
@@ -231,7 +231,7 @@ class Tests_Header: XCTestCase {
             Body text
             """
         )
-        let headers = Headers.parse(&tape)
+        let headers = Headers(&tape)
         let text = String(describing: headers)
         XCTAssertEqual(
             text,
@@ -241,7 +241,7 @@ class Tests_Header: XCTestCase {
     }
 
     func testHeaderIndexFirstWins() throws {
-        let headers = Headers.parse(
+        let headers = Headers(
             markup: """
             content-type: text/subtext
             Content-Type: text/javascript

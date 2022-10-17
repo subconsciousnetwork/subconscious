@@ -52,7 +52,7 @@ struct SubtextFile:
         content: String
     ) {
         self.slug = slug
-        let envelope = HeadersEnvelope.parse(markup: content)
+        let envelope = HeadersEnvelope(markup: content)
         self.headers = HeaderIndex(envelope.headers)
         self.body = String(envelope.body)
     }

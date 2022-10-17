@@ -273,14 +273,12 @@ class Tests_Detail: XCTestCase {
         )
         let action = DetailAction.fromSuggestion(entrySuggestion)
 
-        XCTAssertEqual(
-            action,
-            DetailAction.loadAndPresentDetail(
-                link: EntryLink(title: "Systems Generating Systems")!,
-                fallback: "Systems Generating Systems",
-                autofocus: true
-            )
-        )
+        guard case let DetailAction.loadAndPresentDetail(link, _, autofocus) = action else {
+            XCTFail("Did not match action type")
+            return
+        }
+        XCTAssertEqual(link, EntryLink(title: "Systems Generating Systems")!)
+        XCTAssertEqual(autofocus, true)
     }
 
     func testDetailActionFromRandomSuggestion() throws {

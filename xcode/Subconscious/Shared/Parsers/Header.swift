@@ -9,7 +9,7 @@ import Foundation
 import OrderedCollections
 
 /// A header
-struct Header: Hashable, CustomStringConvertible {
+struct Header: Hashable, CustomStringConvertible, Codable {
     let name: String
     let value: String
 
@@ -19,6 +19,24 @@ struct Header: Hashable, CustomStringConvertible {
     ) {
         self.name = Self.normalizeName(name)
         self.value = Self.normalizeValue(value)
+    }
+
+    /// Parse a single header line
+    /// - Returns ParseState containing header
+    init?(
+        _ tape: inout Tape
+    ) {
+        tape.save()
+        // Require header to have valid name.
+        guard let name = Self.parseName(&tape) else {
+            tape.backtrack()
+            return nil
+        }
+        let value = Self.parseValue(&tape)
+        self.init(
+            name: String(name),
+            value: String(value)
+        )
     }
 
     var description: String {
@@ -95,32 +113,56 @@ struct Header: Hashable, CustomStringConvertible {
         }
         return tape.cut()
     }
-
-    /// Parse a single header line
-    /// - Returns ParseState containing header
-    static func parse(
-        _ tape: inout Tape
-    ) -> Header? {
-        tape.save()
-        // Require header to have valid name.
-        guard let name = parseName(&tape) else {
-            tape.backtrack()
-            return nil
-        }
-        let value = parseValue(&tape)
-        return Header(
-            name: String(name),
-            value: String(value)
-        )
-    }
 }
 
 /// A collection of parsed HTTP-style headers
-struct Headers: Hashable, CustomStringConvertible, Sequence {
+struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
     var headers: [Header]
 
     init(headers: [Header]) {
         self.headers = headers
+    }
+
+    /// Parse headers from a substring.
+    /// Handles missing headers, invalid headers, and no headers.
+    /// - Returns a ParseState containing an array of headers (if any)
+    init(
+        _ tape: inout Tape
+    ) {
+        // Sniff first line. If it is empty, there are no headers.
+        guard !Parser.parseEmptyLine(&tape) else {
+            self.init(
+                headers: []
+            )
+            return
+        }
+        // Sniff first line. If it is not a valid header,
+        // then return empty headers
+        guard let firstHeader = Header(&tape) else {
+            self.init(
+                headers: []
+            )
+            return
+        }
+        var headers: [Header] = [firstHeader]
+        while !tape.isExhausted() {
+            tape.start()
+            if Parser.parseEmptyLine(&tape) {
+                self.init(headers: headers)
+                return
+            } else if let header = Header(&tape) {
+                headers.append(header)
+            } else {
+                Parser.discardLine(&tape)
+            }
+        }
+        self.init(headers: headers)
+        return
+    }
+
+    init(markup: String) {
+        var tape = Tape(markup[...])
+        self.init(&tape)
     }
 
     /// Get headers, rendered back out as a string
@@ -140,11 +182,7 @@ struct Headers: Hashable, CustomStringConvertible, Sequence {
     /// - Returns Header?
     func first(named name: String) -> Header? {
         let name = Header.normalizeName(name)
-        return headers.first(
-            where: { header in
-                header.name == name
-            }
-        )
+        return headers.first(where: { header in header.name == name })
     }
 
     /// Append a header
@@ -154,51 +192,9 @@ struct Headers: Hashable, CustomStringConvertible, Sequence {
 
     /// An empty header struct that can be re-used
     static let empty = Headers(headers: [])
-
-    /// Parse headers from a substring.
-    /// Handles missing headers, invalid headers, and no headers.
-    /// - Returns a ParseState containing an array of headers (if any)
-    static func parse(
-        _ tape: inout Tape
-    ) -> Self {
-        // Sniff first line. If it is empty, there are no headers.
-        guard !Parser.parseEmptyLine(&tape) else {
-            return Self(
-                headers: []
-            )
-        }
-        // Sniff first line. If it is not a valid header,
-        // then return empty headers
-        guard let firstHeader = Header.parse(&tape) else {
-            return Self(
-                headers: []
-            )
-        }
-        var headers: [Header] = [firstHeader]
-        while !tape.isExhausted() {
-            tape.start()
-            if Parser.parseEmptyLine(&tape) {
-                return Self(
-                    headers: headers
-                )
-            } else if let header = Header.parse(&tape) {
-                headers.append(header)
-            } else {
-                Parser.discardLine(&tape)
-            }
-        }
-        return Self(
-            headers: headers
-        )
-    }
-
-    static func parse(markup: String) -> Self {
-        var tape = Tape(markup[...])
-        return parse(&tape)
-    }
 }
 
-struct HeaderIndex: Hashable, Sequence, CustomStringConvertible {
+struct HeaderIndex: Hashable, Sequence, CustomStringConvertible, Codable {
     private(set) var index: OrderedDictionary<String, String>
 
     init(_ headers: [Header] = []) {
@@ -296,17 +292,17 @@ struct HeadersEnvelope: CustomStringConvertible {
         self.body = body
     }
 
-    var description: String {
-        "\(headers)\(body)"
-    }
-
-    static func parse(markup: String) -> Self {
+    init(markup: String) {
         var tape = Tape(markup[...])
-        let headers = Headers.parse(&tape)
+        let headers = Headers(&tape)
         let body = tape.rest
-        return Self(
+        self.init(
             headers: headers,
             body: body
         )
+    }
+
+    var description: String {
+        "\(headers)\(body)"
     }
 }

@@ -8,9 +8,13 @@
 import Foundation
 import SwiftUI
 
-struct Subtext: Hashable, Equatable, CustomStringConvertible {
+struct Subtext: Hashable, Equatable, LosslessStringConvertible {
     let base: Substring
     let blocks: [Block]
+
+    static func parse(markup: String) -> Self {
+        return Self.init(markup: markup)
+    }
 
     private init(
         base: Substring,
@@ -18,6 +22,24 @@ struct Subtext: Hashable, Equatable, CustomStringConvertible {
     ) {
         self.base = base
         self.blocks = blocks
+    }
+
+
+    /// Parse Subtext body from tape
+    init(_ tape: inout Tape) {
+        let base = tape.rest
+        let blocks = Self.parseBlocks(&tape)
+        self.init(base: base, blocks: blocks)
+    }
+
+    /// Parse Subtext body from string
+    init(markup: String) {
+        var tape = Tape(markup[...])
+        self.init(&tape)
+    }
+
+    init?(_ description: String) {
+        self.init(markup: description)
     }
 
     var description: String {
@@ -31,7 +53,7 @@ struct Subtext: Hashable, Equatable, CustomStringConvertible {
     }
 
     /// Empty document
-    static let empty = Self.parse(markup: "")
+    static let empty = Subtext(markup: "")
 
     enum Block: Hashable, Equatable {
         case text(span: Substring, inline: [Inline])
@@ -400,22 +422,6 @@ struct Subtext: Hashable, Equatable, CustomStringConvertible {
     static func parseBlocks(_ tape: inout Tape) -> [Block] {
         Parser.parseLines(&tape, keepEnds: false).map(Self.parseBlock)
     }
-
-    /// Parse Subtext body from tape
-    static func parse(_ tape: inout Tape) -> Self {
-        let base = tape.rest
-        let blocks = parseBlocks(&tape)
-        return Self(
-            base: base,
-            blocks: blocks
-        )
-    }
-
-    /// Parse Subtext body from string
-    static func parse(markup: String) -> Self {
-        var tape = Tape(markup[...])
-        return parse(&tape)
-    }
 }
 
 extension Subtext {
@@ -529,7 +535,7 @@ extension Subtext {
         _ attributedString: NSMutableAttributedString,
         url: (EntryLink) -> URL?
     ) {
-        let dom = Subtext.parse(markup: attributedString.string)
+        let dom = Subtext(markup: attributedString.string)
 
         // Get range of all text, using new Swift NSRange constructor
         // that takes a Swift range which knows how to handle Unicode
@@ -626,7 +632,7 @@ extension Subtext {
 extension Subtext {
     /// Append another Subtext document
     func append(_ other: Subtext) -> Subtext {
-        Subtext.parse(markup: "\(self.base)\n\(other.base)")
+        Subtext(markup: "\(self.base)\n\(other.base)")
     }
 }
 
