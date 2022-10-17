@@ -58,8 +58,8 @@ struct FileStore {
         try data.write(to: url)
     }
     
-    /// Delete file
-    func delete(_ key: String) throws {
+    /// Remove (delete) file
+    func remove(_ key: String) throws {
         let url = url(forKey: key)
         try FileManager.default.removeItem(at: url)
     }
