@@ -25,6 +25,44 @@ extension SubtextEntry {
     }
 }
 
+extension SubtextEntry {
+    /// Mend blessed headers, providing them with default values
+    mutating func mendHeaders(
+        modified: Date = Date.now,
+        created: Date = Date.now
+    ) {
+        contents.headers.fallback(
+            name: "Title",
+            value: slug.toTitle()
+        )
+        contents.headers.fallback(
+            name: "Modified",
+            value: String.from(modified)
+        )
+        contents.headers.fallback(
+            name: "Created",
+            value: String.from(created)
+        )
+    }
+    
+    /// Sets slug and title, using linkable title, to bring them in sync.
+    mutating func setLink(_ link: EntryLink) {
+        self.slug = link.slug
+        self.contents.headers.title(link.linkableTitle)
+    }
+
+    /// Merge two Subtext entries together.
+    /// Headers are merged.
+    /// `other` Subtext is appended to the end of `self` Subtext.
+    func merge(_ other: SubtextEntry) -> Self {
+        var this = self
+        this.contents.headers.merge(other.contents.headers)
+        let subtext = this.contents.contents.appending(other.contents.contents)
+        this.contents.contents = subtext
+        return this
+    }
+}
+
 extension FileStore {
     /// Read a subtext entry from a slug
     func read(_ slug: Slug) throws -> SubtextEntry {
