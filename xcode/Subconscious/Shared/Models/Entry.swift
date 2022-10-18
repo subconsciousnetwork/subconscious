@@ -19,6 +19,12 @@ where T: Hashable
 /// A Subtext entry is an Entry containing a SubtextMemo
 typealias SubtextEntry = Entry<Memo<Subtext>>
 
+extension SubtextEntry {
+    func url(directory: URL) -> URL {
+        slug.toURL(directory: directory, ext: ContentType.subtext.ext)
+    }
+}
+
 extension FileStore {
     /// Read a subtext entry from a slug
     func read(_ slug: Slug) throws -> SubtextEntry {

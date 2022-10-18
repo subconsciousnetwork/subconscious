@@ -11,25 +11,25 @@ import Foundation
 struct Memo<T>: Hashable
 where T: Hashable
 {
-    let headers: Headers
-    let contents: T
-
-    var contentType: String {
-        headers.first(named: "Content-Type")?.value ?? ""
-    }
+    var headers: Headers
+    var contents: T
 }
 
 typealias SubtextMemo = Memo<Subtext>
 
 extension FileStore {
     /// Read a subtext memo from a slug
+    /// This is two reads:
+    /// - Once for memo
+    /// - Once for Subtext file
     func read(_ key: String) throws -> SubtextMemo {
         let sidecar = try read(
             with: MemoData.from,
             key: key.appendingPathExtension(ContentType.memo.ext)
         )
-        guard sidecar.contentType == ContentType.subtext.contentType else {
-            throw FileStoreError.contentTypeError(sidecar.contentType)
+        let contentType = sidecar.headers.contentType().unwrap(or: "")
+        guard contentType == ContentType.subtext.contentType else {
+            throw FileStoreError.contentTypeError(contentType)
         }
         let subtext = try read(
             with: Subtext.from,
@@ -38,9 +38,14 @@ extension FileStore {
         return Memo(headers: sidecar.headers, contents: subtext)
     }
 
+    /// Write SubtextMemo to Memo and Subtext file on disk
+    /// This is two writes:
+    /// - Once for memo file
+    /// - Once for Subtext file
     func write(_ key: String, memo: SubtextMemo) throws {
-        guard memo.contentType == ContentType.subtext.contentType else {
-            throw FileStoreError.contentTypeError(memo.contentType)
+        let contentType = memo.headers.contentType().unwrap(or: "")
+        guard contentType == ContentType.subtext.contentType else {
+            throw FileStoreError.contentTypeError(contentType)
         }
         let memoKey = key.appendingPathExtension(ContentType.memo.ext)
         let subtextKey = key.appendingPathExtension(ContentType.subtext.ext)
