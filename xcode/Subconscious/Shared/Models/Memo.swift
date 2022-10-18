@@ -19,9 +19,11 @@ where T: Hashable
     }
 }
 
+typealias SubtextMemo = Memo<Subtext>
+
 extension FileStore {
     /// Read a subtext memo from a slug
-    func readMemo(_ key: String) throws -> Memo<Subtext> {
+    func read(_ key: String) throws -> SubtextMemo {
         let sidecar = try read(
             with: MemoData.from,
             key: key.appendingPathExtension(ContentType.memo.ext)
@@ -36,14 +38,12 @@ extension FileStore {
         return Memo(headers: sidecar.headers, contents: subtext)
     }
 
-    func writeMemo(_ slug: Slug, memo: Memo<Subtext>) throws {
+    func write(_ key: String, memo: SubtextMemo) throws {
         guard memo.contentType == ContentType.subtext.contentType else {
             throw FileStoreError.contentTypeError(memo.contentType)
         }
-        let baseKey = String(slug)
-        let memoKey = baseKey.appendingPathExtension(ContentType.memo.ext)
-        let subtextKey = baseKey
-            .appendingPathExtension(ContentType.subtext.ext)
+        let memoKey = key.appendingPathExtension(ContentType.memo.ext)
+        let subtextKey = key.appendingPathExtension(ContentType.subtext.ext)
         let memoData = MemoData(headers: memo.headers, contents: subtextKey)
         try write(with: Data.from, key: memoKey, value: memoData)
         try write(with: Data.from, key: subtextKey, value: memo.contents)
