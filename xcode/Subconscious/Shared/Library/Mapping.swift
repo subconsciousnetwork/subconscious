@@ -4,12 +4,10 @@
 //
 //  Created by Gordon Brander on 10/17/22.
 //
+// Mapping functions for translating between types.
 
 import Foundation
 
-/// Mapping functions for translating between types
-
-/// Mapping utilities
 extension String {
     /// Get string from substring
     static func from(_ substring: Substring) -> String {
@@ -25,30 +23,35 @@ extension String {
 }
 
 extension Data {
+    /// Encode string to data, using UTF-8 encoding.
     static func from(_ string: String) -> Data? {
         string.data(using: .utf8)
     }
 }
 
 extension Data {
+    /// Encode Subtext to Data
     static func from(_ subtext: Subtext) -> Data? {
         subtext.base |> String.from |> Data.from
     }
 }
 
 extension Subtext {
+    /// Decode Subtext from Data
     static func from(_ data: Data) -> Subtext? {
         data |> String.from |> Subtext.parse(markup:)
     }
 }
 
 extension MemoData {
+    /// Decode MemoData from Data
     static func from(_ data: Data) -> MemoData? {
         try? JSONDecoder.decode(data: data, type: MemoData.self)
     }
 }
 
 extension Data {
+    /// Encode MemoData to Data
     static func from(_ memo: MemoData) -> Data? {
         try? JSONEncoder.encode(memo)
     }
