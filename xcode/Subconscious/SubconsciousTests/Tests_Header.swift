@@ -215,9 +215,125 @@ class Tests_Header: XCTestCase {
             """
         )
         let headers = Headers(&tape)
-        let header = headers.first(named: "content-type")
-        XCTAssertNotNil(header)
-        XCTAssertEqual(header!.value, "text/subtext")
+        let value = headers.get(first: "content-type")
+        XCTAssertEqual(value, "text/subtext")
+    }
+
+    func testHeadersPuttingA() throws {
+        let headers = Headers(
+            headers: [
+                Header(name: "Content-Type", value: "text/subtext"),
+                Header(name: "Content-Type", value: "text/plain"),
+                Header(name: "Title", value: "Floop the Pig"),
+            ]
+        )
+        let next = headers.putting(
+            name: "content-type",
+            value: "application/json"
+        )
+        XCTAssertEqual(next.headers.count, 3)
+        XCTAssertEqual(next.headers[0].value, "application/json")
+    }
+
+    func testHeadersPuttingB() throws {
+        let headers = Headers(
+            headers: [
+                Header(name: "Content-Type", value: "text/subtext"),
+            ]
+        )
+        let next = headers.putting(name: "title", value: "Card Wars")
+        XCTAssertEqual(next.headers.count, 2)
+        XCTAssertEqual(next.headers[1].value, "Card Wars")
+    }
+
+    func testHeadersConsolidating() throws {
+        let headers = Headers(
+            headers: [
+                Header(name: "Tags", value: "one,two,three"),
+                Header(name: "Content-Type", value: "text/subtext"),
+                Header(name: "Tags", value: "four,five,six"),
+            ]
+        )
+        let next = headers.consolidating()
+        XCTAssertEqual(next.headers.count, 2)
+        XCTAssertEqual(
+            next.headers[0].value,
+            "one,two,three,four-five,six",
+            "consolidates, joining values with comma"
+        )
+        XCTAssertEqual(
+            next.headers[1].value,
+            "text/subtext",
+            "preserves order of headers"
+        )
+    }
+
+    func testHeadersGetContentTypeA() throws {
+        let headers = Headers(
+            headers: [
+                Header(name: "Content-Type", value: "text/subtext"),
+            ]
+        )
+        let contentType = headers.contentType()
+        XCTAssertEqual(contentType, "text/subtext", "Gets content type")
+    }
+
+    func testHeadersGetContentTypeB() throws {
+        let headers = Headers(
+            headers: [
+                Header(name: "Content-Type", value: "text/subtext"),
+                Header(name: "Content-Type", value: "application/json"),
+            ]
+        )
+        let contentType = headers.contentType()
+        XCTAssertEqual(
+            contentType,
+            "text/subtext",
+            "Gets first content type header"
+        )
+    }
+
+    func testHeadersSetContentType() throws {
+        let headers = Headers(
+            headers: [
+                Header(name: "Title", value: "Great Expectations"),
+                Header(name: "Content-Type", value: "text/subtext"),
+            ]
+        )
+        let next = headers.contentType("application/json")
+        XCTAssertEqual(
+            next.headers[0].value,
+            "application/json",
+            "Sets first content type header"
+        )
+    }
+
+    func testHeadersModifiedRoundtrip() throws {
+        let a = Headers(
+            headers: []
+        )
+        let valueA = a.modified()
+        XCTAssertNil(valueA)
+        let now = Date.now
+        let nowString = String.from(now)
+        let b = a.modified(now)
+        let valueB = b.get(first: "modified")
+        XCTAssertEqual(valueB, nowString, "Saves header value")
+        XCTAssertEqual(b.modified(), now, "Gets header value")
+    }
+
+    func testHeadersCreatedRoundtrip() throws {
+        let a = Headers(
+            headers: []
+        )
+        let valueA = a.created()
+        XCTAssertNil(valueA)
+        let now = Date.now
+        let nowString = String.from(now)
+        let b = a.created(now)
+        let valueB = b.get(first: "created")
+        XCTAssertEqual(valueB, nowString, "Saves header value")
+        XCTAssertEqual(b.created(), now, "Gets header value")
     }
 
     func testHeadersDescription() throws {
