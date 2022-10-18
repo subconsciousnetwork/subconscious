@@ -1076,7 +1076,7 @@ class Tests_Subtext: XCTestCase {
             It's all right
             """
         )
-        let c = a.append(b)
+        let c = a.appending(b)
         XCTAssertEqual(
             String(describing: c),
             """
