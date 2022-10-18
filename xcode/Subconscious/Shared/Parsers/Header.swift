@@ -178,28 +178,6 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
         headers.makeIterator()
     }
 
-    /// Consolidate duplicate headers into single headers with comma-separated
-    /// values.
-    ///
-    /// HTTP header spec specifies that duplicate headers MUST be validly
-    /// convertable to single headers with comma-separated values.
-    func consolidating() -> Self {
-        var index: OrderedDictionary<String, Array<String>> = [:]
-        for header in headers {
-            if index[header.name] == nil {
-                index[header.name] = []
-            }
-            index[header.name]!.append(header.value)
-        }
-        let headers = index.elements.map({ (key, values) in
-            let value = values.joined(separator: ",")
-            return Header(name: key, value: value)
-        })
-        var this = self
-        this.headers = headers
-        return this
-    }
-
     /// Get the value of the first header matching a particular name (if any)
     /// - Returns String?
     func get(first name: String) -> String? {
@@ -214,57 +192,81 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
         get(first: name).flatMap(map)
     }
 
+    /// Remove first header with name (if any).
+    mutating func remove(first name: String) {
+        guard let i = headers.firstIndex(where: { existing in
+            existing.name == name
+        }) else {
+            return
+        }
+        self.headers.remove(at: i)
+    }
+
+    /// Remove duplicate headers from array, keeping only the first
+    mutating func removeDuplicates() {
+        self.headers = headers.uniquing(with: { header in header.value })
+    }
+
+    /// Merge headers.
+    /// Duplicate headers from `other` are dropped.
+    mutating func merge(_ other: Headers) {
+        self.headers.append(contentsOf: other.headers)
+        self.removeDuplicates()
+    }
+
     /// Update header, either replacing the first existing header with the
-    /// same key, or appending the header to the end of the list of headers.
-    func putting(_ header: Header) -> Self {
-        var this = self
+    /// same key, or appending a new header to the list of headers.
+    mutating func add(_ header: Header) {
         guard let i = headers.firstIndex(where: { existing in
             existing.name == header.name
         }) else {
-            this.headers.append(header)
-            return this
+            self.headers.append(header)
+            return
         }
-        this.headers[i] = header
-        return this
+        self.headers[i] = header
     }
 
-    /// Update header, either replacing the first existing header with the
-    /// same key, or appending the header to the end of the list of headers.
-    func putting(name: String, value: String) -> Self {
-        putting(Header(name: name, value: value))
+    /// Update header.
+    /// If value is nil, removes the header if it exists.
+    /// If value is string, updates first header with this name if it exists,
+    /// or appends header with this name, if it doesn't.
+    mutating func update(name: String, value: String?) {
+        guard let value = value else {
+            self.remove(first: name)
+            return
+        }
+        add(Header(name: name, value: value))
     }
 
-
-
-    /// Update header, either replacing the first existing header with the
-    /// same key, or appending the header to the end of the list of headers.
-    func putting<T>(
+    /// Update header using `with` to encode value.
+    /// If encoded value is nil, removes the header if it exists.
+    /// If value is string, updates first header with this name if it exists,
+    /// or appends header with this name, if it doesn't.
+    mutating func update<T>(
         with map: (T) -> String?,
         name: String,
         value: T
-    ) -> Self? {
-        guard let value = map(value) else {
-            return nil
-        }
-        return putting(Header(name: name, value: value))
+    ) {
+        update(name: name, value: map(value))
     }
 
-    /// Update header, either replacing the first existing header with the
-    /// same key, or appending the header to the end of the list of headers.
-    func putting<T>(
-        with map: (T) -> String,
+    /// Set a fallback for header. If header does not exist, it will set
+    /// fallback content. Otherwise it will leave the value alone.
+    mutating func fallback(
         name: String,
-        value: T
-    ) -> Self {
-        putting(Header(name: name, value: map(value)))
+        value: String
+    ) {
+        // Do not set if value for this header already exists
+        guard get(first: name) == nil else {
+            return
+        }
+        add(Header(name: name, value: value))
     }
 
     /// Remove all headers with a given name
-    func removingAll(named name: String) -> Self {
+    mutating func removeAll(named name: String) {
         let name = Header.normalizeName(name)
-        var this = self
-        this.headers = self.headers.filter({ header in header.name != name })
-        return this
+        self.headers = self.headers.filter({ header in header.name != name })
     }
 
     /// An empty header struct that can be re-used
@@ -276,17 +278,17 @@ extension Headers {
     func contentType() -> String? {
         get(first: "Content-Type")
     }
-
-    func contentType(_ contentType: String) -> Self {
-        putting(name: "Content-Type", value: contentType)
+    
+    mutating func contentType(_ contentType: String?) {
+        update(name: "Content-Type", value: contentType)
     }
     
     func modified() -> Date? {
         get(with: Date.from, first: "Modified")
     }
     
-    func modified(_ date: Date) -> Self {
-        putting(
+    mutating func modified(_ date: Date) {
+        update(
             with: String.from,
             name: "Modified",
             value: date
@@ -296,12 +298,23 @@ extension Headers {
     func created() -> Date? {
         get(with: Date.from, first: "Created")
     }
-
-    func created(_ date: Date) -> Self {
-        putting(
+    
+    mutating func created(_ date: Date) {
+        update(
             with: String.from,
             name: "Created",
             value: date
+        )
+    }
+    
+    func title() -> String? {
+        get(first: "Title")
+    }
+
+    mutating func title(_ title: String) {
+        update(
+            name: "Title",
+            value: title
         )
     }
 }
