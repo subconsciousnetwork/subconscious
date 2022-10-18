@@ -631,7 +631,7 @@ extension Subtext {
 
 extension Subtext {
     /// Append another Subtext document
-    func append(_ other: Subtext) -> Subtext {
+    func appending(_ other: Subtext) -> Subtext {
         Subtext(markup: "\(self.base)\n\(other.base)")
     }
 }
