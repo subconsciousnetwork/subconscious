@@ -68,9 +68,27 @@ extension SubtextMemo {
     }
     
 }
+
 extension SubtextMemo {
     /// Read SubtextMemo from data
     static func from(_ data: Data) -> SubtextMemo? {
         String.from(data) |> SubtextMemo.from
+    }
+}
+
+extension String {
+    /// Encode Date to ISO8601 String
+    static func from(_ date: Date) -> String {
+        date.ISO8601Format()
+    }
+}
+
+extension Date {
+    /// Decode Date from ISO8601 String
+    static func from(_ iso8601String: String) -> Date? {
+        guard let date = try? Date(iso8601String, strategy: .iso8601) else {
+            return nil
+        }
+        return date
     }
 }
