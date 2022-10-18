@@ -77,7 +77,7 @@ extension FileStore {
         with decode: (Data) -> T?,
         key: String
     ) throws -> T {
-        let data = try read(key)
+        let data: Data = try read(key)
         guard let value = decode(data) else {
             throw FileStoreError.decodingError("Failed to decode data")
         }
@@ -92,7 +92,7 @@ extension FileStore {
         key: String,
         value: T
     ) throws {
-        guard let data = encode(value) else {
+        guard let data: Data = encode(value) else {
             throw FileStoreError.encodingError("Could not encode data")
         }
         try write(key, data: data)
