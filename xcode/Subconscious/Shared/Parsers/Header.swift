@@ -178,20 +178,132 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
         headers.makeIterator()
     }
 
-    /// Get the first header matching a particular name (if any)
-    /// - Returns Header?
-    func first(named name: String) -> Header? {
-        let name = Header.normalizeName(name)
-        return headers.first(where: { header in header.name == name })
+    /// Consolidate duplicate headers into single headers with comma-separated
+    /// values.
+    ///
+    /// HTTP header spec specifies that duplicate headers MUST be validly
+    /// convertable to single headers with comma-separated values.
+    func consolidating() -> Self {
+        var index: OrderedDictionary<String, Array<String>> = [:]
+        for header in headers {
+            if index[header.name] == nil {
+                index[header.name] = []
+            }
+            index[header.name]!.append(header.value)
+        }
+        let headers = index.elements.map({ (key, values) in
+            let value = values.joined(separator: ",")
+            return Header(name: key, value: value)
+        })
+        var this = self
+        this.headers = headers
+        return this
     }
 
-    /// Append a header
-    mutating func append(_ header: Header) {
-        self.headers.append(header)
+    /// Get the value of the first header matching a particular name (if any)
+    /// - Returns String?
+    func get(first name: String) -> String? {
+        let name = Header.normalizeName(name)
+        return headers
+            .first(where: { header in header.name == name })
+            .map({ header in header.value })
+    }
+
+    /// Get the value of the first header
+    func get<T>(with map: (String) -> T?, first name: String) -> T? {
+        get(first: name).flatMap(map)
+    }
+
+    /// Update header, either replacing the first existing header with the
+    /// same key, or appending the header to the end of the list of headers.
+    func putting(_ header: Header) -> Self {
+        var this = self
+        guard let i = headers.firstIndex(where: { existing in
+            existing.name == header.name
+        }) else {
+            this.headers.append(header)
+            return this
+        }
+        this.headers[i] = header
+        return this
+    }
+
+    /// Update header, either replacing the first existing header with the
+    /// same key, or appending the header to the end of the list of headers.
+    func putting(name: String, value: String) -> Self {
+        putting(Header(name: name, value: value))
+    }
+
+
+
+    /// Update header, either replacing the first existing header with the
+    /// same key, or appending the header to the end of the list of headers.
+    func putting<T>(
+        with map: (T) -> String?,
+        name: String,
+        value: T
+    ) -> Self? {
+        guard let value = map(value) else {
+            return nil
+        }
+        return putting(Header(name: name, value: value))
+    }
+
+    /// Update header, either replacing the first existing header with the
+    /// same key, or appending the header to the end of the list of headers.
+    func putting<T>(
+        with map: (T) -> String,
+        name: String,
+        value: T
+    ) -> Self {
+        putting(Header(name: name, value: map(value)))
+    }
+
+    /// Remove all headers with a given name
+    func removingAll(named name: String) -> Self {
+        let name = Header.normalizeName(name)
+        var this = self
+        this.headers = self.headers.filter({ header in header.name != name })
+        return this
     }
 
     /// An empty header struct that can be re-used
     static let empty = Headers(headers: [])
+}
+
+/// Helpers for certain "blessed" headers
+extension Headers {
+    func contentType() -> String? {
+        get(first: "Content-Type")
+    }
+
+    func contentType(_ contentType: String) -> Self {
+        putting(name: "Content-Type", value: contentType)
+    }
+    
+    func modified() -> Date? {
+        get(with: Date.from, first: "Modified")
+    }
+    
+    func modified(_ date: Date) -> Self {
+        putting(
+            with: String.from,
+            name: "Modified",
+            value: date
+        )
+    }
+    
+    func created() -> Date? {
+        get(with: Date.from, first: "Created")
+    }
+
+    func created(_ date: Date) -> Self {
+        putting(
+            with: String.from,
+            name: "Created",
+            value: date
+        )
+    }
 }
 
 struct HeaderIndex: Hashable, Sequence, CustomStringConvertible, Codable {
