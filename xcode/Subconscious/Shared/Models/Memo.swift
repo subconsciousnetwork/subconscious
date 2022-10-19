@@ -15,15 +15,13 @@ where T: Hashable
     var contents: T
 }
 
-typealias SubtextMemo = Memo<Subtext>
-
-extension SubtextMemo {
-    /// Create a Subtext Memo with blessed headers
+extension Memo {
+    /// Create a Memo with blessed headers
     init(
         modified: Date,
         created: Date,
         title: String,
-        contents: Subtext
+        contents: T
     ) {
         self.headers = Headers(
             contentType: ContentType.subtext.contentType,
@@ -34,6 +32,8 @@ extension SubtextMemo {
         self.contents = contents
     }
 }
+
+typealias SubtextMemo = Memo<Subtext>
 
 extension FileStore {
     /// Read a subtext memo from a slug
