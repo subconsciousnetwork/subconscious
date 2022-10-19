@@ -13,11 +13,43 @@ where T: Hashable
 {
     var slug: Slug
     var id: Slug { slug }
-    var contents: T
+    var contents: Memo<T>
+}
+
+extension Entry {
+    /// Mend blessed headers, providing them with default values
+    mutating func mendHeaders(
+        modified: Date = Date.now,
+        created: Date = Date.now
+    ) {
+        contents.headers.fallback(
+            name: "Title",
+            value: slug.toTitle()
+        )
+        contents.headers.fallback(
+            name: "Modified",
+            value: String.from(modified)
+        )
+        contents.headers.fallback(
+            name: "Created",
+            value: String.from(created)
+        )
+    }
+    
+    /// Get title or derive title from slug
+    func titleOrDefault() -> String {
+        contents.headers.title() ?? slug.toTitle()
+    }
+
+    /// Sets slug and title, using linkable title, to bring them in sync.
+    mutating func setLink(_ link: EntryLink) {
+        self.slug = link.slug
+        self.contents.headers.title(link.linkableTitle)
+    }
 }
 
 /// A Subtext entry is an Entry containing a SubtextMemo
-typealias SubtextEntry = Entry<Memo<Subtext>>
+typealias SubtextEntry = Entry<Subtext>
 
 extension SubtextEntry {
     /// Create a Subtext Entry with blessed headers,
@@ -42,34 +74,7 @@ extension SubtextEntry {
     func url(directory: URL) -> URL {
         slug.toURL(directory: directory, ext: ContentType.subtext.ext)
     }
-}
-
-extension SubtextEntry {
-    /// Mend blessed headers, providing them with default values
-    mutating func mendHeaders(
-        modified: Date = Date.now,
-        created: Date = Date.now
-    ) {
-        contents.headers.fallback(
-            name: "Title",
-            value: slug.toTitle()
-        )
-        contents.headers.fallback(
-            name: "Modified",
-            value: String.from(modified)
-        )
-        contents.headers.fallback(
-            name: "Created",
-            value: String.from(created)
-        )
-    }
     
-    /// Sets slug and title, using linkable title, to bring them in sync.
-    mutating func setLink(_ link: EntryLink) {
-        self.slug = link.slug
-        self.contents.headers.title(link.linkableTitle)
-    }
-
     /// Merge two Subtext entries together.
     /// Headers are merged.
     /// `other` Subtext is appended to the end of `self` Subtext.
@@ -92,5 +97,22 @@ extension FileStore {
     /// Write a Subtext entry to its slug
     func write(entry: SubtextEntry) throws {
         try write(String(describing: entry.slug), memo: entry.contents)
+    }
+}
+
+extension EntryLink {
+    init(_ entry: SubtextEntry) {
+        self.init(
+            slug: entry.slug,
+            title: entry.titleOrDefault()
+        )
+    }
+}
+
+extension EntryStub {
+    init(_ entry: SubtextEntry) {
+        self.link = EntryLink(slug: entry.slug, title: entry.titleOrDefault())
+        self.excerpt = entry.contents.contents.excerpt()
+        self.modified = entry.contents.headers.modifiedOrDefault()
     }
 }
