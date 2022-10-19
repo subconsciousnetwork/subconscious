@@ -13,6 +13,18 @@ enum FileStoreError: Error {
     case encodingError(String)
 }
 
+struct FileInfo: Hashable {
+    var created: Date
+    var modified: Date
+    var size: Int
+    
+    init(created: Date, modified: Date, size: Int) {
+        self.created = created
+        self.modified = modified
+        self.size = size
+    }
+}
+
 /// Basic facade over file system actions.
 /// This store thinks in keys and Data.
 /// Keys are path-like strings and are relative to the document directory.
@@ -66,6 +78,21 @@ struct FileStore {
     
     func save() throws {
         // no-op
+    }
+
+    /// Get info for file
+    func info(_ key: String) -> FileInfo? {
+        let url = url(forKey: key)
+        let manager = FileManager.default
+        guard
+            let attributes = try? manager.attributesOfItem(atPath: url.path),
+            let modified = attributes[.modificationDate] as? Date,
+            let created = attributes[.creationDate] as? Date,
+            let size = attributes[.size] as? Int
+        else {
+            return nil
+        }
+        return FileInfo(created: created, modified: modified, size: size)
     }
 }
 
