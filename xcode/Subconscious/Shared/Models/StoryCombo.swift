@@ -25,8 +25,7 @@ struct StoryCombo: Hashable, Identifiable, CustomStringConvertible {
     }
 }
 
-extension SubtextFile {
-    /// Initialize a SubtextFile from a StoryCombo.
+extension SubtextEntry {
     init?(_ story: StoryCombo) {
         // Order by slug alpha
         let (x, y) = Func.block({
@@ -44,16 +43,17 @@ extension SubtextFile {
         }
 
         self.init(
-            slug: link.slug,
-            title: link.linkableTitle,
+            link: link,
             modified: Date.now,
             created: Date.now,
-            body: """
-            \(story.prompt)
-            
-            \(x.link.slug.toSlashlink())
-            \(y.link.slug.toSlashlink())
-            """
+            contents: Subtext(
+                markup: """
+                \(story.prompt)
+                
+                \(x.link.slug.toSlashlink())
+                \(y.link.slug.toSlashlink())
+                """
+            )
         )
     }
 }

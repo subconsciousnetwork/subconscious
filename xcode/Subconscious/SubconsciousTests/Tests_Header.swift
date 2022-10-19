@@ -219,50 +219,50 @@ class Tests_Header: XCTestCase {
         XCTAssertEqual(value, "text/subtext")
     }
 
-    func testHeadersPuttingA() throws {
-        let headers = Headers(
+    func testHeadersPutA() throws {
+        var headers = Headers(
             headers: [
                 Header(name: "Content-Type", value: "text/subtext"),
                 Header(name: "Content-Type", value: "text/plain"),
                 Header(name: "Title", value: "Floop the Pig"),
             ]
         )
-        let next = headers.putting(
+        headers.put(
             name: "content-type",
             value: "application/json"
         )
-        XCTAssertEqual(next.headers.count, 3)
-        XCTAssertEqual(next.headers[0].value, "application/json")
+        XCTAssertEqual(headers.headers.count, 3)
+        XCTAssertEqual(headers.headers[0].value, "application/json")
     }
 
     func testHeadersPuttingB() throws {
-        let headers = Headers(
+        var headers = Headers(
             headers: [
                 Header(name: "Content-Type", value: "text/subtext"),
             ]
         )
-        let next = headers.putting(name: "title", value: "Card Wars")
-        XCTAssertEqual(next.headers.count, 2)
-        XCTAssertEqual(next.headers[1].value, "Card Wars")
+        headers.put(name: "title", value: "Card Wars")
+        XCTAssertEqual(headers.headers.count, 2)
+        XCTAssertEqual(headers.headers[1].value, "Card Wars")
     }
 
-    func testHeadersConsolidating() throws {
-        let headers = Headers(
+    func testHeadersRemoveDuplicates() throws {
+        var headers = Headers(
             headers: [
                 Header(name: "Tags", value: "one,two,three"),
                 Header(name: "Content-Type", value: "text/subtext"),
                 Header(name: "Tags", value: "four,five,six"),
             ]
         )
-        let next = headers.consolidating()
-        XCTAssertEqual(next.headers.count, 2)
+        headers.removeDuplicates()
+        XCTAssertEqual(headers.headers.count, 2)
         XCTAssertEqual(
-            next.headers[0].value,
-            "one,two,three,four-five,six",
-            "consolidates, joining values with comma"
+            headers.headers[0].value,
+            "one,two,three",
+            "keeps first header, and keeps ordering"
         )
         XCTAssertEqual(
-            next.headers[1].value,
+            headers.headers[1].value,
             "text/subtext",
             "preserves order of headers"
         )
@@ -294,46 +294,42 @@ class Tests_Header: XCTestCase {
     }
 
     func testHeadersSetContentType() throws {
-        let headers = Headers(
+        var headers = Headers(
             headers: [
                 Header(name: "Title", value: "Great Expectations"),
                 Header(name: "Content-Type", value: "text/subtext"),
             ]
         )
-        let next = headers.contentType("application/json")
+        headers.contentType("application/json")
         XCTAssertEqual(
-            next.headers[0].value,
+            headers.headers[0].value,
             "application/json",
             "Sets first content type header"
         )
     }
 
     func testHeadersModifiedRoundtrip() throws {
-        let a = Headers(
-            headers: []
-        )
-        let valueA = a.modified()
+        var headers = Headers()
+        let valueA = headers.modified()
         XCTAssertNil(valueA)
         let now = Date.now
         let nowString = String.from(now)
-        let b = a.modified(now)
-        let valueB = b.get(first: "modified")
+        headers.modified(now)
+        let valueB = headers.get(first: "modified")
         XCTAssertEqual(valueB, nowString, "Saves header value")
-        XCTAssertEqual(b.modified(), now, "Gets header value")
+        XCTAssertEqual(headers.modified(), now, "Gets header value")
     }
 
     func testHeadersCreatedRoundtrip() throws {
-        let a = Headers(
-            headers: []
-        )
-        let valueA = a.created()
+        var headers = Headers()
+        let valueA = headers.created()
         XCTAssertNil(valueA)
         let now = Date.now
         let nowString = String.from(now)
-        let b = a.created(now)
-        let valueB = b.get(first: "created")
+        headers.modified(now)
+        let valueB = headers.get(first: "created")
         XCTAssertEqual(valueB, nowString, "Saves header value")
-        XCTAssertEqual(b.created(), now, "Gets header value")
+        XCTAssertEqual(headers.modified(), now, "Gets header value")
     }
 
     func testHeadersDescription() throws {
@@ -353,139 +349,6 @@ class Tests_Header: XCTestCase {
             text,
             "Content-Type: text/subtext\nContent-Type: text/plain\nTitle: Floop the Pig\n\n",
             "Renders headers with trailing blank line"
-        )
-    }
-
-    func testHeaderIndexFirstWins() throws {
-        let headers = Headers(
-            markup: """
-            content-type: text/subtext
-            Content-Type: text/javascript
-            """
-        )
-        let index = HeaderIndex(headers)
-        XCTAssertEqual(
-            index["Content-Type"],
-            "text/subtext"
-        )
-    }
-
-    func testHeaderIndexSubscriptNormalization() throws {
-        var index = HeaderIndex()
-        index["title"] = "Kosmos"
-        index["content type"] = "text/subtext"
-        index["absurd\n   HEADER"] = "nonsense"
-        index["Valid-Header"] = "Content with newline\r\n"
-        XCTAssertEqual(
-            index["TITLE"],
-            "Kosmos",
-            "Subscript normalizes keys when getting"
-        )
-        XCTAssertEqual(
-            index.index["Title"],
-            "Kosmos",
-            "Subscript normalizes keys when setting"
-        )
-        XCTAssertEqual(
-            index.index["Content-Type"],
-            "text/subtext",
-            "Subscript replaces spaces with dashes"
-        )
-        XCTAssertEqual(
-            index.index["Absurd----Header"],
-            "nonsense",
-            "Subscript replaces whitespace with dashes"
-        )
-        XCTAssertEqual(
-            index.index["Valid-Header"],
-            "Content with newline  ",
-            "Subscript replaces whitespace with dashes"
-        )
-    }
-
-    func testHeaderIndexDescription() throws {
-        let index = HeaderIndex(
-            [
-                Header(name: "content-type", value: "text/subtext"),
-                Header(name: "title", value: "Gliding O'er All"),
-            ]
-        )
-        XCTAssertEqual(
-            String(describing: index),
-            "Content-Type: text/subtext\nTitle: Gliding O'er All\n\n",
-            "Index renders to correctly formatted header block"
-        )
-    }
-
-    func testHeaderIndexSetDefault() throws {
-        var index = HeaderIndex(
-            [
-                Header(name: "content-type", value: "text/subtext"),
-            ]
-        )
-        let contentType = index.setDefault(
-            name: "Content-Type",
-            value: "fail"
-        )
-        let author = index.setDefault(
-            name: "author",
-            value: "Walt Whitman"
-        )
-        XCTAssertEqual(
-            contentType,
-            "text/subtext",
-            "Returns existing value for existing headers"
-        )
-        XCTAssertEqual(
-            author,
-            "Walt Whitman",
-            "Returns default value for headers that do not exist"
-        )
-        XCTAssertEqual(
-            index.index["Content-Type"],
-            "text/subtext",
-            "setDefault does not override existing headers"
-        )
-        XCTAssertEqual(
-            index.index["Author"],
-            "Walt Whitman",
-            "setDefault sets when no header with that name is present"
-        )
-    }
-
-    func testHeaderIndexMerge() throws {
-        let a = HeaderIndex(
-            [
-                Header(name: "content-type", value: "text/subtext"),
-                Header(name: "title", value: "Leaves of Grass"),
-            ]
-        )
-        let b = HeaderIndex(
-            [
-                Header(name: "content-type", value: "text/subtext"),
-                Header(name: "title", value: "Wrong title"),
-                Header(name: "author", value: "Walt Whitman"),
-            ]
-        )
-        let c = a.merge(b)
-        XCTAssertEqual(
-            c.index.count,
-            3,
-            "Merge results in correct number of headers"
-        )
-        XCTAssertEqual(
-            c["content-type"],
-            "text/subtext"
-        )
-        XCTAssertEqual(
-            c["title"],
-            "Leaves of Grass",
-            "Does not overwrite old headers (self wins)"
-        )
-        XCTAssertEqual(
-            c["author"],
-            "Walt Whitman",
-            "Merges in new headers"
         )
     }
 }

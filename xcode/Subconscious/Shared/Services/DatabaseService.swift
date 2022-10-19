@@ -348,7 +348,7 @@ struct DatabaseService {
             // are read-only teaser views.
             try database.execute(
                 sql: """
-                SELECT slug, body, modified
+                SELECT slug, title, body, modified
                 FROM entry_search
                 ORDER BY modified DESC
                 LIMIT 1000
@@ -356,18 +356,20 @@ struct DatabaseService {
             )
             .compactMap({ row in
                 guard
-                    let slugString: String = row.get(0),
-                    let slug = Slug(slugString),
-                    let body: String = row.get(1),
-                    let modified: Date = row.get(2)
+                    let slug: Slug = row.get(0).flatMap({ string in
+                        Slug(formatting: string)
+                    }),
+                    let title: String = row.get(1),
+                    let body: String = row.get(2),
+                    let modified: Date = row.get(3)
                 else {
                     return nil
                 }
-                /// Read entry and mend headers using information
-                /// from database.
-                let entry = SubtextFile(slug: slug, content: body)
-                    .mendingHeaders(modified: modified)
-                return EntryStub(entry)
+                return EntryStub(
+                    link: EntryLink(slug: slug, title: title),
+                    excerpt: Subtext(markup: body).excerpt(),
+                    modified: modified
+                )
             })
         }
     }
@@ -721,7 +723,7 @@ struct DatabaseService {
         // Use content indexed in database, even though it might be stale.
         let backlinks: [EntryStub] = try database.execute(
             sql: """
-            SELECT slug, body
+            SELECT slug, title, body, modified
             FROM entry_search
             WHERE slug != ? AND entry_search.body MATCH ?
             ORDER BY rank
@@ -732,17 +734,23 @@ struct DatabaseService {
                 .queryFTS5(link.slug.description)
             ]
         )
-            .compactMap({ row in
-                guard
-                    let slugString: String = row.get(0),
-                    let slug = Slug(slugString),
-                    let body: String = row.get(1)
-                else {
-                    return nil
-                }
-                let entry = SubtextFile(slug: slug, content: body)
-                return EntryStub(entry)
-            })
+        .compactMap({ row in
+            guard
+                let slug: Slug = row.get(0).flatMap({ string in
+                    Slug(formatting: string)
+                }),
+                let title: String = row.get(1),
+                let body: String = row.get(2),
+                let modified: Date = row.get(3)
+            else {
+                return nil
+            }
+            return EntryStub(
+                link: EntryLink(slug: slug, title: title),
+                excerpt: Subtext(markup: body).excerpt(),
+                modified: modified
+            )
+        })
         // Retreive top entry from file system to ensure it is fresh.
         // If no file exists, return a draft, using fallback for title.
         guard let entry = readEntry(slug: link.slug) else {
@@ -799,7 +807,7 @@ struct DatabaseService {
     func readRandomEntry() -> EntryStub? {
         try? database.execute(
             sql: """
-            SELECT slug, body
+            SELECT slug, title, body, modified
             FROM entry
             ORDER BY RANDOM()
             LIMIT 1
@@ -807,14 +815,20 @@ struct DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let body: String = row.get(1)
+                let slug: Slug = row.get(0).flatMap({ string in
+                    Slug(formatting: string)
+                }),
+                let title: String = row.get(1),
+                let body: String = row.get(2),
+                let modified: Date = row.get(3)
             else {
                 return nil
             }
-            let entry = SubtextFile(slug: slug, content: body)
-            return EntryStub(entry)
+            return EntryStub(
+                link: EntryLink(slug: slug, title: title),
+                excerpt: Subtext(markup: body).excerpt(),
+                modified: modified
+            )
         })
         .first
     }
@@ -825,7 +839,7 @@ struct DatabaseService {
     ) -> EntryStub? {
         try? database.execute(
             sql: """
-            SELECT slug, body
+            SELECT slug, title, body, modified
             FROM entry_search
             WHERE entry_search.body MATCH ?
             ORDER BY RANDOM()
@@ -837,14 +851,20 @@ struct DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let body: String = row.get(1)
+                let slug: Slug = row.get(0).flatMap({ string in
+                    Slug(formatting: string)
+                }),
+                let title: String = row.get(1),
+                let body: String = row.get(2),
+                let modified: Date = row.get(3)
             else {
                 return nil
             }
-            let entry = SubtextFile(slug: slug, content: body)
-            return EntryStub(entry)
+            return EntryStub(
+                link: EntryLink(slug: slug, title: title),
+                excerpt: Subtext(markup: body).excerpt(),
+                modified: modified
+            )
         })
         .first
     }

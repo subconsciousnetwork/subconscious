@@ -54,11 +54,11 @@ struct StoryComboView: View {
             HStack {
                 Button(
                     action: {
-                        guard let entry = SubtextFile(story) else {
+                        guard let entry = SubtextEntry(story) else {
                             return
                         }
                         let link = EntryLink(entry)
-                        self.action(link, entry.body)
+                        self.action(link, entry.contents.contents.description)
                     },
                     label: {
                         Text("Create")
@@ -79,29 +79,39 @@ struct StoryComboView_Previews: PreviewProvider {
             story: StoryCombo(
                 prompt: "How are these similar?",
                 entryA: EntryStub(
-                    SubtextFile(
+                    SubtextEntry(
                         slug: Slug("meme")!,
-                        content: """
-                        Title: Meme
-                        Modified: 2022-08-23
-                        
-                        The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
+                        contents: Memo(
+                            headers: Headers(),
+                            contents: Subtext(
+                                markup: """
+                                Title: Meme
+                                Modified: 2022-08-23
+                                
+                                The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
 
-                        But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
-                        """
+                                But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
+                                """
+                            )
+                        )
                     )
                 ),
                 entryB: EntryStub(
-                    SubtextFile(
+                    SubtextEntry(
                         slug: Slug("meme")!,
-                        content: """
-                        Title: Meme
-                        Modified: 2022-08-23
-                        
-                        The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
+                        contents: Memo(
+                            headers: Headers(),
+                            contents: Subtext(
+                                markup: """
+                                Title: Meme
+                                Modified: 2022-08-23
+                                
+                                The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
 
-                        But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
-                        """
+                                But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
+                                """
+                            )
+                        )
                     )
                 )
             ),
