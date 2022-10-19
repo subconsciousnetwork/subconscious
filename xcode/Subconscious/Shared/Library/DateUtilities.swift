@@ -70,3 +70,9 @@ extension ISO8601DateFormatter {
         return formatter
     }
 }
+
+extension Date {
+    static var epoch: Date {
+        Date(timeIntervalSince1970: 0)
+    }
+}
