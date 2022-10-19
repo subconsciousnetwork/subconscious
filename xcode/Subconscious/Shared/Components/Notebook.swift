@@ -42,7 +42,7 @@ enum NotebookAction {
     case listRecentFailure(String)
 
     // Entry CRUD actions
-    case succeedSaveEntry(SubtextFile)
+    case succeedSaveEntry(SubtextEntry)
     /// Move entry succeeded. Lifecycle action from Detail.
     case succeedMoveEntry(from: EntryLink, to: EntryLink)
     /// Merge entry succeeded. Lifecycle action from Detail.

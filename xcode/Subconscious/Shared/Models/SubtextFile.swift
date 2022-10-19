@@ -83,22 +83,6 @@ struct SubtextFile:
         return file
     }
 
-    func write(directory: URL) throws {
-        let fileURL = self.url(directory: directory)
-        let directory = fileURL.deletingLastPathComponent()
-        try FileManager.default.createDirectory(
-            at: directory,
-            withIntermediateDirectories: true,
-            attributes: nil
-        )
-        let body = String(describing: self)
-        try body.write(
-            to: fileURL,
-            atomically: true,
-            encoding: .utf8
-        )
-    }
-
     /// Set slug and title from an entry link.
     /// Sets a linkable title, falling back to title derived from slug
     /// if title is not linkable.

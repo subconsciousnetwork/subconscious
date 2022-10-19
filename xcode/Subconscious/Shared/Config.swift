@@ -12,7 +12,7 @@ struct Config: Equatable {
     let rdns = "com.subconscious.Subconscious"
     var debug = false
 
-    var appTabs = false
+    var appTabs = true
 
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15

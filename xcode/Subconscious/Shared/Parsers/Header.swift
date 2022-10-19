@@ -305,6 +305,11 @@ extension Headers {
         get(with: Date.from, first: "Modified")
     }
     
+    /// Get modified date or a default date (now)
+    func modifiedOrDefault() -> Date {
+        modified() ?? Date.epoch
+    }
+    
     mutating func modified(_ date: Date) {
         put(
             with: String.from,
@@ -317,6 +322,11 @@ extension Headers {
         get(with: Date.from, first: "Created")
     }
     
+    /// Get created date or a default (Unix epoch)
+    func createdOrDefault() -> Date {
+        modified() ?? Date.epoch
+    }
+
     mutating func created(_ date: Date) {
         put(
             with: String.from,

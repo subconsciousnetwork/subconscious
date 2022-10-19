@@ -546,23 +546,23 @@
 		B8B54F39271F6C6800B9B507 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				B8B4250B28FB43C90081B8D5 /* ContentType.swift */,
+				B8B4251A28FE1DA60081B8D5 /* Entry.swift */,
 				B824FDD026FA98F300B81BBD /* EntryDetail.swift */,
 				B8B54F3A271F6C8400B9B507 /* EntryLink.swift */,
 				B8AC6489278F53920099E96B /* EntryStub.swift */,
 				B86DFF3427C07438002E57ED /* LinkSuggestion.swift */,
 				B8C7E8BD2809F19500E439DC /* Markup.swift */,
+				B8B4251428FDE8570081B8D5 /* Memo.swift */,
+				B8B4251728FDE8AA0081B8D5 /* MemoData.swift */,
 				B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */,
 				B826B27427B5D95F003D3C03 /* SaveState.swift */,
 				B8901CF227978FDE007C9021 /* Slug.swift */,
 				B8A59D6B28B692A00010DB2F /* Story.swift */,
-				B8A59D6828B692900010DB2F /* StoryPrompt.swift */,
 				B58FE48B28DED9B600E000CC /* StoryCombo.swift */,
+				B8A59D6828B692900010DB2F /* StoryPrompt.swift */,
 				B824FDCD26FA662200B81BBD /* SubtextFile.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
-				B8B4250B28FB43C90081B8D5 /* ContentType.swift */,
-				B8B4251428FDE8570081B8D5 /* Memo.swift */,
-				B8B4251728FDE8AA0081B8D5 /* MemoData.swift */,
-				B8B4251A28FE1DA60081B8D5 /* Entry.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";

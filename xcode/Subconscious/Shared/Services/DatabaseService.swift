@@ -31,6 +31,7 @@ struct DatabaseService {
         }
     }
 
+    private var fs: FileStore
     private var documentURL: URL
     private var databaseURL: URL
     private var database: SQLite3Database
@@ -39,7 +40,8 @@ struct DatabaseService {
     init(
         documentURL: URL,
         databaseURL: URL,
-        migrations: SQLite3Migrations
+        migrations: SQLite3Migrations,
+        fs: FileStore
     ) {
         self.documentURL = documentURL
         self.databaseURL = databaseURL
@@ -48,6 +50,7 @@ struct DatabaseService {
             mode: .readwrite
         )
         self.migrations = migrations
+        self.fs = fs
     }
 
     /// Close database connection and delete database file
@@ -119,11 +122,7 @@ struct DatabaseService {
                 // .rightNewer = Follower shouldn't be ahead.
                 //               Leader wins.
                 // .conflict. Leader wins.
-                case
-                    .leftOnly(let left),
-                    .leftNewer(let left, _),
-                    .rightNewer(let left, _),
-                    .conflict(let left, _):
+                case .leftOnly(let left), .leftNewer(let left, _), .rightNewer(let left, _), .conflict(let left, _):
                     try writeEntryToDatabase(slug: left.slug)
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly(let right):
@@ -139,9 +138,12 @@ struct DatabaseService {
 
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        entry: SubtextFile,
+        entry: SubtextEntry,
         fingerprint: FileFingerprint.Attributes
     ) throws {
+        let title = entry.contents.headers.get(first: "title").unwrap(
+            or: entry.slug.toTitle()
+        )
         try database.execute(
             sql: """
             INSERT INTO entry (slug, title, body, modified, size)
@@ -154,8 +156,8 @@ struct DatabaseService {
             """,
             parameters: [
                 .text(String(describing: entry.slug)),
-                .text(entry.title()),
-                .text(String(describing: entry)),
+                .text(title),
+                .text(String(describing: entry.contents.contents)),
                 .date(fingerprint.modifiedDate),
                 .integer(fingerprint.size)
             ]
@@ -178,28 +180,30 @@ struct DatabaseService {
             .unwrap()
         try writeEntryToDatabase(entry: entry, fingerprint: fingerprint)
     }
-
+    
     /// Write entry to file system and database
     /// Also sets modified header to now.
-    private func writeEntry(_ entry: SubtextFile) throws {
-        let modifiedEntry = entry.modified(Date.now)
-        try modifiedEntry.write(directory: documentURL)
+    private func writeEntry(_ entry: SubtextEntry) throws {
+        var entry = entry
+        entry.contents.headers.modified(Date.now)
+        try fs.write(entry: entry)
+
         // Read modified date from file system directly after writing
         let fingerprint = try FileFingerprint
             .Attributes(url: entry.url(directory: documentURL))
             .unwrap()
         try writeEntryToDatabase(
-            entry: modifiedEntry,
+            entry: entry,
             fingerprint: fingerprint
         )
     }
-
-    func writeEntryAsync(_ entry: SubtextFile) -> AnyPublisher<Void, Error> {
+    
+    func writeEntryAsync(_ entry: SubtextEntry) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
             try writeEntry(entry)
         }
     }
-
+    
     /// Delete entry from database
     private func deleteEntryFromDatabase(slug: Slug) throws {
         try database.execute(
@@ -211,21 +215,21 @@ struct DatabaseService {
             ]
         )
     }
-
+    
     /// Delete entry from file system and database
     private func deleteEntry(slug: Slug) throws {
         let url = slug.toURL(directory: documentURL, ext: "subtext")
         try FileManager.default.removeItem(at: url)
         try deleteEntryFromDatabase(slug: slug)
     }
-
+    
     /// Delete entry from file system and database
     func deleteEntryAsync(slug: Slug) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .background) {
             try deleteEntry(slug: slug)
         }
     }
-
+    
     /// Move entry to a new location, updating file system and database.
     private func moveEntry(from: EntryLink, to: EntryLink) throws {
         guard from.slug != to.slug else {
@@ -237,14 +241,15 @@ struct DatabaseService {
         }
         let fromFile = try readEntry(slug: from.slug)
             .unwrap(DatabaseServiceError.fileNotFound(from.slug))
-        // Set new title and slug
-        let toFile = fromFile.slugAndTitle(to)
+        // Make a copy representing new location and set new title and slug
+        var toFile = fromFile
+        toFile.setLink(to)
         // Write to new destination
         try writeEntry(toFile)
         // ...Then delete old entry
         try deleteEntry(slug: fromFile.slug)
     }
-
+    
     /// Move entry to a new location, updating file system and database.
     /// - Returns a combine publisher
     func moveEntryAsync(
@@ -255,7 +260,7 @@ struct DatabaseService {
             try moveEntry(from: from, to: to)
         }
     }
-
+    
     /// Merge child entry into parent entry.
     /// - Appends `child` to `parent`
     /// - Writes the combined content to `parent`
@@ -266,18 +271,18 @@ struct DatabaseService {
     ) throws {
         let childEntry = try readEntry(slug: child)
             .unwrap(DatabaseServiceError.fileNotFound(child))
-
+        
         let parentEntry = try readEntry(slug: parent)
             .unwrap(DatabaseServiceError.fileNotFound(parent))
             .merge(childEntry)
-
+        
         //  First write the merged file to "to" location
         try writeEntry(parentEntry)
         //  Then delete child entry *afterwards*.
         //  We do this last to avoid data loss in case of write errors.
         try deleteEntry(slug: childEntry.slug)
     }
-
+    
     /// Merge child entry into parent entry.
     /// - Appends `child` to `parent`
     /// - Writes the combined content to `parent`
@@ -291,7 +296,7 @@ struct DatabaseService {
             try mergeEntry(parent: parent.slug, child: child.slug)
         }
     }
-
+    
     /// Update the title of an entry, without changing its slug
     private func retitleEntry(
         from: EntryLink,
@@ -302,10 +307,10 @@ struct DatabaseService {
         }
         var entry = try readEntry(slug: from.slug)
             .unwrap(DatabaseServiceError.fileNotFound(from.slug))
-        entry.headers["Title"] = to.linkableTitle
+        entry.contents.headers.title(to.linkableTitle)
         try writeEntry(entry)
     }
-
+    
     /// Change title header of entry, without moving it.
     /// - Returns combine publisher
     func retitleEntryAsync(
@@ -316,7 +321,7 @@ struct DatabaseService {
             try retitleEntry(from: from, to: to)
         }
     }
-
+    
     /// Count all entries
     func countEntries() -> AnyPublisher<Int, Error> {
         CombineUtilities.async(qos: .userInteractive) {
@@ -335,7 +340,7 @@ struct DatabaseService {
             .unwrap(or: 0)
         }
     }
-
+    
     /// List recent entries
     func listRecentEntries() -> AnyPublisher<[EntryStub], Error> {
         CombineUtilities.async(qos: .userInitiated) {
@@ -366,7 +371,7 @@ struct DatabaseService {
             })
         }
     }
-
+    
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
         let suggestions = try database.execute(
             sql: """
@@ -376,25 +381,25 @@ struct DatabaseService {
             LIMIT 25
             """
         )
-        .compactMap({ row in
-            if
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let title: String = row.get(1)
-            {
-                return EntryLink(
-                    slug: slug,
-                    title: title
-                )
-            }
-            return nil
-        })
-        .map({ link in
-            Suggestion.entry(link)
-        })
-
+            .compactMap({ row in
+                if
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
+                    let title: String = row.get(1)
+                {
+                    return EntryLink(
+                        slug: slug,
+                        title: title
+                    )
+                }
+                return nil
+            })
+            .map({ link in
+                Suggestion.entry(link)
+            })
+        
         var special: [Suggestion] = []
-
+        
         // Insert scratch
         if Config.default.scratchSuggestionEnabled {
             let now = Date.now
@@ -412,19 +417,19 @@ struct DatabaseService {
                 )
             }
         }
-
+        
         if Config.default.randomSuggestionEnabled {
             // Insert an option to load a random note if there are any notes.
             if suggestions.count > 2 {
                 special.append(.random)
             }
         }
-
+        
         special.append(contentsOf: suggestions)
-
+        
         return special
     }
-
+    
     private func searchSuggestionsForQuery(
         query: String
     ) throws -> [Suggestion] {
@@ -432,12 +437,12 @@ struct DatabaseService {
         guard let queryEntryLink = EntryLink(title: query) else {
             return []
         }
-
+        
         var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
-
+        
         // Create a suggestion for the literal query
         suggestions[queryEntryLink.slug] = .search(queryEntryLink)
-
+        
         let entries: [EntryLink] = try database.execute(
             sql: """
             SELECT slug, title
@@ -450,30 +455,30 @@ struct DatabaseService {
                 .prefixQueryFTS5(query)
             ]
         )
-        .compactMap({ row in
-            if
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let title: String = row.get(1)
-            {
-                return EntryLink(
-                    slug: slug,
-                    title: title
-                )
-            }
-            return nil
-        })
-
+            .compactMap({ row in
+                if
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
+                    let title: String = row.get(1)
+                {
+                    return EntryLink(
+                        slug: slug,
+                        title: title
+                    )
+                }
+                return nil
+            })
+        
         // Insert entries into suggestions.
         // If literal query and an entry have the same slug,
         // entry will overwrite query.
         for entry in entries {
             suggestions.updateValue(.entry(entry), forKey: entry.slug)
         }
-
+        
         return Array(suggestions.values)
     }
-
+    
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     //  TODO: Replace flag arguments with direct references feature flags
@@ -488,7 +493,7 @@ struct DatabaseService {
             }
         }
     }
-
+    
     /// Given
     /// - An entry link representing the current link for the file
     /// - An entry link representing the search query
@@ -541,7 +546,7 @@ struct DatabaseService {
         }
         return Array(suggestions.values)
     }
-
+    
     /// Given a query and a `current` slug, produce an array of suggestions
     /// for renaming the note.
     func searchRenameSuggestions(
@@ -552,7 +557,7 @@ struct DatabaseService {
             guard let queryEntryLink = EntryLink(title: query) else {
                 return []
             }
-
+            
             let results: [EntryLink] = try database.execute(
                 sql: """
                 SELECT slug, title
@@ -565,20 +570,20 @@ struct DatabaseService {
                     .prefixQueryFTS5(query)
                 ]
             )
-            .compactMap({ row in
-                if
-                    let slugString: String = row.get(0),
-                    let slug = Slug(slugString),
-                    let title: String = row.get(1)
-                {
-                    return EntryLink(
-                        slug: slug,
-                        title: title
-                    )
-                }
-                return nil
-            })
-
+                .compactMap({ row in
+                    if
+                        let slugString: String = row.get(0),
+                        let slug = Slug(slugString),
+                        let title: String = row.get(1)
+                    {
+                        return EntryLink(
+                            slug: slug,
+                            title: title
+                        )
+                    }
+                    return nil
+                })
+            
             return Self.collateRenameSuggestions(
                 current: current,
                 query: queryEntryLink,
@@ -586,7 +591,7 @@ struct DatabaseService {
             )
         }
     }
-
+    
     func readDefaultLinkSuggestions() -> [LinkSuggestion] {
         // If default link suggestsions are toggled off, return empty array.
         guard Config.default.linksEnabled else {
@@ -596,14 +601,15 @@ struct DatabaseService {
             let linksEntry = readEntry(slug: Config.default.linksTemplate)
         else {
             return Config.default.linksFallback.map({ slug in
-                .entry(
-                    EntryLink(slug: slug)
-                )
+                    .entry(
+                        EntryLink(slug: slug)
+                    )
             })
         }
-        return linksEntry.dom.entryLinks.map(LinkSuggestion.entry)
+        let subtext = linksEntry.contents.contents
+        return subtext.entryLinks.map(LinkSuggestion.entry)
     }
-
+    
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchLinkSuggestions(
@@ -615,14 +621,14 @@ struct DatabaseService {
             guard !query.isWhitespace else {
                 return fallback
             }
-
+            
             var suggestions: OrderedDictionary<Slug, LinkSuggestion> = [:]
-
+            
             // Append literal
             if let literal = EntryLink(title: query) {
                 suggestions[literal.slug] = .new(literal)
             }
-
+            
             let entries: [EntryLink] = try database
                 .execute(
                     sql: """
@@ -649,7 +655,7 @@ struct DatabaseService {
                     }
                     return nil
                 })
-
+            
             // Insert entries into suggestions.
             // If literal query and an entry have the same slug,
             // entry will overwrite query.
@@ -660,18 +666,18 @@ struct DatabaseService {
                     suggestions.updateValue(.entry(entry), forKey: entry.slug)
                 }
             }
-
+            
             return Array(suggestions.values)
         }
     }
-
+    
     /// Log a search query in search history db
     func createSearchHistoryItem(query: String) -> AnyPublisher<String, Error> {
         CombineUtilities.async(qos: .utility) {
             guard !query.isWhitespace else {
                 return query
             }
-
+            
             // Log search in database, along with number of hits
             try database.execute(
                 sql: """
@@ -683,39 +689,28 @@ struct DatabaseService {
                     .text(query)
                 ]
             )
-
+            
             return query
         }
     }
-
+    
     /// Read an entry from the file system.
     /// Private syncronous API to read a Subtext file via its Slug
     /// Used by public async APIs.
     /// - Returns a SubtextFile with mended headers.
     private func readEntry(
         slug: Slug
-    ) -> SubtextFile? {
-        let url = slug.toURL(directory: documentURL, ext: "subtext")
-        guard let content = try? String(contentsOf: url, encoding: .utf8) else {
+    ) -> SubtextEntry? {
+        guard var entry = try? fs.read(slug: slug) else {
             return nil
         }
-        guard
-            let attributes = try? FileManager.default.attributesOfItem(
-                atPath: url.path
-            ),
-            let modified = attributes[.modificationDate] as? Date,
-            let created = attributes[.creationDate] as? Date
-        else {
-            return nil
+        guard let info = fs.info(String(describing: slug)) else {
+            return entry
         }
-
-        return SubtextFile(slug: slug, content: content)
-            .mendingHeaders(
-                modified: modified,
-                created: created
-            )
+        entry.mendHeaders(modified: info.modified, created: info.created)
+        return entry
     }
-
+    
     /// Sync version of readEntryDetail
     /// Use `readEntryDetail` API to call this async.
     private func readEntryDetail(
@@ -737,29 +732,25 @@ struct DatabaseService {
                 .queryFTS5(link.slug.description)
             ]
         )
-        .compactMap({ row in
-            guard
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let body: String = row.get(1)
-            else {
-                return nil
-            }
-            let entry = SubtextFile(slug: slug, content: body)
-            return EntryStub(entry)
-        })
+            .compactMap({ row in
+                guard
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
+                    let body: String = row.get(1)
+                else {
+                    return nil
+                }
+                let entry = SubtextFile(slug: slug, content: body)
+                return EntryStub(entry)
+            })
         // Retreive top entry from file system to ensure it is fresh.
         // If no file exists, return a draft, using fallback for title.
         guard let entry = readEntry(slug: link.slug) else {
-            let now = Date.now
             return EntryDetail(
                 saveState: .draft,
-                entry: SubtextFile(
-                    slug: link.slug,
-                    title: link.title,
-                    modified: now,
-                    created: now,
-                    body: fallback
+                entry: SubtextEntry(
+                    link: link,
+                    contents: Subtext(markup: fallback)
                 ),
                 backlinks: backlinks
             )
@@ -771,7 +762,7 @@ struct DatabaseService {
             backlinks: backlinks
         )
     }
-
+    
     /// Get entry and backlinks from slug, using string as a fallback.
     /// We trust caller to slugify the string, if necessary.
     /// Allowing any string allows us to retreive files that don't have a
@@ -784,21 +775,26 @@ struct DatabaseService {
             try readEntryDetail(link: link, fallback: fallback)
         }
     }
-
+    
     /// Get entry and backlinks from slug, using template file as a fallback.
     func readEntryDetail(
         link: EntryLink,
         template: Slug
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .utility) {
-            let fallback = readEntry(slug: template)?.body ?? ""
+            let fallback = readEntry(slug: template).mapOr(
+                { entry in
+                    String(describing: entry.contents.contents)
+                },
+                default: ""
+            )
             return try readEntryDetail(
                 link: link,
                 fallback: fallback
             )
         }
     }
-
+    
     /// Select a random entry
     func readRandomEntry() -> EntryStub? {
         try? database.execute(
@@ -822,7 +818,7 @@ struct DatabaseService {
         })
         .first
     }
-
+    
     /// Select a random entry who's body matches a query string
     func readRandomEntryMatching(
         query: String
@@ -852,7 +848,7 @@ struct DatabaseService {
         })
         .first
     }
-
+    
     /// Choose a random entry and publish slug
     func readRandomEntryLink() -> AnyPublisher<EntryLink, Error> {
         CombineUtilities.async(qos: .default) {

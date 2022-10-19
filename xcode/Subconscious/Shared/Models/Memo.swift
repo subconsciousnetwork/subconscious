@@ -17,6 +17,24 @@ where T: Hashable
 
 typealias SubtextMemo = Memo<Subtext>
 
+extension SubtextMemo {
+    /// Create a Subtext Memo with blessed headers
+    init(
+        modified: Date,
+        created: Date,
+        title: String,
+        contents: Subtext
+    ) {
+        self.headers = Headers(
+            contentType: ContentType.subtext.contentType,
+            modified: modified,
+            created: created,
+            title: title
+        )
+        self.contents = contents
+    }
+}
+
 extension FileStore {
     /// Read a subtext memo from a slug
     /// This is two reads:

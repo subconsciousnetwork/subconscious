@@ -17,8 +17,11 @@ struct EntryLink:
     CustomStringConvertible,
     Codable
 {
+    /// Slug for link
     let slug: Slug
+    /// Actual title of link
     let title: String
+    /// Linkable title that is always formattable to slug
     let linkableTitle: String
 
     init(slug: Slug, title: String) {
