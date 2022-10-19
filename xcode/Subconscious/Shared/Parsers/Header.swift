@@ -119,6 +119,10 @@ struct Header: Hashable, CustomStringConvertible, Codable {
 struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
     var headers: [Header]
 
+    init() {
+        self.headers = []
+    }
+
     init(headers: [Header]) {
         self.headers = headers
     }
@@ -226,11 +230,11 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
         self.headers[i] = header
     }
 
-    /// Update header.
+    /// Put header.
     /// If value is nil, removes the header if it exists.
     /// If value is string, updates first header with this name if it exists,
     /// or appends header with this name, if it doesn't.
-    mutating func update(name: String, value: String?) {
+    mutating func put(name: String, value: String?) {
         guard let value = value else {
             self.remove(first: name)
             return
@@ -242,12 +246,12 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
     /// If encoded value is nil, removes the header if it exists.
     /// If value is string, updates first header with this name if it exists,
     /// or appends header with this name, if it doesn't.
-    mutating func update<T>(
+    mutating func put<T>(
         with map: (T) -> String?,
         name: String,
         value: T
     ) {
-        update(name: name, value: map(value))
+        put(name: name, value: map(value))
     }
 
     /// Set a fallback for header. If header does not exist, it will set
@@ -275,12 +279,26 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
 
 /// Helpers for certain "blessed" headers
 extension Headers {
+    /// Create headers instance with blessed fields
+    init(
+        contentType: String,
+        modified: Date,
+        created: Date,
+        title: String
+    ) {
+        self.init()
+        self.contentType(contentType)
+        self.modified(modified)
+        self.created(created)
+        self.title(title)
+    }
+
     func contentType() -> String? {
         get(first: "Content-Type")
     }
     
     mutating func contentType(_ contentType: String?) {
-        update(name: "Content-Type", value: contentType)
+        put(name: "Content-Type", value: contentType)
     }
     
     func modified() -> Date? {
@@ -288,7 +306,7 @@ extension Headers {
     }
     
     mutating func modified(_ date: Date) {
-        update(
+        put(
             with: String.from,
             name: "Modified",
             value: date
@@ -300,7 +318,7 @@ extension Headers {
     }
     
     mutating func created(_ date: Date) {
-        update(
+        put(
             with: String.from,
             name: "Created",
             value: date
@@ -312,7 +330,7 @@ extension Headers {
     }
 
     mutating func title(_ title: String) {
-        update(
+        put(
             name: "Title",
             value: title
         )
