@@ -23,6 +23,36 @@ public protocol StoreProtocol {
     func list() throws -> [Key]
 }
 
+extension StoreProtocol {
+    /// Read with a failable decoding function
+    /// Our codebase defines a number of `DataType.from` static methods
+    /// that can be composed to decode the data type you need.
+    func read<T>(
+        with decode: (Data) -> T?,
+        key: String
+    ) throws -> T {
+        let data: Data = try read(key)
+        guard let value = decode(data) else {
+            throw FileStoreError.decodingError("Failed to decode data")
+        }
+        return value
+    }
+    
+    /// Write with a failable encoding function
+    /// Our codebase defines a number of `DataType.from` static methods
+    /// that can be composed to encode the data type you need.
+    func write<T>(
+        with encode: (T) -> Data?,
+        key: String,
+        value: T
+    ) throws {
+        guard let data: Data = encode(value) else {
+            throw FileStoreError.encodingError("Could not encode data")
+        }
+        try write(key, data: data)
+    }
+}
+
 enum FileStoreError: Error {
     case contentTypeError(String)
     case decodingError(String)
@@ -109,35 +139,5 @@ struct FileStore: StoreProtocol {
         return urls.compactMap({ url in
             url.relativizingPath(relativeTo: documentURL)
         })
-    }
-}
-
-extension StoreProtocol {
-    /// Read with a failable decoding function
-    /// Our codebase defines a number of `DataType.from` static methods
-    /// that can be composed to decode the data type you need.
-    func read<T>(
-        with decode: (Data) -> T?,
-        key: String
-    ) throws -> T {
-        let data: Data = try read(key)
-        guard let value = decode(data) else {
-            throw FileStoreError.decodingError("Failed to decode data")
-        }
-        return value
-    }
-    
-    /// Write with a failable encoding function
-    /// Our codebase defines a number of `DataType.from` static methods
-    /// that can be composed to encode the data type you need.
-    func write<T>(
-        with encode: (T) -> Data?,
-        key: String,
-        value: T
-    ) throws {
-        guard let data: Data = encode(value) else {
-            throw FileStoreError.encodingError("Could not encode data")
-        }
-        try write(key, data: data)
     }
 }
