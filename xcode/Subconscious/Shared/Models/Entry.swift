@@ -80,14 +80,16 @@ extension SubtextEntry {
     /// `other` Subtext is appended to the end of `self` Subtext.
     func merge(_ other: SubtextEntry) -> Self {
         var this = self
-        this.contents.headers.merge(other.contents.headers)
-        let subtext = this.contents.contents.appending(other.contents.contents)
-        this.contents.contents = subtext
+        this.contents.headers = this.contents.headers.merge(
+            other.contents.headers
+        )
+        let subtext = this.contents.body.appending(other.contents.body)
+        this.contents.body = subtext
         return this
     }
 }
 
-extension FileStore {
+extension StoreProtocol {
     /// Read a subtext entry from a slug
     func read(slug: Slug) throws -> SubtextEntry {
         let memo: SubtextMemo = try read(String(describing: slug))
@@ -112,7 +114,7 @@ extension EntryLink {
 extension EntryStub {
     init(_ entry: SubtextEntry) {
         self.link = EntryLink(slug: entry.slug, title: entry.titleOrDefault())
-        self.excerpt = entry.contents.contents.excerpt()
+        self.excerpt = entry.contents.body.excerpt()
         self.modified = entry.contents.headers.modifiedOrDefault()
     }
 }

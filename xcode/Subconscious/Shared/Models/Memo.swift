@@ -12,7 +12,7 @@ struct Memo<T>: Hashable
 where T: Hashable
 {
     var headers: Headers
-    var contents: T
+    var body: T
 }
 
 extension Memo {
@@ -29,13 +29,13 @@ extension Memo {
             created: created,
             title: title
         )
-        self.contents = contents
+        self.body = contents
     }
 }
 
 typealias SubtextMemo = Memo<Subtext>
 
-extension FileStore {
+extension StoreProtocol {
     /// Read a subtext memo from a slug
     /// This is two reads:
     /// - Once for memo
@@ -55,7 +55,7 @@ extension FileStore {
             with: Subtext.from,
             key: bodyKey
         )
-        return Memo(headers: sidecar.headers, contents: subtext)
+        return Memo(headers: sidecar.headers, body: subtext)
     }
 
     /// Write SubtextMemo to Memo and Subtext file on disk
@@ -71,6 +71,6 @@ extension FileStore {
         let subtextKey = key.appendingPathExtension(ContentType.subtext.ext)
         let memoData = MemoData(headers: memo.headers, contents: subtextKey)
         try write(with: Data.from, key: memoKey, value: memoData)
-        try write(with: Data.from, key: subtextKey, value: memo.contents)
+        try write(with: Data.from, key: subtextKey, value: memo.body)
     }
 }

@@ -7,22 +7,26 @@
 
 import Foundation
 
+public struct FileInfo: Hashable {
+    var created: Date
+    var modified: Date
+    var size: Int
+}
+
+public protocol StoreProtocol {
+    typealias Key = String
+    func info(_ key: Key) -> FileInfo?
+    func read(_ key: Key) throws -> Data
+    func write(_ key: Key, data: Data) throws
+    func remove(_ key: Key) throws
+    func save() throws
+    func list() throws -> [Key]
+}
+
 enum FileStoreError: Error {
     case contentTypeError(String)
     case decodingError(String)
     case encodingError(String)
-}
-
-struct FileInfo: Hashable {
-    var created: Date
-    var modified: Date
-    var size: Int
-    
-    init(created: Date, modified: Date, size: Int) {
-        self.created = created
-        self.modified = modified
-        self.size = size
-    }
 }
 
 /// Basic facade over file system actions.
@@ -38,7 +42,7 @@ struct FileInfo: Hashable {
 /// identity and so we avoid exposing the root location.
 /// This also brings us closer in line with the way Noosphere thinks about
 /// paths (as string keys, essentially).
-struct FileStore {
+struct FileStore: StoreProtocol {
     private let fileManager = FileManager.default
     private let documentURL: URL
     
@@ -79,7 +83,7 @@ struct FileStore {
     func save() throws {
         // no-op
     }
-
+    
     /// Get info for file
     func info(_ key: String) -> FileInfo? {
         let url = url(forKey: key)
@@ -94,9 +98,21 @@ struct FileStore {
         }
         return FileInfo(created: created, modified: modified, size: size)
     }
+
+    func list() throws -> [Key] {
+        guard let urls = FileManager.default.listFilesDeep(
+            at: documentURL,
+            includingPropertiesForKeys: []
+        ) else {
+            return []
+        }
+        return urls.compactMap({ url in
+            url.relativizingPath(relativeTo: documentURL)
+        })
+    }
 }
 
-extension FileStore {
+extension StoreProtocol {
     /// Read with a failable decoding function
     /// Our codebase defines a number of `DataType.from` static methods
     /// that can be composed to decode the data type you need.

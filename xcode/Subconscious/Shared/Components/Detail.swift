@@ -314,7 +314,7 @@ struct DetailModel: ModelProtocol {
         }
         return (
             slug == entry.slug &&
-            markupEditor.text == entry.contents.contents.description
+            markupEditor.text == entry.contents.body.description
         )
     }
 
@@ -1009,7 +1009,7 @@ struct DetailModel: ModelProtocol {
         model.backlinks = detail.backlinks
         model.saveState = detail.saveState
 
-        let subtext = detail.entry.contents.contents
+        let subtext = detail.entry.contents.body
         let text = String(describing: subtext)
 
         return DetailModel.update(
@@ -1872,7 +1872,7 @@ extension SubtextEntry {
         self.slug = slug
         self.contents = Memo(
             headers: detail.headers,
-            contents: Subtext(markup: detail.markupEditor.text)
+            body: Subtext(markup: detail.markupEditor.text)
         )
     }
 }

@@ -60,11 +60,11 @@ extension Data {
 extension SubtextMemo {
     /// Read a Subtext-flavored Memo from a string
     /// - Parses headers (if any)
-    /// - Parses contents as Subtext
+    /// - Parses body as Subtext
     static func from(_ string: String) -> SubtextMemo? {
         let envelope = HeadersEnvelope(markup: string)
         let subtext = Subtext(markup: String(envelope.body))
-        return Memo<Subtext>(headers: envelope.headers, contents: subtext)
+        return Memo<Subtext>(headers: envelope.headers, body: subtext)
     }
     
 }

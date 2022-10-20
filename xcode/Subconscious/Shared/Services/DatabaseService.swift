@@ -157,7 +157,7 @@ struct DatabaseService {
             parameters: [
                 .text(String(describing: entry.slug)),
                 .text(title),
-                .text(String(describing: entry.contents.contents)),
+                .text(String(describing: entry.contents.body)),
                 .date(fingerprint.modifiedDate),
                 .integer(fingerprint.size)
             ]
@@ -608,7 +608,7 @@ struct DatabaseService {
                     )
             })
         }
-        let subtext = linksEntry.contents.contents
+        let subtext = linksEntry.contents.body
         return subtext.entryLinks.map(LinkSuggestion.entry)
     }
     
@@ -792,7 +792,7 @@ struct DatabaseService {
         CombineUtilities.async(qos: .utility) {
             let fallback = readEntry(slug: template).mapOr(
                 { entry in
-                    String(describing: entry.contents.contents)
+                    String(describing: entry.contents.body)
                 },
                 default: ""
             )

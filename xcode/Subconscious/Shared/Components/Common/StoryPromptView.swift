@@ -73,7 +73,7 @@ struct StoryPromptView_Previews: PreviewProvider {
                         slug: Slug("meme")!,
                         contents: Memo(
                             headers: Headers(),
-                            contents: Subtext(
+                            body: Subtext(
                                 markup: """
                                 Title: Meme
                                 Modified: 2022-08-23
