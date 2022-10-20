@@ -49,9 +49,11 @@ extension FileStore {
         guard contentType == ContentType.subtext.contentType else {
             throw FileStoreError.contentTypeError(contentType)
         }
+        let bodyKey = sidecar.contents
+            .appendingPathExtension(ContentType.subtext.ext)
         let subtext = try read(
             with: Subtext.from,
-            key: key.appendingPathExtension(ContentType.subtext.ext)
+            key: bodyKey
         )
         return Memo(headers: sidecar.headers, contents: subtext)
     }
