@@ -203,7 +203,7 @@ class Tests_Header: XCTestCase {
         )
     }
 
-    func testHeadersFirst() throws {
+    func testHeadersGetFirst() throws {
         var tape = Tape(
             """
             Content-Type: text/subtext
@@ -217,6 +217,23 @@ class Tests_Header: XCTestCase {
         let headers = Headers(&tape)
         let value = headers.get(first: "content-type")
         XCTAssertEqual(value, "text/subtext")
+    }
+
+    func testHeadersGetAll() throws {
+        var tape = Tape(
+            """
+            Content-Type: text/subtext
+            Malformed header: Husker knights
+            Content-Type: text/plain
+            Title: Floop the Pig
+
+            Body text
+            """
+        )
+        let headers = Headers(&tape)
+        let values = headers.get(named: "content-type")
+        XCTAssertEqual(values[0], "text/subtext")
+        XCTAssertEqual(values[1], "Content-Type")
     }
 
     func testHeadersReplaceA() throws {
@@ -265,6 +282,44 @@ class Tests_Header: XCTestCase {
             headers.headers[1].value,
             "text/subtext",
             "preserves order of headers"
+        )
+    }
+
+    /// Test Headers.merge.
+    /// Ensure that it:
+    /// - Merges headers
+    /// - Keeps only the first header and drops dupes
+    func testHeadersMerge() throws {
+        var headers = Headers(
+            headers: [
+                Header(name: "Tags", value: "one,two,three"),
+                Header(name: "Content-Type", value: "text/subtext"),
+                Header(name: "Tags", value: "four,five,six"),
+            ]
+        )
+        let other = Headers(
+            headers: [
+                Header(name: "Content-Type", value: "text/subtext"),
+                Header(name: "Tags", value: "a,b,c"),
+                Header(name: "Featured", value: "true"),
+            ]
+        )
+        headers.merge(other)
+        XCTAssertEqual(headers.headers.count, 3)
+        XCTAssertEqual(
+            headers.headers[0].value,
+            "one,two,three",
+            "keeps first header, and keeps ordering"
+        )
+        XCTAssertEqual(
+            headers.headers[1].value,
+            "text/subtext",
+            "Keeps first content-type"
+        )
+        XCTAssertEqual(
+            headers.headers[2].value,
+            "true",
+            "Drops duplicates, including dupes in original set"
         )
     }
 
