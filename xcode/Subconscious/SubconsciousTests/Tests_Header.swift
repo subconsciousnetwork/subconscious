@@ -219,7 +219,7 @@ class Tests_Header: XCTestCase {
         XCTAssertEqual(value, "text/subtext")
     }
 
-    func testHeadersPutA() throws {
+    func testHeadersReplaceA() throws {
         var headers = Headers(
             headers: [
                 Header(name: "Content-Type", value: "text/subtext"),
@@ -227,7 +227,7 @@ class Tests_Header: XCTestCase {
                 Header(name: "Title", value: "Floop the Pig"),
             ]
         )
-        headers.put(
+        headers.replace(
             name: "content-type",
             value: "application/json"
         )
@@ -235,13 +235,13 @@ class Tests_Header: XCTestCase {
         XCTAssertEqual(headers.headers[0].value, "application/json")
     }
 
-    func testHeadersPuttingB() throws {
+    func testHeadersReplaceB() throws {
         var headers = Headers(
             headers: [
                 Header(name: "Content-Type", value: "text/subtext"),
             ]
         )
-        headers.put(name: "title", value: "Card Wars")
+        headers.replace(name: "title", value: "Card Wars")
         XCTAssertEqual(headers.headers.count, 2)
         XCTAssertEqual(headers.headers[1].value, "Card Wars")
     }

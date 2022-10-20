@@ -196,6 +196,13 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
         get(first: name).flatMap(map)
     }
 
+    /// Get values for all headers named `name`
+    func get(named name: String) -> [String] {
+        headers
+            .filter({ header in header.name == name })
+            .map({ header in header.value })
+    }
+
     /// Remove first header with name (if any).
     mutating func remove(first name: String) {
         guard let i = headers.firstIndex(where: { existing in
@@ -220,7 +227,7 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
 
     /// Update header, either replacing the first existing header with the
     /// same key, or appending a new header to the list of headers.
-    mutating func add(_ header: Header) {
+    mutating func replace(_ header: Header) {
         guard let i = headers.firstIndex(where: { existing in
             existing.name == header.name
         }) else {
@@ -230,28 +237,11 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
         self.headers[i] = header
     }
 
-    /// Put header.
-    /// If value is nil, removes the header if it exists.
-    /// If value is string, updates first header with this name if it exists,
+    /// Replace header.
+    /// Updates value of first header with this name if it exists,
     /// or appends header with this name, if it doesn't.
-    mutating func put(name: String, value: String?) {
-        guard let value = value else {
-            self.remove(first: name)
-            return
-        }
-        add(Header(name: name, value: value))
-    }
-
-    /// Update header using `with` to encode value.
-    /// If encoded value is nil, removes the header if it exists.
-    /// If value is string, updates first header with this name if it exists,
-    /// or appends header with this name, if it doesn't.
-    mutating func put<T>(
-        with map: (T) -> String?,
-        name: String,
-        value: T
-    ) {
-        put(name: name, value: map(value))
+    mutating func replace(name: String, value: String) {
+        replace(Header(name: name, value: value))
     }
 
     /// Set a fallback for header. If header does not exist, it will set
@@ -264,11 +254,11 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
         guard get(first: name) == nil else {
             return
         }
-        add(Header(name: name, value: value))
+        replace(name: name, value: value)
     }
 
     /// Remove all headers with a given name
-    mutating func removeAll(named name: String) {
+    mutating func remove(named name: String) {
         let name = Header.normalizeName(name)
         self.headers = self.headers.filter({ header in header.name != name })
     }
@@ -297,8 +287,8 @@ extension Headers {
         get(first: "Content-Type")
     }
     
-    mutating func contentType(_ contentType: String?) {
-        put(name: "Content-Type", value: contentType)
+    mutating func contentType(_ contentType: String) {
+        replace(name: "Content-Type", value: contentType)
     }
     
     func modified() -> Date? {
@@ -311,10 +301,9 @@ extension Headers {
     }
     
     mutating func modified(_ date: Date) {
-        put(
-            with: String.from,
+        replace(
             name: "Modified",
-            value: date
+            value: String.from(date)
         )
     }
     
@@ -328,10 +317,9 @@ extension Headers {
     }
 
     mutating func created(_ date: Date) {
-        put(
-            with: String.from,
+        replace(
             name: "Created",
-            value: date
+            value: String.from(date)
         )
     }
     
@@ -340,7 +328,7 @@ extension Headers {
     }
 
     mutating func title(_ title: String) {
-        put(
+        replace(
             name: "Title",
             value: title
         )
