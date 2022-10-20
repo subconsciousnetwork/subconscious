@@ -14,14 +14,14 @@ class Tests_Detail: XCTestCase {
 
     func testsetAndPresentDetail() throws {
         let state = DetailModel()
-        let slug = try Slug("example").unwrap()
+        let link = try EntryLink(title: "Example").unwrap()
         let modified = Date.now
 
-        let entry = SubtextFile(
-            slug: slug,
-            content: "Example text"
+        let entry = SubtextEntry(
+            link: link,
+            modified: modified,
+            contents: Subtext(markup: "Example text")
         )
-        .modified(modified)
 
         let detail = EntryDetail(
             saveState: .saved,
@@ -70,12 +70,12 @@ class Tests_Detail: XCTestCase {
             environment: environment
         )
 
-        let slug = try Slug("example").unwrap()
+        let link = try EntryLink(title: "Example").unwrap()
         let detail = EntryDetail(
             saveState: .saved,
-            entry: SubtextFile(
-                slug: slug,
-                content: "Example text"
+            entry: SubtextEntry(
+                link: link,
+                contents: Subtext(markup: "Example text")
             )
         )
 
@@ -97,12 +97,12 @@ class Tests_Detail: XCTestCase {
 
     func testUpdateDetailBlur() throws {
         let state = DetailModel()
-        let slug = try Slug("example").unwrap()
+        let link = try EntryLink(title: "Example").unwrap()
         let detail = EntryDetail(
             saveState: .saved,
-            entry: SubtextFile(
-                slug: slug,
-                content: "Example text"
+            entry: SubtextEntry(
+                link: link,
+                contents: Subtext(markup: "Example text")
             )
         )
         let update = DetailModel.update(
@@ -164,7 +164,7 @@ class Tests_Detail: XCTestCase {
             return
         }
         XCTAssertNotNil(
-            entry.headers["Modified"],
+            entry.contents.headers.modified(),
             "Marks modified time"
         )
     }

@@ -198,7 +198,8 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
 
     /// Get values for all headers named `name`
     func get(named name: String) -> [String] {
-        headers
+        let name = Header.normalizeName(name)
+        return headers
             .filter({ header in header.name == name })
             .map({ header in header.value })
     }
@@ -215,7 +216,7 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
 
     /// Remove duplicate headers from array, keeping only the first
     mutating func removeDuplicates() {
-        self.headers = headers.uniquing(with: { header in header.value })
+        self.headers = headers.uniquing(with: \.name)
     }
 
     /// Merge headers.
