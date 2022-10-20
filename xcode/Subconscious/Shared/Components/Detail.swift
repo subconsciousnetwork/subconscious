@@ -260,7 +260,7 @@ struct DetailMarkupEditorCursor: CursorProtocol {
 //  MARK: Model
 struct DetailModel: ModelProtocol {
     var slug: Slug?
-    var headers: Headers = .empty
+    var headers: Headers = []
     var backlinks: [EntryStub] = []
 
     /// Is editor saved?

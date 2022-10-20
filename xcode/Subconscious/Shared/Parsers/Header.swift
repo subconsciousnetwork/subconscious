@@ -115,18 +115,9 @@ struct Header: Hashable, CustomStringConvertible, Codable {
     }
 }
 
-/// A collection of parsed HTTP-style headers
-struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
-    var headers: [Header]
+typealias Headers = Array<Header>
 
-    init() {
-        self.headers = []
-    }
-
-    init(headers: [Header]) {
-        self.headers = headers
-    }
-
+extension Headers {
     /// Parse headers from a substring.
     /// Handles missing headers, invalid headers, and no headers.
     /// - Returns a ParseState containing an array of headers (if any)
@@ -135,24 +126,20 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
     ) {
         // Sniff first line. If it is empty, there are no headers.
         guard !Parser.parseEmptyLine(&tape) else {
-            self.init(
-                headers: []
-            )
+            self.init()
             return
         }
         // Sniff first line. If it is not a valid header,
         // then return empty headers
         guard let firstHeader = Header(&tape) else {
-            self.init(
-                headers: []
-            )
+            self.init()
             return
         }
         var headers: [Header] = [firstHeader]
         while !tape.isExhausted() {
             tape.start()
             if Parser.parseEmptyLine(&tape) {
-                self.init(headers: headers)
+                self.init(headers)
                 return
             } else if let header = Header(&tape) {
                 headers.append(header)
@@ -160,7 +147,7 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
                 Parser.discardLine(&tape)
             }
         }
-        self.init(headers: headers)
+        self.init(headers)
         return
     }
 
@@ -168,25 +155,22 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
         var tape = Tape(markup[...])
         self.init(&tape)
     }
+}
 
+extension Headers {
     /// Get headers, rendered back out as a string
-    var description: String {
-        headers
+    var text: String {
+        self
             .map({ header in String(describing: header) })
             .joined(separator: "")
             .appending("\n")
-    }
-
-    /// Conform to Sequence
-    func makeIterator() -> IndexingIterator<Array<Header>> {
-        headers.makeIterator()
     }
 
     /// Get the value of the first header matching a particular name (if any)
     /// - Returns String?
     func get(first name: String) -> String? {
         let name = Header.normalizeName(name)
-        return headers
+        return self
             .first(where: { header in header.name == name })
             .map({ header in header.value })
     }
@@ -199,43 +183,44 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
     /// Get values for all headers named `name`
     func get(named name: String) -> [String] {
         let name = Header.normalizeName(name)
-        return headers
+        return self
             .filter({ header in header.name == name })
             .map({ header in header.value })
     }
 
     /// Remove first header with name (if any).
     mutating func remove(first name: String) {
-        guard let i = headers.firstIndex(where: { existing in
+        guard let i = self.firstIndex(where: { existing in
             existing.name == name
         }) else {
             return
         }
-        self.headers.remove(at: i)
+        self.remove(at: i)
     }
 
     /// Remove duplicate headers from array, keeping only the first
-    mutating func removeDuplicates() {
-        self.headers = headers.uniquing(with: \.name)
+    func removeDuplicates() -> Self {
+        self.uniquing(with: \.name)
     }
 
     /// Merge headers.
     /// Duplicate headers from `other` are dropped.
-    mutating func merge(_ other: Headers) {
-        self.headers.append(contentsOf: other.headers)
-        self.removeDuplicates()
+    func merge(_ other: Headers) -> Self {
+        var this = self
+        this.append(contentsOf: other)
+        return this.removeDuplicates()
     }
 
     /// Update header, either replacing the first existing header with the
     /// same key, or appending a new header to the list of headers.
     mutating func replace(_ header: Header) {
-        guard let i = headers.firstIndex(where: { existing in
+        guard let i = self.firstIndex(where: { existing in
             existing.name == header.name
         }) else {
-            self.headers.append(header)
+            self.append(header)
             return
         }
-        self.headers[i] = header
+        self[i] = header
     }
 
     /// Replace header.
@@ -259,13 +244,10 @@ struct Headers: Hashable, CustomStringConvertible, Sequence, Codable {
     }
 
     /// Remove all headers with a given name
-    mutating func remove(named name: String) {
+    func remove(named name: String) -> Self {
         let name = Header.normalizeName(name)
-        self.headers = self.headers.filter({ header in header.name != name })
+        return self.filter({ header in header.name != name })
     }
-
-    /// An empty header struct that can be re-used
-    static let empty = Headers(headers: [])
 }
 
 /// Helpers for certain "blessed" headers
