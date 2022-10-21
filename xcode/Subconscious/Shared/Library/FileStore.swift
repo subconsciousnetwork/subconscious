@@ -10,10 +10,12 @@ import Foundation
 protocol StoreProtocol {
     associatedtype Key
     associatedtype Value
+    associatedtype Keys: Sequence where Keys.Element == Key
     func read(_ key: Key) throws -> Value
     func write(_ key: Key, value: Value) throws
     func remove(_ key: Key) throws
     func save() throws
+    func list() throws -> Keys
 }
 
 public struct FileInfo: Hashable {
@@ -84,7 +86,20 @@ struct FileStore: StoreProtocol {
     func save() throws {
         // no-op
     }
-    
+
+    /// List all keys
+    func list() throws -> some Sequence<String> {
+        guard let urls = FileManager.default.listFilesDeep(
+            at: documentURL,
+            includingPropertiesForKeys: []
+        ) else {
+            return []
+        }
+        return urls.compactMap({ url in
+            url.relativizingPath(relativeTo: documentURL)
+        })
+    }
+
     /// Get info for file
     func info(_ key: String) -> FileInfo? {
         let url = url(forKey: key)
@@ -98,18 +113,6 @@ struct FileStore: StoreProtocol {
             return nil
         }
         return FileInfo(created: created, modified: modified, size: size)
-    }
-
-    func list() throws -> [String] {
-        guard let urls = FileManager.default.listFilesDeep(
-            at: documentURL,
-            includingPropertiesForKeys: []
-        ) else {
-            return []
-        }
-        return urls.compactMap({ url in
-            url.relativizingPath(relativeTo: documentURL)
-        })
     }
 }
 

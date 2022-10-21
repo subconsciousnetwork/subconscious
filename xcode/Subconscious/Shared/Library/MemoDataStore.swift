@@ -16,13 +16,13 @@ import Foundation
 struct MemoDataStore: StoreProtocol {
     typealias Key = Slug
     typealias Value = MemoData
-
+    
     private let store: FileStore
     
     init(store: FileStore) {
         self.store = store
     }
-
+    
     /// Read memo from slug key
     func read(_ slug: Slug) throws -> MemoData {
         try store.read(
@@ -30,7 +30,7 @@ struct MemoDataStore: StoreProtocol {
             key: slug.toPath(ContentType.memo.ext)
         )
     }
-
+    
     /// Write Memo to slug key
     func write(_ slug: Slug, value: MemoData) throws {
         try store.write(
@@ -45,4 +45,16 @@ struct MemoDataStore: StoreProtocol {
     }
     
     func save() throws {}
+    
+    /// List all memo slugs
+    func list() throws -> some Sequence<Slug> {
+        try store.list()
+            .lazy
+            .filter({ path in
+                path.hasExtension(ContentType.memo.ext)
+            })
+            .compactMap({ path in
+                Slug(path.deletingPathExtension())
+            })
+    }
 }

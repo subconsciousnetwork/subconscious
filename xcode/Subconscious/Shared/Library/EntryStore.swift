@@ -17,15 +17,15 @@ enum EntryStoreError: Error {
 struct EntryStore: StoreProtocol {
     typealias Key = Slug
     typealias Value = SubtextEntry
-
+    
     private var fs: FileStore
     private var memos: MemoDataStore
-
+    
     init(fs: FileStore) {
         self.fs = fs
         self.memos = MemoDataStore(store: fs)
     }
-
+    
     /// Read a SubtextEntry from slug
     func read(_ slug: Slug) throws -> SubtextEntry {
         let memo = try memos.read(slug)
@@ -79,4 +79,8 @@ struct EntryStore: StoreProtocol {
     }
     
     func save() throws {}
+    
+    func list() throws -> some Sequence<Slug> {
+        try memos.list()
+    }
 }
