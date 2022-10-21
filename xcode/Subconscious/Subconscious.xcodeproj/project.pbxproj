@@ -199,6 +199,8 @@
 		B8B4251928FDE8AA0081B8D5 /* MemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4251728FDE8AA0081B8D5 /* MemoData.swift */; };
 		B8B4251B28FE1DA60081B8D5 /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4251A28FE1DA60081B8D5 /* Entry.swift */; };
 		B8B4251C28FE1DA60081B8D5 /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4251A28FE1DA60081B8D5 /* Entry.swift */; };
+		B8B425212902D3840081B8D5 /* MemoDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B425202902D3840081B8D5 /* MemoDataStore.swift */; };
+		B8B425222902D3840081B8D5 /* MemoDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B425202902D3840081B8D5 /* MemoDataStore.swift */; };
 		B8B4D7EC27EA890B00633B5F /* ShadowStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4D7EB27EA890B00633B5F /* ShadowStyle.swift */; };
 		B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4D7ED27EA8AA000633B5F /* DragHandleView.swift */; };
 		B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B54F3A271F6C8400B9B507 /* EntryLink.swift */; };
@@ -385,6 +387,7 @@
 		B8B4251428FDE8570081B8D5 /* Memo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memo.swift; sourceTree = "<group>"; };
 		B8B4251728FDE8AA0081B8D5 /* MemoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoData.swift; sourceTree = "<group>"; };
 		B8B4251A28FE1DA60081B8D5 /* Entry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entry.swift; sourceTree = "<group>"; };
+		B8B425202902D3840081B8D5 /* MemoDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoDataStore.swift; sourceTree = "<group>"; };
 		B8B4D7EB27EA890B00633B5F /* ShadowStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShadowStyle.swift; sourceTree = "<group>"; };
 		B8B4D7ED27EA8AA000633B5F /* DragHandleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragHandleView.swift; sourceTree = "<group>"; };
 		B8B54F3A271F6C8400B9B507 /* EntryLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryLink.swift; sourceTree = "<group>"; };
@@ -688,9 +691,13 @@
 				B839029E28CA246A007A3A3F /* CustomLogStringConvertible.swift */,
 				B86DFF3627C09CA2002E57ED /* DateUtilities.swift */,
 				B82C3A5E26F576C600833CC8 /* FileManagerUtilities.swift */,
+				B8B4250E28FDE6960081B8D5 /* FileStore.swift */,
 				B82C3A5826F5761700833CC8 /* FileSync.swift */,
 				B86DFF3227C072CD002E57ED /* Func.swift */,
+				B8B4250828FB29A30081B8D5 /* JSONUtilities.swift */,
 				B89D296727E832DC009E0DED /* LoggerUtilities.swift */,
+				B8B4251128FDE7780081B8D5 /* Mapping.swift */,
+				B8B425202902D3840081B8D5 /* MemoDataStore.swift */,
 				B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */,
 				B82C3A6426F5796300833CC8 /* OptionalUtilities.swift */,
 				B88CC957284FF59900994928 /* OrderedCollectionUtilities.swift */,
@@ -703,9 +710,6 @@
 				B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
-				B8B4250828FB29A30081B8D5 /* JSONUtilities.swift */,
-				B8B4250E28FDE6960081B8D5 /* FileStore.swift */,
-				B8B4251128FDE7780081B8D5 /* Mapping.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -1100,6 +1104,7 @@
 				B8B4251228FDE7780081B8D5 /* Mapping.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8A41D4E2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,
+				B8B425212902D3840081B8D5 /* MemoDataStore.swift in Sources */,
 				B82C3A5F26F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
 				B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */,
 				B8AC648F278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
@@ -1127,6 +1132,7 @@
 				B81EBB0A27025C1500B87594 /* BacklinkButtonStyle.swift in Sources */,
 				B82C3A6326F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B813749B28BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift in Sources */,
+				B8B425222902D3840081B8D5 /* MemoDataStore.swift in Sources */,
 				B83E91D827692EC600045C6A /* FAB.swift in Sources */,
 				B88CC959284FF59900994928 /* OrderedCollectionUtilities.swift in Sources */,
 				B8A59D6128B51D000010DB2F /* TranscludeView.swift in Sources */,

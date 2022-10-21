@@ -89,7 +89,7 @@ extension SubtextEntry {
     }
 }
 
-extension StoreProtocol {
+extension FileStore {
     /// Read a subtext entry from a slug
     func read(slug: Slug) throws -> SubtextEntry {
         let memo: SubtextMemo = try read(String(describing: slug))

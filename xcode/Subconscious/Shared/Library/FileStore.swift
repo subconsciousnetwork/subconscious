@@ -7,50 +7,19 @@
 
 import Foundation
 
+protocol StoreProtocol {
+    associatedtype Key
+    associatedtype Value
+    func read(_ key: Key) throws -> Value
+    func write(_ key: Key, value: Value) throws
+    func remove(_ key: Key) throws
+    func save() throws
+}
+
 public struct FileInfo: Hashable {
     var created: Date
     var modified: Date
     var size: Int
-}
-
-public protocol StoreProtocol {
-    typealias Key = String
-    func info(_ key: Key) -> FileInfo?
-    func read(_ key: Key) throws -> Data
-    func write(_ key: Key, data: Data) throws
-    func remove(_ key: Key) throws
-    func save() throws
-    func list() throws -> [Key]
-}
-
-extension StoreProtocol {
-    /// Read with a failable decoding function
-    /// Our codebase defines a number of `DataType.from` static methods
-    /// that can be composed to decode the data type you need.
-    func read<T>(
-        with decode: (Data) -> T?,
-        key: String
-    ) throws -> T {
-        let data: Data = try read(key)
-        guard let value = decode(data) else {
-            throw FileStoreError.decodingError("Failed to decode data")
-        }
-        return value
-    }
-    
-    /// Write with a failable encoding function
-    /// Our codebase defines a number of `DataType.from` static methods
-    /// that can be composed to encode the data type you need.
-    func write<T>(
-        with encode: (T) -> Data?,
-        key: String,
-        value: T
-    ) throws {
-        guard let data: Data = encode(value) else {
-            throw FileStoreError.encodingError("Could not encode data")
-        }
-        try write(key, data: data)
-    }
 }
 
 enum FileStoreError: Error {
@@ -59,7 +28,7 @@ enum FileStoreError: Error {
     case encodingError(String)
 }
 
-/// Basic facade over file system actions.
+/// Low-level facade over file system actions.
 /// This store thinks in keys and Data.
 /// Keys are path-like strings and are relative to the document directory.
 ///
@@ -73,6 +42,9 @@ enum FileStoreError: Error {
 /// This also brings us closer in line with the way Noosphere thinks about
 /// paths (as string keys, essentially).
 struct FileStore: StoreProtocol {
+    typealias Key = String
+    typealias Value = Data
+    
     private let fileManager = FileManager.default
     private let documentURL: URL
     
@@ -93,7 +65,7 @@ struct FileStore: StoreProtocol {
     }
     
     /// Write file
-    func write(_ key: String, data: Data) throws {
+    func write(_ key: String, value data: Data) throws {
         let url = url(forKey: key)
         let parent = url.deletingLastPathComponent()
         try FileManager.default.createDirectory(
@@ -129,7 +101,7 @@ struct FileStore: StoreProtocol {
         return FileInfo(created: created, modified: modified, size: size)
     }
 
-    func list() throws -> [Key] {
+    func list() throws -> [String] {
         guard let urls = FileManager.default.listFilesDeep(
             at: documentURL,
             includingPropertiesForKeys: []
@@ -141,3 +113,34 @@ struct FileStore: StoreProtocol {
         })
     }
 }
+
+extension FileStore {
+    /// Read with a failable decoding function
+    /// Our codebase defines a number of `DataType.from` static methods
+    /// that can be composed to decode the data type you need.
+    func read<T>(
+        with decode: (Data) -> T?,
+        key: String
+    ) throws -> T {
+        let data: Data = try read(key)
+        guard let value = decode(data) else {
+            throw FileStoreError.decodingError("Failed to decode data")
+        }
+        return value
+    }
+    
+    /// Write with a failable encoding function
+    /// Our codebase defines a number of `DataType.from` static methods
+    /// that can be composed to encode the data type you need.
+    func write<T>(
+        with encode: (T) -> Data?,
+        key: String,
+        value: T
+    ) throws {
+        guard let data: Data = encode(value) else {
+            throw FileStoreError.encodingError("Could not encode data")
+        }
+        try write(key, value: data)
+    }
+}
+

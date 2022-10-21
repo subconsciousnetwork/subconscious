@@ -7,25 +7,19 @@
 
 import Foundation
 
-/// A struct containing information about particular content types
-struct ContentType: Hashable, CustomStringConvertible {
-    var contentType: String
-    var ext: String
+enum ContentType: String {
+    case subtext = "text/subtext"
+    case memo = "application/memo+json"
+}
 
-    var description: String {
-        contentType
+extension ContentType {
+    var ext: String {
+        switch self {
+        case .subtext:
+            return "subtext"
+        case .memo:
+            return "memo"
+        }
     }
 }
 
-/// Extend ContentType with constants for useful types
-extension ContentType {
-    static let subtext = ContentType(
-        contentType: "text/subtext",
-        ext: "subtext"
-    )
-    
-    static let memo = ContentType(
-        contentType: "application/json",
-        ext: "memo"
-    )
-}

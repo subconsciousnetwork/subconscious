@@ -17,5 +17,5 @@ struct MemoData: Hashable, Codable {
     let headers: Headers
     /// A path-like string that points to the conceptual bodypart that
     /// corresponds to this sidecar file.
-    let contents: String
+    let body: String
 }

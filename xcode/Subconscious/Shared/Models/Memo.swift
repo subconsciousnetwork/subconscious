@@ -24,7 +24,7 @@ extension Memo {
         contents: T
     ) {
         self.headers = Headers(
-            contentType: ContentType.subtext.contentType,
+            contentType: ContentType.subtext.rawValue,
             modified: modified,
             created: created,
             title: title
@@ -35,7 +35,7 @@ extension Memo {
 
 typealias SubtextMemo = Memo<Subtext>
 
-extension StoreProtocol {
+extension FileStore {
     /// Read a subtext memo from a slug
     /// This is two reads:
     /// - Once for memo
@@ -46,10 +46,10 @@ extension StoreProtocol {
             key: key.appendingPathExtension(ContentType.memo.ext)
         )
         let contentType = sidecar.headers.contentType().unwrap(or: "")
-        guard contentType == ContentType.subtext.contentType else {
+        guard contentType == ContentType.subtext.rawValue else {
             throw FileStoreError.contentTypeError(contentType)
         }
-        let bodyKey = sidecar.contents
+        let bodyKey = sidecar.body
             .appendingPathExtension(ContentType.subtext.ext)
         let subtext = try read(
             with: Subtext.from,
@@ -64,12 +64,12 @@ extension StoreProtocol {
     /// - Once for Subtext file
     func write(_ key: String, memo: SubtextMemo) throws {
         let contentType = memo.headers.contentType().unwrap(or: "")
-        guard contentType == ContentType.subtext.contentType else {
+        guard contentType == ContentType.subtext.rawValue else {
             throw FileStoreError.contentTypeError(contentType)
         }
         let memoKey = key.appendingPathExtension(ContentType.memo.ext)
         let subtextKey = key.appendingPathExtension(ContentType.subtext.ext)
-        let memoData = MemoData(headers: memo.headers, contents: subtextKey)
+        let memoData = MemoData(headers: memo.headers, body: subtextKey)
         try write(with: Data.from, key: memoKey, value: memoData)
         try write(with: Data.from, key: subtextKey, value: memo.body)
     }
