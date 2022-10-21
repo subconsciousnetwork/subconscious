@@ -89,16 +89,12 @@ extension SubtextEntry {
     }
 }
 
-extension FileStore {
-    /// Read a subtext entry from a slug
-    func read(slug: Slug) throws -> SubtextEntry {
-        let memo: SubtextMemo = try read(String(describing: slug))
-        return SubtextEntry(slug: slug, contents: memo)
-    }
-
-    /// Write a Subtext entry to its slug
-    func write(entry: SubtextEntry) throws {
-        try write(String(describing: entry.slug), memo: entry.contents)
+extension MemoData {
+    init(_ entry: SubtextEntry) {
+        self.init(
+            headers: entry.contents.headers,
+            body: entry.slug.toPath(ContentType.subtext.ext)
+        )
     }
 }
 

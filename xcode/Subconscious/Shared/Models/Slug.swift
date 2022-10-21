@@ -20,7 +20,7 @@ struct Slug:
     static func < (lhs: Slug, rhs: Slug) -> Bool {
         lhs.id < rhs.id
     }
-
+    
     /// Sanitize a string into a "slug string"-a string into a string that can
     /// be losslessly converted to and from a Slug.
     ///
@@ -29,27 +29,27 @@ struct Slug:
     /// If you need a value to truly be a slug, use the Slug constructor.
     static func format(_ string: String) -> String? {
         let slugString = string
-            // Strip all non-allowed characters
+        // Strip all non-allowed characters
             .replacingOccurrences(
                 of: #"[^a-zA-Z0-9_\-\/\s]"#,
                 with: "",
                 options: .regularExpression,
                 range: nil
             )
-            // Trim leading/trailing whitespace
+        // Trim leading/trailing whitespace
             .trimmingCharacters(in: .whitespacesAndNewlines)
-            // Then trim leading/trailing slashes
+        // Then trim leading/trailing slashes
             .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
             .lowercased()
-            // Replace runs of one or more space with a single dash
+        // Replace runs of one or more space with a single dash
             .replacingOccurrences(
                 of: #"\s+"#,
                 with: "-",
                 options: .regularExpression,
                 range: nil
             )
-            // Replace all instances of two or more consecutive slashes
-            // with a single slash.
+        // Replace all instances of two or more consecutive slashes
+        // with a single slash.
             .replacingOccurrences(
                 of: #"/+"#,
                 with: "/",
@@ -62,10 +62,10 @@ struct Slug:
         }
         return slugString
     }
-
+    
     let id: String
     var description: String { id }
-
+    
     /// Losslessly create a slug from a string.
     /// This requires that the string already be formatted like a
     /// sanitized slug, including being lowercased.
@@ -79,7 +79,7 @@ struct Slug:
         }
         self.id = id
     }
-
+    
     /// Convert a string into a slug.
     /// This will sanitize the string as best it can to create a valid slug.
     init?(formatting string: String) {
@@ -88,7 +88,7 @@ struct Slug:
         }
         self.id = id
     }
-
+    
     /// Create a slug from a URL.
     ///
     /// Note this is lossless, so it will only support URLs that contain
@@ -113,12 +113,12 @@ struct Slug:
         }
         self.init(path.deletingPathExtension())
     }
-
+    
     /// Create a URL from this slug
     func toURL(directory: URL, ext: String) -> URL {
         directory.appendingFilename(name: self.id, ext: ext)
     }
-
+    
     /// Create a nice title-like string from a slug
     func toTitle() -> String {
         // Remove all non-slug characters
@@ -129,6 +129,11 @@ struct Slug:
                 range: nil
             )
             .capitalizingFirst()
+    }
+
+    /// Create relative path-like string from slug
+    func toPath(_ ext: String) -> String {
+        self.description.appendingPathExtension(ext)
     }
 }
 

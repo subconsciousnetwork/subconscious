@@ -23,7 +23,6 @@ public struct FileInfo: Hashable {
 }
 
 enum FileStoreError: Error {
-    case contentTypeError(String)
     case decodingError(String)
     case encodingError(String)
 }
