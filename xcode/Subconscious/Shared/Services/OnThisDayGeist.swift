@@ -21,6 +21,11 @@ enum OnThisDayVariant: CaseIterable {
     }
 }
 
+struct DateRange: Hashable {
+    var beginning: Date
+    var end: Date
+}
+
 struct OnThisDayGeist: Geist {
     private let database: DatabaseService
 
@@ -36,7 +41,7 @@ struct OnThisDayGeist: Geist {
         return d
     }
     
-    func dateFromVariant(variant: OnThisDayVariant) -> (Date, Date)? {
+    func dateFromVariant(variant: OnThisDayVariant) -> DateRange? {
         // Verbose but easy to extend, allows for custom definition of the time window rather than
         // locking us into a "day" being the only possible timespan.
         switch variant {
@@ -45,30 +50,30 @@ struct OnThisDayGeist: Geist {
                     let lower = addTo(date: Date.now, component: Calendar.Component.year, value: -1),
                     let upper = addTo(date: lower, component: Calendar.Component.day, value: 1)
                     else { return nil }
-                return (lower, upper)
+                return DateRange(beginning: lower, end: upper)
             case .sixMonthsAgo:
                 guard
                     let lower = addTo(date: Date.now, component: Calendar.Component.month, value: -6),
                     let upper = addTo(date: lower, component: Calendar.Component.day, value: 1)
                     else { return nil }
-                return (lower, upper)
+                return DateRange(beginning: lower, end: upper)
             case .aMonthAgo:
                 guard
                     let lower = addTo(date: Date.now, component: Calendar.Component.month, value: -1),
                     let upper = addTo(date: lower, component: Calendar.Component.day, value: 1)
                     else { return nil }
-                return (lower, upper)
+                return DateRange(beginning: lower, end: upper)
             case .inTheLastWeek:
                 guard
                     let lower = addTo(date: Date.now, component: Calendar.Component.day, value: -7),
                     let upper = addTo(date: lower, component: Calendar.Component.day, value: 6)
                     else { return nil }
-                return (lower, upper)
+                return DateRange(beginning: lower, end: upper)
             case .inTheLastDay:
                 guard
                     let lower = addTo(date: Date.now, component: Calendar.Component.day, value: -1)
                     else { return nil }
-                return (lower, Date.now)
+                return DateRange(beginning: lower, end: Date.now)
         }
     }
 
@@ -76,11 +81,11 @@ struct OnThisDayGeist: Geist {
         // Check all possible variant cases and keep the ones that actually yield entries
         let storyPool = OnThisDayVariant.allCases
             .map({ variant -> Story? in
-                guard let (start, end) = dateFromVariant(variant: variant) else {
+                guard let range = dateFromVariant(variant: variant) else {
                     return nil
                 }
                 
-                guard let entry = database.readRandomEntryInDateRange(startDate: start, endDate: end) else {
+                guard let entry = database.readRandomEntryInDateRange(startDate: range.beginning, endDate: range.end) else {
                     return nil
                 }
                 
