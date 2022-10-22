@@ -24,11 +24,6 @@ struct StoryView: View {
                 story: combo,
                 action: action
             )
-        case .onThisDay(let story):
-            StoryOnThisDayView(
-                story: story,
-                action: action
-            )
         }
     }
 }

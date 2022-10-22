@@ -11,7 +11,6 @@ import Foundation
 enum Story: Hashable, Identifiable {
     case prompt(StoryPrompt)
     case combo(StoryCombo)
-    case onThisDay(StoryOnThisDay)
 
     var id: UUID {
         switch self {
@@ -19,8 +18,6 @@ enum Story: Hashable, Identifiable {
             return prompt.id
         case .combo(let combo):
             return combo.id
-        case .onThisDay(let onThisDay):
-            return onThisDay.id
         }
     }
 }

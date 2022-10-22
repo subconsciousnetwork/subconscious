@@ -76,6 +76,21 @@ struct OnThisDayGeist: Geist {
                 return DateRange(beginning: lower, end: Date.now)
         }
     }
+    
+    func readableDescription(variant: OnThisDayVariant) -> String {
+        switch variant {
+        case .aYearAgo:
+            return "On this day a year ago"
+        case .sixMonthsAgo:
+            return "6 months ago"
+        case .aMonthAgo:
+            return "One month ago"
+        case .inTheLastWeek:
+            return "Modified in the last week"
+        case .inTheLastDay:
+            return "Modified in the last day"
+        }
+    }
 
     func ask(query: String) -> Story? {
         // Check all possible variant cases and keep the ones that actually yield entries
@@ -89,7 +104,7 @@ struct OnThisDayGeist: Geist {
                     return nil
                 }
                 
-                return Story.onThisDay(StoryOnThisDay(entry: entry, timespan: variant))
+                return Story.prompt(StoryPrompt(entry: entry, prompt: readableDescription(variant: variant)))
             })
             .compactMap({ $0 }) // Filter out nil cases
         
