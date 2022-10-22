@@ -1,5 +1,5 @@
 //
-//  OnThisDayGeist.swift
+//  MementoGeist.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 30/9/2022.
@@ -8,14 +8,14 @@
 import Foundation
 
 
-enum OnThisDayVariant: CaseIterable {
+enum MementoGeistVariant: CaseIterable {
     case inTheLastDay
     case inTheLastWeek
     case aYearAgo
     case sixMonthsAgo
     case aMonthAgo
     
-    static func random() -> OnThisDayVariant {
+    static func random() -> MementoGeistVariant {
         // https://stackoverflow.com/questions/63189870/return-a-random-case-from-an-enum-in-swift
         return allCases.randomElement()!
     }
@@ -26,7 +26,7 @@ struct DateRange: Hashable {
     var end: Date
 }
 
-struct OnThisDayGeist: Geist {
+struct MementoGeist: Geist {
     private let database: DatabaseService
 
     init(database: DatabaseService) {
@@ -41,7 +41,7 @@ struct OnThisDayGeist: Geist {
         return d
     }
     
-    func dateFromVariant(variant: OnThisDayVariant) -> DateRange? {
+    func dateFromVariant(variant: MementoGeistVariant) -> DateRange? {
         // Verbose but easy to extend, allows for custom definition of the time window rather than
         // locking us into a "day" being the only possible timespan.
         switch variant {
@@ -77,7 +77,7 @@ struct OnThisDayGeist: Geist {
         }
     }
     
-    func readableDescription(variant: OnThisDayVariant) -> String {
+    func readableDescription(variant: MementoGeistVariant) -> String {
         switch variant {
         case .aYearAgo:
             return "On this day a year ago"
@@ -94,7 +94,7 @@ struct OnThisDayGeist: Geist {
 
     func ask(query: String) -> Story? {
         // Check all possible variant cases and keep the ones that actually yield entries
-        let storyPool = OnThisDayVariant.allCases
+        let storyPool = MementoGeistVariant.allCases
             .map({ variant -> Story? in
                 guard let range = dateFromVariant(variant: variant) else {
                     return nil
