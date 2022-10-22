@@ -798,6 +798,34 @@ struct DatabaseService {
             )
         }
     }
+    
+    func readRandomEntryInDateRange(startDate: Date, endDate: Date) -> EntryStub? {
+        try? database.execute(
+            sql: """
+            SELECT slug, body
+            FROM entry
+            WHERE entry.modified BETWEEN ? AND ?
+            ORDER BY RANDOM()
+            LIMIT 1
+            """,
+            parameters: [
+                .date(startDate),
+                .date(endDate)
+            ]
+        )
+        .compactMap({ row in
+            guard
+                let slugString: String = row.get(0),
+                let slug = Slug(slugString),
+                let body: String = row.get(1)
+            else {
+                return nil
+            }
+            let entry = SubtextFile(slug: slug, content: body)
+            return EntryStub(entry)
+        })
+        .first
+    }
 
     /// Select a random entry
     func readRandomEntry() -> EntryStub? {

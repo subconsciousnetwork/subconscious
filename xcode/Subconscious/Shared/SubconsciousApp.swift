@@ -714,6 +714,10 @@ struct AppEnvironment {
         } catch {
             logger.debug("Failed to load project Geist: \(error)")
         }
+        
+        // MARK: Memento Geist
+        let mementoGeist = MementoGeist(database: database)
+        self.feed.register(name: "memento", geist: mementoGeist)
     }
 }
 
