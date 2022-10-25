@@ -64,8 +64,8 @@ struct MemoStore: StoreProtocol {
         try memos.write(slug, value: memoData)
         try files.write(
             with: Data.from,
-            key: memoData.body,
-            value: bodyPath
+            key: bodyPath,
+            value: memo.body
         )
     }
     
