@@ -657,14 +657,14 @@ struct AppEnvironment {
 
         self.logger = Logger.main
 
-        let fs = FileStore(documentURL: self.documentURL)
+        let store = MemoStore(documentURL)
 
         self.database = DatabaseService(
             documentURL: self.documentURL,
             databaseURL: self.applicationSupportURL
                 .appendingPathComponent("database.sqlite"),
             migrations: Self.migrations,
-            store: MemoStore(documentURL)
+            store: store
         )
 
         self.keyboard = KeyboardService()
