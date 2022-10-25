@@ -1,5 +1,5 @@
 //
-//  EntryStore.swift
+//  MemoStore.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 10/21/22.
@@ -12,22 +12,23 @@ enum EntryStoreError: Error {
     case contentTypeError(String)
 }
 
-/// EntryStore is a high-level store that allows us to read and write
-/// fully reified datatypes with sidecar metadata.
-struct EntryStore: StoreProtocol {
+/// MemoStore is a higher-level store that allows us to read and write
+/// memos (with deserialized bodyparts) by reading both the MemoData AND
+/// the file that the MemoData sidecar points to.
+struct MemoStore: StoreProtocol {
     typealias Key = Slug
-    typealias Value = SubtextEntry
+    typealias Value = SubtextMemo
     
-    private var fs: FileStore
+    private var files: FileStore
     private var memos: MemoDataStore
     
-    init(fs: FileStore) {
-        self.fs = fs
-        self.memos = MemoDataStore(store: fs)
+    init(files: FileStore) {
+        self.files = files
+        self.memos = MemoDataStore(store: files)
     }
     
     /// Read a SubtextEntry from slug
-    func read(_ slug: Slug) throws -> SubtextEntry {
+    func read(_ slug: Slug) throws -> SubtextMemo {
         let memo = try memos.read(slug)
         guard let contentType = memo.headers.contentType() else {
             throw EntryStoreError.contentTypeMissing
@@ -38,21 +39,16 @@ struct EntryStore: StoreProtocol {
             )
         }
         /// Read bodypart using lower-level
-        let body = try fs.read(
+        let body = try files.read(
             with: Subtext.from,
             key: memo.body
         )
-        return SubtextEntry(
-            slug: slug,
-            contents: Memo(
-                headers: memo.headers,
-                body: body
-            )
-        )
+        return SubtextMemo(headers: memo.headers, body: body)
     }
-    
-    func write(_ slug: Slug, value entry: SubtextEntry) throws {
-        guard let contentType = entry.contents.headers.contentType() else {
+
+    /// Write a SubtextMemo to a location
+    func write(_ slug: Slug, value memo: SubtextMemo) throws {
+        guard let contentType = memo.headers.contentType() else {
             throw EntryStoreError.contentTypeMissing
         }
         guard contentType == ContentType.subtext.rawValue else {
@@ -60,12 +56,16 @@ struct EntryStore: StoreProtocol {
                 "Unsupported content type: \(contentType)"
             )
         }
-        let memoData = MemoData(entry)
+        let bodyPath = slug.toPath(ContentType.subtext.ext)
+        let memoData = MemoData(
+            headers: memo.headers,
+            body: bodyPath
+        )
         try memos.write(slug, value: memoData)
-        try fs.write(
+        try files.write(
             with: Data.from,
             key: memoData.body,
-            value: entry.contents.body
+            value: bodyPath
         )
     }
     
@@ -75,12 +75,26 @@ struct EntryStore: StoreProtocol {
         // Remove memo
         try memos.remove(slug)
         // Remove body file
-        try fs.remove(memo.body)
+        try files.remove(memo.body)
     }
     
     func save() throws {}
     
     func list() throws -> some Sequence<Slug> {
         try memos.list()
+    }
+
+    // Get info for slug
+    func info(_ slug: Slug) throws -> FileInfo? {
+        // Get memo
+        let memo = try memos.read(slug)
+        // Read file info from body property
+        return files.info(memo.body)
+    }
+}
+
+extension MemoStore {
+    init(_ documentURL: URL) {
+        self.init(files: FileStore(documentURL: documentURL))
     }
 }

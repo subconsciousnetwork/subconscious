@@ -17,25 +17,6 @@ where T: Hashable
 }
 
 extension Entry {
-    /// Mend blessed headers, providing them with default values
-    mutating func mendHeaders(
-        modified: Date = Date.now,
-        created: Date = Date.now
-    ) {
-        contents.headers.fallback(
-            name: "Title",
-            value: slug.toTitle()
-        )
-        contents.headers.fallback(
-            name: "Modified",
-            value: String.from(modified)
-        )
-        contents.headers.fallback(
-            name: "Created",
-            value: String.from(created)
-        )
-    }
-    
     /// Get title or derive title from slug
     func titleOrDefault() -> String {
         contents.headers.title() ?? slug.toTitle()

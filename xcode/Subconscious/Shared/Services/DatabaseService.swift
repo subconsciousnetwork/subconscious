@@ -31,7 +31,7 @@ struct DatabaseService {
         }
     }
 
-    private var fs: FileStore
+    private var store: MemoStore
     private var documentURL: URL
     private var databaseURL: URL
     private var database: SQLite3Database
@@ -41,7 +41,7 @@ struct DatabaseService {
         documentURL: URL,
         databaseURL: URL,
         migrations: SQLite3Migrations,
-        fs: FileStore
+        store: MemoStore
     ) {
         self.documentURL = documentURL
         self.databaseURL = databaseURL
@@ -50,7 +50,7 @@ struct DatabaseService {
             mode: .readwrite
         )
         self.migrations = migrations
-        self.fs = fs
+        self.store = store
     }
 
     /// Close database connection and delete database file
@@ -186,7 +186,7 @@ struct DatabaseService {
     private func writeEntry(_ entry: SubtextEntry) throws {
         var entry = entry
         entry.contents.headers.modified(Date.now)
-        try fs.write(entry: entry)
+        try store.write(entry.slug, value: entry.contents)
 
         // Read modified date from file system directly after writing
         let fingerprint = try FileFingerprint
@@ -703,14 +703,20 @@ struct DatabaseService {
     private func readEntry(
         slug: Slug
     ) -> SubtextEntry? {
-        guard var entry = try? fs.read(slug: slug) else {
+        guard var memo = try? store.read(slug) else {
             return nil
         }
-        guard let info = fs.info(String(describing: slug)) else {
-            return entry
+        let fallbackTitle = slug.toTitle()
+        guard let info = try? store.info(slug) else {
+            memo.headers.mend(title: fallbackTitle)
+            return SubtextEntry(slug: slug, contents: memo)
         }
-        entry.mendHeaders(modified: info.modified, created: info.created)
-        return entry
+        memo.headers.mend(
+            title: fallbackTitle,
+            modified: info.modified,
+            created: info.created
+        )
+        return SubtextEntry(slug: slug, contents: memo)
     }
     
     /// Sync version of readEntryDetail

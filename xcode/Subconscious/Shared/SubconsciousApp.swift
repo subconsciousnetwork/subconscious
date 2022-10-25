@@ -664,7 +664,7 @@ struct AppEnvironment {
             databaseURL: self.applicationSupportURL
                 .appendingPathComponent("database.sqlite"),
             migrations: Self.migrations,
-            fs: fs
+            store: MemoStore(documentURL)
         )
 
         self.keyboard = KeyboardService()

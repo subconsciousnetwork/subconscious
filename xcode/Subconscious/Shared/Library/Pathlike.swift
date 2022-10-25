@@ -14,9 +14,11 @@
 
 import Foundation
 
-typealias Path = String
+/// Pathlike is an alias for String, to make it clear we're using a string
+/// as a path.
+typealias Pathlike = String
 
-extension Path {
+extension Pathlike {
     /// Return path exension
     var ext: String {
         let parts = self.split(separator: ".")
@@ -27,7 +29,7 @@ extension Path {
     }
 }
 
-extension Path {
+extension Pathlike {
     /// Returns a string path with the path extension removed, if any.
     /// Extension is anything after the first `.`.
     func deletingPathExtension() -> String {
@@ -38,7 +40,7 @@ extension Path {
     }
 }
 
-extension Path {
+extension Pathlike {
     /// Append a file extension to a path-like string.
     ///
     /// The logic of this function is very simple, essentially a
@@ -53,7 +55,7 @@ extension Path {
     }
 }
 
-extension Path {
+extension Pathlike {
     /// Check if a path-like string has an extension suffix.
     /// Pass the extension without the leading `.`.
     func hasExtension(_ ext: String) -> Bool {
@@ -61,7 +63,7 @@ extension Path {
     }
 }
 
-extension Path {
+extension Pathlike {
     /// Truncate to avoid file name length limit issues.
     /// Windows systems can handle up to 255, but we truncate at 200 to leave a bit of room
     /// for things like version numbers.
@@ -70,7 +72,7 @@ extension Path {
     }
 }
 
-extension Path {
+extension Pathlike {
     func removingLeadingSlash() -> String {
         if self.hasPrefix("/") {
             return String(self.dropFirst())

@@ -265,7 +265,7 @@ extension Headers {
         self.created(created)
         self.title(title)
     }
-
+    
     func contentType() -> String? {
         get(first: "Content-Type")
     }
@@ -298,7 +298,7 @@ extension Headers {
     func createdOrDefault() -> Date {
         modified() ?? Date.epoch
     }
-
+    
     mutating func created(_ date: Date) {
         replace(
             name: "Created",
@@ -309,11 +309,31 @@ extension Headers {
     func title() -> String? {
         get(first: "Title")
     }
-
+    
     mutating func title(_ title: String) {
         replace(
             name: "Title",
             value: title
+        )
+    }
+    
+    /// Mend blessed headers, providing fallbacks
+    mutating func mend(
+        title: String,
+        modified: Date = Date.now,
+        created: Date = Date.now
+    ) {
+        self.fallback(
+            name: "Title",
+            value: title
+        )
+        self.fallback(
+            name: "Modified",
+            value: String.from(modified)
+        )
+        self.fallback(
+            name: "Created",
+            value: String.from(created)
         )
     }
 }
