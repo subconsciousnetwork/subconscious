@@ -185,6 +185,7 @@
 		B8AE34C9276BF77000777FF0 /* SearchTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34C7276BF77000777FF0 /* SearchTextField.swift */; };
 		B8AE34CB276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */; };
 		B8AE34CC276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */; };
+		B8B3194D2909E81D00A1E62A /* FileInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3194C2909E81D00A1E62A /* FileInfo.swift */; };
 		B8B4250928FB29A30081B8D5 /* JSONUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4250828FB29A30081B8D5 /* JSONUtilities.swift */; };
 		B8B4250A28FB29A30081B8D5 /* JSONUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4250828FB29A30081B8D5 /* JSONUtilities.swift */; };
 		B8B4250C28FB43C90081B8D5 /* ContentType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4250B28FB43C90081B8D5 /* ContentType.swift */; };
@@ -384,6 +385,7 @@
 		B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkSearchView.swift; sourceTree = "<group>"; };
 		B8AE34C7276BF77000777FF0 /* SearchTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTextField.swift; sourceTree = "<group>"; };
 		B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkSuggestionLabelView.swift; sourceTree = "<group>"; };
+		B8B3194C2909E81D00A1E62A /* FileInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileInfo.swift; sourceTree = "<group>"; };
 		B8B4250828FB29A30081B8D5 /* JSONUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONUtilities.swift; sourceTree = "<group>"; };
 		B8B4250B28FB43C90081B8D5 /* ContentType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentType.swift; sourceTree = "<group>"; };
 		B8B4250E28FDE6960081B8D5 /* FileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileStore.swift; sourceTree = "<group>"; };
@@ -566,6 +568,7 @@
 				B58FE48B28DED9B600E000CC /* StoryCombo.swift */,
 				B8A59D6828B692900010DB2F /* StoryPrompt.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
+				B8B3194C2909E81D00A1E62A /* FileInfo.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1089,6 +1092,7 @@
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
 				B89D296827E832DC009E0DED /* LoggerUtilities.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
+				B8B3194D2909E81D00A1E62A /* FileInfo.swift in Sources */,
 				B8AC648A278F53920099E96B /* EntryStub.swift in Sources */,
 				B8B4250C28FB43C90081B8D5 /* ContentType.swift in Sources */,
 				B8AE34C5276BF72500777FF0 /* LinkSearchView.swift in Sources */,
