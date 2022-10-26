@@ -13,26 +13,20 @@ public struct FileInfo: Hashable, Equatable {
     var created: Date
     var modified: Date
     var size: Int
-    
-    /// Modified time on file, as Unix Timestamp Integer (rounded to the nearest second)
-    /// We were previously getting what appeared to be rounding precision errors
-    /// when serializing datetimes as ISO strings using .
-    ///
-    /// Additionally, file timestamps precision is limited to:
-    /// 1 second for EXT3
-    /// 1 microsecond for UFS
-    /// 1 nanosecond for EXT4
-    ///
-    /// To-the-nearest-second precision is fine for the purpose of comparing changes, and
-    /// handwaves away these issues.
-    ///
-    /// 2021-07-26 Gordon Brander
-    var modifiedTimestampNearestSecond: Int {
-        Int(modified.timeIntervalSince1970)
+}
+
+extension FileFingerprint.Attributes {
+    init(_ info: FileInfo) {
+        self.init(
+            // Round to nearest second
+            modified: Int(info.modified.timeIntervalSince1970),
+            size: info.size
+        )
     }
-    
-    /// Created time on file, as Unix Timestamp Integer (rounded to the nearest second)
-    var createdTimestampNearestSecond: Int {
-        Int(created.timeIntervalSince1970)
+}
+
+extension FileFingerprint {
+    init(slug: Slug, info: FileInfo) {
+        self.init(slug: slug, attributes: Attributes(info))
     }
 }

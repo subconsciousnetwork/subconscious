@@ -91,9 +91,11 @@ struct MemoStore: StoreProtocol {
     }
 
     // Get info for slug
-    func info(_ slug: Slug) throws -> FileInfo? {
+    func info(_ slug: Slug) -> FileInfo? {
         // Get memo
-        let memo = try memos.read(slug)
+        guard let memo = try? memos.read(slug) else {
+            return nil
+        }
         // Read file info from body property
         return files.info(memo.body)
     }

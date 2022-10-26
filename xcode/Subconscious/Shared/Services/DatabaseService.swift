@@ -15,7 +15,6 @@ struct DatabaseService {
         case pathNotInFilePath
         case randomEntryFailed
         case fileExists(Slug)
-        case fileNotFound(Slug)
 
         var errorDescription: String? {
             switch self {
@@ -25,8 +24,6 @@ struct DatabaseService {
                 return "DatabaseServiceError.randomEntryFailed"
             case .fileExists(let slug):
                 return "DatabaseServiceError.fileExists(\(slug))"
-            case .fileNotFound(let slug):
-                return "DatabaseServiceError.notFound(\(slug))"
             }
         }
     }
@@ -79,11 +76,23 @@ struct DatabaseService {
     func syncDatabase() -> AnyPublisher<[FileFingerprintChange], Error> {
         CombineUtilities.async(qos: .utility) {
             // Left = Leader (files)
-            let left = try FileSync.readFileFingerprints(
-                directory: documentURL,
-                ext: "subtext"
-            ).unwrap()
-
+            let left: [FileFingerprint] = try store.list()
+                .compactMap({ slug in
+                    guard let headers = try? store.headers(slug) else {
+                        return nil
+                    }
+                    let contentType = ContentType.subtext.rawValue
+                    guard headers.contentType() == contentType else {
+                        return nil
+                    }
+                    guard let info = store.info(slug) else {
+                        return nil
+                    }
+                    return FileFingerprint(
+                        slug: slug,
+                        info: info
+                    )
+                })
             // Right = Follower (search index)
             let right: [FileFingerprint] = try database.execute(
                 sql: "SELECT slug, modified, size FROM entry"
@@ -106,7 +115,8 @@ struct DatabaseService {
             let changes = FileSync.calcChanges(
                 left: left,
                 right: right
-            ).filter({ change in
+            )
+            .filter({ change in
                 switch change {
                 case .same:
                     return false
@@ -114,7 +124,6 @@ struct DatabaseService {
                     return true
                 }
             })
-            
             for change in changes {
                 switch change {
                 // .leftOnly = create.
@@ -139,11 +148,9 @@ struct DatabaseService {
     /// Write entry syncronously
     private func writeEntryToDatabase(
         entry: SubtextEntry,
-        fingerprint: FileFingerprint.Attributes
+        attributes: FileFingerprint.Attributes
     ) throws {
-        let title = entry.contents.headers.get(first: "title").unwrap(
-            or: entry.slug.toTitle()
-        )
+        let title = entry.titleOrDefault()
         try database.execute(
             sql: """
             INSERT INTO entry (slug, title, body, modified, size)
@@ -158,10 +165,17 @@ struct DatabaseService {
                 .text(String(describing: entry.slug)),
                 .text(title),
                 .text(String(describing: entry.contents.body)),
-                .date(fingerprint.modifiedDate),
-                .integer(fingerprint.size)
+                .date(attributes.modifiedDate),
+                .integer(attributes.size)
             ]
         )
+    }
+
+    private func writeEntryToDatabase(slug: Slug) throws {
+        let entry = try readEntry(slug: slug)
+        let info = try store.info(slug).unwrap()
+        let attributes = FileFingerprint.Attributes(info)
+        try writeEntryToDatabase(entry: entry, attributes: attributes)
     }
 
     private func entryFileExists(_ slug: Slug) -> Bool {
@@ -173,14 +187,6 @@ struct DatabaseService {
         return FileManager.default.fileExists(atPath: url.path)
     }
 
-    private func writeEntryToDatabase(slug: Slug) throws {
-        let entry = try readEntry(slug: slug).unwrap()
-        let fingerprint = try FileFingerprint
-            .Attributes(url: entry.url(directory: documentURL))
-            .unwrap()
-        try writeEntryToDatabase(entry: entry, fingerprint: fingerprint)
-    }
-    
     /// Write entry to file system and database
     /// Also sets modified header to now.
     private func writeEntry(_ entry: SubtextEntry) throws {
@@ -189,12 +195,11 @@ struct DatabaseService {
         try store.write(entry.slug, value: entry.contents)
 
         // Read modified date from file system directly after writing
-        let fingerprint = try FileFingerprint
-            .Attributes(url: entry.url(directory: documentURL))
-            .unwrap()
+        let info = try store.info(entry.slug).unwrap()
+        let attributes = FileFingerprint.Attributes(info)
         try writeEntryToDatabase(
             entry: entry,
-            fingerprint: fingerprint
+            attributes: attributes
         )
     }
     
@@ -240,7 +245,6 @@ struct DatabaseService {
             throw DatabaseServiceError.fileExists(to.slug)
         }
         let fromFile = try readEntry(slug: from.slug)
-            .unwrap(DatabaseServiceError.fileNotFound(from.slug))
         // Make a copy representing new location and set new title and slug
         var toFile = fromFile
         toFile.setLink(to)
@@ -270,10 +274,8 @@ struct DatabaseService {
         child: Slug
     ) throws {
         let childEntry = try readEntry(slug: child)
-            .unwrap(DatabaseServiceError.fileNotFound(child))
         
         let parentEntry = try readEntry(slug: parent)
-            .unwrap(DatabaseServiceError.fileNotFound(parent))
             .merge(childEntry)
         
         //  First write the merged file to "to" location
@@ -306,7 +308,6 @@ struct DatabaseService {
             return
         }
         var entry = try readEntry(slug: from.slug)
-            .unwrap(DatabaseServiceError.fileNotFound(from.slug))
         entry.contents.headers.title(to.linkableTitle)
         try writeEntry(entry)
     }
@@ -599,14 +600,10 @@ struct DatabaseService {
         guard Config.default.linksEnabled else {
             return []
         }
-        guard
-            let linksEntry = readEntry(slug: Config.default.linksTemplate)
-        else {
-            return Config.default.linksFallback.map({ slug in
-                    .entry(
-                        EntryLink(slug: slug)
-                    )
-            })
+        let slug = Config.default.linksTemplate
+        guard let linksEntry = try? readEntry(slug: slug) else {
+            return Config.default.linksFallback
+                .map({ slug in .entry(EntryLink(slug: slug)) })
         }
         let subtext = linksEntry.contents.body
         return subtext.entryLinks.map(LinkSuggestion.entry)
@@ -700,14 +697,10 @@ struct DatabaseService {
     /// Private syncronous API to read a Subtext file via its Slug
     /// Used by public async APIs.
     /// - Returns a SubtextFile with mended headers.
-    private func readEntry(
-        slug: Slug
-    ) -> SubtextEntry? {
-        guard var memo = try? store.read(slug) else {
-            return nil
-        }
+    private func readEntry(slug: Slug) throws -> SubtextEntry {
+        var memo = try store.read(slug)
         let fallbackTitle = slug.toTitle()
-        guard let info = try? store.info(slug) else {
+        guard let info = store.info(slug) else {
             memo.headers.mend(title: fallbackTitle)
             return SubtextEntry(slug: slug, contents: memo)
         }
@@ -759,7 +752,7 @@ struct DatabaseService {
         })
         // Retreive top entry from file system to ensure it is fresh.
         // If no file exists, return a draft, using fallback for title.
-        guard let entry = readEntry(slug: link.slug) else {
+        guard let entry = try? readEntry(slug: link.slug) else {
             return EntryDetail(
                 saveState: .draft,
                 entry: SubtextEntry(
@@ -796,7 +789,8 @@ struct DatabaseService {
         template: Slug
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .utility) {
-            let fallback = readEntry(slug: template).mapOr(
+            let entry = try? readEntry(slug: template)
+            let fallback = entry.mapOr(
                 { entry in
                     String(describing: entry.contents.body)
                 },
