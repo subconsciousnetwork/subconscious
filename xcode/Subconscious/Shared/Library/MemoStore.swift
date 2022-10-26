@@ -46,6 +46,12 @@ struct MemoStore: StoreProtocol {
         return SubtextMemo(headers: memo.headers, body: body)
     }
 
+    /// Get just the headers for a given memo
+    func headers(_ slug: Slug) throws -> Headers {
+        let memo = try memos.read(slug)
+        return memo.headers
+    }
+
     /// Write a SubtextMemo to a location
     func write(_ slug: Slug, value memo: SubtextMemo) throws {
         guard let contentType = memo.headers.contentType() else {
