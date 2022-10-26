@@ -18,12 +18,6 @@ protocol StoreProtocol {
     func list() throws -> Keys
 }
 
-public struct FileInfo: Hashable {
-    var created: Date
-    var modified: Date
-    var size: Int
-}
-
 enum FileStoreError: Error {
     case decodingError(String)
     case encodingError(String)
