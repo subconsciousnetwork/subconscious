@@ -657,7 +657,11 @@ struct AppEnvironment {
 
         self.logger = Logger.main
 
-        let store = MemoStore(documentURL)
+        let notesURL = documentURL.appending(
+            component: Config.default.notesDirectory,
+            directoryHint: .isDirectory
+        )
+        let store = MemoStore(notesURL)
 
         self.database = DatabaseService(
             documentURL: self.documentURL,
