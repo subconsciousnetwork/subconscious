@@ -10,6 +10,11 @@ import Foundation
 import Combine
 import OrderedCollections
 
+struct DatabaseMigrationInfo: Hashable {
+    var version: Int
+    var didRebuild: Bool
+}
+
 struct DatabaseService {
     enum DatabaseServiceError: Error, LocalizedError {
         case pathNotInFilePath
@@ -32,42 +37,54 @@ struct DatabaseService {
     private var documentURL: URL
     private var databaseURL: URL
     private var database: SQLite3Database
-    private var migrations: SQLite3Migrations
+    private var schema: Schema
 
     init(
         documentURL: URL,
         databaseURL: URL,
-        migrations: SQLite3Migrations,
+        schema: Schema,
         store: MemoStore
     ) {
         self.documentURL = documentURL
         self.databaseURL = databaseURL
-        self.database = .init(
-            path: databaseURL.absoluteString,
+        self.database = SQLite3Database(
+            url: databaseURL,
             mode: .readwrite
         )
-        self.migrations = migrations
+        self.schema = schema
         self.store = store
     }
 
-    /// Close database connection and delete database file
-    func delete() -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(
-            qos: .background,
-            execute: {
-                database.close()
-                try FileManager.default.removeItem(at: databaseURL)
-            }
+    /// Make sure database is up-to-date.
+    /// Checks the user version, and if it is out of date, it deletes
+    /// and recreates the database.
+    ///
+    /// Because we only use the database as a cache, we are able to rebuild
+    /// it from scratch using the file system.
+    ///
+    /// - Returns the version of the database upon successful comple.
+    private func migrate() throws -> DatabaseMigrationInfo {
+        let version = try database.getUserVersion()
+        guard version != schema.version else {
+            return DatabaseMigrationInfo(
+                version: version,
+                didRebuild: false
+            )
+        }
+        try database.delete()
+        let database = try database.open()
+        try database.executescript(sql: schema.script)
+        return DatabaseMigrationInfo(
+            version: schema.version,
+            didRebuild: true
         )
     }
 
-    func migrate() -> AnyPublisher<SQLite3Migrations.MigrationSuccess, Error> {
-        CombineUtilities.async(
-            qos: .userInitiated,
-            execute: {
-                try migrations.migrate(database: database)
-            }
-        )
+    /// Migrate database off main thread, returning a publisher
+    func migrateAsync() -> AnyPublisher<DatabaseMigrationInfo, Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            try migrate()
+        }
     }
 
     /// Sync file system with database.

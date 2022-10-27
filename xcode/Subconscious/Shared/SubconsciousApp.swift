@@ -45,7 +45,7 @@ enum AppAction: CustomLogStringConvertible {
     //  Database
     /// Get database ready for interaction
     case readyDatabase
-    case migrateDatabaseSuccess(SQLite3Migrations.MigrationSuccess)
+    case migrateDatabaseSuccess(DatabaseMigrationInfo)
     case rebuildDatabase
     case rebuildDatabaseFailure(String)
     /// Sync database with file system
@@ -78,6 +78,8 @@ enum AppAction: CustomLogStringConvertible {
             return "feed(\(String.loggable(feedAction)))"
         case .poll(_):
             return "poll"
+        case let .migrateDatabaseSuccess(info):
+            return "migrateDatabaseSuccess(\(info.version), \(info.didRebuild))"
         default:
             return String(describing: self)
         }
@@ -235,11 +237,11 @@ struct AppModel: ModelProtocol {
             )
         case .readyDatabase:
             return readyDatabase(state: state, environment: environment)
-        case let .migrateDatabaseSuccess(success):
+        case let .migrateDatabaseSuccess(info):
             return migrateDatabaseSuccess(
                 state: state,
                 environment: environment,
-                success: success
+                info: info
             )
         case .rebuildDatabase:
             return rebuildDatabase(
@@ -447,9 +449,9 @@ struct AppModel: ModelProtocol {
         case .initial:
             environment.logger.log("Readying database")
             let fx: Fx<AppAction> = environment.database
-                .migrate()
-                .map({ success in
-                    AppAction.migrateDatabaseSuccess(success)
+                .migrateAsync()
+                .map({ info in
+                    AppAction.migrateDatabaseSuccess(info)
                 })
                 .catch({ _ in
                     Just(AppAction.rebuildDatabase)
@@ -481,7 +483,7 @@ struct AppModel: ModelProtocol {
     static func migrateDatabaseSuccess(
         state: AppModel,
         environment: AppEnvironment,
-        success: SQLite3Migrations.MigrationSuccess
+        info: DatabaseMigrationInfo
     ) -> Update<AppModel> {
         var model = state
         model.databaseState = .ready
@@ -489,11 +491,14 @@ struct AppModel: ModelProtocol {
             AppAction.sync
         )
         .eraseToAnyPublisher()
-        if success.from != success.to {
+        if info.didRebuild {
             environment.logger.log(
-                "Migrated database: \(success.from)->\(success.to)"
+                "Rebuilt database @ version \(info.version)"
             )
         }
+        environment.logger.log(
+            "Database @ version \(info.version)"
+        )
         return Update(state: model, fx: fx)
     }
 
@@ -502,19 +507,17 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         environment.logger.warning(
-            "Database is broken or has wrong schema. Attempting to rebuild."
+            "Failed to migrate database. Retrying."
         )
-        let fx: Fx<AppAction> = environment.database
-            .delete()
-            .flatMap({ _ in
-                environment.database.migrate()
-            })
+        let fx: Fx<AppAction> = environment.database.migrateAsync()
             .map({ success in
                 AppAction.migrateDatabaseSuccess(success)
             })
             .catch({ error in
-                Just(AppAction.rebuildDatabaseFailure(
-                    error.localizedDescription)
+                Just(
+                    AppAction.rebuildDatabaseFailure(
+                        error.localizedDescription
+                    )
                 )
             })
             .eraseToAnyPublisher()
@@ -667,7 +670,7 @@ struct AppEnvironment {
             documentURL: self.documentURL,
             databaseURL: self.applicationSupportURL
                 .appendingPathComponent("database.sqlite"),
-            migrations: Self.migrations,
+            schema: Config.schema,
             store: store
         )
 
@@ -724,95 +727,3 @@ struct AppEnvironment {
     }
 }
 
-//  MARK: Migrations
-extension AppEnvironment {
-    static let migrations = SQLite3Migrations([
-        SQLite3Migrations.Migration(
-            date: "2021-11-04T12:00:00",
-            sql: """
-            CREATE TABLE search_history (
-                id TEXT PRIMARY KEY,
-                query TEXT NOT NULL,
-                created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE entry (
-              slug TEXT PRIMARY KEY,
-              title TEXT NOT NULL DEFAULT '',
-              body TEXT NOT NULL,
-              modified TEXT NOT NULL,
-              size INTEGER NOT NULL
-            );
-
-            CREATE VIRTUAL TABLE entry_search USING fts5(
-              slug,
-              title,
-              body,
-              modified UNINDEXED,
-              size UNINDEXED,
-              content="entry",
-              tokenize="porter"
-            );
-
-            /*
-            Create triggers to keep fts5 virtual table in sync with content table.
-
-            Note: SQLite documentation notes that you want to modify the fts table *before*
-            the external content table, hence the BEFORE commands.
-
-            These triggers are adapted from examples in the docs:
-            https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
-            */
-            CREATE TRIGGER entry_search_before_update BEFORE UPDATE ON entry BEGIN
-              DELETE FROM entry_search WHERE rowid=old.rowid;
-            END;
-
-            CREATE TRIGGER entry_search_before_delete BEFORE DELETE ON entry BEGIN
-              DELETE FROM entry_search WHERE rowid=old.rowid;
-            END;
-
-            CREATE TRIGGER entry_search_after_update AFTER UPDATE ON entry BEGIN
-              INSERT INTO entry_search
-                (
-                  rowid,
-                  slug,
-                  title,
-                  body,
-                  modified,
-                  size
-                )
-              VALUES
-                (
-                  new.rowid,
-                  new.slug,
-                  new.title,
-                  new.body,
-                  new.modified,
-                  new.size
-                );
-            END;
-
-            CREATE TRIGGER entry_search_after_insert AFTER INSERT ON entry BEGIN
-              INSERT INTO entry_search
-                (
-                  rowid,
-                  slug,
-                  title,
-                  body,
-                  modified,
-                  size
-                )
-              VALUES
-                (
-                  new.rowid,
-                  new.slug,
-                  new.title,
-                  new.body,
-                  new.modified,
-                  new.size
-                );
-            END;
-            """
-        )!
-    ])!
-}

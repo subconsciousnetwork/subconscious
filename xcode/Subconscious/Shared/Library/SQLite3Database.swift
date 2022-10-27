@@ -258,6 +258,10 @@ final class SQLite3Database {
 
         /// Close connection on deinit
         deinit {
+            self.close()
+        }
+
+        public func close() {
             // We use sqlite3_close_v2 because it knows how to clean up
             // after itself if there are any unfinalized prepared statements.
             //
@@ -624,14 +628,14 @@ final class SQLite3Database {
     /// We use this queue to make database instances threadsafe
     private var queue: DispatchQueue
     private var db: Connection?
-    let path: String
+    let url: URL
     let mode: OpenMode
 
     public init(
-        path: String,
+        url: URL,
         mode: OpenMode = .readwrite
     ) {
-        self.path = path
+        self.url = url
         self.mode = mode
         // Create GCD dispatch queue for running database queries.
         // SQLite3Connection objects are threadsafe.
@@ -650,6 +654,7 @@ final class SQLite3Database {
         if let db = self.db {
             return db
         } else {
+            let path = url.absoluteString
             let db = try Connection(path: path, mode: mode)
             self.db = db
             return db
@@ -661,6 +666,16 @@ final class SQLite3Database {
     func close() {
         queue.sync {
             self.db = nil
+        }
+    }
+
+    /// Close and delete database
+    /// Note that opening the database again will create a new file.
+    func delete() throws {
+        try queue.sync {
+            self.db?.close()
+            self.db = nil
+            try FileManager.default.removeItem(at: self.url)
         }
     }
 
