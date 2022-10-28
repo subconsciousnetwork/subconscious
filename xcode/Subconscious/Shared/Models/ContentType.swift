@@ -10,6 +10,7 @@ import Foundation
 enum ContentType: String {
     case subtext = "text/subtext"
     case memo = "application/memo+json"
+    case story = "application/story+json"
 }
 
 extension ContentType {
@@ -19,6 +20,8 @@ extension ContentType {
             return "subtext"
         case .memo:
             return "memo"
+        case .story:
+            return "story"
         }
     }
 }
