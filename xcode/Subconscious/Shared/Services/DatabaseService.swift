@@ -112,7 +112,7 @@ struct DatabaseService {
                 })
             // Right = Follower (search index)
             let right: [FileFingerprint] = try database.execute(
-                sql: "SELECT slug, modified, size FROM entry"
+                sql: "SELECT slug, modified, size FROM note"
             ).compactMap({ row in
                 if
                     let slugString: String = row.get(0),
@@ -164,35 +164,54 @@ struct DatabaseService {
 
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        entry: SubtextEntry,
-        attributes: FileFingerprint.Attributes
+        entry: SubtextEntry
     ) throws {
-        let title = entry.titleOrDefault()
         try database.execute(
             sql: """
-            INSERT INTO entry (slug, title, body, modified, size)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO note (
+                slug,
+                headers,
+                body,
+                title,
+                links,
+                created,
+                modified,
+                size
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(slug) DO UPDATE SET
-                title=excluded.title,
+                headers=excluded.headers,
                 body=excluded.body,
+                title=excluded.title,
+                links=excluded.links,
+                created=excluded.created,
                 modified=excluded.modified,
                 size=excluded.size
             """,
             parameters: [
                 .text(String(describing: entry.slug)),
-                .text(title),
-                .text(String(describing: entry.contents.body)),
-                .date(attributes.modifiedDate),
-                .integer(attributes.size)
+                .json(entry.contents.headers, or: "[]"),
+                .text(entry.contents.body.description),
+                .text(entry.titleOrDefault()),
+                .json(entry.contents.body.slugs, or: "[]"),
+                .date(entry.contents.headers.createdOrDefault()),
+                .date(entry.contents.headers.modifiedOrDefault()),
+                .integer(
+                    entry.contents.body.description
+                        .lengthOfBytes(using: .utf8)
+                )
             ]
         )
     }
 
     private func writeEntryToDatabase(slug: Slug) throws {
-        let entry = try readEntry(slug: slug)
+        var entry = try readEntry(slug: slug)
+        /// Read created and modified times from file system
         let info = try store.info(slug).unwrap()
-        let attributes = FileFingerprint.Attributes(info)
-        try writeEntryToDatabase(entry: entry, attributes: attributes)
+        /// Set on headers
+        entry.contents.headers.modified(info.modified)
+        entry.contents.headers.created(info.created)
+        try writeEntryToDatabase(entry: entry)
     }
 
     private func entryFileExists(_ slug: Slug) -> Bool {
@@ -213,11 +232,9 @@ struct DatabaseService {
 
         // Read modified date from file system directly after writing
         let info = try store.info(entry.slug).unwrap()
-        let attributes = FileFingerprint.Attributes(info)
-        try writeEntryToDatabase(
-            entry: entry,
-            attributes: attributes
-        )
+        // Amend headers
+        entry.contents.headers.modified(info.modified)
+        try writeEntryToDatabase(entry: entry)
     }
     
     func writeEntryAsync(_ entry: SubtextEntry) -> AnyPublisher<Void, Error> {
@@ -230,7 +247,7 @@ struct DatabaseService {
     private func deleteEntryFromDatabase(slug: Slug) throws {
         try database.execute(
             sql: """
-            DELETE FROM entry WHERE slug = ?
+            DELETE FROM note WHERE slug = ?
             """,
             parameters: [
                 .text(slug.description)
@@ -348,7 +365,7 @@ struct DatabaseService {
             try database.execute(
                 sql: """
                 SELECT count(slug)
-                FROM entry
+                FROM note
                 """
             )
             .compactMap({ row in
@@ -367,7 +384,7 @@ struct DatabaseService {
             try database.execute(
                 sql: """
                 SELECT slug, title, body, modified
-                FROM entry_search
+                FROM note_search
                 ORDER BY modified DESC
                 LIMIT 1000
                 """
@@ -396,7 +413,7 @@ struct DatabaseService {
         let suggestions = try database.execute(
             sql: """
             SELECT slug, title
-            FROM entry
+            FROM note
             ORDER BY modified DESC
             LIMIT 25
             """
@@ -466,8 +483,8 @@ struct DatabaseService {
         let entries: [EntryLink] = try database.execute(
             sql: """
             SELECT slug, title
-            FROM entry_search
-            WHERE entry_search MATCH ?
+            FROM note_search
+            WHERE note_search MATCH ?
             ORDER BY rank
             LIMIT 25
             """,
@@ -581,8 +598,8 @@ struct DatabaseService {
             let results: [EntryLink] = try database.execute(
                 sql: """
                 SELECT slug, title
-                FROM entry_search
-                WHERE entry_search MATCH ?
+                FROM note_search
+                WHERE note_search MATCH ?
                 ORDER BY rank
                 LIMIT 25
                 """,
@@ -649,8 +666,8 @@ struct DatabaseService {
                 .execute(
                     sql: """
                     SELECT slug, title
-                    FROM entry_search
-                    WHERE entry_search MATCH ?
+                    FROM note_search
+                    WHERE note_search MATCH ?
                     ORDER BY rank
                     LIMIT 25
                     """,
@@ -740,8 +757,8 @@ struct DatabaseService {
         let backlinks: [EntryStub] = try database.execute(
             sql: """
             SELECT slug, title, body, modified
-            FROM entry_search
-            WHERE slug != ? AND entry_search.body MATCH ?
+            FROM note_search
+            WHERE slug != ? AND note_search.body MATCH ?
             ORDER BY rank
             LIMIT 200
             """,
@@ -825,7 +842,7 @@ struct DatabaseService {
         try? database.execute(
             sql: """
             SELECT slug, title, body, modified
-            FROM entry
+            FROM note
             ORDER BY RANDOM()
             LIMIT 1
             """
@@ -857,8 +874,8 @@ struct DatabaseService {
         try? database.execute(
             sql: """
             SELECT slug, title, body, modified
-            FROM entry_search
-            WHERE entry_search.body MATCH ?
+            FROM note_search
+            WHERE note_search.body MATCH ?
             ORDER BY RANDOM()
             LIMIT 1
             """,
@@ -892,7 +909,7 @@ struct DatabaseService {
             try database.execute(
                 sql: """
                 SELECT slug, title
-                FROM entry
+                FROM note
                 ORDER BY RANDOM()
                 LIMIT 1
                 """
@@ -914,4 +931,109 @@ struct DatabaseService {
             .unwrap(DatabaseServiceError.randomEntryFailed)
         }
     }
+}
+
+// MARK: Database schema
+extension DatabaseService {
+    static let schema = Schema(
+        version: 202210281442,
+        sql: """
+        CREATE TABLE search_history (
+            id TEXT PRIMARY KEY,
+            query TEXT NOT NULL,
+            created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE note (
+            slug TEXT PRIMARY KEY,
+            headers TEXT NOT NULL DEFAULT '[]',
+            body TEXT NOT NULL,
+            title TEXT NOT NULL DEFAULT '',
+            links TEXT NOT NULL DEFAULT '[]',
+            created TEXT NOT NULL,
+            modified TEXT NOT NULL,
+            size INTEGER NOT NULL
+        );
+
+        CREATE VIRTUAL TABLE note_search USING fts5(
+            slug,
+            headers UNINDEXED,
+            body,
+            title,
+            links UNINDEXED,
+            created UNINDEXED,
+            modified UNINDEXED,
+            size UNINDEXED,
+            content="note",
+            tokenize="porter"
+        );
+
+        /*
+        Create triggers to keep fts5 virtual table in sync with content table.
+
+        Note: SQLite documentation notes that you want to modify the fts table *before*
+        the external content table, hence the BEFORE commands.
+
+        These triggers are adapted from examples in the docs:
+        https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
+        */
+        CREATE TRIGGER note_search_before_update BEFORE UPDATE ON note BEGIN
+            DELETE FROM note_search WHERE rowid=old.rowid;
+        END;
+
+        CREATE TRIGGER note_search_before_delete BEFORE DELETE ON note BEGIN
+            DELETE FROM note_search WHERE rowid=old.rowid;
+        END;
+
+        CREATE TRIGGER note_search_after_update AFTER UPDATE ON note BEGIN
+            INSERT INTO note_search (
+                rowid,
+                slug,
+                headers,
+                body,
+                title,
+                links,
+                created,
+                modified,
+                size
+            )
+            VALUES (
+                new.rowid,
+                new.slug,
+                new.headers,
+                new.body,
+                new.title,
+                new.links,
+                new.created,
+                new.modified,
+                new.size
+            );
+        END;
+
+        CREATE TRIGGER note_search_after_insert AFTER INSERT ON note BEGIN
+            INSERT INTO note_search (
+                rowid,
+                slug,
+                headers,
+                body,
+                title,
+                links,
+                created,
+                modified,
+                size
+            )
+            VALUES (
+                new.rowid,
+                new.slug,
+                new.headers,
+                new.body,
+                new.title,
+                new.links,
+                new.created,
+                new.modified,
+                new.size
+            );
+        END;
+        """
+    )
 }
