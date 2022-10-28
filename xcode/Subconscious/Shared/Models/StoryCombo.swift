@@ -8,7 +8,7 @@
 import Foundation
 
 /// Story prompt model
-struct StoryCombo: Hashable, Identifiable, CustomStringConvertible {
+struct StoryCombo: Hashable, Identifiable, Codable, CustomStringConvertible {
     var id = UUID()
     var prompt: String
     var entryA: EntryStub
