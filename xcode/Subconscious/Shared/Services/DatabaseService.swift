@@ -173,16 +173,18 @@ struct DatabaseService {
                 headers,
                 body,
                 title,
+                excerpt,
                 links,
                 created,
                 modified,
                 size
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(slug) DO UPDATE SET
                 headers=excluded.headers,
                 body=excluded.body,
                 title=excluded.title,
+                excerpt=excluded.excerpt,
                 links=excluded.links,
                 created=excluded.created,
                 modified=excluded.modified,
@@ -193,6 +195,7 @@ struct DatabaseService {
                 .json(entry.contents.headers, or: "[]"),
                 .text(entry.contents.body.description),
                 .text(entry.titleOrDefault()),
+                .text(entry.contents.body.excerpt()),
                 .json(entry.contents.body.slugs, or: "[]"),
                 .date(entry.contents.headers.createdOrDefault()),
                 .date(entry.contents.headers.modifiedOrDefault()),
@@ -383,8 +386,8 @@ struct DatabaseService {
             // are read-only teaser views.
             try database.execute(
                 sql: """
-                SELECT slug, title, body, modified
-                FROM note_search
+                SELECT slug, title, excerpt, modified
+                FROM note
                 ORDER BY modified DESC
                 LIMIT 1000
                 """
@@ -395,14 +398,14 @@ struct DatabaseService {
                         Slug(formatting: string)
                     }),
                     let title: String = row.get(1),
-                    let body: String = row.get(2),
+                    let excerpt: String = row.get(2),
                     let modified: Date = row.get(3)
                 else {
                     return nil
                 }
                 return EntryStub(
                     link: EntryLink(slug: slug, title: title),
-                    excerpt: Subtext(markup: body).excerpt(),
+                    excerpt: excerpt,
                     modified: modified
                 )
             })
@@ -936,7 +939,7 @@ struct DatabaseService {
 // MARK: Database schema
 extension DatabaseService {
     static let schema = Schema(
-        version: 202210281442,
+        version: 202210281611,
         sql: """
         CREATE TABLE search_history (
             id TEXT PRIMARY KEY,
@@ -949,6 +952,7 @@ extension DatabaseService {
             headers TEXT NOT NULL DEFAULT '[]',
             body TEXT NOT NULL,
             title TEXT NOT NULL DEFAULT '',
+            excerpt TEXT NOT NULL DEFAULT '',
             links TEXT NOT NULL DEFAULT '[]',
             created TEXT NOT NULL,
             modified TEXT NOT NULL,
@@ -960,6 +964,7 @@ extension DatabaseService {
             headers UNINDEXED,
             body,
             title,
+            excerpt UNINDEXED,
             links UNINDEXED,
             created UNINDEXED,
             modified UNINDEXED,
@@ -992,6 +997,7 @@ extension DatabaseService {
                 headers,
                 body,
                 title,
+                excerpt,
                 links,
                 created,
                 modified,
@@ -1003,6 +1009,7 @@ extension DatabaseService {
                 new.headers,
                 new.body,
                 new.title,
+                new.excerpt,
                 new.links,
                 new.created,
                 new.modified,
@@ -1017,6 +1024,7 @@ extension DatabaseService {
                 headers,
                 body,
                 title,
+                excerpt,
                 links,
                 created,
                 modified,
@@ -1028,6 +1036,7 @@ extension DatabaseService {
                 new.headers,
                 new.body,
                 new.title,
+                new.excerpt,
                 new.links,
                 new.created,
                 new.modified,
