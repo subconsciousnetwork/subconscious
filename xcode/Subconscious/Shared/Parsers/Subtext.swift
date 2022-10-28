@@ -698,9 +698,19 @@ extension Subtext {
     }
 
     /// Get all entry links from Subtext.
+    /// Contains both wikilinks and slashlinks.
     /// Simple array. Does not de-duplicate.
     var entryLinks: [EntryLink] {
         blocks.flatMap({ block in block.entryLinks })
+    }
+
+    /// Get the set of slugs within a range of Subtext.
+    /// Contains slugs for both wikilinks and slashlinks.
+    var slugs: Set<Slug> {
+        let slugs = blocks
+            .flatMap({ block in block.entryLinks })
+            .map({ link in link.slug })
+        return Set(slugs)
     }
 
     /// Get all slashlinks from Subtext.
