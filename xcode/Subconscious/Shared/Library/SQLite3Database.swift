@@ -107,20 +107,26 @@ final class SQLite3Database {
 
         private static let dateFormatter = makeDateFormatter()
 
-        public static func json(
-            _ object: Any,
-            options: JSONSerialization.WritingOptions = []
-        ) -> Self? {
-            if
-                let data = try? JSONSerialization.data(
-                    withJSONObject: object,
-                    options: options
-                ),
-                let text = String(data: data, encoding: .utf8)
-            {
-                return Self.text(text)
+        /// Encode a structure to JSON and wrap as a `.text` value.
+        /// - Returns a `Value.text` if successful, nil otherwise
+        public static func json<T: Encodable>(_ encodable: T) -> Self? {
+            let encoder = JSONEncoder()
+            guard let data = try? encoder.encode(encodable) else {
+                return nil
             }
-            return nil
+            guard let text = String(data: data, encoding: .utf8) else {
+                return nil
+            }
+            return Self.text(text)
+        }
+        
+        /// Encode a structure to JSON and wrap as a `.text` value.
+        /// - Returns a `Value.text` if successful, `or` fallback otherwise.
+        public static func json<T: Encodable>(
+            _ encodable: T,
+            or fallback: String
+        ) -> Self {
+            json(encodable) ?? .text(fallback)
         }
         
         public static func date(_ date: Date) -> Self {
