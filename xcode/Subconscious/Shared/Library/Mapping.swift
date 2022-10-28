@@ -46,14 +46,16 @@ extension Subtext {
 extension MemoData {
     /// Decode MemoData from Data
     static func from(_ data: Data) -> MemoData? {
-        try? JSONDecoder.decode(data: data, type: MemoData.self)
+        let decoder = JSONDecoder()
+        return try? decoder.decode(MemoData.self, from: data)
     }
 }
 
 extension Data {
     /// Encode MemoData to Data
     static func from(_ memo: MemoData) -> Data? {
-        try? JSONEncoder.encode(memo)
+        let encoder = JSONEncoder()
+        return try? encoder.encode(memo)
     }
 }
 
@@ -90,5 +92,19 @@ extension Date {
             return nil
         }
         return date
+    }
+}
+
+extension Story {
+    static func from(_ data: Data) -> Story? {
+        let decoder = JSONDecoder()
+        return try? decoder.decode(Story.self, from: data)
+    }
+}
+
+extension Data {
+    static func from(_ story: Story) -> Data? {
+        let encoder = JSONEncoder()
+        return try? encoder.encode(story)
     }
 }
