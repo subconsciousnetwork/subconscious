@@ -22,8 +22,8 @@ enum NotebookAction {
     /// Tagged action for detail
     case detail(DetailAction)
 
-    /// On appear. We rely on parent to notify us of this event.
-    case appear
+    /// App database is ready. We rely on parent to notify us of this event.
+    case ready
 
     /// Refresh the state of all lists and child components by reloading
     /// from database. This also sets searches to their zero-query state.
@@ -272,8 +272,8 @@ struct NotebookModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
-        case .appear:
-            return appear(
+        case .ready:
+            return ready(
                 state: state,
                 environment: environment
             )
@@ -434,7 +434,7 @@ struct NotebookModel: ModelProtocol {
     }
 
     /// Appear (when view first renders)
-    static func appear(
+    static func ready(
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {

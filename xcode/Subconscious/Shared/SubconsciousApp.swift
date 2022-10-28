@@ -43,11 +43,21 @@ enum AppAction: CustomLogStringConvertible {
     case appear
 
     //  Database
-    /// Get database ready for interaction
-    case readyDatabase
-    case migrateDatabaseSuccess(DatabaseMigrationInfo)
+    /// Kick off database migration.
+    /// This action is idempotent. It will only kick off a migration if a
+    /// migration is necessary.
+    ///
+    /// We send this action when app is foregrounded.
+    ///
+    /// Technically it's a database rebuild right now. Since the source of
+    /// truth is the file system, it's easier to just rebuild.
+    case migrateDatabase
+    case succeedMigrateDatabase(DatabaseMigrationInfo)
+    /// Database is ready for use
     case rebuildDatabase
-    case rebuildDatabaseFailure(String)
+    case failRebuildDatabase(String)
+    /// App ready for database calls and interaction
+    case ready
     /// Sync database with file system
     case sync
     case syncSuccess([FileFingerprintChange])
@@ -78,8 +88,8 @@ enum AppAction: CustomLogStringConvertible {
             return "feed(\(String.loggable(feedAction)))"
         case .poll(_):
             return "poll"
-        case let .migrateDatabaseSuccess(info):
-            return "migrateDatabaseSuccess(\(info.version), \(info.didRebuild))"
+        case let .succeedMigrateDatabase(info):
+            return "succeedMigrateDatabase(\(info.version), \(info.didRebuild))"
         default:
             return String(describing: self)
         }
@@ -235,10 +245,10 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .readyDatabase:
-            return readyDatabase(state: state, environment: environment)
-        case let .migrateDatabaseSuccess(info):
-            return migrateDatabaseSuccess(
+        case .migrateDatabase:
+            return migrateDatabase(state: state, environment: environment)
+        case let .succeedMigrateDatabase(info):
+            return succeedMigrateDatabase(
                 state: state,
                 environment: environment,
                 info: info
@@ -248,13 +258,17 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case let .rebuildDatabaseFailure(error):
-            environment.logger.warning(
-                "Could not rebuild database: \(error)"
+        case let .failRebuildDatabase(error):
+            return failRebuildDatabase(
+                state: state,
+                environment: environment,
+                error: error
             )
-            var model = state
-            model.databaseState = .broken
-            return Update(state: model)
+        case .ready:
+            return ready(
+                state: state,
+                environment: environment
+            )
         case .sync:
             return sync(
                 state: state,
@@ -377,7 +391,7 @@ struct AppModel: ModelProtocol {
         switch phase {
         case .active:
             let fx: Fx<AppAction> = Just(
-                AppAction.readyDatabase
+                AppAction.migrateDatabase
             )
             .eraseToAnyPublisher()
             return Update(state: state, fx: fx)
@@ -402,23 +416,13 @@ struct AppModel: ModelProtocol {
         })
         .eraseToAnyPublisher()
 
-        let feedFx: Fx<AppAction> = Just(AppAction.feed(.appear))
-            .eraseToAnyPublisher()
-
-        let notebookFx: Fx<AppAction> = Just(AppAction.notebook(.appear))
-            .eraseToAnyPublisher()
-
         // Subscribe to keyboard events
         let fx: Fx<AppAction> = environment
             .keyboard.state
             .map({ value in
                 AppAction.changeKeyboardState(value)
             })
-            .merge(
-                with: pollFx,
-                feedFx,
-                notebookFx
-            )
+            .merge(with: pollFx)
             .eraseToAnyPublisher()
 
         return Update(state: state, fx: fx)
@@ -441,7 +445,7 @@ struct AppModel: ModelProtocol {
     /// Make database ready.
     /// This will kick off a migration IF a successful migration
     /// has not already occurred.
-    static func readyDatabase(
+    static func migrateDatabase(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
@@ -451,7 +455,7 @@ struct AppModel: ModelProtocol {
             let fx: Fx<AppAction> = environment.database
                 .migrateAsync()
                 .map({ info in
-                    AppAction.migrateDatabaseSuccess(info)
+                    AppAction.succeedMigrateDatabase(info)
                 })
                 .catch({ _ in
                     Just(AppAction.rebuildDatabase)
@@ -471,26 +475,18 @@ struct AppModel: ModelProtocol {
             )
             return Update(state: state)
         case .ready:
-            environment.logger.log("Database ready. Syncing.")
-            let fx: Fx<AppAction> = Just(
-                AppAction.sync
-            )
+            environment.logger.log("Database ready.")
+            let fx: Fx<AppAction> = Just(AppAction.ready)
             .eraseToAnyPublisher()
             return Update(state: state, fx: fx)
         }
     }
 
-    static func migrateDatabaseSuccess(
+    static func succeedMigrateDatabase(
         state: AppModel,
         environment: AppEnvironment,
         info: DatabaseMigrationInfo
     ) -> Update<AppModel> {
-        var model = state
-        model.databaseState = .ready
-        let fx: Fx<AppAction> = Just(
-            AppAction.sync
-        )
-        .eraseToAnyPublisher()
         if info.didRebuild {
             environment.logger.log(
                 "Rebuilt database @ version \(info.version)"
@@ -499,7 +495,10 @@ struct AppModel: ModelProtocol {
         environment.logger.log(
             "Database @ version \(info.version)"
         )
-        return Update(state: model, fx: fx)
+        var model = state
+        // Mark database state ready
+        model.databaseState = .ready
+        return update(state: model, action: .ready, environment: environment)
     }
 
     static func rebuildDatabase(
@@ -510,18 +509,46 @@ struct AppModel: ModelProtocol {
             "Failed to migrate database. Retrying."
         )
         let fx: Fx<AppAction> = environment.database.migrateAsync()
-            .map({ success in
-                AppAction.migrateDatabaseSuccess(success)
+            .map({ info in
+                AppAction.succeedMigrateDatabase(info)
             })
             .catch({ error in
                 Just(
-                    AppAction.rebuildDatabaseFailure(
+                    AppAction.failRebuildDatabase(
                         error.localizedDescription
                     )
                 )
             })
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
+    }
+
+    static func failRebuildDatabase(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        environment.logger.warning(
+            "Could not rebuild database: \(error)"
+        )
+        var model = state
+        model.databaseState = .broken
+        return Update(state: model)
+    }
+
+    static func ready(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        return update(
+            state: state,
+            actions: [
+                AppAction.sync,
+                AppAction.notebook(.ready),
+                AppAction.feed(.ready)
+            ],
+            environment: environment
+        )
     }
 
     /// Start file sync
@@ -670,7 +697,7 @@ struct AppEnvironment {
             documentURL: self.documentURL,
             databaseURL: self.applicationSupportURL
                 .appendingPathComponent("database.sqlite"),
-            schema: Config.schema,
+            schema: DatabaseService.schema,
             store: store
         )
 
