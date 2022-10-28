@@ -8,7 +8,7 @@
 import Foundation
 
 /// Enum of possible story types for feed
-enum Story: Hashable, Identifiable {
+enum Story: Hashable, Identifiable, Codable {
     case prompt(StoryPrompt)
     case combo(StoryCombo)
 
