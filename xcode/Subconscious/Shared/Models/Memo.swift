@@ -18,13 +18,14 @@ where T: Hashable
 extension Memo {
     /// Create a Memo with blessed headers
     init(
+        contentType: ContentType,
         modified: Date,
         created: Date,
         title: String,
         contents: T
     ) {
         self.headers = Headers(
-            contentType: ContentType.subtext.rawValue,
+            contentType: contentType.rawValue,
             modified: modified,
             created: created,
             title: title
