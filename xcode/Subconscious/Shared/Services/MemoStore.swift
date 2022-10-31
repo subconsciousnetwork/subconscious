@@ -44,7 +44,10 @@ struct MemoStore: StoreProtocol {
         // truth, so we use file system instead.
         let created = info?.created ?? Date.now
         let modified = info?.modified ?? Date.now
-        let title = memo.headers.title() ?? slug.toTitle()
+        let title = memo.headers.title().mapOr(
+            { title in title.isEmpty ? slug.toTitle() : title },
+            default: slug.toTitle()
+        )
         /// Read bodypart using lower-level
         let body = try files.read(
             with: Subtext.from,
