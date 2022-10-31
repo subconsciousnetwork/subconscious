@@ -260,11 +260,11 @@ struct DetailMarkupEditorCursor: CursorProtocol {
 //  MARK: Model
 struct DetailModel: ModelProtocol {
     var slug: Slug?
-    
     /// Required headers
     /// Initialize date with Unix Epoch
-    var modified = Date.distantPast
+    var contentType = ContentType.subtext
     var created = Date.distantPast
+    var modified = Date.distantPast
     var title = ""
     /// Additional headers
     var other: Headers = []
@@ -1007,8 +1007,11 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         var model = state
         model.isLoading = false
-        model.modified = detail.entry.contents.modified
         model.slug = detail.slug
+        model.contentType = detail.entry.contents.contentType
+        model.created = detail.entry.contents.created
+        model.modified = detail.entry.contents.modified
+        model.title = detail.entry.contents.title
         model.other = detail.entry.contents.other
         model.backlinks = detail.backlinks
         model.saveState = detail.saveState
@@ -1182,6 +1185,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         var model = state
         model.slug = nil
+        model.contentType = ContentType.subtext
         model.modified = Date.distantPast
         model.created = Date.distantPast
         model.title = ""
