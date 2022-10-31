@@ -204,10 +204,10 @@ extension Headers {
     }
 
     /// Merge headers.
-    /// Duplicate headers from `other` are dropped.
-    func merge(_ other: Headers) -> Self {
+    /// Duplicate headers from `that` are dropped.
+    func merge(_ that: Headers) -> Self {
         var this = self
-        this.append(contentsOf: other)
+        this.append(contentsOf: that)
         return this.removeDuplicates()
     }
 
@@ -230,19 +230,6 @@ extension Headers {
         replace(Header(name: name, value: value))
     }
 
-    /// Set a fallback for header. If header does not exist, it will set
-    /// fallback content. Otherwise it will leave the value alone.
-    mutating func fallback(
-        name: String,
-        value: String
-    ) {
-        // Do not set if value for this header already exists
-        guard get(first: name) == nil else {
-            return
-        }
-        replace(name: name, value: value)
-    }
-
     /// Remove all headers with a given name
     func remove(named name: String) -> Self {
         let name = Header.normalizeName(name)
@@ -254,33 +241,31 @@ extension Headers {
 extension Headers {
     /// Create headers instance with blessed fields
     init(
-        contentType: String,
-        modified: Date,
+        contentType: ContentType,
         created: Date,
+        modified: Date,
         title: String
     ) {
         self.init()
         self.contentType(contentType)
-        self.modified(modified)
         self.created(created)
+        self.modified(modified)
         self.title(title)
     }
     
-    func contentType() -> String? {
-        get(first: "Content-Type")
+    func contentType() -> ContentType? {
+        get(
+            with: { value in ContentType(rawValue: value) },
+            first: "Content-Type"
+        )
     }
     
-    mutating func contentType(_ contentType: String) {
-        replace(name: "Content-Type", value: contentType)
+    mutating func contentType(_ contentType: ContentType) {
+        replace(name: "Content-Type", value: contentType.rawValue)
     }
     
     func modified() -> Date? {
         get(with: Date.from, first: "Modified")
-    }
-    
-    /// Get modified date or a default date (now)
-    func modifiedOrDefault() -> Date {
-        modified() ?? Date.epoch
     }
     
     mutating func modified(_ date: Date) {
@@ -292,11 +277,6 @@ extension Headers {
     
     func created() -> Date? {
         get(with: Date.from, first: "Created")
-    }
-    
-    /// Get created date or a default (Unix epoch)
-    func createdOrDefault() -> Date {
-        modified() ?? Date.epoch
     }
     
     mutating func created(_ date: Date) {
@@ -314,31 +294,6 @@ extension Headers {
         replace(
             name: "Title",
             value: title
-        )
-    }
-    
-    /// Mend blessed headers, providing fallbacks
-    mutating func mend(
-        contentType: ContentType = ContentType.subtext,
-        title: String,
-        modified: Date = Date.now,
-        created: Date = Date.now
-    ) {
-        self.fallback(
-            name: "Content-Type",
-            value: contentType.rawValue
-        )
-        self.fallback(
-            name: "Title",
-            value: title
-        )
-        self.fallback(
-            name: "Modified",
-            value: String.from(modified)
-        )
-        self.fallback(
-            name: "Created",
-            value: String.from(created)
         )
     }
 }

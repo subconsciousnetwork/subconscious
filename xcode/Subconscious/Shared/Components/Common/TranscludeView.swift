@@ -33,7 +33,10 @@ struct TranscludeView_Previews: PreviewProvider {
                 SubtextEntry(
                     slug: Slug("meme")!,
                     contents: Memo(
-                        headers: Headers(),
+                        contentType: .subtext,
+                        created: Date.now,
+                        modified: Date.now,
+                        title: "Meme",
                         body: Subtext(
                             markup: """
                             Title: Meme

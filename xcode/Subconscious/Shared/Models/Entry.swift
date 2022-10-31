@@ -24,30 +24,26 @@ extension SubtextEntry {
     /// and providing default values.
     init(
         link: EntryLink,
-        modified: Date = Date.now,
         created: Date = Date.now,
-        contents: Subtext
+        modified: Date = Date.now,
+        body: Subtext
     ) {
         self.slug = link.slug
         self.contents = SubtextMemo(
-            modified: modified,
+            contentType: ContentType.subtext,
             created: created,
+            modified: modified,
             title: link.title,
-            contents: contents
+            body: body
         )
     }
 }
 
 extension SubtextEntry {
-    /// Get title or derive title from slug
-    func titleOrDefault() -> String {
-        contents.headers.title() ?? slug.toTitle()
-    }
-
     /// Sets slug and title, using linkable title, to bring them in sync.
     mutating func setLink(_ link: EntryLink) {
         self.slug = link.slug
-        self.contents.headers.title(link.linkableTitle)
+        self.contents.title = link.linkableTitle
     }
 
     func url(directory: URL) -> URL {
@@ -57,12 +53,10 @@ extension SubtextEntry {
     /// Merge two Subtext entries together.
     /// Headers are merged.
     /// `other` Subtext is appended to the end of `self` Subtext.
-    func merge(_ other: SubtextEntry) -> Self {
+    func merge(_ that: SubtextEntry) -> Self {
         var this = self
-        this.contents.headers = this.contents.headers.merge(
-            other.contents.headers
-        )
-        let subtext = this.contents.body.appending(other.contents.body)
+        this.contents.other = this.contents.other.merge(that.contents.other)
+        let subtext = this.contents.body.appending(that.contents.body)
         this.contents.body = subtext
         return this
     }
@@ -81,15 +75,15 @@ extension EntryLink {
     init(_ entry: SubtextEntry) {
         self.init(
             slug: entry.slug,
-            title: entry.titleOrDefault()
+            title: entry.contents.title
         )
     }
 }
 
 extension EntryStub {
     init(_ entry: SubtextEntry) {
-        self.link = EntryLink(slug: entry.slug, title: entry.titleOrDefault())
+        self.link = EntryLink(entry)
         self.excerpt = entry.contents.body.excerpt()
-        self.modified = entry.contents.headers.modifiedOrDefault()
+        self.modified = entry.contents.modified
     }
 }

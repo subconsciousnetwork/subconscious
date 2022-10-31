@@ -8,7 +8,6 @@
 import Foundation
 
 enum EntryStoreError: Error {
-    case contentTypeMissing
     case contentTypeError(String)
 }
 
@@ -31,19 +30,33 @@ struct MemoStore: StoreProtocol {
     func read(_ slug: Slug) throws -> SubtextMemo {
         let memo = try memos.read(slug)
         guard let contentType = memo.headers.contentType() else {
-            throw EntryStoreError.contentTypeMissing
+            throw EntryStoreError.contentTypeError("Missing content type")
         }
-        guard contentType == ContentType.subtext.rawValue else {
+        guard contentType == ContentType.subtext else {
             throw EntryStoreError.contentTypeError(
                 "Unsupported content type: \(contentType)"
             )
         }
+        let info = self.info(slug)
+        // We defer to file system for created and modified dates.
+        // These will get peristed as headers in the database for the purpose
+        // of queries, but when we read from file system, we want source of
+        // truth, so we use file system instead.
+        let created = info?.created ?? Date.now
+        let modified = info?.modified ?? Date.now
+        let title = memo.headers.title() ?? slug.toTitle()
         /// Read bodypart using lower-level
         let body = try files.read(
             with: Subtext.from,
             key: memo.body
         )
-        return SubtextMemo(headers: memo.headers, body: body)
+        return SubtextMemo(
+            contentType: contentType,
+            created: created,
+            modified: modified,
+            title: title,
+            body: body
+        )
     }
 
     /// Get just the headers for a given memo
@@ -54,15 +67,7 @@ struct MemoStore: StoreProtocol {
 
     /// Write a SubtextMemo to a location
     func write(_ slug: Slug, value memo: SubtextMemo) throws {
-        guard let contentType = memo.headers.contentType() else {
-            throw EntryStoreError.contentTypeMissing
-        }
-        guard contentType == ContentType.subtext.rawValue else {
-            throw EntryStoreError.contentTypeError(
-                "Unsupported content type: \(contentType)"
-            )
-        }
-        let bodyPath = slug.toPath(ContentType.subtext.ext)
+        let bodyPath = slug.toPath(memo.contentType.ext)
         let memoData = MemoData(
             headers: memo.headers,
             body: bodyPath

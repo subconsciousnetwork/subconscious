@@ -65,8 +65,15 @@ extension SubtextMemo {
     /// - Parses body as Subtext
     static func from(_ string: String) -> SubtextMemo? {
         let envelope = HeadersEnvelope(markup: string)
+        let headers = envelope.headers
         let subtext = Subtext(markup: String(envelope.body))
-        return Memo<Subtext>(headers: envelope.headers, body: subtext)
+        return Memo<Subtext>(
+            contentType: ContentType.subtext,
+            created: headers.created() ?? Date.now,
+            modified: headers.modified() ?? Date.now,
+            title: headers.title() ?? "",
+            body: subtext
+        )
     }
     
 }

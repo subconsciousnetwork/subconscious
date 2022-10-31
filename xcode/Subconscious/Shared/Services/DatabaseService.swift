@@ -98,8 +98,7 @@ struct DatabaseService {
                     guard let headers = try? store.headers(slug) else {
                         return nil
                     }
-                    let contentType = ContentType.subtext.rawValue
-                    guard headers.contentType() == contentType else {
+                    guard headers.contentType() == ContentType.subtext else {
                         return nil
                     }
                     guard let info = store.info(slug) else {
@@ -195,14 +194,11 @@ struct DatabaseService {
             parameters: [
                 .text(String(describing: entry.slug)),
                 .json(entry.contents.headers, or: "[]"),
-                .text(
-                    /// Use content type, or default to subtext
-                    entry.contents.headers.contentType() ??
-                    ContentType.subtext.rawValue
-                ),
-                .date(entry.contents.headers.createdOrDefault()),
-                .date(entry.contents.headers.modifiedOrDefault()),
-                .text(entry.titleOrDefault()),
+                /// Use content type, or default to subtext
+                .text(entry.contents.contentType.rawValue),
+                .date(entry.contents.created),
+                .date(entry.contents.modified),
+                .text(entry.contents.title),
                 .text(entry.contents.body.description),
                 .text(entry.contents.body.excerpt()),
                 .json(entry.contents.body.slugs, or: "[]"),
@@ -219,8 +215,8 @@ struct DatabaseService {
         /// Read created and modified times from file system
         let info = try store.info(slug).unwrap()
         /// Set on headers
-        entry.contents.headers.modified(info.modified)
-        entry.contents.headers.created(info.created)
+        entry.contents.created = info.created
+        entry.contents.modified = info.modified
         try writeEntryToDatabase(entry: entry)
     }
 
@@ -237,13 +233,13 @@ struct DatabaseService {
     /// Also sets modified header to now.
     private func writeEntry(_ entry: SubtextEntry) throws {
         var entry = entry
-        entry.contents.headers.modified(Date.now)
+        entry.contents.modified = Date.now
         try store.write(entry.slug, value: entry.contents)
 
         // Read modified date from file system directly after writing
         let info = try store.info(entry.slug).unwrap()
         // Amend headers
-        entry.contents.headers.modified(info.modified)
+        entry.contents.modified = info.modified
         try writeEntryToDatabase(entry: entry)
     }
     
@@ -352,7 +348,7 @@ struct DatabaseService {
             return
         }
         var entry = try readEntry(slug: from.slug)
-        entry.contents.headers.title(to.linkableTitle)
+        entry.contents.title = to.linkableTitle
         try writeEntry(entry)
     }
     
@@ -404,9 +400,9 @@ struct DatabaseService {
                     let slug: Slug = row.get(0).flatMap({ string in
                         Slug(formatting: string)
                     }),
-                    let modified: Date = row.get(1)
+                    let modified: Date = row.get(1),
                     let title: String = row.get(2),
-                    let excerpt: String = row.get(3),
+                    let excerpt: String = row.get(3)
                 else {
                     return nil
                 }
@@ -742,17 +738,7 @@ struct DatabaseService {
     /// Used by public async APIs.
     /// - Returns a SubtextFile with mended headers.
     private func readEntry(slug: Slug) throws -> SubtextEntry {
-        var memo = try store.read(slug)
-        let fallbackTitle = slug.toTitle()
-        guard let info = store.info(slug) else {
-            memo.headers.mend(title: fallbackTitle)
-            return SubtextEntry(slug: slug, contents: memo)
-        }
-        memo.headers.mend(
-            title: fallbackTitle,
-            modified: info.modified,
-            created: info.created
-        )
+        let memo = try store.read(slug)
         return SubtextEntry(slug: slug, contents: memo)
     }
     
@@ -784,7 +770,7 @@ struct DatabaseService {
                 }),
                 let modified: Date = row.get(1),
                 let title: String = row.get(2),
-                let excerpt: String = row.get(3),
+                let excerpt: String = row.get(3)
             else {
                 return nil
             }
@@ -800,8 +786,14 @@ struct DatabaseService {
             return EntryDetail(
                 saveState: .draft,
                 entry: SubtextEntry(
-                    link: link,
-                    contents: Subtext(markup: fallback)
+                    slug: link.slug,
+                    contents: SubtextMemo(
+                        contentType: .subtext,
+                        created: Date.now,
+                        modified: Date.now,
+                        title: link.title,
+                        body: Subtext(markup: fallback)
+                    )
                 ),
                 backlinks: backlinks
             )

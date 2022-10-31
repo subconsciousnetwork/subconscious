@@ -82,12 +82,13 @@ struct StoryComboView_Previews: PreviewProvider {
                     SubtextEntry(
                         slug: Slug("meme")!,
                         contents: Memo(
-                            headers: Headers(),
+                            contentType: ContentType.subtext,
+                            created: Date.now,
+                            modified: Date.now,
+                            title: "meme",
+                            other: [],
                             body: Subtext(
                                 markup: """
-                                Title: Meme
-                                Modified: 2022-08-23
-                                
                                 The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
 
                                 But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
@@ -100,7 +101,11 @@ struct StoryComboView_Previews: PreviewProvider {
                     SubtextEntry(
                         slug: Slug("meme")!,
                         contents: Memo(
-                            headers: Headers(),
+                            contentType: ContentType.subtext,
+                            created: Date.now,
+                            modified: Date.now,
+                            title: "meme",
+                            other: [],
                             body: Subtext(
                                 markup: """
                                 Title: Meme

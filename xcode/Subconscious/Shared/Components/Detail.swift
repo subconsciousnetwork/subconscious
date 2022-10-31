@@ -260,13 +260,18 @@ struct DetailMarkupEditorCursor: CursorProtocol {
 //  MARK: Model
 struct DetailModel: ModelProtocol {
     var slug: Slug?
-    var headers: Headers = []
+    
+    /// Required headers
+    /// Initialize date with Unix Epoch
+    var modified = Date.distantPast
+    var created = Date.distantPast
+    var title = ""
+    /// Additional headers
+    var other: Headers = []
     var backlinks: [EntryStub] = []
 
     /// Is editor saved?
     var saveState = SaveState.saved
-    /// Initialize date with Unix Epoch
-    var modified = Date.distantPast
 
     /// Is editor sliding panel showing?
     var isPresented = false
@@ -1000,12 +1005,11 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         detail: EntryDetail
     ) -> Update<DetailModel> {
-        let modified = detail.entry.contents.headers.modifiedOrDefault()
         var model = state
         model.isLoading = false
-        model.modified = modified
+        model.modified = detail.entry.contents.modified
         model.slug = detail.slug
-        model.headers = detail.entry.contents.headers
+        model.other = detail.entry.contents.other
         model.backlinks = detail.backlinks
         model.saveState = detail.saveState
 
@@ -1017,7 +1021,7 @@ struct DetailModel: ModelProtocol {
             action: .setEditor(
                 text: text,
                 saveState: detail.saveState,
-                modified: modified
+                modified: model.modified
             ),
             environment: environment
         )
@@ -1179,7 +1183,9 @@ struct DetailModel: ModelProtocol {
         var model = state
         model.slug = nil
         model.modified = Date.distantPast
-        model.headers = Headers()
+        model.created = Date.distantPast
+        model.title = ""
+        model.other = Headers()
         model.markupEditor = MarkupTextModel()
         model.backlinks = []
         model.isLoading = true
@@ -1692,7 +1698,7 @@ struct DetailModel: ModelProtocol {
         /// We succeeded in updating title header on disk.
         /// Now set it in the view, so we see the updated state.
         var model = state
-        model.headers.title(to.linkableTitle)
+        model.title = to.linkableTitle
 
         return update(
             state: state,
@@ -1831,7 +1837,7 @@ struct DetailModel: ModelProtocol {
         guard var entry = SubtextEntry(self) else {
             return nil
         }
-        entry.contents.headers.modified(Date.now)
+        entry.contents.modified = Date.now
         return entry
     }
 }
@@ -1841,11 +1847,7 @@ extension EntryLink {
         guard let slug = detail.slug else {
             return nil
         }
-        guard let title = detail.headers.title() else {
-            self.init(slug: slug)
-            return
-        }
-        self.init(slug: slug, title: title)
+        self.init(slug: slug, title: detail.title)
     }
 }
 
@@ -1870,8 +1872,11 @@ extension SubtextEntry {
             return nil
         }
         self.slug = slug
-        self.contents = Memo(
-            headers: detail.headers,
+        self.contents = SubtextMemo(
+            contentType: .subtext,
+            created: detail.created,
+            modified: detail.modified,
+            title: detail.title,
             body: Subtext(markup: detail.markupEditor.text)
         )
     }

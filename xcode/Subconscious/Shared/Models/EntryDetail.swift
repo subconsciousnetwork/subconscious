@@ -24,11 +24,10 @@ extension EntryDetail: CustomLogStringConvertible {
 
 extension FileFingerprint {
     init(_ detail: EntryDetail) {
-        let modified = detail.entry.contents.headers.modified() ?? Date.epoch
         let text = String(describing: detail.entry.contents.body)
         self.init(
             slug: detail.slug,
-            modified: modified,
+            modified: detail.entry.contents.modified,
             text: text
         )
     }

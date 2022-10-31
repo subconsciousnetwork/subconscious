@@ -8,29 +8,44 @@
 import Foundation
 
 /// A "reified" memo who's bodypart has been loaded and decoded
+/// We have a few required header fields that we also represent as fields of
+/// the struct.
 struct Memo<T>: Hashable
 where T: Hashable
 {
-    var headers: Headers
+    var contentType: ContentType
+    var created: Date
+    var modified: Date
+    var title: String
+    var other: Headers
     var body: T
-}
 
-extension Memo {
+    /// Get combined headers
+    var headers: Headers {
+        Headers(
+            contentType: self.contentType,
+            created: self.created,
+            modified: self.modified,
+            title: self.title
+        )
+        .merge(other)
+    }
+
     /// Create a Memo with blessed headers
     init(
         contentType: ContentType,
-        modified: Date,
         created: Date,
+        modified: Date,
         title: String,
-        contents: T
+        other: Headers = [],
+        body: T
     ) {
-        self.headers = Headers(
-            contentType: contentType.rawValue,
-            modified: modified,
-            created: created,
-            title: title
-        )
-        self.body = contents
+        self.contentType = contentType
+        self.created = created
+        self.modified = modified
+        self.title = title
+        self.other = other
+        self.body = body
     }
 }
 

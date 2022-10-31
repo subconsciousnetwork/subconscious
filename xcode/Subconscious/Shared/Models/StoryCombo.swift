@@ -44,9 +44,9 @@ extension SubtextEntry {
 
         self.init(
             link: link,
-            modified: Date.now,
             created: Date.now,
-            contents: Subtext(
+            modified: Date.now,
+            body: Subtext(
                 markup: """
                 \(story.prompt)
                 
