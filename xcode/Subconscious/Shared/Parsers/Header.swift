@@ -319,10 +319,15 @@ extension Headers {
     
     /// Mend blessed headers, providing fallbacks
     mutating func mend(
+        contentType: ContentType = ContentType.subtext,
         title: String,
         modified: Date = Date.now,
         created: Date = Date.now
     ) {
+        self.fallback(
+            name: "Content-Type",
+            value: contentType.rawValue
+        )
         self.fallback(
             name: "Title",
             value: title
