@@ -171,34 +171,41 @@ struct DatabaseService {
             INSERT INTO note (
                 slug,
                 headers,
-                body,
-                title,
-                excerpt,
-                links,
+                content_type,
                 created,
                 modified,
+                title,
+                body,
+                excerpt,
+                links,
                 size
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(slug) DO UPDATE SET
                 headers=excluded.headers,
-                body=excluded.body,
-                title=excluded.title,
-                excerpt=excluded.excerpt,
-                links=excluded.links,
+                content_type=excluded.content_type,
                 created=excluded.created,
                 modified=excluded.modified,
+                title=excluded.title,
+                body=excluded.body,
+                excerpt=excluded.excerpt,
+                links=excluded.links,
                 size=excluded.size
             """,
             parameters: [
                 .text(String(describing: entry.slug)),
                 .json(entry.contents.headers, or: "[]"),
-                .text(entry.contents.body.description),
-                .text(entry.titleOrDefault()),
-                .text(entry.contents.body.excerpt()),
-                .json(entry.contents.body.slugs, or: "[]"),
+                .text(
+                    /// Use content type, or default to subtext
+                    entry.contents.headers.contentType() ??
+                    ContentType.subtext.rawValue
+                ),
                 .date(entry.contents.headers.createdOrDefault()),
                 .date(entry.contents.headers.modifiedOrDefault()),
+                .text(entry.titleOrDefault()),
+                .text(entry.contents.body.description),
+                .text(entry.contents.body.excerpt()),
+                .json(entry.contents.body.slugs, or: "[]"),
                 .integer(
                     entry.contents.body.description
                         .lengthOfBytes(using: .utf8)
@@ -386,7 +393,7 @@ struct DatabaseService {
             // are read-only teaser views.
             try database.execute(
                 sql: """
-                SELECT slug, title, excerpt, modified
+                SELECT slug, modified, title, excerpt
                 FROM note
                 ORDER BY modified DESC
                 LIMIT 1000
@@ -397,9 +404,9 @@ struct DatabaseService {
                     let slug: Slug = row.get(0).flatMap({ string in
                         Slug(formatting: string)
                     }),
-                    let title: String = row.get(1),
-                    let excerpt: String = row.get(2),
-                    let modified: Date = row.get(3)
+                    let modified: Date = row.get(1)
+                    let title: String = row.get(2),
+                    let excerpt: String = row.get(3),
                 else {
                     return nil
                 }
@@ -759,7 +766,7 @@ struct DatabaseService {
         // Use content indexed in database, even though it might be stale.
         let backlinks: [EntryStub] = try database.execute(
             sql: """
-            SELECT slug, title, body, modified
+            SELECT slug, modified, title, excerpt
             FROM note_search
             WHERE slug != ? AND note_search.body MATCH ?
             ORDER BY rank
@@ -775,15 +782,15 @@ struct DatabaseService {
                 let slug: Slug = row.get(0).flatMap({ string in
                     Slug(formatting: string)
                 }),
-                let title: String = row.get(1),
-                let body: String = row.get(2),
-                let modified: Date = row.get(3)
+                let modified: Date = row.get(1),
+                let title: String = row.get(2),
+                let excerpt: String = row.get(3),
             else {
                 return nil
             }
             return EntryStub(
                 link: EntryLink(slug: slug, title: title),
-                excerpt: Subtext(markup: body).excerpt(),
+                excerpt: excerpt,
                 modified: modified
             )
         })
@@ -876,7 +883,7 @@ struct DatabaseService {
     ) -> EntryStub? {
         try? database.execute(
             sql: """
-            SELECT slug, title, body, modified
+            SELECT slug, modified, title, body
             FROM note_search
             WHERE note_search.body MATCH ?
             ORDER BY RANDOM()
@@ -891,9 +898,9 @@ struct DatabaseService {
                 let slug: Slug = row.get(0).flatMap({ string in
                     Slug(formatting: string)
                 }),
-                let title: String = row.get(1),
-                let body: String = row.get(2),
-                let modified: Date = row.get(3)
+                let modified: Date = row.get(1),
+                let title: String = row.get(2),
+                let body: String = row.get(3)
             else {
                 return nil
             }
@@ -939,7 +946,7 @@ struct DatabaseService {
 // MARK: Database schema
 extension DatabaseService {
     static let schema = Schema(
-        version: 202210281611,
+        version: 202210311251,
         sql: """
         CREATE TABLE search_history (
             id TEXT PRIMARY KEY,
@@ -950,24 +957,29 @@ extension DatabaseService {
         CREATE TABLE note (
             slug TEXT PRIMARY KEY,
             headers TEXT NOT NULL DEFAULT '[]',
-            body TEXT NOT NULL,
-            title TEXT NOT NULL DEFAULT '',
-            excerpt TEXT NOT NULL DEFAULT '',
-            links TEXT NOT NULL DEFAULT '[]',
+            content_type TEXT NOT NULL,
             created TEXT NOT NULL,
             modified TEXT NOT NULL,
+            title TEXT NOT NULL DEFAULT '',
+            body TEXT NOT NULL,
+            /* Short description of body */
+            excerpt TEXT NOT NULL DEFAULT '',
+            /* List of all slugs in body */
+            links TEXT NOT NULL DEFAULT '[]',
+            /* Size of body (used in combination with modified for sync) */
             size INTEGER NOT NULL
         );
 
         CREATE VIRTUAL TABLE note_search USING fts5(
             slug,
             headers UNINDEXED,
-            body,
-            title,
-            excerpt UNINDEXED,
-            links UNINDEXED,
+            content_type UNINDEXED,
             created UNINDEXED,
             modified UNINDEXED,
+            title,
+            body,
+            excerpt UNINDEXED,
+            links UNINDEXED,
             size UNINDEXED,
             content="note",
             tokenize="porter"
@@ -995,24 +1007,26 @@ extension DatabaseService {
                 rowid,
                 slug,
                 headers,
-                body,
-                title,
-                excerpt,
-                links,
+                content_type,
                 created,
                 modified,
+                title,
+                body,
+                excerpt,
+                links,
                 size
             )
             VALUES (
                 new.rowid,
                 new.slug,
                 new.headers,
-                new.body,
-                new.title,
-                new.excerpt,
-                new.links,
+                new.content_type,
                 new.created,
                 new.modified,
+                new.title,
+                new.body,
+                new.excerpt,
+                new.links,
                 new.size
             );
         END;
@@ -1022,24 +1036,126 @@ extension DatabaseService {
                 rowid,
                 slug,
                 headers,
-                body,
-                title,
-                excerpt,
-                links,
+                content_type,
                 created,
                 modified,
+                title,
+                body,
+                excerpt,
+                links,
                 size
             )
             VALUES (
                 new.rowid,
                 new.slug,
                 new.headers,
-                new.body,
-                new.title,
-                new.excerpt,
-                new.links,
+                new.content_type,
                 new.created,
                 new.modified,
+                new.title,
+                new.body,
+                new.excerpt,
+                new.links,
+                new.size
+            );
+        END;
+
+        CREATE TABLE story (
+            slug TEXT PRIMARY KEY,
+            headers TEXT NOT NULL DEFAULT '[]',
+            content_type TEXT NOT NULL,
+            created TEXT NOT NULL,
+            modified TEXT NOT NULL,
+            /* Sphere/Geist */
+            author TEXT NOT NULL,
+            /* The actual body payload. Often JSON. */
+            body TEXT NOT NULL,
+            /* A plain text representation of the body used for search */
+            description TEXT NOT NULL,
+            size INTEGER NOT NULL
+        );
+
+        CREATE VIRTUAL TABLE story_search USING fts5(
+            slug,
+            headers UNINDEXED,
+            content_type UNINDEXED,
+            created UNINDEXED,
+            modified UNINDEXED,
+            author,
+            body UNINDEXED,
+            description,
+            size UNINDEXED,
+            content="note",
+            tokenize="porter"
+        );
+
+        /*
+        Create triggers to keep fts5 virtual table in sync with content table.
+
+        Note: SQLite documentation notes that you want to modify the fts table *before*
+        the external content table, hence the BEFORE commands.
+
+        These triggers are adapted from examples in the docs:
+        https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
+        */
+        CREATE TRIGGER story_search_before_update BEFORE UPDATE ON story BEGIN
+            DELETE FROM story_search WHERE rowid=old.rowid;
+        END;
+
+        CREATE TRIGGER story_search_before_delete BEFORE DELETE ON story BEGIN
+            DELETE FROM story_search WHERE rowid=old.rowid;
+        END;
+
+        CREATE TRIGGER story_search_after_update AFTER UPDATE ON story BEGIN
+            INSERT INTO story_search (
+                rowid,
+                slug,
+                headers,
+                content_type,
+                created,
+                modified,
+                author,
+                body,
+                description,
+                size
+            )
+            VALUES (
+                new.rowid,
+                new.slug,
+                new.headers,
+                new.content_type,
+                new.created,
+                new.modified,
+                new.author,
+                new.body,
+                new.description,
+                new.size
+            );
+        END;
+
+        CREATE TRIGGER story_search_after_insert AFTER INSERT ON story BEGIN
+            INSERT INTO story_search (
+                rowid,
+                slug,
+                headers,
+                content_type,
+                created,
+                modified,
+                author,
+                body,
+                description,
+                size
+            )
+            VALUES (
+                new.rowid,
+                new.slug,
+                new.headers,
+                new.content_type,
+                new.created,
+                new.modified,
+                new.author,
+                new.body,
+                new.description,
                 new.size
             );
         END;
