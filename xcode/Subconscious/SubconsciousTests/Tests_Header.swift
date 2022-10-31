@@ -319,7 +319,7 @@ class Tests_Header: XCTestCase {
             Header(name: "Content-Type", value: "text/subtext"),
         ]
         let contentType = headers.contentType()
-        XCTAssertEqual(contentType, "text/subtext", "Gets content type")
+        XCTAssertEqual(contentType, ContentType.subtext, "Gets content type")
     }
     
     func testHeadersGetContentTypeB() throws {
@@ -330,7 +330,7 @@ class Tests_Header: XCTestCase {
         let contentType = headers.contentType()
         XCTAssertEqual(
             contentType,
-            "text/subtext",
+            ContentType.subtext,
             "Gets first content type header"
         )
     }
@@ -340,10 +340,10 @@ class Tests_Header: XCTestCase {
             Header(name: "Title", value: "Great Expectations"),
             Header(name: "Content-Type", value: "text/subtext"),
         ]
-        headers.contentType("application/json")
+        headers.contentType(ContentType.subtext)
         XCTAssertEqual(
             headers[1].value,
-            "application/json",
+            "text/subtext",
             "Sets first content type header"
         )
     }

@@ -14,13 +14,18 @@ class Tests_Detail: XCTestCase {
 
     func testsetAndPresentDetail() throws {
         let state = DetailModel()
-        let link = try EntryLink(title: "Example").unwrap()
+
         let modified = Date.now
 
         let entry = SubtextEntry(
-            link: link,
-            modified: modified,
-            contents: Subtext(markup: "Example text")
+            slug: Slug("example")!,
+            contents: SubtextMemo(
+                contentType: ContentType.subtext,
+                created: Date.now,
+                modified: modified,
+                title: "Example",
+                body: Subtext(markup: "Example text")
+            )
         )
 
         let detail = EntryDetail(
@@ -43,8 +48,8 @@ class Tests_Detail: XCTestCase {
             "isDetailLoading set to false"
         )
         XCTAssertEqual(
-            update.state.modified == modified,
-            false,
+            update.state.modified,
+            modified,
             "Modified is set from entry"
         )
         XCTAssertEqual(
@@ -70,13 +75,20 @@ class Tests_Detail: XCTestCase {
             environment: environment
         )
 
-        let link = try EntryLink(title: "Example").unwrap()
+        let entry = SubtextEntry(
+            slug: Slug("example")!,
+            contents: SubtextMemo(
+                contentType: ContentType.subtext,
+                created: Date.now,
+                modified: Date.now,
+                title: "Example",
+                body: Subtext(markup: "Example")
+            )
+        )
+
         let detail = EntryDetail(
             saveState: .saved,
-            entry: SubtextEntry(
-                link: link,
-                contents: Subtext(markup: "Example text")
-            )
+            entry: entry
         )
 
         store.send(.setAndPresentDetail(detail: detail, autofocus: true))
@@ -97,14 +109,23 @@ class Tests_Detail: XCTestCase {
 
     func testUpdateDetailBlur() throws {
         let state = DetailModel()
-        let link = try EntryLink(title: "Example").unwrap()
-        let detail = EntryDetail(
-            saveState: .saved,
-            entry: SubtextEntry(
-                link: link,
-                contents: Subtext(markup: "Example text")
+
+        let entry = SubtextEntry(
+            slug: Slug("example")!,
+            contents: SubtextMemo(
+                contentType: ContentType.subtext,
+                created: Date.now,
+                modified: Date.now,
+                title: "Example",
+                body: Subtext(markup: "Example")
             )
         )
+        
+        let detail = EntryDetail(
+            saveState: .saved,
+            entry: entry
+        )
+
         let update = DetailModel.update(
             state: state,
             action: .setAndPresentDetail(
