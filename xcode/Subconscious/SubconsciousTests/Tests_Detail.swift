@@ -17,7 +17,7 @@ class Tests_Detail: XCTestCase {
 
         let modified = Date.now
 
-        let entry = SubtextEntry(
+        let entry = MemoEntry(
             slug: Slug("example")!,
             contents: SubtextMemo(
                 contentType: ContentType.subtext,
@@ -75,7 +75,7 @@ class Tests_Detail: XCTestCase {
             environment: environment
         )
 
-        let entry = SubtextEntry(
+        let entry = MemoEntry(
             slug: Slug("example")!,
             contents: SubtextMemo(
                 contentType: ContentType.subtext,
@@ -110,7 +110,7 @@ class Tests_Detail: XCTestCase {
     func testUpdateDetailBlur() throws {
         let state = DetailModel()
 
-        let entry = SubtextEntry(
+        let entry = MemoEntry(
             slug: Slug("example")!,
             contents: SubtextMemo(
                 contentType: ContentType.subtext,

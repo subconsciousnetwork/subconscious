@@ -59,29 +59,40 @@ extension Data {
     }
 }
 
-extension SubtextMemo {
+extension Memo {
     /// Read a Subtext-flavored Memo from a string
     /// - Parses headers (if any)
     /// - Parses body as Subtext
-    static func from(_ string: String) -> SubtextMemo? {
+    static func from(_ string: String) -> Memo? {
         let envelope = HeadersEnvelope(markup: string)
         let headers = envelope.headers
-        let subtext = Subtext(markup: String(envelope.body))
-        return Memo<Subtext>(
-            contentType: ContentType.subtext,
-            created: headers.created() ?? Date.now,
-            modified: headers.modified() ?? Date.now,
-            title: headers.title() ?? "",
-            body: subtext
+        let wellKnownHeaders = WellKnownHeaders(
+            headers: headers,
+            fallback: WellKnownHeaders(
+                contentType: ContentType.text.rawValue,
+                created: Date.now,
+                modified: Date.now,
+                title: "",
+                fileExtension: ContentType.text.fileExtension
+            )
+        )
+        return Memo(
+            contentType: wellKnownHeaders.contentType,
+            created: wellKnownHeaders.created,
+            modified: wellKnownHeaders.modified,
+            title: wellKnownHeaders.title,
+            fileExtension: wellKnownHeaders.fileExtension,
+            other: headers,
+            body: String(envelope.body)
         )
     }
     
 }
 
-extension SubtextMemo {
+extension Memo {
     /// Read SubtextMemo from data
-    static func from(_ data: Data) -> SubtextMemo? {
-        String.from(data) |> SubtextMemo.from
+    static func from(_ data: Data) -> Memo? {
+        String.from(data) |> Memo.from
     }
 }
 

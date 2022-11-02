@@ -52,7 +52,7 @@ enum AppAction: CustomLogStringConvertible {
     /// Technically it's a database rebuild right now. Since the source of
     /// truth is the file system, it's easier to just rebuild.
     case migrateDatabase
-    case succeedMigrateDatabase(DatabaseMigrationInfo)
+    case succeedMigrateDatabase(Int)
     /// Database is ready for use
     case rebuildDatabase
     case failRebuildDatabase(String)
@@ -88,8 +88,8 @@ enum AppAction: CustomLogStringConvertible {
             return "feed(\(String.loggable(feedAction)))"
         case .poll(_):
             return "poll"
-        case let .succeedMigrateDatabase(info):
-            return "succeedMigrateDatabase(\(info.version), \(info.didRebuild))"
+        case let .succeedMigrateDatabase(version):
+            return "succeedMigrateDatabase(\(version))"
         default:
             return String(describing: self)
         }
@@ -247,11 +247,11 @@ struct AppModel: ModelProtocol {
             )
         case .migrateDatabase:
             return migrateDatabase(state: state, environment: environment)
-        case let .succeedMigrateDatabase(info):
+        case let .succeedMigrateDatabase(version):
             return succeedMigrateDatabase(
                 state: state,
                 environment: environment,
-                info: info
+                version: version
             )
         case .rebuildDatabase:
             return rebuildDatabase(
@@ -454,8 +454,8 @@ struct AppModel: ModelProtocol {
             environment.logger.log("Readying database")
             let fx: Fx<AppAction> = environment.database
                 .migrateAsync()
-                .map({ info in
-                    AppAction.succeedMigrateDatabase(info)
+                .map({ version in
+                    AppAction.succeedMigrateDatabase(version)
                 })
                 .catch({ _ in
                     Just(AppAction.rebuildDatabase)
@@ -485,15 +485,10 @@ struct AppModel: ModelProtocol {
     static func succeedMigrateDatabase(
         state: AppModel,
         environment: AppEnvironment,
-        info: DatabaseMigrationInfo
+        version: Int
     ) -> Update<AppModel> {
-        if info.didRebuild {
-            environment.logger.log(
-                "Rebuilt database @ version \(info.version)"
-            )
-        }
         environment.logger.log(
-            "Database @ version \(info.version)"
+            "Database version: \(version)"
         )
         var model = state
         // Mark database state ready
@@ -687,18 +682,21 @@ struct AppEnvironment {
 
         self.logger = Logger.main
 
+        let files = FileStore(documentURL: documentURL)
+
         let notesURL = documentURL.appending(
             component: Config.default.notesDirectory,
             directoryHint: .isDirectory
         )
-        let store = MemoStore(notesURL)
+        let memos = MemoStore(notesURL)
 
         self.database = DatabaseService(
             documentURL: self.documentURL,
             databaseURL: self.applicationSupportURL
                 .appendingPathComponent("database.sqlite"),
-            schema: DatabaseService.schema,
-            store: store
+            memos: memos,
+            files: files,
+            migrations: Config.migrations
         )
 
         self.keyboard = KeyboardService()

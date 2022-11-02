@@ -7,17 +7,6 @@
 
 import Foundation
 
-protocol StoreProtocol {
-    associatedtype Key
-    associatedtype Value
-    associatedtype Keys: Sequence where Keys.Element == Key
-    func read(_ key: Key) throws -> Value
-    func write(_ key: Key, value: Value) throws
-    func remove(_ key: Key) throws
-    func save() throws
-    func list() throws -> Keys
-}
-
 enum FileStoreError: Error {
     case decodingError(String)
     case encodingError(String)
@@ -109,34 +98,3 @@ struct FileStore: StoreProtocol {
         return FileInfo(created: created, modified: modified, size: size)
     }
 }
-
-extension FileStore {
-    /// Read with a failable decoding function
-    /// Our codebase defines a number of `DataType.from` static methods
-    /// that can be composed to decode the data type you need.
-    func read<T>(
-        with decode: (Data) -> T?,
-        key: String
-    ) throws -> T {
-        let data: Data = try read(key)
-        guard let value = decode(data) else {
-            throw FileStoreError.decodingError("Failed to decode data")
-        }
-        return value
-    }
-    
-    /// Write with a failable encoding function
-    /// Our codebase defines a number of `DataType.from` static methods
-    /// that can be composed to encode the data type you need.
-    func write<T>(
-        with encode: (T) -> Data?,
-        key: String,
-        value: T
-    ) throws {
-        guard let data: Data = encode(value) else {
-            throw FileStoreError.encodingError("Could not encode data")
-        }
-        try write(key, value: data)
-    }
-}
-

@@ -9,7 +9,7 @@ import Foundation
 
 struct EntryDetail: Hashable {
     var saveState: SaveState
-    var entry: SubtextEntry
+    var entry: MemoEntry
     var backlinks: [EntryStub] = []
     var slug: Slug {
         entry.slug

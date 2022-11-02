@@ -17,29 +17,9 @@ where T: Hashable
 }
 
 /// A Subtext entry is an Entry containing a SubtextMemo
-typealias SubtextEntry = Entry<Memo<Subtext>>
+typealias MemoEntry = Entry<Memo>
 
-extension SubtextEntry {
-    /// Create a Subtext Entry with blessed headers,
-    /// and providing default values.
-    init(
-        link: EntryLink,
-        created: Date = Date.now,
-        modified: Date = Date.now,
-        body: Subtext
-    ) {
-        self.slug = link.slug
-        self.contents = SubtextMemo(
-            contentType: ContentType.subtext,
-            created: created,
-            modified: modified,
-            title: link.title,
-            body: body
-        )
-    }
-}
-
-extension SubtextEntry {
+extension MemoEntry {
     /// Sets slug and title, using linkable title, to bring them in sync.
     mutating func setLink(_ link: EntryLink) {
         self.slug = link.slug
@@ -47,13 +27,13 @@ extension SubtextEntry {
     }
 
     func url(directory: URL) -> URL {
-        slug.toURL(directory: directory, ext: ContentType.subtext.ext)
+        slug.toURL(directory: directory, ext: ContentType.subtext.fileExtension)
     }
     
     /// Merge two Subtext entries together.
     /// Headers are merged.
     /// `other` Subtext is appended to the end of `self` Subtext.
-    func merge(_ that: SubtextEntry) -> Self {
+    func merge(_ that: MemoEntry) -> Self {
         var this = self
         this.contents.other = this.contents.other.merge(that.contents.other)
         let subtext = this.contents.body.appending(that.contents.body)
@@ -63,16 +43,16 @@ extension SubtextEntry {
 }
 
 extension MemoData {
-    init(_ entry: SubtextEntry) {
+    init(_ entry: MemoEntry) {
         self.init(
             headers: entry.contents.headers,
-            body: entry.slug.toPath(ContentType.subtext.ext)
+            body: entry.slug.toPath(entry.contents.fileExtension)
         )
     }
 }
 
 extension EntryLink {
-    init(_ entry: SubtextEntry) {
+    init(_ entry: MemoEntry) {
         self.init(
             slug: entry.slug,
             title: entry.contents.title
@@ -81,9 +61,9 @@ extension EntryLink {
 }
 
 extension EntryStub {
-    init(_ entry: SubtextEntry) {
+    init(_ entry: MemoEntry) {
         self.link = EntryLink(entry)
-        self.excerpt = entry.contents.body.excerpt()
+        self.excerpt = entry.contents.excerpt()
         self.modified = entry.contents.modified
     }
 }

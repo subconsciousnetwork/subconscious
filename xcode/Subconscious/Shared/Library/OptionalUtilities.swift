@@ -85,20 +85,18 @@ extension Optional {
             return transform(wrapped)
         }
     }
-}
-
-extension Optional {
-    /// Map an optional value to a different type if it exists,
-    /// or else use a fallback value.
-    func mapOrElse<T>(
-        _ transform: (Wrapped) -> T,
-        `default`: () -> T
+    
+    /// Map an optional value with a transforming function that returns
+    /// an optional result. In case of none, returns default.
+    func compactMapOr<T>(
+        _ transform: (Wrapped) -> T?,
+        `default`: T
     ) -> T {
         switch self {
         case .none:
-            return `default`()
+            return `default`
         case .some(let wrapped):
-            return transform(wrapped)
+            return transform(wrapped) ?? `default`
         }
     }
 }

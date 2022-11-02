@@ -31,8 +31,6 @@ struct Config: Equatable {
 
     /// Default links feature enabled?
     var linksEnabled = true
-    /// Where to look for user-defined links
-    var linksTemplate: Slug = Slug("_special/links")!
     /// Template for default links
     var linksFallback: [Slug] = [
         Slug("pattern")!,

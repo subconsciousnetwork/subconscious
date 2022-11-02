@@ -27,7 +27,7 @@ struct MemoDataStore: StoreProtocol {
     func read(_ slug: Slug) throws -> MemoData {
         try store.read(
             with: MemoData.from,
-            key: slug.toPath(ContentType.memo.ext)
+            key: slug.toPath(ContentType.memo.fileExtension)
         )
     }
     
@@ -35,13 +35,13 @@ struct MemoDataStore: StoreProtocol {
     func write(_ slug: Slug, value: MemoData) throws {
         try store.write(
             with: Data.from,
-            key: slug.toPath(ContentType.memo.ext),
+            key: slug.toPath(ContentType.memo.fileExtension),
             value: value
         )
     }
     
     func remove(_ slug: Slug) throws {
-        try store.remove(slug.toPath(ContentType.memo.ext))
+        try store.remove(slug.toPath(ContentType.memo.fileExtension))
     }
     
     func save() throws {}
@@ -51,7 +51,7 @@ struct MemoDataStore: StoreProtocol {
         try store.list()
             .lazy
             .filter({ path in
-                path.hasExtension(ContentType.memo.ext)
+                path.hasExtension(ContentType.memo.fileExtension)
             })
             .compactMap({ path in
                 Slug(path.deletingPathExtension())

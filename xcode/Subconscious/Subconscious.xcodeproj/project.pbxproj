@@ -243,6 +243,8 @@
 		B8DEBF232798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */; };
 		B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */; };
 		B8DEBF262798EF6A007CB528 /* RenameSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */; };
+		B8E4724C2912A42C00D89C84 /* StoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4724B2912A42C00D89C84 /* StoreProtocol.swift */; };
+		B8E4724D2912A42C00D89C84 /* StoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4724B2912A42C00D89C84 /* StoreProtocol.swift */; };
 		B8EB2A1026F27797006E97C3 /* Tests_iOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EB2A0F26F27797006E97C3 /* Tests_iOS.swift */; };
 		B8EB2A1226F27797006E97C3 /* Tests_iOSLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EB2A1126F27797006E97C3 /* Tests_iOSLaunchTests.swift */; };
 		B8EB2A1C26F27797006E97C3 /* Tests_macOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EB2A1B26F27797006E97C3 /* Tests_macOS.swift */; };
@@ -423,6 +425,7 @@
 		B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleGroupView.swift; sourceTree = "<group>"; };
 		B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSuggestionLabelView.swift; sourceTree = "<group>"; };
 		B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSearchView.swift; sourceTree = "<group>"; };
+		B8E4724B2912A42C00D89C84 /* StoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreProtocol.swift; sourceTree = "<group>"; };
 		B8EB29F326F27794006E97C3 /* SubconsciousApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubconsciousApp.swift; sourceTree = "<group>"; };
 		B8EB29F526F27794006E97C3 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppView.swift; sourceTree = "<group>"; };
 		B8EB29F626F27797006E97C3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -537,6 +540,7 @@
 				B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */,
 				B8CA8F1F288F1875005F8802 /* RandomPromptGeist.swift */,
 				B89E30792911D70F00A4721F /* AppMigrations.swift */,
+				B8E4724B2912A42C00D89C84 /* StoreProtocol.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -1032,6 +1036,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B8B4251B28FE1DA60081B8D5 /* Entry.swift in Sources */,
+				B8E4724C2912A42C00D89C84 /* StoreProtocol.swift in Sources */,
 				B82FD4562730A62C002CB641 /* EntryRow.swift in Sources */,
 				B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */,
 				B8CA8F2828909FBA005F8802 /* StoryPromptView.swift in Sources */,
@@ -1173,6 +1178,7 @@
 				B89E30782911B51A00A4721F /* Migration.swift in Sources */,
 				B89966C828B6EE2300DF1F8C /* Notebook.swift in Sources */,
 				B82FD4572730A62C002CB641 /* EntryRow.swift in Sources */,
+				B8E4724D2912A42C00D89C84 /* StoreProtocol.swift in Sources */,
 				B82F053828D60EE60025A8B5 /* AppTabView.swift in Sources */,
 				B8879EA726F9348600A0B4FF /* SubURL.swift in Sources */,
 				B8AE34B7276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,

@@ -25,7 +25,7 @@ struct StoryCombo: Hashable, Identifiable, Codable, CustomStringConvertible {
     }
 }
 
-extension SubtextEntry {
+extension MemoEntry {
     init?(_ story: StoryCombo) {
         // Order by slug alpha
         let (x, y) = Func.block({
@@ -43,11 +43,14 @@ extension SubtextEntry {
         }
 
         self.init(
-            link: link,
-            created: Date.now,
-            modified: Date.now,
-            body: Subtext(
-                markup: """
+            slug: link.slug,
+            contents: Memo(
+                contentType: ContentType.subtext.rawValue,
+                created: Date.now, modified: Date.now,
+                title: link.title,
+                fileExtension: ContentType.subtext.fileExtension,
+                other: [],
+                body: """
                 \(story.prompt)
                 
                 \(x.link.slug.toSlashlink())

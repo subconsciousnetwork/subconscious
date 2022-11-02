@@ -8,6 +8,63 @@
 import Foundation
 import OrderedCollections
 
+/// Well-known header names
+enum HeaderName: String {
+    case contentType = "Content-Type"
+    case created = "Created"
+    case modified = "Modified"
+    case title = "Title"
+    case fileExtension = "File-Extension"
+}
+
+/// A struct containing well-known headers
+struct WellKnownHeaders: Hashable {
+    var contentType: String
+    var created: Date
+    var modified: Date
+    var title: String
+    var fileExtension: String
+}
+
+extension WellKnownHeaders {
+    /// Extract well-known headers from Headers, using another
+    /// `WellKnownHeaders` instance as a fallback.
+    init(
+        headers: Headers,
+        fallback: WellKnownHeaders
+    ) {
+        /// Get ContentType or fall back to text.
+        let contentType = headers.get(
+            first: HeaderName.contentType.rawValue
+        ) ?? fallback.contentType
+
+        let knownContentType = ContentType(rawValue: contentType)
+
+        let fileExtension = headers.get(
+            first: HeaderName.fileExtension.rawValue
+        ) ?? knownContentType?.fileExtension ?? fallback.fileExtension
+
+        // Get created and modified from headers.
+        // If not in headers, use file system info.
+        // If not in file system info, use Date.now.
+        let created = headers.get(first: HeaderName.created.rawValue)
+            .compactMapOr(Date.from, default: fallback.created)
+
+        let modified = headers.get(first: HeaderName.modified.rawValue)
+            .compactMapOr(Date.from, default: fallback.modified)
+
+        let title = headers.get(
+            first: HeaderName.title.rawValue
+        ) ?? fallback.title
+
+        self.contentType = contentType
+        self.created = created
+        self.modified = modified
+        self.title = title
+        self.fileExtension = fileExtension
+    }
+}
+
 /// A header
 struct Header: Hashable, CustomStringConvertible, Codable {
     let name: String
@@ -165,7 +222,7 @@ extension Headers {
             .joined(separator: "")
             .appending("\n")
     }
-
+    
     /// Get the value of the first header matching a particular name (if any)
     /// - Returns String?
     func get(first name: String) -> String? {
@@ -174,12 +231,12 @@ extension Headers {
             .first(where: { header in header.name == name })
             .map({ header in header.value })
     }
-
+    
     /// Get the value of the first header
     func get<T>(with map: (String) -> T?, first name: String) -> T? {
         get(first: name).flatMap(map)
     }
-
+    
     /// Get values for all headers named `name`
     func get(named name: String) -> [String] {
         let name = Header.normalizeName(name)
@@ -187,22 +244,18 @@ extension Headers {
             .filter({ header in header.name == name })
             .map({ header in header.value })
     }
-
-    /// Remove first header with name (if any).
-    mutating func remove(first name: String) {
-        guard let i = self.firstIndex(where: { existing in
-            existing.name == name
-        }) else {
-            return
-        }
-        self.remove(at: i)
+    
+    /// Remove all headers with a given name
+    func remove(named name: String) -> Self {
+        let name = Header.normalizeName(name)
+        return self.filter({ header in header.name != name })
     }
-
+    
     /// Remove duplicate headers from array, keeping only the first
     func removeDuplicates() -> Self {
         self.uniquing(with: \.name)
     }
-
+    
     /// Merge headers.
     /// Duplicate headers from `that` are dropped.
     func merge(_ that: Headers) -> Self {
@@ -210,7 +263,7 @@ extension Headers {
         this.append(contentsOf: that)
         return this.removeDuplicates()
     }
-
+    
     /// Update header, either replacing the first existing header with the
     /// same key, or appending a new header to the list of headers.
     mutating func replace(_ header: Header) {
@@ -222,78 +275,44 @@ extension Headers {
         }
         self[i] = header
     }
-
+    
     /// Replace header.
     /// Updates value of first header with this name if it exists,
     /// or appends header with this name, if it doesn't.
     mutating func replace(name: String, value: String) {
         replace(Header(name: name, value: value))
     }
-
-    /// Remove all headers with a given name
-    func remove(named name: String) -> Self {
-        let name = Header.normalizeName(name)
-        return self.filter({ header in header.name != name })
-    }
 }
 
-/// Helpers for certain "blessed" headers
 extension Headers {
-    /// Create headers instance with blessed fields
+    /// Create headers instance with required fields
     init(
-        contentType: ContentType,
+        contentType: String,
         created: Date,
         modified: Date,
-        title: String
+        title: String,
+        fileExtension: String
     ) {
         self.init()
-        self.contentType(contentType)
-        self.created(created)
-        self.modified(modified)
-        self.title(title)
-    }
-    
-    func contentType() -> ContentType? {
-        get(
-            with: { value in ContentType(rawValue: value) },
-            first: "Content-Type"
+        self.replace(
+            name: HeaderName.contentType.rawValue,
+            value: contentType
         )
-    }
-    
-    mutating func contentType(_ contentType: ContentType) {
-        replace(name: "Content-Type", value: contentType.rawValue)
-    }
-    
-    func modified() -> Date? {
-        get(with: Date.from, first: "Modified")
-    }
-    
-    mutating func modified(_ date: Date) {
-        replace(
-            name: "Modified",
-            value: String.from(date)
+        self.replace(
+            name: HeaderName.created.rawValue,
+            value: String.from(created)
         )
-    }
-    
-    func created() -> Date? {
-        get(with: Date.from, first: "Created")
-    }
-    
-    mutating func created(_ date: Date) {
-        replace(
-            name: "Created",
-            value: String.from(date)
+        self.replace(
+            name: HeaderName.modified.rawValue,
+            value: String.from(modified)
         )
-    }
-    
-    func title() -> String? {
-        get(first: "Title")
-    }
-    
-    mutating func title(_ title: String) {
-        replace(
-            name: "Title",
+        self.replace(
+            name: HeaderName.title.rawValue,
             value: title
+        )
+        self.replace(
+            name: HeaderName.fileExtension.rawValue,
+            value: fileExtension
         )
     }
 }

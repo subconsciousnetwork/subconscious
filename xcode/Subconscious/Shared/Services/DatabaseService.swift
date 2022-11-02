@@ -33,7 +33,8 @@ struct DatabaseService {
         }
     }
 
-    private var store: MemoStore
+    private var memos: MemoStore
+    private var files: FileStore
     private var documentURL: URL
     private var databaseURL: URL
     private var database: SQLite3Database
@@ -42,7 +43,8 @@ struct DatabaseService {
     init(
         documentURL: URL,
         databaseURL: URL,
-        store: MemoStore,
+        memos: MemoStore,
+        files: FileStore,
         migrations: Migrations<AppMigrationEnvironment>
     ) {
         self.documentURL = documentURL
@@ -52,7 +54,8 @@ struct DatabaseService {
             mode: .readwrite
         )
         self.migrations = migrations
-        self.store = store
+        self.memos = memos
+        self.files = files
     }
 
     /// Make sure database is up-to-date.
@@ -63,25 +66,18 @@ struct DatabaseService {
     /// it from scratch using the file system.
     ///
     /// - Returns the version of the database upon successful comple.
-    private func migrate() throws -> DatabaseMigrationInfo {
-        let version = try database.getUserVersion()
-        guard version != schema.version else {
-            return DatabaseMigrationInfo(
-                version: version,
-                didRebuild: false
+    private func migrate() throws -> Int {
+        try self.migrations.migrate(
+            database: self.database,
+            environment: AppMigrationEnvironment(
+                memos: memos,
+                files: files
             )
-        }
-        try database.delete()
-        let database = try database.open()
-        try database.executescript(sql: schema.script)
-        return DatabaseMigrationInfo(
-            version: schema.version,
-            didRebuild: true
         )
     }
 
     /// Migrate database off main thread, returning a publisher
-    func migrateAsync() -> AnyPublisher<DatabaseMigrationInfo, Error> {
+    func migrateAsync() -> AnyPublisher<Int, Error> {
         CombineUtilities.async(qos: .userInitiated) {
             try migrate()
         }
@@ -93,15 +89,9 @@ struct DatabaseService {
     func syncDatabase() -> AnyPublisher<[FileFingerprintChange], Error> {
         CombineUtilities.async(qos: .utility) {
             // Left = Leader (files)
-            let left: [FileFingerprint] = try store.list()
+            let left: [FileFingerprint] = try memos.list()
                 .compactMap({ slug in
-                    guard let headers = try? store.headers(slug) else {
-                        return nil
-                    }
-                    guard headers.contentType() == ContentType.subtext else {
-                        return nil
-                    }
-                    guard let info = store.info(slug) else {
+                    guard let info = memos.info(slug) else {
                         return nil
                     }
                     return FileFingerprint(
@@ -163,7 +153,7 @@ struct DatabaseService {
 
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        entry: SubtextEntry
+        entry: MemoEntry
     ) throws {
         try database.execute(
             sql: """
@@ -195,13 +185,13 @@ struct DatabaseService {
                 .text(String(describing: entry.slug)),
                 .json(entry.contents.headers, or: "[]"),
                 /// Use content type, or default to subtext
-                .text(entry.contents.contentType.rawValue),
+                .text(entry.contents.contentType),
                 .date(entry.contents.created),
                 .date(entry.contents.modified),
                 .text(entry.contents.title),
                 .text(entry.contents.body.description),
-                .text(entry.contents.body.excerpt()),
-                .json(entry.contents.body.slugs, or: "[]"),
+                .text(entry.contents.excerpt()),
+                .json(entry.contents.slugs(), or: "[]"),
                 .integer(
                     entry.contents.body.description
                         .lengthOfBytes(using: .utf8)
@@ -213,7 +203,7 @@ struct DatabaseService {
     private func writeEntryToDatabase(slug: Slug) throws {
         var entry = try readEntry(slug: slug)
         /// Read created and modified times from file system
-        let info = try store.info(slug).unwrap()
+        let info = try memos.info(slug).unwrap()
         /// Set on headers
         entry.contents.created = info.created
         entry.contents.modified = info.modified
@@ -231,19 +221,19 @@ struct DatabaseService {
 
     /// Write entry to file system and database
     /// Also sets modified header to now.
-    private func writeEntry(_ entry: SubtextEntry) throws {
+    private func writeEntry(_ entry: MemoEntry) throws {
         var entry = entry
         entry.contents.modified = Date.now
-        try store.write(entry.slug, value: entry.contents)
+        try memos.write(entry.slug, value: entry.contents)
 
         // Read modified date from file system directly after writing
-        let info = try store.info(entry.slug).unwrap()
+        let info = try memos.info(entry.slug).unwrap()
         // Amend headers
         entry.contents.modified = info.modified
         try writeEntryToDatabase(entry: entry)
     }
     
-    func writeEntryAsync(_ entry: SubtextEntry) -> AnyPublisher<Void, Error> {
+    func writeEntryAsync(_ entry: MemoEntry) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
             try writeEntry(entry)
         }
@@ -640,13 +630,8 @@ struct DatabaseService {
         guard Config.default.linksEnabled else {
             return []
         }
-        let slug = Config.default.linksTemplate
-        guard let linksEntry = try? readEntry(slug: slug) else {
-            return Config.default.linksFallback
-                .map({ slug in .entry(EntryLink(slug: slug)) })
-        }
-        let subtext = linksEntry.contents.body
-        return subtext.entryLinks.map(LinkSuggestion.entry)
+        return Config.default.linksFallback
+            .map({ slug in .entry(EntryLink(slug: slug)) })
     }
     
     /// Fetch search suggestions
@@ -737,9 +722,9 @@ struct DatabaseService {
     /// Private syncronous API to read a Subtext file via its Slug
     /// Used by public async APIs.
     /// - Returns a SubtextFile with mended headers.
-    private func readEntry(slug: Slug) throws -> SubtextEntry {
-        let memo = try store.read(slug)
-        return SubtextEntry(slug: slug, contents: memo)
+    private func readEntry(slug: Slug) throws -> MemoEntry {
+        let memo = try memos.read(slug)
+        return MemoEntry(slug: slug, contents: memo)
     }
     
     /// Sync version of readEntryDetail
@@ -785,14 +770,16 @@ struct DatabaseService {
         guard let entry = try? readEntry(slug: link.slug) else {
             return EntryDetail(
                 saveState: .draft,
-                entry: SubtextEntry(
+                entry: MemoEntry(
                     slug: link.slug,
-                    contents: SubtextMemo(
-                        contentType: .subtext,
+                    contents: Memo(
+                        contentType: ContentType.subtext.rawValue,
                         created: Date.now,
                         modified: Date.now,
                         title: link.title,
-                        body: Subtext(markup: fallback)
+                        fileExtension: ContentType.subtext.fileExtension,
+                        other: [],
+                        body: fallback
                     )
                 ),
                 backlinks: backlinks
@@ -933,224 +920,4 @@ struct DatabaseService {
             .unwrap(DatabaseServiceError.randomEntryFailed)
         }
     }
-}
-
-// MARK: Database schema
-extension DatabaseService {
-    static let schema = Schema(
-        version: 202210311251,
-        sql: """
-        CREATE TABLE search_history (
-            id TEXT PRIMARY KEY,
-            query TEXT NOT NULL,
-            created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE note (
-            slug TEXT PRIMARY KEY,
-            headers TEXT NOT NULL DEFAULT '[]',
-            content_type TEXT NOT NULL,
-            created TEXT NOT NULL,
-            modified TEXT NOT NULL,
-            title TEXT NOT NULL DEFAULT '',
-            body TEXT NOT NULL,
-            /* Short description of body */
-            excerpt TEXT NOT NULL DEFAULT '',
-            /* List of all slugs in body */
-            links TEXT NOT NULL DEFAULT '[]',
-            /* Size of body (used in combination with modified for sync) */
-            size INTEGER NOT NULL
-        );
-
-        CREATE VIRTUAL TABLE note_search USING fts5(
-            slug,
-            headers UNINDEXED,
-            content_type UNINDEXED,
-            created UNINDEXED,
-            modified UNINDEXED,
-            title,
-            body,
-            excerpt UNINDEXED,
-            links UNINDEXED,
-            size UNINDEXED,
-            content="note",
-            tokenize="porter"
-        );
-
-        /*
-        Create triggers to keep fts5 virtual table in sync with content table.
-
-        Note: SQLite documentation notes that you want to modify the fts table *before*
-        the external content table, hence the BEFORE commands.
-
-        These triggers are adapted from examples in the docs:
-        https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
-        */
-        CREATE TRIGGER note_search_before_update BEFORE UPDATE ON note BEGIN
-            DELETE FROM note_search WHERE rowid=old.rowid;
-        END;
-
-        CREATE TRIGGER note_search_before_delete BEFORE DELETE ON note BEGIN
-            DELETE FROM note_search WHERE rowid=old.rowid;
-        END;
-
-        CREATE TRIGGER note_search_after_update AFTER UPDATE ON note BEGIN
-            INSERT INTO note_search (
-                rowid,
-                slug,
-                headers,
-                content_type,
-                created,
-                modified,
-                title,
-                body,
-                excerpt,
-                links,
-                size
-            )
-            VALUES (
-                new.rowid,
-                new.slug,
-                new.headers,
-                new.content_type,
-                new.created,
-                new.modified,
-                new.title,
-                new.body,
-                new.excerpt,
-                new.links,
-                new.size
-            );
-        END;
-
-        CREATE TRIGGER note_search_after_insert AFTER INSERT ON note BEGIN
-            INSERT INTO note_search (
-                rowid,
-                slug,
-                headers,
-                content_type,
-                created,
-                modified,
-                title,
-                body,
-                excerpt,
-                links,
-                size
-            )
-            VALUES (
-                new.rowid,
-                new.slug,
-                new.headers,
-                new.content_type,
-                new.created,
-                new.modified,
-                new.title,
-                new.body,
-                new.excerpt,
-                new.links,
-                new.size
-            );
-        END;
-
-        CREATE TABLE story (
-            slug TEXT PRIMARY KEY,
-            headers TEXT NOT NULL DEFAULT '[]',
-            content_type TEXT NOT NULL,
-            created TEXT NOT NULL,
-            modified TEXT NOT NULL,
-            /* Sphere/Geist */
-            author TEXT NOT NULL,
-            /* The actual body payload. Often JSON. */
-            body TEXT NOT NULL,
-            /* A plain text representation of the body used for search */
-            description TEXT NOT NULL,
-            size INTEGER NOT NULL
-        );
-
-        CREATE VIRTUAL TABLE story_search USING fts5(
-            slug,
-            headers UNINDEXED,
-            content_type UNINDEXED,
-            created UNINDEXED,
-            modified UNINDEXED,
-            author,
-            body UNINDEXED,
-            description,
-            size UNINDEXED,
-            content="note",
-            tokenize="porter"
-        );
-
-        /*
-        Create triggers to keep fts5 virtual table in sync with content table.
-
-        Note: SQLite documentation notes that you want to modify the fts table *before*
-        the external content table, hence the BEFORE commands.
-
-        These triggers are adapted from examples in the docs:
-        https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
-        */
-        CREATE TRIGGER story_search_before_update BEFORE UPDATE ON story BEGIN
-            DELETE FROM story_search WHERE rowid=old.rowid;
-        END;
-
-        CREATE TRIGGER story_search_before_delete BEFORE DELETE ON story BEGIN
-            DELETE FROM story_search WHERE rowid=old.rowid;
-        END;
-
-        CREATE TRIGGER story_search_after_update AFTER UPDATE ON story BEGIN
-            INSERT INTO story_search (
-                rowid,
-                slug,
-                headers,
-                content_type,
-                created,
-                modified,
-                author,
-                body,
-                description,
-                size
-            )
-            VALUES (
-                new.rowid,
-                new.slug,
-                new.headers,
-                new.content_type,
-                new.created,
-                new.modified,
-                new.author,
-                new.body,
-                new.description,
-                new.size
-            );
-        END;
-
-        CREATE TRIGGER story_search_after_insert AFTER INSERT ON story BEGIN
-            INSERT INTO story_search (
-                rowid,
-                slug,
-                headers,
-                content_type,
-                created,
-                modified,
-                author,
-                body,
-                description,
-                size
-            )
-            VALUES (
-                new.rowid,
-                new.slug,
-                new.headers,
-                new.content_type,
-                new.created,
-                new.modified,
-                new.author,
-                new.body,
-                new.description,
-                new.size
-            );
-        END;
-        """
-    )
 }

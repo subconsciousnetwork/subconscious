@@ -54,7 +54,7 @@ struct StoryComboView: View {
             HStack {
                 Button(
                     action: {
-                        guard let entry = SubtextEntry(story) else {
+                        guard let entry = MemoEntry(story) else {
                             return
                         }
                         let link = EntryLink(entry)
@@ -79,43 +79,41 @@ struct StoryComboView_Previews: PreviewProvider {
             story: StoryCombo(
                 prompt: "How are these similar?",
                 entryA: EntryStub(
-                    SubtextEntry(
+                    MemoEntry(
                         slug: Slug("meme")!,
                         contents: Memo(
-                            contentType: ContentType.subtext,
+                            contentType: ContentType.subtext.rawValue,
                             created: Date.now,
                             modified: Date.now,
                             title: "meme",
+                            fileExtension: ContentType.subtext.fileExtension,
                             other: [],
-                            body: Subtext(
-                                markup: """
-                                The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
+                            body: """
+                            The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
 
-                                But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
-                                """
-                            )
+                            But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
+                            """
                         )
                     )
                 ),
                 entryB: EntryStub(
-                    SubtextEntry(
+                    MemoEntry(
                         slug: Slug("meme")!,
                         contents: Memo(
-                            contentType: ContentType.subtext,
+                            contentType: ContentType.subtext.rawValue,
                             created: Date.now,
                             modified: Date.now,
                             title: "meme",
+                            fileExtension: ContentType.subtext.fileExtension,
                             other: [],
-                            body: Subtext(
-                                markup: """
-                                Title: Meme
-                                Modified: 2022-08-23
-                                
-                                The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
+                            body: """
+                            Title: Meme
+                            Modified: 2022-08-23
+                            
+                            The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
 
-                                But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
-                                """
-                            )
+                            But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
+                            """
                         )
                     )
                 )

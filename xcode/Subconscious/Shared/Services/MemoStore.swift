@@ -7,16 +7,12 @@
 
 import Foundation
 
-enum EntryStoreError: Error {
-    case contentTypeError(String)
-}
-
 /// MemoStore is a higher-level store that allows us to read and write
 /// memos (with deserialized bodyparts) by reading both the MemoData AND
 /// the file that the MemoData sidecar points to.
 struct MemoStore: StoreProtocol {
     typealias Key = Slug
-    typealias Value = SubtextMemo
+    typealias Value = Memo
     
     private var files: FileStore
     private var memos: MemoDataStore
@@ -26,38 +22,43 @@ struct MemoStore: StoreProtocol {
         self.memos = MemoDataStore(store: files)
     }
     
-    /// Read a SubtextEntry from slug
-    func read(_ slug: Slug) throws -> SubtextMemo {
-        let memo = try memos.read(slug)
-        guard let contentType = memo.headers.contentType() else {
-            throw EntryStoreError.contentTypeError("Missing content type")
-        }
-        guard contentType == ContentType.subtext else {
-            throw EntryStoreError.contentTypeError(
-                "Unsupported content type: \(contentType)"
-            )
-        }
+    /// Read a Memo from slug
+    /// This method does a bit of work to clean up missing metadata
+    /// so when we write it back out, we get well-formed meta.
+    func read(_ slug: Slug) throws -> Memo {
+        let memoData = try memos.read(slug)
+
         let info = self.info(slug)
-        // We defer to file system for created and modified dates.
-        // These will get peristed as headers in the database for the purpose
-        // of queries, but when we read from file system, we want source of
-        // truth, so we use file system instead.
-        let created = info?.created ?? Date.now
-        let modified = info?.modified ?? Date.now
-        let title = memo.headers.title().mapOr(
-            { title in title.isEmpty ? slug.toTitle() : title },
-            default: slug.toTitle()
+
+        let fallback = WellKnownHeaders(
+            contentType: ContentType.text.rawValue,
+            created: info?.created ?? Date.now,
+            modified: info?.modified ?? Date.now,
+            title: slug.toTitle(),
+            fileExtension: ContentType.text.fileExtension
         )
-        /// Read bodypart using lower-level
+
+        let headers = WellKnownHeaders(
+            headers: memoData.headers,
+            fallback: fallback
+        )
+
+        /// Read bodypart using lower-level file store
         let body = try files.read(
-            with: Subtext.from,
-            key: memo.body
+            with: String.from,
+            key: memoData.body
         )
-        return SubtextMemo(
-            contentType: contentType,
-            created: created,
-            modified: modified,
-            title: title,
+
+        return Memo(
+            contentType: headers.contentType,
+            created: headers.created,
+            modified: headers.modified,
+            title: headers.title,
+            fileExtension: headers.fileExtension,
+            // Include the entirety of the headers. We don't worry about
+            // duplicates in the well-known header properties. The well-known
+            // values will win when we use the `headers` property of Memo.
+            other: memoData.headers,
             body: body
         )
     }
@@ -69,8 +70,8 @@ struct MemoStore: StoreProtocol {
     }
 
     /// Write a SubtextMemo to a location
-    func write(_ slug: Slug, value memo: SubtextMemo) throws {
-        let bodyPath = slug.toPath(memo.contentType.ext)
+    func write(_ slug: Slug, value memo: Memo) throws {
+        let bodyPath = slug.toPath(memo.fileExtension)
         let memoData = MemoData(
             headers: memo.headers,
             body: bodyPath

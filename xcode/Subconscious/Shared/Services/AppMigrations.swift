@@ -13,9 +13,11 @@ struct AppMigrationEnvironment {
     var files: FileStore
 }
 
-extension AppMigrationEnvironment {
+typealias AppMigration = Migration<AppMigrationEnvironment>
+
+extension Config {
     static let migrations = Migrations<AppMigrationEnvironment>([
-        Migration(
+        AppMigration(
             parent: 0,
             version: Int.from(iso8601String: "2021-11-04T12:00:00")!,
             sql: """
@@ -95,7 +97,7 @@ extension AppMigrationEnvironment {
             END;
             """
         ),
-        Migration(
+        AppMigration(
             parent: Int.from(iso8601String: "2021-11-04T12:00:00")!,
             version: Int.from(iso8601String: "2022-11-01T18:46:00")!,
             sql: """
@@ -222,7 +224,16 @@ extension AppMigrationEnvironment {
             END;
             """,
             perform: { database, environment in
-                
+                let subtextPaths = try environment.files.list({ path in
+                    !path.hasPrefix("notes/") && path.hasSuffix(".subtext")
+                })
+                for path in subtextPaths {
+//                    let slug = try Slug(path).unwrap()
+//                    let migratedPath = "migrated/\(path)"
+//                    let data: Data = try environment.files.read(path)
+//                    try environment.files.write(migratedPath, value: data)
+//                    try environment.memos.write(<#T##Slug#>, value: <#T##SubtextMemo#>)
+                }
             }
         )
     ])

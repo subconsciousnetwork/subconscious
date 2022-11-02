@@ -11,10 +11,11 @@ enum ContentType: String {
     case subtext = "text/subtext"
     case memo = "application/memo+json"
     case story = "application/story+json"
+    case text = "text/plain"
 }
 
 extension ContentType {
-    var ext: String {
+    var fileExtension: String {
         switch self {
         case .subtext:
             return "subtext"
@@ -22,6 +23,8 @@ extension ContentType {
             return "memo"
         case .story:
             return "story"
+        case .text:
+            return "txt"
         }
     }
 }
