@@ -27,7 +27,7 @@ struct Migration<Environment>: Equatable, Identifiable, Comparable {
     var version: Int
     var sql: String
     /// Actions to perform during migration.
-    var perform: ((SQLite3Database, Environment) throws -> Void)?
+    var perform: ((SQLite3Database.Connection, Environment) throws -> Void)?
     
     var id: Int { version }
 
@@ -37,11 +37,10 @@ struct Migration<Environment>: Equatable, Identifiable, Comparable {
     /// Applies migration SQL and `after` logic. If either fail, rolls database
     /// back to last savepoint.
     func apply(
-        database: SQLite3Database,
+        connection: SQLite3Database.Connection,
         environment: Environment
     ) throws -> Int {
-        let connection = try database.open()
-        let parent = try database.getUserVersion()
+        let parent = try connection.getUserVersion()
         guard parent == self.parent else {
             throw MigrationError.invalidParent(
                 expected: self.parent,
@@ -60,7 +59,7 @@ struct Migration<Environment>: Equatable, Identifiable, Comparable {
             )
             // Attempt manual migration steps
             if let perform = self.perform {
-                try perform(database, environment)
+                try perform(connection, environment)
             }
         } catch {
             // If failure, roll back all changes to original savepoint.
@@ -68,7 +67,7 @@ struct Migration<Environment>: Equatable, Identifiable, Comparable {
             // out as if it never happened, whereas ROLLBACK TO rewinds
             // to the beginning of the transaction. We want the former.
             // https://sqlite.org/lang_savepoint.html
-            try database.executescript(
+            try connection.executescript(
                 sql: "ROLLBACK TO SAVEPOINT premigration;"
             )
             throw MigrationError.migrationFailed(
@@ -95,19 +94,18 @@ struct Migrations<Environment> {
     func migrate(
         database: SQLite3Database,
         environment: Environment
-    ) throws -> [Int] {
-        let version = try database.getUserVersion()
-        var applied: [Int] = []
+    ) throws -> Int {
+        let connection = try database.open()
+        var version = try connection.getUserVersion()
         for migration in migrations {
             if migration.version <= version {
                 continue
             }
-            let version = try migration.apply(
-                database: database,
+            version = try migration.apply(
+                connection: connection,
                 environment: environment
             )
-            applied.append(version)
         }
-        return applied
+        return version
     }
 }
