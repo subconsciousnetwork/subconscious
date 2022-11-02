@@ -37,13 +37,13 @@ struct DatabaseService {
     private var documentURL: URL
     private var databaseURL: URL
     private var database: SQLite3Database
-    private var schema: Schema
+    private var migrations: Migrations<AppMigrationEnvironment>
 
     init(
         documentURL: URL,
         databaseURL: URL,
-        schema: Schema,
-        store: MemoStore
+        store: MemoStore,
+        migrations: Migrations<AppMigrationEnvironment>
     ) {
         self.documentURL = documentURL
         self.databaseURL = databaseURL
@@ -51,7 +51,7 @@ struct DatabaseService {
             url: databaseURL,
             mode: .readwrite
         )
-        self.schema = schema
+        self.migrations = migrations
         self.store = store
     }
 
