@@ -26,9 +26,6 @@ enum FileStoreError: Error {
 /// This also brings us closer in line with the way Noosphere thinks about
 /// paths (as string keys, essentially).
 struct FileStore: StoreProtocol {
-    typealias Key = String
-    typealias Value = Data
-    
     private let fileManager = FileManager.default
     private let documentURL: URL
     
@@ -71,7 +68,7 @@ struct FileStore: StoreProtocol {
     }
 
     /// List all keys
-    func list() throws -> some Sequence<String> {
+    func list() throws -> [String] {
         guard let urls = FileManager.default.listFilesDeep(
             at: documentURL,
             includingPropertiesForKeys: []

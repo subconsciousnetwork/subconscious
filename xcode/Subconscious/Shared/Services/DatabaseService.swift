@@ -38,19 +38,19 @@ struct DatabaseService {
     private var documentURL: URL
     private var databaseURL: URL
     private var database: SQLite3Database
-    private var migrations: Migrations<AppMigrationEnvironment>
+    private var migrations: Migrations
 
     init(
         documentURL: URL,
         databaseURL: URL,
         memos: MemoStore,
         files: FileStore,
-        migrations: Migrations<AppMigrationEnvironment>
+        migrations: Migrations
     ) {
         self.documentURL = documentURL
         self.databaseURL = databaseURL
         self.database = SQLite3Database(
-            url: databaseURL,
+            path: databaseURL.absoluteString,
             mode: .readwrite
         )
         self.migrations = migrations
@@ -67,13 +67,7 @@ struct DatabaseService {
     ///
     /// - Returns the version of the database upon successful comple.
     private func migrate() throws -> Int {
-        try self.migrations.migrate(
-            database: self.database,
-            environment: AppMigrationEnvironment(
-                memos: memos,
-                files: files
-            )
-        )
+        return try self.migrations.migrate(self.database)
     }
 
     /// Migrate database off main thread, returning a publisher

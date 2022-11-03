@@ -690,13 +690,20 @@ struct AppEnvironment {
         )
         let memos = MemoStore(notesURL)
 
+        let migrations = Config.migrations(
+            AppMigrationEnvironment(
+                files: files,
+                memos: memos
+            )
+        )
+
         self.database = DatabaseService(
             documentURL: self.documentURL,
             databaseURL: self.applicationSupportURL
                 .appendingPathComponent("database.sqlite"),
             memos: memos,
             files: files,
-            migrations: Config.migrations
+            migrations: migrations
         )
 
         self.keyboard = KeyboardService()

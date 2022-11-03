@@ -7,29 +7,46 @@
 
 import Foundation
 
-/// A migration is a combination of a Schema plus some
-struct Migration<Environment>: Equatable, Identifiable, Comparable {
-    static func < (
-        lhs: Migration<Environment>,
-        rhs: Migration<Environment>
-    ) -> Bool {
-        lhs.version < rhs.version
-    }
-    
-    static func == (
-        lhs: Migration<Environment>,
-        rhs: Migration<Environment>
-    ) -> Bool {
-        lhs.version == rhs.version
-    }
+protocol MigrationProtocol {
+    var version: Int { get }
+    func migrate(_ connection: SQLite3Database.Connection) throws
+}
 
-    /// Migration version. Written into database after successful migration.
+/// A declarative SQL-only migration
+struct SQLMigration: MigrationProtocol {
     var version: Int
     var sql: String
-    /// Actions to perform during migration.
-    var perform: ((SQLite3Database.Connection, Environment) throws -> Void)?
+
+    func migrate(_ connection: SQLite3Database.Connection) throws {
+        try connection.executescript(sql: sql)
+    }
+}
+
+/// A custom migration that is defined via a migrate closure
+struct Migration<Environment>: MigrationProtocol {
+    var version: Int
+    private var environment: Environment
+    private var perform: (
+        SQLite3Database.Connection,
+        Environment
+    ) throws -> Void
     
-    var id: Int { version }
+    init(
+        version: Int,
+        environment: Environment,
+        perform: @escaping (
+            SQLite3Database.Connection,
+            Environment
+        ) throws -> Void
+    ) {
+        self.version = version
+        self.environment = environment
+        self.perform = perform
+    }
+    
+    func migrate(_ connection: SQLite3Database.Connection) throws {
+        try self.perform(connection, self.environment)
+    }
 }
 
 enum MigrationsError: Error {
@@ -37,22 +54,22 @@ enum MigrationsError: Error {
     case invalidVersion(Int)
 }
 
-struct Migrations<Environment> {
-    let migrations: [Migration<Environment>]
+struct Migrations {
+    let migrations: [MigrationProtocol]
     
     init(
-        _ migrations: [Migration<Environment>]
+        _ migrations: [MigrationProtocol]
     ) {
-        let migrations = migrations.sorted()
+        let migrations = migrations
+            .sorted(by: { lhs, rhs in
+                lhs.version < rhs.version
+            })
         self.migrations = migrations
     }
 
     /// Applies migrations in sequence, skipping everything up to and including
     /// current version, then applying versions after that one by one.
-    func migrate(
-        database: SQLite3Database,
-        environment: Environment
-    ) throws -> Int {
+    func migrate(_ database: SQLite3Database) throws -> Int {
         let connection = try database.open()
         var version = try connection.getUserVersion()
         var versions: Set<Int> = Set(
@@ -69,17 +86,15 @@ struct Migrations<Environment> {
             // Mark rollback savepoint
             try connection.executescript(sql: "SAVEPOINT premigration;")
             do {
-                // Attempt SQL migration
+                // Try migration
+                try migration.migrate(connection)
+                // Mark version
                 try connection.executescript(
                     sql: """
                     PRAGMA user_version = \(migration.version);
-                    \(migration.sql)
                     """
                 )
-                // Attempt manual migration steps
-                if let perform = migration.perform {
-                    try perform(connection, environment)
-                }
+                // Release savepoint
                 try connection.executescript(
                     sql: "RELEASE SAVEPOINT premigration;"
                 )

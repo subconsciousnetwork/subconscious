@@ -13,7 +13,7 @@ import Foundation
 ///
 /// This is a lightweight datatype that is often read into `Memo<T>` type
 /// using higher-level APIs.
-struct MemoDataStore: StoreProtocol {
+struct MemoDataStore {
     typealias Key = Slug
     typealias Value = MemoData
     

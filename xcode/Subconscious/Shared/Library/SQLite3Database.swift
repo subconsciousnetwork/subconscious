@@ -634,14 +634,14 @@ final class SQLite3Database {
     /// We use this queue to make database instances threadsafe
     private var queue: DispatchQueue
     private var db: Connection?
-    let url: URL
+    let path: String
     let mode: OpenMode
 
     public init(
-        url: URL,
+        path: String,
         mode: OpenMode = .readwrite
     ) {
-        self.url = url
+        self.path = path
         self.mode = mode
         // Create GCD dispatch queue for running database queries.
         // SQLite3Connection objects are threadsafe.
@@ -660,7 +660,6 @@ final class SQLite3Database {
         if let db = self.db {
             return db
         } else {
-            let path = url.absoluteString
             let db = try Connection(path: path, mode: mode)
             self.db = db
             return db
@@ -681,7 +680,7 @@ final class SQLite3Database {
         try queue.sync {
             self.db?.close()
             self.db = nil
-            try FileManager.default.removeItem(at: self.url)
+            try FileManager.default.removeItem(atPath: self.path)
         }
     }
 

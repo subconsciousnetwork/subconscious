@@ -10,7 +10,7 @@ import Foundation
 /// MemoStore is a higher-level store that allows us to read and write
 /// memos (with deserialized bodyparts) by reading both the MemoData AND
 /// the file that the MemoData sidecar points to.
-struct MemoStore: StoreProtocol {
+struct MemoStore {
     typealias Key = Slug
     typealias Value = Memo
     
