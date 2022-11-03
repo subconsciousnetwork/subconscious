@@ -59,18 +59,24 @@ extension MemoData {
 }
 
 extension String {
-    func toMemo() -> Memo? {
-        let envelope = HeadersEnvelope(markup: self)
-        let headers = envelope.headers
+    func toHeadersEnvelope() -> HeadersEnvelope {
+        HeadersEnvelope(markup: self)
+    }
+}
+
+extension HeadersEnvelope {
+    func toMemo(
+        fallback: WellKnownHeaders = WellKnownHeaders(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            title: Config.default.untitled,
+            fileExtension: ContentType.subtext.fileExtension
+        )
+    ) -> Memo? {
         let wellKnownHeaders = WellKnownHeaders(
             headers: headers,
-            fallback: WellKnownHeaders(
-                contentType: ContentType.text.rawValue,
-                created: Date.now,
-                modified: Date.now,
-                title: "",
-                fileExtension: ContentType.text.fileExtension
-            )
+            fallback: fallback
         )
         return Memo(
             contentType: wellKnownHeaders.contentType,
@@ -79,14 +85,8 @@ extension String {
             title: wellKnownHeaders.title,
             fileExtension: wellKnownHeaders.fileExtension,
             other: headers,
-            body: String(envelope.body)
+            body: String(body)
         )
-    }
-}
-
-extension Data {
-    func toMemo() -> Memo? {
-        self.toString()?.toMemo()
     }
 }
 
