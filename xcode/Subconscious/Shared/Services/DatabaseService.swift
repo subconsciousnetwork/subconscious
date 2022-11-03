@@ -95,7 +95,7 @@ struct DatabaseService {
                 })
             // Right = Follower (search index)
             let right: [FileFingerprint] = try database.execute(
-                sql: "SELECT slug, modified, size FROM note"
+                sql: "SELECT slug, modified, size FROM memo"
             ).compactMap({ row in
                 if
                     let slugString: String = row.get(0),
@@ -151,39 +151,44 @@ struct DatabaseService {
     ) throws {
         try database.execute(
             sql: """
-            INSERT INTO note (
+            INSERT INTO memo (
                 slug,
-                headers,
                 content_type,
                 created,
                 modified,
                 title,
+                file_extension,
+                headers,
                 body,
+                description,
                 excerpt,
                 links,
                 size
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(slug) DO UPDATE SET
-                headers=excluded.headers,
                 content_type=excluded.content_type,
                 created=excluded.created,
                 modified=excluded.modified,
                 title=excluded.title,
+                file_extension=excluded.file_extension,
+                headers=excluded.headers,
                 body=excluded.body,
+                description=excluded.description,
                 excerpt=excluded.excerpt,
                 links=excluded.links,
                 size=excluded.size
             """,
             parameters: [
                 .text(String(describing: entry.slug)),
-                .json(entry.contents.headers, or: "[]"),
-                /// Use content type, or default to subtext
                 .text(entry.contents.contentType),
                 .date(entry.contents.created),
                 .date(entry.contents.modified),
                 .text(entry.contents.title),
-                .text(entry.contents.body.description),
+                .text(entry.contents.fileExtension),
+                .json(entry.contents.headers, or: "[]"),
+                .text(entry.contents.body),
+                .text(entry.contents.plain()),
                 .text(entry.contents.excerpt()),
                 .json(entry.contents.slugs(), or: "[]"),
                 .integer(
@@ -237,7 +242,7 @@ struct DatabaseService {
     private func deleteEntryFromDatabase(slug: Slug) throws {
         try database.execute(
             sql: """
-            DELETE FROM note WHERE slug = ?
+            DELETE FROM memo WHERE slug = ?
             """,
             parameters: [
                 .text(slug.description)
@@ -355,7 +360,7 @@ struct DatabaseService {
             try database.execute(
                 sql: """
                 SELECT count(slug)
-                FROM note
+                FROM memo
                 """
             )
             .compactMap({ row in
@@ -374,7 +379,7 @@ struct DatabaseService {
             try database.execute(
                 sql: """
                 SELECT slug, modified, title, excerpt
-                FROM note
+                FROM memo
                 ORDER BY modified DESC
                 LIMIT 1000
                 """
@@ -403,7 +408,7 @@ struct DatabaseService {
         let suggestions = try database.execute(
             sql: """
             SELECT slug, title
-            FROM note
+            FROM memo
             ORDER BY modified DESC
             LIMIT 25
             """
@@ -473,8 +478,8 @@ struct DatabaseService {
         let entries: [EntryLink] = try database.execute(
             sql: """
             SELECT slug, title
-            FROM note_search
-            WHERE note_search MATCH ?
+            FROM memo_search
+            WHERE memo_search MATCH ?
             ORDER BY rank
             LIMIT 25
             """,
@@ -588,8 +593,8 @@ struct DatabaseService {
             let results: [EntryLink] = try database.execute(
                 sql: """
                 SELECT slug, title
-                FROM note_search
-                WHERE note_search MATCH ?
+                FROM memo_search
+                WHERE memo_search MATCH ?
                 ORDER BY rank
                 LIMIT 25
                 """,
@@ -651,8 +656,8 @@ struct DatabaseService {
                 .execute(
                     sql: """
                     SELECT slug, title
-                    FROM note_search
-                    WHERE note_search MATCH ?
+                    FROM memo_search
+                    WHERE memo_search MATCH ?
                     ORDER BY rank
                     LIMIT 25
                     """,
@@ -732,8 +737,8 @@ struct DatabaseService {
         let backlinks: [EntryStub] = try database.execute(
             sql: """
             SELECT slug, modified, title, excerpt
-            FROM note_search
-            WHERE slug != ? AND note_search.body MATCH ?
+            FROM memo_search
+            WHERE slug != ? AND memo_search.body MATCH ?
             ORDER BY rank
             LIMIT 200
             """,
@@ -825,7 +830,7 @@ struct DatabaseService {
         try? database.execute(
             sql: """
             SELECT slug, title, body, modified
-            FROM note
+            FROM memo
             ORDER BY RANDOM()
             LIMIT 1
             """
@@ -857,8 +862,8 @@ struct DatabaseService {
         try? database.execute(
             sql: """
             SELECT slug, modified, title, body
-            FROM note_search
-            WHERE note_search.body MATCH ?
+            FROM memo_search
+            WHERE memo_search.body MATCH ?
             ORDER BY RANDOM()
             LIMIT 1
             """,
@@ -892,7 +897,7 @@ struct DatabaseService {
             try database.execute(
                 sql: """
                 SELECT slug, title
-                FROM note
+                FROM memo
                 ORDER BY RANDOM()
                 LIMIT 1
                 """
