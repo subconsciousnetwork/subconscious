@@ -41,6 +41,18 @@ extension Pathlike {
 }
 
 extension Pathlike {
+    /// Delete a specific path extension from a pathlike string.
+    /// If path extension is not part of string, returns nil.
+    func deletingPathExtension(_ ext: String) -> String? {
+        let stem = ".\(ext)"
+        guard self.hasSuffix(stem) else {
+            return nil
+        }
+        return String(self.dropLast(stem.count))
+    }
+}
+
+extension Pathlike {
     /// Append a file extension to a path-like string.
     ///
     /// The logic of this function is very simple, essentially a

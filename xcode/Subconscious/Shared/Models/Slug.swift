@@ -138,6 +138,15 @@ struct Slug:
 }
 
 extension Slug {
+    init?(fromPath path: String, withExtension ext: String) {
+        guard let sluglike = path.deletingPathExtension(ext) else {
+            return nil
+        }
+        self.init(sluglike)
+    }
+}
+
+extension Slug {
     /// Create a slashlink (markup string) from slug
     /// https://github.com/gordonbrander/subtext
     func toSlashlink() -> String {
