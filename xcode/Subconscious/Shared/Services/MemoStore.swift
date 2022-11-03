@@ -45,7 +45,7 @@ struct MemoStore: StoreProtocol {
 
         /// Read bodypart using lower-level file store
         let body = try files.read(
-            with: String.from,
+            with: { data in data.toString() },
             key: memoData.body
         )
 
@@ -78,7 +78,7 @@ struct MemoStore: StoreProtocol {
         )
         try memos.write(slug, value: memoData)
         try files.write(
-            with: Data.from,
+            with: { string in string.toData() },
             key: bodyPath,
             value: memo.body
         )

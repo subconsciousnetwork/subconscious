@@ -8,63 +8,59 @@
 
 import Foundation
 
-extension String {
-    /// Get string from substring
-    static func from(_ substring: Substring) -> String {
-        String(substring)
-    }
-}
-
-extension String {
-    /// Get string from Data, using UTF-8 encoding.
-    static func from(_ data: Data) -> String? {
-        String(data: data, encoding: .utf8)
+extension Substring {
+    func toString() -> String {
+        String(self)
     }
 }
 
 extension Data {
-    /// Encode string to data, using UTF-8 encoding.
-    static func from(_ string: String) -> Data? {
-        string.data(using: .utf8)
+    func toString(encoding: String.Encoding = .utf8) -> String? {
+        String(data: self, encoding: encoding)
     }
 }
 
-extension Data {
-    /// Encode Subtext to Data
-    static func from(_ subtext: Subtext) -> Data? {
-        subtext.base |> String.from |> Data.from
+extension String {
+    func toData(encoding: String.Encoding = .utf8) -> Data? {
+        self.data(using: .utf8)
+    }
+}
+
+extension String {
+    func toSubtext() -> Subtext {
+        Subtext.parse(markup: self)
     }
 }
 
 extension Subtext {
-    /// Decode Subtext from Data
-    static func from(_ data: Data) -> Subtext? {
-        data |> String.from |> Subtext.parse(markup:)
-    }
-}
-
-extension MemoData {
-    /// Decode MemoData from Data
-    static func from(_ data: Data) -> MemoData? {
-        let decoder = JSONDecoder()
-        return try? decoder.decode(MemoData.self, from: data)
+    func toData() -> Data? {
+        self.base.toString().toData()
     }
 }
 
 extension Data {
-    /// Encode MemoData to Data
-    static func from(_ memo: MemoData) -> Data? {
-        let encoder = JSONEncoder()
-        return try? encoder.encode(memo)
+    func toSubtext() -> Subtext? {
+        self.toString()?.toSubtext()
     }
 }
 
-extension Memo {
-    /// Read a Subtext-flavored Memo from a string
-    /// - Parses headers (if any)
-    /// - Parses body as Subtext
-    static func from(_ string: String) -> Memo? {
-        let envelope = HeadersEnvelope(markup: string)
+extension Data {
+    func toMemoData() -> MemoData? {
+        let decoder = JSONDecoder()
+        return try? decoder.decode(MemoData.self, from: self)
+    }
+}
+
+extension MemoData {
+    func toData() -> Data? {
+        let encoder = JSONEncoder()
+        return try? encoder.encode(self)
+    }
+}
+
+extension String {
+    func toMemo() -> Memo? {
+        let envelope = HeadersEnvelope(markup: self)
         let headers = envelope.headers
         let wellKnownHeaders = WellKnownHeaders(
             headers: headers,
@@ -86,13 +82,11 @@ extension Memo {
             body: String(envelope.body)
         )
     }
-    
 }
 
-extension Memo {
-    /// Read SubtextMemo from data
-    static func from(_ data: Data) -> Memo? {
-        String.from(data) |> Memo.from
+extension Data {
+    func toMemo() -> Memo? {
+        self.toString()?.toMemo()
     }
 }
 
@@ -113,16 +107,16 @@ extension Date {
     }
 }
 
-extension Story {
-    static func from(_ data: Data) -> Story? {
+extension Data {
+    func toStory() -> Story? {
         let decoder = JSONDecoder()
-        return try? decoder.decode(Story.self, from: data)
+        return try? decoder.decode(Story.self, from: self)
     }
 }
 
-extension Data {
-    static func from(_ story: Story) -> Data? {
+extension Story {
+    func toData() -> Data? {
         let encoder = JSONEncoder()
-        return try? encoder.encode(story)
+        return try? encoder.encode(self)
     }
 }

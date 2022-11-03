@@ -26,7 +26,7 @@ struct MemoDataStore: StoreProtocol {
     /// Read memo from slug key
     func read(_ slug: Slug) throws -> MemoData {
         try store.read(
-            with: MemoData.from,
+            with: { data in data.toMemoData() },
             key: slug.toPath(ContentType.memo.fileExtension)
         )
     }
@@ -34,7 +34,7 @@ struct MemoDataStore: StoreProtocol {
     /// Write Memo to slug key
     func write(_ slug: Slug, value: MemoData) throws {
         try store.write(
-            with: Data.from,
+            with: { memo in memo.toData() },
             key: slug.toPath(ContentType.memo.fileExtension),
             value: value
         )

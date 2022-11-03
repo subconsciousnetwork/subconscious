@@ -23,27 +23,3 @@ struct Func {
         closure()
     }
 }
-
-precedencegroup PipeOperator {
-    associativity: left
-}
-
-infix operator |>: PipeOperator
-
-/// Pipe a value through functions
-func |> <A, B>(lhs: A, rhs: (A) -> B) -> B {
-    rhs(lhs)
-}
-
-/// Pipe a value through a throwing function
-func |> <A, B>(lhs: A, rhs: (A) throws -> B) throws -> B {
-    try rhs(lhs)
-}
-
-/// Pipe an optional value through an optional mapping function
-func |> <A, B>(lhs: A?, rhs: (A) -> B?) -> B? {
-    guard let value = lhs else {
-        return nil
-    }
-    return rhs(value)
-}
