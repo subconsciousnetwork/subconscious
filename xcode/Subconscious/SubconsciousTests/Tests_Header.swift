@@ -314,68 +314,6 @@ class Tests_Header: XCTestCase {
         )
     }
     
-    func testHeadersGetContentTypeA() throws {
-        let headers = [
-            Header(name: "Content-Type", value: "text/subtext"),
-        ]
-        let contentType = headers.contentType()
-        XCTAssertEqual(contentType, ContentType.subtext, "Gets content type")
-    }
-    
-    func testHeadersGetContentTypeB() throws {
-        let headers = [
-            Header(name: "Content-Type", value: "text/subtext"),
-            Header(name: "Content-Type", value: "application/json"),
-        ]
-        let contentType = headers.contentType()
-        XCTAssertEqual(
-            contentType,
-            ContentType.subtext,
-            "Gets first content type header"
-        )
-    }
-    
-    func testHeadersSetContentType() throws {
-        var headers = [
-            Header(name: "Title", value: "Great Expectations"),
-            Header(name: "Content-Type", value: "text/subtext"),
-        ]
-        headers.contentType(ContentType.subtext)
-        XCTAssertEqual(
-            headers[1].value,
-            "text/subtext",
-            "Sets first content type header"
-        )
-    }
-    
-    func testHeadersModifiedRoundtrip() throws {
-        var headers = Headers()
-        let valueA = headers.modified()
-        XCTAssertNil(valueA)
-        let now = Date.now
-        headers.modified(now)
-        guard let date = headers.modified() else {
-            XCTFail("Did not set date")
-            return
-        }
-        let interval = now.timeIntervalSince(date)
-        XCTAssert(interval < 1, "Date is set (we allow encoding lossiness up to second-precision)")
-    }
-    
-    func testHeadersCreatedRoundtrip() throws {
-        var headers = Headers()
-        let valueA = headers.created()
-        XCTAssertNil(valueA)
-        let now = Date.now
-        headers.created(now)
-        guard let date = headers.created() else {
-            XCTFail("Did not set date")
-            return
-        }
-        let interval = now.timeIntervalSince(date)
-        XCTAssert(interval < 1, "Date is set (we allow encoding lossiness up to second-precision)")
-    }
-    
     func testHeadersDescription() throws {
         var tape = Tape(
             """

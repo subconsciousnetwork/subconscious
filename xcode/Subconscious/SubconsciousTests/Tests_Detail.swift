@@ -19,12 +19,14 @@ class Tests_Detail: XCTestCase {
 
         let entry = MemoEntry(
             slug: Slug("example")!,
-            contents: SubtextMemo(
-                contentType: ContentType.subtext,
+            contents: Memo(
+                contentType: ContentType.subtext.rawValue,
                 created: Date.now,
                 modified: modified,
                 title: "Example",
-                body: Subtext(markup: "Example text")
+                fileExtension: ContentType.subtext.fileExtension,
+                other: [],
+                body: "Example text"
             )
         )
 
@@ -48,7 +50,7 @@ class Tests_Detail: XCTestCase {
             "isDetailLoading set to false"
         )
         XCTAssertEqual(
-            update.state.modified,
+            update.state.headers.modified,
             modified,
             "Modified is set from entry"
         )
@@ -77,12 +79,14 @@ class Tests_Detail: XCTestCase {
 
         let entry = MemoEntry(
             slug: Slug("example")!,
-            contents: SubtextMemo(
-                contentType: ContentType.subtext,
+            contents: Memo(
+                contentType: ContentType.subtext.rawValue,
                 created: Date.now,
                 modified: Date.now,
                 title: "Example",
-                body: Subtext(markup: "Example")
+                fileExtension: ContentType.subtext.fileExtension,
+                other: [],
+                body: "Example"
             )
         )
 
@@ -112,12 +116,14 @@ class Tests_Detail: XCTestCase {
 
         let entry = MemoEntry(
             slug: Slug("example")!,
-            contents: SubtextMemo(
-                contentType: ContentType.subtext,
+            contents: Memo(
+                contentType: ContentType.subtext.rawValue,
                 created: Date.now,
                 modified: Date.now,
                 title: "Example",
-                body: Subtext(markup: "Example")
+                fileExtension: ContentType.subtext.fileExtension,
+                other: [],
+                body: "Example"
             )
         )
         
@@ -184,8 +190,9 @@ class Tests_Detail: XCTestCase {
             XCTFail("Failed to derive entry from editor")
             return
         }
-        XCTAssertNotNil(
-            entry.contents.headers.modified(),
+        let interval = Date.now.timeIntervalSince(entry.contents.modified)
+        XCTAssert(
+            interval < 1,
             "Marks modified time"
         )
     }
