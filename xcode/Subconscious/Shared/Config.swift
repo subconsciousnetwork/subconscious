@@ -22,6 +22,8 @@ struct Config: Equatable {
     /// Subsurface "orb" shader on main FAB
     var orbShaderEnabled = true
 
+    var untitled = "Untitled"
+
     /// Toggle scratch note suggestion feature
     var scratchSuggestionEnabled = true
     var scratchDefaultTitle = "Untitled"
