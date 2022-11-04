@@ -823,11 +823,45 @@ struct DatabaseService {
         }
     }
     
+    func readRandomEntryInDateRange(startDate: Date, endDate: Date) -> EntryStub? {
+        try? database.execute(
+            sql: """
+            SELECT slug, modified, title, excerpt
+            FROM memo
+            WHERE memo.modified BETWEEN ? AND ?
+            ORDER BY RANDOM()
+            LIMIT 1
+            """,
+            parameters: [
+                .date(startDate),
+                .date(endDate)
+            ]
+        )
+        .compactMap({ row in
+            guard
+                let slug: Slug = row.get(0).flatMap({ string in
+                    Slug(formatting: string)
+                }),
+                let modified: Date = row.get(1),
+                let title: String = row.get(2),
+                let excerpt: String = row.get(3)
+            else {
+                return nil
+            }
+            return EntryStub(
+                link: EntryLink(slug: slug, title: title),
+                excerpt: excerpt,
+                modified: modified
+            )
+        })
+        .first
+    }
+
     /// Select a random entry
     func readRandomEntry() -> EntryStub? {
         try? database.execute(
             sql: """
-            SELECT slug, title, body, modified
+            SELECT slug, modified, title, excerpt
             FROM memo
             ORDER BY RANDOM()
             LIMIT 1
@@ -838,15 +872,15 @@ struct DatabaseService {
                 let slug: Slug = row.get(0).flatMap({ string in
                     Slug(formatting: string)
                 }),
-                let title: String = row.get(1),
-                let body: String = row.get(2),
-                let modified: Date = row.get(3)
+                let modified: Date = row.get(1),
+                let title: String = row.get(2),
+                let excerpt: String = row.get(3)
             else {
                 return nil
             }
             return EntryStub(
                 link: EntryLink(slug: slug, title: title),
-                excerpt: Subtext(markup: body).excerpt(),
+                excerpt: excerpt,
                 modified: modified
             )
         })
