@@ -12,7 +12,7 @@ struct Config: Equatable {
     let rdns = "com.subconscious.Subconscious"
     var debug = false
 
-    var appTabs = true
+    var appTabs = false
 
     var notesDirectory = "notes"
 
