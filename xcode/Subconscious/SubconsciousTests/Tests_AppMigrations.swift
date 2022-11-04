@@ -17,7 +17,7 @@ final class Tests_AppMigrations: XCTestCase {
             files: memoryStore,
             memos: memoStore
         )
-        let migrations = Config.migrations(environment)
+        let migrations = Config.migrations
         guard let latest = migrations.migrations.last?.version else {
             XCTFail("Could not unwrap latest migration")
             return
@@ -33,34 +33,34 @@ final class Tests_AppMigrations: XCTestCase {
     func testOldContentMigrations() throws {
         let db = SQLite3Database(path: ":memory:")
         let memoryStore = MemoryStore()
-
-        try memoryStore.write(
-            "loomings.subtext",
-            value: """
-            Content-Type: text/subtext
-            Title: Loomings
-            
-            Call me Ishmael.
-            """.toData()!
+        let memos = HeaderSubtextMemoStore(store: memoryStore)
+        let now = Date.now
+        try memos.write(
+            Slug("loomings")!,
+            value: Memo(
+                contentType: ContentType.subtext.rawValue,
+                created: Date.now,
+                modified: Date.now,
+                title: "Loomings",
+                fileExtension: ContentType.subtext.fileExtension,
+                other: [],
+                body: "Call me Ishmael."
+            )
         )
 
+        /// Write incomplete file
         try memoryStore.write(
             "oysters.subtext",
             value: """
-            Content-Type: text/subtext
-            Title: Oysters
-            
+            Title: Too much like oysters
+            Created: 2022-11-04T19:52:09Z
+            Modified: 2022-11-04T19:52:40Z
+
             We are too much like oysters observing the sun through the water, and thinking that thick water the thinnest of air.
             """.toData()!
         )
 
-        let memoStore = MemoStore(store: memoryStore)
-
-        let environment = AppMigrationEnvironment(
-            files: memoryStore,
-            memos: memoStore
-        )
-        let migrations = Config.migrations(environment)
+        let migrations = Config.migrations
 
         guard let latest = migrations.migrations.last?.version else {
             XCTFail("Could not unwrap latest migration")
@@ -74,11 +74,20 @@ final class Tests_AppMigrations: XCTestCase {
             latest,
             "Migrated to latest version"
         )
-        let loomings = try memoStore.read(Slug("loomings")!)
+        let loomings = try memos.read(Slug("loomings")!)
         XCTAssertEqual(loomings.title, "Loomings")
-        XCTAssertEqual(loomings.body, "We are too much like oysters observing the sun through the water, and thinking that thick water the thinnest of air.")
-        let oysters = try memoStore.read(Slug("oysters")!)
-        XCTAssertEqual(oysters.title, "Oysters")
         XCTAssertEqual(loomings.body, "Call me Ishmael.")
+
+        let oysters = try memos.read(Slug("oysters")!)
+        XCTAssertEqual(oysters.title, "Too much like oysters")
+        XCTAssertEqual(oysters.body, "We are too much like oysters observing the sun through the water, and thinking that thick water the thinnest of air.")
+        XCTAssertEqual(
+            oysters.created,
+            Date.from("2022-11-04T19:52:09Z")
+        )
+        XCTAssertEqual(
+            oysters.modified,
+            Date.from("2022-11-04T19:52:40Z")
+        )
     }
 }
