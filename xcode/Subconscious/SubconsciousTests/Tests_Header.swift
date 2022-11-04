@@ -326,7 +326,7 @@ class Tests_Header: XCTestCase {
             """
         )
         let headers = Headers(&tape)
-        let text = headers.text
+        let text = headers.toHeaderString()
         XCTAssertEqual(
             text,
             "Content-Type: text/subtext\nContent-Type: text/plain\nTitle: Floop the Pig\n\n",

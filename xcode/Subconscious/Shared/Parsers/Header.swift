@@ -216,7 +216,7 @@ extension Headers {
 
 extension Headers {
     /// Get headers, rendered back out as a string
-    var text: String {
+    func toHeaderString() -> String {
         self
             .map({ header in String(describing: header) })
             .joined(separator: "")
@@ -321,27 +321,27 @@ extension Headers {
 /// Parses headers and retains body portion as a substring
 struct HeadersEnvelope: CustomStringConvertible {
     var headers: Headers
-    var body: Substring
-
-    private init(
+    var body: String
+    
+    init(
         headers: Headers,
-        body: Substring
+        body: String
     ) {
         self.headers = headers
         self.body = body
     }
-
+    
     init(markup: String) {
         var tape = Tape(markup[...])
         let headers = Headers(&tape)
         let body = tape.rest
         self.init(
             headers: headers,
-            body: body
+            body: String(body)
         )
     }
-
+    
     var description: String {
-        "\(headers)\(body)"
+        "\(headers.toHeaderString())\(body)"
     }
 }

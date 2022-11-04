@@ -14,9 +14,6 @@ import Foundation
 /// This is a lightweight datatype that is often read into `Memo<T>` type
 /// using higher-level APIs.
 struct MemoDataStore {
-    typealias Key = Slug
-    typealias Value = MemoData
-    
     private let store: StoreProtocol
     
     init(store: StoreProtocol) {
@@ -47,9 +44,8 @@ struct MemoDataStore {
     func save() throws {}
     
     /// List all memo slugs
-    func list() throws -> some Sequence<Slug> {
+    func list() throws -> [Slug] {
         try store.list()
-            .lazy
             .filter({ path in
                 path.hasExtension(ContentType.memo.fileExtension)
             })

@@ -11,9 +11,6 @@ import Foundation
 /// memos (with deserialized bodyparts) by reading both the MemoData AND
 /// the file that the MemoData sidecar points to.
 struct MemoStore {
-    typealias Key = Slug
-    typealias Value = Memo
-    
     private var files: StoreProtocol
     private var memos: MemoDataStore
     
@@ -95,7 +92,7 @@ struct MemoStore {
     
     func save() throws {}
     
-    func list() throws -> some Sequence<Slug> {
+    func list() throws -> [Slug] {
         try memos.list()
     }
 

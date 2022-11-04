@@ -27,6 +27,12 @@ extension String {
 }
 
 extension String {
+    func toHeadersEnvelope() -> HeadersEnvelope {
+        HeadersEnvelope(markup: self)
+    }
+}
+
+extension String {
     func toSubtext() -> Subtext {
         Subtext.parse(markup: self)
     }
@@ -58,9 +64,12 @@ extension MemoData {
     }
 }
 
-extension String {
+extension Memo {
     func toHeadersEnvelope() -> HeadersEnvelope {
-        HeadersEnvelope(markup: self)
+        HeadersEnvelope(
+            headers: self.headers,
+            body: self.body
+        )
     }
 }
 
@@ -85,7 +94,7 @@ extension HeadersEnvelope {
             title: wellKnownHeaders.title,
             fileExtension: wellKnownHeaders.fileExtension,
             other: headers,
-            body: String(body)
+            body: body
         )
     }
 }

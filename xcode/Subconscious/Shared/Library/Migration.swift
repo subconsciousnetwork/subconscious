@@ -80,7 +80,7 @@ struct Migrations {
     /// current version, then applying versions after that one by one.
     func migrate(_ database: SQLite3Database) throws -> Int {
         let connection = try database.open()
-        var version = try connection.getUserVersion()
+        let version = try connection.getUserVersion()
         var versions: Set<Int> = Set(
             migrations.map({ migration in migration.version })
         )

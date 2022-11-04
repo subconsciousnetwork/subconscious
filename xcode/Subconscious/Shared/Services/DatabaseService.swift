@@ -15,6 +15,7 @@ struct DatabaseMigrationInfo: Hashable {
     var didRebuild: Bool
 }
 
+// MARK: SERVICE
 struct DatabaseService {
     enum DatabaseServiceError: Error, LocalizedError {
         case pathNotInFilePath
@@ -33,18 +34,16 @@ struct DatabaseService {
         }
     }
 
-    private var memos: MemoStore
-    private var files: FileStore
     private var documentURL: URL
     private var databaseURL: URL
+    private var memos: HeaderSubtextMemoStore
     private var database: SQLite3Database
     private var migrations: Migrations
 
     init(
         documentURL: URL,
         databaseURL: URL,
-        memos: MemoStore,
-        files: FileStore,
+        memos: HeaderSubtextMemoStore,
         migrations: Migrations
     ) {
         self.documentURL = documentURL
@@ -55,7 +54,6 @@ struct DatabaseService {
         )
         self.migrations = migrations
         self.memos = memos
-        self.files = files
     }
 
     /// Make sure database is up-to-date.
@@ -165,7 +163,7 @@ struct DatabaseService {
                 links,
                 size
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(slug) DO UPDATE SET
                 content_type=excluded.content_type,
                 created=excluded.created,
@@ -919,4 +917,227 @@ struct DatabaseService {
             .unwrap(DatabaseServiceError.randomEntryFailed)
         }
     }
+}
+
+struct AppMigrationEnvironment {
+    var files: StoreProtocol
+    var memos: MemoStore
+}
+
+// MARK: Migrations
+extension Config {
+    static let migrations = Migrations([
+        SQLMigration(
+            version: Int.from(iso8601String: "2021-11-04T12:00:00")!,
+            sql: """
+            CREATE TABLE search_history (
+                id TEXT PRIMARY KEY,
+                query TEXT NOT NULL,
+                created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE entry (
+              slug TEXT PRIMARY KEY,
+              title TEXT NOT NULL DEFAULT '',
+              body TEXT NOT NULL,
+              modified TEXT NOT NULL,
+              size INTEGER NOT NULL
+            );
+            CREATE VIRTUAL TABLE entry_search USING fts5(
+              slug,
+              title,
+              body,
+              modified UNINDEXED,
+              size UNINDEXED,
+              content="entry",
+              tokenize="porter"
+            );
+            /*
+            Create triggers to keep fts5 virtual table in sync with content table.
+            Note: SQLite documentation notes that you want to modify the fts table *before*
+            the external content table, hence the BEFORE commands.
+            These triggers are adapted from examples in the docs:
+            https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
+            */
+            CREATE TRIGGER entry_search_before_update BEFORE UPDATE ON entry BEGIN
+              DELETE FROM entry_search WHERE rowid=old.rowid;
+            END;
+            CREATE TRIGGER entry_search_before_delete BEFORE DELETE ON entry BEGIN
+              DELETE FROM entry_search WHERE rowid=old.rowid;
+            END;
+            CREATE TRIGGER entry_search_after_update AFTER UPDATE ON entry BEGIN
+              INSERT INTO entry_search
+                (
+                  rowid,
+                  slug,
+                  title,
+                  body,
+                  modified,
+                  size
+                )
+              VALUES
+                (
+                  new.rowid,
+                  new.slug,
+                  new.title,
+                  new.body,
+                  new.modified,
+                  new.size
+                );
+            END;
+            CREATE TRIGGER entry_search_after_insert AFTER INSERT ON entry BEGIN
+              INSERT INTO entry_search
+                (
+                  rowid,
+                  slug,
+                  title,
+                  body,
+                  modified,
+                  size
+                )
+              VALUES
+                (
+                  new.rowid,
+                  new.slug,
+                  new.title,
+                  new.body,
+                  new.modified,
+                  new.size
+                );
+            END;
+            """
+        ),
+        SQLMigration(
+            version: Int.from(iso8601String: "2022-11-04T15:38:00")!,
+            sql: """
+            /* Remove old tables */
+            DROP TABLE IF EXISTS entry;
+            DROP TABLE IF EXISTS entry_search;
+            DROP TRIGGER IF EXISTS entry_search_before_update;
+            DROP TRIGGER IF EXISTS entry_search_before_delete;
+            DROP TRIGGER IF EXISTS entry_search_after_update;
+            DROP TRIGGER IF EXISTS entry_search_after_insert;
+            
+            /* Create new memo table */
+            CREATE TABLE memo (
+                slug TEXT PRIMARY KEY,
+                content_type TEXT NOT NULL,
+                created TEXT NOT NULL,
+                modified TEXT NOT NULL,
+                title TEXT NOT NULL DEFAULT '',
+                file_extension TEXT NOT NULL,
+                /* Additional free-form headers */
+                headers TEXT NOT NULL DEFAULT '[]',
+                body TEXT NOT NULL,
+                /* Plain text serialization of body for search purposes */
+                description TEXT NOT NULL,
+                /* Short description of body */
+                excerpt TEXT NOT NULL DEFAULT '',
+                /* List of all slugs in body */
+                links TEXT NOT NULL DEFAULT '[]',
+                /* Size of body (used in combination with modified for sync) */
+                size INTEGER NOT NULL
+            );
+            
+            CREATE VIRTUAL TABLE memo_search USING fts5(
+                slug,
+                content_type UNINDEXED,
+                created UNINDEXED,
+                modified UNINDEXED,
+                title,
+                file_extension UNINDEXED,
+                headers UNINDEXED,
+                body UNINDEXED,
+                description,
+                excerpt UNINDEXED,
+                links UNINDEXED,
+                size UNINDEXED,
+                content="memo",
+                tokenize="porter"
+            );
+            
+            /*
+            Create triggers to keep fts5 virtual table in sync with content table.
+
+            Note: SQLite documentation notes that you want to modify the fts table *before*
+            the external content table, hence the BEFORE commands.
+
+            These triggers are adapted from examples in the docs:
+            https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
+            */
+            CREATE TRIGGER memo_search_before_update BEFORE UPDATE ON memo BEGIN
+                DELETE FROM memo_search WHERE rowid=old.rowid;
+            END;
+            
+            CREATE TRIGGER memo_search_before_delete BEFORE DELETE ON memo BEGIN
+                DELETE FROM memo_search WHERE rowid=old.rowid;
+            END;
+            
+            CREATE TRIGGER memo_search_after_update AFTER UPDATE ON memo BEGIN
+                INSERT INTO memo_search (
+                    rowid,
+                    slug,
+                    content_type,
+                    created,
+                    modified,
+                    title,
+                    file_extension,
+                    headers,
+                    body,
+                    description,
+                    excerpt,
+                    links,
+                    size
+                )
+                VALUES (
+                    new.rowid,
+                    new.slug,
+                    new.content_type,
+                    new.created,
+                    new.modified,
+                    new.title,
+                    new.file_extension,
+                    new.headers,
+                    new.body,
+                    new.description,
+                    new.excerpt,
+                    new.links,
+                    new.size
+                );
+            END;
+
+            CREATE TRIGGER memo_search_after_insert AFTER INSERT ON memo BEGIN
+                INSERT INTO memo_search (
+                    rowid,
+                    slug,
+                    content_type,
+                    created,
+                    modified,
+                    title,
+                    file_extension,
+                    headers,
+                    body,
+                    description,
+                    excerpt,
+                    links,
+                    size
+                )
+                VALUES (
+                    new.rowid,
+                    new.slug,
+                    new.content_type,
+                    new.created,
+                    new.modified,
+                    new.title,
+                    new.file_extension,
+                    new.headers,
+                    new.body,
+                    new.description,
+                    new.excerpt,
+                    new.links,
+                    new.size
+                );
+            END;
+            """
+        )
+    ])
 }

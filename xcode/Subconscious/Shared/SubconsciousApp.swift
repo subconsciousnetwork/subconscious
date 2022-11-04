@@ -683,26 +683,15 @@ struct AppEnvironment {
         self.logger = Logger.main
 
         let files = FileStore(documentURL: documentURL)
+        let memos = HeaderSubtextMemoStore(store: files)
 
-        let notesURL = documentURL.appending(
-            component: Config.default.notesDirectory,
-            directoryHint: .isDirectory
-        )
-        let memos = MemoStore(notesURL)
-
-        let migrations = Config.migrations(
-            AppMigrationEnvironment(
-                files: files,
-                memos: memos
-            )
-        )
+        let migrations = Config.migrations
 
         self.database = DatabaseService(
             documentURL: self.documentURL,
             databaseURL: self.applicationSupportURL
                 .appendingPathComponent("database.sqlite"),
             memos: memos,
-            files: files,
             migrations: migrations
         )
 
