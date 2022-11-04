@@ -8,7 +8,7 @@
 import Foundation
 
 struct AppMigrationEnvironment {
-    var files: FileStore
+    var files: StoreProtocol
     var memos: MemoStore
 }
 

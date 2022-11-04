@@ -85,7 +85,7 @@ struct DatabaseService {
             // Left = Leader (files)
             let left: [FileFingerprint] = try memos.list()
                 .compactMap({ slug in
-                    guard let info = memos.info(slug) else {
+                    guard let info = try? memos.info(slug) else {
                         return nil
                     }
                     return FileFingerprint(
@@ -202,7 +202,7 @@ struct DatabaseService {
     private func writeEntryToDatabase(slug: Slug) throws {
         var entry = try readEntry(slug: slug)
         /// Read created and modified times from file system
-        let info = try memos.info(slug).unwrap()
+        let info = try memos.info(slug)
         /// Set on headers
         entry.contents.created = info.created
         entry.contents.modified = info.modified
@@ -226,7 +226,7 @@ struct DatabaseService {
         try memos.write(entry.slug, value: entry.contents)
 
         // Read modified date from file system directly after writing
-        let info = try memos.info(entry.slug).unwrap()
+        let info = try memos.info(entry.slug)
         // Amend headers
         entry.contents.modified = info.modified
         try writeEntryToDatabase(entry: entry)

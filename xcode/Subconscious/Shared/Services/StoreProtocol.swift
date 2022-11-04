@@ -11,6 +11,7 @@ protocol StoreProtocol {
     func read(_ key: String) throws -> Data
     func write(_ key: String, value: Data) throws
     func remove(_ key: String) throws
+    func info(_ key: String) throws -> FileInfo
     func save() throws
     func list() throws -> [String]
 }

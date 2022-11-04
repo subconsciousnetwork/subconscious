@@ -8,6 +8,8 @@
 import Foundation
 
 enum FileStoreError: Error {
+    case failReadAttribute(FileAttributeKey)
+    case doesNotExist(String)
     case decodingError(String)
     case encodingError(String)
 }
@@ -81,16 +83,20 @@ struct FileStore: StoreProtocol {
     }
 
     /// Get info for file
-    func info(_ key: String) -> FileInfo? {
+    func info(_ key: String) throws -> FileInfo {
         let url = url(forKey: key)
         let manager = FileManager.default
-        guard
-            let attributes = try? manager.attributesOfItem(atPath: url.path),
-            let modified = attributes[.modificationDate] as? Date,
-            let created = attributes[.creationDate] as? Date,
-            let size = attributes[.size] as? Int
-        else {
-            return nil
+        let attributes = try FileManager.default.attributesOfItem(
+            atPath: url.path
+        )
+        guard let modified = attributes[.modificationDate] as? Date else {
+            throw FileStoreError.failReadAttribute(.modificationDate)
+        }
+        guard let created = attributes[.creationDate] as? Date else {
+            throw FileStoreError.failReadAttribute(.creationDate)
+        }
+        guard let size = attributes[.size] as? Int else {
+            throw FileStoreError.failReadAttribute(.size)
         }
         return FileInfo(created: created, modified: modified, size: size)
     }

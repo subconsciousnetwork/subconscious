@@ -14,11 +14,11 @@ struct MemoStore {
     typealias Key = Slug
     typealias Value = Memo
     
-    private var files: FileStore
+    private var files: StoreProtocol
     private var memos: MemoDataStore
     
-    init(files: FileStore) {
-        self.files = files
+    init(store: StoreProtocol) {
+        self.files = store
         self.memos = MemoDataStore(store: files)
     }
     
@@ -28,12 +28,12 @@ struct MemoStore {
     func read(_ slug: Slug) throws -> Memo {
         let memoData = try memos.read(slug)
 
-        let info = self.info(slug)
+        let info = try self.info(slug)
 
         let fallback = WellKnownHeaders(
             contentType: ContentType.text.rawValue,
-            created: info?.created ?? Date.now,
-            modified: info?.modified ?? Date.now,
+            created: info.created,
+            modified: info.modified,
             title: slug.toTitle(),
             fileExtension: ContentType.text.fileExtension
         )
@@ -100,18 +100,16 @@ struct MemoStore {
     }
 
     // Get info for slug
-    func info(_ slug: Slug) -> FileInfo? {
+    func info(_ slug: Slug) throws -> FileInfo {
         // Get memo
-        guard let memo = try? memos.read(slug) else {
-            return nil
-        }
+        let memo = try memos.read(slug)
         // Read file info from body property
-        return files.info(memo.body)
+        return try files.info(memo.body)
     }
 }
 
 extension MemoStore {
     init(_ documentURL: URL) {
-        self.init(files: FileStore(documentURL: documentURL))
+        self.init(store: FileStore(documentURL: documentURL))
     }
 }

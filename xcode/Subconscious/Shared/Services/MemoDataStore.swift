@@ -17,9 +17,9 @@ struct MemoDataStore {
     typealias Key = Slug
     typealias Value = MemoData
     
-    private let store: FileStore
+    private let store: StoreProtocol
     
-    init(store: FileStore) {
+    init(store: StoreProtocol) {
         self.store = store
     }
     
