@@ -12,11 +12,6 @@ final class Tests_AppMigrations: XCTestCase {
     func testBasicMigrations() throws {
         let db = SQLite3Database(path: ":memory:")
         let memoryStore = MemoryStore()
-        let memoStore = MemoStore(store: memoryStore)
-        let environment = AppMigrationEnvironment(
-            files: memoryStore,
-            memos: memoStore
-        )
         let migrations = Config.migrations
         guard let latest = migrations.migrations.last?.version else {
             XCTFail("Could not unwrap latest migration")

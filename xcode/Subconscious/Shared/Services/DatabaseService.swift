@@ -919,11 +919,6 @@ struct DatabaseService {
     }
 }
 
-struct AppMigrationEnvironment {
-    var files: StoreProtocol
-    var memos: MemoStore
-}
-
 // MARK: Migrations
 extension Config {
     static let migrations = Migrations([
