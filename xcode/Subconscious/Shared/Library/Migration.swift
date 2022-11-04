@@ -49,9 +49,18 @@ struct Migration<Environment>: MigrationProtocol {
     }
 }
 
-enum MigrationsError: Error {
+enum MigrationsError: Error, LocalizedError {
     case migrationFailed(version: Int, error: String)
     case invalidVersion(Int)
+    
+    var errorDescription: String? {
+        switch self {
+        case let .migrationFailed(version, error):
+            return "migrationFailed(\(version), \(error))"
+        case let .invalidVersion(version):
+            return "invalidVersion(\(version))"
+        }
+    }
 }
 
 struct Migrations {
