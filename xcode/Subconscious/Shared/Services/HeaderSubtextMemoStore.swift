@@ -28,7 +28,7 @@ struct HeaderSubtextMemoStore {
         return try store.read(
             with: { data in
                 data.toString()?
-                    .toHeadersEnvelope()
+                    .toHeaderSubtext()
                     .toMemo(fallback: fallbackHeaders)
             },
             key: path
@@ -39,8 +39,8 @@ struct HeaderSubtextMemoStore {
     func write(_ slug: Slug, value: Memo) throws {
         try store.write(
             with: { memo in
-                memo.toHeadersEnvelope()
-                    .description
+                memo.toHeaderSubtext()
+                    .toMarkup()
                     .toData()
             },
             key: slug.toPath(ContentType.subtext.fileExtension),

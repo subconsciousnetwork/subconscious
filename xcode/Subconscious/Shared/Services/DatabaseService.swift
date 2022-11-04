@@ -147,6 +147,9 @@ struct DatabaseService {
     private func writeEntryToDatabase(
         entry: MemoEntry
     ) throws {
+        // Get memo as header stubtext. We'll use this in a bit to calculate
+        // the size that the text will be on disk for the database size column.
+        let headerSubtext = entry.contents.toHeaderSubtext()
         try database.execute(
             sql: """
             INSERT INTO memo (
@@ -189,10 +192,7 @@ struct DatabaseService {
                 .text(entry.contents.plain()),
                 .text(entry.contents.excerpt()),
                 .json(entry.contents.slugs(), or: "[]"),
-                .integer(
-                    entry.contents.body.description
-                        .lengthOfBytes(using: .utf8)
-                )
+                .integer(headerSubtext.size())
             ]
         )
     }

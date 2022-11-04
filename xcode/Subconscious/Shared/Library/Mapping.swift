@@ -27,12 +27,6 @@ extension String {
 }
 
 extension String {
-    func toHeadersEnvelope() -> HeadersEnvelope {
-        HeadersEnvelope(markup: self)
-    }
-}
-
-extension String {
     func toSubtext() -> Subtext {
         Subtext.parse(markup: self)
     }
@@ -61,41 +55,6 @@ extension MemoData {
     func toData() -> Data? {
         let encoder = JSONEncoder()
         return try? encoder.encode(self)
-    }
-}
-
-extension Memo {
-    func toHeadersEnvelope() -> HeadersEnvelope {
-        HeadersEnvelope(
-            headers: self.headers,
-            body: self.body
-        )
-    }
-}
-
-extension HeadersEnvelope {
-    func toMemo(
-        fallback: WellKnownHeaders = WellKnownHeaders(
-            contentType: ContentType.subtext.rawValue,
-            created: Date.now,
-            modified: Date.now,
-            title: Config.default.untitled,
-            fileExtension: ContentType.subtext.fileExtension
-        )
-    ) -> Memo? {
-        let wellKnownHeaders = WellKnownHeaders(
-            headers: headers,
-            fallback: fallback
-        )
-        return Memo(
-            contentType: wellKnownHeaders.contentType,
-            created: wellKnownHeaders.created,
-            modified: wellKnownHeaders.modified,
-            title: wellKnownHeaders.title,
-            fileExtension: wellKnownHeaders.fileExtension,
-            other: headers,
-            body: body
-        )
     }
 }
 
