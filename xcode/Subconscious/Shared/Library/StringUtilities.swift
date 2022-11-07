@@ -58,26 +58,6 @@ extension Substring {
 }
 
 extension String {
-    /// Returns a string path with the path extension removed, if any.
-    /// Extension is anything after the first `.`.
-    func deletingPathExtension() -> String {
-        if let stem = self.split(separator: ".").first {
-            return String(stem)
-        }
-        return self
-    }
-}
-
-extension String {
-    /// Truncate to avoid file name length limit issues.
-    /// Windows systems can handle up to 255, but we truncate at 200 to leave a bit of room
-    /// for things like version numbers.
-    func truncatingSafeFileNameLength() -> String {
-        String(self.prefix(200))
-    }
-}
-
-extension String {
     /// Trim string and add blank line ending
     func formattingBlankLineEnding() -> String {
         var trimmed = self.trimmingCharacters(

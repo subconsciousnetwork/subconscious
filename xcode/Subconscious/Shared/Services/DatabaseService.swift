@@ -10,12 +10,17 @@ import Foundation
 import Combine
 import OrderedCollections
 
+struct DatabaseMigrationInfo: Hashable {
+    var version: Int
+    var didRebuild: Bool
+}
+
+// MARK: SERVICE
 struct DatabaseService {
     enum DatabaseServiceError: Error, LocalizedError {
         case pathNotInFilePath
         case randomEntryFailed
         case fileExists(Slug)
-        case fileNotFound(Slug)
 
         var errorDescription: String? {
             switch self {
@@ -25,49 +30,49 @@ struct DatabaseService {
                 return "DatabaseServiceError.randomEntryFailed"
             case .fileExists(let slug):
                 return "DatabaseServiceError.fileExists(\(slug))"
-            case .fileNotFound(let slug):
-                return "DatabaseServiceError.notFound(\(slug))"
             }
         }
     }
 
     private var documentURL: URL
     private var databaseURL: URL
+    private var memos: HeaderSubtextMemoStore
     private var database: SQLite3Database
-    private var migrations: SQLite3Migrations
+    private var migrations: Migrations
 
     init(
         documentURL: URL,
         databaseURL: URL,
-        migrations: SQLite3Migrations
+        memos: HeaderSubtextMemoStore,
+        migrations: Migrations
     ) {
         self.documentURL = documentURL
         self.databaseURL = databaseURL
-        self.database = .init(
+        self.database = SQLite3Database(
             path: databaseURL.absoluteString,
             mode: .readwrite
         )
         self.migrations = migrations
+        self.memos = memos
     }
 
-    /// Close database connection and delete database file
-    func delete() -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(
-            qos: .background,
-            execute: {
-                database.close()
-                try FileManager.default.removeItem(at: databaseURL)
-            }
-        )
+    /// Make sure database is up-to-date.
+    /// Checks the user version, and if it is out of date, it deletes
+    /// and recreates the database.
+    ///
+    /// Because we only use the database as a cache, we are able to rebuild
+    /// it from scratch using the file system.
+    ///
+    /// - Returns the version of the database upon successful comple.
+    private func migrate() throws -> Int {
+        return try self.migrations.migrate(self.database)
     }
 
-    func migrate() -> AnyPublisher<SQLite3Migrations.MigrationSuccess, Error> {
-        CombineUtilities.async(
-            qos: .userInitiated,
-            execute: {
-                try migrations.migrate(database: database)
-            }
-        )
+    /// Migrate database off main thread, returning a publisher
+    func migrateAsync() -> AnyPublisher<Int, Error> {
+        CombineUtilities.async(qos: .userInitiated) {
+            try migrate()
+        }
     }
 
     /// Sync file system with database.
@@ -76,14 +81,19 @@ struct DatabaseService {
     func syncDatabase() -> AnyPublisher<[FileFingerprintChange], Error> {
         CombineUtilities.async(qos: .utility) {
             // Left = Leader (files)
-            let left = try FileSync.readFileFingerprints(
-                directory: documentURL,
-                ext: "subtext"
-            ).unwrap()
-
+            let left: [FileFingerprint] = try memos.list()
+                .compactMap({ slug in
+                    guard let info = try? memos.info(slug) else {
+                        return nil
+                    }
+                    return FileFingerprint(
+                        slug: slug,
+                        info: info
+                    )
+                })
             // Right = Follower (search index)
             let right: [FileFingerprint] = try database.execute(
-                sql: "SELECT slug, modified, size FROM entry"
+                sql: "SELECT slug, modified, size FROM memo"
             ).compactMap({ row in
                 if
                     let slugString: String = row.get(0),
@@ -103,7 +113,8 @@ struct DatabaseService {
             let changes = FileSync.calcChanges(
                 left: left,
                 right: right
-            ).filter({ change in
+            )
+            .filter({ change in
                 switch change {
                 case .same:
                     return false
@@ -111,7 +122,6 @@ struct DatabaseService {
                     return true
                 }
             })
-            
             for change in changes {
                 switch change {
                 // .leftOnly = create.
@@ -119,11 +129,7 @@ struct DatabaseService {
                 // .rightNewer = Follower shouldn't be ahead.
                 //               Leader wins.
                 // .conflict. Leader wins.
-                case
-                    .leftOnly(let left),
-                    .leftNewer(let left, _),
-                    .rightNewer(let left, _),
-                    .conflict(let left, _):
+                case .leftOnly(let left), .leftNewer(let left, _), .rightNewer(let left, _), .conflict(let left, _):
                     try writeEntryToDatabase(slug: left.slug)
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly(let right):
@@ -139,27 +145,66 @@ struct DatabaseService {
 
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        entry: SubtextFile,
-        fingerprint: FileFingerprint.Attributes
+        entry: MemoEntry
     ) throws {
+        // Get memo as header stubtext. We'll use this in a bit to calculate
+        // the size that the text will be on disk for the database size column.
+        let headerSubtext = entry.contents.toHeaderSubtext()
         try database.execute(
             sql: """
-            INSERT INTO entry (slug, title, body, modified, size)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO memo (
+                slug,
+                content_type,
+                created,
+                modified,
+                title,
+                file_extension,
+                headers,
+                body,
+                description,
+                excerpt,
+                links,
+                size
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(slug) DO UPDATE SET
-                title=excluded.title,
-                body=excluded.body,
+                content_type=excluded.content_type,
+                created=excluded.created,
                 modified=excluded.modified,
+                title=excluded.title,
+                file_extension=excluded.file_extension,
+                headers=excluded.headers,
+                body=excluded.body,
+                description=excluded.description,
+                excerpt=excluded.excerpt,
+                links=excluded.links,
                 size=excluded.size
             """,
             parameters: [
                 .text(String(describing: entry.slug)),
-                .text(entry.title()),
-                .text(String(describing: entry)),
-                .date(fingerprint.modifiedDate),
-                .integer(fingerprint.size)
+                .text(entry.contents.contentType),
+                .date(entry.contents.created),
+                .date(entry.contents.modified),
+                .text(entry.contents.title),
+                .text(entry.contents.fileExtension),
+                .json(entry.contents.headers, or: "[]"),
+                .text(entry.contents.body),
+                .text(entry.contents.plain()),
+                .text(entry.contents.excerpt()),
+                .json(entry.contents.slugs(), or: "[]"),
+                .integer(headerSubtext.size())
             ]
         )
+    }
+
+    private func writeEntryToDatabase(slug: Slug) throws {
+        var entry = try readEntry(slug: slug)
+        /// Read created and modified times from file system
+        let info = try memos.info(slug)
+        /// Set on headers
+        entry.contents.created = info.created
+        entry.contents.modified = info.modified
+        try writeEntryToDatabase(entry: entry)
     }
 
     private func entryFileExists(_ slug: Slug) -> Bool {
@@ -171,61 +216,52 @@ struct DatabaseService {
         return FileManager.default.fileExists(atPath: url.path)
     }
 
-    private func writeEntryToDatabase(slug: Slug) throws {
-        let entry = try readEntry(slug: slug).unwrap()
-        let fingerprint = try FileFingerprint
-            .Attributes(url: entry.url(directory: documentURL))
-            .unwrap()
-        try writeEntryToDatabase(entry: entry, fingerprint: fingerprint)
-    }
-
     /// Write entry to file system and database
     /// Also sets modified header to now.
-    private func writeEntry(_ entry: SubtextFile) throws {
-        let modifiedEntry = entry.modified(Date.now)
-        try modifiedEntry.write(directory: documentURL)
-        // Read modified date from file system directly after writing
-        let fingerprint = try FileFingerprint
-            .Attributes(url: entry.url(directory: documentURL))
-            .unwrap()
-        try writeEntryToDatabase(
-            entry: modifiedEntry,
-            fingerprint: fingerprint
-        )
-    }
+    private func writeEntry(_ entry: MemoEntry) throws {
+        var entry = entry
+        entry.contents.modified = Date.now
+        try memos.write(entry.slug, value: entry.contents)
 
-    func writeEntryAsync(_ entry: SubtextFile) -> AnyPublisher<Void, Error> {
+        // Read modified date from file system directly after writing
+        let info = try memos.info(entry.slug)
+        // Amend headers
+        entry.contents.modified = info.modified
+        try writeEntryToDatabase(entry: entry)
+    }
+    
+    func writeEntryAsync(_ entry: MemoEntry) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
             try writeEntry(entry)
         }
     }
-
+    
     /// Delete entry from database
     private func deleteEntryFromDatabase(slug: Slug) throws {
         try database.execute(
             sql: """
-            DELETE FROM entry WHERE slug = ?
+            DELETE FROM memo WHERE slug = ?
             """,
             parameters: [
                 .text(slug.description)
             ]
         )
     }
-
+    
     /// Delete entry from file system and database
     private func deleteEntry(slug: Slug) throws {
         let url = slug.toURL(directory: documentURL, ext: "subtext")
         try FileManager.default.removeItem(at: url)
         try deleteEntryFromDatabase(slug: slug)
     }
-
+    
     /// Delete entry from file system and database
     func deleteEntryAsync(slug: Slug) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .background) {
             try deleteEntry(slug: slug)
         }
     }
-
+    
     /// Move entry to a new location, updating file system and database.
     private func moveEntry(from: EntryLink, to: EntryLink) throws {
         guard from.slug != to.slug else {
@@ -236,15 +272,15 @@ struct DatabaseService {
             throw DatabaseServiceError.fileExists(to.slug)
         }
         let fromFile = try readEntry(slug: from.slug)
-            .unwrap(DatabaseServiceError.fileNotFound(from.slug))
-        // Set new title and slug
-        let toFile = fromFile.slugAndTitle(to)
+        // Make a copy representing new location and set new title and slug
+        var toFile = fromFile
+        toFile.setLink(to)
         // Write to new destination
         try writeEntry(toFile)
         // ...Then delete old entry
         try deleteEntry(slug: fromFile.slug)
     }
-
+    
     /// Move entry to a new location, updating file system and database.
     /// - Returns a combine publisher
     func moveEntryAsync(
@@ -255,7 +291,7 @@ struct DatabaseService {
             try moveEntry(from: from, to: to)
         }
     }
-
+    
     /// Merge child entry into parent entry.
     /// - Appends `child` to `parent`
     /// - Writes the combined content to `parent`
@@ -265,19 +301,17 @@ struct DatabaseService {
         child: Slug
     ) throws {
         let childEntry = try readEntry(slug: child)
-            .unwrap(DatabaseServiceError.fileNotFound(child))
-
+        
         let parentEntry = try readEntry(slug: parent)
-            .unwrap(DatabaseServiceError.fileNotFound(parent))
             .merge(childEntry)
-
+        
         //  First write the merged file to "to" location
         try writeEntry(parentEntry)
         //  Then delete child entry *afterwards*.
         //  We do this last to avoid data loss in case of write errors.
         try deleteEntry(slug: childEntry.slug)
     }
-
+    
     /// Merge child entry into parent entry.
     /// - Appends `child` to `parent`
     /// - Writes the combined content to `parent`
@@ -291,7 +325,7 @@ struct DatabaseService {
             try mergeEntry(parent: parent.slug, child: child.slug)
         }
     }
-
+    
     /// Update the title of an entry, without changing its slug
     private func retitleEntry(
         from: EntryLink,
@@ -301,11 +335,10 @@ struct DatabaseService {
             return
         }
         var entry = try readEntry(slug: from.slug)
-            .unwrap(DatabaseServiceError.fileNotFound(from.slug))
-        entry.headers["Title"] = to.linkableTitle
+        entry.contents.title = to.linkableTitle
         try writeEntry(entry)
     }
-
+    
     /// Change title header of entry, without moving it.
     /// - Returns combine publisher
     func retitleEntryAsync(
@@ -316,7 +349,7 @@ struct DatabaseService {
             try retitleEntry(from: from, to: to)
         }
     }
-
+    
     /// Count all entries
     func countEntries() -> AnyPublisher<Int, Error> {
         CombineUtilities.async(qos: .userInteractive) {
@@ -325,7 +358,7 @@ struct DatabaseService {
             try database.execute(
                 sql: """
                 SELECT count(slug)
-                FROM entry
+                FROM memo
                 """
             )
             .compactMap({ row in
@@ -335,7 +368,7 @@ struct DatabaseService {
             .unwrap(or: 0)
         }
     }
-
+    
     /// List recent entries
     func listRecentEntries() -> AnyPublisher<[EntryStub], Error> {
         CombineUtilities.async(qos: .userInitiated) {
@@ -343,58 +376,60 @@ struct DatabaseService {
             // are read-only teaser views.
             try database.execute(
                 sql: """
-                SELECT slug, body, modified
-                FROM entry_search
+                SELECT slug, modified, title, excerpt
+                FROM memo
                 ORDER BY modified DESC
                 LIMIT 1000
                 """
             )
             .compactMap({ row in
                 guard
-                    let slugString: String = row.get(0),
-                    let slug = Slug(slugString),
-                    let body: String = row.get(1),
-                    let modified: Date = row.get(2)
+                    let slug: Slug = row.get(0).flatMap({ string in
+                        Slug(formatting: string)
+                    }),
+                    let modified: Date = row.get(1),
+                    let title: String = row.get(2),
+                    let excerpt: String = row.get(3)
                 else {
                     return nil
                 }
-                /// Read entry and mend headers using information
-                /// from database.
-                let entry = SubtextFile(slug: slug, content: body)
-                    .mendingHeaders(modified: modified)
-                return EntryStub(entry)
+                return EntryStub(
+                    link: EntryLink(slug: slug, title: title),
+                    excerpt: excerpt,
+                    modified: modified
+                )
             })
         }
     }
-
+    
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
         let suggestions = try database.execute(
             sql: """
             SELECT slug, title
-            FROM entry
+            FROM memo
             ORDER BY modified DESC
             LIMIT 25
             """
         )
-        .compactMap({ row in
-            if
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let title: String = row.get(1)
-            {
-                return EntryLink(
-                    slug: slug,
-                    title: title
-                )
-            }
-            return nil
-        })
-        .map({ link in
-            Suggestion.entry(link)
-        })
-
+            .compactMap({ row in
+                if
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
+                    let title: String = row.get(1)
+                {
+                    return EntryLink(
+                        slug: slug,
+                        title: title
+                    )
+                }
+                return nil
+            })
+            .map({ link in
+                Suggestion.entry(link)
+            })
+        
         var special: [Suggestion] = []
-
+        
         // Insert scratch
         if Config.default.scratchSuggestionEnabled {
             let now = Date.now
@@ -412,19 +447,19 @@ struct DatabaseService {
                 )
             }
         }
-
+        
         if Config.default.randomSuggestionEnabled {
             // Insert an option to load a random note if there are any notes.
             if suggestions.count > 2 {
                 special.append(.random)
             }
         }
-
+        
         special.append(contentsOf: suggestions)
-
+        
         return special
     }
-
+    
     private func searchSuggestionsForQuery(
         query: String
     ) throws -> [Suggestion] {
@@ -432,17 +467,17 @@ struct DatabaseService {
         guard let queryEntryLink = EntryLink(title: query) else {
             return []
         }
-
+        
         var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
-
+        
         // Create a suggestion for the literal query
         suggestions[queryEntryLink.slug] = .search(queryEntryLink)
-
+        
         let entries: [EntryLink] = try database.execute(
             sql: """
             SELECT slug, title
-            FROM entry_search
-            WHERE entry_search MATCH ?
+            FROM memo_search
+            WHERE memo_search MATCH ?
             ORDER BY rank
             LIMIT 25
             """,
@@ -450,30 +485,30 @@ struct DatabaseService {
                 .prefixQueryFTS5(query)
             ]
         )
-        .compactMap({ row in
-            if
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let title: String = row.get(1)
-            {
-                return EntryLink(
-                    slug: slug,
-                    title: title
-                )
-            }
-            return nil
-        })
-
+            .compactMap({ row in
+                if
+                    let slugString: String = row.get(0),
+                    let slug = Slug(slugString),
+                    let title: String = row.get(1)
+                {
+                    return EntryLink(
+                        slug: slug,
+                        title: title
+                    )
+                }
+                return nil
+            })
+        
         // Insert entries into suggestions.
         // If literal query and an entry have the same slug,
         // entry will overwrite query.
         for entry in entries {
             suggestions.updateValue(.entry(entry), forKey: entry.slug)
         }
-
+        
         return Array(suggestions.values)
     }
-
+    
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     //  TODO: Replace flag arguments with direct references feature flags
@@ -488,7 +523,7 @@ struct DatabaseService {
             }
         }
     }
-
+    
     /// Given
     /// - An entry link representing the current link for the file
     /// - An entry link representing the search query
@@ -541,7 +576,7 @@ struct DatabaseService {
         }
         return Array(suggestions.values)
     }
-
+    
     /// Given a query and a `current` slug, produce an array of suggestions
     /// for renaming the note.
     func searchRenameSuggestions(
@@ -552,12 +587,12 @@ struct DatabaseService {
             guard let queryEntryLink = EntryLink(title: query) else {
                 return []
             }
-
+            
             let results: [EntryLink] = try database.execute(
                 sql: """
                 SELECT slug, title
-                FROM entry_search
-                WHERE entry_search MATCH ?
+                FROM memo_search
+                WHERE memo_search MATCH ?
                 ORDER BY rank
                 LIMIT 25
                 """,
@@ -565,20 +600,20 @@ struct DatabaseService {
                     .prefixQueryFTS5(query)
                 ]
             )
-            .compactMap({ row in
-                if
-                    let slugString: String = row.get(0),
-                    let slug = Slug(slugString),
-                    let title: String = row.get(1)
-                {
-                    return EntryLink(
-                        slug: slug,
-                        title: title
-                    )
-                }
-                return nil
-            })
-
+                .compactMap({ row in
+                    if
+                        let slugString: String = row.get(0),
+                        let slug = Slug(slugString),
+                        let title: String = row.get(1)
+                    {
+                        return EntryLink(
+                            slug: slug,
+                            title: title
+                        )
+                    }
+                    return nil
+                })
+            
             return Self.collateRenameSuggestions(
                 current: current,
                 query: queryEntryLink,
@@ -586,24 +621,16 @@ struct DatabaseService {
             )
         }
     }
-
+    
     func readDefaultLinkSuggestions() -> [LinkSuggestion] {
         // If default link suggestsions are toggled off, return empty array.
         guard Config.default.linksEnabled else {
             return []
         }
-        guard
-            let linksEntry = readEntry(slug: Config.default.linksTemplate)
-        else {
-            return Config.default.linksFallback.map({ slug in
-                .entry(
-                    EntryLink(slug: slug)
-                )
-            })
-        }
-        return linksEntry.dom.entryLinks.map(LinkSuggestion.entry)
+        return Config.default.linksFallback
+            .map({ slug in .entry(EntryLink(slug: slug)) })
     }
-
+    
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchLinkSuggestions(
@@ -615,20 +642,20 @@ struct DatabaseService {
             guard !query.isWhitespace else {
                 return fallback
             }
-
+            
             var suggestions: OrderedDictionary<Slug, LinkSuggestion> = [:]
-
+            
             // Append literal
             if let literal = EntryLink(title: query) {
                 suggestions[literal.slug] = .new(literal)
             }
-
+            
             let entries: [EntryLink] = try database
                 .execute(
                     sql: """
                     SELECT slug, title
-                    FROM entry_search
-                    WHERE entry_search MATCH ?
+                    FROM memo_search
+                    WHERE memo_search MATCH ?
                     ORDER BY rank
                     LIMIT 25
                     """,
@@ -649,7 +676,7 @@ struct DatabaseService {
                     }
                     return nil
                 })
-
+            
             // Insert entries into suggestions.
             // If literal query and an entry have the same slug,
             // entry will overwrite query.
@@ -660,18 +687,18 @@ struct DatabaseService {
                     suggestions.updateValue(.entry(entry), forKey: entry.slug)
                 }
             }
-
+            
             return Array(suggestions.values)
         }
     }
-
+    
     /// Log a search query in search history db
     func createSearchHistoryItem(query: String) -> AnyPublisher<String, Error> {
         CombineUtilities.async(qos: .utility) {
             guard !query.isWhitespace else {
                 return query
             }
-
+            
             // Log search in database, along with number of hits
             try database.execute(
                 sql: """
@@ -683,39 +710,20 @@ struct DatabaseService {
                     .text(query)
                 ]
             )
-
+            
             return query
         }
     }
-
+    
     /// Read an entry from the file system.
     /// Private syncronous API to read a Subtext file via its Slug
     /// Used by public async APIs.
     /// - Returns a SubtextFile with mended headers.
-    private func readEntry(
-        slug: Slug
-    ) -> SubtextFile? {
-        let url = slug.toURL(directory: documentURL, ext: "subtext")
-        guard let content = try? String(contentsOf: url, encoding: .utf8) else {
-            return nil
-        }
-        guard
-            let attributes = try? FileManager.default.attributesOfItem(
-                atPath: url.path
-            ),
-            let modified = attributes[.modificationDate] as? Date,
-            let created = attributes[.creationDate] as? Date
-        else {
-            return nil
-        }
-
-        return SubtextFile(slug: slug, content: content)
-            .mendingHeaders(
-                modified: modified,
-                created: created
-            )
+    private func readEntry(slug: Slug) throws -> MemoEntry {
+        let memo = try memos.read(slug)
+        return MemoEntry(slug: slug, contents: memo)
     }
-
+    
     /// Sync version of readEntryDetail
     /// Use `readEntryDetail` API to call this async.
     private func readEntryDetail(
@@ -726,9 +734,9 @@ struct DatabaseService {
         // Use content indexed in database, even though it might be stale.
         let backlinks: [EntryStub] = try database.execute(
             sql: """
-            SELECT slug, body
-            FROM entry_search
-            WHERE slug != ? AND entry_search.body MATCH ?
+            SELECT slug, modified, title, excerpt
+            FROM memo_search
+            WHERE slug != ? AND memo_search.body MATCH ?
             ORDER BY rank
             LIMIT 200
             """,
@@ -739,27 +747,37 @@ struct DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let body: String = row.get(1)
+                let slug: Slug = row.get(0).flatMap({ string in
+                    Slug(formatting: string)
+                }),
+                let modified: Date = row.get(1),
+                let title: String = row.get(2),
+                let excerpt: String = row.get(3)
             else {
                 return nil
             }
-            let entry = SubtextFile(slug: slug, content: body)
-            return EntryStub(entry)
+            return EntryStub(
+                link: EntryLink(slug: slug, title: title),
+                excerpt: excerpt,
+                modified: modified
+            )
         })
         // Retreive top entry from file system to ensure it is fresh.
         // If no file exists, return a draft, using fallback for title.
-        guard let entry = readEntry(slug: link.slug) else {
-            let now = Date.now
+        guard let entry = try? readEntry(slug: link.slug) else {
             return EntryDetail(
                 saveState: .draft,
-                entry: SubtextFile(
+                entry: MemoEntry(
                     slug: link.slug,
-                    title: link.title,
-                    modified: now,
-                    created: now,
-                    body: fallback
+                    contents: Memo(
+                        contentType: ContentType.subtext.rawValue,
+                        created: Date.now,
+                        modified: Date.now,
+                        title: link.title,
+                        fileExtension: ContentType.subtext.fileExtension,
+                        other: [],
+                        body: fallback
+                    )
                 ),
                 backlinks: backlinks
             )
@@ -771,7 +789,7 @@ struct DatabaseService {
             backlinks: backlinks
         )
     }
-
+    
     /// Get entry and backlinks from slug, using string as a fallback.
     /// We trust caller to slugify the string, if necessary.
     /// Allowing any string allows us to retreive files that don't have a
@@ -784,14 +802,20 @@ struct DatabaseService {
             try readEntryDetail(link: link, fallback: fallback)
         }
     }
-
+    
     /// Get entry and backlinks from slug, using template file as a fallback.
     func readEntryDetail(
         link: EntryLink,
         template: Slug
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .utility) {
-            let fallback = readEntry(slug: template)?.body ?? ""
+            let entry = try? readEntry(slug: template)
+            let fallback = entry.mapOr(
+                { entry in
+                    String(describing: entry.contents.body)
+                },
+                default: ""
+            )
             return try readEntryDetail(
                 link: link,
                 fallback: fallback
@@ -802,9 +826,9 @@ struct DatabaseService {
     func readRandomEntryInDateRange(startDate: Date, endDate: Date) -> EntryStub? {
         try? database.execute(
             sql: """
-            SELECT slug, body
-            FROM entry
-            WHERE entry.modified BETWEEN ? AND ?
+            SELECT slug, modified, title, excerpt
+            FROM memo
+            WHERE memo.modified BETWEEN ? AND ?
             ORDER BY RANDOM()
             LIMIT 1
             """,
@@ -815,14 +839,20 @@ struct DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let body: String = row.get(1)
+                let slug: Slug = row.get(0).flatMap({ string in
+                    Slug(formatting: string)
+                }),
+                let modified: Date = row.get(1),
+                let title: String = row.get(2),
+                let excerpt: String = row.get(3)
             else {
                 return nil
             }
-            let entry = SubtextFile(slug: slug, content: body)
-            return EntryStub(entry)
+            return EntryStub(
+                link: EntryLink(slug: slug, title: title),
+                excerpt: excerpt,
+                modified: modified
+            )
         })
         .first
     }
@@ -831,35 +861,41 @@ struct DatabaseService {
     func readRandomEntry() -> EntryStub? {
         try? database.execute(
             sql: """
-            SELECT slug, body
-            FROM entry
+            SELECT slug, modified, title, excerpt
+            FROM memo
             ORDER BY RANDOM()
             LIMIT 1
             """
         )
         .compactMap({ row in
             guard
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let body: String = row.get(1)
+                let slug: Slug = row.get(0).flatMap({ string in
+                    Slug(formatting: string)
+                }),
+                let modified: Date = row.get(1),
+                let title: String = row.get(2),
+                let excerpt: String = row.get(3)
             else {
                 return nil
             }
-            let entry = SubtextFile(slug: slug, content: body)
-            return EntryStub(entry)
+            return EntryStub(
+                link: EntryLink(slug: slug, title: title),
+                excerpt: excerpt,
+                modified: modified
+            )
         })
         .first
     }
-
+    
     /// Select a random entry who's body matches a query string
     func readRandomEntryMatching(
         query: String
     ) -> EntryStub? {
         try? database.execute(
             sql: """
-            SELECT slug, body
-            FROM entry_search
-            WHERE entry_search.body MATCH ?
+            SELECT slug, modified, title, body
+            FROM memo_search
+            WHERE memo_search.body MATCH ?
             ORDER BY RANDOM()
             LIMIT 1
             """,
@@ -869,25 +905,31 @@ struct DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let body: String = row.get(1)
+                let slug: Slug = row.get(0).flatMap({ string in
+                    Slug(formatting: string)
+                }),
+                let modified: Date = row.get(1),
+                let title: String = row.get(2),
+                let body: String = row.get(3)
             else {
                 return nil
             }
-            let entry = SubtextFile(slug: slug, content: body)
-            return EntryStub(entry)
+            return EntryStub(
+                link: EntryLink(slug: slug, title: title),
+                excerpt: Subtext(markup: body).excerpt(),
+                modified: modified
+            )
         })
         .first
     }
-
+    
     /// Choose a random entry and publish slug
     func readRandomEntryLink() -> AnyPublisher<EntryLink, Error> {
         CombineUtilities.async(qos: .default) {
             try database.execute(
                 sql: """
                 SELECT slug, title
-                FROM entry
+                FROM memo
                 ORDER BY RANDOM()
                 LIMIT 1
                 """
@@ -909,4 +951,222 @@ struct DatabaseService {
             .unwrap(DatabaseServiceError.randomEntryFailed)
         }
     }
+}
+
+// MARK: Migrations
+extension Config {
+    static let migrations = Migrations([
+        SQLMigration(
+            version: Int.from(iso8601String: "2021-11-04T12:00:00")!,
+            sql: """
+            CREATE TABLE search_history (
+                id TEXT PRIMARY KEY,
+                query TEXT NOT NULL,
+                created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE entry (
+              slug TEXT PRIMARY KEY,
+              title TEXT NOT NULL DEFAULT '',
+              body TEXT NOT NULL,
+              modified TEXT NOT NULL,
+              size INTEGER NOT NULL
+            );
+            CREATE VIRTUAL TABLE entry_search USING fts5(
+              slug,
+              title,
+              body,
+              modified UNINDEXED,
+              size UNINDEXED,
+              content="entry",
+              tokenize="porter"
+            );
+            /*
+            Create triggers to keep fts5 virtual table in sync with content table.
+            Note: SQLite documentation notes that you want to modify the fts table *before*
+            the external content table, hence the BEFORE commands.
+            These triggers are adapted from examples in the docs:
+            https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
+            */
+            CREATE TRIGGER entry_search_before_update BEFORE UPDATE ON entry BEGIN
+              DELETE FROM entry_search WHERE rowid=old.rowid;
+            END;
+            CREATE TRIGGER entry_search_before_delete BEFORE DELETE ON entry BEGIN
+              DELETE FROM entry_search WHERE rowid=old.rowid;
+            END;
+            CREATE TRIGGER entry_search_after_update AFTER UPDATE ON entry BEGIN
+              INSERT INTO entry_search
+                (
+                  rowid,
+                  slug,
+                  title,
+                  body,
+                  modified,
+                  size
+                )
+              VALUES
+                (
+                  new.rowid,
+                  new.slug,
+                  new.title,
+                  new.body,
+                  new.modified,
+                  new.size
+                );
+            END;
+            CREATE TRIGGER entry_search_after_insert AFTER INSERT ON entry BEGIN
+              INSERT INTO entry_search
+                (
+                  rowid,
+                  slug,
+                  title,
+                  body,
+                  modified,
+                  size
+                )
+              VALUES
+                (
+                  new.rowid,
+                  new.slug,
+                  new.title,
+                  new.body,
+                  new.modified,
+                  new.size
+                );
+            END;
+            """
+        ),
+        SQLMigration(
+            version: Int.from(iso8601String: "2022-11-04T15:38:00")!,
+            sql: """
+            /* Remove old tables */
+            DROP TABLE IF EXISTS entry;
+            DROP TABLE IF EXISTS entry_search;
+            DROP TRIGGER IF EXISTS entry_search_before_update;
+            DROP TRIGGER IF EXISTS entry_search_before_delete;
+            DROP TRIGGER IF EXISTS entry_search_after_update;
+            DROP TRIGGER IF EXISTS entry_search_after_insert;
+            
+            /* Create new memo table */
+            CREATE TABLE memo (
+                slug TEXT PRIMARY KEY,
+                content_type TEXT NOT NULL,
+                created TEXT NOT NULL,
+                modified TEXT NOT NULL,
+                title TEXT NOT NULL DEFAULT '',
+                file_extension TEXT NOT NULL,
+                /* Additional free-form headers */
+                headers TEXT NOT NULL DEFAULT '[]',
+                body TEXT NOT NULL,
+                /* Plain text serialization of body for search purposes */
+                description TEXT NOT NULL,
+                /* Short description of body */
+                excerpt TEXT NOT NULL DEFAULT '',
+                /* List of all slugs in body */
+                links TEXT NOT NULL DEFAULT '[]',
+                /* Size of body (used in combination with modified for sync) */
+                size INTEGER NOT NULL
+            );
+            
+            CREATE VIRTUAL TABLE memo_search USING fts5(
+                slug,
+                content_type UNINDEXED,
+                created UNINDEXED,
+                modified UNINDEXED,
+                title,
+                file_extension UNINDEXED,
+                headers UNINDEXED,
+                body UNINDEXED,
+                description,
+                excerpt UNINDEXED,
+                links UNINDEXED,
+                size UNINDEXED,
+                content="memo",
+                tokenize="porter"
+            );
+            
+            /*
+            Create triggers to keep fts5 virtual table in sync with content table.
+
+            Note: SQLite documentation notes that you want to modify the fts table *before*
+            the external content table, hence the BEFORE commands.
+
+            These triggers are adapted from examples in the docs:
+            https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
+            */
+            CREATE TRIGGER memo_search_before_update BEFORE UPDATE ON memo BEGIN
+                DELETE FROM memo_search WHERE rowid=old.rowid;
+            END;
+            
+            CREATE TRIGGER memo_search_before_delete BEFORE DELETE ON memo BEGIN
+                DELETE FROM memo_search WHERE rowid=old.rowid;
+            END;
+            
+            CREATE TRIGGER memo_search_after_update AFTER UPDATE ON memo BEGIN
+                INSERT INTO memo_search (
+                    rowid,
+                    slug,
+                    content_type,
+                    created,
+                    modified,
+                    title,
+                    file_extension,
+                    headers,
+                    body,
+                    description,
+                    excerpt,
+                    links,
+                    size
+                )
+                VALUES (
+                    new.rowid,
+                    new.slug,
+                    new.content_type,
+                    new.created,
+                    new.modified,
+                    new.title,
+                    new.file_extension,
+                    new.headers,
+                    new.body,
+                    new.description,
+                    new.excerpt,
+                    new.links,
+                    new.size
+                );
+            END;
+
+            CREATE TRIGGER memo_search_after_insert AFTER INSERT ON memo BEGIN
+                INSERT INTO memo_search (
+                    rowid,
+                    slug,
+                    content_type,
+                    created,
+                    modified,
+                    title,
+                    file_extension,
+                    headers,
+                    body,
+                    description,
+                    excerpt,
+                    links,
+                    size
+                )
+                VALUES (
+                    new.rowid,
+                    new.slug,
+                    new.content_type,
+                    new.created,
+                    new.modified,
+                    new.title,
+                    new.file_extension,
+                    new.headers,
+                    new.body,
+                    new.description,
+                    new.excerpt,
+                    new.links,
+                    new.size
+                );
+            END;
+            """
+        )
+    ])
 }

@@ -8,8 +8,65 @@
 import Foundation
 import OrderedCollections
 
+/// Well-known header names
+enum HeaderName: String {
+    case contentType = "Content-Type"
+    case created = "Created"
+    case modified = "Modified"
+    case title = "Title"
+    case fileExtension = "File-Extension"
+}
+
+/// A struct containing well-known headers
+struct WellKnownHeaders: Hashable {
+    var contentType: String
+    var created: Date
+    var modified: Date
+    var title: String
+    var fileExtension: String
+}
+
+extension WellKnownHeaders {
+    /// Extract well-known headers from Headers, using another
+    /// `WellKnownHeaders` instance as a fallback.
+    init(
+        headers: Headers,
+        fallback: WellKnownHeaders
+    ) {
+        /// Get ContentType or fall back to text.
+        let contentType = headers.get(
+            first: HeaderName.contentType.rawValue
+        ) ?? fallback.contentType
+
+        let knownContentType = ContentType(rawValue: contentType)
+
+        let fileExtension = headers.get(
+            first: HeaderName.fileExtension.rawValue
+        ) ?? knownContentType?.fileExtension ?? fallback.fileExtension
+
+        // Get created and modified from headers.
+        // If not in headers, use file system info.
+        // If not in file system info, use Date.now.
+        let created = headers.get(first: HeaderName.created.rawValue)
+            .compactMapOr(Date.from, default: fallback.created)
+
+        let modified = headers.get(first: HeaderName.modified.rawValue)
+            .compactMapOr(Date.from, default: fallback.modified)
+
+        let title = headers.get(
+            first: HeaderName.title.rawValue
+        ) ?? fallback.title
+
+        self.contentType = contentType
+        self.created = created
+        self.modified = modified
+        self.title = title
+        self.fileExtension = fileExtension
+    }
+}
+
 /// A header
-struct Header: Hashable, CustomStringConvertible {
+struct Header: Hashable, CustomStringConvertible, Codable {
     let name: String
     let value: String
 
@@ -19,6 +76,24 @@ struct Header: Hashable, CustomStringConvertible {
     ) {
         self.name = Self.normalizeName(name)
         self.value = Self.normalizeValue(value)
+    }
+
+    /// Parse a single header line
+    /// - Returns ParseState containing header
+    init?(
+        _ tape: inout Tape
+    ) {
+        tape.save()
+        // Require header to have valid name.
+        guard let name = Self.parseName(&tape) else {
+            tape.backtrack()
+            return nil
+        }
+        let value = Self.parseValue(&tape)
+        self.init(
+            name: String(name),
+            value: String(value)
+        )
     }
 
     var description: String {
@@ -95,190 +170,150 @@ struct Header: Hashable, CustomStringConvertible {
         }
         return tape.cut()
     }
-
-    /// Parse a single header line
-    /// - Returns ParseState containing header
-    static func parse(
-        _ tape: inout Tape
-    ) -> Header? {
-        tape.save()
-        // Require header to have valid name.
-        guard let name = parseName(&tape) else {
-            tape.backtrack()
-            return nil
-        }
-        let value = parseValue(&tape)
-        return Header(
-            name: String(name),
-            value: String(value)
-        )
-    }
 }
 
-/// A collection of parsed HTTP-style headers
-struct Headers: Hashable, CustomStringConvertible, Sequence {
-    var headers: [Header]
+typealias Headers = Array<Header>
 
-    init(headers: [Header]) {
-        self.headers = headers
-    }
-
-    /// Get headers, rendered back out as a string
-    var description: String {
-        headers
-            .map({ header in String(describing: header) })
-            .joined(separator: "")
-            .appending("\n")
-    }
-
-    /// Conform to Sequence
-    func makeIterator() -> IndexingIterator<Array<Header>> {
-        headers.makeIterator()
-    }
-
-    /// Get the first header matching a particular name (if any)
-    /// - Returns Header?
-    func first(named name: String) -> Header? {
-        let name = Header.normalizeName(name)
-        return headers.first(
-            where: { header in
-                header.name == name
-            }
-        )
-    }
-
-    /// Append a header
-    mutating func append(_ header: Header) {
-        self.headers.append(header)
-    }
-
-    /// An empty header struct that can be re-used
-    static let empty = Headers(headers: [])
-
+extension Headers {
     /// Parse headers from a substring.
     /// Handles missing headers, invalid headers, and no headers.
     /// - Returns a ParseState containing an array of headers (if any)
-    static func parse(
+    init(
         _ tape: inout Tape
-    ) -> Self {
+    ) {
         // Sniff first line. If it is empty, there are no headers.
         guard !Parser.parseEmptyLine(&tape) else {
-            return Self(
-                headers: []
-            )
+            self.init()
+            return
         }
         // Sniff first line. If it is not a valid header,
         // then return empty headers
-        guard let firstHeader = Header.parse(&tape) else {
-            return Self(
-                headers: []
-            )
+        guard let firstHeader = Header(&tape) else {
+            self.init()
+            return
         }
         var headers: [Header] = [firstHeader]
         while !tape.isExhausted() {
             tape.start()
             if Parser.parseEmptyLine(&tape) {
-                return Self(
-                    headers: headers
-                )
-            } else if let header = Header.parse(&tape) {
+                self.init(headers)
+                return
+            } else if let header = Header(&tape) {
                 headers.append(header)
             } else {
                 Parser.discardLine(&tape)
             }
         }
-        return Self(
-            headers: headers
-        )
+        self.init(headers)
+        return
     }
 
-    static func parse(markup: String) -> Self {
+    init(markup: String) {
         var tape = Tape(markup[...])
-        return parse(&tape)
+        self.init(&tape)
     }
-}
-
-struct HeaderIndex: Hashable, Sequence, CustomStringConvertible {
-    private(set) var index: OrderedDictionary<String, String>
-
-    init(_ headers: [Header] = []) {
-        var headerIndex: OrderedDictionary<String, String> = [:]
-        for header in headers {
-            let name = header.name
-            if headerIndex[name] == nil {
-                headerIndex[name] = header.value
-            }
-        }
-        self.index = headerIndex
-    }
-
-    subscript(_ name: String) -> String? {
-        get {
-            let name = Header.normalizeName(name)
-            return self.index[name]
-        }
-        set {
-            let name = Header.normalizeName(name)
-            guard let value = newValue else {
-                self.index[name] = nil
-                return
-            }
-            self.index[name] = Header.normalizeValue(value)
-        }
-    }
-
-    /// Conform to Sequence
-    func makeIterator() -> OrderedDictionary<String, String>.Iterator {
-        index.makeIterator()
-    }
-
-    var description: String {
-        index
-            .map({ name, value in
-                String(describing: Header(name: name, value: value))
-            })
-            .joined(separator: "")
-            .appending("\n")
-    }
-
-    /// Set a header value only if a header of the same name
-    /// does not already exist.
-    /// - Returns the current value of the header
-    @discardableResult mutating func setDefault(
-        name: String,
-        value defaultValue: String
-    ) -> String {
-        let name = Header.normalizeName(name)
-        return self.index.setDefault(defaultValue, forKey: name)
-    }
-
-    /// Merge headers together, returning a new HeaderIndex.
-    /// In case of conflicts between header keys, `self` wins.
-    func merge(_ other: HeaderIndex) -> Self {
-        var this = self
-        for (name, value) in other {
-            this.setDefault(name: name, value: value)
-        }
-        return this
-    }
-
-    static let empty = HeaderIndex()
 }
 
 extension Headers {
-    init(_ index: HeaderIndex) {
-        self.headers = index.index.map({ name, value in
-            Header(
-                name: String(describing: name),
-                value: value
-            )
-        })
+    /// Get headers, rendered back out as a string
+    func toHeaderString() -> String {
+        self
+            .map({ header in String(describing: header) })
+            .joined(separator: "")
+            .appending("\n")
+    }
+    
+    /// Get the value of the first header matching a particular name (if any)
+    /// - Returns String?
+    func get(first name: String) -> String? {
+        let name = Header.normalizeName(name)
+        return self
+            .first(where: { header in header.name == name })
+            .map({ header in header.value })
+    }
+    
+    /// Get the value of the first header
+    func get<T>(with map: (String) -> T?, first name: String) -> T? {
+        get(first: name).flatMap(map)
+    }
+    
+    /// Get values for all headers named `name`
+    func get(named name: String) -> [String] {
+        let name = Header.normalizeName(name)
+        return self
+            .filter({ header in header.name == name })
+            .map({ header in header.value })
+    }
+    
+    /// Remove all headers with a given name
+    func remove(named name: String) -> Self {
+        let name = Header.normalizeName(name)
+        return self.filter({ header in header.name != name })
+    }
+    
+    /// Remove duplicate headers from array, keeping only the first
+    func removeDuplicates() -> Self {
+        self.uniquing(with: \.name)
+    }
+    
+    /// Merge headers.
+    /// Duplicate headers from `that` are dropped.
+    func merge(_ that: Headers) -> Self {
+        var this = self
+        this.append(contentsOf: that)
+        return this.removeDuplicates()
+    }
+    
+    /// Update header, either replacing the first existing header with the
+    /// same key, or appending a new header to the list of headers.
+    mutating func replace(_ header: Header) {
+        guard let i = self.firstIndex(where: { existing in
+            existing.name == header.name
+        }) else {
+            self.append(header)
+            return
+        }
+        self[i] = header
+    }
+    
+    /// Replace header.
+    /// Updates value of first header with this name if it exists,
+    /// or appends header with this name, if it doesn't.
+    mutating func replace(name: String, value: String) {
+        replace(Header(name: name, value: value))
     }
 }
 
-extension HeaderIndex {
-    init(_ headers: Headers) {
-        self.init(headers.headers)
+extension Headers {
+    /// Create headers instance with required fields
+    init(
+        contentType: String,
+        created: Date,
+        modified: Date,
+        title: String,
+        fileExtension: String
+    ) {
+        self.init()
+        self.replace(
+            name: HeaderName.contentType.rawValue,
+            value: contentType
+        )
+        self.replace(
+            name: HeaderName.created.rawValue,
+            value: String.from(created)
+        )
+        self.replace(
+            name: HeaderName.modified.rawValue,
+            value: String.from(modified)
+        )
+        self.replace(
+            name: HeaderName.title.rawValue,
+            value: title
+        )
+        self.replace(
+            name: HeaderName.fileExtension.rawValue,
+            value: fileExtension
+        )
     }
 }
 
@@ -286,27 +321,27 @@ extension HeaderIndex {
 /// Parses headers and retains body portion as a substring
 struct HeadersEnvelope: CustomStringConvertible {
     var headers: Headers
-    var body: Substring
-
-    private init(
+    var body: String
+    
+    init(
         headers: Headers,
-        body: Substring
+        body: String
     ) {
         self.headers = headers
         self.body = body
     }
-
-    var description: String {
-        "\(headers)\(body)"
-    }
-
-    static func parse(markup: String) -> Self {
+    
+    init(markup: String) {
         var tape = Tape(markup[...])
-        let headers = Headers.parse(&tape)
+        let headers = Headers(&tape)
         let body = tape.rest
-        return Self(
+        self.init(
             headers: headers,
-            body: body
+            body: String(body)
         )
+    }
+    
+    var description: String {
+        "\(headers.toHeaderString())\(body)"
     }
 }

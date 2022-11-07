@@ -43,11 +43,21 @@ enum AppAction: CustomLogStringConvertible {
     case appear
 
     //  Database
-    /// Get database ready for interaction
-    case readyDatabase
-    case migrateDatabaseSuccess(SQLite3Migrations.MigrationSuccess)
+    /// Kick off database migration.
+    /// This action is idempotent. It will only kick off a migration if a
+    /// migration is necessary.
+    ///
+    /// We send this action when app is foregrounded.
+    ///
+    /// Technically it's a database rebuild right now. Since the source of
+    /// truth is the file system, it's easier to just rebuild.
+    case migrateDatabase
+    case succeedMigrateDatabase(Int)
+    /// Database is ready for use
     case rebuildDatabase
-    case rebuildDatabaseFailure(String)
+    case failRebuildDatabase(String)
+    /// App ready for database calls and interaction
+    case ready
     /// Sync database with file system
     case sync
     case syncSuccess([FileFingerprintChange])
@@ -78,6 +88,8 @@ enum AppAction: CustomLogStringConvertible {
             return "feed(\(String.loggable(feedAction)))"
         case .poll(_):
             return "poll"
+        case let .succeedMigrateDatabase(version):
+            return "succeedMigrateDatabase(\(version))"
         default:
             return String(describing: self)
         }
@@ -233,26 +245,30 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .readyDatabase:
-            return readyDatabase(state: state, environment: environment)
-        case let .migrateDatabaseSuccess(success):
-            return migrateDatabaseSuccess(
+        case .migrateDatabase:
+            return migrateDatabase(state: state, environment: environment)
+        case let .succeedMigrateDatabase(version):
+            return succeedMigrateDatabase(
                 state: state,
                 environment: environment,
-                success: success
+                version: version
             )
         case .rebuildDatabase:
             return rebuildDatabase(
                 state: state,
                 environment: environment
             )
-        case let .rebuildDatabaseFailure(error):
-            environment.logger.warning(
-                "Could not rebuild database: \(error)"
+        case let .failRebuildDatabase(error):
+            return failRebuildDatabase(
+                state: state,
+                environment: environment,
+                error: error
             )
-            var model = state
-            model.databaseState = .broken
-            return Update(state: model)
+        case .ready:
+            return ready(
+                state: state,
+                environment: environment
+            )
         case .sync:
             return sync(
                 state: state,
@@ -375,7 +391,7 @@ struct AppModel: ModelProtocol {
         switch phase {
         case .active:
             let fx: Fx<AppAction> = Just(
-                AppAction.readyDatabase
+                AppAction.migrateDatabase
             )
             .eraseToAnyPublisher()
             return Update(state: state, fx: fx)
@@ -400,23 +416,13 @@ struct AppModel: ModelProtocol {
         })
         .eraseToAnyPublisher()
 
-        let feedFx: Fx<AppAction> = Just(AppAction.feed(.appear))
-            .eraseToAnyPublisher()
-
-        let notebookFx: Fx<AppAction> = Just(AppAction.notebook(.appear))
-            .eraseToAnyPublisher()
-
         // Subscribe to keyboard events
         let fx: Fx<AppAction> = environment
             .keyboard.state
             .map({ value in
                 AppAction.changeKeyboardState(value)
             })
-            .merge(
-                with: pollFx,
-                feedFx,
-                notebookFx
-            )
+            .merge(with: pollFx)
             .eraseToAnyPublisher()
 
         return Update(state: state, fx: fx)
@@ -439,7 +445,7 @@ struct AppModel: ModelProtocol {
     /// Make database ready.
     /// This will kick off a migration IF a successful migration
     /// has not already occurred.
-    static func readyDatabase(
+    static func migrateDatabase(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
@@ -447,9 +453,9 @@ struct AppModel: ModelProtocol {
         case .initial:
             environment.logger.log("Readying database")
             let fx: Fx<AppAction> = environment.database
-                .migrate()
-                .map({ success in
-                    AppAction.migrateDatabaseSuccess(success)
+                .migrateAsync()
+                .map({ version in
+                    AppAction.succeedMigrateDatabase(version)
                 })
                 .catch({ _ in
                     Just(AppAction.rebuildDatabase)
@@ -469,32 +475,25 @@ struct AppModel: ModelProtocol {
             )
             return Update(state: state)
         case .ready:
-            environment.logger.log("Database ready. Syncing.")
-            let fx: Fx<AppAction> = Just(
-                AppAction.sync
-            )
+            environment.logger.log("Database ready.")
+            let fx: Fx<AppAction> = Just(AppAction.ready)
             .eraseToAnyPublisher()
             return Update(state: state, fx: fx)
         }
     }
 
-    static func migrateDatabaseSuccess(
+    static func succeedMigrateDatabase(
         state: AppModel,
         environment: AppEnvironment,
-        success: SQLite3Migrations.MigrationSuccess
+        version: Int
     ) -> Update<AppModel> {
-        var model = state
-        model.databaseState = .ready
-        let fx: Fx<AppAction> = Just(
-            AppAction.sync
+        environment.logger.log(
+            "Database version: \(version)"
         )
-        .eraseToAnyPublisher()
-        if success.from != success.to {
-            environment.logger.log(
-                "Migrated database: \(success.from)->\(success.to)"
-            )
-        }
-        return Update(state: model, fx: fx)
+        var model = state
+        // Mark database state ready
+        model.databaseState = .ready
+        return update(state: model, action: .ready, environment: environment)
     }
 
     static func rebuildDatabase(
@@ -502,23 +501,49 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         environment.logger.warning(
-            "Database is broken or has wrong schema. Attempting to rebuild."
+            "Failed to migrate database. Retrying."
         )
-        let fx: Fx<AppAction> = environment.database
-            .delete()
-            .flatMap({ _ in
-                environment.database.migrate()
-            })
-            .map({ success in
-                AppAction.migrateDatabaseSuccess(success)
+        let fx: Fx<AppAction> = environment.database.migrateAsync()
+            .map({ info in
+                AppAction.succeedMigrateDatabase(info)
             })
             .catch({ error in
-                Just(AppAction.rebuildDatabaseFailure(
-                    error.localizedDescription)
+                Just(
+                    AppAction.failRebuildDatabase(
+                        error.localizedDescription
+                    )
                 )
             })
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
+    }
+
+    static func failRebuildDatabase(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        environment.logger.warning(
+            "Could not rebuild database: \(error)"
+        )
+        var model = state
+        model.databaseState = .broken
+        return Update(state: model)
+    }
+
+    static func ready(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        return update(
+            state: state,
+            actions: [
+                AppAction.sync,
+                AppAction.notebook(.ready),
+                AppAction.feed(.ready)
+            ],
+            environment: environment
+        )
     }
 
     /// Start file sync
@@ -657,11 +682,17 @@ struct AppEnvironment {
 
         self.logger = Logger.main
 
+        let files = FileStore(documentURL: documentURL)
+        let memos = HeaderSubtextMemoStore(store: files)
+
+        let migrations = Config.migrations
+
         self.database = DatabaseService(
             documentURL: self.documentURL,
             databaseURL: self.applicationSupportURL
                 .appendingPathComponent("database.sqlite"),
-            migrations: Self.migrations
+            memos: memos,
+            migrations: migrations
         )
 
         self.keyboard = KeyboardService()
@@ -721,95 +752,3 @@ struct AppEnvironment {
     }
 }
 
-//  MARK: Migrations
-extension AppEnvironment {
-    static let migrations = SQLite3Migrations([
-        SQLite3Migrations.Migration(
-            date: "2021-11-04T12:00:00",
-            sql: """
-            CREATE TABLE search_history (
-                id TEXT PRIMARY KEY,
-                query TEXT NOT NULL,
-                created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE entry (
-              slug TEXT PRIMARY KEY,
-              title TEXT NOT NULL DEFAULT '',
-              body TEXT NOT NULL,
-              modified TEXT NOT NULL,
-              size INTEGER NOT NULL
-            );
-
-            CREATE VIRTUAL TABLE entry_search USING fts5(
-              slug,
-              title,
-              body,
-              modified UNINDEXED,
-              size UNINDEXED,
-              content="entry",
-              tokenize="porter"
-            );
-
-            /*
-            Create triggers to keep fts5 virtual table in sync with content table.
-
-            Note: SQLite documentation notes that you want to modify the fts table *before*
-            the external content table, hence the BEFORE commands.
-
-            These triggers are adapted from examples in the docs:
-            https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
-            */
-            CREATE TRIGGER entry_search_before_update BEFORE UPDATE ON entry BEGIN
-              DELETE FROM entry_search WHERE rowid=old.rowid;
-            END;
-
-            CREATE TRIGGER entry_search_before_delete BEFORE DELETE ON entry BEGIN
-              DELETE FROM entry_search WHERE rowid=old.rowid;
-            END;
-
-            CREATE TRIGGER entry_search_after_update AFTER UPDATE ON entry BEGIN
-              INSERT INTO entry_search
-                (
-                  rowid,
-                  slug,
-                  title,
-                  body,
-                  modified,
-                  size
-                )
-              VALUES
-                (
-                  new.rowid,
-                  new.slug,
-                  new.title,
-                  new.body,
-                  new.modified,
-                  new.size
-                );
-            END;
-
-            CREATE TRIGGER entry_search_after_insert AFTER INSERT ON entry BEGIN
-              INSERT INTO entry_search
-                (
-                  rowid,
-                  slug,
-                  title,
-                  body,
-                  modified,
-                  size
-                )
-              VALUES
-                (
-                  new.rowid,
-                  new.slug,
-                  new.title,
-                  new.body,
-                  new.modified,
-                  new.size
-                );
-            END;
-            """
-        )!
-    ])!
-}

@@ -63,8 +63,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Trigger autosave of current state
     case autosave
     /// Save an entry at a particular snapshot value
-    case save(SubtextFile?)
-    case succeedSave(SubtextFile)
+    case save(MemoEntry?)
+    case succeedSave(MemoEntry)
     case failSave(
         slug: Slug,
         message: String
@@ -260,13 +260,21 @@ struct DetailMarkupEditorCursor: CursorProtocol {
 //  MARK: Model
 struct DetailModel: ModelProtocol {
     var slug: Slug?
-    var headers: HeaderIndex = .empty
+    /// Required headers
+    /// Initialize date with Unix Epoch
+    var headers = WellKnownHeaders(
+        contentType: ContentType.subtext.rawValue,
+        created: Date.distantPast,
+        modified: Date.distantPast,
+        title: "",
+        fileExtension: ContentType.subtext.fileExtension
+    )
+    /// Additional headers that are not well-known headers.
+    var other: Headers = []
     var backlinks: [EntryStub] = []
 
     /// Is editor saved?
     var saveState = SaveState.saved
-    /// Initialize date with Unix Epoch
-    var modified = Date.distantPast
 
     /// Is editor sliding panel showing?
     var isPresented = false
@@ -308,13 +316,13 @@ struct DetailModel: ModelProtocol {
     /// Given a particular entry value, does the editor's state
     /// currently match it, such that we could say the editor is
     /// displaying that entry?
-    func stateMatches(entry: SubtextFile) -> Bool {
+    func stateMatches(entry: MemoEntry) -> Bool {
         guard let slug = self.slug else {
             return false
         }
         return (
             slug == entry.slug &&
-            markupEditor.text == entry.body
+            markupEditor.text == entry.contents.body.description
         )
     }
 
@@ -759,7 +767,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         var model = state
         model.saveState = saveState
-        model.modified = modified
+        model.headers.modified = modified
         return update(
             state: model,
             action: .markupEditor(.setText(text)),
@@ -1000,21 +1008,23 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         detail: EntryDetail
     ) -> Update<DetailModel> {
-        let modified = detail.entry.modified()
         var model = state
         model.isLoading = false
-        model.modified = modified
         model.slug = detail.slug
-        model.headers = detail.entry.headers
+        model.headers = detail.entry.contents.wellKnownHeaders()
+        model.other = detail.entry.contents.other
         model.backlinks = detail.backlinks
         model.saveState = detail.saveState
+
+        let subtext = detail.entry.contents.body
+        let text = String(describing: subtext)
 
         return DetailModel.update(
             state: model,
             action: .setEditor(
-                text: detail.entry.body,
+                text: text,
                 saveState: detail.saveState,
-                modified: detail.entry.modified()
+                modified: model.headers.modified
             ),
             environment: environment
         )
@@ -1069,7 +1079,7 @@ struct DetailModel: ModelProtocol {
         // Slugs don't match. Different entries.
         // Save current state and set new detail.
         case .none:
-            let snapshot = SubtextFile(model)
+            let snapshot = MemoEntry(model)
             return update(
                 state: model,
                 actions: [
@@ -1175,8 +1185,14 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         var model = state
         model.slug = nil
-        model.modified = Date.distantPast
-        model.headers = HeaderIndex()
+        model.headers = WellKnownHeaders(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.distantPast,
+            modified: Date.distantPast,
+            title: "",
+            fileExtension: ContentType.subtext.fileExtension
+        )
+        model.other = Headers()
         model.markupEditor = MarkupTextModel()
         model.backlinks = []
         model.isLoading = true
@@ -1200,7 +1216,7 @@ struct DetailModel: ModelProtocol {
     static func save(
         state: DetailModel,
         environment: AppEnvironment,
-        entry: SubtextFile?
+        entry: MemoEntry?
     ) -> Update<DetailModel> {
         // If editor dom is already saved, noop
         guard state.saveState != .saved else {
@@ -1241,7 +1257,7 @@ struct DetailModel: ModelProtocol {
     static func succeedSave(
         state: DetailModel,
         environment: AppEnvironment,
-        entry: SubtextFile
+        entry: MemoEntry
     ) -> Update<DetailModel> {
         environment.logger.debug(
             "Saved entry: \(entry.slug)"
@@ -1689,7 +1705,7 @@ struct DetailModel: ModelProtocol {
         /// We succeeded in updating title header on disk.
         /// Now set it in the view, so we see the updated state.
         var model = state
-        model.headers["title"] = to.linkableTitle
+        model.headers.title = to.linkableTitle
 
         return update(
             state: state,
@@ -1824,11 +1840,12 @@ struct DetailModel: ModelProtocol {
 
     /// Snapshot editor state in preparation for saving.
     /// Also mends header files.
-    func snapshotEntry() -> SubtextFile? {
-        guard let entry = SubtextFile(self) else {
+    func snapshotEntry() -> MemoEntry? {
+        guard var entry = MemoEntry(self) else {
             return nil
         }
-        return entry.modified(Date.now)
+        entry.contents.modified = Date.now
+        return entry
     }
 }
 
@@ -1837,11 +1854,7 @@ extension EntryLink {
         guard let slug = detail.slug else {
             return nil
         }
-        guard let title = detail.headers["title"] else {
-            self.init(slug: slug)
-            return
-        }
-        self.init(slug: slug, title: title)
+        self.init(slug: slug, title: detail.headers.title)
     }
 }
 
@@ -1854,22 +1867,27 @@ extension FileFingerprint {
         }
         self.init(
             slug: slug,
-            modified: detail.modified,
+            modified: detail.headers.modified,
             text: detail.markupEditor.text
         )
     }
 }
 
-extension SubtextFile {
-    /// Initialize SubtextFile from DetailModel.
-    /// We use this to snapshot the current state of detail for saving.
+extension MemoEntry {
     init?(_ detail: DetailModel) {
         guard let slug = detail.slug else {
             return nil
         }
         self.slug = slug
-        self.headers = detail.headers
-        self.body = detail.markupEditor.text
+        self.contents = Memo(
+            contentType: detail.headers.contentType,
+            created: detail.headers.created,
+            modified: detail.headers.modified,
+            title: detail.headers.title,
+            fileExtension: detail.headers.fileExtension,
+            other: detail.other,
+            body: detail.markupEditor.text
+        )
     }
 }
 

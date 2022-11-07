@@ -11,31 +11,6 @@ import SwiftUI
 struct StoryComboView: View {
     var story: StoryCombo
     var action: (EntryLink, String) -> Void
-    
-    var orderedSlugPair: (Slug, Slug) {
-        var entries = [story.entryA.slug, story.entryB.slug]
-        entries.sort(by: { $0.description < $1.description })
-        
-        return (entries[0], entries[1])
-    }
-    
-    /// Construct combined slug and default content, then open editor
-    func synthesize() {
-        let (first, second) = orderedSlugPair
-        let content =
-            """
-            \(story.prompt)
-            
-            \(first.toSlashlink()) \(second.toSlashlink())
-            """
-        
-        guard let slug = Slug(formatting: "\(first) \(second)") else {
-            return
-        }
-        let link = EntryLink.init(slug: slug)
-        
-        action(link, content)
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -78,7 +53,13 @@ struct StoryComboView: View {
             Divider()
             HStack {
                 Button(
-                    action: { synthesize() },
+                    action: {
+                        guard let entry = MemoEntry(story) else {
+                            return
+                        }
+                        let link = EntryLink(entry)
+                        self.action(link, entry.contents.body.description)
+                    },
                     label: {
                         Text("Create")
                     }
@@ -98,29 +79,42 @@ struct StoryComboView_Previews: PreviewProvider {
             story: StoryCombo(
                 prompt: "How are these similar?",
                 entryA: EntryStub(
-                    SubtextFile(
+                    MemoEntry(
                         slug: Slug("meme")!,
-                        content: """
-                        Title: Meme
-                        Modified: 2022-08-23
-                        
-                        The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
+                        contents: Memo(
+                            contentType: ContentType.subtext.rawValue,
+                            created: Date.now,
+                            modified: Date.now,
+                            title: "meme",
+                            fileExtension: ContentType.subtext.fileExtension,
+                            other: [],
+                            body: """
+                            The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
 
-                        But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
-                        """
+                            But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
+                            """
+                        )
                     )
                 ),
                 entryB: EntryStub(
-                    SubtextFile(
+                    MemoEntry(
                         slug: Slug("meme")!,
-                        content: """
-                        Title: Meme
-                        Modified: 2022-08-23
-                        
-                        The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
+                        contents: Memo(
+                            contentType: ContentType.subtext.rawValue,
+                            created: Date.now,
+                            modified: Date.now,
+                            title: "meme",
+                            fileExtension: ContentType.subtext.fileExtension,
+                            other: [],
+                            body: """
+                            Title: Meme
+                            Modified: 2022-08-23
+                            
+                            The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
 
-                        But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
-                        """
+                            But do we have to go to distant worlds to find other kinds of replicator and other, consequent, kinds of evolution? I think that a new kind of replicator has recently emerged on this very planet. It is staring us in the face.
+                            """
+                        )
                     )
                 )
             ),

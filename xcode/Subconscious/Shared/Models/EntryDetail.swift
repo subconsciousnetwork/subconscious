@@ -9,7 +9,7 @@ import Foundation
 
 struct EntryDetail: Hashable {
     var saveState: SaveState
-    var entry: SubtextFile
+    var entry: MemoEntry
     var backlinks: [EntryStub] = []
     var slug: Slug {
         entry.slug
@@ -24,10 +24,11 @@ extension EntryDetail: CustomLogStringConvertible {
 
 extension FileFingerprint {
     init(_ detail: EntryDetail) {
+        let text = String(describing: detail.entry.contents.body)
         self.init(
             slug: detail.slug,
-            modified: detail.entry.modified(),
-            text: detail.entry.body
+            modified: detail.entry.contents.modified,
+            text: text
         )
     }
 }

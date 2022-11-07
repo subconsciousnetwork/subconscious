@@ -14,4 +14,12 @@ struct Func {
     ) -> U {
         through(value)
     }
+    
+    /// Return the result of a closure immediately.
+    /// This is useful for working around some of Swift's syntactical
+    /// shortcomings. In particular, this lets us treat switch as an
+    /// expression that returns a value.
+    static func block<T>(_ closure: () -> T) -> T {
+        closure()
+    }
 }

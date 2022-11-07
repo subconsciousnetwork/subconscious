@@ -37,21 +37,14 @@ struct FileFingerprint: Hashable, Equatable, Identifiable {
             Date(timeIntervalSince1970: Double(modified))
         }
 
-        init(modified: Date, size: Int) {
-            self.modified = Int(modified.timeIntervalSince1970)
+        init(modified: Int, size: Int) {
+            self.modified = modified
             self.size = size
         }
 
-        init?(url: URL) {
-            guard
-                let attr = try? FileManager.default
-                    .attributesOfItem(atPath: url.path),
-                let modified = attr[FileAttributeKey.modificationDate] as? Date,
-                let size = attr[FileAttributeKey.size] as? Int
-            else {
-                return nil
-            }
-            self.init(modified: modified, size: size)
+        init(modified: Date, size: Int) {
+            self.modified = Int(modified.timeIntervalSince1970)
+            self.size = size
         }
     }
 
@@ -82,23 +75,6 @@ struct FileFingerprint: Hashable, Equatable, Identifiable {
                 size: text.lengthOfBytes(using: .utf8)
             )
         )
-    }
-
-    init?(
-        url: URL,
-        relativeTo base: URL
-    ) {
-        if
-            let slug = Slug(url: url, relativeTo: base),
-            let attributes = Attributes(url: url)
-        {
-            self.init(
-                slug: slug,
-                attributes: attributes
-            )
-        } else {
-            return nil
-        }
     }
 }
 
@@ -140,23 +116,6 @@ enum FileFingerprintChange: Hashable, Equatable {
 }
 
 struct FileSync {
-    /// Given an array of URLs, get an array of FileFingerprints.
-    /// If we can't read a fingerprint for the file, we filter it out of the list.
-    static func readFileFingerprints(
-        directory: URL,
-        ext: String
-    ) -> [FileFingerprint]? {
-        FileManager.default.listFilesDeep(
-            at: directory,
-            includingPropertiesForKeys: nil,
-            options: .skipsHiddenFiles
-        )?
-        .withPathExtension(ext)
-        .compactMap({ url in
-            FileFingerprint(url: url, relativeTo: directory)
-        })
-    }
-
     /// Given a set of FileFingerprints, return a dictionary, indexed by key
     static private func indexFileFingerprints(
         _ fingerprints: [FileFingerprint]

@@ -14,14 +14,21 @@ class Tests_Detail: XCTestCase {
 
     func testsetAndPresentDetail() throws {
         let state = DetailModel()
-        let slug = try Slug("example").unwrap()
+
         let modified = Date.now
 
-        let entry = SubtextFile(
-            slug: slug,
-            content: "Example text"
+        let entry = MemoEntry(
+            slug: Slug("example")!,
+            contents: Memo(
+                contentType: ContentType.subtext.rawValue,
+                created: Date.now,
+                modified: modified,
+                title: "Example",
+                fileExtension: ContentType.subtext.fileExtension,
+                other: [],
+                body: "Example text"
+            )
         )
-        .modified(modified)
 
         let detail = EntryDetail(
             saveState: .saved,
@@ -43,8 +50,8 @@ class Tests_Detail: XCTestCase {
             "isDetailLoading set to false"
         )
         XCTAssertEqual(
-            update.state.modified == modified,
-            false,
+            update.state.headers.modified,
+            modified,
             "Modified is set from entry"
         )
         XCTAssertEqual(
@@ -70,13 +77,22 @@ class Tests_Detail: XCTestCase {
             environment: environment
         )
 
-        let slug = try Slug("example").unwrap()
+        let entry = MemoEntry(
+            slug: Slug("example")!,
+            contents: Memo(
+                contentType: ContentType.subtext.rawValue,
+                created: Date.now,
+                modified: Date.now,
+                title: "Example",
+                fileExtension: ContentType.subtext.fileExtension,
+                other: [],
+                body: "Example"
+            )
+        )
+
         let detail = EntryDetail(
             saveState: .saved,
-            entry: SubtextFile(
-                slug: slug,
-                content: "Example text"
-            )
+            entry: entry
         )
 
         store.send(.setAndPresentDetail(detail: detail, autofocus: true))
@@ -97,14 +113,25 @@ class Tests_Detail: XCTestCase {
 
     func testUpdateDetailBlur() throws {
         let state = DetailModel()
-        let slug = try Slug("example").unwrap()
-        let detail = EntryDetail(
-            saveState: .saved,
-            entry: SubtextFile(
-                slug: slug,
-                content: "Example text"
+
+        let entry = MemoEntry(
+            slug: Slug("example")!,
+            contents: Memo(
+                contentType: ContentType.subtext.rawValue,
+                created: Date.now,
+                modified: Date.now,
+                title: "Example",
+                fileExtension: ContentType.subtext.fileExtension,
+                other: [],
+                body: "Example"
             )
         )
+        
+        let detail = EntryDetail(
+            saveState: .saved,
+            entry: entry
+        )
+
         let update = DetailModel.update(
             state: state,
             action: .setAndPresentDetail(
@@ -163,8 +190,9 @@ class Tests_Detail: XCTestCase {
             XCTFail("Failed to derive entry from editor")
             return
         }
-        XCTAssertNotNil(
-            entry.headers["Modified"],
+        let interval = Date.now.timeIntervalSince(entry.contents.modified)
+        XCTAssert(
+            interval < 1,
             "Marks modified time"
         )
     }
@@ -273,14 +301,12 @@ class Tests_Detail: XCTestCase {
         )
         let action = DetailAction.fromSuggestion(entrySuggestion)
 
-        XCTAssertEqual(
-            action,
-            DetailAction.loadAndPresentDetail(
-                link: EntryLink(title: "Systems Generating Systems")!,
-                fallback: "Systems Generating Systems",
-                autofocus: true
-            )
-        )
+        guard case let DetailAction.loadAndPresentDetail(link, _, autofocus) = action else {
+            XCTFail("Did not match action type")
+            return
+        }
+        XCTAssertEqual(link, EntryLink(title: "Systems Generating Systems")!)
+        XCTAssertEqual(autofocus, true)
     }
 
     func testDetailActionFromRandomSuggestion() throws {

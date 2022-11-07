@@ -34,6 +34,27 @@ class Tests_Slug: XCTestCase {
         )
     }
 
+    func testSlugFromPathlike() throws {
+        let pathlikeA = "foo.subtext"
+
+        XCTAssertEqual(
+            Slug(fromPath: pathlikeA, withExtension: "subtext"),
+            Slug("foo")!
+        )
+
+        let pathlikeB = "foo/bar.subtext"
+        XCTAssertEqual(
+            Slug(fromPath: pathlikeB, withExtension: "subtext"),
+            Slug("foo/bar")!
+        )
+
+        let pathlikeC = "foo/bar.txt"
+        XCTAssertNil(
+            Slug(fromPath: pathlikeC, withExtension: "subtext"),
+            "Returns nil for invalid path extension"
+        )
+    }
+
     func testFormatStripsInvalidCharacters() throws {
         let slug = Slug.format(
             "The quick brown fox jumps over the lazy dog!@#$%^&*()+,>:;'|{}[]<>?"

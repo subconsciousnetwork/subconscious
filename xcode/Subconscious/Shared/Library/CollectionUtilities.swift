@@ -13,3 +13,23 @@ extension Collection {
         indices.contains(index) ? self[index] : nil
     }
 }
+
+extension Array {
+    /// Unique elements in an array, returning a new array.
+    /// Function `with` reads each element, producing an identifying key.
+    /// The first element for each key is kept.
+    func uniquing<T>(with read: (Element) -> T) -> [Element]
+    where T: Hashable
+    {
+        var unique: [Element] = []
+        var seen: Set<T> = Set()
+        for element in self {
+            let key = read(element)
+            if !seen.contains(key) {
+                unique.append(element)
+            }
+            seen.insert(key)
+        }
+        return unique
+    }
+}

@@ -931,6 +931,21 @@ class Tests_Subtext: XCTestCase {
         )
     }
     
+    /// Test that Subtext correctly aggregates and de-duplicates slugs
+    func testSlugs() throws {
+        let dom = Subtext(
+            markup: """
+            Just as with contemplating /impermanence. In the same way also for /dukkha, emptiness and [[not-self]]
+            """
+        )
+        let comparator = Set([
+            Slug("impermanence")!,
+            Slug("dukkha")!,
+            Slug("not-self")!
+        ])
+        XCTAssertEqual(dom.slugs, comparator, "Gathers wikilinks and slugs, and de-duplicates them")
+    }
+
     func testWikilinkForRange() throws {
         let markup = """
         To what base uses we may return, [[Horatio]]! Why may
@@ -1076,7 +1091,7 @@ class Tests_Subtext: XCTestCase {
             It's all right
             """
         )
-        let c = a.append(b)
+        let c = a.appending(b)
         XCTAssertEqual(
             String(describing: c),
             """

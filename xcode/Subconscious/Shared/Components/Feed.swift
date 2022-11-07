@@ -13,7 +13,7 @@ import Combine
 enum FeedAction {
     case search(SearchAction)
     case detail(DetailAction)
-    case appear
+    case ready
 
     case refreshAll
 
@@ -172,8 +172,8 @@ struct FeedModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
-        case .appear:
-            return appear(
+        case .ready:
+            return ready(
                 state: state,
                 environment: environment
             )
@@ -264,7 +264,7 @@ struct FeedModel: ModelProtocol {
 
     /// Handle appear lifecycle action.
     /// Currently this just calls out to `fetchFeed`. In future it may do more.
-    static func appear(
+    static func ready(
         state: FeedModel,
         environment: AppEnvironment
     ) -> Update<FeedModel> {

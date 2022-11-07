@@ -14,11 +14,15 @@ struct Config: Equatable {
 
     var appTabs = false
 
+    var notesDirectory = "notes"
+
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
 
     /// Subsurface "orb" shader on main FAB
     var orbShaderEnabled = true
+
+    var untitled = "Untitled"
 
     /// Toggle scratch note suggestion feature
     var scratchSuggestionEnabled = true
@@ -29,8 +33,6 @@ struct Config: Equatable {
 
     /// Default links feature enabled?
     var linksEnabled = true
-    /// Where to look for user-defined links
-    var linksTemplate: Slug = Slug("_special/links")!
     /// Template for default links
     var linksFallback: [Slug] = [
         Slug("pattern")!,

@@ -13,7 +13,8 @@ struct EntryStub:
     Hashable,
     Equatable,
     Identifiable,
-    CustomDebugStringConvertible
+    CustomDebugStringConvertible,
+    Codable
 {
     let link: EntryLink
     let excerpt: String
