@@ -36,8 +36,8 @@ extension MemoEntry {
     func merge(_ that: MemoEntry) -> Self {
         var this = self
         this.contents.other = this.contents.other.merge(that.contents.other)
-        let subtext = this.contents.body.appending(that.contents.body)
-        this.contents.body = subtext
+        let concatenated = "\(this.contents.body)\n\n\(that.contents.body)"
+        this.contents.body = concatenated
         return this
     }
 }
