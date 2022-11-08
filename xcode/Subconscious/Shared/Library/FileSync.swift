@@ -42,8 +42,12 @@ struct FileFingerprint: Hashable, Equatable, Identifiable {
             self.size = size
         }
 
+        /// Initialize Fingerprint from a Date and an Int.
+        /// Date is rounded DOWN to the nearest second.
         init(modified: Date, size: Int) {
-            self.modified = Int(modified.timeIntervalSince1970)
+            self.modified = Int(
+                modified.timeIntervalSince1970.rounded(.towardZero)
+            )
             self.size = size
         }
     }
