@@ -145,11 +145,12 @@ struct DatabaseService {
 
     /// Write entry syncronously
     private func writeEntryToDatabase(
-        entry: MemoEntry
+        entry: MemoEntry,
+        info: FileInfo
     ) throws {
-        // Get memo as header stubtext. We'll use this in a bit to calculate
-        // the size that the text will be on disk for the database size column.
-        let headerSubtext = entry.contents.toHeaderSubtext()
+        var entry = entry
+        entry.contents.modified = info.modified
+        entry.contents.created = info.created
         try database.execute(
             sql: """
             INSERT INTO memo (
@@ -192,19 +193,16 @@ struct DatabaseService {
                 .text(entry.contents.plain()),
                 .text(entry.contents.excerpt()),
                 .json(entry.contents.slugs(), or: "[]"),
-                .integer(headerSubtext.size())
+                .integer(info.size)
             ]
         )
     }
 
     private func writeEntryToDatabase(slug: Slug) throws {
-        var entry = try readEntry(slug: slug)
+        let entry = try readEntry(slug: slug)
         /// Read created and modified times from file system
         let info = try memos.info(slug)
-        /// Set on headers
-        entry.contents.created = info.created
-        entry.contents.modified = info.modified
-        try writeEntryToDatabase(entry: entry)
+        try writeEntryToDatabase(entry: entry, info: info)
     }
 
     private func entryFileExists(_ slug: Slug) -> Bool {
@@ -223,11 +221,12 @@ struct DatabaseService {
         entry.contents.modified = Date.now
         try memos.write(entry.slug, value: entry.contents)
 
-        // Read modified date from file system directly after writing
+        // Read modified/size from file system directly after writing.
+        // Why: we use file system as source of truth and don't want any
+        // discrepencies to sneak in (e.g. different time between write and
+        // persistence on file system).
         let info = try memos.info(entry.slug)
-        // Amend headers
-        entry.contents.modified = info.modified
-        try writeEntryToDatabase(entry: entry)
+        try writeEntryToDatabase(entry: entry, info: info)
     }
     
     func writeEntryAsync(_ entry: MemoEntry) -> AnyPublisher<Void, Error> {
