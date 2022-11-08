@@ -50,7 +50,7 @@ struct MemoryStore: StoreProtocol {
     }
     
     func info(_ key: String) throws -> FileInfo {
-        guard var value = storage.data[key] else {
+        guard let value = storage.data[key] else {
             throw MemoryStoreError.doesNotExist(key)
         }
         return FileInfo(

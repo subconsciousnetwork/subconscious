@@ -85,7 +85,6 @@ struct FileStore: StoreProtocol {
     /// Get info for file
     func info(_ key: String) throws -> FileInfo {
         let url = url(forKey: key)
-        let manager = FileManager.default
         let attributes = try FileManager.default.attributesOfItem(
             atPath: url.path
         )
