@@ -735,7 +735,7 @@ struct DatabaseService {
             sql: """
             SELECT slug, modified, title, excerpt
             FROM memo_search
-            WHERE slug != ? AND memo_search.body MATCH ?
+            WHERE slug != ? AND memo_search.description MATCH ?
             ORDER BY rank
             LIMIT 200
             """,
@@ -894,7 +894,7 @@ struct DatabaseService {
             sql: """
             SELECT slug, modified, title, body
             FROM memo_search
-            WHERE memo_search.body MATCH ?
+            WHERE memo_search MATCH ?
             ORDER BY RANDOM()
             LIMIT 1
             """,
@@ -1055,8 +1055,9 @@ extension Config {
                 file_extension TEXT NOT NULL,
                 /* Additional free-form headers */
                 headers TEXT NOT NULL DEFAULT '[]',
+                /* Actual source text */
                 body TEXT NOT NULL,
-                /* Plain text serialization of body for search purposes */
+                /* Subtext/plain text serialization of body for search purposes */
                 description TEXT NOT NULL,
                 /* Short description of body */
                 excerpt TEXT NOT NULL DEFAULT '',
