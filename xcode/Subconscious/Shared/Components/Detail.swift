@@ -1705,10 +1705,10 @@ struct DetailModel: ModelProtocol {
         /// We succeeded in updating title header on disk.
         /// Now set it in the view, so we see the updated state.
         var model = state
-        model.headers.title = to.linkableTitle
+        model.headers.title = to.title
 
         return update(
-            state: state,
+            state: model,
             action: .refreshLists,
             environment: environment
         )
