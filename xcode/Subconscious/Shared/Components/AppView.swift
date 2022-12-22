@@ -27,7 +27,6 @@ struct AppView: View {
             }
         }
         .disabled(!store.state.isReadyForInteraction)
-        .font(Font(UIFont.appText))
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
         // See https://developer.apple.com/documentation/swiftui/scenephase

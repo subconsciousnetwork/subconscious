@@ -22,7 +22,6 @@ struct EntryRow: View, Equatable {
                     entry.link.title :
                     emptyTitle
                 )
-                .font(Font(UIFont.appText))
                 .lineLimit(1)
                 .foregroundColor(Color.text)
                 .multilineTextAlignment(.leading)
@@ -36,11 +35,10 @@ struct EntryRow: View, Equatable {
                         relativeTo: Date.now
                     )
                 )
-                .font(Font(UIFont.appTextSmall))
+                .font(.callout)
                 .foregroundColor(Color.secondaryText)
             }
             Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
-                .font(Font(UIFont.appText))
                 .lineLimit(1)
                 .multilineTextAlignment(.leading)
                 .foregroundColor(Color.secondaryText)
@@ -49,7 +47,6 @@ struct EntryRow: View, Equatable {
                     .font(.system(size: 12))
                 Text(entry.slug.description)
             }
-            .font(Font(UIFont.appText))
             .lineLimit(1)
             .foregroundColor(Color.secondaryText)
             .multilineTextAlignment(.leading)

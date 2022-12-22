@@ -22,7 +22,7 @@ struct StoryComboView: View {
                     .foregroundColor(Color.secondary)
                 Spacer()
             }
-            .font(Font(UIFont.appTextSmall))
+            .font(.caption)
             .padding()
             .frame(height: AppTheme.unit * 11)
             Divider()

@@ -13,7 +13,6 @@ struct RoundedTextFieldViewModifier: ViewModifier {
         content
             .textInputAutocapitalization(.sentences)
             .textFieldStyle(.plain)
-            .font(Font(UIFont.appText))
             .padding(.horizontal, AppTheme.unit * 3)
             .padding(.vertical, AppTheme.unit * 2)
             .background(Color.inputBackground)

@@ -12,9 +12,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(
-                Font(UIFont.appButton)
-            )
+            .bold()
             .frame(
                 height: AppTheme.unit * 8
             )

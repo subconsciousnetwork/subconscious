@@ -39,26 +39,6 @@ extension AppTheme {
 //  from Font to UIFont. So, we define our fonts as UIFonts.
 //  2021-12-15 Gordon Brander
 extension UIFont {
-    static let appText = UIFont(
-        name: "IBMPlexSans",
-        size: AppTheme.textSize
-    )!
-
-    static let appTextMedium = UIFont(
-        name: "IBMPlexSans-Medium",
-        size: AppTheme.textSize
-    )!
-
-    static let appTextSmall = UIFont(
-        name: "IBMPlexSans",
-        size: 14
-    )!
-
-    static let appHeadline = UIFont(
-        name: "IBMPlexSans-Medium",
-        size: 14
-    )!
-
     static let appTextMono = UIFont(
         name: "IBMPlexMono",
         size: AppTheme.textSize
@@ -72,16 +52,6 @@ extension UIFont {
     static let appTextMonoItalic = UIFont(
         name: "IBMPlexMono-Italic",
         size: AppTheme.textSize
-    )!
-
-    static let appLargeTitle = UIFont(name: "IBMPlexSans-Light", size: 34)!
-
-    static let appTitle = appTextMedium
-    static let appButton = appTextMedium
-
-    static let appCaption = UIFont(
-        name: "IBMPlexSans",
-        size: AppTheme.captionSize
     )!
 }
 
