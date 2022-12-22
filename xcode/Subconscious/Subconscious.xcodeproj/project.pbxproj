@@ -1485,7 +1485,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.6;
+				MARKETING_VERSION = 0.0.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.subconscious.Subconscious;
 				PRODUCT_NAME = Subconscious;
 				SDKROOT = iphoneos;
@@ -1524,7 +1524,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.0.6;
+				MARKETING_VERSION = 0.0.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.subconscious.Subconscious;
 				PRODUCT_NAME = Subconscious;
 				SDKROOT = iphoneos;
