@@ -16,12 +16,11 @@ struct ToolbarTitleGroupView: View, Equatable {
             Spacer()
             VStack(spacing: AppTheme.unit) {
                 title
-                    .font(Font(UIFont.appText))
                     .foregroundColor(Color.text)
                     .frame(height: AppTheme.textSize)
                     .lineLimit(1)
                 subtitle
-                    .font(Font(UIFont.appCaption))
+                    .font(.caption)
                     .frame(height: AppTheme.captionSize)
                     .foregroundColor(Color.secondaryText)
                     .lineLimit(1)

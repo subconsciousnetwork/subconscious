@@ -15,7 +15,7 @@ struct BacklinksView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text("Backlinks")
-                .font(Font(UIFont.appCaption))
+                    .font(.caption)
                 Spacer()
             }
             .padding(.horizontal, AppTheme.unit4)

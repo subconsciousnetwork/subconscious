@@ -66,7 +66,6 @@ struct EntryListView: View {
                     Image(systemName: "sparkles")
                         .font(.system(size: 64))
                     Text("Your Subconscious is empty")
-                        .font(Font(UIFont.appText))
                     VStack(spacing: AppTheme.unit) {
                         Text(
                             "If your mind is empty, it is always ready for anything, it is open to everything. In the beginner's mind there are many possibilities, but in the expert's mind there are few."
@@ -81,7 +80,7 @@ struct EntryListView: View {
                     // The icon is large and rather heavy. This offset
                     // helps prevent the illusion of being off-center.
                     .padding(.bottom, AppTheme.unit * 24)
-                    .font(Font(UIFont.appCaption))
+                    .font(.caption)
                     Spacer()
                 }
                 .multilineTextAlignment(.center)

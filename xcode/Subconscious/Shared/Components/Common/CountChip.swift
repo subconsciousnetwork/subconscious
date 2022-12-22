@@ -22,7 +22,7 @@ struct CountChip: View, Equatable {
 
     var body: some View {
         Text(Self.asText(count: count))
-            .font(Font(UIFont.appCaption))
+            .font(.caption)
             .padding(.horizontal, AppTheme.unit2)
             .padding(.vertical, AppTheme.unit)
             .background(Color.secondaryBackground)

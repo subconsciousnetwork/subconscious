@@ -74,7 +74,7 @@ struct NotebookNavigationView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .principal) {
                     HStack {
-                        Text("Notes").font(Font(UIFont.appTextMedium))
+                        Text("Notes").bold()
                         CountChip(count: store.state.entryCount)
                     }
                     .frame(minWidth: 200, maxWidth: .infinity)

@@ -19,14 +19,13 @@ struct TitleGroupView: View, Equatable {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 title
-                    .font(Font(UIFont.appText))
                     .foregroundColor(Color.text)
                 Spacer()
             }
             .frame(minHeight: AppTheme.icon)
             HStack {
                 subtitle
-                    .font(Font(UIFont.appCaption))
+                    .font(.caption)
                     .foregroundColor(Color.secondaryText)
                 Spacer()
             }
