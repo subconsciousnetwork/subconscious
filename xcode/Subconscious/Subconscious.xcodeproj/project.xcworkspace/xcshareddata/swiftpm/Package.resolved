@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "noosphere",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/subconsciousnetwork/noosphere",
+      "state" : {
+        "branch" : "main",
+        "revision" : "609a72d23ba23d1d9541693a276ccfcc0d983215"
+      }
+    },
+    {
       "identity" : "observablestore",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/gordonbrander/ObservableStore",
