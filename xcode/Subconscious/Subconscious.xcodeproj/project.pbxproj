@@ -243,6 +243,7 @@
 		B8DEBF232798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */; };
 		B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */; };
 		B8DEBF262798EF6A007CB528 /* RenameSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */; };
+		B8E1BB79296DECE700B86E0E /* SwiftNoosphere in Frameworks */ = {isa = PBXBuildFile; productRef = B8E1BB78296DECE700B86E0E /* SwiftNoosphere */; };
 		B8E4724C2912A42C00D89C84 /* StoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4724B2912A42C00D89C84 /* StoreProtocol.swift */; };
 		B8E4724D2912A42C00D89C84 /* StoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4724B2912A42C00D89C84 /* StoreProtocol.swift */; };
 		B8EA3EE529159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EA3EE429159C5500B92C2E /* HeaderSubtextMemoStore.swift */; };
@@ -463,6 +464,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B8E1BB79296DECE700B86E0E /* SwiftNoosphere in Frameworks */,
 				B82C3A7126F6B1C000833CC8 /* OrderedCollections in Frameworks */,
 				B822F18B27C9615600943C6B /* ObservableStore in Frameworks */,
 				B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */,
@@ -833,6 +835,7 @@
 				B8579B6427C561E900D8B4BC /* SwiftSubsurface */,
 				B822F18A27C9615600943C6B /* ObservableStore */,
 				B8CA8F19288F038C005F8802 /* Tracery */,
+				B8E1BB78296DECE700B86E0E /* SwiftNoosphere */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B8EB29FB26F27797006E97C3 /* Subconscious.app */;
@@ -935,6 +938,7 @@
 				B8579B6327C561E900D8B4BC /* XCRemoteSwiftPackageReference "SwiftSubsurface" */,
 				B822F18927C9615600943C6B /* XCRemoteSwiftPackageReference "ObservableStore" */,
 				B8CA8F18288F038C005F8802 /* XCRemoteSwiftPackageReference "Tracery" */,
+				B8E1BB77296DECE700B86E0E /* XCRemoteSwiftPackageReference "noosphere" */,
 			);
 			productRefGroup = B8EB29FC26F27797006E97C3 /* Products */;
 			projectDirPath = "";
@@ -1791,6 +1795,14 @@
 				minimumVersion = 0.0.2;
 			};
 		};
+		B8E1BB77296DECE700B86E0E /* XCRemoteSwiftPackageReference "noosphere" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/subconsciousnetwork/noosphere";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1833,6 +1845,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B8CA8F18288F038C005F8802 /* XCRemoteSwiftPackageReference "Tracery" */;
 			productName = Tracery;
+		};
+		B8E1BB78296DECE700B86E0E /* SwiftNoosphere */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B8E1BB77296DECE700B86E0E /* XCRemoteSwiftPackageReference "noosphere" */;
+			productName = SwiftNoosphere;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
