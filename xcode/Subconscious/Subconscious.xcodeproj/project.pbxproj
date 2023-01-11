@@ -89,6 +89,10 @@
 		B85D5E3F28BE4B4600EE0078 /* Tests_FeedUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85D5E3E28BE4B4600EE0078 /* Tests_FeedUpdate.swift */; };
 		B85EC460296F099700558761 /* ProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85EC45F296F099700558761 /* ProfilePic.swift */; };
 		B85EC461296F099700558761 /* ProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85EC45F296F099700558761 /* ProfilePic.swift */; };
+		B85EC463296F0CBD00558761 /* ProfilePicSm.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85EC462296F0CBD00558761 /* ProfilePicSm.swift */; };
+		B85EC464296F0CBD00558761 /* ProfilePicSm.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85EC462296F0CBD00558761 /* ProfilePicSm.swift */; };
+		B85EC466296F0D0A00558761 /* ProfilePicMd.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85EC465296F0D0A00558761 /* ProfilePicMd.swift */; };
+		B85EC467296F0D0A00558761 /* ProfilePicMd.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85EC465296F0D0A00558761 /* ProfilePicMd.swift */; };
 		B866868127AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */; };
 		B866868227AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */; };
 		B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */; };
@@ -343,6 +347,8 @@
 		B85D5E3C28BE4B2C00EE0078 /* Tests_NotebookUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_NotebookUpdate.swift; sourceTree = "<group>"; };
 		B85D5E3E28BE4B4600EE0078 /* Tests_FeedUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FeedUpdate.swift; sourceTree = "<group>"; };
 		B85EC45F296F099700558761 /* ProfilePic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePic.swift; sourceTree = "<group>"; };
+		B85EC462296F0CBD00558761 /* ProfilePicSm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicSm.swift; sourceTree = "<group>"; };
+		B85EC465296F0D0A00558761 /* ProfilePicMd.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePicMd.swift; sourceTree = "<group>"; };
 		B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSRangeUtilities.swift; sourceTree = "<group>"; };
 		B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailKeyboardToolbarView.swift; sourceTree = "<group>"; };
 		B8682DCA2804BF04001CD8DD /* Tests_Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Subtext.swift; sourceTree = "<group>"; };
@@ -775,6 +781,8 @@
 				B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */,
 				B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */,
 				B85EC45F296F099700558761 /* ProfilePic.swift */,
+				B85EC465296F0D0A00558761 /* ProfilePicMd.swift */,
+				B85EC462296F0CBD00558761 /* ProfilePicSm.swift */,
 				B8AC648B278F757B0099E96B /* ProgressScrimView.swift */,
 				B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */,
 				B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */,
@@ -1132,6 +1140,7 @@
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
+				B85EC466296F0D0A00558761 /* ProfilePicMd.swift in Sources */,
 				B89D296827E832DC009E0DED /* LoggerUtilities.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
 				B8B3194D2909E81D00A1E62A /* FileInfo.swift in Sources */,
@@ -1167,6 +1176,7 @@
 				B8B54F3D271F7C6B00B9B507 /* Suggestion.swift in Sources */,
 				B8AC648F278F7E7B0099E96B /* BackLabelStyle.swift in Sources */,
 				B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */,
+				B85EC463296F0CBD00558761 /* ProfilePicSm.swift in Sources */,
 				B86DFF3927C15B77002E57ED /* Config.swift in Sources */,
 				B83E91D727692EC600045C6A /* FAB.swift in Sources */,
 				B8A59D6028B51D000010DB2F /* TranscludeView.swift in Sources */,
@@ -1200,6 +1210,7 @@
 				B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B824FDD526FAB1BC00B81BBD /* Truncate.swift in Sources */,
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
+				B85EC467296F0D0A00558761 /* ProfilePicMd.swift in Sources */,
 				B8AE34A8276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
 				B85BF47927BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
 				B81EACD927B724A000B3B8DC /* ThickDividerView.swift in Sources */,
@@ -1212,6 +1223,7 @@
 				B8AE34B7276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
 				B8879EAD26F944DA00A0B4FF /* Detail.swift in Sources */,
 				B8D7F04027A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
+				B85EC464296F0CBD00558761 /* ProfilePicSm.swift in Sources */,
 				B8CC433E27A07CE10079D2F9 /* ScrimView.swift in Sources */,
 				B8AE34C3276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B82C3A7726F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
