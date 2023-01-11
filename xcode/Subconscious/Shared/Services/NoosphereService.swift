@@ -24,6 +24,11 @@ public struct SphereReceipt {
     var mnemonic: String
 }
 
+struct SphereMemo: Hashable {
+    var contentType: String
+    var data: Data
+}
+
 /// Create a Noosphere instance.
 ///
 /// - Property noosphere: pointer that holds all the internal book keeping.
@@ -102,6 +107,50 @@ public final class Noosphere {
             identity: sphereIdentity,
             mnemonic: sphereMnemonic
         )
+    }
+
+    /// Read the value of a memo from a Sphere
+    /// - Returns: `SphereMemo`
+    func read(
+        sphereIdentity: String,
+        path: String
+    ) -> SphereMemo? {
+        let sphereIdentityPointer: UnsafeMutablePointer<CChar> = sphereIdentity
+            .withCString { pointer in
+                UnsafeMutablePointer(mutating: pointer)
+            }
+        defer {
+            ns_string_free(sphereIdentityPointer)
+        }
+
+        let sphereFS = ns_sphere_fs_open(noosphere, sphereIdentityPointer)
+        defer {
+            ns_sphere_fs_free(sphereFS)
+        }
+
+        let file = ns_sphere_fs_read(noosphere, sphereFS, path)
+        defer {
+            ns_sphere_file_free(file)
+        }
+
+        let contentTypeValues = ns_sphere_file_header_values_read(
+            file,
+            "Content-Type"
+        )
+        defer {
+            ns_string_array_free(contentTypeValues)
+        }
+
+        let contentType = String(cString: contentTypeValues.ptr.pointee!)
+
+        let contents = ns_sphere_file_contents_read(noosphere, file)
+        defer {
+            ns_bytes_free(contents)
+        }
+
+        let data: Data = Data(bytes: contents.ptr, count: contents.len)
+
+        return SphereMemo(contentType: contentType, data: data)
     }
 
     deinit {
