@@ -15,7 +15,7 @@
 import Foundation
 import SwiftNoosphere
 
-public enum NoosphereServiceError: Error {
+public enum NoosphereError: Error {
     case foreignError(String)
 }
 
@@ -24,10 +24,29 @@ public struct SphereConfig {
     var mnemonic: String
 }
 
-/// A Swift Wrapper for Noosphere.
-/// This class is designed to follow RAII pattern https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization.
-/// Memory is automatically freed when the class is deallocated.
-public final class NoosphereService {
+/// Create a Noosphere instance.
+///
+/// - Property noosphere: pointer that holds all the internal book keeping.
+///   DB pointers, key storage interfaces, active HTTP clients etc.
+public final class Noosphere {
+    private let noosphere: OpaquePointer
+    
+    init(
+        globalStoragePath: String,
+        sphereStoragePath: String
+    ) throws {
+        guard let noosphere = ns_initialize(
+            globalStoragePath,
+            sphereStoragePath,
+            nil
+        ) else {
+            throw NoosphereError.foreignError(
+                "Failed to get pointer for Noosphere"
+            )
+        }
+        self.noosphere = noosphere
+    }
+    
     /// Create and configure a user and sphere
     /// - Important: the identity should be persisted
     /// - Important: the mnemonic should be displayed to user and then discarded.
@@ -37,43 +56,27 @@ public final class NoosphereService {
     /// - Initializes a namespace
     /// - Creates a key
     /// - Creates a sphere for that key
-    public static func create(
-        ownerKeyName: String,
-        globalStoragePath: String,
-        sphereStoragePath: String
+    public func createSphere(
+        ownerKeyName: String
     ) throws -> SphereConfig {
-        guard let noosphere = ns_initialize(
-            globalStoragePath,
-            sphereStoragePath,
-            nil
-        ) else {
-            throw NoosphereServiceError.foreignError(
-                "Failed to get pointer for namespace"
-            )
-        }
-        defer {
-            ns_free(noosphere)
-        }
-        
         ns_key_create(noosphere, ownerKeyName)
         
         guard let sphereReceipt = ns_sphere_create(
             noosphere,
             ownerKeyName
         ) else {
-            throw NoosphereServiceError.foreignError(
+            throw NoosphereError.foreignError(
                 "Failed to get pointer for sphere receipt"
             )
         }
         defer {
             ns_sphere_receipt_free(sphereReceipt)
-
         }
         
         guard let sphereIdentityPointer = ns_sphere_receipt_identity(
             sphereReceipt
         ) else {
-            throw NoosphereServiceError.foreignError(
+            throw NoosphereError.foreignError(
                 "Failed to get pointer for identity"
             )
         }
@@ -84,7 +87,7 @@ public final class NoosphereService {
         guard let sphereMnemonicPointer = ns_sphere_receipt_mnemonic(
             sphereReceipt
         ) else {
-            throw NoosphereServiceError.foreignError(
+            throw NoosphereError.foreignError(
                 "Failed to get pointer for mnemonic"
             )
         }
@@ -99,5 +102,9 @@ public final class NoosphereService {
             identity: sphereIdentity,
             mnemonic: sphereMnemonic
         )
+    }
+
+    deinit {
+        ns_free(noosphere)
     }
 }
