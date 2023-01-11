@@ -30,7 +30,7 @@ struct AudienceSelectorButtonStyle: ButtonStyle {
             Image(systemName: "chevron.down")
                 .font(.system(size: 12))
         }
-        .frame(height: AppTheme.unit * 8)
+        .frame(height: AppTheme.unit * 6)
         .foregroundColor(
             Color.chooseForState(
                 isPressed: configuration.isPressed,
@@ -47,7 +47,6 @@ struct AudienceSelectorButtonStyle: ButtonStyle {
         .overlay(
             Capsule()
                 .stroke(Color.accentColor, lineWidth: 1)
-                .frame(height: AppTheme.unit * 6)
         )
         .animation(.default, value: configuration.isPressed)
     }
