@@ -19,7 +19,7 @@ public enum NoosphereError: Error {
     case foreignError(String)
 }
 
-public struct SphereConfig {
+public struct SphereReceipt {
     var identity: String
     var mnemonic: String
 }
@@ -58,7 +58,7 @@ public final class Noosphere {
     /// - Creates a sphere for that key
     public func createSphere(
         ownerKeyName: String
-    ) throws -> SphereConfig {
+    ) throws -> SphereReceipt {
         ns_key_create(noosphere, ownerKeyName)
         
         guard let sphereReceipt = ns_sphere_create(
@@ -98,7 +98,7 @@ public final class Noosphere {
         let sphereIdentity = String.init(cString: sphereIdentityPointer)
         let sphereMnemonic = String.init(cString: sphereMnemonicPointer)
         
-        return SphereConfig(
+        return SphereReceipt(
             identity: sphereIdentity,
             mnemonic: sphereMnemonic
         )
