@@ -1,11 +1,23 @@
 //
-//  PrimaryButtonStyle.swift
+//  AudienceSelectorButton.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 12/15/21.
 //
 
 import SwiftUI
+
+struct AudienceSelectorButton: View {
+    var action: () -> Void
+    var text: String
+
+    var body: some View {
+        Button(action: action) {
+            Text(text)
+        }
+        .buttonStyle(AudienceSelectorButtonStyle())
+    }
+}
 
 struct AudienceSelectorButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
@@ -15,7 +27,8 @@ struct AudienceSelectorButtonStyle: ButtonStyle {
             configuration.label
                 .bold()
                 .font(.caption)
-            Image(systemName: "chevron.compact.down")
+            Image(systemName: "chevron.down")
+                .font(.system(size: 12))
         }
         .frame(height: AppTheme.unit * 8)
         .foregroundColor(
@@ -42,14 +55,9 @@ struct AudienceSelectorButtonStyle: ButtonStyle {
 
 struct AudienceSelectorButtonStyle_Previews: PreviewProvider {
     static var previews: some View {
-        Button(
+        AudienceSelectorButton(
             action: {},
-            label: {
-                Text("Public")
-            }
-        )
-        .buttonStyle(
-            AudienceSelectorButtonStyle()
+            text: "Public"
         )
     }
 }
