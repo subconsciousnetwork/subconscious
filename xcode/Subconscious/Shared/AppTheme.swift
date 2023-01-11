@@ -61,6 +61,7 @@ extension UIFont {
 //  is resolved at runtime.
 //  2021-12-15 Gordon Brander
 extension Color {
+    static let separator = SwiftUI.Color(uiColor: UIColor.separator)
     static let text = SwiftUI.Color("TextColor")
     static let placeholderText = SwiftUI.Color("PlaceholderTextColor")
     static let textPressed = text.opacity(0.5)

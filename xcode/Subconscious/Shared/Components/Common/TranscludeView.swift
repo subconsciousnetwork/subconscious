@@ -21,8 +21,12 @@ struct TranscludeView: View {
         }
         .padding(.vertical, AppTheme.unit3)
         .padding(.horizontal, AppTheme.unit4)
-        .background(Color.secondaryBackground)
-        .cornerRadius(AppTheme.cornerRadius)
+        .overlay(
+            RoundedRectangle(
+                cornerRadius: AppTheme.cornerRadiusLg
+            )
+            .stroke(Color.separator, lineWidth: 1)
+        )
     }
 }
 
