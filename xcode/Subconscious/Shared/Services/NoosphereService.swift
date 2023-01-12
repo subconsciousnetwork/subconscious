@@ -17,6 +17,7 @@ import SwiftNoosphere
 
 public enum NoosphereError: Error {
     case foreignError(String)
+    case memoDoesNotExist
 }
 
 public struct SphereReceipt {
@@ -109,12 +110,13 @@ public final class Noosphere {
         )
     }
 
-    /// Read the value of a memo from a Sphere
-    /// - Returns: `SphereMemo`
-    func read(
+    /// Perform an action with SphereFS using a closure.
+    /// SphereFS pointer is freed after action is performed.
+    /// - Returns: return value of `action` closure
+    @discardableResult private func withSphereFS<T>(
         sphereIdentity: String,
-        path: String
-    ) -> SphereMemo? {
+        action: (OpaquePointer) throws -> T
+    ) throws -> T {
         let sphereIdentityPointer: UnsafeMutablePointer<CChar> = sphereIdentity
             .withCString { pointer in
                 UnsafeMutablePointer(mutating: pointer)
@@ -123,12 +125,45 @@ public final class Noosphere {
             ns_string_free(sphereIdentityPointer)
         }
 
-        let sphereFS = ns_sphere_fs_open(noosphere, sphereIdentityPointer)
+        guard let sphereFS = ns_sphere_fs_open(
+            noosphere,
+            sphereIdentityPointer
+        ) else {
+            throw NoosphereError.foreignError("Failed to get pointer for sphere file system")
+        }
+        defer {
+            ns_sphere_fs_free(sphereFS)
+        }
+        return try action(sphereFS)
+    }
+
+    /// Read the value of a memo from a Sphere
+    /// - Returns: `SphereMemo`
+    func read(
+        sphereIdentity: String,
+        path: String
+    ) throws -> SphereMemo {
+        let sphereIdentityPointer: UnsafeMutablePointer<CChar> = sphereIdentity
+            .withCString { pointer in
+                UnsafeMutablePointer(mutating: pointer)
+            }
+        defer {
+            ns_string_free(sphereIdentityPointer)
+        }
+
+        guard let sphereFS = ns_sphere_fs_open(
+            noosphere,
+            sphereIdentityPointer
+        ) else {
+            throw NoosphereError.foreignError("Failed to get pointer for sphere file system")
+        }
         defer {
             ns_sphere_fs_free(sphereFS)
         }
 
-        let file = ns_sphere_fs_read(noosphere, sphereFS, path)
+        guard let file = ns_sphere_fs_read(noosphere, sphereFS, path) else {
+            throw NoosphereError.memoDoesNotExist
+        }
         defer {
             ns_sphere_file_free(file)
         }
@@ -151,6 +186,28 @@ public final class Noosphere {
         let data: Data = Data(bytes: contents.ptr, count: contents.len)
 
         return SphereMemo(contentType: contentType, data: data)
+    }
+
+    func write(
+        sphereIdentity: String,
+        path: String,
+        contentType: String,
+        contents: Data
+    ) throws {
+        try withSphereFS(sphereIdentity: sphereIdentity) { sphereFS in
+            contents.withUnsafeBytes({ (ptr: UnsafePointer<UInt8>) in
+                let contentsSlice = slice_ref_uint8(ptr: ptr, len: contents.count)
+                ns_sphere_fs_write(
+                    noosphere,
+                    sphereFS,
+                    path,
+                    contentType,
+                    contentsSlice,
+                    nil
+                )
+            })
+            ns_sphere_fs_save(noosphere, sphereFS, nil)
+        }
     }
 
     deinit {
