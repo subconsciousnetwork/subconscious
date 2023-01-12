@@ -76,6 +76,8 @@
 		B84AD8E82811C827006B3153 /* Tests_URLComponentsUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E72811C827006B3153 /* Tests_URLComponentsUtilities.swift */; };
 		B84AD8EA2811C863006B3153 /* URLComponentsUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */; };
 		B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */; };
+		B8545F0A296F8FB700BC4EA1 /* OmniboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */; };
+		B8545F0B296F8FB700BC4EA1 /* OmniboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */; };
 		B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */ = {isa = PBXBuildFile; productRef = B8579B6427C561E900D8B4BC /* SwiftSubsurface */; };
 		B85A8059296E31860007F957 /* AudienceSelectorButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85A8057296E31860007F957 /* AudienceSelectorButton.swift */; };
 		B85A805E296F08720007F957 /* AudienceSelectorButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85A8057296E31860007F957 /* AudienceSelectorButton.swift */; };
@@ -342,6 +344,7 @@
 		B84AD8E52810B74E006B3153 /* Tests_SubURLs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_SubURLs.swift; sourceTree = "<group>"; };
 		B84AD8E72811C827006B3153 /* Tests_URLComponentsUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_URLComponentsUtilities.swift; sourceTree = "<group>"; };
 		B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLComponentsUtilities.swift; sourceTree = "<group>"; };
+		B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmniboxView.swift; sourceTree = "<group>"; };
 		B85A8057296E31860007F957 /* AudienceSelectorButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudienceSelectorButton.swift; sourceTree = "<group>"; };
 		B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowViewModifier.swift; sourceTree = "<group>"; };
 		B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarTitleGroupView.swift; sourceTree = "<group>"; };
@@ -726,6 +729,7 @@
 				B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */,
 				B89966C628B6EE2300DF1F8C /* Notebook.swift */,
 				B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */,
+				B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */,
 				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 			);
 			path = Components;
@@ -1104,6 +1108,7 @@
 				B58FE48A28DED93F00E000CC /* ComboGeist.swift in Sources */,
 				B813749A28BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift in Sources */,
 				B8A59D6628B690B20010DB2F /* FeedService.swift in Sources */,
+				B8545F0A296F8FB700BC4EA1 /* OmniboxView.swift in Sources */,
 				B8CC434327A0815E0079D2F9 /* ModalView.swift in Sources */,
 				B85BF47527BB3D6E00F55730 /* ToolbarTitleGroupView.swift in Sources */,
 				B8879EA926F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
@@ -1263,6 +1268,7 @@
 				B8B604E729146DF6006FCB77 /* MemoryStore.swift in Sources */,
 				B8DEBF262798EF6A007CB528 /* RenameSearchView.swift in Sources */,
 				B81A5360272751EE001A6268 /* Subtext.swift in Sources */,
+				B8545F0B296F8FB700BC4EA1 /* OmniboxView.swift in Sources */,
 				B8AC648D278F757B0099E96B /* ProgressScrimView.swift in Sources */,
 				B8DEBF232798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
 				B8A41D522811F87C0096D2E7 /* SlashlinkBarView.swift in Sources */,
