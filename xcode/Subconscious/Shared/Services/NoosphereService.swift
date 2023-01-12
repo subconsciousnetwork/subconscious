@@ -121,9 +121,6 @@ public final class Noosphere {
             .withCString { pointer in
                 UnsafeMutablePointer(mutating: pointer)
             }
-        defer {
-            ns_string_free(sphereIdentityPointer)
-        }
 
         guard let sphereFS = ns_sphere_fs_open(
             noosphere,
