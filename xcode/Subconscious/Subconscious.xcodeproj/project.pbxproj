@@ -177,6 +177,8 @@
 		B8A59D7328B693100010DB2F /* StoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A59D7128B693100010DB2F /* StoryView.swift */; };
 		B8A59D7528B694C40010DB2F /* Geist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A59D7428B694C40010DB2F /* Geist.swift */; };
 		B8A59D7628B694C40010DB2F /* Geist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A59D7428B694C40010DB2F /* Geist.swift */; };
+		B8A617202971D3000054D410 /* Slashlink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A6171F2971D3000054D410 /* Slashlink.swift */; };
+		B8A617222971E4860054D410 /* Tests_Slashlink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A617212971E4860054D410 /* Tests_Slashlink.swift */; };
 		B8AAAAD928CBD68600DBC8A9 /* Tests_Detail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AAAAD828CBD68600DBC8A9 /* Tests_Detail.swift */; };
 		B8AAAADB28CBDED800DBC8A9 /* Tests_Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AAAADA28CBDED800DBC8A9 /* Tests_Search.swift */; };
 		B8AC648A278F53920099E96B /* EntryStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AC6489278F53920099E96B /* EntryStub.swift */; };
@@ -403,6 +405,8 @@
 		B8A59D6B28B692A00010DB2F /* Story.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Story.swift; sourceTree = "<group>"; };
 		B8A59D7128B693100010DB2F /* StoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryView.swift; sourceTree = "<group>"; };
 		B8A59D7428B694C40010DB2F /* Geist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geist.swift; sourceTree = "<group>"; };
+		B8A6171F2971D3000054D410 /* Slashlink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slashlink.swift; sourceTree = "<group>"; };
+		B8A617212971E4860054D410 /* Tests_Slashlink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Slashlink.swift; sourceTree = "<group>"; };
 		B8AAAAD828CBD68600DBC8A9 /* Tests_Detail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Detail.swift; sourceTree = "<group>"; };
 		B8AAAADA28CBDED800DBC8A9 /* Tests_Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Search.swift; sourceTree = "<group>"; };
 		B8AC6489278F53920099E96B /* EntryStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryStub.swift; sourceTree = "<group>"; };
@@ -544,6 +548,7 @@
 				B84AD8E52810B74E006B3153 /* Tests_SubURLs.swift */,
 				B831BDB62824DA9700C4CE92 /* Tests_Tape.swift */,
 				B84AD8E72811C827006B3153 /* Tests_URLComponentsUtilities.swift */,
+				B8A617212971E4860054D410 /* Tests_Slashlink.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
@@ -617,6 +622,7 @@
 				B8A59D6828B692900010DB2F /* StoryPrompt.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
 				B8EA3EE72915C23200B92C2E /* HeaderSubtext.swift */,
+				B8A6171F2971D3000054D410 /* Slashlink.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1070,6 +1076,7 @@
 				B80057EB27DC355E002C0129 /* SubconsciousTests.swift in Sources */,
 				B84AD8DF280F3659006B3153 /* Tests_EntryLink.swift in Sources */,
 				B8B604E9291476E9006FCB77 /* Tests_Migrations.swift in Sources */,
+				B8A617222971E4860054D410 /* Tests_Slashlink.swift in Sources */,
 				B8B3194F2909F36800A1E62A /* Tests_FileFingerprint.swift in Sources */,
 				B8682DCB2804BF04001CD8DD /* Tests_Subtext.swift in Sources */,
 				B88CC956284FCF8C00994928 /* Tests_DatabaseService.swift in Sources */,
@@ -1128,6 +1135,7 @@
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8A59D7528B694C40010DB2F /* Geist.swift in Sources */,
 				B8B4250F28FDE6960081B8D5 /* FileStore.swift in Sources */,
+				B8A617202971D3000054D410 /* Slashlink.swift in Sources */,
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
 				B8CC434027A07DF10079D2F9 /* DialogView.swift in Sources */,
 				B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
