@@ -34,17 +34,19 @@ final class Tests_NoosphereService: XCTestCase {
         print("Sphere identity: \(sphereReceipt.identity)")
         print("Sphere mnemonic: \(sphereReceipt.mnemonic)")
 
-        try noosphere.write(
-            sphereIdentity: sphereReceipt.identity,
-            path: "foo",
+        let sphere = try Sphere(
+            noosphere: noosphere,
+            identity: sphereReceipt.identity
+        )
+
+        try sphere.write(
+            slug: "foo",
             contentType: "text/subtext",
             contents: "Test".toData(encoding: .utf8)!
         )
+        sphere.save()
 
-        let memo = try noosphere.read(
-            sphereIdentity: sphereReceipt.identity,
-            path: "/foo"
-        )
+        let memo = try sphere.read(slashlink: "/foo")
 
         XCTAssertEqual(memo.contentType, "text/subtext")
         let content = memo.data.toString(encoding: .utf8)

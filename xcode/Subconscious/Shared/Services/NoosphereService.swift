@@ -35,7 +35,7 @@ struct SphereMemo: Hashable {
 /// - Property noosphere: pointer that holds all the internal book keeping.
 ///   DB pointers, key storage interfaces, active HTTP clients etc.
 public final class Noosphere {
-    private let noosphere: OpaquePointer
+    let noosphere: OpaquePointer
     
     init(
         globalStoragePath: String,
@@ -109,88 +109,93 @@ public final class Noosphere {
             mnemonic: sphereMnemonic
         )
     }
+    
+    deinit {
+        ns_free(noosphere)
+    }
+}
 
-    /// Perform an action with SphereFS using a closure.
-    /// SphereFS pointer is freed after action is performed.
-    /// - Returns: return value of `action` closure
-    @discardableResult private func withSphereFS<T>(
-        sphereIdentity: String,
-        action: (OpaquePointer) throws -> T
-    ) throws -> T {
-        guard let sphereFS = ns_sphere_fs_open(
-            noosphere,
-            sphereIdentity
+public final class Sphere {
+    private let noosphere: Noosphere
+    let fs: OpaquePointer
+    let identity: String
+    
+    init(noosphere: Noosphere, identity: String) throws {
+        self.noosphere = noosphere
+        self.identity = identity
+        
+        guard let fs = ns_sphere_fs_open(
+            noosphere.noosphere,
+            identity
         ) else {
             throw NoosphereError.foreignError("Failed to get pointer for sphere file system")
         }
-        defer {
-            ns_sphere_fs_free(sphereFS)
-        }
-        return try action(sphereFS)
+        self.fs = fs
     }
-
+    
     /// Read the value of a memo from a Sphere
     /// - Returns: `SphereMemo`
-    func read(
-        sphereIdentity: String,
-        path: String
-    ) throws -> SphereMemo {
-        try withSphereFS(sphereIdentity: sphereIdentity) { sphereFS in
-            guard let file = ns_sphere_fs_read(noosphere, sphereFS, path) else {
-                throw NoosphereError.memoDoesNotExist
-            }
-            defer {
-                ns_sphere_file_free(file)
-            }
-
-            let contentTypeValues = ns_sphere_file_header_values_read(
-                file,
-                "Content-Type"
-            )
-            defer {
-                ns_string_array_free(contentTypeValues)
-            }
-
-            let contentType = String(cString: contentTypeValues.ptr.pointee!)
-
-            let contents = ns_sphere_file_contents_read(noosphere, file)
-            defer {
-                ns_bytes_free(contents)
-            }
-
-            let data: Data = Data(bytes: contents.ptr, count: contents.len)
-
-            return SphereMemo(contentType: contentType, data: data)
+    func read(slashlink: String) throws -> SphereMemo {
+        guard let file = ns_sphere_fs_read(
+            noosphere.noosphere,
+            fs,
+            slashlink
+        ) else {
+            throw NoosphereError.memoDoesNotExist
         }
+        defer {
+            ns_sphere_file_free(file)
+        }
+        
+        let contentTypeValues = ns_sphere_file_header_values_read(
+            file,
+            "Content-Type"
+        )
+        defer {
+            ns_string_array_free(contentTypeValues)
+        }
+        
+        let contentType = String(cString: contentTypeValues.ptr.pointee!)
+        
+        let contents = ns_sphere_file_contents_read(noosphere.noosphere, file)
+        defer {
+            ns_bytes_free(contents)
+        }
+        
+        let data: Data = Data(bytes: contents.ptr, count: contents.len)
+        
+        return SphereMemo(contentType: contentType, data: data)
     }
-
+    
+    /// Write to sphere
     func write(
-        sphereIdentity: String,
-        path: String,
+        slug: String,
         contentType: String,
         contents: Data
     ) throws {
-        try withSphereFS(sphereIdentity: sphereIdentity) { sphereFS in
-            contents.withUnsafeBytes({ rawBufferPointer in
-                let bufferPointer = rawBufferPointer.bindMemory(to: UInt8.self)
-                let pointer = bufferPointer.baseAddress!
-                let contentsSlice = slice_ref_uint8(
-                    ptr: pointer, len: contents.count
-                )
-                ns_sphere_fs_write(
-                    noosphere,
-                    sphereFS,
-                    path,
-                    contentType,
-                    contentsSlice,
-                    nil
-                )
-            })
-            ns_sphere_fs_save(noosphere, sphereFS, nil)
-        }
+        contents.withUnsafeBytes({ rawBufferPointer in
+            let bufferPointer = rawBufferPointer.bindMemory(to: UInt8.self)
+            let pointer = bufferPointer.baseAddress!
+            let contentsSlice = slice_ref_uint8(
+                ptr: pointer, len: contents.count
+            )
+            ns_sphere_fs_write(
+                noosphere.noosphere,
+                fs,
+                slug,
+                contentType,
+                contentsSlice,
+                nil
+            )
+        })
+    }
+    
+    /// Save outstanding writes
+    func save() {
+        ns_sphere_fs_save(noosphere.noosphere, fs, nil)
     }
 
     deinit {
-        ns_free(noosphere)
+        ns_sphere_fs_free(fs)
     }
 }
