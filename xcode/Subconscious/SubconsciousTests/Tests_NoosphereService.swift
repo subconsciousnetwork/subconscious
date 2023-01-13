@@ -36,7 +36,7 @@ final class Tests_NoosphereService: XCTestCase {
 
         try noosphere.write(
             sphereIdentity: sphereReceipt.identity,
-            path: "/foo",
+            path: "foo",
             contentType: "text/subtext",
             contents: "Test".toData(encoding: .utf8)!
         )
