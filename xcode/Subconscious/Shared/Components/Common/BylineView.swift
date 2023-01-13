@@ -11,7 +11,7 @@ import SwiftUI
 struct BylineView: View {
     var image: Image
     var petname: String
-    var slug: Slug
+    var slug: String
 
     var body: some View {
         HStack {
@@ -20,7 +20,7 @@ struct BylineView: View {
                 Text(verbatim: petname)
                     .bold()
                     .foregroundColor(.accentColor)
-                Text(verbatim: slug.toSlashlink())
+                Text(verbatim: slug)
                     .foregroundColor(.secondary)
             }
         }
@@ -31,8 +31,8 @@ struct BylineView_Previews: PreviewProvider {
     static var previews: some View {
         BylineView(
             image: Image("pfp-dog"),
-            petname: "name",
-            slug: Slug("path")!
+            petname: "@name",
+            slug: "/path"
         )
     }
 }
