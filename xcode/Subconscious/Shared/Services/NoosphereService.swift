@@ -117,14 +117,9 @@ public final class Noosphere {
         sphereIdentity: String,
         action: (OpaquePointer) throws -> T
     ) throws -> T {
-        let sphereIdentityPointer: UnsafeMutablePointer<CChar> = sphereIdentity
-            .withCString { pointer in
-                UnsafeMutablePointer(mutating: pointer)
-            }
-
         guard let sphereFS = ns_sphere_fs_open(
             noosphere,
-            sphereIdentityPointer
+            sphereIdentity
         ) else {
             throw NoosphereError.foreignError("Failed to get pointer for sphere file system")
         }

@@ -10,9 +10,25 @@ import XCTest
 
 final class Tests_NoosphereService: XCTestCase {
     func testRoundtrip() throws {
+        let globalStoragePath = FileManager.default.temporaryDirectory
+            .appendingPathComponent(
+                "noosphere",
+                isDirectory: true
+            )
+            .path()
+        print("Noosphere global storage path: \(globalStoragePath)")
+
+        let sphereStoragePath = FileManager.default.temporaryDirectory
+            .appendingPathComponent(
+                "sphere",
+                isDirectory: true
+            )
+            .path()
+        print("Noosphere sphere storage path: \(sphereStoragePath)")
+
         let noosphere = try Noosphere(
-            globalStoragePath: "/tmp/foo",
-            sphereStoragePath: "/tmp/bar"
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath
         )
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         print("Sphere identity: \(sphereReceipt.identity)")
