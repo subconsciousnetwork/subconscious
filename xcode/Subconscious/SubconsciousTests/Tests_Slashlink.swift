@@ -15,6 +15,8 @@ final class Tests_Slashlink: XCTestCase {
             return
         }
         XCTAssertEqual(slashlink.description, "@valid-petname")
+        XCTAssertEqual(slashlink.petname, "@valid-petname")
+        XCTAssertNil(slashlink.slug)
     }
     
     func testSlugOnly() throws {
@@ -23,6 +25,8 @@ final class Tests_Slashlink: XCTestCase {
             return
         }
         XCTAssertEqual(slashlink.description, "/valid-slashlink")
+        XCTAssertNil(slashlink.petname)
+        XCTAssertEqual(slashlink.slug, "/valid-slashlink")
     }
     
     func testFull() throws {
@@ -31,6 +35,8 @@ final class Tests_Slashlink: XCTestCase {
             return
         }
         XCTAssertEqual(slashlink.description, "@valid-petname/valid-slashlink")
+        XCTAssertEqual(slashlink.petname, "@valid-petname")
+        XCTAssertEqual(slashlink.slug, "/valid-slashlink")
     }
     
     func testUnicode() throws {
@@ -39,6 +45,8 @@ final class Tests_Slashlink: XCTestCase {
             return
         }
         XCTAssertEqual(slashlink.description, "@ⴙvalid-petname/valid-slashlink")
+        XCTAssertEqual(slashlink.petname, "@ⴙvalid-petname")
+        XCTAssertEqual(slashlink.slug, "/valid-slashlink")
     }
     
     func testInvalidSlashlinkA() throws {
@@ -52,34 +60,42 @@ final class Tests_Slashlink: XCTestCase {
     }
     
     func testFormatInvalidSlashlink() throws {
-        guard let slashlink = Slashlink(formatting: "/special$#%-slashlink") else {
+        guard let slashlink = Slashlink("/special$#%-slashlink") else {
             XCTFail("Failed to parse slashlink")
             return
         }
         XCTAssertEqual(slashlink.description, "/special-slashlink")
+        XCTAssertNil(slashlink.petname)
+        XCTAssertEqual(slashlink.slug, "/special-slashlink")
     }
     
     func testFormatSlashlinkSpaces() throws {
-        guard let slashlink = Slashlink(formatting: "/special  slashlink") else {
+        guard let slashlink = Slashlink("/special  slashlink") else {
             XCTFail("Failed to parse slashlink")
             return
         }
         XCTAssertEqual(slashlink.description, "/special--slashlink")
+        XCTAssertNil(slashlink.petname)
+        XCTAssertEqual(slashlink.slug, "/special--slashlink")
     }
     
     func testFormatSlashlinkDoubleSlashA() throws {
-        guard let slashlink = Slashlink(formatting: "//special-slashlink") else {
+        guard let slashlink = Slashlink("//special-slashlink") else {
             XCTFail("Failed to parse slashlink")
             return
         }
         XCTAssertEqual(slashlink.description, "/special-slashlink")
+        XCTAssertNil(slashlink.petname)
+        XCTAssertEqual(slashlink.slug, "/special-slashlink")
     }
     
     func testFormatSlashlinkDoubleSlashB() throws {
-        guard let slashlink = Slashlink(formatting: "/special//slashlink") else {
+        guard let slashlink = Slashlink("/special//slashlink") else {
             XCTFail("Failed to parse slashlink")
             return
         }
         XCTAssertEqual(slashlink.description, "/special/slashlink")
+        XCTAssertNil(slashlink.petname)
+        XCTAssertEqual(slashlink.slug, "/special/slashlink")
     }
 }

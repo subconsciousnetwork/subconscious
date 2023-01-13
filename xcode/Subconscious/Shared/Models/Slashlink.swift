@@ -15,6 +15,8 @@ struct Slashlink:
     LosslessStringConvertible
 {
     let description: String
+    let petname: String?
+    let slug: String?
     
     var id: String {
         description
@@ -24,18 +26,17 @@ struct Slashlink:
         guard let formatted = Self.format(description) else {
             return nil
         }
-        guard formatted == description else {
+        guard let match = try? Self.slashlinkRegex.firstMatch(
+            in: formatted
+        ) else {
             return nil
         }
         self.description = formatted
+        self.petname = match.1?.toString()
+        self.slug = match.2?.toString()
     }
 
-    init?(formatting string: String) {
-        guard let formatted = Self.format(string) else {
-            return nil
-        }
-        self.description = formatted
-    }
+    private static let slashlinkRegex = /(\@[\w\d\-]+)?(\/[\w\d\-\/]+)?/
 
     /// Compare slugs by alpha
     static func < (lhs: Slashlink, rhs: Slashlink) -> Bool {
