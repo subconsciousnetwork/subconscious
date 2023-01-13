@@ -6,11 +6,11 @@
 //
 //  Noosphere lifecycle:
 //  1. Initialize namespace (once ever)
-//  2. Create key (once per key)
-//  3. Create sphere for key (once per key)
-//  4. Retreive sphere identity from sphere creation receipt, then store (once, upon sphere creation)
-//  5. Retrieve sphere mnemonic from sphere creation receipt. Display to user, then discard (once, upon sphere creation).
-//  6. Open sphere file system (on-demand)
+//  2. Create a unique key (once per key)
+//  3. Create sphere for key, getting back a receipt (once per key)
+//     - Retrieve identity from sphere receipt, then store (once, upon sphere creation)
+//     - Retrieve sphere mnemonic from sphere receipt. Display to user, then discard (once, upon sphere creation)
+//  4. Open sphere file system (on-demand)
 
 import Foundation
 import SwiftNoosphere
