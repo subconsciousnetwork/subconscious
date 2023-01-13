@@ -16,7 +16,9 @@ import Foundation
 import SwiftNoosphere
 
 public enum NoosphereError: Error {
+    /// Thrown when something unexpected happens on the other side of the FFI, and we don't know what went wrong.
     case foreignError(String)
+    /// Thrown when trying to read a memo that does not exist.
     case memoDoesNotExist
 }
 
