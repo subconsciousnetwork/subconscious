@@ -36,7 +36,13 @@ struct StoryPromptView: View {
                         )
                     },
                     label: {
-                        TranscludeView(entry: story.entry)
+                        TranscludeView(
+                            pfp: Image("pfp-dog"),
+                            petname: "@doge",
+                            slug: story.entry.slug.toSlashlink(),
+                            title: story.entry.linkableTitle,
+                            excerpt: story.entry.excerpt
+                        )
                     }
                 )
                 .buttonStyle(.plain)

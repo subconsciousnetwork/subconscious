@@ -34,7 +34,13 @@ struct StoryComboView: View {
                         action(story.entryA.link, story.entryA.linkableTitle)
                     },
                     label: {
-                        TranscludeView(entry: story.entryA)
+                        TranscludeView(
+                            pfp: Image("pfp-dog"),
+                            petname: "@doge",
+                            slug: story.entryA.slug.toSlashlink(),
+                            title: story.entryA.linkableTitle,
+                            excerpt: story.entryA.excerpt
+                        )
                     }
                 )
                 .buttonStyle(.plain)
@@ -44,7 +50,13 @@ struct StoryComboView: View {
                         action(story.entryB.link, story.entryB.linkableTitle)
                     },
                     label: {
-                        TranscludeView(entry: story.entryB)
+                        TranscludeView(
+                            pfp: Image("pfp-dog"),
+                            petname: "@doge",
+                            slug: story.entryB.slug.toSlashlink(),
+                            title: story.entryB.linkableTitle,
+                            excerpt: story.entryB.excerpt
+                        )
                     }
                 )
                 .buttonStyle(.plain)
@@ -85,7 +97,7 @@ struct StoryComboView_Previews: PreviewProvider {
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,
                             modified: Date.now,
-                            title: "meme",
+                            title: "Meme",
                             fileExtension: ContentType.subtext.fileExtension,
                             other: [],
                             body: """
@@ -103,7 +115,7 @@ struct StoryComboView_Previews: PreviewProvider {
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,
                             modified: Date.now,
-                            title: "meme",
+                            title: "Meme",
                             fileExtension: ContentType.subtext.fileExtension,
                             other: [],
                             body: """

@@ -9,13 +9,13 @@ import SwiftUI
 
 /// Byline combines a small profile pic, username, and path
 struct BylineView: View {
-    var image: Image
+    var pfp: Image
     var petname: String
     var slug: String
 
     var body: some View {
         HStack {
-            ProfilePicSm(image: image)
+            ProfilePicSm(image: pfp)
             HStack(spacing: 0) {
                 Text(verbatim: petname)
                     .bold()
@@ -30,7 +30,7 @@ struct BylineView: View {
 struct BylineView_Previews: PreviewProvider {
     static var previews: some View {
         BylineView(
-            image: Image("pfp-dog"),
+            pfp: Image("pfp-dog"),
             petname: "@name",
             slug: "/path"
         )
