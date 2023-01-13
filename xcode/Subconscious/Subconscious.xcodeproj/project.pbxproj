@@ -547,13 +547,13 @@
 				B88CC95A284FF64300994928 /* Tests_OrderedCollectionUtilities.swift */,
 				B82BB7FD28243F32000C9FCC /* Tests_Parser.swift */,
 				B8AAAADA28CBDED800DBC8A9 /* Tests_Search.swift */,
+				B8A617212971E4860054D410 /* Tests_Slashlink.swift */,
 				B80057F327DC35BE002C0129 /* Tests_Slug.swift */,
 				B84AD8E0280F7A19006B3153 /* Tests_StringUtilities.swift */,
 				B8682DCA2804BF04001CD8DD /* Tests_Subtext.swift */,
 				B84AD8E52810B74E006B3153 /* Tests_SubURLs.swift */,
 				B831BDB62824DA9700C4CE92 /* Tests_Tape.swift */,
 				B84AD8E72811C827006B3153 /* Tests_URLComponentsUtilities.swift */,
-				B8A617212971E4860054D410 /* Tests_Slashlink.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
@@ -616,19 +616,19 @@
 				B8B54F3A271F6C8400B9B507 /* EntryLink.swift */,
 				B8AC6489278F53920099E96B /* EntryStub.swift */,
 				B8B3194C2909E81D00A1E62A /* FileInfo.swift */,
+				B8EA3EE72915C23200B92C2E /* HeaderSubtext.swift */,
 				B86DFF3427C07438002E57ED /* LinkSuggestion.swift */,
 				B8C7E8BD2809F19500E439DC /* Markup.swift */,
 				B8B4251428FDE8570081B8D5 /* Memo.swift */,
 				B8B4251728FDE8AA0081B8D5 /* MemoData.swift */,
 				B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */,
 				B826B27427B5D95F003D3C03 /* SaveState.swift */,
+				B8A6171F2971D3000054D410 /* Slashlink.swift */,
 				B8901CF227978FDE007C9021 /* Slug.swift */,
 				B8A59D6B28B692A00010DB2F /* Story.swift */,
 				B58FE48B28DED9B600E000CC /* StoryCombo.swift */,
 				B8A59D6828B692900010DB2F /* StoryPrompt.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
-				B8EA3EE72915C23200B92C2E /* HeaderSubtext.swift */,
-				B8A6171F2971D3000054D410 /* Slashlink.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
