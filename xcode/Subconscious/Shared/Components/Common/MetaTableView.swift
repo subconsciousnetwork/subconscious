@@ -19,19 +19,27 @@ struct NoteMetaTableView: View {
                 icon: Image(systemName: "number"),
                 label: Text("Note Revision"),
                 text: Text(verbatim: noteCID)
-            )
+            ) {
+                
+            }
             MetaTableRowView(
                 icon: Image(systemName: "network"),
                 label: Text("Sphere Revision"),
                 text: Text(verbatim: sphereCID)
-            )
+            ) {
+                
+            }
             MetaTableRowView(
                 icon: Image(systemName: "key"),
                 label: Text("Author Key"),
                 text: Text(verbatim: authorPublicKey),
                 hasDivider: false
-            )
+            ) {
+                
+            }
         }
+        .cornerRadius(AppTheme.cornerRadiusLg)
+        .clipped()
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLg)
                 .stroke(Color.separator, lineWidth: 0.5)
@@ -44,30 +52,35 @@ struct MetaTableRowView: View {
     var label: Text
     var text: Text
     var hasDivider = true
+    var action: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: AppTheme.unit2) {
-                icon
-                    .frame(width: AppTheme.icon, height: AppTheme.icon)
-                    .foregroundColor(Color.accentColor)
-                VStack(alignment: .leading, spacing: 2) {
-                    label
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                        .textCase(.uppercase)
-                    text
-                        .lineLimit(1)
+        Button(action: action) {
+            VStack(spacing: 0) {
+                HStack(spacing: AppTheme.unit2) {
+                    icon
+                        .frame(width: AppTheme.icon, height: AppTheme.icon)
+                        .foregroundColor(Color.accentColor)
+                    VStack(alignment: .leading, spacing: 2) {
+                        label
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .textCase(.uppercase)
+                        text
+                            .lineLimit(1)
+                            .foregroundColor(.text)
+                    }
+                    Spacer()
                 }
-                Spacer()
-            }
-            .padding(.horizontal, AppTheme.unit2)
-            .padding(.vertical, AppTheme.unit2)
-            if hasDivider {
-                Divider()
-                    .padding(.leading, AppTheme.icon + (AppTheme.unit2 * 2))
+                .padding(.horizontal, AppTheme.unit2)
+                .padding(.vertical, AppTheme.unit2)
+                if hasDivider {
+                    Divider()
+                        .padding(.leading, AppTheme.icon + (AppTheme.unit2 * 2))
+                }
             }
         }
+        .buttonStyle(RowButtonStyle())
     }
 }
 

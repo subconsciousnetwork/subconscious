@@ -73,7 +73,7 @@ extension Color {
     static let tertiaryIcon = SwiftUI.Color(UIColor.tertiarySystemFill)
     static let buttonText = SwiftUI.Color.accentColor
     /// Fill for pressed-state overlays
-    static let pressedFill = SwiftUI.Color(UIColor.systemFill)
+    static let pressedBackground = SwiftUI.Color(UIColor.systemFill)
     static let background = SwiftUI.Color("BackgroundColor")
     static let secondaryBackground = SwiftUI.Color("SecondaryBackgroundColor")
     static let inputBackground = SwiftUI.Color("InputBackgroundColor")
