@@ -7,36 +7,13 @@
 
 import SwiftUI
 
-/// A meta table for notes
-struct NoteMetaTableView: View {
-    var noteCID: String
-    var sphereCID: String
-    var authorPublicKey: String
+/// A table view box
+struct MetaTableView<Rows: View>: View {
+    @ViewBuilder var content: () -> Rows
 
     var body: some View {
         VStack(spacing: 0) {
-            MetaTableRowView(
-                icon: Image(systemName: "number"),
-                label: Text("Note Revision"),
-                text: Text(verbatim: noteCID)
-            ) {
-                
-            }
-            MetaTableRowView(
-                icon: Image(systemName: "network"),
-                label: Text("Sphere Revision"),
-                text: Text(verbatim: sphereCID)
-            ) {
-                
-            }
-            MetaTableRowView(
-                icon: Image(systemName: "key"),
-                label: Text("Author Key"),
-                text: Text(verbatim: authorPublicKey),
-                hasDivider: false
-            ) {
-                
-            }
+            content()
         }
         .cornerRadius(AppTheme.cornerRadiusLg)
         .clipped()
@@ -87,17 +64,55 @@ struct MetaTableRowView: View {
 struct MetaTableView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            NoteMetaTableView(
-                noteCID: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf",
-                sphereCID: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf",
-                authorPublicKey: "0xb794f5ea0ba39494ce8"
-            )
+            MetaTableView {
+                MetaTableRowView(
+                    icon: Image(systemName: "number"),
+                    label: Text("Note Revision"),
+                    text: Text(verbatim: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf")
+                ) {
+                    
+                }
+                MetaTableRowView(
+                    icon: Image(systemName: "network"),
+                    label: Text("Sphere Revision"),
+                    text: Text(verbatim: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf")
+                ) {
+                    
+                }
+                MetaTableRowView(
+                    icon: Image(systemName: "key"),
+                    label: Text("Author Key"),
+                    text: Text(verbatim: "0xb794f5ea0ba39494ce8"),
+                    hasDivider: false
+                ) {
+                    
+                }
+            }
             VStack {
-                NoteMetaTableView(
-                    noteCID: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf",
-                    sphereCID: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf",
-                    authorPublicKey: "0xb794f5ea0ba39494ce8"
-                )
+                MetaTableView {
+                    MetaTableRowView(
+                        icon: Image(systemName: "number"),
+                        label: Text("Note Revision"),
+                        text: Text(verbatim: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf")
+                    ) {
+                        
+                    }
+                    MetaTableRowView(
+                        icon: Image(systemName: "network"),
+                        label: Text("Sphere Revision"),
+                        text: Text(verbatim: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf")
+                    ) {
+                        
+                    }
+                    MetaTableRowView(
+                        icon: Image(systemName: "key"),
+                        label: Text("Author Key"),
+                        text: Text(verbatim: "0xb794f5ea0ba39494ce8"),
+                        hasDivider: false
+                    ) {
+                        
+                    }
+                }
             }
             .padding()
             .background(Color.secondaryBackground)
