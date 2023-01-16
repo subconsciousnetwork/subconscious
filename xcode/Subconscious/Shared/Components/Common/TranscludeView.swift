@@ -16,7 +16,7 @@ struct TranscludeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
-            BylineView(
+            BylineSmView(
                 pfp: pfp,
                 petname: petname,
                 slug: slug

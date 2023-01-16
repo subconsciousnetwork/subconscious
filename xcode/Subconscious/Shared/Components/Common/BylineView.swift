@@ -1,27 +1,32 @@
 //
 //  BylineView.swift
-//  Subconscious
+//  Subconscious (iOS)
 //
-//  Created by Gordon Brander on 1/11/23.
+//  Created by Gordon Brander on 1/16/23.
 //
 
 import SwiftUI
 
-/// Byline combines a small profile pic, username, and path
+/// Full-sized byline, suitable for using as header of story
 struct BylineView: View {
     var pfp: Image
+    var name: String
     var petname: String
     var slug: String
-
+    
     var body: some View {
-        HStack {
-            ProfilePicSm(image: pfp)
-            HStack(spacing: 0) {
-                Text(verbatim: petname)
-                    .bold()
-                    .foregroundColor(.accentColor)
-                Text(verbatim: slug)
-                    .foregroundColor(.secondary)
+        HStack(spacing: AppTheme.unit3) {
+            ProfilePic(image: pfp)
+            VStack(alignment: .leading) {
+                Text(verbatim: name)
+                    .foregroundColor(.buttonText)
+                    .fontWeight(.semibold)
+                HStack(spacing: 0) {
+                    Text(verbatim: petname)
+                        .fontWeight(.semibold)
+                    Text(verbatim: slug)
+                }
+                .foregroundColor(.secondary)
             }
         }
     }
@@ -31,6 +36,7 @@ struct BylineView_Previews: PreviewProvider {
     static var previews: some View {
         BylineView(
             pfp: Image("pfp-dog"),
+            name: "Dog",
             petname: "@name",
             slug: "/path"
         )
