@@ -82,6 +82,7 @@
 		B8545F0E2970577600BC4EA1 /* BacklinkReacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */; };
 		B856521C2975B2CF00B7FCA0 /* StoryAudienceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856521B2975B2CF00B7FCA0 /* StoryAudienceView.swift */; };
 		B856521E2975B7F100B7FCA0 /* Audience.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856521D2975B7F100B7FCA0 /* Audience.swift */; };
+		B85652202975BA9000B7FCA0 /* MetaTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856521F2975BA9000B7FCA0 /* MetaTableView.swift */; };
 		B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */ = {isa = PBXBuildFile; productRef = B8579B6427C561E900D8B4BC /* SwiftSubsurface */; };
 		B85A8059296E31860007F957 /* AudienceSelectorButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85A8057296E31860007F957 /* AudienceSelectorButton.swift */; };
 		B85A805E296F08720007F957 /* AudienceSelectorButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85A8057296E31860007F957 /* AudienceSelectorButton.swift */; };
@@ -356,6 +357,7 @@
 		B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinkReacts.swift; sourceTree = "<group>"; };
 		B856521B2975B2CF00B7FCA0 /* StoryAudienceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryAudienceView.swift; sourceTree = "<group>"; };
 		B856521D2975B7F100B7FCA0 /* Audience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Audience.swift; sourceTree = "<group>"; };
+		B856521F2975BA9000B7FCA0 /* MetaTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaTableView.swift; sourceTree = "<group>"; };
 		B85A8057296E31860007F957 /* AudienceSelectorButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudienceSelectorButton.swift; sourceTree = "<group>"; };
 		B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowViewModifier.swift; sourceTree = "<group>"; };
 		B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarTitleGroupView.swift; sourceTree = "<group>"; };
@@ -842,6 +844,7 @@
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B8A59D5F28B51D000010DB2F /* TranscludeView.swift */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
+				B856521F2975BA9000B7FCA0 /* MetaTableView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1209,6 +1212,7 @@
 				B8DEBF1F2798EC23007CB528 /* TitleGroupView.swift in Sources */,
 				B8AE34BF276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
 				B8CA8F2628909E66005F8802 /* Feed.swift in Sources */,
+				B85652202975BA9000B7FCA0 /* MetaTableView.swift in Sources */,
 				B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */,
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
 				B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */,
