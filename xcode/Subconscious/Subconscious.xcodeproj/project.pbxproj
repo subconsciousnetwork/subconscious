@@ -80,6 +80,8 @@
 		B8545F0B296F8FB700BC4EA1 /* OmniboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */; };
 		B8545F0D2970577600BC4EA1 /* BacklinkReacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */; };
 		B8545F0E2970577600BC4EA1 /* BacklinkReacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */; };
+		B856521C2975B2CF00B7FCA0 /* StoryAudienceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856521B2975B2CF00B7FCA0 /* StoryAudienceView.swift */; };
+		B856521E2975B7F100B7FCA0 /* Audience.swift in Sources */ = {isa = PBXBuildFile; fileRef = B856521D2975B7F100B7FCA0 /* Audience.swift */; };
 		B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */ = {isa = PBXBuildFile; productRef = B8579B6427C561E900D8B4BC /* SwiftSubsurface */; };
 		B85A8059296E31860007F957 /* AudienceSelectorButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85A8057296E31860007F957 /* AudienceSelectorButton.swift */; };
 		B85A805E296F08720007F957 /* AudienceSelectorButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85A8057296E31860007F957 /* AudienceSelectorButton.swift */; };
@@ -352,6 +354,8 @@
 		B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLComponentsUtilities.swift; sourceTree = "<group>"; };
 		B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OmniboxView.swift; sourceTree = "<group>"; };
 		B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinkReacts.swift; sourceTree = "<group>"; };
+		B856521B2975B2CF00B7FCA0 /* StoryAudienceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryAudienceView.swift; sourceTree = "<group>"; };
+		B856521D2975B7F100B7FCA0 /* Audience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Audience.swift; sourceTree = "<group>"; };
 		B85A8057296E31860007F957 /* AudienceSelectorButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudienceSelectorButton.swift; sourceTree = "<group>"; };
 		B85BF46E27BB0FA800F55730 /* RowViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowViewModifier.swift; sourceTree = "<group>"; };
 		B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarTitleGroupView.swift; sourceTree = "<group>"; };
@@ -569,6 +573,17 @@
 			path = Parsers;
 			sourceTree = "<group>";
 		};
+		B85652182975B29800B7FCA0 /* Story */ = {
+			isa = PBXGroup;
+			children = (
+				B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */,
+				B8CA8F2728909FBA005F8802 /* StoryPromptView.swift */,
+				B8A59D7128B693100010DB2F /* StoryView.swift */,
+				B856521B2975B2CF00B7FCA0 /* StoryAudienceView.swift */,
+			);
+			path = Story;
+			sourceTree = "<group>";
+		};
 		B8879E9B26F8F3BD00A0B4FF /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -610,6 +625,7 @@
 		B8B54F39271F6C6800B9B507 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				B856521D2975B7F100B7FCA0 /* Audience.swift */,
 				B8B4250B28FB43C90081B8D5 /* ContentType.swift */,
 				B8B4251A28FE1DA60081B8D5 /* Entry.swift */,
 				B824FDD026FA98F300B81BBD /* EntryDetail.swift */,
@@ -816,9 +832,7 @@
 				B86F1AB628C77E8C00DA264E /* Search.swift */,
 				B8AE34C7276BF77000777FF0 /* SearchTextField.swift */,
 				B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */,
-				B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */,
-				B8CA8F2728909FBA005F8802 /* StoryPromptView.swift */,
-				B8A59D7128B693100010DB2F /* StoryView.swift */,
+				B85652182975B29800B7FCA0 /* Story */,
 				B8AE34C1276BD77C00777FF0 /* SuggestionLabelStyle.swift */,
 				B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */,
 				B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */,
@@ -1102,6 +1116,7 @@
 				B8CA8F2828909FBA005F8802 /* StoryPromptView.swift in Sources */,
 				B831BDB92825A28A00C4CE92 /* Header.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
+				B856521C2975B2CF00B7FCA0 /* StoryAudienceView.swift in Sources */,
 				B88CC958284FF59900994928 /* OrderedCollectionUtilities.swift in Sources */,
 				B8EA3EE82915C23200B92C2E /* HeaderSubtext.swift in Sources */,
 				B8EF986E29034ADF0029363D /* Pathlike.swift in Sources */,
@@ -1211,6 +1226,7 @@
 				B83E91D727692EC600045C6A /* FAB.swift in Sources */,
 				B8545F0D2970577600BC4EA1 /* BacklinkReacts.swift in Sources */,
 				B8A59D6028B51D000010DB2F /* TranscludeView.swift in Sources */,
+				B856521E2975B7F100B7FCA0 /* Audience.swift in Sources */,
 				B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
 				B839029F28CA246A007A3A3F /* CustomLogStringConvertible.swift in Sources */,
 				B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
