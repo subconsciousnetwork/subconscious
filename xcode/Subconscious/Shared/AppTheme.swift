@@ -61,6 +61,7 @@ extension UIFont {
 //  is resolved at runtime.
 //  2021-12-15 Gordon Brander
 extension Color {
+    static let separator = SwiftUI.Color(uiColor: UIColor.separator)
     static let text = SwiftUI.Color("TextColor")
     static let placeholderText = SwiftUI.Color("PlaceholderTextColor")
     static let textPressed = text.opacity(0.5)
@@ -72,7 +73,7 @@ extension Color {
     static let tertiaryIcon = SwiftUI.Color(UIColor.tertiarySystemFill)
     static let buttonText = SwiftUI.Color.accentColor
     /// Fill for pressed-state overlays
-    static let pressedFill = SwiftUI.Color(UIColor.systemFill)
+    static let pressedBackground = SwiftUI.Color(UIColor.systemFill)
     static let background = SwiftUI.Color("BackgroundColor")
     static let secondaryBackground = SwiftUI.Color("SecondaryBackgroundColor")
     static let inputBackground = SwiftUI.Color("InputBackgroundColor")
