@@ -17,6 +17,7 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
     typealias Environment = AppEnvironment
     
     var sphereMnemonic: String?
+    var sphereIdentity: String?
     
     static func update(
         state: FirstRunModel,
@@ -40,6 +41,7 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
             let receipt = try environment.noosphere.createSphereIfNeeded()
             var model = state
             model.sphereMnemonic = receipt.mnemonic
+            model.sphereIdentity = receipt.identity
             return Update(state: model)
         }  catch {
             return update(
@@ -74,6 +76,9 @@ struct FirstRunView: View {
                 )
             }
         }
+        .task {
+            store.send(.createSphere)
+        }
     }
 }
 
@@ -84,19 +89,24 @@ struct FirstRunCreateSphereView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                if let mnemonic = store.state.sphereMnemonic {
-                    Text(mnemonic)
-                        .monospaced()
-                }
                 Spacer()
-                Button(
-                    action: {
-                        store.send(.createSphere)
+                VStack(alignment: .leading) {
+                    Text("Recovery Passphrase")
+                        .font(.headline)
+                    HStack {
+                        Text(store.state.sphereMnemonic ?? "")
+                            .monospaced()
+                        Spacer()
                     }
-                ) {
-                    Text("Create Sphere")
+                    .padding()
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLg)
+                            .stroke(Color.separator, lineWidth: 0.5)
+                    )
                 }
-                .buttonStyle(.borderedProminent)
+                Text("This is your notebook's recovery passphrase. It's for you alone. We don't store it. Write it down someplace, keep it safe.")
+                    .foregroundColor(.secondary)
+                Spacer()
                 NavigationLink(
                     destination: {},
                     label: {
@@ -104,6 +114,7 @@ struct FirstRunCreateSphereView: View {
                     }
                 )
             }
+            .padding()
         }
     }
 }
