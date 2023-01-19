@@ -201,3 +201,64 @@ public final class Sphere {
         ns_sphere_fs_free(fs)
     }
 }
+
+enum NoosphereServiceError: Error {
+    case sphereNotFound(String)
+    case sphereExists(String)
+}
+
+/// Creates and manages Noosphere and Spheres.
+/// Handles persisting settings to UserDefaults.
+final class NoosphereService {
+    var userDefaults = UserDefaults.standard
+    var noosphere: Noosphere
+
+    init(
+        globalStoragePath: String,
+        sphereStoragePath: String
+    ) throws {
+        /// Initialize Noosphere
+        self.noosphere = try Noosphere(
+            globalStoragePath: Config.default.noosphere.globalStoragePath,
+            sphereStoragePath: Config.default.noosphere.sphereStoragePath
+        )
+    }
+
+    /// Get the sphere identity stored in user defaults, if any
+    /// - Returns: identity string, or nil
+    func getSphereIdentity() -> String? {
+        userDefaults.string(forKey: "sphereIdentity")
+    }
+
+    /// Get a Sphere for the identity stored in user defaults.
+    /// - Returns: Sphere, or nil
+    func getSphere() throws -> Sphere {
+        guard let identity = getSphereIdentity() else {
+            throw NoosphereServiceError.sphereNotFound(
+                "Could not find sphere for user."
+            )
+        }
+        return try Sphere(noosphere: self.noosphere, identity: identity)
+    }
+
+    /// Create a default sphere for user.
+    /// - Returns: SphereReceipt
+    /// Will not create sphere if a sphereIdentity already appears in
+    /// the user defaults.
+    func createSphere() throws -> SphereReceipt {
+        guard userDefaults.string(forKey: "sphereIdentity") == nil else {
+            throw NoosphereServiceError.sphereExists(
+                "A default Sphere already exists for this user. Doing nothing."
+            )
+        }
+        let sphereReceipt = try noosphere.createSphere(
+            ownerKeyName: Config.default.noosphere.ownerKeyName
+        )
+        // Persist sphere identity to user defaults.
+        // NOTE: we do not persist the mnemonic, since it would be insecure.
+        // Instead, we return the receipt so that mnemonic can be displayed
+        // and discarded.
+        userDefaults.set(sphereReceipt.identity, forKey: "sphereIdentity")
+        return sphereReceipt
+    }
+}
