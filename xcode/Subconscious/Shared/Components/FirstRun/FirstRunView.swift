@@ -56,25 +56,37 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
 struct FirstRunView: View {
     /// FirstRunView is a major view that manages its own state in a store.
     @ObservedObject var store: Store<FirstRunModel>
+    var done: () -> Void
 
     var body: some View {
         NavigationStack {
             VStack {
+                Spacer()
                 Image("sub_logo_light")
                     .resizable()
-                    .frame(width: 96, height: 96)
-                Text("Welcome to Subconscious")
-                    .foregroundColor(.secondary)
+                    .frame(width: 128, height: 128)
+                Spacer()
+                VStack(alignment: .leading, spacing: AppTheme.unit3) {
+                    Text("Welcome to Subconscious, a place to garden thoughts and share them with others.")
+                    
+                    Text("Subconscious is powered by decentralized protocols that put you in control. Your thoughts belong to you forever.")
+                }
+                .foregroundColor(.secondary)
+                .font(.callout)
                 Spacer()
                 NavigationLink(
                     destination: {
-                        FirstRunCreateSphereView(store: store)
+                        FirstRunCreateSphereView(
+                            store: store,
+                            done: done
+                        )
                     },
                     label: {
                         Text("Get Started")
                     }
                 )
             }
+            .padding()
         }
         .task {
             store.send(.createSphere)
@@ -85,6 +97,7 @@ struct FirstRunView: View {
 struct FirstRunCreateSphereView: View {
     /// FirstRunView is a major view that manages its own state in a store.
     @ObservedObject var store: Store<FirstRunModel>
+    var done: () -> Void
 
     var body: some View {
         NavigationStack {
@@ -108,11 +121,39 @@ struct FirstRunCreateSphereView: View {
                     .foregroundColor(.secondary)
                 Spacer()
                 NavigationLink(
-                    destination: {},
+                    destination: {
+                        FirstRunDone(store: store, done: done)
+                    },
                     label: {
                         Text("Continue")
                     }
                 )
+            }
+            .padding()
+        }
+    }
+}
+
+struct FirstRunDone: View {
+    /// FirstRunView is a major view that manages its own state in a store.
+    @ObservedObject var store: Store<FirstRunModel>
+    var done: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            VStack {
+                Spacer()
+                VStack(spacing: AppTheme.unit3) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 96))
+                        .foregroundColor(.accentColor)
+                    Text("All set!")
+                        .foregroundColor(.secondary)
+                }
+                Spacer()                
+                Button(action: done) {
+                    Text("Continue")
+                }
             }
             .padding()
         }
@@ -125,7 +166,8 @@ struct FirstRunView_Previews: PreviewProvider {
             store: Store(
                 state: FirstRunModel(),
                 environment: AppEnvironment()
-            )
+            ),
+            done: {}
         )
     }
 }
