@@ -210,18 +210,31 @@ enum NoosphereServiceError: Error {
 /// Creates and manages Noosphere and Spheres.
 /// Handles persisting settings to UserDefaults.
 final class NoosphereService {
+    var globalStorageURL: URL
+    var sphereStorageURL: URL
     var userDefaults = UserDefaults.standard
-    var noosphere: Noosphere
+    /// Memoized Noosphere instance
+    private var noosphere: Noosphere?
 
     init(
         globalStorageURL: URL,
         sphereStorageURL: URL
-    ) throws {
-        /// Initialize Noosphere
-        self.noosphere = try Noosphere(
+    ) {
+        self.globalStorageURL = globalStorageURL
+        self.sphereStorageURL = sphereStorageURL
+        self.noosphere = try? createNoosphereIfNeeded()
+    }
+
+    func createNoosphereIfNeeded() throws -> Noosphere {
+        if let noosphere = self.noosphere {
+            return noosphere
+        }
+        let noosphere = try Noosphere(
             globalStoragePath: globalStorageURL.path(),
             sphereStoragePath: sphereStorageURL.path()
         )
+        self.noosphere = noosphere
+        return noosphere
     }
 
     /// Get the sphere identity stored in user defaults, if any
@@ -238,19 +251,21 @@ final class NoosphereService {
                 "Could not find sphere for user."
             )
         }
-        return try Sphere(noosphere: self.noosphere, identity: identity)
+        let noosphere = try createNoosphereIfNeeded()
+        return try Sphere(noosphere: noosphere, identity: identity)
     }
 
     /// Create a default sphere for user.
     /// - Returns: SphereReceipt
     /// Will not create sphere if a sphereIdentity already appears in
     /// the user defaults.
-    func createSphere() throws -> SphereReceipt {
+    func createSphereIfNeeded() throws -> SphereReceipt {
         guard userDefaults.string(forKey: "sphereIdentity") == nil else {
             throw NoosphereServiceError.sphereExists(
                 "A default Sphere already exists for this user. Doing nothing."
             )
         }
+        let noosphere = try createNoosphereIfNeeded()
         let sphereReceipt = try noosphere.createSphere(
             ownerKeyName: Config.default.noosphere.ownerKeyName
         )
