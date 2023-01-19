@@ -172,6 +172,7 @@ enum AppDatabaseState {
 struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
+    var sphereIdentity: String?
 
     /// Feed of stories
     var feed = FeedModel()
@@ -408,6 +409,15 @@ struct AppModel: ModelProtocol {
             "Documents: \(environment.documentURL)"
         )
 
+        var model = state
+
+        /// Get and set sphere identity
+        let sphereIdentity = environment.noosphere.getSphereIdentity()
+        model.sphereIdentity = sphereIdentity
+        if let sphereIdentity = sphereIdentity {
+            environment.logger.debug("Sphere Identity: \(sphereIdentity)")
+        }
+
         let pollFx: Fx<AppAction> = AppEnvironment.poll(
             every: Config.default.pollingInterval
         )
@@ -425,7 +435,7 @@ struct AppModel: ModelProtocol {
             .merge(with: pollFx)
             .eraseToAnyPublisher()
 
-        return Update(state: state, fx: fx)
+        return Update(state: model, fx: fx)
     }
 
     static func poll(

@@ -88,6 +88,7 @@ struct FirstRunView: View {
             }
             .padding()
         }
+        .background(.background)
         .task {
             store.send(.createSphere)
         }
@@ -150,7 +151,7 @@ struct FirstRunDone: View {
                     Text("All set!")
                         .foregroundColor(.secondary)
                 }
-                Spacer()                
+                Spacer()
                 Button(action: done) {
                     Text("Continue")
                 }
