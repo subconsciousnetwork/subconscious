@@ -652,6 +652,10 @@ struct AppEnvironment {
     var applicationSupportURL: URL
 
     var logger: Logger
+    /// Holds reference to Noosphere instance.
+    /// Noosphere is meant to be a singleton, and we typically keep
+    /// this instance around for the lifetime of the app.
+    var noosphere: NoosphereService?
     var keyboard: KeyboardService
     var database: DatabaseService
     var feed: FeedService
@@ -693,6 +697,13 @@ struct AppEnvironment {
                 .appendingPathComponent("database.sqlite"),
             memos: memos,
             migrations: migrations
+        )
+
+        self.noosphere = try? NoosphereService(
+            globalStorageURL: applicationSupportURL
+                .appending(path: Config.default.noosphere.globalStoragePath),
+            sphereStorageURL: applicationSupportURL
+                .appending(path: Config.default.noosphere.sphereStoragePath)
         )
 
         self.keyboard = KeyboardService()

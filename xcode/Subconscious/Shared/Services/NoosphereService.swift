@@ -214,13 +214,13 @@ final class NoosphereService {
     var noosphere: Noosphere
 
     init(
-        globalStoragePath: String,
-        sphereStoragePath: String
+        globalStorageURL: URL,
+        sphereStorageURL: URL
     ) throws {
         /// Initialize Noosphere
         self.noosphere = try Noosphere(
-            globalStoragePath: Config.default.noosphere.globalStoragePath,
-            sphereStoragePath: Config.default.noosphere.sphereStoragePath
+            globalStoragePath: globalStorageURL.path(),
+            sphereStoragePath: sphereStorageURL.path()
         )
     }
 
