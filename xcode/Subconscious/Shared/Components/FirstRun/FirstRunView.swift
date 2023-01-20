@@ -106,7 +106,11 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
 
 struct FirstRunView: View {
     /// FirstRunView is a major view that manages its own state in a store.
-    @ObservedObject var store: Store<FirstRunModel>
+    /// Store for first run experience state
+    @StateObject private var store = Store(
+        state: FirstRunModel(),
+        environment: AppEnvironment.default
+    )
     var done: () -> Void
 
     var body: some View {
@@ -151,10 +155,6 @@ struct FirstRunView: View {
 struct FirstRunView_Previews: PreviewProvider {
     static var previews: some View {
         FirstRunView(
-            store: Store(
-                state: FirstRunModel(),
-                environment: AppEnvironment()
-            ),
             done: {}
         )
     }

@@ -17,12 +17,6 @@ struct AppView: View {
         state: AppModel(),
         environment: AppEnvironment.default
     )
-
-    /// Store for first run experience state
-    @StateObject private var firstRun = Store(
-        state: FirstRunModel(),
-        environment: AppEnvironment.default
-    )
     @Environment(\.scenePhase) var scenePhase: ScenePhase
 
     var body: some View {
@@ -42,7 +36,6 @@ struct AppView: View {
             .zIndex(0)
             if store.state.sphereIdentity == nil {
                 FirstRunView(
-                    store: firstRun,
                     done: {}
                 )
                 .zIndex(1)
