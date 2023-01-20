@@ -215,6 +215,8 @@
 		B8B3EE732979DEE900779B7F /* FirstRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3EE722979DEE900779B7F /* FirstRunView.swift */; };
 		B8B3EE75297AEE6600779B7F /* FirstRunCreateSphereView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3EE74297AEE6600779B7F /* FirstRunCreateSphereView.swift */; };
 		B8B3EE77297AEE8B00779B7F /* FirstRunDoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3EE76297AEE8B00779B7F /* FirstRunDoneView.swift */; };
+		B8B3EE79297AF6E500779B7F /* FirstRunProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3EE78297AF6E500779B7F /* FirstRunProfileView.swift */; };
+		B8B3EE7B297AFB9100779B7F /* TextFieldLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3EE7A297AFB9100779B7F /* TextFieldLabel.swift */; };
 		B8B4250C28FB43C90081B8D5 /* ContentType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4250B28FB43C90081B8D5 /* ContentType.swift */; };
 		B8B4250D28FB43C90081B8D5 /* ContentType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4250B28FB43C90081B8D5 /* ContentType.swift */; };
 		B8B4250F28FDE6960081B8D5 /* FileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B4250E28FDE6960081B8D5 /* FileStore.swift */; };
@@ -440,6 +442,8 @@
 		B8B3EE722979DEE900779B7F /* FirstRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunView.swift; sourceTree = "<group>"; };
 		B8B3EE74297AEE6600779B7F /* FirstRunCreateSphereView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunCreateSphereView.swift; sourceTree = "<group>"; };
 		B8B3EE76297AEE8B00779B7F /* FirstRunDoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunDoneView.swift; sourceTree = "<group>"; };
+		B8B3EE78297AF6E500779B7F /* FirstRunProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunProfileView.swift; sourceTree = "<group>"; };
+		B8B3EE7A297AFB9100779B7F /* TextFieldLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldLabel.swift; sourceTree = "<group>"; };
 		B8B4250B28FB43C90081B8D5 /* ContentType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentType.swift; sourceTree = "<group>"; };
 		B8B4250E28FDE6960081B8D5 /* FileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileStore.swift; sourceTree = "<group>"; };
 		B8B4251128FDE7780081B8D5 /* Mapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mapping.swift; sourceTree = "<group>"; };
@@ -638,6 +642,7 @@
 				B8B3EE74297AEE6600779B7F /* FirstRunCreateSphereView.swift */,
 				B8B3EE76297AEE8B00779B7F /* FirstRunDoneView.swift */,
 				B8B3EE722979DEE900779B7F /* FirstRunView.swift */,
+				B8B3EE78297AF6E500779B7F /* FirstRunProfileView.swift */,
 			);
 			path = FirstRun;
 			sourceTree = "<group>";
@@ -859,6 +864,7 @@
 				B8AE34C1276BD77C00777FF0 /* SuggestionLabelStyle.swift */,
 				B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */,
 				B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */,
+				B8B3EE7A297AFB9100779B7F /* TextFieldLabel.swift */,
 				B8AE34A6276A885300777FF0 /* TextViewRepresentable.swift */,
 				B81EACD727B724A000B3B8DC /* ThickDividerView.swift */,
 				B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */,
@@ -1161,6 +1167,7 @@
 				B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */,
 				B81A535F272751EE001A6268 /* Subtext.swift in Sources */,
 				B8CA8F20288F1875005F8802 /* RandomPromptGeist.swift in Sources */,
+				B8B3EE79297AF6E500779B7F /* FirstRunProfileView.swift in Sources */,
 				B8109C2827A8879C00CD2B6D /* AppTheme.swift in Sources */,
 				B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
 				B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */,
@@ -1214,6 +1221,7 @@
 				B85EC466296F0D0A00558761 /* ProfilePicMd.swift in Sources */,
 				B89D296827E832DC009E0DED /* LoggerUtilities.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
+				B8B3EE7B297AFB9100779B7F /* TextFieldLabel.swift in Sources */,
 				B8B3194D2909E81D00A1E62A /* FileInfo.swift in Sources */,
 				B8AC648A278F53920099E96B /* EntryStub.swift in Sources */,
 				B8B4250C28FB43C90081B8D5 /* ContentType.swift in Sources */,

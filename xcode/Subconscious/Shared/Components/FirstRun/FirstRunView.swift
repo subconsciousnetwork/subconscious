@@ -11,12 +11,16 @@ enum FirstRunAction: Hashable {
     case start
     case createSphere
     case failCreateSphere(String)
+    case setNickname(String)
+    case setEmail(String)
 }
 
 struct FirstRunModel: ModelProtocol, Codable, Hashable {
     typealias Action = FirstRunAction
     typealias Environment = AppEnvironment
     
+    var nickname: String = ""
+    var email: String = ""
     var sphereMnemonic: String?
     var sphereIdentity: String?
     
@@ -33,6 +37,14 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
         case .failCreateSphere(let message):
             environment.logger.warning("Failed to create Sphere: \(message)")
             return Update(state: state)
+        case .setNickname(let nickname):
+            var model = state
+            model.nickname = nickname
+            return Update(state: model)
+        case .setEmail(var email):
+            var model = state
+            model.email = email
+            return Update(state: model)
         }
     }
     
