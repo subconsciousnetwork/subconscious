@@ -34,22 +34,32 @@ final class Tests_NoosphereService: XCTestCase {
         print("Sphere identity: \(sphereReceipt.identity)")
         print("Sphere mnemonic: \(sphereReceipt.mnemonic)")
 
-        let sphere = try Sphere(
-            noosphere: noosphere,
-            identity: sphereReceipt.identity
-        )
+        do {
+            let sphere = try Sphere(
+                noosphere: noosphere,
+                identity: sphereReceipt.identity
+            )
 
-        try sphere.write(
-            slug: "foo",
-            contentType: "text/subtext",
-            contents: "Test".toData(encoding: .utf8)!
-        )
-        sphere.save()
+            try sphere.write(
+                slug: "foo",
+                contentType: "text/subtext",
+                contents: "Test".toData(encoding: .utf8)!
+            )
+            sphere.save()
+            let memo = try sphere.read(slashlink: "/foo")
+            XCTAssertEqual(memo.contentType, "text/subtext")
+            let content = memo.data.toString(encoding: .utf8)
+            XCTAssertEqual(content, "Test")
+        }
 
-        let memo = try sphere.read(slashlink: "/foo")
-
-        XCTAssertEqual(memo.contentType, "text/subtext")
-        let content = memo.data.toString(encoding: .utf8)
-        XCTAssertEqual(content, "Test")
+        // Re-open sphere
+        do {
+            let sphere = try Sphere(
+                noosphere: noosphere,
+                identity: sphereReceipt.identity
+            )
+            let memo = try sphere.read(slashlink: "/foo")
+            XCTAssertEqual(memo.contentType, "text/subtext")
+        }
     }
 }
