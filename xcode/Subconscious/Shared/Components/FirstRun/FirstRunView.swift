@@ -111,7 +111,7 @@ struct FirstRunView: View {
         state: FirstRunModel(),
         environment: AppEnvironment.default
     )
-    var done: () -> Void
+    var done: (String) -> Void
 
     var body: some View {
         NavigationStack {
@@ -155,7 +155,7 @@ struct FirstRunView: View {
 struct FirstRunView_Previews: PreviewProvider {
     static var previews: some View {
         FirstRunView(
-            done: {}
+            done: { id in }
         )
     }
 }

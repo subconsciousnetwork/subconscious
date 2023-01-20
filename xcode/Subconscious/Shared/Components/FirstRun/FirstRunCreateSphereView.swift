@@ -10,14 +10,14 @@ import SwiftUI
 struct FirstRunCreateSphereView: View {
     /// FirstRunView is a major view that manages its own state in a store.
     @ObservedObject var store: Store<FirstRunModel>
-    var done: () -> Void
+    var done: (String) -> Void
 
     var body: some View {
         NavigationStack {
             VStack {
                 Spacer()
                 VStack(alignment: .leading) {
-                    Text("Recovery Passphrase")
+                    Text("Recovery Phrase")
                         .font(.headline)
                     HStack {
                         Text(store.state.sphereMnemonic ?? "")
@@ -29,7 +29,7 @@ struct FirstRunCreateSphereView: View {
                         RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLg)
                             .stroke(Color.separator, lineWidth: 0.5)
                     )
-                    Text("This is your notebook recovery passphrase. It's for your eyes only. We don't store it. Write it down and keep it safe.")
+                    Text("This is your notebook's secret recovery phrase. You can use it to access your data if you lose your device. It's for your eyes only. We don't store it. Write it down and keep it safe.")
                         .foregroundColor(.secondary)
                 }
                 Spacer()
@@ -47,7 +47,7 @@ struct FirstRunCreateSphereView: View {
         .task {
             store.send(.createSphere)
         }
-        .navigationTitle("Recovery")
+        .navigationTitle("Recovery Phrase")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -59,7 +59,7 @@ struct FirstRunCreateSphereView_Previews: PreviewProvider {
                 state: FirstRunModel(),
                 environment: AppEnvironment.default
             ),
-            done: {}
+            done: { id in }
         )
     }
 }

@@ -36,7 +36,9 @@ struct AppView: View {
             .zIndex(0)
             if store.state.sphereIdentity == nil {
                 FirstRunView(
-                    done: {}
+                    done: { sphereIdentity in
+                        store.send(.setSphereIdentity(sphereIdentity))
+                    }
                 )
                 .zIndex(1)
             }
@@ -60,6 +62,9 @@ enum AppAction: CustomLogStringConvertible {
     case notebook(NotebookAction)
     /// Wrapper for feed actions
     case feed(FeedAction)
+
+    /// Set identity of sphere
+    case setSphereIdentity(String?)
 
     ///  KeyboardService state change
     case changeKeyboardState(KeyboardState)
@@ -258,6 +263,12 @@ struct AppModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
+        case let .setSphereIdentity(sphereIdentity):
+            return setSphereIdentity(
+                state: state,
+                environment: environment,
+                sphereIdentity: sphereIdentity
+            )
         case let .scenePhaseChange(phase):
             return scenePhaseChange(
                 state: state,
@@ -414,6 +425,19 @@ struct AppModel: ModelProtocol {
         }
     }
 
+    static func setSphereIdentity(
+        state: AppModel,
+        environment: AppEnvironment,
+        sphereIdentity: String?
+    ) -> Update<AppModel> {
+        var model = state
+        model.sphereIdentity = sphereIdentity
+        if let sphereIdentity = sphereIdentity {
+            environment.logger.debug("Sphere identity: \(sphereIdentity)")
+        }
+        return Update(state: model)
+    }
+
     /// Handle scene phase change
     static func scenePhaseChange(
         state: AppModel,
@@ -440,15 +464,6 @@ struct AppModel: ModelProtocol {
             "Documents: \(environment.documentURL)"
         )
 
-        var model = state
-
-        /// Get and set sphere identity
-        let sphereIdentity = environment.noosphere.getSphereIdentity()
-        model.sphereIdentity = sphereIdentity
-        if let sphereIdentity = sphereIdentity {
-            environment.logger.debug("Sphere Identity: \(sphereIdentity)")
-        }
-
         let pollFx: Fx<AppAction> = AppEnvironment.poll(
             every: Config.default.pollingInterval
         )
@@ -465,8 +480,16 @@ struct AppModel: ModelProtocol {
             })
             .merge(with: pollFx)
             .eraseToAnyPublisher()
+        
+        /// Get sphere identity, if any
+        let sphereIdentity = environment.noosphere.getSphereIdentity()
 
-        return Update(state: model, fx: fx)
+        return update(
+            state: state,
+            action: .setSphereIdentity(sphereIdentity),
+            environment: environment
+        )
+        .mergeFx(fx)
     }
 
     static func poll(

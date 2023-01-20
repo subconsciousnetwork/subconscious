@@ -10,7 +10,7 @@ import SwiftUI
 struct FirstRunDoneView: View {
     /// FirstRunView is a major view that manages its own state in a store.
     @ObservedObject var store: Store<FirstRunModel>
-    var done: () -> Void
+    var done: (String) -> Void
 
     var body: some View {
         NavigationStack {
@@ -24,9 +24,16 @@ struct FirstRunDoneView: View {
                         .foregroundColor(.secondary)
                 }
                 Spacer()
-                Button(action: done) {
+                Button(
+                    action: {
+                        if let sphereIdentity = store.state.sphereIdentity {
+                            done(sphereIdentity)
+                        }
+                    }
+                ) {
                     Text("Continue")
                 }
+                .disabled(store.state.sphereIdentity == nil)
             }
             .padding()
         }
@@ -40,7 +47,7 @@ struct FirstRunDoneView_Previews: PreviewProvider {
                 state: FirstRunModel(),
                 environment: AppEnvironment.default
             ),
-            done: {}
+            done: { id in }
         )
     }
 }
