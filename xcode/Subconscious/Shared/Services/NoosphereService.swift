@@ -20,6 +20,7 @@ public enum NoosphereError: Error {
     case foreignError(String)
     /// Thrown when trying to read a memo that does not exist.
     case memoDoesNotExist
+    case headerDoesNotExist(String)
 }
 
 public struct SphereReceipt {
@@ -69,40 +70,43 @@ public final class Noosphere {
     ) throws -> SphereReceipt {
         ns_key_create(noosphere, ownerKeyName)
         
-        guard let sphereReceipt = ns_sphere_create(
+        let sphereReceipt = ns_sphere_create(
             noosphere,
             ownerKeyName
-        ) else {
+        )
+        defer {
+            ns_sphere_receipt_free(sphereReceipt)
+        }
+        guard let sphereReceipt = sphereReceipt else {
             throw NoosphereError.foreignError(
                 "Failed to get pointer for sphere receipt"
             )
         }
-        defer {
-            ns_sphere_receipt_free(sphereReceipt)
-        }
         
-        guard let sphereIdentityPointer = ns_sphere_receipt_identity(
+        let sphereIdentityPointer = ns_sphere_receipt_identity(
             sphereReceipt
-        ) else {
+        )
+        defer {
+            ns_string_free(sphereIdentityPointer)
+        }
+        guard let sphereIdentityPointer = sphereIdentityPointer else {
             throw NoosphereError.foreignError(
                 "Failed to get pointer for identity"
             )
         }
-        defer {
-            ns_string_free(sphereIdentityPointer)
-        }
         
-        guard let sphereMnemonicPointer = ns_sphere_receipt_mnemonic(
+        let sphereMnemonicPointer = ns_sphere_receipt_mnemonic(
             sphereReceipt
-        ) else {
+        )
+        defer {
+            ns_string_free(sphereMnemonicPointer)
+        }
+        guard let sphereMnemonicPointer = sphereMnemonicPointer else {
             throw NoosphereError.foreignError(
                 "Failed to get pointer for mnemonic"
             )
         }
-        defer {
-            ns_string_free(sphereMnemonicPointer)
-        }
-        
+
         let sphereIdentity = String.init(cString: sphereIdentityPointer)
         let sphereMnemonic = String.init(cString: sphereMnemonicPointer)
         
@@ -138,26 +142,26 @@ public final class Sphere {
     /// Read the value of a memo from a Sphere
     /// - Returns: `SphereMemo`
     func read(slashlink: String) throws -> SphereMemo {
-        guard let file = ns_sphere_fs_read(
+        let file = ns_sphere_fs_read(
             noosphere.noosphere,
             fs,
             slashlink
-        ) else {
-            throw NoosphereError.memoDoesNotExist
-        }
+        )
         defer {
             ns_sphere_file_free(file)
         }
-        
-        let contentTypeValues = ns_sphere_file_header_values_read(
-            file,
-            "Content-Type"
-        )
-        defer {
-            ns_string_array_free(contentTypeValues)
+        guard let file = file else {
+            throw NoosphereError.memoDoesNotExist
         }
         
-        let contentType = String(cString: contentTypeValues.ptr.pointee!)
+        guard let contentType = Self.readFileHeaderValueFirst(
+            file: file,
+            name: "Content-Type"
+        ) else {
+            throw NoosphereError.headerDoesNotExist(
+                "Header Content-Type does not exist"
+            )
+        }
         
         let contents = ns_sphere_file_contents_read(noosphere.noosphere, file)
         defer {
@@ -196,9 +200,27 @@ public final class Sphere {
     func save() {
         ns_sphere_fs_save(noosphere.noosphere, fs, nil)
     }
-
+    
     deinit {
         ns_sphere_fs_free(fs)
+    }
+    
+    /// Read first header value for file
+    private static func readFileHeaderValueFirst(
+        file: OpaquePointer?,
+        name: String
+    ) -> String? {
+        let valueRaw = ns_sphere_file_header_value_first(
+            file,
+            name
+        )
+        defer {
+            ns_string_free(valueRaw)
+        }
+        guard let valueRaw = valueRaw else {
+            return nil
+        }
+        return String(cString: valueRaw)
     }
 }
 
