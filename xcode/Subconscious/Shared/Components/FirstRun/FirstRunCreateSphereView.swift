@@ -44,6 +44,11 @@ struct FirstRunCreateSphereView: View {
             }
             .padding()
         }
+        .task {
+            store.send(.createSphere)
+        }
+        .navigationTitle("Recovery")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

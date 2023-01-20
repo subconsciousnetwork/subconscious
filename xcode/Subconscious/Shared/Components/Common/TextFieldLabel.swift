@@ -8,10 +8,10 @@
 import SwiftUI
 
 /// Wraps a TextField with a headline and optional caption
-struct TextFieldLabel<Label: View>: View {
+struct TextFieldLabel<Field: View>: View {
     var label: Text
     var caption: Text?
-    var field: TextField<Label>
+    var field: Field
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
             label

@@ -212,7 +212,6 @@ enum NoosphereServiceError: Error {
 final class NoosphereService {
     var globalStorageURL: URL
     var sphereStorageURL: URL
-    var userDefaults = UserDefaults.standard
     /// Memoized Noosphere instance
     private var _noosphere: Noosphere?
 
@@ -241,7 +240,7 @@ final class NoosphereService {
     /// Get the sphere identity stored in user defaults, if any
     /// - Returns: identity string, or nil
     func getSphereIdentity() -> String? {
-        userDefaults.string(forKey: "sphereIdentity")
+        UserDefaults.standard.string(forKey: "sphereIdentity")
     }
 
     /// Get a Sphere for the identity stored in user defaults.
@@ -260,21 +259,26 @@ final class NoosphereService {
     /// - Returns: SphereReceipt
     /// Will not create sphere if a sphereIdentity already appears in
     /// the user defaults.
-    func createSphere() throws -> SphereReceipt {
-        guard userDefaults.string(forKey: "sphereIdentity") == nil else {
+    func createSphere(ownerKeyName: String) throws -> SphereReceipt {
+        guard UserDefaults.standard.string(
+            forKey: "sphereIdentity"
+        ) == nil else {
             throw NoosphereServiceError.sphereExists(
                 "A default Sphere already exists for this user. Doing nothing."
             )
         }
         let noosphere = try getNoosphere()
         let sphereReceipt = try noosphere.createSphere(
-            ownerKeyName: Config.default.noosphere.ownerKeyName
+            ownerKeyName: ownerKeyName
         )
         // Persist sphere identity to user defaults.
         // NOTE: we do not persist the mnemonic, since it would be insecure.
         // Instead, we return the receipt so that mnemonic can be displayed
         // and discarded.
-        userDefaults.set(sphereReceipt.identity, forKey: "sphereIdentity")
+        UserDefaults.standard.set(
+            sphereReceipt.identity,
+            forKey: "sphereIdentity"
+        )
         return sphereReceipt
     }
 }

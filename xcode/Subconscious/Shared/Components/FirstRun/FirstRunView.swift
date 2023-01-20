@@ -13,6 +13,7 @@ enum FirstRunAction: Hashable {
     case failCreateSphere(String)
     case setNickname(String)
     case setEmail(String)
+    case persistProfile
 }
 
 struct FirstRunModel: ModelProtocol, Codable, Hashable {
@@ -33,7 +34,10 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
         case .start:
             return start(state: state, environment: environment)
         case .createSphere:
-            return createSphere(state: state, environment: environment)
+            return createSphere(
+                state: state,
+                environment: environment
+            )
         case .failCreateSphere(let message):
             environment.logger.warning("Failed to create Sphere: \(message)")
             return Update(state: state)
@@ -41,10 +45,15 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
             var model = state
             model.nickname = nickname
             return Update(state: model)
-        case .setEmail(var email):
+        case .setEmail(let email):
             var model = state
             model.email = email
             return Update(state: model)
+        case .persistProfile:
+            return persistProfile(
+                state: state,
+                environment: environment
+            )
         }
     }
     
@@ -58,20 +67,17 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
             model.sphereIdentity = sphereIdentity
             return Update(state: model)
         }
-        // Otherwise create a sphere
-        return update(
-            state: state,
-            action: .createSphere,
-            environment: environment
-        )
+        return Update(state: state)
     }
-
+    
     static func createSphere(
         state: FirstRunModel,
         environment: AppEnvironment
     ) -> Update<FirstRunModel> {
         do {
-            let receipt = try environment.noosphere.createSphere()
+            let receipt = try environment.noosphere.createSphere(
+                ownerKeyName: state.nickname
+            )
             var model = state
             model.sphereMnemonic = receipt.mnemonic
             model.sphereIdentity = receipt.identity
@@ -83,6 +89,18 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
                 environment: environment
             )
         }
+    }
+    
+    /// Save profile values
+    static func persistProfile(
+        state: FirstRunModel,
+        environment: AppEnvironment
+    ) -> Update<FirstRunModel> {
+        UserDefaults.standard.set(state.nickname, forKey: "nickname")
+        UserDefaults.standard.set(state.email, forKey: "email")
+        environment.logger.log("Saved nickname: \(state.nickname)")
+        environment.logger.log("Saved email: \(state.email)")
+        return Update(state: state)
     }
 }
 
@@ -109,7 +127,7 @@ struct FirstRunView: View {
                 Spacer()
                 NavigationLink(
                     destination: {
-                        FirstRunCreateSphereView(
+                        FirstRunProfileView(
                             store: store,
                             done: done
                         )
@@ -119,6 +137,8 @@ struct FirstRunView: View {
                     }
                 )
             }
+            .navigationTitle("Welcome")
+            .navigationBarTitleDisplayMode(.inline)
             .padding()
         }
         .background(.background)

@@ -40,6 +40,7 @@ struct FirstRunProfileView: View {
                                 tag: FirstRunAction.setEmail
                             )
                         )
+                        .textInputAutocapitalization(.never)
                     )
                 }
                 Spacer()
@@ -51,9 +52,12 @@ struct FirstRunProfileView: View {
                         Text("Continue")
                     }
                 )
+                .simultaneousGesture(TapGesture().onEnded {
+                    store.send(.persistProfile)
+                })
             }
             .padding()
-            .navigationTitle("Profile")
+            .navigationTitle("Your Profile")
             .navigationBarTitleDisplayMode(.inline)
         }
     }
