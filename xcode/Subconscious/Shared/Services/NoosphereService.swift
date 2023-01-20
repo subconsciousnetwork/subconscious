@@ -245,7 +245,7 @@ final class NoosphereService {
     }
 
     /// Get a Sphere for the identity stored in user defaults.
-    /// - Returns: Sphere, or nil
+    /// - Returns: Sphere
     func getSphere() throws -> Sphere {
         guard let identity = getSphereIdentity() else {
             throw NoosphereServiceError.sphereNotFound(
