@@ -29,8 +29,12 @@ struct FirstRunCreateSphereView: View {
                         RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLg)
                             .stroke(Color.separator, lineWidth: 0.5)
                     )
-                    Text("This is your notebook's secret recovery phrase. You can use it to access your data if you lose your device. It's for your eyes only. We don't store it. Write it down and keep it safe.")
-                        .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: AppTheme.unit2) {
+                        Text("This is your notebook's secret recovery phrase. You can use it to recover your data.")
+                            .foregroundColor(.secondary)
+                        Text("Your recovery phrase is for your eyes only. We don't store it. Write it down. Keep it secret, keep it safe.")
+                            .foregroundColor(.secondary)
+                    }
                 }
                 Spacer()
                 NavigationLink(
@@ -38,7 +42,7 @@ struct FirstRunCreateSphereView: View {
                         FirstRunDoneView(store: store, done: done)
                     },
                     label: {
-                        Text("Continue")
+                        Text("Ok, I wrote it down")
                     }
                 )
             }
