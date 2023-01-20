@@ -8,6 +8,7 @@ import ObservableStore
 import SwiftUI
 
 enum FirstRunAction: Hashable {
+    case start
     case createSphere
     case failCreateSphere(String)
 }
@@ -25,6 +26,8 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
         environment: AppEnvironment
     ) -> Update<FirstRunModel> {
         switch action {
+        case .start:
+            return start(state: state, environment: environment)
         case .createSphere:
             return createSphere(state: state, environment: environment)
         case .failCreateSphere(let message):
@@ -33,12 +36,30 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
         }
     }
     
+    static func start(
+        state: FirstRunModel,
+        environment: AppEnvironment
+    ) -> Update<FirstRunModel> {
+        // Does Sphere already exist? Get it and set on model
+        if let sphereIdentity = environment.noosphere.getSphereIdentity() {
+            var model = state
+            model.sphereIdentity = sphereIdentity
+            return Update(state: model)
+        }
+        // Otherwise create a sphere
+        return update(
+            state: state,
+            action: .createSphere,
+            environment: environment
+        )
+    }
+
     static func createSphere(
         state: FirstRunModel,
         environment: AppEnvironment
     ) -> Update<FirstRunModel> {
         do {
-            let receipt = try environment.noosphere.createSphereIfNeeded()
+            let receipt = try environment.noosphere.createSphere()
             var model = state
             model.sphereMnemonic = receipt.mnemonic
             model.sphereIdentity = receipt.identity
@@ -90,7 +111,7 @@ struct FirstRunView: View {
         }
         .background(.background)
         .task {
-            store.send(.createSphere)
+            store.send(.start)
         }
     }
 }

@@ -14,7 +14,7 @@ import ObservableStore
 struct SubconsciousApp: App {
     @StateObject private var store = Store(
         state: AppModel(),
-        environment: AppEnvironment()
+        environment: AppEnvironment.default
     )
 
     var body: some Scene {
@@ -658,6 +658,9 @@ struct AppModel: ModelProtocol {
 //  MARK: Environment
 /// A place for constants and services
 struct AppEnvironment {
+    /// Default environment constant
+    static let `default` = AppEnvironment()
+
     var documentURL: URL
     var applicationSupportURL: URL
 

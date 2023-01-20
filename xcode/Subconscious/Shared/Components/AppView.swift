@@ -10,7 +10,14 @@ import ObservableStore
 
 /// Top-level view for app
 struct AppView: View {
+    /// Store for global application state
     @ObservedObject var store: Store<AppModel>
+
+    /// Store for first run experience state
+    @StateObject private var firstRun = Store(
+        state: FirstRunModel(),
+        environment: AppEnvironment.default
+    )
     @Environment(\.scenePhase) var scenePhase: ScenePhase
 
     var body: some View {
@@ -30,10 +37,7 @@ struct AppView: View {
             .zIndex(0)
             if store.state.sphereIdentity == nil {
                 FirstRunView(
-                    store: Store(
-                        state: FirstRunModel(),
-                        environment: store.environment
-                    ),
+                    store: firstRun,
                     done: {}
                 )
                 .zIndex(1)
