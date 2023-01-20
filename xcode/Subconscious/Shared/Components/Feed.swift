@@ -336,7 +336,7 @@ struct FeedView: View {
 
     var body: some View {
         ZStack {
-            NavigationView {
+            NavigationStack {
                 VStack(spacing: 0) {
                     ScrollView(.vertical, showsIndicators: false) {
                         LazyVStack {
@@ -356,23 +356,19 @@ struct FeedView: View {
                             }
                         }
                     }
-                    NavigationLink(
-                        isActive: Binding(
+                }
+                .navigationDestination(
+                    isPresented: Binding(
+                        store: store,
+                        get: \.detail.isPresented,
+                        tag: FeedAction.presentDetail
+                    )
+                ) {
+                    DetailView(
+                        store: ViewStore(
                             store: store,
-                            get: \.detail.isPresented,
-                            tag: FeedAction.presentDetail
-                        ),
-                        destination: {
-                            DetailView(
-                                store: ViewStore(
-                                    store: store,
-                                    cursor: FeedDetailCursor.self
-                                )
-                            )
-                        },
-                        label: {
-                            EmptyView()
-                        }
+                            cursor: FeedDetailCursor.self
+                        )
                     )
                 }
                 .navigationTitle(Text("Latest"))
