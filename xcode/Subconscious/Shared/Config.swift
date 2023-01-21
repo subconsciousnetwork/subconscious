@@ -8,9 +8,11 @@
 import Foundation
 
 /// Feature flags and settings
-struct Config: Equatable {
-    let rdns = "com.subconscious.Subconscious"
+struct Config: Equatable, Codable {
+    var rdns = "com.subconscious.Subconscious"
     var debug = false
+
+    var noosphere = NoosphereConfig()
 
     var appTabs = false
 
@@ -53,4 +55,18 @@ struct Config: Equatable {
 
 extension Config {
     static let `default` = Config()
+}
+
+// MARK: Noosphere configuration
+struct NoosphereConfig: Equatable, Codable {
+    /// Enable Noosphere?
+    var enabled = false
+    /// Name of directory used for Noosphere storage
+    var globalStoragePath = "noosphere"
+    /// Name of directory used for sphere storage.
+    /// NOTE: In future, we might support multiple spheres. If so, this
+    /// flag will be deprecated in favor of multiple spheres
+    var sphereStoragePath = "sphere"
+    /// Owner key name for spheres on this device
+    var ownerKeyName = "Sphere"
 }

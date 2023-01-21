@@ -44,20 +44,6 @@ extension Data {
     }
 }
 
-extension Data {
-    func toMemoData() -> MemoData? {
-        let decoder = JSONDecoder()
-        return try? decoder.decode(MemoData.self, from: self)
-    }
-}
-
-extension MemoData {
-    func toData() -> Data? {
-        let encoder = JSONEncoder()
-        return try? encoder.encode(self)
-    }
-}
-
 extension String {
     /// Encode Date to ISO8601 String
     static func from(_ date: Date) -> String {
@@ -72,6 +58,14 @@ extension Date {
             return nil
         }
         return date
+    }
+    
+    /// Decode date from optional iso8601String
+    static func from(_ iso8601String: String?) -> Date? {
+        guard let iso8601String = iso8601String else {
+            return nil
+        }
+        return Date.from(iso8601String)
     }
 }
 

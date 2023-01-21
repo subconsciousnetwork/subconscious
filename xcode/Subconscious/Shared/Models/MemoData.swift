@@ -7,15 +7,15 @@
 
 import Foundation
 
-/// A MemoSidecar is a Codable that represents a minimal memo structure
-/// as it would appear on-disk.
+/// A MemoData represents not-yet-decoded memo.
 ///
 /// We typically convert this to `Memo<T>` in order to work with it more
 /// effectively.
 struct MemoData: Hashable, Codable {
+    /// The value of the `Content-Type` header.
+    let contentType: String
     /// A collection of headers
-    let headers: Headers
-    /// A path-like string that points to the conceptual bodypart that
-    /// corresponds to this sidecar file. Should include file extension.
-    let body: String
+    let additionalHeaders: [Header]
+    /// The raw bytes of the body part.
+    let body: Data
 }

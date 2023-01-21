@@ -20,16 +20,13 @@ public enum NoosphereError: Error {
     case foreignError(String)
     /// Thrown when trying to read a memo that does not exist.
     case memoDoesNotExist
+    case headerDoesNotExist(String)
+    case decodingError(String)
 }
 
 public struct SphereReceipt {
     var identity: String
     var mnemonic: String
-}
-
-struct SphereMemo: Hashable {
-    var contentType: String
-    var data: Data
 }
 
 /// Create a Noosphere instance.
@@ -102,7 +99,7 @@ public final class Noosphere {
         defer {
             ns_string_free(sphereMnemonicPointer)
         }
-        
+
         let sphereIdentity = String.init(cString: sphereIdentityPointer)
         let sphereMnemonic = String.init(cString: sphereMnemonicPointer)
         
@@ -135,9 +132,47 @@ public final class Sphere {
         self.fs = fs
     }
     
+    /// Read first header value for memo at slashlink
+    /// - Returns: value, if any
+    func readHeaderValueFirst(
+        slashlink: String,
+        name: String
+    ) -> String? {
+        guard let file = ns_sphere_fs_read(
+            noosphere.noosphere,
+            fs,
+            slashlink
+        ) else {
+            return nil
+        }
+        defer {
+            ns_sphere_file_free(file)
+        }
+        
+        return Self.readFileHeaderValueFirst(
+            file: file,
+            name: name
+        )
+    }
+
+    /// Read all header names for a given slashlink
+    func readHeaderNames(slashlink: String) -> [String] {
+        guard let file = ns_sphere_fs_read(
+            noosphere.noosphere,
+            fs,
+            slashlink
+        ) else {
+            return []
+        }
+        defer {
+            ns_sphere_file_free(file)
+        }
+        return Self.readFileHeaderNames(file: file)
+    }
+
     /// Read the value of a memo from a Sphere
-    /// - Returns: `SphereMemo`
-    func read(slashlink: String) throws -> SphereMemo {
+    /// - Returns: `Memo`
+    func read(slashlink: String) throws -> MemoData {
         guard let file = ns_sphere_fs_read(
             noosphere.noosphere,
             fs,
@@ -149,45 +184,80 @@ public final class Sphere {
             ns_sphere_file_free(file)
         }
         
-        let contentTypeValues = ns_sphere_file_header_values_read(
-            file,
-            "Content-Type"
+        guard let contentType = Self.readFileHeaderValueFirst(
+            file: file,
+            name: "Content-Type"
+        ) else {
+            throw NoosphereError.headerDoesNotExist(
+                "Header Content-Type does not exist"
+            )
+        }
+
+        let bodyRaw = ns_sphere_file_contents_read(noosphere.noosphere, file)
+        defer {
+            ns_bytes_free(bodyRaw)
+        }
+        let body = Data(bytes: bodyRaw.ptr, count: bodyRaw.len)
+
+        var headers: [Header] = []
+        let headerNames = Self.readFileHeaderNames(file: file)
+        for name in headerNames {
+            // Skip content type. We've already retreived it.
+            guard name != "Content-Type" else {
+                continue
+            }
+            guard let value = Self.readFileHeaderValueFirst(
+                file: file,
+                name: name
+            ) else {
+                continue
+            }
+            headers.append(Header(name: name, value: value))
+        }
+
+        return MemoData(
+            contentType: contentType,
+            additionalHeaders: headers,
+            body: body
         )
-        defer {
-            ns_string_array_free(contentTypeValues)
-        }
-        
-        let contentType = String(cString: contentTypeValues.ptr.pointee!)
-        
-        let contents = ns_sphere_file_contents_read(noosphere.noosphere, file)
-        defer {
-            ns_bytes_free(contents)
-        }
-        
-        let data: Data = Data(bytes: contents.ptr, count: contents.len)
-        
-        return SphereMemo(contentType: contentType, data: data)
     }
     
     /// Write to sphere
     func write(
         slug: String,
         contentType: String,
-        contents: Data
+        additionalHeaders: [Header] = [],
+        body: Data
     ) throws {
-        contents.withUnsafeBytes({ rawBufferPointer in
+        try body.withUnsafeBytes({ rawBufferPointer in
             let bufferPointer = rawBufferPointer.bindMemory(to: UInt8.self)
             let pointer = bufferPointer.baseAddress!
-            let contentsSlice = slice_ref_uint8(
-                ptr: pointer, len: contents.count
+            let bodyRaw = slice_ref_uint8(
+                ptr: pointer, len: body.count
             )
+            
+            guard let additionalHeadersContainer = ns_headers_create() else {
+                throw NoosphereError.foreignError("ns_headers_create failed to return pointer")
+            }
+            defer {
+                ns_headers_free(additionalHeadersContainer)
+            }
+            
+            for header in additionalHeaders {
+                ns_headers_add(
+                    additionalHeadersContainer,
+                    header.name,
+                    header.value
+                )
+            }
+            
             ns_sphere_fs_write(
                 noosphere.noosphere,
                 fs,
                 slug,
                 contentType,
-                contentsSlice,
-                nil
+                bodyRaw,
+                additionalHeadersContainer
             )
         })
     }
@@ -196,8 +266,129 @@ public final class Sphere {
     func save() {
         ns_sphere_fs_save(noosphere.noosphere, fs, nil)
     }
-
+    
     deinit {
         ns_sphere_fs_free(fs)
+    }
+    
+    /// Read first header value for file pointer
+    private static func readFileHeaderValueFirst(
+        file: OpaquePointer,
+        name: String
+    ) -> String? {
+        guard let valueRaw = ns_sphere_file_header_value_first(
+            file,
+            name
+        ) else {
+            return nil
+        }
+        defer {
+            ns_string_free(valueRaw)
+        }
+        return String(cString: valueRaw)
+    }
+
+    /// Get all header names for a given file pointer
+    private static func readFileHeaderNames(
+        file: OpaquePointer
+    ) -> [String] {
+        let file_header_names = ns_sphere_file_header_names_read(file)
+        defer {
+            ns_string_array_free(file_header_names)
+        }
+
+        let name_count = file_header_names.len
+        guard var pointer = file_header_names.ptr else {
+            return []
+        }
+
+        var names: [String] = []
+        for _ in 0..<name_count {
+            let name = String(cString: pointer.pointee!)
+            names.append(name)
+            pointer += 1;
+        }
+        return names
+    }
+}
+
+enum NoosphereServiceError: Error {
+    case sphereNotFound(String)
+    case sphereExists(String)
+}
+
+/// Creates and manages Noosphere and Spheres.
+/// Handles persisting settings to UserDefaults.
+final class NoosphereService {
+    var globalStorageURL: URL
+    var sphereStorageURL: URL
+    /// Memoized Noosphere instance
+    private var _noosphere: Noosphere?
+    
+    init(
+        globalStorageURL: URL,
+        sphereStorageURL: URL
+    ) {
+        self.globalStorageURL = globalStorageURL
+        self.sphereStorageURL = sphereStorageURL
+        self._noosphere = try? getNoosphere()
+    }
+    
+    /// Gets or creates memoized Noosphere singleton instance
+    func getNoosphere() throws -> Noosphere {
+        if let noosphere = self._noosphere {
+            return noosphere
+        }
+        let noosphere = try Noosphere(
+            globalStoragePath: globalStorageURL.path(),
+            sphereStoragePath: sphereStorageURL.path()
+        )
+        self._noosphere = noosphere
+        return noosphere
+    }
+    
+    /// Get the sphere identity stored in user defaults, if any
+    /// - Returns: identity string, or nil
+    func getSphereIdentity() -> String? {
+        UserDefaults.standard.string(forKey: "sphereIdentity")
+    }
+    
+    /// Get a Sphere for the identity stored in user defaults.
+    /// - Returns: Sphere
+    func getSphere() throws -> Sphere {
+        guard let identity = getSphereIdentity() else {
+            throw NoosphereServiceError.sphereNotFound(
+                "Could not find sphere for user."
+            )
+        }
+        let noosphere = try getNoosphere()
+        return try Sphere(noosphere: noosphere, identity: identity)
+    }
+    
+    /// Create a default sphere for user.
+    /// - Returns: SphereReceipt
+    /// Will not create sphere if a sphereIdentity already appears in
+    /// the user defaults.
+    func createSphere(ownerKeyName: String) throws -> SphereReceipt {
+        guard UserDefaults.standard.string(
+            forKey: "sphereIdentity"
+        ) == nil else {
+            throw NoosphereServiceError.sphereExists(
+                "A default Sphere already exists for this user. Doing nothing."
+            )
+        }
+        let noosphere = try getNoosphere()
+        let sphereReceipt = try noosphere.createSphere(
+            ownerKeyName: ownerKeyName
+        )
+        // Persist sphere identity to user defaults.
+        // NOTE: we do not persist the mnemonic, since it would be insecure.
+        // Instead, we return the receipt so that mnemonic can be displayed
+        // and discarded.
+        UserDefaults.standard.set(
+            sphereReceipt.identity,
+            forKey: "sphereIdentity"
+        )
+        return sphereReceipt
     }
 }

@@ -42,15 +42,6 @@ extension MemoEntry {
     }
 }
 
-extension MemoData {
-    init(_ entry: MemoEntry) {
-        self.init(
-            headers: entry.contents.headers,
-            body: entry.slug.toPath(entry.contents.fileExtension)
-        )
-    }
-}
-
 extension EntryLink {
     init(_ entry: MemoEntry) {
         self.init(

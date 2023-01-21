@@ -11,7 +11,7 @@ struct NotebookNavigationView: View {
     var store: ViewStore<NotebookModel>
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 EntryListView(
                     entries: store.state.recent,
@@ -50,25 +50,22 @@ struct NotebookNavigationView: View {
                         Text("Delete Immediately")
                     }
                 }
-                NavigationLink(
-                    isActive: Binding(
-                        store: store,
-                        get: \.detail.isPresented,
-                        tag: NotebookAction.presentDetail
-                    ),
-                    destination: {
-                        DetailView(
-                            store: ViewStore(
-                                store: store,
-                                cursor: NotebookDetailCursor.self
-                            )
-                        )
-                    },
-                    label: {
-                        EmptyView()
-                    }
-                )
             }
+            .navigationDestination(
+                isPresented: Binding(
+                    store: store,
+                    get: \.detail.isPresented,
+                    tag: NotebookAction.presentDetail
+                ),
+                destination: {
+                    DetailView(
+                        store: ViewStore(
+                            store: store,
+                            cursor: NotebookDetailCursor.self
+                        )
+                    )
+                }
+            )
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

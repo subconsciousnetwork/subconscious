@@ -82,3 +82,36 @@ struct Memo: Hashable, CustomStringConvertible {
         )
     }
 }
+
+extension MemoData {
+    /// Create a memo from MemoData, with defaults for missing headers
+    func toMemo(
+        created: Date = Date.now,
+        modified: Date = Date.now,
+        title: String = "",
+        fileExtension: String = "subtext"
+    ) -> Memo? {
+        guard let body = self.body.toString() else {
+            return nil
+        }
+
+        let headers = WellKnownHeaders(
+            contentType: self.contentType,
+            created: created,
+            modified: modified,
+            title: title,
+            fileExtension: fileExtension
+        )
+        .updating(self.additionalHeaders)
+
+        return Memo(
+            contentType: headers.contentType,
+            created: headers.created,
+            modified: headers.modified,
+            title: headers.title,
+            fileExtension: headers.fileExtension,
+            other: [],
+            body: body
+        )
+    }
+}
