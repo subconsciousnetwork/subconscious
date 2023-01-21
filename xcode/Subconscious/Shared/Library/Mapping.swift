@@ -73,6 +73,14 @@ extension Date {
         }
         return date
     }
+    
+    /// Decode date from optional iso8601String
+    static func from(_ iso8601String: String?) -> Date? {
+        guard let iso8601String = iso8601String else {
+            return nil
+        }
+        return Date.from(iso8601String)
+    }
 }
 
 extension Data {
