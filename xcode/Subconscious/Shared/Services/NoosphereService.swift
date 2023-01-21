@@ -21,16 +21,12 @@ public enum NoosphereError: Error {
     /// Thrown when trying to read a memo that does not exist.
     case memoDoesNotExist
     case headerDoesNotExist(String)
+    case decodingError(String)
 }
 
 public struct SphereReceipt {
     var identity: String
     var mnemonic: String
-}
-
-struct SphereMemo: Hashable {
-    var contentType: String
-    var data: Data
 }
 
 /// Create a Noosphere instance.
@@ -70,41 +66,38 @@ public final class Noosphere {
     ) throws -> SphereReceipt {
         ns_key_create(noosphere, ownerKeyName)
         
-        let sphereReceipt = ns_sphere_create(
+        guard let sphereReceipt = ns_sphere_create(
             noosphere,
             ownerKeyName
-        )
-        defer {
-            ns_sphere_receipt_free(sphereReceipt)
-        }
-        guard let sphereReceipt = sphereReceipt else {
+        ) else {
             throw NoosphereError.foreignError(
                 "Failed to get pointer for sphere receipt"
             )
         }
-        
-        let sphereIdentityPointer = ns_sphere_receipt_identity(
-            sphereReceipt
-        )
         defer {
-            ns_string_free(sphereIdentityPointer)
+            ns_sphere_receipt_free(sphereReceipt)
         }
-        guard let sphereIdentityPointer = sphereIdentityPointer else {
+        
+        guard let sphereIdentityPointer = ns_sphere_receipt_identity(
+            sphereReceipt
+        ) else {
             throw NoosphereError.foreignError(
                 "Failed to get pointer for identity"
             )
         }
-        
-        let sphereMnemonicPointer = ns_sphere_receipt_mnemonic(
-            sphereReceipt
-        )
         defer {
-            ns_string_free(sphereMnemonicPointer)
+            ns_string_free(sphereIdentityPointer)
         }
-        guard let sphereMnemonicPointer = sphereMnemonicPointer else {
+        
+        guard let sphereMnemonicPointer = ns_sphere_receipt_mnemonic(
+            sphereReceipt
+        ) else {
             throw NoosphereError.foreignError(
                 "Failed to get pointer for mnemonic"
             )
+        }
+        defer {
+            ns_string_free(sphereMnemonicPointer)
         }
 
         let sphereIdentity = String.init(cString: sphereIdentityPointer)
@@ -140,18 +133,17 @@ public final class Sphere {
     }
     
     /// Read the value of a memo from a Sphere
-    /// - Returns: `SphereMemo`
-    func read(slashlink: String) throws -> SphereMemo {
-        let file = ns_sphere_fs_read(
+    /// - Returns: `Memo`
+    func read(slashlink: String) throws -> Memo {
+        guard let file = ns_sphere_fs_read(
             noosphere.noosphere,
             fs,
             slashlink
-        )
+        ) else {
+            throw NoosphereError.memoDoesNotExist
+        }
         defer {
             ns_sphere_file_free(file)
-        }
-        guard let file = file else {
-            throw NoosphereError.memoDoesNotExist
         }
         
         guard let contentType = Self.readFileHeaderValueFirst(
@@ -163,14 +155,49 @@ public final class Sphere {
             )
         }
         
+        let fileExtensionRaw = Self.readFileHeaderValueFirst(
+            file: file,
+            name: "File-Extension"
+        )
+        let fileExtension = fileExtensionRaw ?? "subtexts"
+
+        let titleRaw = Self.readFileHeaderValueFirst(
+            file: file,
+            name: "Title"
+        )
+        let title = titleRaw ?? ""
+
+        let createdRaw = Self.readFileHeaderValueFirst(
+            file: file,
+            name: "Created"
+        )
+        let created = Date.from(createdRaw) ?? Date.now
+
+        let modifiedRaw = Self.readFileHeaderValueFirst(
+            file: file,
+            name: "Modified"
+        )
+        let modified = Date.from(modifiedRaw) ?? Date.now
+
         let contents = ns_sphere_file_contents_read(noosphere.noosphere, file)
         defer {
             ns_bytes_free(contents)
         }
         
         let data: Data = Data(bytes: contents.ptr, count: contents.len)
-        
-        return SphereMemo(contentType: contentType, data: data)
+        guard let body = data.toString() else {
+            throw NoosphereError.decodingError("Could not decode body to UTF-8 String")
+        }
+
+        return Memo(
+            contentType: contentType,
+            created: created,
+            modified: modified,
+            title: title,
+            fileExtension: fileExtension,
+            other: [],
+            body: body
+        )
     }
     
     /// Write to sphere
@@ -205,22 +232,44 @@ public final class Sphere {
         ns_sphere_fs_free(fs)
     }
     
-    /// Read first header value for file
+    /// Read first header value for file pointer
     private static func readFileHeaderValueFirst(
-        file: OpaquePointer?,
+        file: OpaquePointer,
         name: String
     ) -> String? {
-        let valueRaw = ns_sphere_file_header_value_first(
+        guard let valueRaw = ns_sphere_file_header_value_first(
             file,
             name
-        )
+        ) else {
+            return nil
+        }
         defer {
             ns_string_free(valueRaw)
         }
-        guard let valueRaw = valueRaw else {
+        return String(cString: valueRaw)
+    }
+
+    /// Get all header names for a given file pointer
+    private static func readFileHeaderNames(
+        file: OpaquePointer?
+    ) -> [String]? {
+        let file_header_names = ns_sphere_file_header_names_read(file)
+        defer {
+            ns_string_array_free(file_header_names)
+        }
+
+        let name_count = file_header_names.len
+        guard var pointer = file_header_names.ptr else {
             return nil
         }
-        return String(cString: valueRaw)
+
+        var names: [String] = []
+        for _ in 0..<name_count {
+            let name = String(cString: pointer.pointee!)
+            names.append(name)
+            pointer += 1;
+        }
+        return names
     }
 }
 

@@ -48,7 +48,7 @@ final class Tests_NoosphereService: XCTestCase {
             sphere.save()
             let memo = try sphere.read(slashlink: "/foo")
             XCTAssertEqual(memo.contentType, "text/subtext")
-            let content = memo.data.toString(encoding: .utf8)
+            let content = memo.body
             XCTAssertEqual(content, "Test")
         }
 
