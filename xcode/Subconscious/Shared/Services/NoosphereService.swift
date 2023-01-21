@@ -132,9 +132,47 @@ public final class Sphere {
         self.fs = fs
     }
     
+    /// Read first header value for memo at slashlink
+    /// - Returns: value, if any
+    func readHeaderValueFirst(
+        slashlink: String,
+        name: String
+    ) -> String? {
+        guard let file = ns_sphere_fs_read(
+            noosphere.noosphere,
+            fs,
+            slashlink
+        ) else {
+            return nil
+        }
+        defer {
+            ns_sphere_file_free(file)
+        }
+        
+        return Self.readFileHeaderValueFirst(
+            file: file,
+            name: name
+        )
+    }
+
+    /// Read all header names for a given slashlink
+    func readHeaderNames(slashlink: String) -> [String] {
+        guard let file = ns_sphere_fs_read(
+            noosphere.noosphere,
+            fs,
+            slashlink
+        ) else {
+            return []
+        }
+        defer {
+            ns_sphere_file_free(file)
+        }
+        return Self.readFileHeaderNames(file: file)
+    }
+
     /// Read the value of a memo from a Sphere
     /// - Returns: `Memo`
-    func read(slashlink: String) throws -> Memo {
+    func read(slashlink: String) throws -> MemoData {
         guard let file = ns_sphere_fs_read(
             noosphere.noosphere,
             fs,
@@ -154,48 +192,32 @@ public final class Sphere {
                 "Header Content-Type does not exist"
             )
         }
-        
-        let fileExtensionRaw = Self.readFileHeaderValueFirst(
-            file: file,
-            name: "File-Extension"
-        )
-        let fileExtension = fileExtensionRaw ?? "subtexts"
-
-        let titleRaw = Self.readFileHeaderValueFirst(
-            file: file,
-            name: "Title"
-        )
-        let title = titleRaw ?? ""
-
-        let createdRaw = Self.readFileHeaderValueFirst(
-            file: file,
-            name: "Created"
-        )
-        let created = Date.from(createdRaw) ?? Date.now
-
-        let modifiedRaw = Self.readFileHeaderValueFirst(
-            file: file,
-            name: "Modified"
-        )
-        let modified = Date.from(modifiedRaw) ?? Date.now
 
         let contents = ns_sphere_file_contents_read(noosphere.noosphere, file)
         defer {
             ns_bytes_free(contents)
         }
-        
-        let data: Data = Data(bytes: contents.ptr, count: contents.len)
-        guard let body = data.toString() else {
-            throw NoosphereError.decodingError("Could not decode body to UTF-8 String")
+        let body = Data(bytes: contents.ptr, count: contents.len)
+
+        var headers: [Header] = []
+        let headerNames = Self.readFileHeaderNames(file: file)
+        for name in headerNames {
+            // Skip content type. We've already retreived it.
+            guard name != "Content-Type" else {
+                continue
+            }
+            guard let value = Self.readFileHeaderValueFirst(
+                file: file,
+                name: name
+            ) else {
+                continue
+            }
+            headers.append(Header(name: name, value: value))
         }
 
-        return Memo(
+        return MemoData(
             contentType: contentType,
-            created: created,
-            modified: modified,
-            title: title,
-            fileExtension: fileExtension,
-            other: [],
+            additionalHeaders: headers,
             body: body
         )
     }
@@ -264,8 +286,8 @@ public final class Sphere {
 
     /// Get all header names for a given file pointer
     private static func readFileHeaderNames(
-        file: OpaquePointer?
-    ) -> [String]? {
+        file: OpaquePointer
+    ) -> [String] {
         let file_header_names = ns_sphere_file_header_names_read(file)
         defer {
             ns_string_array_free(file_header_names)
@@ -273,7 +295,7 @@ public final class Sphere {
 
         let name_count = file_header_names.len
         guard var pointer = file_header_names.ptr else {
-            return nil
+            return []
         }
 
         var names: [String] = []

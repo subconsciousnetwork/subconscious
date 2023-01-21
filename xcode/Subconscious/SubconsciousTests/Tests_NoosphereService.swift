@@ -54,7 +54,7 @@ final class Tests_Noosphere: XCTestCase {
             sphere.save()
             let memo = try sphere.read(slashlink: "/foo")
             XCTAssertEqual(memo.contentType, "text/subtext")
-            let content = memo.body
+            let content = memo.body.toString()
             XCTAssertEqual(content, "Test")
         }
         
@@ -78,25 +78,33 @@ final class Tests_Noosphere: XCTestCase {
             identity: sphereReceipt.identity
         )
 
-        let then = Date.distantPast
-        let thenString = then.ISO8601Format()
+        let then = Date.distantPast.ISO8601Format()
         try sphere.write(
             slug: "foo",
             contentType: "text/subtext",
             contents: "Test".toData(encoding: .utf8)!,
             additional: [
                 Header(name: "Title", value: "Foo"),
-                Header(name: "Created", value: thenString),
-                Header(name: "Modified", value: thenString),
+                Header(name: "Created", value: then),
+                Header(name: "Modified", value: then),
                 Header(name: "File-Extension", value: "subtext")
             ]
         )
         sphere.save()
         let memo = try sphere.read(slashlink: "/foo")
         XCTAssertEqual(memo.contentType, "text/subtext")
-        XCTAssertEqual(memo.body, "Test")
-        XCTAssertEqual(memo.fileExtension, "subtext")
-        XCTAssertEqual(memo.created, then)
-        XCTAssertEqual(memo.modified, then)
+        XCTAssertEqual(memo.body.toString(), "Test")
+
+        let title = memo.additionalHeaders.get(first: "Title")
+        XCTAssertEqual(title, "Foo")
+
+        let ext = memo.additionalHeaders.get(first: "File-Extension")
+        XCTAssertEqual(ext, "subtext")
+
+        let created = memo.additionalHeaders.get(first: "Created")
+        XCTAssertEqual(created, then)
+
+        let modified = memo.additionalHeaders.get(first: "Created")
+        XCTAssertEqual(modified, then)
     }
 }
