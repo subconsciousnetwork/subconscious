@@ -238,6 +238,7 @@
 		B8B604E729146DF6006FCB77 /* MemoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B604E529146DF6006FCB77 /* MemoryStore.swift */; };
 		B8B604E9291476E9006FCB77 /* Tests_Migrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B604E8291476E9006FCB77 /* Tests_Migrations.swift */; };
 		B8B604EB29148C82006FCB77 /* Tests_AppMigrations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B604EA29148C82006FCB77 /* Tests_AppMigrations.swift */; };
+		B8C0A1B4297C938000D59532 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C0A1B3297C938000D59532 /* Error.swift */; };
 		B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7E8BD2809F19500E439DC /* Markup.swift */; };
 		B8C7E8C0280A2B7700E439DC /* Test_Markup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */; };
 		B8CA8F1A288F038C005F8802 /* Tracery in Frameworks */ = {isa = PBXBuildFile; productRef = B8CA8F19288F038C005F8802 /* Tracery */; };
@@ -459,6 +460,7 @@
 		B8B604E529146DF6006FCB77 /* MemoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryStore.swift; sourceTree = "<group>"; };
 		B8B604E8291476E9006FCB77 /* Tests_Migrations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Migrations.swift; sourceTree = "<group>"; };
 		B8B604EA29148C82006FCB77 /* Tests_AppMigrations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_AppMigrations.swift; sourceTree = "<group>"; };
+		B8C0A1B3297C938000D59532 /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
 		B8C7E8BD2809F19500E439DC /* Markup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Markup.swift; sourceTree = "<group>"; };
 		B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Test_Markup.swift; sourceTree = "<group>"; };
 		B8CA8F1D288F07F9005F8802 /* zettelkasten.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = zettelkasten.json; sourceTree = "<group>"; };
@@ -804,6 +806,7 @@
 				B82C3A5526F529EF00833CC8 /* CombineUtilities.swift */,
 				B839029E28CA246A007A3A3F /* CustomLogStringConvertible.swift */,
 				B86DFF3627C09CA2002E57ED /* DateUtilities.swift */,
+				B8C0A1B3297C938000D59532 /* Error.swift */,
 				B82C3A5E26F576C600833CC8 /* FileManagerUtilities.swift */,
 				B82C3A5826F5761700833CC8 /* FileSync.swift */,
 				B86DFF3227C072CD002E57ED /* Func.swift */,
@@ -822,8 +825,8 @@
 				B824FDD326FAB1BC00B81BBD /* Truncate.swift */,
 				B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
-				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
 				B8B3EE7C297B1A1000779B7F /* ViewDebugUtilities.swift */,
+				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -1244,6 +1247,7 @@
 				B8EA3EE529159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */,
 				B86DFF3127C06EBC002E57ED /* RenameSuggestion.swift in Sources */,
 				B8AE34A7276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
+				B8C0A1B4297C938000D59532 /* Error.swift in Sources */,
 				B8DEBF222798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
 				B8DEBF1F2798EC23007CB528 /* TitleGroupView.swift in Sources */,
 				B8AE34BF276BD61400777FF0 /* RowButtonStyle.swift in Sources */,

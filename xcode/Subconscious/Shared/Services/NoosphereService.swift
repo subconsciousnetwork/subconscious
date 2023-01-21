@@ -324,6 +324,8 @@ final class NoosphereService {
     var sphereStorageURL: URL
     /// Memoized Noosphere instance
     private var _noosphere: Noosphere?
+    /// Memoized Sphere instance for default user sphere
+    private var _sphere: Sphere?
     
     init(
         globalStorageURL: URL,
@@ -356,13 +358,18 @@ final class NoosphereService {
     /// Get a Sphere for the identity stored in user defaults.
     /// - Returns: Sphere
     func getSphere() throws -> Sphere {
+        if let sphere = self._sphere {
+            return sphere
+        }
         guard let identity = getSphereIdentity() else {
             throw NoosphereServiceError.sphereNotFound(
                 "Could not find sphere for user."
             )
         }
         let noosphere = try getNoosphere()
-        return try Sphere(noosphere: noosphere, identity: identity)
+        let sphere = try Sphere(noosphere: noosphere, identity: identity)
+        self._sphere = sphere
+        return sphere
     }
     
     /// Create a default sphere for user.

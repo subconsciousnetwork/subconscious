@@ -485,7 +485,7 @@ struct AppModel: ModelProtocol {
             .eraseToAnyPublisher()
         
         /// Get sphere identity, if any
-        let sphereIdentity = environment.noosphere.getSphereIdentity()
+        let sphereIdentity = environment.database.noosphere.getSphereIdentity()
 
         return update(
             state: state,
@@ -722,10 +722,6 @@ struct AppEnvironment {
     var applicationSupportURL: URL
 
     var logger: Logger
-    /// Holds reference to Noosphere instance.
-    /// Noosphere is meant to be a singleton, and we typically keep
-    /// this instance around for the lifetime of the app.
-    var noosphere: NoosphereService
     var keyboard: KeyboardService
     var database: DatabaseService
     var feed: FeedService
@@ -761,19 +757,20 @@ struct AppEnvironment {
 
         let migrations = Config.migrations
 
-        self.database = DatabaseService(
-            documentURL: self.documentURL,
-            databaseURL: self.applicationSupportURL
-                .appendingPathComponent("database.sqlite"),
-            memos: memos,
-            migrations: migrations
-        )
-
-        self.noosphere = NoosphereService(
+        let noosphere = NoosphereService(
             globalStorageURL: applicationSupportURL
                 .appending(path: Config.default.noosphere.globalStoragePath),
             sphereStorageURL: applicationSupportURL
                 .appending(path: Config.default.noosphere.sphereStoragePath)
+        )
+
+        self.database = DatabaseService(
+            documentURL: self.documentURL,
+            databaseURL: self.applicationSupportURL
+                .appendingPathComponent("database.sqlite"),
+            noosphere: noosphere,
+            memos: memos,
+            migrations: migrations
         )
 
         self.keyboard = KeyboardService()

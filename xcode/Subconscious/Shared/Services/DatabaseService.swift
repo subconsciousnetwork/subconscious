@@ -34,6 +34,7 @@ struct DatabaseService {
         }
     }
 
+    var noosphere: NoosphereService
     private var documentURL: URL
     private var databaseURL: URL
     private var memos: HeaderSubtextMemoStore
@@ -43,6 +44,7 @@ struct DatabaseService {
     init(
         documentURL: URL,
         databaseURL: URL,
+        noosphere: NoosphereService,
         memos: HeaderSubtextMemoStore,
         migrations: Migrations
     ) {
@@ -53,6 +55,7 @@ struct DatabaseService {
             mode: .readwrite
         )
         self.migrations = migrations
+        self.noosphere = noosphere
         self.memos = memos
     }
 
@@ -217,6 +220,20 @@ struct DatabaseService {
     /// Write entry to file system and database
     /// Also sets modified header to now.
     private func writeEntry(_ entry: MemoEntry) throws {
+        guard Config.default.noosphere.enabled else {
+            guard let body = entry.contents.body.toData() else {
+                throw CodingError.encodingError(message: "Could not encode UTF-8 String")
+            }
+            let sphere = try self.noosphere.getSphere()
+            try sphere.write(
+                slug: entry.slug.description,
+                contentType: entry.contents.contentType,
+                additionalHeaders: entry.contents.headers,
+                body: body
+            )
+            return
+        }
+
         var entry = entry
         entry.contents.modified = Date.now
         try memos.write(entry.slug, value: entry.contents)
@@ -719,6 +736,14 @@ struct DatabaseService {
     /// Used by public async APIs.
     /// - Returns a SubtextFile with mended headers.
     private func readEntry(slug: Slug) throws -> MemoEntry {
+        guard Config.default.noosphere.enabled else {
+            let sphere = try self.noosphere.getSphere()
+            let memoData = try sphere.read(slashlink: slug.toSlashlink())
+            guard let memo = memoData.toMemo(title: slug.toTitle()) else {
+                throw CodingError.decodingError(message: "Could not decode UTF-8 String")
+            }
+            return MemoEntry(slug: slug, contents: memo)
+        }
         let memo = try memos.read(slug)
         return MemoEntry(slug: slug, contents: memo)
     }
