@@ -49,7 +49,7 @@ final class Tests_Noosphere: XCTestCase {
             try sphere.write(
                 slug: "foo",
                 contentType: "text/subtext",
-                contents: "Test".toData(encoding: .utf8)!
+                body: "Test".toData(encoding: .utf8)!
             )
             sphere.save()
             let memo = try sphere.read(slashlink: "/foo")
@@ -82,13 +82,13 @@ final class Tests_Noosphere: XCTestCase {
         try sphere.write(
             slug: "foo",
             contentType: "text/subtext",
-            contents: "Test".toData(encoding: .utf8)!,
-            additional: [
+            additionalHeaders: [
                 Header(name: "Title", value: "Foo"),
                 Header(name: "Created", value: then),
                 Header(name: "Modified", value: then),
                 Header(name: "File-Extension", value: "subtext")
-            ]
+            ],
+            body: "Test".toData(encoding: .utf8)!
         )
         sphere.save()
         let memo = try sphere.read(slashlink: "/foo")

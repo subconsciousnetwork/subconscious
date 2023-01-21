@@ -193,11 +193,11 @@ public final class Sphere {
             )
         }
 
-        let contents = ns_sphere_file_contents_read(noosphere.noosphere, file)
+        let bodyRaw = ns_sphere_file_contents_read(noosphere.noosphere, file)
         defer {
-            ns_bytes_free(contents)
+            ns_bytes_free(bodyRaw)
         }
-        let body = Data(bytes: contents.ptr, count: contents.len)
+        let body = Data(bytes: bodyRaw.ptr, count: bodyRaw.len)
 
         var headers: [Header] = []
         let headerNames = Self.readFileHeaderNames(file: file)
@@ -226,25 +226,29 @@ public final class Sphere {
     func write(
         slug: String,
         contentType: String,
-        contents: Data,
-        additional headers: [Header] = []
+        additionalHeaders: [Header] = [],
+        body: Data
     ) throws {
-        try contents.withUnsafeBytes({ rawBufferPointer in
+        try body.withUnsafeBytes({ rawBufferPointer in
             let bufferPointer = rawBufferPointer.bindMemory(to: UInt8.self)
             let pointer = bufferPointer.baseAddress!
-            let contentsSlice = slice_ref_uint8(
-                ptr: pointer, len: contents.count
+            let bodyRaw = slice_ref_uint8(
+                ptr: pointer, len: body.count
             )
             
-            guard let additionalHeaders = ns_headers_create() else {
+            guard let additionalHeadersContainer = ns_headers_create() else {
                 throw NoosphereError.foreignError("ns_headers_create failed to return pointer")
             }
             defer {
-                ns_headers_free(additionalHeaders)
+                ns_headers_free(additionalHeadersContainer)
             }
             
-            for header in headers {
-                ns_headers_add(additionalHeaders, header.name, header.value)
+            for header in additionalHeaders {
+                ns_headers_add(
+                    additionalHeadersContainer,
+                    header.name,
+                    header.value
+                )
             }
             
             ns_sphere_fs_write(
@@ -252,8 +256,8 @@ public final class Sphere {
                 fs,
                 slug,
                 contentType,
-                contentsSlice,
-                additionalHeaders
+                bodyRaw,
+                additionalHeadersContainer
             )
         })
     }
