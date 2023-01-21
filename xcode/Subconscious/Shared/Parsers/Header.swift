@@ -27,41 +27,43 @@ struct WellKnownHeaders: Hashable {
 }
 
 extension WellKnownHeaders {
-    /// Extract well-known headers from Headers, using another
-    /// `WellKnownHeaders` instance as a fallback.
-    init(
-        headers: Headers,
-        fallback: WellKnownHeaders
-    ) {
-        /// Get ContentType or fall back to text.
-        let contentType = headers.get(
-            first: HeaderName.contentType.rawValue
-        ) ?? fallback.contentType
+    /// Update instance from an array of additional headers.
+    /// Does not update contentType, as this is a required header and
+    /// we generally do not include it in the "additional" headers.
+    func updating(_ additionalHeaders: [Header]) -> Self {
+        var this = self
 
-        let knownContentType = ContentType(rawValue: contentType)
-
-        let fileExtension = headers.get(
-            first: HeaderName.fileExtension.rawValue
-        ) ?? knownContentType?.fileExtension ?? fallback.fileExtension
-
-        // Get created and modified from headers.
-        // If not in headers, use file system info.
-        // If not in file system info, use Date.now.
-        let created = headers.get(first: HeaderName.created.rawValue)
-            .compactMapOr(Date.from, default: fallback.created)
-
-        let modified = headers.get(first: HeaderName.modified.rawValue)
-            .compactMapOr(Date.from, default: fallback.modified)
-
-        let title = headers.get(
+        if let title = additionalHeaders.get(
             first: HeaderName.title.rawValue
-        ) ?? fallback.title
+        ) {
+            this.title = title
+        }
 
-        self.contentType = contentType
-        self.created = created
-        self.modified = modified
-        self.title = title
-        self.fileExtension = fileExtension
+        if let fileExtension = additionalHeaders.get(
+            first: HeaderName.fileExtension.rawValue
+        ) {
+            this.fileExtension = fileExtension
+        }
+
+        if
+            let createdString = additionalHeaders.get(
+                first: HeaderName.created.rawValue
+            ),
+            let created = Date.from(createdString)
+        {
+            this.created = created
+        }
+
+        if
+            let modifiedString = additionalHeaders.get(
+                first: HeaderName.modified.rawValue
+            ),
+            let modified = Date.from(modifiedString)
+        {
+            this.modified = modified
+        }
+
+        return this
     }
 }
 
@@ -263,7 +265,7 @@ extension Headers {
         this.append(contentsOf: that)
         return this.removeDuplicates()
     }
-    
+
     /// Update header, either replacing the first existing header with the
     /// same key, or appending a new header to the list of headers.
     mutating func replace(_ header: Header) {

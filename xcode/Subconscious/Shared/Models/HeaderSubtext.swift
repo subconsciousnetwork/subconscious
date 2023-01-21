@@ -50,10 +50,7 @@ extension HeaderSubtext {
             fileExtension: ContentType.subtext.fileExtension
         )
     ) -> Memo? {
-        let wellKnownHeaders = WellKnownHeaders(
-            headers: headers,
-            fallback: fallback
-        )
+        let wellKnownHeaders = fallback.updating(headers)
         return Memo(
             contentType: wellKnownHeaders.contentType,
             created: wellKnownHeaders.created,
