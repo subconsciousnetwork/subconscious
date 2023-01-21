@@ -34,7 +34,10 @@ struct AppView: View {
                 }
             }
             .zIndex(0)
-            if store.state.sphereIdentity == nil {
+            if (
+                Config.default.noosphere.enabled &&
+                store.state.sphereIdentity == nil
+            ) {
                 FirstRunView(
                     done: { sphereIdentity in
                         store.send(.setSphereIdentity(sphereIdentity))
