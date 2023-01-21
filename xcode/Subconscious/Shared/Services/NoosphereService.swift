@@ -204,21 +204,34 @@ public final class Sphere {
     func write(
         slug: String,
         contentType: String,
-        contents: Data
+        contents: Data,
+        additional headers: [Header] = []
     ) throws {
-        contents.withUnsafeBytes({ rawBufferPointer in
+        try contents.withUnsafeBytes({ rawBufferPointer in
             let bufferPointer = rawBufferPointer.bindMemory(to: UInt8.self)
             let pointer = bufferPointer.baseAddress!
             let contentsSlice = slice_ref_uint8(
                 ptr: pointer, len: contents.count
             )
+            
+            guard let additionalHeaders = ns_headers_create() else {
+                throw NoosphereError.foreignError("ns_headers_create failed to return pointer")
+            }
+            defer {
+                ns_headers_free(additionalHeaders)
+            }
+            
+            for header in headers {
+                ns_headers_add(additionalHeaders, header.name, header.value)
+            }
+            
             ns_sphere_fs_write(
                 noosphere.noosphere,
                 fs,
                 slug,
                 contentType,
                 contentsSlice,
-                nil
+                additionalHeaders
             )
         })
     }
@@ -285,7 +298,7 @@ final class NoosphereService {
     var sphereStorageURL: URL
     /// Memoized Noosphere instance
     private var _noosphere: Noosphere?
-
+    
     init(
         globalStorageURL: URL,
         sphereStorageURL: URL
@@ -294,7 +307,7 @@ final class NoosphereService {
         self.sphereStorageURL = sphereStorageURL
         self._noosphere = try? getNoosphere()
     }
-
+    
     /// Gets or creates memoized Noosphere singleton instance
     func getNoosphere() throws -> Noosphere {
         if let noosphere = self._noosphere {
@@ -307,13 +320,13 @@ final class NoosphereService {
         self._noosphere = noosphere
         return noosphere
     }
-
+    
     /// Get the sphere identity stored in user defaults, if any
     /// - Returns: identity string, or nil
     func getSphereIdentity() -> String? {
         UserDefaults.standard.string(forKey: "sphereIdentity")
     }
-
+    
     /// Get a Sphere for the identity stored in user defaults.
     /// - Returns: Sphere
     func getSphere() throws -> Sphere {
@@ -325,7 +338,7 @@ final class NoosphereService {
         let noosphere = try getNoosphere()
         return try Sphere(noosphere: noosphere, identity: identity)
     }
-
+    
     /// Create a default sphere for user.
     /// - Returns: SphereReceipt
     /// Will not create sphere if a sphereIdentity already appears in
