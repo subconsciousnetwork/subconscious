@@ -158,10 +158,11 @@ struct DataService {
             throw DatabaseServiceError.fileExists(to.slug)
         }
         // Make sure we're writing to an empty location
-        guard memos.info(to.slug) != nil else {
+        guard memos.info(to.slug) == nil else {
             throw DatabaseServiceError.fileExists(to.slug)
         }
-        let fromFile = try readEntry(slug: from.slug).unwrap()
+        let fromMemo = try memos.read(from.slug).unwrap()
+        let fromFile = MemoEntry(slug: from.slug, contents: fromMemo)
         // Make a copy representing new location and set new title and slug
         var toFile = fromFile
         toFile.setLink(to)
@@ -190,11 +191,16 @@ struct DataService {
         parent: Slug,
         child: Slug
     ) throws {
-        let childEntry = try readEntry(slug: child).unwrap()
+        let childEntry = MemoEntry(
+            slug: child,
+            contents: try memos.read(child).unwrap()
+        )
         
-        let parentEntry = try readEntry(slug: parent)
-            .unwrap()
-            .merge(childEntry)
+        let parentEntry = MemoEntry(
+            slug: parent,
+            contents: try memos.read(parent).unwrap()
+        )
+        .merge(childEntry)
         
         //  First write the merged file to "to" location
         try writeEntry(parentEntry)
@@ -225,7 +231,10 @@ struct DataService {
         guard from.linkableTitle != to.linkableTitle else {
             return
         }
-        var entry = try readEntry(slug: from.slug).unwrap()
+        var entry = MemoEntry(
+            slug: from.slug,
+            contents: try memos.read(from.slug).unwrap()
+        )
         entry.contents.title = to.linkableTitle
         try writeEntry(entry)
     }
@@ -270,7 +279,7 @@ struct DataService {
         fallback: [LinkSuggestion] = []
     ) -> AnyPublisher<[LinkSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            database.searchLinkSuggestions(
+            return database.searchLinkSuggestions(
                 query: query,
                 omitting: invalidSuggestions,
                 fallback: fallback
@@ -294,17 +303,41 @@ struct DataService {
         }
     }
     
-    /// Read an entry from the file system.
-    /// Private syncronous API to read a Subtext file via its Slug
-    /// Used by public async APIs.
-    /// - Returns a SubtextFile with mended headers.
-    private func readEntry(slug: Slug) -> MemoEntry? {
-        guard let memo = memos.read(slug) else {
-            return nil
+    /// Sync version of readEntryDetail
+    /// Use `readEntryDetail` API to call this async.
+    private func readEntryDetail(
+        link: EntryLink,
+        fallback: String
+    ) throws -> EntryDetail {
+        let backlinks = database.readEntryBacklinks(slug: link.slug)
+        // Retreive top entry from file system to ensure it is fresh.
+        // If no file exists, return a draft, using fallback for title.
+        guard let memo = memos.read(link.slug) else {
+            return EntryDetail(
+                saveState: .draft,
+                entry: MemoEntry(
+                    slug: link.slug,
+                    contents: Memo(
+                        contentType: ContentType.subtext.rawValue,
+                        created: Date.now,
+                        modified: Date.now,
+                        title: link.title,
+                        fileExtension: ContentType.subtext.fileExtension,
+                        other: [],
+                        body: fallback
+                    )
+                ),
+                backlinks: backlinks
+            )
         }
-        return MemoEntry(slug: slug, contents: memo)
+        // Return entry
+        return EntryDetail(
+            saveState: .saved,
+            entry: MemoEntry(slug: link.slug, contents: memo),
+            backlinks: backlinks
+        )
     }
-    
+
     /// Get entry and backlinks from slug, using string as a fallback.
     /// We trust caller to slugify the string, if necessary.
     /// Allowing any string allows us to retreive files that don't have a
@@ -314,7 +347,7 @@ struct DataService {
         fallback: String
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .utility) {
-            try database.readEntryDetail(link: link, fallback: fallback)
+            try readEntryDetail(link: link, fallback: fallback)
         }
     }
     
@@ -324,14 +357,8 @@ struct DataService {
         template: Slug
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .utility) {
-            let entry = readEntry(slug: template)
-            let fallback = entry.mapOr(
-                { entry in
-                    String(describing: entry.contents.body)
-                },
-                default: ""
-            )
-            return try database.readEntryDetail(link: link, fallback: fallback)
+            let fallback = memos.read(template)?.body ?? ""
+            return try readEntryDetail(link: link, fallback: fallback)
         }
     }
     
@@ -852,15 +879,10 @@ struct DatabaseService {
         )
     }
     
-    /// Sync version of readEntryDetail
-    /// Use `readEntryDetail` API to call this async.
-    func readEntryDetail(
-        link: EntryLink,
-        fallback: String
-    ) throws -> EntryDetail {
+    func readEntryBacklinks(slug: Slug) -> [EntryStub] {
         // Get backlinks.
         // Use content indexed in database, even though it might be stale.
-        let backlinks: [EntryStub] = try database.execute(
+        guard let results = try? database.execute(
             sql: """
             SELECT slug, modified, title, excerpt
             FROM memo_search
@@ -869,11 +891,14 @@ struct DatabaseService {
             LIMIT 200
             """,
             parameters: [
-                .text(link.slug.description),
-                .queryFTS5(link.slug.description)
+                .text(slug.description),
+                .queryFTS5(slug.description)
             ]
-        )
-        .compactMap({ row in
+        ) else {
+            return []
+        }
+        
+        return results.compactMap({ row in
             guard
                 let slug: Slug = row.get(0).flatMap({ string in
                     Slug(formatting: string)
@@ -890,32 +915,6 @@ struct DatabaseService {
                 modified: modified
             )
         })
-        // Retreive top entry from file system to ensure it is fresh.
-        // If no file exists, return a draft, using fallback for title.
-        guard let entry = readEntry(slug: link.slug) else {
-            return EntryDetail(
-                saveState: .draft,
-                entry: MemoEntry(
-                    slug: link.slug,
-                    contents: Memo(
-                        contentType: ContentType.subtext.rawValue,
-                        created: Date.now,
-                        modified: Date.now,
-                        title: link.title,
-                        fileExtension: ContentType.subtext.fileExtension,
-                        other: [],
-                        body: fallback
-                    )
-                ),
-                backlinks: backlinks
-            )
-        }
-        // Return entry
-        return EntryDetail(
-            saveState: .saved,
-            entry: entry,
-            backlinks: backlinks
-        )
     }
     
     func readRandomEntryInDateRange(startDate: Date, endDate: Date) -> EntryStub? {
