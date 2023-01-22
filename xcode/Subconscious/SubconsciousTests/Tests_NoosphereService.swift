@@ -51,8 +51,11 @@ final class Tests_Noosphere: XCTestCase {
                 contentType: "text/subtext",
                 body: "Test".toData(encoding: .utf8)!
             )
-            sphere.save()
-            let memo = try sphere.read(slashlink: "/foo")
+            try sphere.save()
+            guard let memo = sphere.read(slashlink: "/foo") else {
+                XCTFail("Could not read memo")
+                return
+            }
             XCTAssertEqual(memo.contentType, "text/subtext")
             let content = memo.body.toString()
             XCTAssertEqual(content, "Test")
@@ -64,7 +67,10 @@ final class Tests_Noosphere: XCTestCase {
                 noosphere: noosphere,
                 identity: sphereReceipt.identity
             )
-            let memo = try sphere.read(slashlink: "/foo")
+            guard let memo = sphere.read(slashlink: "/foo") else {
+                XCTFail("Could not read memo")
+                return
+            }
             XCTAssertEqual(memo.contentType, "text/subtext")
         }
     }
@@ -90,8 +96,11 @@ final class Tests_Noosphere: XCTestCase {
             ],
             body: "Test".toData(encoding: .utf8)!
         )
-        sphere.save()
-        let memo = try sphere.read(slashlink: "/foo")
+        try sphere.save()
+        guard let memo = sphere.read(slashlink: "/foo") else {
+            XCTFail("Could not read memo")
+            return
+        }
         XCTAssertEqual(memo.contentType, "text/subtext")
         XCTAssertEqual(memo.body.toString(), "Test")
 

@@ -27,7 +27,7 @@ struct FileStore: StoreProtocol {
     init(documentURL: URL) {
         self.documentURL = documentURL
     }
-    
+        
     /// Get URL for key
     private func url(forKey key: String) -> URL {
         documentURL.appending(path: key)
