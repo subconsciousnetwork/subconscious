@@ -467,7 +467,7 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.database.countEntries()
+        let fx: Fx<NotebookAction> = environment.data.countEntries()
             .map({ count in
                 NotebookAction.setEntryCount(count)
             })
@@ -493,8 +493,7 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.database
-            .listRecentEntries()
+        let fx: Fx<NotebookAction> = environment.data.listRecentEntries()
             .map({ entries in
                 NotebookAction.setRecent(entries)
             })

@@ -7,13 +7,6 @@
 
 import Foundation
 
-enum FileStoreError: Error {
-    case failReadAttribute(FileAttributeKey)
-    case doesNotExist(String)
-    case decodingError(String)
-    case encodingError(String)
-}
-
 /// Low-level facade over file system actions.
 /// This store thinks in keys and Data.
 /// Keys are path-like strings and are relative to the document directory.
@@ -41,10 +34,9 @@ struct FileStore: StoreProtocol {
     }
     
     /// Read bytes from key, if any.
-    func read(_ key: String) throws -> Data {
+    func read(_ key: String) -> Data? {
         let url = url(forKey: key)
-        let data = try Data(contentsOf: url)
-        return data
+        return try? Data(contentsOf: url)
     }
     
     /// Write file
@@ -70,7 +62,7 @@ struct FileStore: StoreProtocol {
     }
 
     /// List all keys
-    func list() throws -> [String] {
+    func list() -> [String] {
         guard let urls = FileManager.default.listFilesDeep(
             at: documentURL,
             includingPropertiesForKeys: []
@@ -83,19 +75,21 @@ struct FileStore: StoreProtocol {
     }
 
     /// Get info for file
-    func info(_ key: String) throws -> FileInfo {
+    func info(_ key: String) -> FileInfo? {
         let url = url(forKey: key)
-        let attributes = try FileManager.default.attributesOfItem(
+        guard let attributes = try? FileManager.default.attributesOfItem(
             atPath: url.path
-        )
+        ) else {
+            return nil
+        }
         guard let modified = attributes[.modificationDate] as? Date else {
-            throw FileStoreError.failReadAttribute(.modificationDate)
+            return nil
         }
         guard let created = attributes[.creationDate] as? Date else {
-            throw FileStoreError.failReadAttribute(.creationDate)
+            return nil
         }
         guard let size = attributes[.size] as? Int else {
-            throw FileStoreError.failReadAttribute(.size)
+            return nil
         }
         return FileInfo(created: created, modified: modified, size: size)
     }

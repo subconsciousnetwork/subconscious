@@ -485,7 +485,7 @@ struct AppModel: ModelProtocol {
             .eraseToAnyPublisher()
         
         /// Get sphere identity, if any
-        let sphereIdentity = environment.database.noosphere.getSphereIdentity()
+        let sphereIdentity = environment.data.noosphere.getSphereIdentity()
 
         return update(
             state: state,
@@ -519,7 +519,7 @@ struct AppModel: ModelProtocol {
         switch state.databaseState {
         case .initial:
             environment.logger.log("Readying database")
-            let fx: Fx<AppAction> = environment.database
+            let fx: Fx<AppAction> = environment.data
                 .migrateAsync()
                 .map({ version in
                     AppAction.succeedMigrateDatabase(version)
@@ -570,7 +570,7 @@ struct AppModel: ModelProtocol {
         environment.logger.warning(
             "Failed to migrate database. Retrying."
         )
-        let fx: Fx<AppAction> = environment.database.migrateAsync()
+        let fx: Fx<AppAction> = environment.data.migrateAsync()
             .map({ info in
                 AppAction.succeedMigrateDatabase(info)
             })
@@ -619,7 +619,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         environment.logger.log("File sync started")
-        let fx: Fx<AppAction> = environment.database
+        let fx: Fx<AppAction> = environment.data
             .syncDatabase()
             .map({ changes in
                 AppAction.syncSuccess(changes)
@@ -680,7 +680,7 @@ struct AppModel: ModelProtocol {
             )
             return Update(state: state)
         }
-        let fx: Fx<AppAction> = environment.database
+        let fx: Fx<AppAction> = environment.data
             .deleteEntryAsync(slug: slug)
             .map({ _ in
                 AppAction.succeedDeleteEntry(slug)
@@ -723,7 +723,7 @@ struct AppEnvironment {
 
     var logger: Logger
     var keyboard: KeyboardService
-    var database: DatabaseService
+    var data: DataService
     var feed: FeedService
 
     /// Create a long polling publisher that never completes
@@ -755,8 +755,6 @@ struct AppEnvironment {
         let files = FileStore(documentURL: documentURL)
         let memos = HeaderSubtextMemoStore(store: files)
 
-        let migrations = Config.migrations
-
         let noosphere = NoosphereService(
             globalStorageURL: applicationSupportURL
                 .appending(path: Config.default.noosphere.globalStoragePath),
@@ -764,69 +762,28 @@ struct AppEnvironment {
                 .appending(path: Config.default.noosphere.sphereStoragePath)
         )
 
-        self.database = DatabaseService(
+        let databaseURL = self.applicationSupportURL
+            .appendingPathComponent("database.sqlite")
+
+        let databaseService = DatabaseService(
+            database: SQLite3Database(
+                path: databaseURL.absoluteString,
+                mode: .readwrite
+            ),
+            migrations: Config.migrations
+        )
+        
+        self.data = DataService(
             documentURL: self.documentURL,
-            databaseURL: self.applicationSupportURL
-                .appendingPathComponent("database.sqlite"),
+            databaseURL: databaseURL,
             noosphere: noosphere,
-            memos: memos,
-            migrations: migrations
+            database: databaseService,
+            memos: memos
         )
 
         self.keyboard = KeyboardService()
 
         self.feed = FeedService()
-
-        // MARK: zettelkasten geist
-        do {
-            let grammar = try Bundle.main.read(
-                resource: Config.default.traceryZettelkasten,
-                withExtension: "json"
-            )
-            let geist = try RandomPromptGeist(
-                database: database,
-                data: grammar
-            )
-            self.feed.register(name: "zettelkasten", geist: geist)
-        } catch {
-            logger.debug("Failed to load zettelkasten geist: \(error)")
-        }
-        
-        // MARK: combo geist
-        do {
-            let grammar = try Bundle.main.read(
-                resource: Config.default.traceryCombo,
-                withExtension: "json"
-            )
-            let geist = try ComboGeist(
-                database: database,
-                data: grammar
-            )
-            
-            self.feed.register(name: "combo", geist: geist)
-        } catch {
-            logger.debug("Failed to load combo geist: \(error)")
-        }
-
-        // MARK: Project Geist
-        do {
-            let grammar = try Bundle.main.read(
-                resource: Config.default.traceryProject,
-                withExtension: "json"
-            )
-            let geist = try QueryPromptGeist(
-                database: database,
-                data: grammar,
-                query: "project"
-            )
-            self.feed.register(name: "project", geist: geist)
-        } catch {
-            logger.debug("Failed to load project Geist: \(error)")
-        }
-        
-        // MARK: Memento Geist
-        let mementoGeist = MementoGeist(database: database)
-        self.feed.register(name: "memento", geist: mementoGeist)
     }
 }
 

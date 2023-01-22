@@ -915,7 +915,7 @@ struct DetailModel: ModelProtocol {
             return Update(state: state)
         }
 
-        let fx: Fx<DetailAction> = environment.database
+        let fx: Fx<DetailAction> = environment.data
             .readEntryDetail(
                 link: link,
                 fallback: fallback
@@ -949,7 +949,7 @@ struct DetailModel: ModelProtocol {
 
         let model = prepareLoadDetail(state)
 
-        let fx: Fx<DetailAction> = environment.database
+        let fx: Fx<DetailAction> = environment.data
             .readEntryDetail(
                 link: EntryLink(slug: slug),
                 fallback: model.markupEditor.text
@@ -1140,7 +1140,7 @@ struct DetailModel: ModelProtocol {
         template: Slug,
         autofocus: Bool
     ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.database
+        let fx: Fx<DetailAction> = environment.data
             .readEntryDetail(link: link, template: template)
             .map({ detail in
                 DetailAction.setAndPresentDetail(
@@ -1163,7 +1163,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         autofocus: Bool
     ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.database.readRandomEntryLink()
+        let fx: Fx<DetailAction> = environment.data.readRandomEntryLink()
             .map({ link in
                 DetailAction.loadAndPresentDetail(
                     link: link,
@@ -1236,7 +1236,7 @@ struct DetailModel: ModelProtocol {
         // Mark saving in-progress
         model.saveState = .saving
 
-        let fx: Fx<DetailAction> = environment.database
+        let fx: Fx<DetailAction> = environment.data
             .writeEntryAsync(entry)
             .map({ _ in
                 DetailAction.succeedSave(entry)
@@ -1322,15 +1322,12 @@ struct DetailModel: ModelProtocol {
             default: Set()
         )
 
-        // Get fallback link suggestions
-        let fallback = environment.database.readDefaultLinkSuggestions()
-
         // Search link suggestions
-        let fx: Fx<DetailAction> = environment.database
+        let fx: Fx<DetailAction> = environment.data
             .searchLinkSuggestions(
                 query: text,
                 omitting: omitting,
-                fallback: fallback
+                fallback: []
             )
             .map({ suggestions in
                 DetailAction.setLinkSuggestions(suggestions)
@@ -1465,7 +1462,7 @@ struct DetailModel: ModelProtocol {
         guard let current = state.entryToRename else {
             return Update(state: state)
         }
-        let fx: Fx<DetailAction> = environment.database
+        let fx: Fx<DetailAction> = environment.data
             .searchRenameSuggestions(
                 query: text,
                 current: current
@@ -1548,7 +1545,7 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.database
+        let fx: Fx<DetailAction> = environment.data
             .moveEntryAsync(from: from, to: to)
             .map({ _ in
                 DetailAction.succeedMoveEntry(from: from, to: to)
@@ -1611,7 +1608,7 @@ struct DetailModel: ModelProtocol {
         parent: EntryLink,
         child: EntryLink
     ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.database
+        let fx: Fx<DetailAction> = environment.data
             .mergeEntryAsync(parent: parent, child: child)
             .map({ _ in
                 DetailAction.succeedMergeEntry(parent: parent, child: child)
@@ -1673,7 +1670,7 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.database
+        let fx: Fx<DetailAction> = environment.data
             .retitleEntryAsync(from: from, to: to)
             .map({ _ in
                 DetailAction.succeedRetitleEntry(from: from, to: to)

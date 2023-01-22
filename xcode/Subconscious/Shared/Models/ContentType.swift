@@ -15,6 +15,18 @@ enum ContentType: String {
 }
 
 extension ContentType {
+    static func orFallback(string: String?, fallback: ContentType) -> Self {
+        guard let string = string else {
+            return fallback
+        }
+        guard let contentType = ContentType(rawValue: string) else {
+            return fallback
+        }
+        return contentType
+    }
+}
+
+extension ContentType {
     var fileExtension: String {
         switch self {
         case .subtext:

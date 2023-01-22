@@ -16,7 +16,7 @@ struct HeaderSubtextMemoStore {
     }
     
     /// Read memo from slug key
-    func read(_ slug: Slug) throws -> Memo {
+    func read(_ slug: Slug) -> Memo? {
         let path = slug.toPath(ContentType.subtext.fileExtension)
         let fallbackHeaders = WellKnownHeaders(
             contentType: ContentType.subtext.rawValue,
@@ -25,14 +25,12 @@ struct HeaderSubtextMemoStore {
             title: slug.toTitle(),
             fileExtension: ContentType.subtext.rawValue
         )
-        return try store.read(
-            with: { data in
-                data.toString()?
-                    .toHeaderSubtext()
-                    .toMemo(fallback: fallbackHeaders)
-            },
-            key: path
-        )
+        return store
+            .read(path)?
+            .toString()?
+            .toHeaderSubtext()
+            .toMemo(fallback: fallbackHeaders)
+
     }
     
     /// Write Memo to slug key
@@ -69,7 +67,7 @@ struct HeaderSubtextMemoStore {
             })
     }
 
-    func info(_ key: Slug) throws -> FileInfo {
-        try store.info(key.toPath(ContentType.subtext.fileExtension))
+    func info(_ key: Slug) -> FileInfo? {
+        store.info(key.toPath(ContentType.subtext.fileExtension))
     }
 }
