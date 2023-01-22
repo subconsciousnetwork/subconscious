@@ -11,11 +11,11 @@ import Foundation
 ///
 /// We typically convert this to `Memo<T>` in order to work with it more
 /// effectively.
-struct MemoData: Hashable, Codable {
+public struct MemoData: Hashable, Codable {
     /// The value of the `Content-Type` header.
-    let contentType: String
+    public let contentType: String
     /// A collection of headers
-    let additionalHeaders: [Header]
+    public let additionalHeaders: [Header]
     /// The raw bytes of the body part.
-    let body: Data
+    public let body: Data
 }

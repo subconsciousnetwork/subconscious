@@ -739,6 +739,7 @@ struct DatabaseService {
         guard Config.default.noosphere.enabled else {
             let sphere = try self.noosphere.getSphere()
             let memoData = try sphere.read(slashlink: slug.toSlashlink())
+                .unwrap()
             guard let memo = memoData.toMemo(title: slug.toTitle()) else {
                 throw CodingError.decodingError(message: "Could not decode UTF-8 String")
             }

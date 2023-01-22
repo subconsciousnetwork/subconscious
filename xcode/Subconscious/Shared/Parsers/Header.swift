@@ -88,9 +88,9 @@ extension WellKnownHeaders {
 }
 
 /// A header
-struct Header: Hashable, CustomStringConvertible, Codable {
-    let name: String
-    let value: String
+public struct Header: Hashable, CustomStringConvertible, Codable {
+    public let name: String
+    public let value: String
 
     init(
         name: String,
@@ -118,7 +118,7 @@ struct Header: Hashable, CustomStringConvertible, Codable {
         )
     }
 
-    var description: String {
+    public var description: String {
         "\(name): \(value)\n"
     }
 
