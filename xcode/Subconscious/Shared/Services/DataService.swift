@@ -99,6 +99,7 @@ struct DataService {
     func writeEntry(_ entry: MemoEntry) throws {
         var entry = entry
         entry.contents.modified = Date.now
+
         try memos.write(entry.slug, value: entry.contents)
 
         // Read modified/size from file system directly after writing.
@@ -299,7 +300,7 @@ struct DataService {
                         modified: Date.now,
                         title: link.title,
                         fileExtension: ContentType.subtext.fileExtension,
-                        other: [],
+                        additionalHeaders: [],
                         body: fallback
                     )
                 ),

@@ -16,7 +16,7 @@ struct Memo: Hashable, CustomStringConvertible {
     var modified: Date
     var title: String
     var fileExtension: String
-    var other: Headers
+    var additionalHeaders: Headers
     var body: String
     
     /// Get combined headers.
@@ -31,7 +31,7 @@ struct Memo: Hashable, CustomStringConvertible {
             fileExtension: fileExtension
         )
         .getAdditionalHeaders()
-        .merge(other)
+        .merge(additionalHeaders)
     }
     
     var description: String { body }
@@ -111,7 +111,7 @@ extension MemoData {
             modified: headers.modified,
             title: headers.title,
             fileExtension: headers.fileExtension,
-            other: [],
+            additionalHeaders: [],
             body: body
         )
     }

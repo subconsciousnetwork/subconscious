@@ -35,7 +35,8 @@ extension MemoEntry {
     /// `other` Subtext is appended to the end of `self` Subtext.
     func merge(_ that: MemoEntry) -> Self {
         var this = self
-        this.contents.other = this.contents.other.merge(that.contents.other)
+        this.contents.additionalHeaders = this.contents.additionalHeaders
+            .merge(that.contents.additionalHeaders)
         let concatenated = "\(this.contents.body)\n\n\(that.contents.body)"
         this.contents.body = concatenated
         return this

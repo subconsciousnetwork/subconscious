@@ -99,7 +99,7 @@ struct StoryComboView_Previews: PreviewProvider {
                             modified: Date.now,
                             title: "Meme",
                             fileExtension: ContentType.subtext.fileExtension,
-                            other: [],
+                            additionalHeaders: [],
                             body: """
                             The gene, the DNA molecule, happens to be the replicating entity that prevails on our own planet. There may be others.
 
@@ -117,7 +117,7 @@ struct StoryComboView_Previews: PreviewProvider {
                             modified: Date.now,
                             title: "Meme",
                             fileExtension: ContentType.subtext.fileExtension,
-                            other: [],
+                            additionalHeaders: [],
                             body: """
                             Title: Meme
                             Modified: 2022-08-23

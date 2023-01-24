@@ -527,7 +527,7 @@ struct DatabaseService {
             modified: modified,
             title: title,
             fileExtension: contentType.fileExtension,
-            other: [],
+            additionalHeaders: [],
             body: body
         )
 

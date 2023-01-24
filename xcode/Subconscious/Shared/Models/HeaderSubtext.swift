@@ -57,7 +57,7 @@ extension HeaderSubtext {
             modified: wellKnownHeaders.modified,
             title: wellKnownHeaders.title,
             fileExtension: wellKnownHeaders.fileExtension,
-            other: headers,
+            additionalHeaders: headers,
             body: body
         )
     }

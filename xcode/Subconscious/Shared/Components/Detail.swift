@@ -270,9 +270,9 @@ struct DetailModel: ModelProtocol {
         fileExtension: ContentType.subtext.fileExtension
     )
     /// Additional headers that are not well-known headers.
-    var other: Headers = []
+    var additionalHeaders: Headers = []
     var backlinks: [EntryStub] = []
-
+    
     /// Is editor saved?
     var saveState = SaveState.saved
 
@@ -1012,7 +1012,7 @@ struct DetailModel: ModelProtocol {
         model.isLoading = false
         model.slug = detail.slug
         model.headers = detail.entry.contents.wellKnownHeaders()
-        model.other = detail.entry.contents.other
+        model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.backlinks = detail.backlinks
         model.saveState = detail.saveState
 
@@ -1192,7 +1192,7 @@ struct DetailModel: ModelProtocol {
             title: "",
             fileExtension: ContentType.subtext.fileExtension
         )
-        model.other = Headers()
+        model.additionalHeaders = Headers()
         model.markupEditor = MarkupTextModel()
         model.backlinks = []
         model.isLoading = true
@@ -1882,7 +1882,7 @@ extension MemoEntry {
             modified: detail.headers.modified,
             title: detail.headers.title,
             fileExtension: detail.headers.fileExtension,
-            other: detail.other,
+            additionalHeaders: detail.additionalHeaders,
             body: detail.markupEditor.text
         )
     }
