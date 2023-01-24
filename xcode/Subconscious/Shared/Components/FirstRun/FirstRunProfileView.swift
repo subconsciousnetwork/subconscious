@@ -40,6 +40,7 @@ struct FirstRunProfileView: View {
                                 tag: FirstRunAction.setEmail
                             )
                         )
+                        .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
                     )
                 }
@@ -54,6 +55,10 @@ struct FirstRunProfileView: View {
                     label: {
                         Text("Continue")
                     }
+                )
+                .disabled(
+                    !store.state.isEmailValid ||
+                    !store.state.isNicknameValid
                 )
                 .simultaneousGesture(TapGesture().onEnded {
                     store.send(.persistProfile)
