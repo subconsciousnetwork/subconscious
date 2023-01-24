@@ -16,21 +16,22 @@ struct Memo: Hashable, CustomStringConvertible {
     var modified: Date
     var title: String
     var fileExtension: String
-    var other: Headers
+    var additionalHeaders: Headers
     var body: String
     
     /// Get combined headers.
     /// Properties that represent well-known headers will override
     /// headers in `other`.
     var headers: Headers {
-        Headers(
-            contentType: self.contentType,
-            created: self.created,
-            modified: self.modified,
-            title: self.title,
+        WellKnownHeaders(
+            contentType: contentType,
+            created: created,
+            modified: modified,
+            title: title,
             fileExtension: fileExtension
         )
-        .merge(other)
+        .getAdditionalHeaders()
+        .merge(additionalHeaders)
     }
     
     var description: String { body }
@@ -110,7 +111,7 @@ extension MemoData {
             modified: headers.modified,
             title: headers.title,
             fileExtension: headers.fileExtension,
-            other: [],
+            additionalHeaders: [],
             body: body
         )
     }

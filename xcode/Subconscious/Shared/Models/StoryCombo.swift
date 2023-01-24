@@ -49,7 +49,7 @@ extension MemoEntry {
                 created: Date.now, modified: Date.now,
                 title: link.title,
                 fileExtension: ContentType.subtext.fileExtension,
-                other: [],
+                additionalHeaders: [],
                 body: """
                 \(story.prompt)
                 

@@ -68,11 +68,11 @@ final class Tests_AppMigrations: XCTestCase {
             latest,
             "Migrated to latest version"
         )
-        let loomings = try memos.read(Slug("loomings")!)
+        let loomings = memos.read(Slug("loomings")!)!
         XCTAssertEqual(loomings.title, "Loomings")
         XCTAssertEqual(loomings.body, "Call me Ishmael.")
 
-        let oysters = try memos.read(Slug("oysters")!)
+        let oysters = memos.read(Slug("oysters")!)!
         XCTAssertEqual(oysters.title, "Too much like oysters")
         XCTAssertEqual(oysters.body, "We are too much like oysters observing the sun through the water, and thinking that thick water the thinnest of air.")
         XCTAssertEqual(

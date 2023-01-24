@@ -28,9 +28,9 @@ final class MemoryStoreStorage {
 struct MemoryStore: StoreProtocol {
     private var storage = MemoryStoreStorage()
 
-    func read(_ key: String) throws -> Data {
+    func read(_ key: String) -> Data? {
         guard let value = storage.data[key] else {
-            throw MemoryStoreError.doesNotExist(key)
+            return nil
         }
         return value.data
     }
@@ -49,9 +49,9 @@ struct MemoryStore: StoreProtocol {
         self.storage.data.removeValue(forKey: key)
     }
     
-    func info(_ key: String) throws -> FileInfo {
+    func info(_ key: String) -> FileInfo? {
         guard let value = storage.data[key] else {
-            throw MemoryStoreError.doesNotExist(key)
+            return nil
         }
         return FileInfo(
             created: value.created,
@@ -60,7 +60,7 @@ struct MemoryStore: StoreProtocol {
         )
     }
     
-    func list() throws -> [String] {
+    func list() -> [String] {
         Array(storage.data.keys)
     }
 

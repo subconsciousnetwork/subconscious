@@ -11,7 +11,7 @@ import ObservableStore
 struct FirstRunProfileView: View {
     /// FirstRunView is a major view that manages its own state in a store.
     @ObservedObject var store: Store<FirstRunModel>
-    var done: (String) -> Void
+    var onDone: (String) -> Void
 
     var body: some View {
         NavigationStack {
@@ -40,17 +40,25 @@ struct FirstRunProfileView: View {
                                 tag: FirstRunAction.setEmail
                             )
                         )
+                        .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
                     )
                 }
                 Spacer()
                 NavigationLink(
                     destination: {
-                        FirstRunCreateSphereView(store: store, done: done)
+                        FirstRunCreateSphereView(
+                            store: store,
+                            onDone: onDone
+                        )
                     },
                     label: {
                         Text("Continue")
                     }
+                )
+                .disabled(
+                    !store.state.isEmailValid ||
+                    !store.state.isNicknameValid
                 )
                 .simultaneousGesture(TapGesture().onEnded {
                     store.send(.persistProfile)
@@ -70,7 +78,7 @@ struct FirstRunProfileView_Previews: PreviewProvider {
                 state: FirstRunModel(),
                 environment: AppEnvironment.default
             ),
-            done: { id in }
+            onDone: { id in }
         )
     }
 }

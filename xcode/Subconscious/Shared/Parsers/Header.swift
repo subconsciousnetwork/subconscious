@@ -32,19 +32,19 @@ extension WellKnownHeaders {
     /// we generally do not include it in the "additional" headers.
     func updating(_ additionalHeaders: [Header]) -> Self {
         var this = self
-
+        
         if let title = additionalHeaders.get(
             first: HeaderName.title.rawValue
         ) {
             this.title = title
         }
-
+        
         if let fileExtension = additionalHeaders.get(
             first: HeaderName.fileExtension.rawValue
         ) {
             this.fileExtension = fileExtension
         }
-
+        
         if
             let createdString = additionalHeaders.get(
                 first: HeaderName.created.rawValue
@@ -53,7 +53,7 @@ extension WellKnownHeaders {
         {
             this.created = created
         }
-
+        
         if
             let modifiedString = additionalHeaders.get(
                 first: HeaderName.modified.rawValue
@@ -62,15 +62,35 @@ extension WellKnownHeaders {
         {
             this.modified = modified
         }
-
+        
         return this
+    }
+    
+    /// Get "additional" headers as an array.
+    /// Does not include `Content-Type`.
+    func getAdditionalHeaders() -> [Header] {
+        [
+            Header(name: HeaderName.title.rawValue, value: title),
+            Header(
+                name: HeaderName.fileExtension.rawValue,
+                value: fileExtension
+            ),
+            Header(
+                name: HeaderName.created.rawValue,
+                value: created.ISO8601Format()
+            ),
+            Header(
+                name: HeaderName.modified.rawValue,
+                value: modified.ISO8601Format()
+            )
+        ]
     }
 }
 
 /// A header
-struct Header: Hashable, CustomStringConvertible, Codable {
-    let name: String
-    let value: String
+public struct Header: Hashable, CustomStringConvertible, Codable {
+    public let name: String
+    public let value: String
 
     init(
         name: String,
@@ -98,7 +118,7 @@ struct Header: Hashable, CustomStringConvertible, Codable {
         )
     }
 
-    var description: String {
+    public var description: String {
         "\(name): \(value)\n"
     }
 

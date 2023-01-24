@@ -25,6 +25,16 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
     var sphereMnemonic: String?
     var sphereIdentity: String?
     
+    var isNicknameValid: Bool {
+        let match = try? Self.nicknameRegex.prefixMatch(in: nickname)
+        return match != nil
+    }
+
+    var isEmailValid: Bool {
+        let match = try? Self.emailRegex.wholeMatch(in: email)
+        return match != nil
+    }
+
     static func update(
         state: FirstRunModel,
         action: FirstRunAction,
@@ -56,13 +66,20 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
             )
         }
     }
-    
+
+    /// Does an extremely simple hygiene check on email addresses.
+    static let nicknameRegex = try! Regex(#"\S"#)
+
+    /// Does an extremely simple hygiene check on email addresses.
+    static let emailRegex = try! Regex(#"^\S+@\S+$"#)
+
     static func start(
         state: FirstRunModel,
         environment: AppEnvironment
     ) -> Update<FirstRunModel> {
         // Does Sphere already exist? Get it and set on model
-        if let sphereIdentity = environment.noosphere.getSphereIdentity() {
+        let noosphere = environment.data.noosphere
+        if let sphereIdentity = noosphere.getSphereIdentity() {
             var model = state
             model.sphereIdentity = sphereIdentity
             return Update(state: model)
@@ -75,8 +92,13 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
         environment: AppEnvironment
     ) -> Update<FirstRunModel> {
         do {
-            let receipt = try environment.noosphere.createSphere(
-                ownerKeyName: state.nickname
+            let ownerKeyName = (
+                state.nickname.isEmpty ?
+                Config.default.noosphere.ownerKeyName :
+                state.nickname
+            )
+            let receipt = try environment.data.noosphere.createSphere(
+                ownerKeyName: ownerKeyName
             )
             var model = state
             model.sphereMnemonic = receipt.mnemonic
@@ -111,7 +133,7 @@ struct FirstRunView: View {
         state: FirstRunModel(),
         environment: AppEnvironment.default
     )
-    var done: (String) -> Void
+    var onDone: (String) -> Void
 
     var body: some View {
         NavigationStack {
@@ -122,9 +144,9 @@ struct FirstRunView: View {
                     .frame(width: 128, height: 128)
                 Spacer()
                 VStack(alignment: .leading, spacing: AppTheme.unit3) {
-                    Text("Welcome to Subconscious, a place to garden thoughts and share them with others.")
+                    Text("Welcome to Subconscious, a place to garden thoughts and share with others.")
                     
-                    Text("Subconscious is powered by an open and decentralized note graph. Your data is yours, forever.")
+                    Text("Subconscious is powered by a decentralized note graph. Your data is yours, forever.")
                 }
                 .foregroundColor(.secondary)
                 .font(.callout)
@@ -133,7 +155,7 @@ struct FirstRunView: View {
                     destination: {
                         FirstRunProfileView(
                             store: store,
-                            done: done
+                            onDone: onDone
                         )
                     },
                     label: {
@@ -155,7 +177,7 @@ struct FirstRunView: View {
 struct FirstRunView_Previews: PreviewProvider {
     static var previews: some View {
         FirstRunView(
-            done: { id in }
+            onDone: { id in }
         )
     }
 }

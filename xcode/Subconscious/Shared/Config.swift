@@ -35,17 +35,6 @@ struct Config: Equatable, Codable {
 
     /// Default links feature enabled?
     var linksEnabled = true
-    /// Template for default links
-    var linksFallback: [Slug] = [
-        Slug("pattern")!,
-        Slug("project")!,
-        Slug("question")!,
-        Slug("quote")!,
-        Slug("book")!,
-        Slug("reference")!,
-        Slug("decision")!,
-        Slug("person")!
-    ]
 
     /// Toggle on/off simple Tracery-based Geists
     var traceryZettelkasten = "zettelkasten"
