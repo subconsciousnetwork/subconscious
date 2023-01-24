@@ -69,9 +69,6 @@ enum AppAction: CustomLogStringConvertible {
     /// Set identity of sphere
     case setSphereIdentity(String?)
 
-    ///  KeyboardService state change
-    case changeKeyboardState(KeyboardState)
-
     /// Poll service
     case poll(Date)
 
@@ -280,12 +277,6 @@ struct AppModel: ModelProtocol {
             )
         case .appear:
             return appear(state: state, environment: environment)
-        case let .changeKeyboardState(keyboard):
-            return changeKeyboardState(
-                state: state,
-                environment: environment,
-                keyboard: keyboard
-            )
         case .poll:
             return poll(
                 state: state,
@@ -397,37 +388,6 @@ struct AppModel: ModelProtocol {
         return Update(state: state)
     }
 
-    /// Change state of keyboard
-    /// Actions come from `KeyboardService`
-    static func changeKeyboardState(
-        state: AppModel,
-        environment: AppEnvironment,
-        keyboard: KeyboardState
-    ) -> Update<AppModel> {
-        switch keyboard {
-        case .willShow(let size, _):
-            return update(
-                state: state,
-                actions: [
-                    .notebook(.setKeyboardHeight(size.height)),
-                    .feed(.setKeyboardHeight(size.height))
-                ],
-                environment: environment
-            )
-        case .didHide:
-            return update(
-                state: state,
-                actions: [
-                    .notebook(.setKeyboardHeight(0)),
-                    .feed(.setKeyboardHeight(0))
-                ],
-                environment: environment
-            )
-        default:
-            return Update(state: state)
-        }
-    }
-
     static func setSphereIdentity(
         state: AppModel,
         environment: AppEnvironment,
@@ -475,15 +435,6 @@ struct AppModel: ModelProtocol {
         })
         .eraseToAnyPublisher()
 
-        // Subscribe to keyboard events
-        let fx: Fx<AppAction> = environment
-            .keyboard.state
-            .map({ value in
-                AppAction.changeKeyboardState(value)
-            })
-            .merge(with: pollFx)
-            .eraseToAnyPublisher()
-        
         /// Get sphere identity, if any
         let sphereIdentity = environment.data.noosphere.getSphereIdentity()
 
@@ -492,7 +443,7 @@ struct AppModel: ModelProtocol {
             action: .setSphereIdentity(sphereIdentity),
             environment: environment
         )
-        .mergeFx(fx)
+        .mergeFx(pollFx)
     }
 
     static func poll(
@@ -722,7 +673,6 @@ struct AppEnvironment {
     var applicationSupportURL: URL
 
     var logger: Logger
-    var keyboard: KeyboardService
     var data: DataService
     var feed: FeedService
 
@@ -780,8 +730,6 @@ struct AppEnvironment {
             database: databaseService,
             memos: memos
         )
-
-        self.keyboard = KeyboardService()
 
         self.feed = FeedService()
     }
