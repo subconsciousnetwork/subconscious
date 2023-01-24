@@ -16,7 +16,7 @@ struct FirstRunCreateSphereView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                VStack(alignment: .leading) {
+                VStack(alignment: .center, spacing: AppTheme.unit2) {
                     Text("Recovery Phrase")
                         .font(.headline)
                     HStack {
@@ -30,9 +30,9 @@ struct FirstRunCreateSphereView: View {
                             .stroke(Color.separator, lineWidth: 0.5)
                     )
                     VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                        Text("This is your notebook's secret recovery phrase. You can use it to recover your data.")
+                        Text("This is your secret recovery phrase. You can use it to recover your account if you lose access.")
                             .foregroundColor(.secondary)
-                        Text("Your recovery phrase is for your eyes only. We don't store it. Write it down. Keep it secret, keep it safe.")
+                        Text("This is for your eyes only. We don't store it. Write it down. Keep it secret, keep it safe.")
                             .foregroundColor(.secondary)
                     }
                 }
