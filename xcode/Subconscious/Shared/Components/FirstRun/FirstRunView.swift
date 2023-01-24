@@ -76,8 +76,13 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
         environment: AppEnvironment
     ) -> Update<FirstRunModel> {
         do {
+            let ownerKeyName = (
+                state.nickname.isEmpty ?
+                Config.default.noosphere.ownerKeyName :
+                state.nickname
+            )
             let receipt = try environment.data.noosphere.createSphere(
-                ownerKeyName: state.nickname
+                ownerKeyName: ownerKeyName
             )
             var model = state
             model.sphereMnemonic = receipt.mnemonic
