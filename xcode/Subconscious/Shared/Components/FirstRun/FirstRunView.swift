@@ -123,9 +123,9 @@ struct FirstRunView: View {
                     .frame(width: 128, height: 128)
                 Spacer()
                 VStack(alignment: .leading, spacing: AppTheme.unit3) {
-                    Text("Welcome to Subconscious, a place to garden thoughts and share them with others.")
+                    Text("Welcome to Subconscious, a place to garden thoughts and share with others.")
                     
-                    Text("Subconscious is powered by an open and decentralized note graph. Your data is yours, forever.")
+                    Text("Subconscious is powered by a decentralized note graph. Your data is yours, forever.")
                 }
                 .foregroundColor(.secondary)
                 .font(.callout)
