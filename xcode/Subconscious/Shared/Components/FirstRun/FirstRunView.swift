@@ -25,6 +25,16 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
     var sphereMnemonic: String?
     var sphereIdentity: String?
     
+    var isNicknameValid: Bool {
+        let match = try? Self.nicknameRegex.prefixMatch(in: nickname)
+        return match != nil
+    }
+
+    var isEmailValid: Bool {
+        let match = try? Self.emailRegex.wholeMatch(in: email)
+        return match != nil
+    }
+
     static func update(
         state: FirstRunModel,
         action: FirstRunAction,
@@ -56,7 +66,13 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
             )
         }
     }
-    
+
+    /// Does an extremely simple hygiene check on email addresses.
+    static let nicknameRegex = try! Regex(#"\S"#)
+
+    /// Does an extremely simple hygiene check on email addresses.
+    static let emailRegex = try! Regex(#"^\S+@\S+$"#)
+
     static func start(
         state: FirstRunModel,
         environment: AppEnvironment
