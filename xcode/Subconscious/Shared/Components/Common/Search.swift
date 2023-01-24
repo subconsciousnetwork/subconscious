@@ -31,7 +31,6 @@ enum SearchAction: Hashable, CustomLogStringConvertible {
     case activateSuggestion(Suggestion)
     /// Notify parent of suggeston activation
     case activatedSuggestion(Suggestion)
-    case setKeyboardHeight(CGFloat)
     //  Search history
     /// Write a search history event to the database
     case createSearchHistoryItem(String)
@@ -57,13 +56,13 @@ struct SearchModel: ModelProtocol {
     var isPresented = false
     /// Animation duration for hide/show
     var presentAnimationDuration = Duration.keyboard
+    var clearSearchTimeout = Duration.keyboard + 0.1
 
     /// Placeholder text when empty
     var placeholder = ""
     /// Live input text
     var query = ""
     var suggestions: [Suggestion] = []
-    var keyboardHeight: CGFloat = 350
 
     //  MARK: Update
     static func update(
@@ -128,10 +127,6 @@ struct SearchModel: ModelProtocol {
                 ".activatedSuggestion should be handled by parent component"
             )
             return Update(state: state)
-        case .setKeyboardHeight(let keyboardHeight):
-            var model = state
-            model.keyboardHeight = keyboardHeight
-            return Update(state: model)
         case let .createSearchHistoryItem(query):
             return createSearchHistoryItem(
                 state: state,
@@ -181,7 +176,7 @@ struct SearchModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<SearchModel> {
         /// Delay search clearing until hide animation completes
-        let delay = state.presentAnimationDuration
+        let delay = state.clearSearchTimeout
         let fx: Fx<SearchAction> = Just(
             .setQuery("")
         )
@@ -322,82 +317,60 @@ struct SearchView: View {
     var store: ViewStore<SearchModel>
     var suggestionHeight: CGFloat = 56
 
-    /// Calculate maxHeight given number of suggestions.
-    /// This allows us to adapt the height of the modal to the
-    /// suggestions that are returned.
-    private func calcMaxHeight() -> CGFloat {
-        CGFloat.minimum(
-            suggestionHeight * CGFloat(store.state.suggestions.count),
-            suggestionHeight * 6
-        )
-    }
-
     var body: some View {
-        ModalView(
-            isPresented: Binding(
-                store: store,
-                get: \.isPresented,
-                tag: SearchAction.setPresented
-            ),
-            content: VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    SearchTextField(
-                        placeholder: store.state.placeholder,
-                        text: Binding(
-                            store: store,
-                            get: \.query,
-                            tag: SearchAction.setQuery
-                        ),
-                        autofocus: true
-                    )
-                    .submitLabel(.go)
-                    .onSubmit {
-                        store.send(.submitQuery(store.state.query))
-                    }
-                    Button(
-                        action: {
-                            store.send(.cancel)
-                        },
-                        label: {
-                            Text("Cancel")
-                        }
-                    )
-                }
-                .frame(height: AppTheme.unit * 10)
-                .padding(AppTheme.tightPadding)
-                List(store.state.suggestions) { suggestion in
-                    Button(
-                        action: {
-                            store.send(.activateSuggestion(suggestion))
-                        },
-                        label: {
-                            SuggestionLabelView(suggestion: suggestion)
-                        }
-                    )
-                    .modifier(
-                        SuggestionViewModifier(
-                            // Set suggestion height explicitly so we can
-                            // rely on it for our search modal height
-                            // calculations.
-                            // 2022-02-17 Gordon Brander
-                            height: suggestionHeight
+        VStack {
+            if store.state.isPresented {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack {
+                        SearchTextField(
+                            placeholder: store.state.placeholder,
+                            text: Binding(
+                                store: store,
+                                get: \.query,
+                                tag: SearchAction.setQuery
+                            ),
+                            autofocus: true
                         )
-                    )
+                        .submitLabel(.go)
+                        .onSubmit {
+                            store.send(.submitQuery(store.state.query))
+                        }
+                        Button(
+                            action: {
+                                store.send(.cancel)
+                            },
+                            label: {
+                                Text("Cancel")
+                            }
+                        )
+                    }
+                    .frame(height: AppTheme.unit * 10)
+                    .padding(AppTheme.tightPadding)
+                    List(store.state.suggestions) { suggestion in
+                        Button(
+                            action: {
+                                store.send(.activateSuggestion(suggestion))
+                            },
+                            label: {
+                                SuggestionLabelView(suggestion: suggestion)
+                            }
+                        )
+                        .modifier(
+                            SuggestionViewModifier(
+                                // Set suggestion height explicitly so we can
+                                // rely on it for our search modal height
+                                // calculations.
+                                // 2022-02-17 Gordon Brander
+                                height: suggestionHeight
+                            )
+                        )
+                    }
+                    .listStyle(.plain)
+                    .padding(.bottom, AppTheme.tightPadding)
                 }
-                // Fix the height of the scrollview based on the number of
-                // elements present.
-                //
-                // This allows us to shrink the modal when there are only a
-                // few elements to show.
-                //
-                // 2022-01-28 Gordon Brander
-                .frame(maxHeight: calcMaxHeight())
-                .listStyle(.plain)
-                .padding(.bottom, AppTheme.tightPadding)
+                .background(Color.background)
             }
-            .background(Color.background),
-            keyboardHeight: store.state.keyboardHeight
-        )
+        }
     }
 }
 

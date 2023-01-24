@@ -128,12 +128,6 @@ enum NotebookAction {
     static func setLinkSearch(_ query: String) -> Self {
         .detail(.setLinkSearch(query))
     }
-
-    /// Notification passed down from parent component,
-    /// driven by KeyboardService.
-    static func setKeyboardHeight(_ height: CGFloat) -> Self {
-        .search(.setKeyboardHeight(height))
-    }
 }
 
 extension NotebookAction: CustomLogStringConvertible {
