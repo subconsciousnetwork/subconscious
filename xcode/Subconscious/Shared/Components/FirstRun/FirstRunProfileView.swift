@@ -11,7 +11,7 @@ import ObservableStore
 struct FirstRunProfileView: View {
     /// FirstRunView is a major view that manages its own state in a store.
     @ObservedObject var store: Store<FirstRunModel>
-    var done: (String) -> Void
+    var onDone: (String) -> Void
 
     var body: some View {
         NavigationStack {
@@ -46,7 +46,10 @@ struct FirstRunProfileView: View {
                 Spacer()
                 NavigationLink(
                     destination: {
-                        FirstRunCreateSphereView(store: store, done: done)
+                        FirstRunCreateSphereView(
+                            store: store,
+                            onDone: onDone
+                        )
                     },
                     label: {
                         Text("Continue")
@@ -70,7 +73,7 @@ struct FirstRunProfileView_Previews: PreviewProvider {
                 state: FirstRunModel(),
                 environment: AppEnvironment.default
             ),
-            done: { id in }
+            onDone: { id in }
         )
     }
 }

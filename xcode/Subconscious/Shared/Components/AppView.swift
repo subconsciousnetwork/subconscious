@@ -39,7 +39,7 @@ struct AppView: View {
                 store.state.sphereIdentity == nil
             ) {
                 FirstRunView(
-                    done: { sphereIdentity in
+                    onDone: { sphereIdentity in
                         store.send(.setSphereIdentity(sphereIdentity))
                     }
                 )

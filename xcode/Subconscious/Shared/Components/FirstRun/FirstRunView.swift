@@ -117,7 +117,7 @@ struct FirstRunView: View {
         state: FirstRunModel(),
         environment: AppEnvironment.default
     )
-    var done: (String) -> Void
+    var onDone: (String) -> Void
 
     var body: some View {
         NavigationStack {
@@ -139,7 +139,7 @@ struct FirstRunView: View {
                     destination: {
                         FirstRunProfileView(
                             store: store,
-                            done: done
+                            onDone: onDone
                         )
                     },
                     label: {
@@ -161,7 +161,7 @@ struct FirstRunView: View {
 struct FirstRunView_Previews: PreviewProvider {
     static var previews: some View {
         FirstRunView(
-            done: { id in }
+            onDone: { id in }
         )
     }
 }

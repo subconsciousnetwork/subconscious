@@ -10,7 +10,7 @@ import SwiftUI
 struct FirstRunCreateSphereView: View {
     /// FirstRunView is a major view that manages its own state in a store.
     @ObservedObject var store: Store<FirstRunModel>
-    var done: (String) -> Void
+    var onDone: (String) -> Void
 
     var body: some View {
         NavigationStack {
@@ -39,7 +39,7 @@ struct FirstRunCreateSphereView: View {
                 Spacer()
                 NavigationLink(
                     destination: {
-                        FirstRunDoneView(store: store, done: done)
+                        FirstRunDoneView(store: store, onDone: onDone)
                     },
                     label: {
                         Text("Ok, I wrote it down")
@@ -63,7 +63,7 @@ struct FirstRunCreateSphereView_Previews: PreviewProvider {
                 state: FirstRunModel(),
                 environment: AppEnvironment.default
             ),
-            done: { id in }
+            onDone: { id in }
         )
     }
 }
