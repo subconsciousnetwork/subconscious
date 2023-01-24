@@ -100,8 +100,25 @@ struct DataService {
         var entry = entry
         entry.contents.modified = Date.now
 
-        try memos.write(entry.slug, value: entry.contents)
+        guard !Config.default.noosphere.enabled else {
+            let sphere = try noosphere.getSphere()
+            let body = try entry.contents.body.toData().unwrap()
+            try sphere.write(
+                slug: entry.slug.description,
+                contentType: entry.contents.contentType,
+                additionalHeaders: entry.contents.headers,
+                body: body
+            )
+            let info = FileInfo(
+                created: entry.contents.created,
+                modified: entry.contents.modified,
+                size: body.count
+            )
+            try database.writeEntry(entry: entry, info: info)
+            return
+        }
 
+        try memos.write(entry.slug, value: entry.contents)
         // Read modified/size from file system directly after writing.
         // Why: we use file system as source of truth and don't want any
         // discrepencies to sneak in (e.g. different time between write and
@@ -287,6 +304,38 @@ struct DataService {
         fallback: String
     ) throws -> EntryDetail {
         let backlinks = database.readEntryBacklinks(slug: link.slug)
+
+        guard !Config.default.noosphere.enabled else {
+            // Retreive top entry from file system to ensure it is fresh.
+            // If no file exists, return a draft, using fallback for title.
+            let sphere = try noosphere.getSphere()
+            let slashlink = link.slug.toSlashlink()
+            guard let memo = sphere.read(slashlink: slashlink)?.toMemo() else {
+                return EntryDetail(
+                    saveState: .draft,
+                    entry: MemoEntry(
+                        slug: link.slug,
+                        contents: Memo(
+                            contentType: ContentType.subtext.rawValue,
+                            created: Date.now,
+                            modified: Date.now,
+                            title: link.title,
+                            fileExtension: ContentType.subtext.fileExtension,
+                            additionalHeaders: [],
+                            body: fallback
+                        )
+                    ),
+                    backlinks: backlinks
+                )
+            }
+            // Return entry
+            return EntryDetail(
+                saveState: .saved,
+                entry: MemoEntry(slug: link.slug, contents: memo),
+                backlinks: backlinks
+            )
+        }
+
         // Retreive top entry from file system to ensure it is fresh.
         // If no file exists, return a draft, using fallback for title.
         guard let memo = memos.read(link.slug) else {
