@@ -370,8 +370,8 @@ final class NoosphereService {
             return noosphere
         }
         let noosphere = try Noosphere(
-            globalStoragePath: globalStorageURL.path(),
-            sphereStoragePath: sphereStorageURL.path()
+            globalStoragePath: globalStorageURL.path(percentEncoded: false),
+            sphereStoragePath: sphereStorageURL.path(percentEncoded: false)
         )
         self._noosphere = noosphere
         return noosphere
