@@ -158,38 +158,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         .selectLinkSuggestion(.entry(link))
     }
 
-    private static func generateScratchFallback(date: Date) -> String {
-        let formatter = DateFormatter.yyyymmdd()
-        let yyyymmdd = formatter.string(from: date)
-        return "[[\(yyyymmdd)]]"
-    }
-
-    /// Generate a detail request from a suggestion
-    static func fromSuggestion(_ suggestion: Suggestion) -> Self {
-        switch suggestion {
-        case .entry(let entryLink):
-            return .loadAndPresentDetail(
-                link: entryLink,
-                fallback: entryLink.linkableTitle,
-                autofocus: false
-            )
-        case .search(let entryLink):
-            return .loadAndPresentDetail(
-                link: entryLink,
-                fallback: entryLink.linkableTitle,
-                autofocus: true
-            )
-        case .scratch(let entryLink):
-            return .loadAndPresentDetail(
-                link: entryLink,
-                fallback: generateScratchFallback(date: Date.now),
-                autofocus: true
-            )
-        case .random:
-            return .loadAndPresentRandomDetail(autofocus: false)
-        }
-    }
-
     // MARK: logDescription
     var logDescription: String {
         switch self {
@@ -1888,69 +1856,85 @@ extension MemoEntry {
     }
 }
 
+/// A description of a detail suitible for pushing onto a navigation stack
+struct DetailDescription: Hashable {
+    var slug: Slug
+    var title: String
+    var fallback: String
+}
+
 //  MARK: View
 struct DetailView: View {
-    private static func calcTextFieldHeight(
-        containerHeight: CGFloat,
-        isKeyboardUp: Bool,
-        hasBacklinks: Bool
-    ) -> CGFloat {
-        UIFont.appTextMono.lineHeight * 8
-    }
-
-    var store: ViewStore<DetailModel>
+    @StateObject private var store = Store(
+        state: DetailModel(),
+        environment: AppEnvironment.default
+    )
     @Environment(\.scenePhase) var scenePhase: ScenePhase
+    var slug: Slug?
+    var title: String
+    var fallback: String
+    var onRequestDetail: (Slug, String, String) -> Void
 
     var isReady: Bool {
         let state = store.state
         return !state.isLoading && state.slug != nil
     }
-
+    
     var body: some View {
         ZStack {
             GeometryReader { geometry in
                 VStack(spacing: 0) {
                     Divider()
-                        ScrollView(.vertical) {
-                            VStack(spacing: 0) {
-                                MarkupTextViewRepresentable(
-                                    store: ViewStore(
-                                        store: store,
-                                        cursor: DetailMarkupEditorCursor.self
-                                    ),
-                                    frame: geometry.frame(in: .local),
-                                    renderAttributesOf: Subtext.renderAttributesOf,
-                                    onLink: { url, _, _, _ in
-                                        store.send(.openURL(url))
-                                        return false
-                                    },
-                                    logger: Logger.editor
-                                )
-                                .insets(
-                                    EdgeInsets(
-                                        top: AppTheme.padding,
-                                        leading: AppTheme.padding,
-                                        bottom: AppTheme.padding,
-                                        trailing: AppTheme.padding
-                                    )
-                                )
-                                .frame(
-                                    minHeight: Self.calcTextFieldHeight(
-                                        containerHeight: geometry.size.height,
-                                        isKeyboardUp: store.state.markupEditor.focus,
-                                        hasBacklinks: store.state.backlinks.count > 0
-                                    )
-                                )
-                                ThickDividerView()
-                                    .padding(.bottom, AppTheme.unit4)
-                                BacklinksView(
-                                    backlinks: store.state.backlinks,
-                                    onSelect: { link in
-                                        store.send(.selectBacklink(link))
+                    ScrollView(.vertical) {
+                        VStack(spacing: 0) {
+                            MarkupTextViewRepresentable(
+                                store: ViewStore(
+                                    store: store,
+                                    cursor: DetailMarkupEditorCursor.self
+                                ),
+                                frame: geometry.frame(in: .local),
+                                renderAttributesOf: Subtext.renderAttributesOf,
+                                onLink: { url, _, _, _ in
+                                    guard
+                                        let link = EntryLink
+                                            .decodefromSubEntryURL(url)
+                                    else {
+                                        return true
                                     }
+                                    onRequestDetail(
+                                        link.slug,
+                                        link.linkableTitle,
+                                        link.title
+                                    )
+                                    return false
+                                },
+                                logger: Logger.editor
+                            )
+                            .insets(
+                                EdgeInsets(
+                                    top: AppTheme.padding,
+                                    leading: AppTheme.padding,
+                                    bottom: AppTheme.padding,
+                                    trailing: AppTheme.padding
                                 )
-                            }
+                            )
+                            .frame(
+                                minHeight: Self.calcTextFieldHeight(
+                                    containerHeight: geometry.size.height,
+                                    isKeyboardUp: store.state.markupEditor.focus,
+                                    hasBacklinks: store.state.backlinks.count > 0
+                                )
+                            )
+                            ThickDividerView()
+                                .padding(.bottom, AppTheme.unit4)
+                            BacklinksView(
+                                backlinks: store.state.backlinks,
+                                onSelect: { link in
+                                    store.send(.selectBacklink(link))
+                                }
+                            )
                         }
+                    }
                     if store.state.markupEditor.focus {
                         DetailKeyboardToolbarView(
                             isSheetPresented: Binding(
@@ -2009,15 +1993,26 @@ struct DetailView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
+        .task {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
-            store.send(.refreshDetailIfStale)
+            store.send(
+                .loadAndPresentDetail(
+                    link: slug.map({ slug in
+                        EntryLink(slug: slug, title: title)
+                    }),
+                    fallback: fallback,
+                    autofocus: false
+                )
+            )
         }
         /// Catch link taps and handle them here
         .environment(\.openURL, OpenURLAction { url in
-            store.send(.openURL(url))
+            guard let link = EntryLink.decodefromSubEntryURL(url) else {
+                return .systemAction
+            }
+            onRequestDetail(link.slug, link.linkableTitle, link.title)
             return .handled
         })
         // Track changes to scene phase so we know when app gets
@@ -2103,5 +2098,13 @@ struct DetailView: View {
                 }
             )
         }
+    }
+    
+    private static func calcTextFieldHeight(
+        containerHeight: CGFloat,
+        isKeyboardUp: Bool,
+        hasBacklinks: Bool
+    ) -> CGFloat {
+        UIFont.appTextMono.lineHeight * 8
     }
 }

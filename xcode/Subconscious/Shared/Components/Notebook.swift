@@ -19,41 +19,30 @@ import Combine
 enum NotebookAction {
     /// Tagged action for search HUD
     case search(SearchAction)
-    /// Tagged action for detail
-    case detail(DetailAction)
-
+    
     /// Sent by `task` when the view first appears
     case start
     /// App database is ready. We rely on parent to notify us of this event.
     case ready
     /// Emitted by database state publisher
     case databaseStateChange(DatabaseServiceState)
-
+    
     /// Refresh the state of all lists and child components by reloading
     /// from database. This also sets searches to their zero-query state.
     case refreshAll
-
+    
     /// Read entry count from DB
     case countEntries
     /// Set the count of existing entries
     case setEntryCount(Int)
     /// Fail to get count of existing entries
     case failEntryCount(Error)
-
+    
     // List entries
     case listRecent
     case setRecent([EntryStub])
     case listRecentFailure(String)
-
-    // Entry CRUD actions
-    case succeedSaveEntry(MemoEntry)
-    /// Move entry succeeded. Lifecycle action from Detail.
-    case succeedMoveEntry(from: EntryLink, to: EntryLink)
-    /// Merge entry succeeded. Lifecycle action from Detail.
-    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
-    /// Retitle entry succeeded. Lifecycle action from Detail.
-    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
-
+    
     // Delete entries
     case confirmDelete(Slug?)
     case setConfirmDeleteShowing(Bool)
@@ -63,88 +52,82 @@ enum NotebookAction {
     case stageDeleteEntry(Slug)
     /// Send entry delete request up to parent.
     case requestDeleteEntry(Slug?)
-    /// Handle entry having been deleted.
-    /// This action is typically sent down from a parent component to notify
-    /// of a deletion having happened here or somewhere else.
-    case entryDeleted(Slug)
-
+    
     //  Search
     /// Hit submit ("go") while focused on search field
     case submitSearch(String)
-
+    
     // Search suggestions
     /// Search suggestion was activated
     case activatedSuggestion(Suggestion)
-
+    
+    /// Set entire navigation stack
+    case setDetails([DetailDescription])
+    
+    /// Push detail onto navigation stack
+    case pushDetail(
+        slug: Slug,
+        title: String,
+        fallback: String,
+        autofocus: Bool
+    )
+    
+    case pushRandomDetail(autofocus: Bool)
+    case failPushRandomDetail(String)
+    
     /// Set search query
     static func setSearch(_ query: String) -> NotebookAction {
         .search(.setQuery(query))
     }
-
+    
     /// Show/hide the search HUD
     static func setSearchPresented(_ isPresented: Bool) -> NotebookAction {
         .search(.setPresented(isPresented))
     }
+    
+    private static func generateScratchFallback(date: Date) -> String {
+        let formatter = DateFormatter.yyyymmdd()
+        let yyyymmdd = formatter.string(from: date)
+        return "[[\(yyyymmdd)]]"
+    }
 
-    /// Forward requestDetail action to detail
-    static func loadAndPresentDetail(
-        link: EntryLink?,
-        fallback: String,
-        autofocus: Bool
-    ) -> Self {
-        .detail(
-            .loadAndPresentDetail(
-                link: link,
-                fallback: fallback,
-                autofocus: autofocus
+    /// Generate a detail request from a suggestion
+    static func fromSuggestion(_ suggestion: Suggestion) -> Self {
+        switch suggestion {
+        case .entry(let entryLink):
+            return .pushDetail(
+                slug: entryLink.slug,
+                title: entryLink.linkableTitle,
+                fallback: entryLink.title,
+                autofocus: false
             )
-        )
-    }
-
-    /// request detail for slug, using template file as a fallback
-    static func loadAndPresentTemplateDetail(
-        link: EntryLink,
-        template: Slug,
-        autofocus: Bool
-    ) -> Self {
-        .detail(
-            .loadAndPresentTemplateDetail(
-                link: link,
-                template: template,
-                autofocus: autofocus
+        case .search(let entryLink):
+            return .pushDetail(
+                slug: entryLink.slug,
+                title: entryLink.linkableTitle,
+                fallback: entryLink.title,
+                autofocus: false
             )
-        )
-    }
-
-    static func loadAndPresentRandomDetail(autofocus: Bool) -> Self {
-        .detail(
-            .loadAndPresentRandomDetail(autofocus: autofocus)
-        )
-    }
-
-    /// Send autosave to detail
-    static let autosave = Self.detail(.autosave)
-
-    static func presentDetail(_ isPresented: Bool) -> Self {
-        .detail(.presentDetail(isPresented))
-    }
-
-    static func setLinkSearch(_ query: String) -> Self {
-        .detail(.setLinkSearch(query))
+        case .scratch(let entryLink):
+            return .pushDetail(
+                slug: entryLink.slug,
+                title: entryLink.linkableTitle,
+                fallback: generateScratchFallback(date: Date.now),
+                autofocus: false
+            )
+        case .random:
+            return .pushRandomDetail(autofocus: false)
+        }
     }
 }
 
 extension NotebookAction: CustomLogStringConvertible {
     var logDescription: String {
         switch self {
-        case .detail(let action):
-            return "detail(\(String.loggable(action)))"
         case .search(let action):
             return "search(\(String.loggable(action)))"
         case .setRecent(let items):
             return "setRecent(\(items.count) items)"
-        case .succeedSaveEntry(let entry):
-            return "succeedSaveEntry(\(entry.slug))"
         default:
             return String(describing: self)
         }
@@ -152,40 +135,6 @@ extension NotebookAction: CustomLogStringConvertible {
 }
 
 //  MARK: Cursors
-
-/// Cursor for detail view
-//  This is a non-standard cursor because Detail is not yet factored out
-//  into a stand-alone component. Instead, we just have a handful of actions
-//  we map to/from and a model we construct on the fly. We should factor
-//  out detail into a proper component.
-struct NotebookDetailCursor: CursorProtocol {
-    static func get(state: NotebookModel) -> DetailModel {
-        state.detail
-    }
-
-    static func set(state: NotebookModel, inner: DetailModel) -> NotebookModel {
-        var model = state
-        model.detail = inner
-        return model
-    }
-
-    static func tag(_ action: DetailAction) -> NotebookAction {
-        switch action {
-        case let .succeedSave(entry):
-            return .succeedSaveEntry(entry)
-        case let .succeedMoveEntry(from, to):
-            return .succeedMoveEntry(from: from, to: to)
-        case let .succeedMergeEntry(parent, child):
-            return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedRetitleEntry(from, to):
-            return .succeedRetitleEntry(from: from, to: to)
-        case .requestDeleteEntry(let slug):
-            return .requestDeleteEntry(slug)
-        default:
-            return .detail(action)
-        }
-    }
-}
 
 struct NotebookSearchCursor: CursorProtocol {
     static func get(state: NotebookModel) -> SearchModel {
@@ -215,27 +164,27 @@ struct NotebookSearchCursor: CursorProtocol {
 struct NotebookModel: ModelProtocol {
     var isDatabaseReady = false
     var isFabShowing = true
-
+    
     /// Search HUD
     var search = SearchModel(
         placeholder: "Search or create..."
     )
-
-    /// Entry detail
-    var detail = DetailModel()
-
+    
+    /// Contains notebook detail panels
+    var details: [DetailDescription] = []
+    
     /// Count of entries
     var entryCount: Int? = nil
-
+    
     ///  Recent entries (nil means "hasn't been loaded from DB")
     var recent: [EntryStub]? = nil
-
+    
     //  Note deletion action sheet
     /// Delete confirmation action sheet
     var entryToDelete: Slug? = nil
     /// Delete confirmation action sheet
     var isConfirmDeleteShowing = false
-
+    
     //  MARK: Update
     //  !!!: Combine publishers can cause segfaults in Swift compiler
     //  Combine publishers have complex types and must be marked up carefully
@@ -251,7 +200,7 @@ struct NotebookModel: ModelProtocol {
     //  2022-01-14 Gordon Brander
     /// AppUpdate is a namespace where we keep the main app update function,
     /// as well as the sub-update functions it calls out to.
-
+    
     /// Main update function
     /// Logs updates and calls down to updateModel
     static func update(
@@ -267,7 +216,7 @@ struct NotebookModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Main update function
     static func updateModel(
         state: NotebookModel,
@@ -277,12 +226,6 @@ struct NotebookModel: ModelProtocol {
         switch action {
         case .search(let action):
             return NotebookSearchCursor.update(
-                state: state,
-                action: action,
-                environment: environment
-            )
-        case .detail(let action):
-            return NotebookDetailCursor.update(
                 state: state,
                 action: action,
                 environment: environment
@@ -317,11 +260,8 @@ struct NotebookModel: ModelProtocol {
                 count: count
             )
         case .failEntryCount(let error):
-            return warn(
-                state: state,
-                environment: environment,
-                error: error
-            )
+            logger.warning("Failed to count entries: \(error)")
+            return Update(state: state)
         case .listRecent:
             return listRecent(
                 state: state,
@@ -370,60 +310,6 @@ struct NotebookModel: ModelProtocol {
                 "requestDeleteEntry should be handled by parent component"
             )
             return Update(state: state)
-        case let .entryDeleted(slug):
-            return NotebookModel.update(
-                state: state,
-                actions: [
-                    .detail(.entryDeleted(slug)),
-                    .search(.entryDeleted(slug)),
-                    .countEntries,
-                    .listRecent
-                ],
-                environment: environment
-            )
-        case let .succeedSaveEntry(entry):
-            return update(
-                state: state,
-                actions: [
-                    .detail(.succeedSave(entry)),
-                    .search(.refreshSuggestions),
-                    .listRecent,
-                    .countEntries
-                ],
-                environment: environment
-            )
-        case let .succeedMoveEntry(from, to):
-            return update(
-                state: state,
-                actions: [
-                    .detail(.succeedMoveEntry(from: from, to: to)),
-                    .search(.refreshSuggestions),
-                    .listRecent,
-                    .countEntries
-                ],
-                environment: environment
-            )
-        case let .succeedMergeEntry(parent, child):
-            return update(
-                state: state,
-                actions: [
-                    .detail(.succeedMergeEntry(parent: parent, child: child)),
-                    .search(.refreshSuggestions),
-                    .listRecent,
-                    .countEntries
-                ],
-                environment: environment
-            )
-        case let .succeedRetitleEntry(from, to):
-            return update(
-                state: state,
-                actions: [
-                    .detail(.succeedRetitleEntry(from: from, to: to)),
-                    .search(.refreshSuggestions),
-                    .listRecent
-                ],
-                environment: environment
-            )
         case .submitSearch(let query):
             return submitSearch(
                 state: state,
@@ -431,64 +317,57 @@ struct NotebookModel: ModelProtocol {
                 query: query
             )
         case let .activatedSuggestion(suggestion):
-            return NotebookDetailCursor.update(
+            return update(
                 state: state,
-                action: DetailAction.fromSuggestion(suggestion),
+                action: NotebookAction.fromSuggestion(suggestion),
                 environment: environment
             )
+        case .setDetails(let details):
+            var model = state
+            model.details = details
+            return Update(state: model)
+        case let .pushDetail(slug, title, fallback, _):
+            var model = state
+            model.details.append(
+                DetailDescription(
+                    slug: slug,
+                    title: title,
+                    fallback: fallback
+                )
+            )
+            return Update(state: model)
+        case .pushRandomDetail(let autofocus):
+            return pushRandomDetail(
+                state: state,
+                environment: environment,
+                autofocus: autofocus
+            )
+        case .failPushRandomDetail(let error):
+            logger.log("Failed to get random note: \(error)")
+            return Update(state: state)
         }
     }
-
+    
     // Logger for actions
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "notebook"
     )
-
-    /// Log error at log level
-    static func log(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        error: Error
-    ) -> Update<NotebookModel> {
-        environment.logger.log("\(error.localizedDescription)")
-        return Update(state: state)
-    }
-
-    /// Log error at warning level
-    static func warn(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        error: Error
-    ) -> Update<NotebookModel> {
-        environment.logger.warning("\(error.localizedDescription)")
-        return Update(state: state)
-    }
-
+    
     /// Just before view appears (sent by task)
     static func start(
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        let pollFx = AppEnvironment.poll(
-            every: Config.default.pollingInterval
-        )
-        .map({ date in
-            NotebookAction.autosave
-        })
-
         /// Subscribe to database state publisher to know when ready to query.
         let databaseStateFx = environment.data.database.$state.map({ state in
-                NotebookAction.databaseStateChange(state)
+            NotebookAction.databaseStateChange(state)
         })
-
-        let fx: Fx<NotebookAction> = databaseStateFx
-            .merge(with: pollFx)
             .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
+        
+        return Update(state: state, fx: databaseStateFx)
     }
-
+    
     /// View is ready
     static func ready(
         state: NotebookModel,
@@ -503,7 +382,7 @@ struct NotebookModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Handle database state changes
     static func databaseStateChange(
         state: NotebookModel,
@@ -524,7 +403,7 @@ struct NotebookModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Refresh all lists in the notebook tab from database.
     /// Typically invoked after creating/deleting an entry, or performing
     /// some other action that would invalidate the state of various lists.
@@ -535,7 +414,6 @@ struct NotebookModel: ModelProtocol {
         return NotebookModel.update(
             state: state,
             actions: [
-                .detail(.refreshLists),
                 .search(.refreshSuggestions),
                 .countEntries,
                 .listRecent
@@ -543,7 +421,7 @@ struct NotebookModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Read entry count from db
     static func countEntries(
         state: NotebookModel,
@@ -556,10 +434,10 @@ struct NotebookModel: ModelProtocol {
             .catch({ error in
                 Just(NotebookAction.failEntryCount(error))
             })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+                .eraseToAnyPublisher()
+                    return Update(state: state, fx: fx)
     }
-
+    
     /// Set entry count
     static func setEntryCount(
         state: NotebookModel,
@@ -570,7 +448,7 @@ struct NotebookModel: ModelProtocol {
         model.entryCount = count
         return Update(state: model)
     }
-
+    
     static func listRecent(
         state: NotebookModel,
         environment: AppEnvironment
@@ -586,10 +464,10 @@ struct NotebookModel: ModelProtocol {
                     )
                 )
             })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+                .eraseToAnyPublisher()
+                    return Update(state: state, fx: fx)
     }
-
+    
     /// Delete entry with `slug`
     static func stageDeleteEntry(
         state: NotebookModel,
@@ -597,7 +475,7 @@ struct NotebookModel: ModelProtocol {
         slug: Slug
     ) -> Update<NotebookModel> {
         var model = state
-
+        
         // If we have recent entries, and can find this slug,
         // immediately remove it from recent entries without waiting
         // for database success to come back.
@@ -611,21 +489,21 @@ struct NotebookModel: ModelProtocol {
         if
             var recent = model.recent,
             let index = recent.firstIndex(
-            where: { stub in stub.id == slug }
-        ) {
+                where: { stub in stub.id == slug }
+            ) {
             recent.remove(at: index)
             model.recent = recent
         }
-
+        
         let fx: Fx<NotebookAction> = Just(
             NotebookAction.requestDeleteEntry(slug)
         )
-        .eraseToAnyPublisher()
-
+            .eraseToAnyPublisher()
+        
         return Update(state: model, fx: fx)
             .animation(.default)
     }
-
+    
     /// Submit a search query (typically by hitting "go" on keyboard)
     static func submitSearch(
         state: NotebookModel,
@@ -635,14 +513,14 @@ struct NotebookModel: ModelProtocol {
         // Duration of keyboard animation
         let duration = Duration.keyboard
         let delay = duration + 0.03
-
+        
         /// We intercepted this action, so create an Fx to forward it down.
         let update = NotebookModel.update(
             state: state,
             action: .search(.submitQuery(query)),
             environment: environment
         )
-
+        
         // Derive slug. If we can't (e.g. invalid query such as empty string),
         // just hide the search HUD and do nothing.
         guard let link = EntryLink(title: query) else {
@@ -651,19 +529,46 @@ struct NotebookModel: ModelProtocol {
             )
             return update
         }
-
+        
         let fx: Fx<NotebookAction> = Just(
-            NotebookAction.loadAndPresentDetail(
-                link: link,
-                fallback: query,
-                autofocus: true
+            NotebookAction.pushDetail(
+                slug: link.slug,
+                title: link.linkableTitle,
+                fallback: link.title,
+                autofocus: false
             )
         )
         // Request detail AFTER animaiton completes
-        .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
-        .eraseToAnyPublisher()
-
+            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+        
         return update.mergeFx(fx)
+    }
+    
+    /// Request detail for a random entry
+    static func pushRandomDetail(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        autofocus: Bool
+    ) -> Update<NotebookModel> {
+        let fx: Fx<NotebookAction> = environment.data.readRandomEntryLink()
+            .map({ link in
+                NotebookAction.pushDetail(
+                    slug: link.slug,
+                    title: link.linkableTitle,
+                    fallback: link.title,
+                    autofocus: autofocus
+                )
+            })
+            .catch({ error in
+                Just(
+                    NotebookAction.failPushRandomDetail(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
 }
 

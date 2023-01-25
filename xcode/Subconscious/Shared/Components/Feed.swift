@@ -189,12 +189,9 @@ struct FeedModel: ModelProtocol {
             )
         case .failFetchFeed(let error):
             return log(state: state, environment: environment, error: error)
-        case .activatedSuggestion(let suggestion):
-            return FeedDetailCursor.update(
-                state: state,
-                action: DetailAction.fromSuggestion(suggestion),
-                environment: environment
-            )
+        case .activatedSuggestion:
+            environment.logger.warning("Not implemented")
+            return Update(state: state)
         case .requestDeleteEntry(_):
             environment.logger.debug(
                 "requestDeleteEntry should be handled by parent component"
@@ -362,12 +359,7 @@ struct FeedView: View {
                         tag: FeedAction.presentDetail
                     )
                 ) {
-                    DetailView(
-                        store: ViewStore(
-                            store: store,
-                            cursor: FeedDetailCursor.self
-                        )
-                    )
+                    Text("Not implemented")
                 }
                 .navigationTitle(Text("Latest"))
             }

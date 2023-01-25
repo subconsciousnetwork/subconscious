@@ -11,15 +11,22 @@ struct NotebookNavigationView: View {
     @ObservedObject var store: Store<NotebookModel>
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(
+            path: Binding(
+                store: store,
+                get: \.details,
+                tag: NotebookAction.setDetails
+            )
+        ) {
             VStack(spacing: 0) {
                 EntryListView(
                     entries: store.state.recent,
                     onEntryPress: { entry in
                         store.send(
-                            .loadAndPresentDetail(
-                                link: entry.link,
-                                fallback: entry.linkableTitle,
+                            .pushDetail(
+                                slug: entry.slug,
+                                title: entry.link.title,
+                                fallback: entry.link.title,
                                 autofocus: false
                             )
                         )
@@ -51,21 +58,23 @@ struct NotebookNavigationView: View {
                     }
                 }
             }
-            .navigationDestination(
-                isPresented: Binding(
-                    store: store,
-                    get: \.detail.isPresented,
-                    tag: NotebookAction.presentDetail
-                ),
-                destination: {
-                    DetailView(
-                        store: ViewStore(
-                            store: store,
-                            cursor: NotebookDetailCursor.self
+            .navigationDestination(for: DetailDescription.self) { desc in
+                DetailView(
+                    slug: desc.slug,
+                    title: desc.title,
+                    fallback: desc.fallback,
+                    onRequestDetail: { slug, title, fallback in
+                        store.send(
+                            NotebookAction.pushDetail(
+                                slug: slug,
+                                title: title,
+                                fallback: fallback,
+                                autofocus: false
+                            )
                         )
-                    )
-                }
-            )
+                    }
+                )
+            }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
