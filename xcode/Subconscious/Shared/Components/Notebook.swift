@@ -552,7 +552,11 @@ struct NotebookModel: ModelProtocol {
         model.details = state.details.filter({ detail in
             detail.slug != slug
         })
-        return Update(state: model)
+        return update(
+            state: model,
+            action: .refreshAll,
+            environment: environment
+        )
     }
 
     /// Submit a search query (typically by hitting "go" on keyboard)
