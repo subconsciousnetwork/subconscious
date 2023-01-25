@@ -75,7 +75,7 @@ struct NotebookNavigationView: View {
                     }
                 )
             }
-            .navigationTitle("")
+            .navigationTitle("Notes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .principal) {

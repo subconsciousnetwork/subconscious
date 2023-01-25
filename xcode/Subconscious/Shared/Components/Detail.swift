@@ -1991,7 +1991,7 @@ struct DetailView: View {
                 }
             }
         }
-        .navigationTitle("")
+        .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .task {
             // When an editor is presented, refresh if stale.
