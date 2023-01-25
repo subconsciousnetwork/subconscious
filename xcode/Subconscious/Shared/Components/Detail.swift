@@ -88,6 +88,10 @@ struct DetailView: View {
         .onChange(of: self.scenePhase) { phase in
             store.send(DetailAction.scenePhaseChange(phase))
         }
+        .onReceive(store.actions) { action in
+            let message = String.loggable(action)
+            DetailModel.logger.debug("[action] \(message)")
+        }
         .sheet(
             isPresented: Binding(
                 store: store,
@@ -548,22 +552,8 @@ struct DetailModel: ModelProtocol {
         category: "detail"
     )
 
-    static func update(
-        state: DetailModel,
-        action: DetailAction,
-        environment: AppEnvironment
-    ) -> Update<DetailModel> {
-        let message = String.loggable(action)
-        logger.debug("[action] \(message)")
-        return updateModel(
-            state: state,
-            action: action,
-            environment: environment
-        )
-    }
-
     //  MARK: Update
-    static func updateModel(
+    static func update(
         state: DetailModel,
         action: DetailAction,
         environment: AppEnvironment

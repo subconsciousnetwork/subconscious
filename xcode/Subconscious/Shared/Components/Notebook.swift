@@ -12,6 +12,59 @@ import os
 import ObservableStore
 import Combine
 
+//  MARK: View
+/// The file view for notes
+struct NotebookView: View {
+    /// Global shared store
+    @ObservedObject var parent: Store<AppModel>
+    /// Local major view store
+    @StateObject private var store = Store(
+        state: NotebookModel(),
+        environment: AppEnvironment.default
+    )
+
+    var body: some View {
+        // Give each element in this ZStack an explicit z-index.
+        // This keeps transitions working correctly.
+        // SwiftUI will dynamically generate z-indexes when no explicit
+        // z-index is given. This can cause transitions to layer incorrectly.
+        // Adding an explicit z-index fixed problems with the
+        // out-transition for the search view.
+        // See https://stackoverflow.com/a/58512696
+        // 2021-12-16 Gordon Brander
+        ZStack {
+            NotebookNavigationView(store: store)
+                .zIndex(1)
+            PinTrailingBottom(
+                content: FABView(
+                    action: {
+                        store.send(.setSearchPresented(true))
+                    }
+                )
+                .padding()
+                .disabled(!store.state.isFabShowing)
+            )
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .zIndex(2)
+            SearchView(
+                store: ViewStore(
+                    store: store,
+                    cursor: NotebookSearchCursor.self
+                )
+            )
+            .zIndex(3)
+        }
+        .onAppear {
+            store.send(.appear)
+        }
+        .onReceive(store.actions) { action in
+            let message = String.loggable(action)
+            NotebookModel.logger.debug("[action] \(message)")
+        }
+    }
+}
+
+
 //  MARK: Action
 /// Actions for modifying state
 /// For action naming convention, see
@@ -203,23 +256,7 @@ struct NotebookModel: ModelProtocol {
     /// as well as the sub-update functions it calls out to.
     
     /// Main update function
-    /// Logs updates and calls down to updateModel
     static func update(
-        state: NotebookModel,
-        action: NotebookAction,
-        environment: AppEnvironment
-    ) -> Update<NotebookModel> {
-        let message = String.loggable(action)
-        logger.debug("\(message)")
-        return updateModel(
-            state: state,
-            action: action,
-            environment: environment
-        )
-    }
-    
-    /// Main update function
-    static func updateModel(
         state: NotebookModel,
         action: NotebookAction,
         environment: AppEnvironment
@@ -624,53 +661,5 @@ struct NotebookModel: ModelProtocol {
             })
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
-    }
-}
-
-//  MARK: View
-/// The file view for notes
-struct NotebookView: View {
-    /// Global shared store
-    @ObservedObject var parent: Store<AppModel>
-    /// Local major view store
-    @StateObject private var store = Store(
-        state: NotebookModel(),
-        environment: AppEnvironment.default
-    )
-
-    var body: some View {
-        // Give each element in this ZStack an explicit z-index.
-        // This keeps transitions working correctly.
-        // SwiftUI will dynamically generate z-indexes when no explicit
-        // z-index is given. This can cause transitions to layer incorrectly.
-        // Adding an explicit z-index fixed problems with the
-        // out-transition for the search view.
-        // See https://stackoverflow.com/a/58512696
-        // 2021-12-16 Gordon Brander
-        ZStack {
-            NotebookNavigationView(store: store)
-                .zIndex(1)
-            PinTrailingBottom(
-                content: FABView(
-                    action: {
-                        store.send(.setSearchPresented(true))
-                    }
-                )
-                .padding()
-                .disabled(!store.state.isFabShowing)
-            )
-            .ignoresSafeArea(.keyboard, edges: .bottom)
-            .zIndex(2)
-            SearchView(
-                store: ViewStore(
-                    store: store,
-                    cursor: NotebookSearchCursor.self
-                )
-            )
-            .zIndex(3)
-        }
-        .onAppear {
-            store.send(.appear)
-        }
     }
 }

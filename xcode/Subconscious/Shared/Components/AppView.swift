@@ -43,6 +43,10 @@ struct AppView: View {
         .onAppear {
             store.send(.appear)
         }
+        .onReceive(store.actions) { action in
+            let message = String.loggable(action)
+            AppModel.logger.debug("[action] \(message)")
+        }
     }
 }
 
@@ -111,36 +115,15 @@ struct AppModel: ModelProtocol {
         self.databaseState == .ready
     }
 
-    //  MARK: Update
-    /// Call through to main update function and log updates
-    /// when `state.config.debug` is `true`.
-    static func update(
-        state: AppModel,
-        action: AppAction,
-        environment: AppEnvironment
-    ) -> Update<AppModel> {
-        let message = String.loggable(action)
-        logger.debug("[action] \(message)")
-        // Generate next state and effect
-        let next = updateApp(
-            state: state,
-            action: action,
-            environment: environment
-        )
-        if Config.default.debug {
-            logger.debug("[state] \(String(describing: next.state))")
-        }
-        return next
-    }
-
     // Logger for actions
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "app"
     )
 
+    //  MARK: Update
     /// Main update function
-    static func updateApp(
+    static func update(
         state: AppModel,
         action: AppAction,
         environment: AppEnvironment
