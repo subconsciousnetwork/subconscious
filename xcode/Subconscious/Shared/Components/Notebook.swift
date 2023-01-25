@@ -21,7 +21,7 @@ enum NotebookAction {
     case search(SearchAction)
     
     /// Sent by `task` when the view first appears
-    case start
+    case appear
     /// App database is ready. We rely on parent to notify us of this event.
     case ready
     /// Emitted by database state publisher
@@ -230,8 +230,8 @@ struct NotebookModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
-        case .start:
-            return start(
+        case .appear:
+            return appear(
                 state: state,
                 environment: environment
             )
@@ -355,7 +355,7 @@ struct NotebookModel: ModelProtocol {
     )
     
     /// Just before view appears (sent by task)
-    static func start(
+    static func appear(
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
@@ -614,8 +614,8 @@ struct NotebookView: View {
             )
             .zIndex(3)
         }
-        .task {
-            store.send(.start)
+        .onAppear {
+            store.send(.appear)
         }
     }
 }

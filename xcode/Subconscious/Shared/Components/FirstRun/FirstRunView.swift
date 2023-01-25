@@ -8,7 +8,7 @@ import ObservableStore
 import SwiftUI
 
 enum FirstRunAction: Hashable {
-    case start
+    case appear
     case createSphere
     case failCreateSphere(String)
     case setNickname(String)
@@ -41,8 +41,8 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
         environment: AppEnvironment
     ) -> Update<FirstRunModel> {
         switch action {
-        case .start:
-            return start(state: state, environment: environment)
+        case .appear:
+            return appear(state: state, environment: environment)
         case .createSphere:
             return createSphere(
                 state: state,
@@ -73,7 +73,7 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
     /// Does an extremely simple hygiene check on email addresses.
     static let emailRegex = try! Regex(#"^\S+@\S+$"#)
 
-    static func start(
+    static func appear(
         state: FirstRunModel,
         environment: AppEnvironment
     ) -> Update<FirstRunModel> {
@@ -168,8 +168,8 @@ struct FirstRunView: View {
             .padding()
         }
         .background(.background)
-        .task {
-            store.send(.start)
+        .onAppear {
+            store.send(.appear)
         }
     }
 }

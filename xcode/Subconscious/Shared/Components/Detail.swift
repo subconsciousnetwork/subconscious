@@ -12,12 +12,22 @@ import Combine
 
 //  MARK: Action
 enum DetailAction: Hashable, CustomLogStringConvertible {
+    /// Sent once and only once on Store initialization
+    case start
+
     /// When scene phase changes.
     /// E.g. when app is foregrounded, backgrounded, etc.
     case scenePhaseChange(ScenePhase)
 
     /// Wrapper for editor actions
     case markupEditor(MarkupTextAction)
+
+    case appear(
+        slug: Slug?,
+        title: String,
+        fallback: String,
+        autofocus: Bool = false
+    )
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
@@ -317,17 +327,31 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         switch action {
+        case .markupEditor(let action):
+            return DetailMarkupEditorCursor.update(
+                state: state,
+                action: action,
+                environment: ()
+            )
+        case .start:
+            return start(
+                state: state,
+                environment: environment
+            )
         case .scenePhaseChange(let phase):
             return scenePhaseChange(
                 state: state,
                 environment: environment,
                 phase: phase
             )
-        case .markupEditor(let action):
-            return DetailMarkupEditorCursor.update(
+        case let .appear(slug, title, fallback, autofocus):
+            return appear(
                 state: state,
-                action: action,
-                environment: ()
+                environment: environment,
+                slug: slug,
+                title: title,
+                fallback: fallback,
+                autofocus: autofocus
             )
         case let .setEditor(text, saveState, modified):
             return setEditor(
@@ -652,6 +676,16 @@ struct DetailModel: ModelProtocol {
         return Update(state: state)
     }
 
+    static func start(
+        state: DetailModel,
+        environment: AppEnvironment
+    ) -> Update<DetailModel> {
+        let pollFx = AppEnvironment.poll(every: Config.default.pollingInterval)
+            .map({ _ in DetailAction.autosave })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: pollFx)
+    }
+
     /// Handle scene phase change
     /// We trigger an autosave when scene becomes inactive.
     static func scenePhaseChange(
@@ -669,6 +703,27 @@ struct DetailModel: ModelProtocol {
         default:
             return Update(state: state)
         }
+    }
+
+    /// Set the contents of the editor and mark save state and modified time.
+    static func appear(
+        state: DetailModel,
+        environment: AppEnvironment,
+        slug: Slug?,
+        title: String,
+        fallback: String,
+        autofocus: Bool
+    ) -> Update<DetailModel> {
+        let link = slug.map({ slug in EntryLink(slug: slug, title: title) })
+        return update(
+            state: state,
+            action: .loadAndPresentDetail(
+                    link: link,
+                    fallback: fallback,
+                    autofocus: autofocus
+            ),
+            environment: environment
+        )
     }
 
     /// Set the contents of the editor and mark save state and modified time.
@@ -1813,6 +1868,7 @@ struct DetailDescription: Hashable {
 struct DetailView: View {
     @StateObject private var store = Store(
         state: DetailModel(),
+        action: .start,
         environment: AppEnvironment.default
     )
     @Environment(\.scenePhase) var scenePhase: ScenePhase
@@ -1940,17 +1996,15 @@ struct DetailView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
-        .task {
+        .onAppear {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
             store.send(
-                .loadAndPresentDetail(
-                    link: slug.map({ slug in
-                        EntryLink(slug: slug, title: title)
-                    }),
-                    fallback: fallback,
-                    autofocus: false
+                DetailAction.appear(
+                    slug: slug,
+                    title: title,
+                    fallback: fallback
                 )
             )
         }

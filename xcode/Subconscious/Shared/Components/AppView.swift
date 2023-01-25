@@ -40,8 +40,8 @@ struct AppView: View {
                 .zIndex(1)
             }
         }
-        .task {
-            store.send(.start)
+        .onAppear {
+            store.send(.appear)
         }
     }
 }
@@ -51,7 +51,7 @@ enum AppAction: CustomLogStringConvertible {
     /// Set identity of sphere
     case setSphereIdentity(String?)
 
-    case start
+    case appear
 
     //  Database
     /// Kick off database migration.
@@ -152,8 +152,8 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 sphereIdentity: sphereIdentity
             )
-        case .start:
-            return start(state: state, environment: environment)
+        case .appear:
+            return appear(state: state, environment: environment)
         case .migrateDatabase:
             return migrateDatabase(state: state, environment: environment)
         case let .succeedMigrateDatabase(version):
@@ -220,7 +220,7 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
 
-    static func start(
+    static func appear(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
