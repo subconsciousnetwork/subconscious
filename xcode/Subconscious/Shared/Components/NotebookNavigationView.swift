@@ -8,7 +8,7 @@ import SwiftUI
 import ObservableStore
 
 struct NotebookNavigationView: View {
-    var store: ViewStore<NotebookModel>
+    @ObservedObject var store: Store<NotebookModel>
 
     var body: some View {
         NavigationStack {

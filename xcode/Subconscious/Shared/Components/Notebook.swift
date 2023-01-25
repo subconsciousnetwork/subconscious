@@ -22,8 +22,12 @@ enum NotebookAction {
     /// Tagged action for detail
     case detail(DetailAction)
 
+    /// Sent by `task` when the view first appears
+    case start
     /// App database is ready. We rely on parent to notify us of this event.
     case ready
+    /// Emitted by database state publisher
+    case databaseStateChange(DatabaseServiceState)
 
     /// Refresh the state of all lists and child components by reloading
     /// from database. This also sets searches to their zero-query state.
@@ -209,6 +213,7 @@ struct NotebookSearchCursor: CursorProtocol {
 //  MARK: Model
 /// Model containing state for the notebook tab.
 struct NotebookModel: ModelProtocol {
+    var isDatabaseReady = false
     var isFabShowing = true
 
     /// Search HUD
@@ -248,7 +253,23 @@ struct NotebookModel: ModelProtocol {
     /// as well as the sub-update functions it calls out to.
 
     /// Main update function
+    /// Logs updates and calls down to updateModel
     static func update(
+        state: NotebookModel,
+        action: NotebookAction,
+        environment: AppEnvironment
+    ) -> Update<NotebookModel> {
+        let message = String.loggable(action)
+        logger.debug("\(message)")
+        return updateModel(
+            state: state,
+            action: action,
+            environment: environment
+        )
+    }
+
+    /// Main update function
+    static func updateModel(
         state: NotebookModel,
         action: NotebookAction,
         environment: AppEnvironment
@@ -266,10 +287,21 @@ struct NotebookModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
+        case .start:
+            return start(
+                state: state,
+                environment: environment
+            )
         case .ready:
             return ready(
                 state: state,
                 environment: environment
+            )
+        case .databaseStateChange(let databaseState):
+            return databaseStateChange(
+                state: state,
+                environment: environment,
+                databaseState: databaseState
             )
         case .refreshAll:
             return refreshAll(state: state, environment: environment)
@@ -407,6 +439,12 @@ struct NotebookModel: ModelProtocol {
         }
     }
 
+    // Logger for actions
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "notebook"
+    )
+
     /// Log error at log level
     static func log(
         state: NotebookModel,
@@ -427,14 +465,64 @@ struct NotebookModel: ModelProtocol {
         return Update(state: state)
     }
 
-    /// Appear (when view first renders)
+    /// Just before view appears (sent by task)
+    static func start(
+        state: NotebookModel,
+        environment: AppEnvironment
+    ) -> Update<NotebookModel> {
+        let pollFx = AppEnvironment.poll(
+            every: Config.default.pollingInterval
+        )
+        .map({ date in
+            NotebookAction.autosave
+        })
+
+        /// Subscribe to database state publisher to know when ready to query.
+        let databaseStateFx = environment.data.database.$state.map({ state in
+                NotebookAction.databaseStateChange(state)
+        })
+
+        let fx: Fx<NotebookAction> = databaseStateFx
+            .merge(with: pollFx)
+            .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    /// View is ready
     static func ready(
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = Just(NotebookAction.countEntries)
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+        return update(
+            state: state,
+            actions: [
+                .countEntries,
+                .refreshAll
+            ],
+            environment: environment
+        )
+    }
+
+    /// Handle database state changes
+    static func databaseStateChange(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        databaseState: DatabaseServiceState
+    ) -> Update<NotebookModel> {
+        var model = state
+        // If database is not ready, set ready to false and do nothing
+        guard databaseState == .ready else {
+            model.isDatabaseReady = false
+            return Update(state: model)
+        }
+        // If database is ready, set ready and send down ready action.
+        model.isDatabaseReady = true
+        return update(
+            state: model,
+            action: .ready,
+            environment: environment
+        )
     }
 
     /// Refresh all lists in the notebook tab from database.
@@ -582,7 +670,13 @@ struct NotebookModel: ModelProtocol {
 //  MARK: View
 /// The file view for notes
 struct NotebookView: View {
-    var store: ViewStore<NotebookModel>
+    /// Global shared store
+    @ObservedObject var parent: Store<AppModel>
+    /// Local major view store
+    @StateObject private var store = Store(
+        state: NotebookModel(),
+        environment: AppEnvironment.default
+    )
 
     var body: some View {
         // Give each element in this ZStack an explicit z-index.
@@ -614,6 +708,9 @@ struct NotebookView: View {
                 )
             )
             .zIndex(3)
+        }
+        .task {
+            store.send(.start)
         }
     }
 }

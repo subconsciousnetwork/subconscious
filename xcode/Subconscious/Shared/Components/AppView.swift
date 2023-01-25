@@ -17,20 +17,14 @@ struct AppView: View {
         state: AppModel(),
         environment: AppEnvironment.default
     )
-    @Environment(\.scenePhase) var scenePhase: ScenePhase
-
+    
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
                 if Config.default.appTabs {
                     AppTabView(store: store)
                 } else {
-                    NotebookView(
-                        store: ViewStore(
-                            store: store,
-                            cursor: NotebookCursor.self
-                        )
-                    )
+                    NotebookView(parent: store)
                 }
             }
             .zIndex(0)
@@ -46,37 +40,18 @@ struct AppView: View {
                 .zIndex(1)
             }
         }
-        // Track changes to scene phase so we know when app gets
-        // foregrounded/backgrounded.
-        // See https://developer.apple.com/documentation/swiftui/scenephase
-        // 2022-02-08 Gordon Brander
-        .onChange(of: self.scenePhase) { phase in
-            store.send(AppAction.scenePhaseChange(phase))
-        }
-        .onAppear {
-            store.send(.appear)
+        .task {
+            store.send(.start)
         }
     }
 }
 
 //  MARK: Action
 enum AppAction: CustomLogStringConvertible {
-    /// Wrapper for notebook actions
-    case notebook(NotebookAction)
-    /// Wrapper for feed actions
-    case feed(FeedAction)
-
     /// Set identity of sphere
     case setSphereIdentity(String?)
 
-    /// Poll service
-    case poll(Date)
-
-    //  Lifecycle events
-    /// When scene phase changes.
-    /// E.g. when app is foregrounded, backgrounded, etc.
-    case scenePhaseChange(ScenePhase)
-    case appear
+    case start
 
     //  Database
     /// Kick off database migration.
@@ -98,32 +73,9 @@ enum AppAction: CustomLogStringConvertible {
     case sync
     case syncSuccess([FileFingerprintChange])
     case syncFailure(String)
-    case refreshAll
-
-    //  Entry deletion
-    /// Delete an entry
-    case deleteEntry(Slug?)
-    /// Confirm entry deleted
-    case succeedDeleteEntry(Slug)
-    /// Notify entry deletion failed
-    case failDeleteEntry(String)
-
-    // Rename and merge
-    /// Move entry succeeded. Lifecycle action from Detail.
-    case succeedMoveEntry(from: EntryLink, to: EntryLink)
-    /// Merge entry succeeded. Lifecycle action from Detail.
-    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
-    /// Retitle entry succeeded. Lifecycle action from Detail.
-    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
 
     var logDescription: String {
         switch self {
-        case .notebook(let notebookAction):
-            return "notebook(\(String.loggable(notebookAction)))"
-        case .feed(let feedAction):
-            return "feed(\(String.loggable(feedAction)))"
-        case .poll(_):
-            return "poll"
         case let .succeedMigrateDatabase(version):
             return "succeedMigrateDatabase(\(version))"
         default:
@@ -133,69 +85,6 @@ enum AppAction: CustomLogStringConvertible {
 }
 
 //  MARK: Cursors
-
-/// Cursor functions for mapping notebook updates to app updates
-struct NotebookCursor: CursorProtocol {
-    /// Get notebook model from app model
-    static func get(state: AppModel) -> NotebookModel {
-        state.notebook
-    }
-
-    /// Set notebook on app model
-    static func set(
-        state: AppModel,
-        inner notebook: NotebookModel
-    ) -> AppModel {
-        var model = state
-        model.notebook = notebook
-        return model
-    }
-
-    /// Tag notebook actions
-    static func tag(_ action: NotebookAction) -> AppAction {
-        switch action {
-        case .requestDeleteEntry(let slug):
-            return .deleteEntry(slug)
-        case let .succeedMoveEntry(from, to):
-            return .succeedMoveEntry(from: from, to: to)
-        case let .succeedMergeEntry(parent, child):
-            return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedRetitleEntry(from, to):
-            return .succeedRetitleEntry(from: from, to: to)
-        default:
-            return .notebook(action)
-        }
-    }
-}
-
-/// Cursor functions for mapping feed updates to app updates
-struct FeedCursor: CursorProtocol {
-    static func get(state: AppModel) -> FeedModel {
-        state.feed
-    }
-
-    static func set(state: AppModel, inner feed: FeedModel) -> AppModel {
-        var model = state
-        model.feed = feed
-        return model
-    }
-
-    /// Tag feed action
-    static func tag(_ action: FeedAction) -> AppAction {
-        switch action {
-        case .requestDeleteEntry(let slug):
-            return .deleteEntry(slug)
-        case let .succeedMoveEntry(from, to):
-            return .succeedMoveEntry(from: from, to: to)
-        case let .succeedMergeEntry(parent, child):
-            return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedRetitleEntry(from, to):
-            return .succeedRetitleEntry(from: from, to: to)
-        default:
-            return .feed(action)
-        }
-    }
-}
 
 enum AppDatabaseState {
     case initial
@@ -231,7 +120,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         let message = String.loggable(action)
-        Logger.action.debug("\(message)")
+        logger.debug("[action] \(message)")
         // Generate next state and effect
         let next = updateApp(
             state: state,
@@ -239,10 +128,16 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
         if Config.default.debug {
-            Logger.state.debug("\(String(describing: next.state))")
+            logger.debug("[state] \(String(describing: next.state))")
         }
         return next
     }
+
+    // Logger for actions
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "app"
+    )
 
     /// Main update function
     static func updateApp(
@@ -251,37 +146,14 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         switch action {
-        case .notebook(let action):
-            return NotebookCursor.update(
-                state: state,
-                action: action,
-                environment: environment
-            )
-        case .feed(let action):
-            return FeedCursor.update(
-                state: state,
-                action: action,
-                environment: environment
-            )
         case let .setSphereIdentity(sphereIdentity):
             return setSphereIdentity(
                 state: state,
                 environment: environment,
                 sphereIdentity: sphereIdentity
             )
-        case let .scenePhaseChange(phase):
-            return scenePhaseChange(
-                state: state,
-                phase: phase,
-                environment: environment
-            )
-        case .appear:
-            return appear(state: state, environment: environment)
-        case .poll:
-            return poll(
-                state: state,
-                environment: environment
-            )
+        case .start:
+            return start(state: state, environment: environment)
         case .migrateDatabase:
             return migrateDatabase(state: state, environment: environment)
         case let .succeedMigrateDatabase(version):
@@ -322,59 +194,6 @@ struct AppModel: ModelProtocol {
                 "File sync failed: \(message)"
             )
             return Update(state: state)
-        case .refreshAll:
-            return refreshAll(
-                state: state,
-                environment: environment
-            )
-        case .deleteEntry(let slug):
-            return deleteEntry(
-                state: state,
-                environment: environment,
-                slug: slug
-            )
-        case .succeedDeleteEntry(let slug):
-            return succeedDeleteEntry(
-                state: state,
-                environment: environment,
-                slug: slug
-            )
-        case .failDeleteEntry(let message):
-            return log(
-                state: state,
-                environment: environment,
-                message: message
-            )
-        case let .succeedMoveEntry(from, to):
-            // Dispatch move actions from anywhere down to sub-components
-            return update(
-                state: state,
-                actions: [
-                    .feed(.succeedMoveEntry(from: from, to: to)),
-                    .notebook(.succeedMoveEntry(from: from, to: to))
-                ],
-                environment: environment
-            )
-        case let .succeedMergeEntry(parent, child):
-            // Dispatch merge actions from anywhere down to sub-components
-            return update(
-                state: state,
-                actions: [
-                    .feed(.succeedMergeEntry(parent: parent, child: child)),
-                    .notebook(.succeedMergeEntry(parent: parent, child: child))
-                ],
-                environment: environment
-            )
-        case let .succeedRetitleEntry(from, to):
-            // Dispatch retitle actions from anywhere down to sub-components
-            return update(
-                state: state,
-                actions: [
-                    .feed(.succeedRetitleEntry(from: from, to: to)),
-                    .notebook(.succeedRetitleEntry(from: from, to: to))
-                ],
-                environment: environment
-            )
         }
     }
 
@@ -401,25 +220,7 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
 
-    /// Handle scene phase change
-    static func scenePhaseChange(
-        state: AppModel,
-        phase: ScenePhase,
-        environment: AppEnvironment
-    ) -> Update<AppModel> {
-        switch phase {
-        case .active:
-            let fx: Fx<AppAction> = Just(
-                AppAction.migrateDatabase
-            )
-            .eraseToAnyPublisher()
-            return Update(state: state, fx: fx)
-        default:
-            return Update(state: state)
-        }
-    }
-
-    static func appear(
+    static func start(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
@@ -427,37 +228,21 @@ struct AppModel: ModelProtocol {
             "Documents: \(environment.documentURL)"
         )
 
-        let pollFx: Fx<AppAction> = AppEnvironment.poll(
-            every: Config.default.pollingInterval
+        let migrate = Just(
+            AppAction.migrateDatabase
         )
-        .map({ date in
-            AppAction.poll(date)
-        })
-        .eraseToAnyPublisher()
 
         /// Get sphere identity, if any
-        let sphereIdentity = environment.data.noosphere.getSphereIdentity()
-
-        return update(
-            state: state,
-            action: .setSphereIdentity(sphereIdentity),
-            environment: environment
+        let setSphereIdentity = Just(
+            AppAction.setSphereIdentity(
+                environment.data.noosphere.getSphereIdentity()
+            )
         )
-        .mergeFx(pollFx)
-    }
 
-    static func poll(
-        state: AppModel,
-        environment: AppEnvironment
-    ) -> Update<AppModel> {
-        return AppModel.update(
-            state: state,
-            actions: [
-                .feed(.autosave),
-                .notebook(.autosave)
-            ],
-            environment: environment
-        )
+        let fx: Fx<AppAction> = setSphereIdentity.merge(with: migrate)
+            .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
     }
 
     /// Make database ready.
@@ -555,11 +340,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         return update(
             state: state,
-            actions: [
-                AppAction.sync,
-                AppAction.notebook(.ready),
-                AppAction.feed(.ready)
-            ],
+            action: AppAction.sync,
             environment: environment
         )
     }
@@ -591,75 +372,7 @@ struct AppModel: ModelProtocol {
         environment.logger.debug(
             "File sync finished: \(changes)"
         )
-
-        // Refresh lists after completing sync.
-        // This ensures that files which were deleted outside the app
-        // are removed from lists once sync is complete.
-        return AppModel.update(
-            state: state,
-            action: .refreshAll,
-            environment: environment
-        )
-    }
-
-    /// Refresh all lists in the app.
-    /// Typically done after a save or a delete to ensure old notes
-    /// aren't showing up anymore.
-    static func refreshAll(
-        state: AppModel,
-        environment: AppEnvironment
-    ) -> Update<AppModel> {
-        return AppModel.update(
-            state: state,
-            actions: [
-                .feed(.refreshAll),
-                .notebook(.refreshAll)
-            ],
-            environment: environment
-        )
-    }
-
-    /// Entry delete succeeded
-    static func deleteEntry(
-        state: AppModel,
-        environment: AppEnvironment,
-        slug: Slug?
-    ) -> Update<AppModel> {
-        guard let slug = slug else {
-            environment.logger.log(
-                "Delete requested for nil slug. Doing nothing."
-            )
-            return Update(state: state)
-        }
-        let fx: Fx<AppAction> = environment.data
-            .deleteEntryAsync(slug: slug)
-            .map({ _ in
-                AppAction.succeedDeleteEntry(slug)
-            })
-            .catch({ error in
-                Just(
-                    AppAction.failDeleteEntry(error.localizedDescription)
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
-    }
-
-    /// Entry delete succeeded
-    static func succeedDeleteEntry(
-        state: AppModel,
-        environment: AppEnvironment,
-        slug: Slug
-    ) -> Update<AppModel> {
-        environment.logger.log("Deleted entry: \(slug)")
-        return AppModel.update(
-            state: state,
-            actions: [
-                .feed(.entryDeleted(slug)),
-                .notebook(.entryDeleted(slug))
-            ],
-            environment: environment
-        )
+        return Update(state: state)
     }
 }
 

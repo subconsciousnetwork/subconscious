@@ -326,7 +326,11 @@ struct FeedModel: ModelProtocol {
 
 //  MARK: View
 struct FeedView: View {
-    var store: ViewStore<FeedModel>
+    @ObservedObject var parent: Store<AppModel>
+    @StateObject private var store = Store(
+        state: FeedModel(),
+        environment: AppEnvironment.default
+    )
 
     var body: some View {
         ZStack {

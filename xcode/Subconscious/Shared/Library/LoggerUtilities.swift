@@ -13,16 +13,6 @@ extension Logger {
         subsystem: Config.default.rdns,
         category: "main"
     )
-    // Logger for actions
-    static let action = Logger(
-        subsystem: Config.default.rdns,
-        category: "action"
-    )
-    // Logger for states
-    static let state = Logger(
-        subsystem: Config.default.rdns,
-        category: "state"
-    )
     // Logger for editor
     static let editor = Logger(
         subsystem: Config.default.rdns,
