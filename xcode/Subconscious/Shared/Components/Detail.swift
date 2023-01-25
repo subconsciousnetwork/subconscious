@@ -1865,11 +1865,8 @@ struct DetailView: View {
                                 )
                             )
                             .frame(
-                                minHeight: Self.calcTextFieldHeight(
-                                    containerHeight: geometry.size.height,
-                                    isKeyboardUp: store.state.markupEditor.focus,
-                                    hasBacklinks: store.state.backlinks.count > 0
-                                )
+                                minHeight: UIFont.appTextMono.lineHeight * 8
+
                             )
                             ThickDividerView()
                                 .padding(.bottom, AppTheme.unit4)
@@ -2051,13 +2048,5 @@ struct DetailView: View {
                 }
             )
         }
-    }
-    
-    private static func calcTextFieldHeight(
-        containerHeight: CGFloat,
-        isKeyboardUp: Bool,
-        hasBacklinks: Bool
-    ) -> CGFloat {
-        UIFont.appTextMono.lineHeight * 8
     }
 }
