@@ -19,11 +19,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Wrapper for editor actions
     case markupEditor(MarkupTextAction)
 
-    /// Link was tapped (disambiguates to browser or editor action)
-    case openURL(URL)
-    case openBrowserURL(URL)
-    case openEditorURL(URL)
-
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
     /// if detail is already loaded.
@@ -333,24 +328,6 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: ()
-            )
-        case .openURL(let url):
-            return openURL(
-                state: state,
-                environment: environment,
-                url: url
-            )
-        case .openBrowserURL(let url):
-            return openBrowserURL(
-                state: state,
-                environment: environment,
-                url: url
-            )
-        case .openEditorURL(let url):
-            return openEditorURL(
-                state: state,
-                environment: environment,
-                url: url
             )
         case let .setEditor(text, saveState, modified):
             return setEditor(
@@ -692,58 +669,6 @@ struct DetailModel: ModelProtocol {
         default:
             return Update(state: state)
         }
-    }
-
-    /// Disambiguate URL opens and forward to specialized action types
-    static func openURL(
-        state: DetailModel,
-        environment: AppEnvironment,
-        url: URL
-    ) -> Update<DetailModel> {
-        // If link is not a sub:// link, then open it in browser
-        guard SubURL.isSubEntryURL(url) else {
-            return update(
-                state: state,
-                action: .openBrowserURL(url),
-                environment: environment
-            )
-        }
-        return update(
-            state: state,
-            action: .openEditorURL(url),
-            environment: environment
-        )
-    }
-
-    /// Open URL in browser
-    /// Request open URL in editor
-    static func openBrowserURL(
-        state: DetailModel,
-        environment: AppEnvironment,
-        url: URL
-    ) -> Update<DetailModel> {
-        /// Open in browser
-        UIApplication.shared.open(url)
-        return Update(state: state)
-    }
-
-    /// Request open URL in editor
-    static func openEditorURL(
-        state: DetailModel,
-        environment: AppEnvironment,
-        url: URL
-    ) -> Update<DetailModel> {
-        // Otherwise decode link from URL and request detail
-        let link = EntryLink.decodefromSubEntryURL(url)
-        return update(
-            state: state,
-            action: .loadAndPresentDetail(
-                link: link,
-                fallback: link?.linkableTitle ?? "",
-                autofocus: false
-            ),
-            environment: environment
-        )
     }
 
     /// Set the contents of the editor and mark save state and modified time.
@@ -1951,7 +1876,11 @@ struct DetailView: View {
                             BacklinksView(
                                 backlinks: store.state.backlinks,
                                 onSelect: { link in
-                                    store.send(.selectBacklink(link))
+                                    onRequestDetail(
+                                        link.slug,
+                                        link.linkableTitle,
+                                        link.title
+                                    )
                                 }
                             )
                         }
