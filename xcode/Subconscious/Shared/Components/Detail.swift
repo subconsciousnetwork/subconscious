@@ -25,125 +25,39 @@ struct DetailView: View {
     // Notify parent of deletion
     var onDelete: (Slug?) -> Void
 
-    var isReady: Bool {
-        let state = store.state
-        return !state.isLoading && state.slug != nil
-    }
-    
     var body: some View {
-        ZStack {
-            GeometryReader { geometry in
-                VStack(spacing: 0) {
-                    Divider()
-                    ScrollView(.vertical) {
-                        VStack(spacing: 0) {
-                            MarkupTextViewRepresentable(
-                                store: ViewStore(
-                                    store: store,
-                                    cursor: DetailMarkupEditorCursor.self
-                                ),
-                                frame: geometry.frame(in: .local),
-                                renderAttributesOf: Subtext.renderAttributesOf,
-                                onLink: { url, _, _, _ in
-                                    guard
-                                        let link = EntryLink
-                                            .decodefromSubEntryURL(url)
-                                    else {
-                                        return true
-                                    }
-                                    onRequestDetail(
-                                        link.slug,
-                                        link.linkableTitle,
-                                        link.title
-                                    )
-                                    return false
-                                },
-                                logger: Logger.editor
-                            )
-                            .insets(
-                                EdgeInsets(
-                                    top: AppTheme.padding,
-                                    leading: AppTheme.padding,
-                                    bottom: AppTheme.padding,
-                                    trailing: AppTheme.padding
-                                )
-                            )
-                            .frame(
-                                minHeight: UIFont.appTextMono.lineHeight * 8
-
-                            )
-                            ThickDividerView()
-                                .padding(.bottom, AppTheme.unit4)
-                            BacklinksView(
-                                backlinks: store.state.backlinks,
-                                onSelect: { link in
-                                    onRequestDetail(
-                                        link.slug,
-                                        link.linkableTitle,
-                                        link.title
-                                    )
-                                }
-                            )
-                        }
-                    }
-                    if store.state.markupEditor.focus {
-                        DetailKeyboardToolbarView(
-                            isSheetPresented: Binding(
-                                store: store,
-                                get: \.isLinkSheetPresented,
-                                tag: DetailAction.setLinkSheetPresented
-                            ),
-                            selectedEntryLinkMarkup:
-                                store.state.selectedEntryLinkMarkup,
-                            suggestions: store.state.linkSuggestions,
-                            onSelectLinkCompletion: { link in
-                                store.send(.selectLinkCompletion(link))
-                            },
-                            onInsertWikilink: {
-                                store.send(.insertEditorWikilinkAtSelection)
-                            },
-                            onInsertBold: {
-                                store.send(.insertEditorBoldAtSelection)
-                            },
-                            onInsertItalic: {
-                                store.send(.insertEditorItalicAtSelection)
-                            },
-                            onInsertCode: {
-                                store.send(.insertEditorCodeAtSelection)
-                            },
-                            onDoneEditing: {
-                                store.send(.selectDoneEditing)
-                            }
-                        )
-                        .transition(
-                            .asymmetric(
-                                insertion: .opacity.animation(
-                                    .easeOutCubic(duration: Duration.normal)
-                                    .delay(Duration.keyboard)
-                                ),
-                                removal: .opacity.animation(
-                                    .easeOutCubic(duration: Duration.normal)
-                                )
-                            )
-                        )
-                    }
-                }
-                .zIndex(1)
-                if !isReady {
-                    Color.background
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .transition(
-                            .asymmetric(
-                                insertion: .opacity.animation(.none),
-                                removal: .opacity.animation(.default)
-                            )
-                        )
-                        .zIndex(2)
+        VStack {
+            if store.state.slug != nil {
+                DetailReadyView(
+                    store: store,
+                    slug: slug,
+                    title: title,
+                    fallback: fallback,
+                    onRequestDetail: onRequestDetail,
+                    onDelete: onDelete
+                )
+            } else {
+                VStack {
+                    Spacer()
+                    Text("Nothing here")
+                        .foregroundColor(.secondary)
+                    Spacer()
                 }
             }
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            DetailToolbarContent(
+                link: EntryLink(store.state),
+                onRename: {
+                    store.send(.showRenameSheet(EntryLink(store.state)))
+                },
+                onDelete: {
+                    store.send(.presentDeleteConfirmationDialog(true))
+                }
+            )
+        }
         .onAppear {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
@@ -227,7 +141,7 @@ struct DetailView: View {
             isPresented: Binding(
                 store: store,
                 get: \.isDeleteConfirmationDialogShowing,
-                tag: DetailAction.showDeleteConfirmationDialog
+                tag: DetailAction.presentDeleteConfirmationDialog
             )
         ) {
             Button(
@@ -239,16 +153,116 @@ struct DetailView: View {
                 Text("Delete Immediately")
             }
         }
-        .toolbar {
-            DetailToolbarContent(
-                link: EntryLink(store.state),
-                onRename: {
-                    store.send(.showRenameSheet(EntryLink(store.state)))
-                },
-                onDelete: {
-                    store.send(.showDeleteConfirmationDialog(true))
+    }
+}
+
+struct DetailReadyView: View {
+    @ObservedObject var store: Store<DetailModel>
+    @Environment(\.scenePhase) var scenePhase: ScenePhase
+    var slug: Slug?
+    var title: String
+    var fallback: String
+    var onRequestDetail: (Slug, String, String) -> Void
+    // Notify parent of deletion
+    var onDelete: (Slug?) -> Void
+
+    var body: some View {
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                Divider()
+                ScrollView(.vertical) {
+                    VStack(spacing: 0) {
+                        MarkupTextViewRepresentable(
+                            store: ViewStore(
+                                store: store,
+                                cursor: DetailMarkupEditorCursor.self
+                            ),
+                            frame: geometry.frame(in: .local),
+                            renderAttributesOf: Subtext.renderAttributesOf,
+                            onLink: { url, _, _, _ in
+                                guard
+                                    let link = EntryLink
+                                        .decodefromSubEntryURL(url)
+                                else {
+                                    return true
+                                }
+                                onRequestDetail(
+                                    link.slug,
+                                    link.linkableTitle,
+                                    link.title
+                                )
+                                return false
+                            },
+                            logger: Logger.editor
+                        )
+                        .insets(
+                            EdgeInsets(
+                                top: AppTheme.padding,
+                                leading: AppTheme.padding,
+                                bottom: AppTheme.padding,
+                                trailing: AppTheme.padding
+                            )
+                        )
+                        .frame(
+                            minHeight: UIFont.appTextMono.lineHeight * 8
+
+                        )
+                        ThickDividerView()
+                            .padding(.bottom, AppTheme.unit4)
+                        BacklinksView(
+                            backlinks: store.state.backlinks,
+                            onSelect: { link in
+                                onRequestDetail(
+                                    link.slug,
+                                    link.linkableTitle,
+                                    link.title
+                                )
+                            }
+                        )
+                    }
                 }
-            )
+                if store.state.markupEditor.focus {
+                    DetailKeyboardToolbarView(
+                        isSheetPresented: Binding(
+                            store: store,
+                            get: \.isLinkSheetPresented,
+                            tag: DetailAction.setLinkSheetPresented
+                        ),
+                        selectedEntryLinkMarkup:
+                            store.state.selectedEntryLinkMarkup,
+                        suggestions: store.state.linkSuggestions,
+                        onSelectLinkCompletion: { link in
+                            store.send(.selectLinkCompletion(link))
+                        },
+                        onInsertWikilink: {
+                            store.send(.insertEditorWikilinkAtSelection)
+                        },
+                        onInsertBold: {
+                            store.send(.insertEditorBoldAtSelection)
+                        },
+                        onInsertItalic: {
+                            store.send(.insertEditorItalicAtSelection)
+                        },
+                        onInsertCode: {
+                            store.send(.insertEditorCodeAtSelection)
+                        },
+                        onDoneEditing: {
+                            store.send(.selectDoneEditing)
+                        }
+                    )
+                    .transition(
+                        .asymmetric(
+                            insertion: .opacity.animation(
+                                .easeOutCubic(duration: Duration.normal)
+                                .delay(Duration.keyboard)
+                            ),
+                            removal: .opacity.animation(
+                                .easeOutCubic(duration: Duration.normal)
+                            )
+                        )
+                    )
+                }
+            }
         }
     }
 }
@@ -340,7 +354,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
-    case showDeleteConfirmationDialog(Bool)
+    case presentDeleteConfirmationDialog(Bool)
 
     case selectBacklink(EntryLink)
 
@@ -790,7 +804,7 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .showDeleteConfirmationDialog(let isPresented):
+        case .presentDeleteConfirmationDialog(let isPresented):
             return presentDeleteConfirmationDialog(
                 state: state,
                 environment: environment,
@@ -1296,12 +1310,12 @@ struct DetailModel: ModelProtocol {
             title: "",
             fileExtension: ContentType.subtext.fileExtension
         )
-        model.additionalHeaders = Headers()
+        model.additionalHeaders = []
         model.markupEditor = MarkupTextModel()
         model.backlinks = []
         model.isLoading = true
         model.saveState = .saved
-        return Update(state: state)
+        return Update(state: model)
     }
 
     static func autosave(
