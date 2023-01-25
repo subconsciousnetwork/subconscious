@@ -118,8 +118,6 @@ struct FeedDetailCursor: CursorProtocol {
     
     static func tag(_ action: DetailAction) -> FeedAction {
         switch action {
-        case .requestDeleteEntry(let slug):
-            return .requestDeleteEntry(slug)
         case let .succeedMoveEntry(from, to):
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedMergeEntry(parent, child):
@@ -306,14 +304,8 @@ struct FeedModel: ModelProtocol {
         environment: AppEnvironment,
         slug: Slug
     ) -> Update<FeedModel> {
-        return FeedModel.update(
-            state: state,
-            actions: [
-                .search(.entryDeleted(slug)),
-                .detail(.entryDeleted(slug))
-            ],
-            environment: environment
-        )
+        environment.logger.warning("Not implemented")
+        return Update(state: state)
     }
 }
 

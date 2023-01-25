@@ -549,7 +549,11 @@ struct NotebookModel: ModelProtocol {
         slug: Slug
     ) -> Update<NotebookModel> {
         logger.log("Deleted entry: \(slug)")
-        return Update(state: state)
+        var model = state
+        model.details = state.details.filter({ detail in
+            detail.slug != slug
+        })
+        return Update(state: model)
     }
 
     /// Submit a search query (typically by hitting "go" on keyboard)

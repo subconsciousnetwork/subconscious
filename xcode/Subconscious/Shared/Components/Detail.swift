@@ -10,6 +10,248 @@ import os
 import ObservableStore
 import Combine
 
+//  MARK: View
+struct DetailView: View {
+    @StateObject private var store = Store(
+        state: DetailModel(),
+        action: .start,
+        environment: AppEnvironment.default
+    )
+    @Environment(\.scenePhase) var scenePhase: ScenePhase
+    var slug: Slug?
+    var title: String
+    var fallback: String
+    var onRequestDetail: (Slug, String, String) -> Void
+    var onDelete: (Slug?) -> Void
+
+    var isReady: Bool {
+        let state = store.state
+        return !state.isLoading && state.slug != nil
+    }
+    
+    var body: some View {
+        ZStack {
+            GeometryReader { geometry in
+                VStack(spacing: 0) {
+                    Divider()
+                    ScrollView(.vertical) {
+                        VStack(spacing: 0) {
+                            MarkupTextViewRepresentable(
+                                store: ViewStore(
+                                    store: store,
+                                    cursor: DetailMarkupEditorCursor.self
+                                ),
+                                frame: geometry.frame(in: .local),
+                                renderAttributesOf: Subtext.renderAttributesOf,
+                                onLink: { url, _, _, _ in
+                                    guard
+                                        let link = EntryLink
+                                            .decodefromSubEntryURL(url)
+                                    else {
+                                        return true
+                                    }
+                                    onRequestDetail(
+                                        link.slug,
+                                        link.linkableTitle,
+                                        link.title
+                                    )
+                                    return false
+                                },
+                                logger: Logger.editor
+                            )
+                            .insets(
+                                EdgeInsets(
+                                    top: AppTheme.padding,
+                                    leading: AppTheme.padding,
+                                    bottom: AppTheme.padding,
+                                    trailing: AppTheme.padding
+                                )
+                            )
+                            .frame(
+                                minHeight: UIFont.appTextMono.lineHeight * 8
+
+                            )
+                            ThickDividerView()
+                                .padding(.bottom, AppTheme.unit4)
+                            BacklinksView(
+                                backlinks: store.state.backlinks,
+                                onSelect: { link in
+                                    onRequestDetail(
+                                        link.slug,
+                                        link.linkableTitle,
+                                        link.title
+                                    )
+                                }
+                            )
+                        }
+                    }
+                    if store.state.markupEditor.focus {
+                        DetailKeyboardToolbarView(
+                            isSheetPresented: Binding(
+                                store: store,
+                                get: \.isLinkSheetPresented,
+                                tag: DetailAction.setLinkSheetPresented
+                            ),
+                            selectedEntryLinkMarkup:
+                                store.state.selectedEntryLinkMarkup,
+                            suggestions: store.state.linkSuggestions,
+                            onSelectLinkCompletion: { link in
+                                store.send(.selectLinkCompletion(link))
+                            },
+                            onInsertWikilink: {
+                                store.send(.insertEditorWikilinkAtSelection)
+                            },
+                            onInsertBold: {
+                                store.send(.insertEditorBoldAtSelection)
+                            },
+                            onInsertItalic: {
+                                store.send(.insertEditorItalicAtSelection)
+                            },
+                            onInsertCode: {
+                                store.send(.insertEditorCodeAtSelection)
+                            },
+                            onDoneEditing: {
+                                store.send(.selectDoneEditing)
+                            }
+                        )
+                        .transition(
+                            .asymmetric(
+                                insertion: .opacity.animation(
+                                    .easeOutCubic(duration: Duration.normal)
+                                    .delay(Duration.keyboard)
+                                ),
+                                removal: .opacity.animation(
+                                    .easeOutCubic(duration: Duration.normal)
+                                )
+                            )
+                        )
+                    }
+                }
+                .zIndex(1)
+                if !isReady {
+                    Color.background
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .transition(
+                            .asymmetric(
+                                insertion: .opacity.animation(.none),
+                                removal: .opacity.animation(.default)
+                            )
+                        )
+                        .zIndex(2)
+                }
+            }
+        }
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            // When an editor is presented, refresh if stale.
+            // This covers the case where the editor might have been in the
+            // background for a while, and the content changed in another tab.
+            store.send(
+                DetailAction.appear(
+                    slug: slug,
+                    title: title,
+                    fallback: fallback
+                )
+            )
+        }
+        .onDisappear {
+            store.send(.autosave)
+        }
+        /// Catch link taps and handle them here
+        .environment(\.openURL, OpenURLAction { url in
+            guard let link = EntryLink.decodefromSubEntryURL(url) else {
+                return .systemAction
+            }
+            onRequestDetail(link.slug, link.linkableTitle, link.title)
+            return .handled
+        })
+        // Track changes to scene phase so we know when app gets
+        // foregrounded/backgrounded.
+        // See https://developer.apple.com/documentation/swiftui/scenephase
+        // 2022-02-08 Gordon Brander
+        .onChange(of: self.scenePhase) { phase in
+            store.send(DetailAction.scenePhaseChange(phase))
+        }
+        .sheet(
+            isPresented: Binding(
+                store: store,
+                get: \.isLinkSheetPresented,
+                tag: DetailAction.setLinkSheetPresented
+            )
+        ) {
+            LinkSearchView(
+                placeholder: "Search or create...",
+                suggestions: store.state.linkSuggestions,
+                text: Binding(
+                    store: store,
+                    get: \.linkSearchText,
+                    tag: DetailAction.setLinkSearch
+                ),
+                onCancel: {
+                    store.send(.setLinkSheetPresented(false))
+                },
+                onSelect: { suggestion in
+                    store.send(.selectLinkSuggestion(suggestion))
+                }
+            )
+        }
+        .sheet(
+            isPresented: Binding(
+                store: store,
+                get: \.isRenameSheetShowing,
+                tag: { _ in DetailAction.hideRenameSheet }
+            )
+        ) {
+            RenameSearchView(
+                current: EntryLink(store.state),
+                suggestions: store.state.renameSuggestions,
+                text: Binding(
+                    store: store,
+                    get: \.renameField,
+                    tag: DetailAction.setRenameField
+                ),
+                onCancel: {
+                    store.send(.hideRenameSheet)
+                },
+                onSelect: { suggestion in
+                    store.send(
+                        .renameEntry(suggestion)
+                    )
+                }
+            )
+        }
+        .confirmationDialog(
+            "Are you sure?",
+            isPresented: Binding(
+                store: store,
+                get: \.isDeleteConfirmationDialogShowing,
+                tag: DetailAction.showDeleteConfirmationDialog
+            )
+        ) {
+            Button(
+                role: .destructive,
+                action: {
+                    onDelete(slug)
+                }
+            ) {
+                Text("Delete Immediately")
+            }
+        }
+        .toolbar {
+            DetailToolbarContent(
+                link: EntryLink(store.state),
+                onRename: {
+                    store.send(.showRenameSheet(EntryLink(store.state)))
+                },
+                onDelete: {
+                    store.send(.showDeleteConfirmationDialog(true))
+                }
+            )
+        }
+    }
+}
+
 //  MARK: Action
 enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Sent once and only once on Store initialization
@@ -108,9 +350,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
     case showDeleteConfirmationDialog(Bool)
-    /// Request that parent delete entry
-    case requestDeleteEntry(Slug?)
-    case entryDeleted(Slug)
 
     case selectBacklink(EntryLink)
 
@@ -587,18 +826,6 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 isPresented: isPresented
-            )
-        case .requestDeleteEntry(_):
-            return logDebug(
-                state: state,
-                environment: environment,
-                message: "requestDeleteEntry should be handled by parent component"
-            )
-        case .entryDeleted(let slug):
-            return entryDeleted(
-                state: state,
-                environment: environment,
-                slug: slug
             )
         case .selectBacklink(let link):
             return update(
@@ -1705,35 +1932,6 @@ struct DetailModel: ModelProtocol {
             .animation(.default)
     }
 
-    static func entryDeleted(
-        state: DetailModel,
-        environment: AppEnvironment,
-        slug: Slug
-    ) -> Update<DetailModel> {
-        guard state.slug == slug else {
-            // If entry that was deleted was not this entry, then just
-            // refresh lists.
-            return update(
-                state: state,
-                action: .refreshLists,
-                environment: environment
-            )
-        }
-
-        // If the slug currently being edited was just deleted,
-        // - reset the editor
-        // - un-present detail
-        return DetailModel.update(
-            state: state,
-            actions: [
-                .resetDetail,
-                .refreshLists,
-                .presentDetail(false)
-            ],
-            environment: environment
-        )
-    }
-
     /// Insert wikilink markup into editor, begining at previous range
     /// and wrapping the contents of previous range
     static func insertTaggedMarkup<T>(
@@ -1864,243 +2062,3 @@ struct DetailDescription: Hashable {
     var fallback: String
 }
 
-//  MARK: View
-struct DetailView: View {
-    @StateObject private var store = Store(
-        state: DetailModel(),
-        action: .start,
-        environment: AppEnvironment.default
-    )
-    @Environment(\.scenePhase) var scenePhase: ScenePhase
-    var slug: Slug?
-    var title: String
-    var fallback: String
-    var onRequestDetail: (Slug, String, String) -> Void
-
-    var isReady: Bool {
-        let state = store.state
-        return !state.isLoading && state.slug != nil
-    }
-    
-    var body: some View {
-        ZStack {
-            GeometryReader { geometry in
-                VStack(spacing: 0) {
-                    Divider()
-                    ScrollView(.vertical) {
-                        VStack(spacing: 0) {
-                            MarkupTextViewRepresentable(
-                                store: ViewStore(
-                                    store: store,
-                                    cursor: DetailMarkupEditorCursor.self
-                                ),
-                                frame: geometry.frame(in: .local),
-                                renderAttributesOf: Subtext.renderAttributesOf,
-                                onLink: { url, _, _, _ in
-                                    guard
-                                        let link = EntryLink
-                                            .decodefromSubEntryURL(url)
-                                    else {
-                                        return true
-                                    }
-                                    onRequestDetail(
-                                        link.slug,
-                                        link.linkableTitle,
-                                        link.title
-                                    )
-                                    return false
-                                },
-                                logger: Logger.editor
-                            )
-                            .insets(
-                                EdgeInsets(
-                                    top: AppTheme.padding,
-                                    leading: AppTheme.padding,
-                                    bottom: AppTheme.padding,
-                                    trailing: AppTheme.padding
-                                )
-                            )
-                            .frame(
-                                minHeight: UIFont.appTextMono.lineHeight * 8
-
-                            )
-                            ThickDividerView()
-                                .padding(.bottom, AppTheme.unit4)
-                            BacklinksView(
-                                backlinks: store.state.backlinks,
-                                onSelect: { link in
-                                    onRequestDetail(
-                                        link.slug,
-                                        link.linkableTitle,
-                                        link.title
-                                    )
-                                }
-                            )
-                        }
-                    }
-                    if store.state.markupEditor.focus {
-                        DetailKeyboardToolbarView(
-                            isSheetPresented: Binding(
-                                store: store,
-                                get: \.isLinkSheetPresented,
-                                tag: DetailAction.setLinkSheetPresented
-                            ),
-                            selectedEntryLinkMarkup:
-                                store.state.selectedEntryLinkMarkup,
-                            suggestions: store.state.linkSuggestions,
-                            onSelectLinkCompletion: { link in
-                                store.send(.selectLinkCompletion(link))
-                            },
-                            onInsertWikilink: {
-                                store.send(.insertEditorWikilinkAtSelection)
-                            },
-                            onInsertBold: {
-                                store.send(.insertEditorBoldAtSelection)
-                            },
-                            onInsertItalic: {
-                                store.send(.insertEditorItalicAtSelection)
-                            },
-                            onInsertCode: {
-                                store.send(.insertEditorCodeAtSelection)
-                            },
-                            onDoneEditing: {
-                                store.send(.selectDoneEditing)
-                            }
-                        )
-                        .transition(
-                            .asymmetric(
-                                insertion: .opacity.animation(
-                                    .easeOutCubic(duration: Duration.normal)
-                                    .delay(Duration.keyboard)
-                                ),
-                                removal: .opacity.animation(
-                                    .easeOutCubic(duration: Duration.normal)
-                                )
-                            )
-                        )
-                    }
-                }
-                .zIndex(1)
-                if !isReady {
-                    Color.background
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .transition(
-                            .asymmetric(
-                                insertion: .opacity.animation(.none),
-                                removal: .opacity.animation(.default)
-                            )
-                        )
-                        .zIndex(2)
-                }
-            }
-        }
-        .navigationTitle(title)
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            // When an editor is presented, refresh if stale.
-            // This covers the case where the editor might have been in the
-            // background for a while, and the content changed in another tab.
-            store.send(
-                DetailAction.appear(
-                    slug: slug,
-                    title: title,
-                    fallback: fallback
-                )
-            )
-        }
-        .onDisappear {
-            store.send(.autosave)
-        }
-        /// Catch link taps and handle them here
-        .environment(\.openURL, OpenURLAction { url in
-            guard let link = EntryLink.decodefromSubEntryURL(url) else {
-                return .systemAction
-            }
-            onRequestDetail(link.slug, link.linkableTitle, link.title)
-            return .handled
-        })
-        // Track changes to scene phase so we know when app gets
-        // foregrounded/backgrounded.
-        // See https://developer.apple.com/documentation/swiftui/scenephase
-        // 2022-02-08 Gordon Brander
-        .onChange(of: self.scenePhase) { phase in
-            store.send(DetailAction.scenePhaseChange(phase))
-        }
-        .sheet(
-            isPresented: Binding(
-                store: store,
-                get: \.isLinkSheetPresented,
-                tag: DetailAction.setLinkSheetPresented
-            )
-        ) {
-            LinkSearchView(
-                placeholder: "Search or create...",
-                suggestions: store.state.linkSuggestions,
-                text: Binding(
-                    store: store,
-                    get: \.linkSearchText,
-                    tag: DetailAction.setLinkSearch
-                ),
-                onCancel: {
-                    store.send(.setLinkSheetPresented(false))
-                },
-                onSelect: { suggestion in
-                    store.send(.selectLinkSuggestion(suggestion))
-                }
-            )
-        }
-        .sheet(
-            isPresented: Binding(
-                store: store,
-                get: \.isRenameSheetShowing,
-                tag: { _ in DetailAction.hideRenameSheet }
-            )
-        ) {
-            RenameSearchView(
-                current: EntryLink(store.state),
-                suggestions: store.state.renameSuggestions,
-                text: Binding(
-                    store: store,
-                    get: \.renameField,
-                    tag: DetailAction.setRenameField
-                ),
-                onCancel: {
-                    store.send(.hideRenameSheet)
-                },
-                onSelect: { suggestion in
-                    store.send(
-                        .renameEntry(suggestion)
-                    )
-                }
-            )
-        }
-        .confirmationDialog(
-            "Are you sure?",
-            isPresented: Binding(
-                store: store,
-                get: \.isDeleteConfirmationDialogShowing,
-                tag: DetailAction.showDeleteConfirmationDialog
-            )
-        ) {
-            Button(
-                role: .destructive,
-                action: {
-                    store.send(.requestDeleteEntry(store.state.slug))
-                }
-            ) {
-                Text("Delete Immediately")
-            }
-        }
-        .toolbar {
-            DetailToolbarContent(
-                link: EntryLink(store.state),
-                onRename: {
-                    store.send(.showRenameSheet(EntryLink(store.state)))
-                },
-                onDelete: {
-                    store.send(.showDeleteConfirmationDialog(true))
-                }
-            )
-        }
-    }
-}

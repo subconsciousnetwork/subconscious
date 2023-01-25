@@ -72,6 +72,9 @@ struct NotebookNavigationView: View {
                                 autofocus: false
                             )
                         )
+                    },
+                    onDelete: { slug in
+                        store.send(.deleteEntry(slug))
                     }
                 )
             }
