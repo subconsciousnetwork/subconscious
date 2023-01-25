@@ -53,10 +53,6 @@ enum FeedAction {
         )
     }
 
-    static func presentDetail(_ isPresented: Bool) -> FeedAction {
-        .detail(.presentDetail(isPresented))
-    }
-
     /// Show/hide the search HUD
     static var autosave: FeedAction {
         .detail(.autosave)
@@ -341,11 +337,7 @@ struct FeedView: View {
                     }
                 }
                 .navigationDestination(
-                    isPresented: Binding(
-                        store: store,
-                        get: \.detail.isPresented,
-                        tag: FeedAction.presentDetail
-                    )
+                    isPresented: .constant(false)
                 ) {
                     Text("Not implemented")
                 }

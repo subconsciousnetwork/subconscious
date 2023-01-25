@@ -210,8 +210,6 @@
 		B8AE34C9276BF77000777FF0 /* SearchTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34C7276BF77000777FF0 /* SearchTextField.swift */; };
 		B8AE34CB276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */; };
 		B8AE34CC276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */; };
-		B8B07D1A2981BD3C0092800D /* ObservableStoreUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B07D192981BD3C0092800D /* ObservableStoreUtilities.swift */; };
-		B8B07D1B2981BD3C0092800D /* ObservableStoreUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B07D192981BD3C0092800D /* ObservableStoreUtilities.swift */; };
 		B8B3194D2909E81D00A1E62A /* FileInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3194C2909E81D00A1E62A /* FileInfo.swift */; };
 		B8B3194F2909F36800A1E62A /* Tests_FileFingerprint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3194E2909F36800A1E62A /* Tests_FileFingerprint.swift */; };
 		B8B3EE732979DEE900779B7F /* FirstRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8B3EE722979DEE900779B7F /* FirstRunView.swift */; };
@@ -437,7 +435,6 @@
 		B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkSearchView.swift; sourceTree = "<group>"; };
 		B8AE34C7276BF77000777FF0 /* SearchTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTextField.swift; sourceTree = "<group>"; };
 		B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkSuggestionLabelView.swift; sourceTree = "<group>"; };
-		B8B07D192981BD3C0092800D /* ObservableStoreUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableStoreUtilities.swift; sourceTree = "<group>"; };
 		B8B3194C2909E81D00A1E62A /* FileInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileInfo.swift; sourceTree = "<group>"; };
 		B8B3194E2909F36800A1E62A /* Tests_FileFingerprint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_FileFingerprint.swift; sourceTree = "<group>"; };
 		B8B3EE722979DEE900779B7F /* FirstRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunView.swift; sourceTree = "<group>"; };
@@ -824,7 +821,6 @@
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
 				B8B3EE7C297B1A1000779B7F /* ViewDebugUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
-				B8B07D192981BD3C0092800D /* ObservableStoreUtilities.swift */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -1195,7 +1191,6 @@
 				B8A617202971D3000054D410 /* Slashlink.swift in Sources */,
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
 				B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
-				B8B07D1A2981BD3C0092800D /* ObservableStoreUtilities.swift in Sources */,
 				B8879EA626F9348600A0B4FF /* SubURL.swift in Sources */,
 				B8B604E629146DF6006FCB77 /* MemoryStore.swift in Sources */,
 				B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
@@ -1352,7 +1347,6 @@
 				B84AD8E4281073CE006B3153 /* InlineFormattingBarView.swift in Sources */,
 				B8AE34C6276BF72500777FF0 /* LinkSearchView.swift in Sources */,
 				B82C3A5426F528B000833CC8 /* DatabaseService.swift in Sources */,
-				B8B07D1B2981BD3C0092800D /* ObservableStoreUtilities.swift in Sources */,
 				B8CE40E828D2707D00819064 /* QueryPromptGeist.swift in Sources */,
 				B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
 				B8B4251328FDE7780081B8D5 /* Mapping.swift in Sources */,
@@ -1879,8 +1873,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gordonbrander/ObservableStore";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.2.0;
+				branch = main;
+				kind = branch;
 			};
 		};
 		B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */ = {

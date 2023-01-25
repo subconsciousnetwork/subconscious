@@ -22,6 +22,7 @@ struct DetailView: View {
     var title: String
     var fallback: String
     var onRequestDetail: (Slug, String, String) -> Void
+    // Notify parent of deletion
     var onDelete: (Slug?) -> Void
 
     var isReady: Bool {
@@ -291,18 +292,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Set EntryDetail on DetailModel, but only if last modification happened
     /// more recently than DetailModel.
     case setDetailLastWriteWins(EntryDetail)
-    /// Set detail and present detail
-    case setAndPresentDetail(detail: EntryDetail, autofocus: Bool)
-    /// Load detail
-    /// request detail for slug, using template file as a fallback
-    case loadAndPresentTemplateDetail(
-        link: EntryLink,
-        template: Slug,
-        autofocus: Bool
-    )
-    case loadAndPresentRandomDetail(autofocus: Bool)
-    /// Show detail panel
-    case presentDetail(Bool)
+    /// Set detail
+    case setDetail(detail: EntryDetail, autofocus: Bool)
     /// Set detail to initial conditions
     case resetDetail
 
@@ -423,8 +414,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "save(\(slugString))"
         case .succeedSave(let entry):
             return "succeedSave(\(entry.slug))"
-        case .setAndPresentDetail(let detail, _):
-            return "setAndPresentDetail(\(String.loggable(detail)))"
+        case .setDetail(let detail, _):
+            return "setDetail(\(String.loggable(detail)))"
         case let .setEditor(_, saveState, modified):
             return "setEditor(text: ..., saveState: \(String(describing: saveState)), modified: \(modified))"
         case let .setEditorSelection(range, _):
@@ -490,8 +481,6 @@ struct DetailModel: ModelProtocol {
     /// Is editor saved?
     var saveState = SaveState.saved
 
-    /// Is editor sliding panel showing?
-    var isPresented = false
     /// Is editor in loading state?
     var isLoading = true
     /// When was the last time the editor issued a fetch from source of truth?
@@ -620,14 +609,8 @@ struct DetailModel: ModelProtocol {
                 text: text,
                 range: range
             )
-        case .presentDetail(let isPresented):
-            return presentDetail(
-                state: state,
-                environment: environment,
-                isPresented: isPresented
-            )
         case let .loadDetail(link, fallback, autofocus):
-            return loadAndPresentDetail(
+            return loadDetail(
                 state: state,
                 environment: environment,
                 link: link,
@@ -656,8 +639,8 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 detail: detail
             )
-        case let .setAndPresentDetail(detail, autofocus):
-            return setAndPresentDetail(
+        case let .setDetail(detail, autofocus):
+            return setDetail(
                 state: state,
                 environment: environment,
                 detail: detail,
@@ -668,20 +651,6 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 detail: detail
-            )
-        case let .loadAndPresentTemplateDetail(link, template, autofocus):
-            return loadAndPresentTemplateDetail(
-                state: state,
-                environment: environment,
-                link: link,
-                template: template,
-                autofocus: autofocus
-            )
-        case let .loadAndPresentRandomDetail(autofocus):
-            return loadAndPresentRandomDetail(
-                state: state,
-                environment: environment,
-                autofocus: autofocus
             )
         case .resetDetail:
             return resetDetail(
@@ -945,9 +914,9 @@ struct DetailModel: ModelProtocol {
         return update(
             state: state,
             action: .loadDetail(
-                    link: link,
-                    fallback: fallback,
-                    autofocus: autofocus
+                link: link,
+                fallback: fallback,
+                autofocus: autofocus
             ),
             environment: environment
         )
@@ -1075,17 +1044,6 @@ struct DetailModel: ModelProtocol {
         )
     }
 
-    /// Toggle detail presentation
-    static func presentDetail(
-        state: DetailModel,
-        environment: AppEnvironment,
-        isPresented: Bool
-    ) -> Update<DetailModel> {
-        var model = state
-        model.isPresented = isPresented
-        return Update(state: model)
-    }
-
     /// Mark properties on model in preparation for detail load
     static func prepareLoadDetail(_ state: DetailModel) -> DetailModel {
         var model = state
@@ -1097,7 +1055,7 @@ struct DetailModel: ModelProtocol {
     }
 
     /// Load Detail from database and present detail
-    static func loadAndPresentDetail(
+    static func loadDetail(
         state: DetailModel,
         environment: AppEnvironment,
         link: EntryLink?,
@@ -1117,7 +1075,7 @@ struct DetailModel: ModelProtocol {
                 fallback: fallback
             )
             .map({ detail in
-                DetailAction.setAndPresentDetail(
+                DetailAction.setDetail(
                     detail: detail,
                     autofocus: autofocus
                 )
@@ -1294,7 +1252,7 @@ struct DetailModel: ModelProtocol {
     /// - autofocus: automatically focus the editor,
     ///   and set cursor at end of document?
     /// - Returns: an update
-    static func setAndPresentDetail(
+    static func setDetail(
         state: DetailModel,
         environment: AppEnvironment,
         detail: EntryDetail,
@@ -1305,7 +1263,6 @@ struct DetailModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .presentDetail(true),
                     .setDetailLastWriteWins(detail),
                     .requestEditorFocus(false)
                 ],
@@ -1317,61 +1274,12 @@ struct DetailModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .presentDetail(true),
                 .setDetailLastWriteWins(detail),
                 .requestEditorFocus(true),
                 .setEditorSelectionAtEnd
             ],
             environment: environment
         )
-    }
-
-    /// Request detail view for entry.
-    /// Fall back on contents of template file when no detail
-    /// exists for this slug yet.
-    static func loadAndPresentTemplateDetail(
-        state: DetailModel,
-        environment: AppEnvironment,
-        link: EntryLink,
-        template: Slug,
-        autofocus: Bool
-    ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.data
-            .readEntryDetail(link: link, template: template)
-            .map({ detail in
-                DetailAction.setAndPresentDetail(
-                    detail: detail,
-                    autofocus: autofocus
-                )
-            })
-            .catch({ error in
-                Just(DetailAction.failLoadDetail(error.localizedDescription))
-            })
-            .eraseToAnyPublisher()
-
-        let model = prepareLoadDetail(state)
-        return Update(state: model, fx: fx)
-    }
-
-    /// Request detail for a random entry
-    static func loadAndPresentRandomDetail(
-        state: DetailModel,
-        environment: AppEnvironment,
-        autofocus: Bool
-    ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.data.readRandomEntryLink()
-            .map({ link in
-                DetailAction.loadDetail(
-                    link: link,
-                    fallback: link.linkableTitle,
-                    autofocus: autofocus
-                )
-            })
-            .catch({ error in
-                Just(DetailAction.failLoadDetail(error.localizedDescription))
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
     }
 
     /// Reset model to "none" condition

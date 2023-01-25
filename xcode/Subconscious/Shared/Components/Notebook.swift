@@ -65,7 +65,6 @@ enum NotebookAction {
     
     /// Set entire navigation stack
     case setDetails([DetailDescription])
-    
     /// Push detail onto navigation stack
     case pushDetail(
         slug: Slug,

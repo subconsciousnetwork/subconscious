@@ -12,7 +12,7 @@ import ObservableStore
 class Tests_Detail: XCTestCase {
     let environment = AppEnvironment()
 
-    func testsetAndPresentDetail() throws {
+    func testSetAndPresentDetail() throws {
         let state = DetailModel()
 
         let modified = Date.now
@@ -25,7 +25,7 @@ class Tests_Detail: XCTestCase {
                 modified: modified,
                 title: "Example",
                 fileExtension: ContentType.subtext.fileExtension,
-                other: [],
+                additionalHeaders: [],
                 body: "Example text"
             )
         )
@@ -37,7 +37,7 @@ class Tests_Detail: XCTestCase {
 
         let update = DetailModel.update(
             state: state,
-            action: .setAndPresentDetail(
+            action: .setDetail(
                 detail: detail,
                 autofocus: true
             ),
@@ -85,7 +85,7 @@ class Tests_Detail: XCTestCase {
                 modified: Date.now,
                 title: "Example",
                 fileExtension: ContentType.subtext.fileExtension,
-                other: [],
+                additionalHeaders: [],
                 body: "Example"
             )
         )
@@ -95,7 +95,7 @@ class Tests_Detail: XCTestCase {
             entry: entry
         )
 
-        store.send(.setAndPresentDetail(detail: detail, autofocus: true))
+        store.send(.setDetail(detail: detail, autofocus: true))
 
         let expectation = XCTestExpectation(
             description: "Autofocus sets editor focus"
@@ -122,7 +122,7 @@ class Tests_Detail: XCTestCase {
                 modified: Date.now,
                 title: "Example",
                 fileExtension: ContentType.subtext.fileExtension,
-                other: [],
+                additionalHeaders: [],
                 body: "Example"
             )
         )
@@ -134,7 +134,7 @@ class Tests_Detail: XCTestCase {
 
         let update = DetailModel.update(
             state: state,
-            action: .setAndPresentDetail(
+            action: .setDetail(
                 detail: detail,
                 autofocus: false
             ),
@@ -254,68 +254,6 @@ class Tests_Detail: XCTestCase {
             update.state.renameField,
             "Two pink faces turned in the flare of the tiny torch",
             "Rename field set to literal text of query"
-        )
-    }
-
-    func testDetailActionFromEntrySuggestion() throws {
-        let entrySuggestion = Suggestion.entry(
-            EntryLink(title: "Systems Generating Systems")!
-        )
-        let action = DetailAction.fromSuggestion(entrySuggestion)
-
-        XCTAssertEqual(
-            action,
-            DetailAction.loadAndPresentDetail(
-                link: EntryLink(title: "Systems Generating Systems")!,
-                fallback: "Systems Generating Systems",
-                autofocus: false
-            )
-        )
-    }
-
-    func testDetailActionFromSearchSuggestion() throws {
-        let entrySuggestion = Suggestion.search(
-            EntryLink(
-                slug: Slug("systems-generating-systems")!,
-                title: "Systems Generating Systems"
-            )
-        )
-        let action = DetailAction.fromSuggestion(entrySuggestion)
-
-        XCTAssertEqual(
-            action,
-            DetailAction.loadAndPresentDetail(
-                link: EntryLink(title: "Systems Generating Systems")!,
-                fallback: "Systems Generating Systems",
-                autofocus: true
-            )
-        )
-    }
-
-    func testDetailActionFromScratchSuggestion() throws {
-        let entrySuggestion = Suggestion.scratch(
-            EntryLink(
-                slug: Slug("systems-generating-systems")!,
-                title: "Systems Generating Systems"
-            )
-        )
-        let action = DetailAction.fromSuggestion(entrySuggestion)
-
-        guard case let DetailAction.loadAndPresentDetail(link, _, autofocus) = action else {
-            XCTFail("Did not match action type")
-            return
-        }
-        XCTAssertEqual(link, EntryLink(title: "Systems Generating Systems")!)
-        XCTAssertEqual(autofocus, true)
-    }
-
-    func testDetailActionFromRandomSuggestion() throws {
-        let entrySuggestion = Suggestion.random
-        let action = DetailAction.fromSuggestion(entrySuggestion)
-
-        XCTAssertEqual(
-            action,
-            DetailAction.loadAndPresentRandomDetail(autofocus: false)
         )
     }
 }
