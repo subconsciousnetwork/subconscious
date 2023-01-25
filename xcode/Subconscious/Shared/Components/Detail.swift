@@ -32,7 +32,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
     /// if detail is already loaded.
-    case loadAndPresentDetail(
+    case loadDetail(
         link: EntryLink?,
         fallback: String,
         autofocus: Bool
@@ -387,7 +387,7 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
-        case let .loadAndPresentDetail(link, fallback, autofocus):
+        case let .loadDetail(link, fallback, autofocus):
             return loadAndPresentDetail(
                 state: state,
                 environment: environment,
@@ -603,7 +603,7 @@ struct DetailModel: ModelProtocol {
         case .selectBacklink(let link):
             return update(
                 state: state,
-                action: .loadAndPresentDetail(
+                action: .loadDetail(
                     link: link,
                     fallback: link.linkableTitle,
                     autofocus: false
@@ -717,7 +717,7 @@ struct DetailModel: ModelProtocol {
         let link = slug.map({ slug in EntryLink(slug: slug, title: title) })
         return update(
             state: state,
-            action: .loadAndPresentDetail(
+            action: .loadDetail(
                     link: link,
                     fallback: fallback,
                     autofocus: autofocus
@@ -1134,7 +1134,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = environment.data.readRandomEntryLink()
             .map({ link in
-                DetailAction.loadAndPresentDetail(
+                DetailAction.loadDetail(
                     link: link,
                     fallback: link.linkableTitle,
                     autofocus: autofocus
@@ -1546,7 +1546,7 @@ struct DetailModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .loadAndPresentDetail(
+                .loadDetail(
                     link: to,
                     fallback: to.linkableTitle,
                     autofocus: false
@@ -1607,7 +1607,7 @@ struct DetailModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .loadAndPresentDetail(
+                .loadDetail(
                     link: parent,
                     fallback: parent.linkableTitle,
                     autofocus: false

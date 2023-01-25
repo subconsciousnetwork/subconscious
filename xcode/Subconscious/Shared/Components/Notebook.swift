@@ -51,7 +51,9 @@ enum NotebookAction {
     /// from the list before requesting delete for the animation to work.
     case stageDeleteEntry(Slug)
     /// Send entry delete request up to parent.
-    case requestDeleteEntry(Slug?)
+    case deleteEntry(Slug?)
+    case failDeleteEntry(String)
+    case succeedDeleteEntry(Slug)
     
     //  Search
     /// Hit submit ("go") while focused on search field
@@ -305,11 +307,21 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 slug: slug
             )
-        case .requestDeleteEntry(_):
-            environment.logger.debug(
-                "requestDeleteEntry should be handled by parent component"
+        case .deleteEntry(let slug):
+            return deleteEntry(
+                state: state,
+                environment: environment,
+                slug: slug
             )
+        case .failDeleteEntry(let error):
+            logger.log("failDeleteEntry: \(error)")
             return Update(state: state)
+        case .succeedDeleteEntry(let slug):
+            return succeedDeleteEntry(
+                state: state,
+                environment: environment,
+                slug: slug
+            )
         case .submitSearch(let query):
             return submitSearch(
                 state: state,
@@ -496,7 +508,7 @@ struct NotebookModel: ModelProtocol {
         }
         
         let fx: Fx<NotebookAction> = Just(
-            NotebookAction.requestDeleteEntry(slug)
+            NotebookAction.deleteEntry(slug)
         )
             .eraseToAnyPublisher()
         
@@ -504,6 +516,42 @@ struct NotebookModel: ModelProtocol {
             .animation(.default)
     }
     
+    /// Entry delete succeeded
+    static func deleteEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        slug: Slug?
+    ) -> Update<NotebookModel> {
+        guard let slug = slug else {
+            logger.log(
+                "Delete requested for nil slug. Doing nothing."
+            )
+            return Update(state: state)
+        }
+        let fx: Fx<NotebookAction> = environment.data
+            .deleteEntryAsync(slug: slug)
+            .map({ _ in
+                NotebookAction.succeedDeleteEntry(slug)
+            })
+            .catch({ error in
+                Just(
+                    NotebookAction.failDeleteEntry(error.localizedDescription)
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    /// Entry delete succeeded
+    static func succeedDeleteEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        slug: Slug
+    ) -> Update<NotebookModel> {
+        logger.log("Deleted entry: \(slug)")
+        return Update(state: state)
+    }
+
     /// Submit a search query (typically by hitting "go" on keyboard)
     static func submitSearch(
         state: NotebookModel,

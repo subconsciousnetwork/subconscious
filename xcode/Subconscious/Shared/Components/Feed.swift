@@ -49,11 +49,7 @@ enum FeedAction {
         autofocus: Bool
     ) -> FeedAction {
         .detail(
-            .loadAndPresentDetail(
-                link: link,
-                fallback: fallback,
-                autofocus: autofocus
-            )
+            .loadDetail(link: link, fallback: fallback, autofocus: autofocus)
         )
     }
 
