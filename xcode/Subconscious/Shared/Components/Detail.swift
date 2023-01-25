@@ -169,6 +169,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "markupEditor(\(String.loggable(action)))"
         case let .setDetailLastWriteWins(detail):
             return "setDetailLastWriteWins(\(String.loggable(detail)))"
+        case let .forceSetDetail(detail):
+            return "forceSetDetail(\(String.loggable(detail)))"
         case .save(let entry):
             let slugString: String = entry.mapOr(
                 { entry in String(entry.slug) },
@@ -294,8 +296,27 @@ struct DetailModel: ModelProtocol {
         )
     }
 
-    //  MARK: Update
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "detail"
+    )
+
     static func update(
+        state: DetailModel,
+        action: DetailAction,
+        environment: AppEnvironment
+    ) -> Update<DetailModel> {
+        let message = String.loggable(action)
+        logger.debug("[action] \(message)")
+        return updateModel(
+            state: state,
+            action: action,
+            environment: environment
+        )
+    }
+
+    //  MARK: Update
+    static func updateModel(
         state: DetailModel,
         action: DetailAction,
         environment: AppEnvironment
@@ -480,7 +501,7 @@ struct DetailModel: ModelProtocol {
             model.linkSuggestions = suggestions
             return Update(state: model)
         case let .linkSuggestionsFailure(message):
-            environment.logger.debug(
+            logger.debug(
                 "Link suggest failed: \(message)"
             )
             return Update(state: state)
@@ -630,7 +651,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         message: String
     ) -> Update<DetailModel> {
-        environment.logger.log("\(message)")
+        logger.log("\(message)")
         return Update(state: state)
     }
 
@@ -640,7 +661,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         message: String
     ) -> Update<DetailModel> {
-        environment.logger.debug("\(message)")
+        logger.debug("\(message)")
         return Update(state: state)
     }
 
@@ -650,7 +671,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         message: String
     ) -> Update<DetailModel> {
-        environment.logger.warning("\(message)")
+        logger.warning("\(message)")
         return Update(state: state)
     }
 
@@ -805,7 +826,7 @@ struct DetailModel: ModelProtocol {
         range nsRange: NSRange
     ) -> Update<DetailModel> {
         guard let range = Range(nsRange, in: state.markupEditor.text) else {
-            environment.logger.log(
+            logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
             return Update(state: state)
@@ -823,7 +844,7 @@ struct DetailModel: ModelProtocol {
             offsetBy: text.count,
             limitedBy: markup.endIndex
         ) else {
-            environment.logger.log(
+            logger.log(
                 "Could not find new cursor position. Aborting text insert."
             )
             return Update(state: state)
@@ -877,7 +898,7 @@ struct DetailModel: ModelProtocol {
         autofocus: Bool
     ) -> Update<DetailModel> {
         guard let link = link else {
-            environment.logger.log(
+            logger.log(
                 "Load and present detail requested, but nothing was being edited. Skipping."
             )
             return Update(state: state)
@@ -909,7 +930,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         guard let slug = state.slug else {
-            environment.logger.log(
+            logger.log(
                 "Refresh detail requested when nothing was being edited. Skipping."
             )
             return Update(state: state)
@@ -938,19 +959,19 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         guard let slug = state.slug else {
-            environment.logger.debug(
+            logger.debug(
                 "Refresh-detail-if-stale requested, but nothing was being edited. Skipping."
             )
             return Update(state: state)
         }
         let lastLoadElapsed = Date.now.timeIntervalSince(state.lastLoadStarted)
         guard lastLoadElapsed > Self.loadStaleInterval else {
-            environment.logger.debug(
+            logger.debug(
                 "Detail is fresh. No refresh needed. Skipping."
             )
             return Update(state: state)
         }
-        environment.logger.log(
+        logger.log(
             "Detail for \(slug) is stale. Refreshing."
         )
         return update(
@@ -1686,7 +1707,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<DetailModel> {
-        environment.logger.warning(
+        logger.warning(
             "Failed to retitle entry with error: \(error)"
         )
         return Update(state: state)
@@ -1744,7 +1765,7 @@ struct DetailModel: ModelProtocol {
     where T: TaggedMarkup
     {
         guard let range = Range(nsRange, in: state.markupEditor.text) else {
-            environment.logger.log(
+            logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
             return Update(state: state)
@@ -1765,7 +1786,7 @@ struct DetailModel: ModelProtocol {
             offsetBy: markup.markupWithoutClosingTag.count,
             limitedBy: editorText.endIndex
         ) else {
-            environment.logger.log(
+            logger.log(
                 "Could not find new cursor position. Aborting text insert."
             )
             return Update(state: state)
@@ -2006,6 +2027,9 @@ struct DetailView: View {
                     autofocus: false
                 )
             )
+        }
+        .onDisappear {
+            store.send(.autosave)
         }
         /// Catch link taps and handle them here
         .environment(\.openURL, OpenURLAction { url in
