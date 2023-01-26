@@ -71,8 +71,6 @@ struct NotebookView: View {
 /// For action naming convention, see
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
 enum NotebookAction {
-    case noop
-
     /// Tagged action for search HUD
     case search(SearchAction)
     
@@ -185,8 +183,13 @@ extension NotebookAction {
         switch action {
         case .requestDelete(let slug):
             return .deleteEntry(slug)
-        default:
-            return .noop
+        case let .requestDetail(slug, title, fallback):
+            return .pushDetail(
+                slug: slug,
+                title: title,
+                fallback: fallback,
+                autofocus: false
+            )
         }
     }
 }
@@ -278,8 +281,6 @@ struct NotebookModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
         switch action {
-        case .noop:
-            return Update(state: state)
         case .search(let action):
             return NotebookSearchCursor.update(
                 state: state,
