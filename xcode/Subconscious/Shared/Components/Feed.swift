@@ -114,12 +114,6 @@ struct FeedDetailCursor: CursorProtocol {
     
     static func tag(_ action: DetailAction) -> FeedAction {
         switch action {
-        case let .succeedMoveEntry(from, to):
-            return .succeedMoveEntry(from: from, to: to)
-        case let .succeedMergeEntry(parent, child):
-            return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedRetitleEntry(from, to):
-            return .succeedRetitleEntry(from: from, to: to)
         default:
             return .detail(action)
         }
@@ -197,7 +191,6 @@ struct FeedModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .detail(.succeedMoveEntry(from: from, to: to)),
                     .search(.refreshSuggestions)
                 ],
                 environment: environment
@@ -206,7 +199,6 @@ struct FeedModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .detail(.succeedMergeEntry(parent: parent, child: child)),
                     .search(.refreshSuggestions)
                 ],
                 environment: environment
@@ -215,7 +207,6 @@ struct FeedModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .detail(.succeedRetitleEntry(from: from, to: to)),
                     .search(.refreshSuggestions)
                 ],
                 environment: environment
