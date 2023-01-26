@@ -108,7 +108,23 @@ enum NotebookAction {
     case deleteEntry(Slug?)
     case failDeleteEntry(String)
     case succeedDeleteEntry(Slug)
-    
+
+    // Rename entry
+    /// Issue a rename action for an entry.
+    case renameEntry(RenameSuggestion)
+    /// Move entry succeeded. Lifecycle action.
+    case succeedMoveEntry(from: EntryLink, to: EntryLink)
+    /// Move entry failed. Lifecycle action.
+    case failMoveEntry(String)
+    /// Merge entry succeeded. Lifecycle action.
+    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
+    /// Merge entry failed. Lifecycle action.
+    case failMergeEntry(String)
+    /// Retitle entry succeeded. Lifecycle action.
+    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+    /// Retitle entry failed. Lifecycle action.
+    case failRetitleEntry(String)
+
     //  Search
     /// Hit submit ("go") while focused on search field
     case submitSearch(String)
@@ -190,6 +206,8 @@ extension NotebookAction {
                 fallback: fallback,
                 autofocus: false
             )
+        case .renameEntry(let suggestion):
+            return .renameEntry(suggestion)
         }
     }
 }
@@ -376,6 +394,51 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 slug: slug
+            )
+        case .renameEntry(let suggestion):
+            return renameEntry(
+                state: state,
+                environment: environment,
+                suggestion: suggestion
+            )
+        case let .succeedMoveEntry(from, to):
+            return succeedMoveEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case .failMoveEntry(let error):
+            return failMoveEntry(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case let .succeedMergeEntry(parent, child):
+            return succeedMergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
+        case .failMergeEntry(let error):
+            return failMergeEntry(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case let .succeedRetitleEntry(from, to):
+            return succeedRetitleEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case .failRetitleEntry(let error):
+            return failRetitleEntry(
+                state: state,
+                environment: environment,
+                error: error
             )
         case .submitSearch(let query):
             return submitSearch(
@@ -615,6 +678,187 @@ struct NotebookModel: ModelProtocol {
         )
     }
 
+    /// Rename an entry (change its slug).
+    /// If `next` does not already exist, this will change the slug
+    /// and move the file.
+    /// If next exists, this will merge documents.
+    static func renameEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        suggestion: RenameSuggestion
+    ) -> Update<NotebookModel> {
+        switch suggestion {
+        case .move(let from, let to):
+            return moveEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case .merge(let parent, let child):
+            return mergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
+        case .retitle(let from, let to):
+            return retitleEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        }
+    }
+
+    /// Move entry
+    static func moveEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<NotebookModel> {
+        let fx: Fx<NotebookAction> = environment.data
+            .moveEntryAsync(from: from, to: to)
+            .map({ _ in
+                NotebookAction.succeedMoveEntry(from: from, to: to)
+            })
+            .catch({ error in
+                Just(
+                    NotebookAction.failMoveEntry(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(
+            state: state,
+            fx: fx
+        )
+        .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
+    /// Move success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedMoveEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<NotebookModel> {
+        logger.warning("Not implemented")
+        return Update(state: state)
+    }
+
+    /// Move failure lifecycle handler.
+    //  TODO: in future consider triggering an alert.
+    static func failMoveEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<NotebookModel> {
+        environment.logger.warning(
+            "Failed to move entry with error: \(error)"
+        )
+        return Update(state: state)
+    }
+
+    /// Merge entry
+    static func mergeEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        parent: EntryLink,
+        child: EntryLink
+    ) -> Update<NotebookModel> {
+        let fx: Fx<NotebookAction> = environment.data
+            .mergeEntryAsync(parent: parent, child: child)
+            .map({ _ in
+                NotebookAction.succeedMergeEntry(parent: parent, child: child)
+            })
+            .catch({ error in
+                Just(
+                    NotebookAction.failMergeEntry(error.localizedDescription)
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    /// Merge success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedMergeEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        parent: EntryLink,
+        child: EntryLink
+    ) -> Update<NotebookModel> {
+        logger.warning("Not implemented yet")
+        return Update(state: state)
+    }
+
+    /// Merge failure lifecycle handler.
+    //  TODO: in future consider triggering an alert.
+    static func failMergeEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<NotebookModel> {
+        environment.logger.warning(
+            "Failed to merge entry with error: \(error)"
+        )
+        return Update(state: state)
+    }
+
+    /// Retitle entry
+    static func retitleEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<NotebookModel> {
+        let fx: Fx<NotebookAction> = environment.data
+            .retitleEntryAsync(from: from, to: to)
+            .map({ _ in
+                NotebookAction.succeedRetitleEntry(from: from, to: to)
+            })
+            .catch({ error in
+                Just(
+                    NotebookAction.failRetitleEntry(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    /// Retitle success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedRetitleEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<NotebookModel> {
+        logger.warning("Not implemented")
+        return Update(state: state)
+    }
+
+    /// Retitle failure lifecycle handler.
+    //  TODO: in future consider triggering an alert.
+    static func failRetitleEntry(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<NotebookModel> {
+        logger.warning(
+            "Failed to retitle entry with error: \(error)"
+        )
+        return Update(state: state)
+    }
+
+
     /// Submit a search query (typically by hitting "go" on keyboard)
     static func submitSearch(
         state: NotebookModel,
@@ -641,6 +885,7 @@ struct NotebookModel: ModelProtocol {
             return update
         }
         
+        // Request detail AFTER animaiton completes
         let fx: Fx<NotebookAction> = Just(
             NotebookAction.pushDetail(
                 slug: link.slug,
@@ -649,9 +894,8 @@ struct NotebookModel: ModelProtocol {
                 autofocus: false
             )
         )
-        // Request detail AFTER animaiton completes
-            .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
-            .eraseToAnyPublisher()
+        .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
+        .eraseToAnyPublisher()
         
         return update.mergeFx(fx)
     }

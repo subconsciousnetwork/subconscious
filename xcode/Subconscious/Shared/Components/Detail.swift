@@ -139,9 +139,7 @@ struct DetailView: View {
                     store.send(.hideRenameSheet)
                 },
                 onSelect: { suggestion in
-                    store.send(
-                        .renameEntry(suggestion)
-                    )
+                    send(.renameEntry(suggestion))
                 }
             )
         }
@@ -280,6 +278,7 @@ struct DetailReadyView: View {
 enum DetailOuterAction: Hashable {
     case requestDetail(slug: Slug, title: String, fallback: String)
     case requestDelete(Slug?)
+    case renameEntry(RenameSuggestion)
 }
 
 /// Actions handled by detail's private store.
