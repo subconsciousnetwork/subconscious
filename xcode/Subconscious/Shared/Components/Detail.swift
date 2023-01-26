@@ -25,6 +25,17 @@ struct DetailView: View {
     var onRequestDelete: (Slug?) -> Void
     var onSucceedMoveEntry: (Slug, Slug) -> Void
 
+    /// Forward lifecycle actions up to parent.
+    /// Wired up to Store action publisher via `onReceive` below.
+    private func forward(_ action: DetailModel.Action) {
+        switch action {
+        case let .succeedMoveEntry(from, to):
+            onSucceedMoveEntry(from.slug, to.slug)
+        default:
+            break
+        }
+    }
+
     var body: some View {
         VStack {
             if store.state.slug != nil {
@@ -92,14 +103,7 @@ struct DetailView: View {
             let message = String.loggable(action)
             DetailModel.logger.debug("[action] \(message)")
         }
-        .onReceive(store.actions) { action in
-            switch action {
-            case let .succeedMoveEntry(from, to):
-                onSucceedMoveEntry(from.slug, to.slug)
-            default:
-                break
-            }
-        }
+        .onReceive(store.actions, perform: forward)
         .sheet(
             isPresented: Binding(
                 store: store,
