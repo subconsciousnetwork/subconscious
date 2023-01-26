@@ -83,7 +83,7 @@ enum NotebookAction {
     
     /// Refresh the state of all lists and child components by reloading
     /// from database. This also sets searches to their zero-query state.
-    case refreshAll
+    case refreshLists
     
     /// Read entry count from DB
     case countEntries
@@ -321,8 +321,8 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 databaseState: databaseState
             )
-        case .refreshAll:
-            return refreshAll(state: state, environment: environment)
+        case .refreshLists:
+            return refreshLists(state: state, environment: environment)
         case .countEntries:
             return countEntries(
                 state: state,
@@ -507,7 +507,7 @@ struct NotebookModel: ModelProtocol {
             state: state,
             actions: [
                 .countEntries,
-                .refreshAll
+                .refreshLists
             ],
             environment: environment
         )
@@ -537,7 +537,7 @@ struct NotebookModel: ModelProtocol {
     /// Refresh all lists in the notebook tab from database.
     /// Typically invoked after creating/deleting an entry, or performing
     /// some other action that would invalidate the state of various lists.
-    static func refreshAll(
+    static func refreshLists(
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
@@ -673,7 +673,7 @@ struct NotebookModel: ModelProtocol {
         })
         return update(
             state: model,
-            action: .refreshAll,
+            action: .refreshLists,
             environment: environment
         )
     }
@@ -747,8 +747,25 @@ struct NotebookModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<NotebookModel> {
-        logger.warning("Not implemented")
-        return Update(state: state)
+        var model = state
+
+        /// Find all instances of this model in the stack and update them
+        model.details = state.details.map({ (detail: DetailOuterModel) in
+            guard detail.slug == from.slug else {
+                return detail
+            }
+            var model = detail
+            model.slug = to.slug
+            model.title = to.linkableTitle
+            model.fallback = to.title
+            return model
+        })
+        
+        return update(
+            state: model,
+            action: .refreshLists,
+            environment: environment
+        )
     }
 
     /// Move failure lifecycle handler.

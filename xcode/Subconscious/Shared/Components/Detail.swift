@@ -48,9 +48,13 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             DetailToolbarContent(
-                link: EntryLink(store.state),
+                link: EntryLink(slug: state.slug, title: state.title),
                 onRename: {
-                    store.send(.showRenameSheet(EntryLink(store.state)))
+                    store.send(
+                        .showRenameSheet(
+                            EntryLink(slug: state.slug, title: state.title)
+                        )
+                    )
                 },
                 onDelete: {
                     store.send(.presentDeleteConfirmationDialog(true))
