@@ -73,8 +73,11 @@ struct NotebookNavigationView: View {
                             )
                         )
                     },
-                    onDelete: { slug in
+                    onRequestDelete: { slug in
                         store.send(.deleteEntry(slug))
+                    },
+                    onSucceedMoveEntry: { from, to in
+                        store.send(.refreshAll)
                     }
                 )
             }

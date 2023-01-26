@@ -17,13 +17,13 @@ struct DetailView: View {
         action: .start,
         environment: AppEnvironment.default
     )
-    @Environment(\.scenePhase) var scenePhase: ScenePhase
+    @Environment(\.scenePhase) private var scenePhase: ScenePhase
     var slug: Slug?
     var title: String
     var fallback: String
     var onRequestDetail: (Slug, String, String) -> Void
-    // Notify parent of deletion
-    var onDelete: (Slug?) -> Void
+    var onRequestDelete: (Slug?) -> Void
+    var onSucceedMoveEntry: (Slug, Slug) -> Void
 
     var body: some View {
         VStack {
@@ -34,7 +34,7 @@ struct DetailView: View {
                     title: title,
                     fallback: fallback,
                     onRequestDetail: onRequestDetail,
-                    onDelete: onDelete
+                    onRequestDelete: onRequestDelete
                 )
             } else {
                 VStack {
@@ -91,6 +91,14 @@ struct DetailView: View {
         .onReceive(store.actions) { action in
             let message = String.loggable(action)
             DetailModel.logger.debug("[action] \(message)")
+        }
+        .onReceive(store.actions) { action in
+            switch action {
+            case let .succeedMoveEntry(from, to):
+                onSucceedMoveEntry(from.slug, to.slug)
+            default:
+                break
+            }
         }
         .sheet(
             isPresented: Binding(
@@ -151,7 +159,7 @@ struct DetailView: View {
             Button(
                 role: .destructive,
                 action: {
-                    onDelete(slug)
+                    onRequestDelete(slug)
                 }
             ) {
                 Text("Delete Immediately")
@@ -167,8 +175,7 @@ struct DetailReadyView: View {
     var title: String
     var fallback: String
     var onRequestDetail: (Slug, String, String) -> Void
-    // Notify parent of deletion
-    var onDelete: (Slug?) -> Void
+    var onRequestDelete: (Slug?) -> Void
 
     var body: some View {
         GeometryReader { geometry in
@@ -184,10 +191,7 @@ struct DetailReadyView: View {
                             frame: geometry.frame(in: .local),
                             renderAttributesOf: Subtext.renderAttributesOf,
                             onLink: { url, _, _, _ in
-                                guard
-                                    let link = EntryLink
-                                        .decodefromSubEntryURL(url)
-                                else {
+                                guard let link = EntryLink.decodefromSubEntryURL(url) else {
                                     return true
                                 }
                                 onRequestDetail(
