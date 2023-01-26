@@ -149,7 +149,7 @@ struct DetailView: View {
                     store.send(.hideRenameSheet)
                 },
                 onSelect: { suggestion in
-                    store.send(.chooseRenameSuggestion(suggestion))
+                    store.send(DetailAction.from(suggestion))
                 }
             )
         }
@@ -288,14 +288,20 @@ struct DetailReadyView: View {
 enum DetailOuterAction: Hashable {
     case requestDetail(slug: Slug, title: String, fallback: String)
     case requestDelete(Slug?)
-    case renameEntry(RenameSuggestion)
+    case selectMoveEntry(from: EntryLink, to: EntryLink)
+    case selectMergeEntry(parent: EntryLink, child: EntryLink)
+    case selectRetitleEntry(from: EntryLink, to: EntryLink)
 }
 
 extension DetailOuterAction {
     static func from(_ action: DetailAction) -> Self? {
         switch action {
-        case .chooseRenameSuggestion(let suggestion):
-            return .renameEntry(suggestion)
+        case let .selectMoveEntry(from, to):
+            return .selectMoveEntry(from: from, to: to)
+        case let .selectMergeEntry(parent, child):
+            return .selectMergeEntry(parent: parent, child: child)
+        case let .selectRetitleEntry(from, to):
+            return .selectRetitleEntry(from: from, to: to)
         default:
             return nil
         }
@@ -372,8 +378,11 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case refreshRenameSuggestions
     case setRenameSuggestions([RenameSuggestion])
     case renameSuggestionsFailure(String)
-    /// Issue a rename action for an entry.
-    case chooseRenameSuggestion(RenameSuggestion)
+
+    /// Issue a rename actions for an entry.
+    case selectMoveEntry(from: EntryLink, to: EntryLink)
+    case selectMergeEntry(parent: EntryLink, child: EntryLink)
+    case selectRetitleEntry(from: EntryLink, to: EntryLink)
 
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
@@ -459,6 +468,19 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "setEditorSelection(range: \(range), text: ...)"
         default:
             return String(describing: self)
+        }
+    }
+}
+
+extension DetailAction {
+    static func from(_ suggestion: RenameSuggestion) -> Self {
+        switch suggestion {
+        case let .move(from, to):
+            return .selectMoveEntry(from: from, to: to)
+        case let .merge(parent, child):
+            return .selectMergeEntry(parent: parent, child: child)
+        case let .retitle(from, to):
+            return .selectRetitleEntry(from: from, to: to)
         }
     }
 }
@@ -768,7 +790,11 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .chooseRenameSuggestion(_):
+        case .selectMoveEntry:
+            return hideRenameSheet(state: state, environment: environment)
+        case .selectMergeEntry:
+            return hideRenameSheet(state: state, environment: environment)
+        case .selectRetitleEntry:
             return hideRenameSheet(state: state, environment: environment)
         case .presentDeleteConfirmationDialog(let isPresented):
             return presentDeleteConfirmationDialog(

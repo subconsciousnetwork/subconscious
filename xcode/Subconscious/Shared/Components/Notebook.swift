@@ -110,16 +110,20 @@ enum NotebookAction {
     case succeedDeleteEntry(Slug)
 
     // Rename entry
-    /// Issue a rename action for an entry.
-    case renameEntry(RenameSuggestion)
+    /// Move an entry from one location to another
+    case moveEntry(from: EntryLink, to: EntryLink)
     /// Move entry succeeded. Lifecycle action.
     case succeedMoveEntry(from: EntryLink, to: EntryLink)
     /// Move entry failed. Lifecycle action.
     case failMoveEntry(String)
+    /// Merge entries
+    case mergeEntry(parent: EntryLink, child: EntryLink)
     /// Merge entry succeeded. Lifecycle action.
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)
     /// Merge entry failed. Lifecycle action.
     case failMergeEntry(String)
+    /// Retitle an entry (change its title header)
+    case retitleEntry(from: EntryLink, to: EntryLink)
     /// Retitle entry succeeded. Lifecycle action.
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
     /// Retitle entry failed. Lifecycle action.
@@ -206,8 +210,12 @@ extension NotebookAction {
                 fallback: fallback,
                 autofocus: false
             )
-        case .renameEntry(let suggestion):
-            return .renameEntry(suggestion)
+        case let .selectMoveEntry(from, to):
+            return .moveEntry(from: from, to: to)
+        case let .selectMergeEntry(parent, child):
+            return .mergeEntry(parent: parent, child: child)
+        case let .selectRetitleEntry(from, to):
+            return .retitleEntry(from: from, to: to)
         }
     }
 }
@@ -395,11 +403,12 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 slug: slug
             )
-        case .renameEntry(let suggestion):
-            return renameEntry(
+        case .moveEntry(let from, let to):
+            return moveEntry(
                 state: state,
                 environment: environment,
-                suggestion: suggestion
+                from: from,
+                to: to
             )
         case let .succeedMoveEntry(from, to):
             return succeedMoveEntry(
@@ -414,6 +423,13 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
+        case .mergeEntry(let parent, let child):
+            return mergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
         case let .succeedMergeEntry(parent, child):
             return succeedMergeEntry(
                 state: state,
@@ -426,6 +442,13 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
+            )
+        case .retitleEntry(let from, let to):
+            return retitleEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
             )
         case let .succeedRetitleEntry(from, to):
             return succeedRetitleEntry(
@@ -678,40 +701,6 @@ struct NotebookModel: ModelProtocol {
         )
     }
 
-    /// Rename an entry (change its slug).
-    /// If `next` does not already exist, this will change the slug
-    /// and move the file.
-    /// If next exists, this will merge documents.
-    static func renameEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        suggestion: RenameSuggestion
-    ) -> Update<NotebookModel> {
-        switch suggestion {
-        case .move(let from, let to):
-            return moveEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
-        case .merge(let parent, let child):
-            return mergeEntry(
-                state: state,
-                environment: environment,
-                parent: parent,
-                child: child
-            )
-        case .retitle(let from, let to):
-            return retitleEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
-        }
-    }
-
     /// Move entry
     static func moveEntry(
         state: NotebookModel,
@@ -810,8 +799,25 @@ struct NotebookModel: ModelProtocol {
         parent: EntryLink,
         child: EntryLink
     ) -> Update<NotebookModel> {
-        logger.warning("Not implemented yet")
-        return Update(state: state)
+        var model = state
+
+        /// Find all instances of child and update them to become parent
+        model.details = state.details.map({ (detail: DetailOuterModel) in
+            guard detail.slug == child.slug else {
+                return detail
+            }
+            var model = detail
+            model.slug = parent.slug
+            model.title = parent.linkableTitle
+            model.fallback = parent.title
+            return model
+        })
+        
+        return update(
+            state: model,
+            action: .refreshLists,
+            environment: environment
+        )
     }
 
     /// Merge failure lifecycle handler.
