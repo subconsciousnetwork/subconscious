@@ -858,8 +858,23 @@ struct NotebookModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<NotebookModel> {
-        logger.warning("Not implemented")
-        return Update(state: state)
+        var model = state
+
+        /// Find all instances of this model in the stack and update them
+        model.details = state.details.map({ (detail: DetailOuterModel) in
+            guard detail.slug == from.slug else {
+                return detail
+            }
+            var model = detail
+            model.title = to.linkableTitle
+            return model
+        })
+        
+        return update(
+            state: model,
+            action: .refreshLists,
+            environment: environment
+        )
     }
 
     /// Retitle failure lifecycle handler.
