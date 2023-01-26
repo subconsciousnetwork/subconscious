@@ -288,20 +288,20 @@ struct DetailReadyView: View {
 enum DetailOuterAction: Hashable {
     case requestDetail(slug: Slug, title: String, fallback: String)
     case requestDelete(Slug?)
-    case selectMoveEntry(from: EntryLink, to: EntryLink)
-    case selectMergeEntry(parent: EntryLink, child: EntryLink)
-    case selectRetitleEntry(from: EntryLink, to: EntryLink)
+    case succeedMoveEntry(from: EntryLink, to: EntryLink)
+    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
+    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
 }
 
 extension DetailOuterAction {
     static func from(_ action: DetailAction) -> Self? {
         switch action {
-        case let .selectMoveEntry(from, to):
-            return .selectMoveEntry(from: from, to: to)
-        case let .selectMergeEntry(parent, child):
-            return .selectMergeEntry(parent: parent, child: child)
-        case let .selectRetitleEntry(from, to):
-            return .selectRetitleEntry(from: from, to: to)
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedRetitleEntry(from, to):
+            return .succeedRetitleEntry(from: from, to: to)
         default:
             return nil
         }
@@ -379,10 +379,25 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case setRenameSuggestions([RenameSuggestion])
     case renameSuggestionsFailure(String)
 
-    /// Issue a rename actions for an entry.
-    case selectMoveEntry(from: EntryLink, to: EntryLink)
-    case selectMergeEntry(parent: EntryLink, child: EntryLink)
-    case selectRetitleEntry(from: EntryLink, to: EntryLink)
+    // Rename entry
+    /// Move an entry from one location to another
+    case moveEntry(from: EntryLink, to: EntryLink)
+    /// Move entry succeeded. Lifecycle action.
+    case succeedMoveEntry(from: EntryLink, to: EntryLink)
+    /// Move entry failed. Lifecycle action.
+    case failMoveEntry(String)
+    /// Merge entries
+    case mergeEntry(parent: EntryLink, child: EntryLink)
+    /// Merge entry succeeded. Lifecycle action.
+    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
+    /// Merge entry failed. Lifecycle action.
+    case failMergeEntry(String)
+    /// Retitle an entry (change its title header)
+    case retitleEntry(from: EntryLink, to: EntryLink)
+    /// Retitle entry succeeded. Lifecycle action.
+    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+    /// Retitle entry failed. Lifecycle action.
+    case failRetitleEntry(String)
 
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
@@ -476,11 +491,11 @@ extension DetailAction {
     static func from(_ suggestion: RenameSuggestion) -> Self {
         switch suggestion {
         case let .move(from, to):
-            return .selectMoveEntry(from: from, to: to)
+            return .moveEntry(from: from, to: to)
         case let .merge(parent, child):
-            return .selectMergeEntry(parent: parent, child: child)
+            return .mergeEntry(parent: parent, child: child)
         case let .retitle(from, to):
-            return .selectRetitleEntry(from: from, to: to)
+            return .retitleEntry(from: from, to: to)
         }
     }
 }
@@ -790,12 +805,66 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .selectMoveEntry:
-            return hideRenameSheet(state: state, environment: environment)
-        case .selectMergeEntry:
-            return hideRenameSheet(state: state, environment: environment)
-        case .selectRetitleEntry:
-            return hideRenameSheet(state: state, environment: environment)
+        case .moveEntry(let from, let to):
+            return moveEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case let .succeedMoveEntry(from, to):
+            return succeedMoveEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case .failMoveEntry(let error):
+            return failMoveEntry(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .mergeEntry(let parent, let child):
+            return mergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
+        case let .succeedMergeEntry(parent, child):
+            return succeedMergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
+            )
+        case .failMergeEntry(let error):
+            return failMergeEntry(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .retitleEntry(let from, let to):
+            return retitleEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case let .succeedRetitleEntry(from, to):
+            return succeedRetitleEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
+            )
+        case .failRetitleEntry(let error):
+            return failRetitleEntry(
+                state: state,
+                environment: environment,
+                error: error
+            )
         case .presentDeleteConfirmationDialog(let isPresented):
             return presentDeleteConfirmationDialog(
                 state: state,
@@ -1613,6 +1682,165 @@ struct DetailModel: ModelProtocol {
         )
         return Update(state: state)
     }
+
+    /// Move entry
+    static func moveEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<DetailModel> {
+        let fx: Fx<DetailAction> = environment.data
+            .moveEntryAsync(from: from, to: to)
+            .map({ _ in
+                DetailAction.succeedMoveEntry(from: from, to: to)
+            })
+            .catch({ error in
+                Just(
+                    DetailAction.failMoveEntry(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(
+            state: state,
+            fx: fx
+        )
+        .animation(.easeOutCubic(duration: Duration.keyboard))
+    }
+
+    /// Move success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedMoveEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<DetailModel> {
+        return update(
+            state: state,
+            actions: [.hideRenameSheet, .refreshLists],
+            environment: environment
+        )
+    }
+
+    /// Move failure lifecycle handler.
+    //  TODO: in future consider triggering an alert.
+    static func failMoveEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<DetailModel> {
+        environment.logger.warning(
+            "Failed to move entry with error: \(error)"
+        )
+        return Update(state: state)
+    }
+
+    /// Merge entry
+    static func mergeEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        parent: EntryLink,
+        child: EntryLink
+    ) -> Update<DetailModel> {
+        let fx: Fx<DetailAction> = environment.data
+            .mergeEntryAsync(parent: parent, child: child)
+            .map({ _ in
+                DetailAction.succeedMergeEntry(parent: parent, child: child)
+            })
+            .catch({ error in
+                Just(
+                    DetailAction.failMergeEntry(error.localizedDescription)
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    /// Merge success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedMergeEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        parent: EntryLink,
+        child: EntryLink
+    ) -> Update<DetailModel> {
+        let fx: Fx<DetailAction> = Just(DetailAction.refreshDetail)
+            .eraseToAnyPublisher()
+        return update(
+            state: state,
+            actions: [.refreshLists, .hideRenameSheet],
+            environment: environment
+        )
+        .mergeFx(fx)
+    }
+
+    /// Merge failure lifecycle handler.
+    //  TODO: in future consider triggering an alert.
+    static func failMergeEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<DetailModel> {
+        environment.logger.warning(
+            "Failed to merge entry with error: \(error)"
+        )
+        return Update(state: state)
+    }
+
+    /// Retitle entry
+    static func retitleEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<DetailModel> {
+        let fx: Fx<DetailAction> = environment.data
+            .retitleEntryAsync(from: from, to: to)
+            .map({ _ in
+                DetailAction.succeedRetitleEntry(from: from, to: to)
+            })
+            .catch({ error in
+                Just(
+                    DetailAction.failRetitleEntry(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    /// Retitle success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedRetitleEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        from: EntryLink,
+        to: EntryLink
+    ) -> Update<DetailModel> {
+        return update(
+            state: state,
+            actions: [.refreshLists, .hideRenameSheet],
+            environment: environment
+        )
+    }
+
+    /// Retitle failure lifecycle handler.
+    //  TODO: in future consider triggering an alert.
+    static func failRetitleEntry(
+        state: DetailModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<DetailModel> {
+        logger.warning(
+            "Failed to retitle entry with error: \(error)"
+        )
+        return Update(state: state)
+    }
+
 
     /// Show/hide entry delete confirmation dialog.
     static func presentDeleteConfirmationDialog(

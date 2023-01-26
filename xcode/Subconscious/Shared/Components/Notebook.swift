@@ -109,25 +109,12 @@ enum NotebookAction {
     case failDeleteEntry(String)
     case succeedDeleteEntry(Slug)
 
-    // Rename entry
-    /// Move an entry from one location to another
-    case moveEntry(from: EntryLink, to: EntryLink)
     /// Move entry succeeded. Lifecycle action.
     case succeedMoveEntry(from: EntryLink, to: EntryLink)
-    /// Move entry failed. Lifecycle action.
-    case failMoveEntry(String)
-    /// Merge entries
-    case mergeEntry(parent: EntryLink, child: EntryLink)
     /// Merge entry succeeded. Lifecycle action.
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)
-    /// Merge entry failed. Lifecycle action.
-    case failMergeEntry(String)
-    /// Retitle an entry (change its title header)
-    case retitleEntry(from: EntryLink, to: EntryLink)
     /// Retitle entry succeeded. Lifecycle action.
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
-    /// Retitle entry failed. Lifecycle action.
-    case failRetitleEntry(String)
 
     //  Search
     /// Hit submit ("go") while focused on search field
@@ -210,12 +197,12 @@ extension NotebookAction {
                 fallback: fallback,
                 autofocus: false
             )
-        case let .selectMoveEntry(from, to):
-            return .moveEntry(from: from, to: to)
-        case let .selectMergeEntry(parent, child):
-            return .mergeEntry(parent: parent, child: child)
-        case let .selectRetitleEntry(from, to):
-            return .retitleEntry(from: from, to: to)
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedRetitleEntry(from, to):
+            return .succeedRetitleEntry(from: from, to: to)
         }
     }
 }
@@ -403,32 +390,12 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 slug: slug
             )
-        case .moveEntry(let from, let to):
-            return moveEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
         case let .succeedMoveEntry(from, to):
             return succeedMoveEntry(
                 state: state,
                 environment: environment,
                 from: from,
                 to: to
-            )
-        case .failMoveEntry(let error):
-            return failMoveEntry(
-                state: state,
-                environment: environment,
-                error: error
-            )
-        case .mergeEntry(let parent, let child):
-            return mergeEntry(
-                state: state,
-                environment: environment,
-                parent: parent,
-                child: child
             )
         case let .succeedMergeEntry(parent, child):
             return succeedMergeEntry(
@@ -437,31 +404,12 @@ struct NotebookModel: ModelProtocol {
                 parent: parent,
                 child: child
             )
-        case .failMergeEntry(let error):
-            return failMergeEntry(
-                state: state,
-                environment: environment,
-                error: error
-            )
-        case .retitleEntry(let from, let to):
-            return retitleEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
         case let .succeedRetitleEntry(from, to):
             return succeedRetitleEntry(
                 state: state,
                 environment: environment,
                 from: from,
                 to: to
-            )
-        case .failRetitleEntry(let error):
-            return failRetitleEntry(
-                state: state,
-                environment: environment,
-                error: error
             )
         case .submitSearch(let query):
             return submitSearch(
@@ -701,33 +649,6 @@ struct NotebookModel: ModelProtocol {
         )
     }
 
-    /// Move entry
-    static func moveEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
-    ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data
-            .moveEntryAsync(from: from, to: to)
-            .map({ _ in
-                NotebookAction.succeedMoveEntry(from: from, to: to)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.failMoveEntry(
-                        error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(
-            state: state,
-            fx: fx
-        )
-        .animation(.easeOutCubic(duration: Duration.keyboard))
-    }
-
     /// Move success lifecycle handler.
     /// Updates UI in response.
     static func succeedMoveEntry(
@@ -755,40 +676,6 @@ struct NotebookModel: ModelProtocol {
             action: .refreshLists,
             environment: environment
         )
-    }
-
-    /// Move failure lifecycle handler.
-    //  TODO: in future consider triggering an alert.
-    static func failMoveEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        error: String
-    ) -> Update<NotebookModel> {
-        environment.logger.warning(
-            "Failed to move entry with error: \(error)"
-        )
-        return Update(state: state)
-    }
-
-    /// Merge entry
-    static func mergeEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        parent: EntryLink,
-        child: EntryLink
-    ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data
-            .mergeEntryAsync(parent: parent, child: child)
-            .map({ _ in
-                NotebookAction.succeedMergeEntry(parent: parent, child: child)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.failMergeEntry(error.localizedDescription)
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
     }
 
     /// Merge success lifecycle handler.
@@ -820,42 +707,6 @@ struct NotebookModel: ModelProtocol {
         )
     }
 
-    /// Merge failure lifecycle handler.
-    //  TODO: in future consider triggering an alert.
-    static func failMergeEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        error: String
-    ) -> Update<NotebookModel> {
-        environment.logger.warning(
-            "Failed to merge entry with error: \(error)"
-        )
-        return Update(state: state)
-    }
-
-    /// Retitle entry
-    static func retitleEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
-    ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data
-            .retitleEntryAsync(from: from, to: to)
-            .map({ _ in
-                NotebookAction.succeedRetitleEntry(from: from, to: to)
-            })
-            .catch({ error in
-                Just(
-                    NotebookAction.failRetitleEntry(
-                        error.localizedDescription
-                    )
-                )
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
-    }
-
     /// Retitle success lifecycle handler.
     /// Updates UI in response.
     static func succeedRetitleEntry(
@@ -882,20 +733,6 @@ struct NotebookModel: ModelProtocol {
             environment: environment
         )
     }
-
-    /// Retitle failure lifecycle handler.
-    //  TODO: in future consider triggering an alert.
-    static func failRetitleEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        error: String
-    ) -> Update<NotebookModel> {
-        logger.warning(
-            "Failed to retitle entry with error: \(error)"
-        )
-        return Update(state: state)
-    }
-
 
     /// Submit a search query (typically by hitting "go" on keyboard)
     static func submitSearch(
