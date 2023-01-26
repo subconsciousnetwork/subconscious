@@ -1767,14 +1767,14 @@ struct DetailModel: ModelProtocol {
         parent: EntryLink,
         child: EntryLink
     ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = Just(DetailAction.refreshDetail)
-            .eraseToAnyPublisher()
+        var model = state
+        model.slug = parent.slug
+        model.headers.title = parent.linkableTitle
         return update(
-            state: state,
-            actions: [.refreshLists, .hideRenameSheet],
+            state: model,
+            actions: [.refreshLists, .hideRenameSheet, .refreshDetail],
             environment: environment
         )
-        .mergeFx(fx)
     }
 
     /// Merge failure lifecycle handler.
