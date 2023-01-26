@@ -314,30 +314,31 @@ struct SearchModel: ModelProtocol {
 
 //  MARK: View
 struct SearchView: View {
-    var store: ViewStore<SearchModel>
+    var state: SearchModel
+    var send: (SearchAction) -> Void
     var suggestionHeight: CGFloat = 56
 
     var body: some View {
         VStack {
-            if store.state.isPresented {
+            if state.isPresented {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack {
                         SearchTextField(
-                            placeholder: store.state.placeholder,
+                            placeholder: state.placeholder,
                             text: Binding(
-                                store: store,
-                                get: \.query,
+                                get: { state.query },
+                                send: send,
                                 tag: SearchAction.setQuery
                             ),
                             autofocus: true
                         )
                         .submitLabel(.go)
                         .onSubmit {
-                            store.send(.submitQuery(store.state.query))
+                            send(.submitQuery(state.query))
                         }
                         Button(
                             action: {
-                                store.send(.cancel)
+                                send(.cancel)
                             },
                             label: {
                                 Text("Cancel")
@@ -346,10 +347,10 @@ struct SearchView: View {
                     }
                     .frame(height: AppTheme.unit * 10)
                     .padding(AppTheme.tightPadding)
-                    List(store.state.suggestions) { suggestion in
+                    List(state.suggestions) { suggestion in
                         Button(
                             action: {
-                                store.send(.activateSuggestion(suggestion))
+                                send(.activateSuggestion(suggestion))
                             },
                             label: {
                                 SuggestionLabelView(suggestion: suggestion)
@@ -377,12 +378,11 @@ struct SearchView: View {
 struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
         SearchView(
-            store: ViewStore.constant(
-                state: SearchModel(
-                    isPresented: true,
-                    placeholder: "Search or create..."
-                )
-            )
+            state: SearchModel(
+                isPresented: true,
+                placeholder: "Search or create..."
+            ),
+            send: { action in }
         )
     }
 }

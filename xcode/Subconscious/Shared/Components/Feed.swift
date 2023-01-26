@@ -355,9 +355,10 @@ struct FeedView: View {
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
             SearchView(
-                store: ViewStore(
-                    store: store,
-                    cursor: FeedSearchCursor.self
+                state: store.state.search,
+                send: Address.forward(
+                    send: store.send,
+                    tag: FeedSearchCursor.tag
                 )
             )
             .zIndex(3)

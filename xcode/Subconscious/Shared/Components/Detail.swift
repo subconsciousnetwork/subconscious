@@ -106,8 +106,8 @@ struct DetailView: View {
         .onReceive(store.actions, perform: forward)
         .sheet(
             isPresented: Binding(
-                store: store,
-                get: \.isLinkSheetPresented,
+                get: { store.state.isLinkSheetPresented },
+                send: store.send,
                 tag: DetailAction.setLinkSheetPresented
             )
         ) {
@@ -115,8 +115,8 @@ struct DetailView: View {
                 placeholder: "Search or create...",
                 suggestions: store.state.linkSuggestions,
                 text: Binding(
-                    store: store,
-                    get: \.linkSearchText,
+                    get: { store.state.linkSearchText },
+                    send: store.send,
                     tag: DetailAction.setLinkSearch
                 ),
                 onCancel: {
@@ -129,8 +129,8 @@ struct DetailView: View {
         }
         .sheet(
             isPresented: Binding(
-                store: store,
-                get: \.isRenameSheetShowing,
+                get: { store.state.isRenameSheetShowing },
+                send: store.send,
                 tag: { _ in DetailAction.hideRenameSheet }
             )
         ) {
@@ -138,8 +138,8 @@ struct DetailView: View {
                 current: EntryLink(store.state),
                 suggestions: store.state.renameSuggestions,
                 text: Binding(
-                    store: store,
-                    get: \.renameField,
+                    get: { store.state.renameField },
+                    send: store.send,
                     tag: DetailAction.setRenameField
                 ),
                 onCancel: {
@@ -155,8 +155,8 @@ struct DetailView: View {
         .confirmationDialog(
             "Are you sure?",
             isPresented: Binding(
-                store: store,
-                get: \.isDeleteConfirmationDialogShowing,
+                get: { store.state.isDeleteConfirmationDialogShowing },
+                send: store.send,
                 tag: DetailAction.presentDeleteConfirmationDialog
             )
         ) {
@@ -188,9 +188,10 @@ struct DetailReadyView: View {
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
                         MarkupTextViewRepresentable(
-                            store: ViewStore(
-                                store: store,
-                                cursor: DetailMarkupEditorCursor.self
+                            state: store.state.markupEditor,
+                            send: Address.forward(
+                                send: store.send,
+                                tag: DetailMarkupEditorCursor.tag
                             ),
                             frame: geometry.frame(in: .local),
                             renderAttributesOf: Subtext.renderAttributesOf,
@@ -236,8 +237,8 @@ struct DetailReadyView: View {
                 if store.state.markupEditor.focus {
                     DetailKeyboardToolbarView(
                         isSheetPresented: Binding(
-                            store: store,
-                            get: \.isLinkSheetPresented,
+                            get: { store.state.isLinkSheetPresented },
+                            send: store.send,
                             tag: DetailAction.setLinkSheetPresented
                         ),
                         selectedEntryLinkMarkup:

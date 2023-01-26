@@ -13,8 +13,8 @@ struct NotebookNavigationView: View {
     var body: some View {
         NavigationStack(
             path: Binding(
-                store: store,
-                get: \.details,
+                get: { store.state.details },
+                send: store.send,
                 tag: NotebookAction.setDetails
             )
         ) {
@@ -42,8 +42,8 @@ struct NotebookNavigationView: View {
                 .confirmationDialog(
                     "Are you sure?",
                     isPresented: Binding(
-                        store: store,
-                        get: \.isConfirmDeleteShowing,
+                        get: { store.state.isConfirmDeleteShowing },
+                        send: store.send,
                         tag: NotebookAction.setConfirmDeleteShowing
                     ),
                     presenting: store.state.entryToDelete
