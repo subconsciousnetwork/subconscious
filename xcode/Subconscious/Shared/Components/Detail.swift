@@ -101,6 +101,12 @@ struct DetailView: View {
             let message = String.loggable(action)
             DetailModel.logger.debug("[action] \(message)")
         }
+        // Filtermap actions to outer actions, and forward them to parent
+        .onReceive(
+            store.actions.compactMap(DetailOuterAction.from)
+        ) { action in
+            send(action)
+        }
         .sheet(
             isPresented: Binding(
                 get: { store.state.isLinkSheetPresented },
@@ -144,7 +150,6 @@ struct DetailView: View {
                 },
                 onSelect: { suggestion in
                     store.send(.chooseRenameSuggestion(suggestion))
-                    send(.renameEntry(suggestion))
                 }
             )
         }
@@ -284,6 +289,17 @@ enum DetailOuterAction: Hashable {
     case requestDetail(slug: Slug, title: String, fallback: String)
     case requestDelete(Slug?)
     case renameEntry(RenameSuggestion)
+}
+
+extension DetailOuterAction {
+    static func from(_ action: DetailAction) -> Self? {
+        switch action {
+        case .chooseRenameSuggestion(let suggestion):
+            return .renameEntry(suggestion)
+        default:
+            return nil
+        }
+    }
 }
 
 /// Actions handled by detail's private store.
