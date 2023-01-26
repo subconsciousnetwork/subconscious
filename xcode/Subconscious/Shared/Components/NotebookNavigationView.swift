@@ -58,27 +58,13 @@ struct NotebookNavigationView: View {
                     }
                 }
             }
-            .navigationDestination(for: DetailDescription.self) { desc in
+            .navigationDestination(for: DetailOuterModel.self) { state in
                 DetailView(
-                    slug: desc.slug,
-                    title: desc.title,
-                    fallback: desc.fallback,
-                    onRequestDetail: { slug, title, fallback in
-                        store.send(
-                            NotebookAction.pushDetail(
-                                slug: slug,
-                                title: title,
-                                fallback: fallback,
-                                autofocus: false
-                            )
-                        )
-                    },
-                    onRequestDelete: { slug in
-                        store.send(.deleteEntry(slug))
-                    },
-                    onSucceedMoveEntry: { from, to in
-                        store.send(.refreshAll)
-                    }
+                    state: state,
+                    send: Address.forward(
+                        send: store.send,
+                        tag: NotebookAction.tag
+                    )
                 )
             }
             .navigationTitle("Notes")

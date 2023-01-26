@@ -12,40 +12,28 @@ import Combine
 
 //  MARK: View
 struct DetailView: View {
+    /// Detail keeps a separate internal store for editor state that does not
+    /// need to be surfaced in higher level views.
+    ///
+    /// This gives us a pretty big efficiency win, since keystrokes will only
+    /// rerender this view, and not whole app view tree.
     @StateObject private var store = Store(
         state: DetailModel(),
         action: .start,
         environment: AppEnvironment.default
     )
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
-    var slug: Slug?
-    var title: String
-    var fallback: String
-    var onRequestDetail: (Slug, String, String) -> Void
-    var onRequestDelete: (Slug?) -> Void
-    var onSucceedMoveEntry: (Slug, Slug) -> Void
-
-    /// Forward lifecycle actions up to parent.
-    /// Wired up to Store action publisher via `onReceive` below.
-    private func forward(_ action: DetailModel.Action) {
-        switch action {
-        case let .succeedMoveEntry(from, to):
-            onSucceedMoveEntry(from.slug, to.slug)
-        default:
-            break
-        }
-    }
+    /// State passed down from parent
+    var state: DetailOuterModel
+    var send: (DetailOuterAction) -> Void
 
     var body: some View {
         VStack {
             if store.state.slug != nil {
                 DetailReadyView(
                     store: store,
-                    slug: slug,
-                    title: title,
-                    fallback: fallback,
-                    onRequestDetail: onRequestDetail,
-                    onRequestDelete: onRequestDelete
+                    state: state,
+                    send: send
                 )
             } else {
                 VStack {
@@ -56,7 +44,7 @@ struct DetailView: View {
                 }
             }
         }
-        .navigationTitle(title)
+        .navigationTitle(state.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             DetailToolbarContent(
@@ -75,9 +63,9 @@ struct DetailView: View {
             // background for a while, and the content changed in another tab.
             store.send(
                 DetailAction.appear(
-                    slug: slug,
-                    title: title,
-                    fallback: fallback
+                    slug: state.slug,
+                    title: state.title,
+                    fallback: state.fallback
                 )
             )
         }
@@ -89,7 +77,13 @@ struct DetailView: View {
             guard let link = EntryLink.decodefromSubEntryURL(url) else {
                 return .systemAction
             }
-            onRequestDetail(link.slug, link.linkableTitle, link.title)
+            send(
+                .requestDetail(
+                    slug: link.slug,
+                    title: link.linkableTitle,
+                    fallback: link.title
+                )
+            )
             return .handled
         })
         // Track changes to scene phase so we know when app gets
@@ -103,7 +97,6 @@ struct DetailView: View {
             let message = String.loggable(action)
             DetailModel.logger.debug("[action] \(message)")
         }
-        .onReceive(store.actions, perform: forward)
         .sheet(
             isPresented: Binding(
                 get: { store.state.isLinkSheetPresented },
@@ -163,7 +156,7 @@ struct DetailView: View {
             Button(
                 role: .destructive,
                 action: {
-                    onRequestDelete(slug)
+                    send(.requestDelete(state.slug))
                 }
             ) {
                 Text("Delete Immediately")
@@ -175,11 +168,8 @@ struct DetailView: View {
 struct DetailReadyView: View {
     @ObservedObject var store: Store<DetailModel>
     @Environment(\.scenePhase) var scenePhase: ScenePhase
-    var slug: Slug?
-    var title: String
-    var fallback: String
-    var onRequestDetail: (Slug, String, String) -> Void
-    var onRequestDelete: (Slug?) -> Void
+    var state: DetailOuterModel
+    var send: (DetailOuterAction) -> Void
 
     var body: some View {
         GeometryReader { geometry in
@@ -199,10 +189,12 @@ struct DetailReadyView: View {
                                 guard let link = EntryLink.decodefromSubEntryURL(url) else {
                                     return true
                                 }
-                                onRequestDetail(
-                                    link.slug,
-                                    link.linkableTitle,
-                                    link.title
+                                send(
+                                    .requestDetail(
+                                        slug: link.slug,
+                                        title: link.linkableTitle,
+                                        fallback: link.title
+                                    )
                                 )
                                 return false
                             },
@@ -225,10 +217,12 @@ struct DetailReadyView: View {
                         BacklinksView(
                             backlinks: store.state.backlinks,
                             onSelect: { link in
-                                onRequestDetail(
-                                    link.slug,
-                                    link.linkableTitle,
-                                    link.title
+                                send(
+                                    .requestDetail(
+                                        slug: link.slug,
+                                        title: link.linkableTitle,
+                                        fallback: link.title
+                                    )
                                 )
                             }
                         )
@@ -281,6 +275,14 @@ struct DetailReadyView: View {
 }
 
 //  MARK: Action
+
+/// Actions that are forwarded up to the parent component
+enum DetailOuterAction: Hashable {
+    case requestDetail(slug: Slug, title: String, fallback: String)
+    case requestDelete(Slug?)
+}
+
+/// Actions handled by detail's private store.
 enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Sent once and only once on Store initialization
     case start
@@ -1934,6 +1936,22 @@ struct DetailModel: ModelProtocol {
     }
 }
 
+//  MARK: Outer Model
+/// A description of a detail suitible for pushing onto a navigation stack
+struct DetailOuterModel: Hashable, ModelProtocol {
+    var slug: Slug
+    var title: String
+    var fallback: String
+    
+    static func update(
+        state: DetailOuterModel,
+        action: DetailOuterAction,
+        environment: AppEnvironment
+    ) -> ObservableStore.Update<DetailOuterModel> {
+        Update(state: state)
+    }
+}
+
 extension EntryLink {
     init?(_ detail: DetailModel) {
         guard let slug = detail.slug else {
@@ -1975,11 +1993,3 @@ extension MemoEntry {
         )
     }
 }
-
-/// A description of a detail suitible for pushing onto a navigation stack
-struct DetailDescription: Hashable {
-    var slug: Slug
-    var title: String
-    var fallback: String
-}
-

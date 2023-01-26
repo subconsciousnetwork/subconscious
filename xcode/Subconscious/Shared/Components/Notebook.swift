@@ -71,6 +71,8 @@ struct NotebookView: View {
 /// For action naming convention, see
 /// https://github.com/gordonbrander/subconscious/wiki/action-naming-convention
 enum NotebookAction {
+    case noop
+
     /// Tagged action for search HUD
     case search(SearchAction)
     
@@ -104,7 +106,7 @@ enum NotebookAction {
     /// We do this for swipe-to-delete, where we must remove the entry
     /// from the list before requesting delete for the animation to work.
     case stageDeleteEntry(Slug)
-    /// Send entry delete request up to parent.
+    /// Delete entry identified by slug.
     case deleteEntry(Slug?)
     case failDeleteEntry(String)
     case succeedDeleteEntry(Slug)
@@ -118,7 +120,7 @@ enum NotebookAction {
     case activatedSuggestion(Suggestion)
     
     /// Set entire navigation stack
-    case setDetails([DetailDescription])
+    case setDetails([DetailOuterModel])
     /// Push detail onto navigation stack
     case pushDetail(
         slug: Slug,
@@ -145,7 +147,9 @@ enum NotebookAction {
         let yyyymmdd = formatter.string(from: date)
         return "[[\(yyyymmdd)]]"
     }
+}
 
+extension NotebookAction {
     /// Generate a detail request from a suggestion
     static func fromSuggestion(_ suggestion: Suggestion) -> Self {
         switch suggestion {
@@ -172,6 +176,17 @@ enum NotebookAction {
             )
         case .random:
             return .pushRandomDetail(autofocus: false)
+        }
+    }
+}
+
+extension NotebookAction {
+    static func tag(_ action: DetailOuterAction) -> Self {
+        switch action {
+        case .requestDelete(let slug):
+            return .deleteEntry(slug)
+        default:
+            return .noop
         }
     }
 }
@@ -226,7 +241,7 @@ struct NotebookModel: ModelProtocol {
     )
     
     /// Contains notebook detail panels
-    var details: [DetailDescription] = []
+    var details: [DetailOuterModel] = []
     
     /// Count of entries
     var entryCount: Int? = nil
@@ -263,6 +278,8 @@ struct NotebookModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
         switch action {
+        case .noop:
+            return Update(state: state)
         case .search(let action):
             return NotebookSearchCursor.update(
                 state: state,
@@ -378,7 +395,7 @@ struct NotebookModel: ModelProtocol {
         case let .pushDetail(slug, title, fallback, _):
             var model = state
             model.details.append(
-                DetailDescription(
+                DetailOuterModel(
                     slug: slug,
                     title: title,
                     fallback: fallback
