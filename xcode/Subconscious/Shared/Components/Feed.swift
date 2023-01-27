@@ -40,7 +40,7 @@ enum FeedAction {
 
     /// Show/hide the search HUD
     static func setSearchPresented(_ isPresented: Bool) -> FeedAction {
-        .search(.setPresented(isPresented))
+        .search(.requestPresent(isPresented))
     }
 
     static func loadAndPresentDetail(

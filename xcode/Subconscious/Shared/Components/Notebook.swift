@@ -35,6 +35,17 @@ struct NotebookView: View {
         ZStack {
             NotebookNavigationView(store: store)
                 .zIndex(1)
+            if store.state.isSearchPresented {
+                SearchView(
+                    state: store.state.search,
+                    send: Address.forward(
+                        send: store.send,
+                        tag: NotebookSearchCursor.tag
+                    )
+                )
+                .zIndex(3)
+                .transition(SearchView.presentTransition)
+            }
             PinTrailingBottom(
                 content: FABView(
                     action: {
@@ -46,14 +57,6 @@ struct NotebookView: View {
             )
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .zIndex(2)
-            SearchView(
-                state: store.state.search,
-                send: Address.forward(
-                    send: store.send,
-                    tag: NotebookSearchCursor.tag
-                )
-            )
-            .zIndex(3)
         }
         .onAppear {
             store.send(.appear)
@@ -81,6 +84,9 @@ enum NotebookAction {
     /// Emitted by database state publisher
     case databaseStateChange(DatabaseServiceState)
     
+    /// Set search view presented
+    case setSearchPresented(Bool)
+
     /// Refresh the state of all lists and child components by reloading
     /// from database. This also sets searches to their zero-query state.
     case refreshLists
@@ -140,11 +146,6 @@ enum NotebookAction {
     /// Set search query
     static func setSearch(_ query: String) -> NotebookAction {
         .search(.setQuery(query))
-    }
-    
-    /// Show/hide the search HUD
-    static func setSearchPresented(_ isPresented: Bool) -> NotebookAction {
-        .search(.setPresented(isPresented))
     }
     
     private static func generateScratchFallback(date: Date) -> String {
@@ -239,6 +240,8 @@ struct NotebookSearchCursor: CursorProtocol {
             return .submitSearch(query)
         case .activatedSuggestion(let suggestion):
             return .activatedSuggestion(suggestion)
+        case .requestPresent(let isPresented):
+            return .setSearchPresented(isPresented)
         default:
             return .search(action)
         }
@@ -252,6 +255,7 @@ struct NotebookModel: ModelProtocol {
     var isFabShowing = true
     
     /// Search HUD
+    var isSearchPresented = false
     var search = SearchModel(
         placeholder: "Search or create..."
     )
@@ -315,6 +319,12 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 databaseState: databaseState
+            )
+        case .setSearchPresented(let isPresented):
+            return setSearchPresented(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
             )
         case .refreshLists:
             return refreshLists(state: state, environment: environment)
@@ -505,6 +515,17 @@ struct NotebookModel: ModelProtocol {
         )
     }
     
+    /// Set search presented flag
+    static func setSearchPresented(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        isPresented: Bool
+    ) -> Update<NotebookModel> {
+        var model = state
+        model.isSearchPresented = isPresented
+        return Update(state: model)
+    }
+
     /// Refresh all lists in the notebook tab from database.
     /// Typically invoked after creating/deleting an entry, or performing
     /// some other action that would invalidate the state of various lists.
