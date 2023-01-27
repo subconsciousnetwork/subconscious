@@ -20,32 +20,6 @@ struct FeedView: View {
     var body: some View {
         ZStack {
             NavigationStack {
-                VStack(spacing: 0) {
-                    ScrollView(.vertical, showsIndicators: false) {
-                        LazyVStack {
-                            ForEach(store.state.stories) { story in
-                                StoryView(
-                                    story: story,
-                                    action: { link, fallback in
-                                        store.send(
-                                            FeedAction.loadAndPresentDetail(
-                                                link: link,
-                                                fallback: fallback,
-                                                autofocus: false
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-                .navigationDestination(
-                    isPresented: .constant(false)
-                ) {
-                    Text("Not implemented")
-                }
-                .navigationTitle(Text("Latest"))
             }
             .zIndex(1)
             if store.state.isSearchPresented {
@@ -77,7 +51,6 @@ struct FeedView: View {
 //  MARK: Action
 enum FeedAction {
     case search(SearchAction)
-    case detail(DetailAction)
 
     /// Set search view presented
     case setSearchPresented(Bool)
@@ -106,28 +79,11 @@ enum FeedAction {
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)
     /// Retitle entry succeeded. Lifecycle action from Detail.
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
-
-    static func loadAndPresentDetail(
-        link: EntryLink?,
-        fallback: String,
-        autofocus: Bool
-    ) -> FeedAction {
-        .detail(
-            .loadDetail(link: link, fallback: fallback, autofocus: autofocus)
-        )
-    }
-
-    /// Show/hide the search HUD
-    static var autosave: FeedAction {
-        .detail(.autosave)
-    }
 }
 
 extension FeedAction: CustomLogStringConvertible {
     var logDescription: String {
         switch self {
-        case .detail(let action):
-            return "detail(\(String.loggable(action)))"
         case .search(let action):
             return "search(\(String.loggable(action)))"
         case .setFeed(let items):
@@ -164,28 +120,6 @@ struct FeedSearchCursor: CursorProtocol {
     }
 }
 
-struct FeedDetailCursor: CursorProtocol {
-    typealias Model = FeedModel
-    typealias ViewModel = DetailModel
-
-    static func get(state: FeedModel) -> DetailModel {
-        state.detail
-    }
-    
-    static func set(state: FeedModel, inner: DetailModel) -> FeedModel {
-        var model = state
-        model.detail = inner
-        return model
-    }
-    
-    static func tag(_ action: DetailAction) -> FeedAction {
-        switch action {
-        default:
-            return .detail(action)
-        }
-    }
-}
-
 //  MARK: Model
 /// A feed of stories
 struct FeedModel: ModelProtocol {
@@ -208,12 +142,6 @@ struct FeedModel: ModelProtocol {
         switch action {
         case .search(let action):
             return FeedSearchCursor.update(
-                state: state,
-                action: action,
-                environment: environment
-            )
-        case .detail(let action):
-            return FeedDetailCursor.update(
                 state: state,
                 action: action,
                 environment: environment
@@ -261,7 +189,7 @@ struct FeedModel: ModelProtocol {
                 environment: environment,
                 slug: slug
             )
-        case let .succeedMoveEntry(from, to):
+        case .succeedMoveEntry(_, _):
             return update(
                 state: state,
                 actions: [
@@ -269,7 +197,7 @@ struct FeedModel: ModelProtocol {
                 ],
                 environment: environment
             )
-        case let .succeedMergeEntry(parent, child):
+        case .succeedMergeEntry(_, _):
             return update(
                 state: state,
                 actions: [
@@ -277,7 +205,7 @@ struct FeedModel: ModelProtocol {
                 ],
                 environment: environment
             )
-        case let .succeedRetitleEntry(from, to):
+        case .succeedRetitleEntry(_, _):
             return update(
                 state: state,
                 actions: [
