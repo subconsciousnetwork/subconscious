@@ -9,10 +9,79 @@ import SwiftUI
 import ObservableStore
 import Combine
 
+//  MARK: View
+struct FeedView: View {
+    @ObservedObject var parent: Store<AppModel>
+    @StateObject private var store = Store(
+        state: FeedModel(),
+        environment: AppEnvironment.default
+    )
+
+    var body: some View {
+        ZStack {
+            NavigationStack {
+                VStack(spacing: 0) {
+                    ScrollView(.vertical, showsIndicators: false) {
+                        LazyVStack {
+                            ForEach(store.state.stories) { story in
+                                StoryView(
+                                    story: story,
+                                    action: { link, fallback in
+                                        store.send(
+                                            FeedAction.loadAndPresentDetail(
+                                                link: link,
+                                                fallback: fallback,
+                                                autofocus: false
+                                            )
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                .navigationDestination(
+                    isPresented: .constant(false)
+                ) {
+                    Text("Not implemented")
+                }
+                .navigationTitle(Text("Latest"))
+            }
+            .zIndex(1)
+            if store.state.isSearchPresented {
+                SearchView(
+                    state: store.state.search,
+                    send: Address.forward(
+                        send: store.send,
+                        tag: FeedSearchCursor.tag
+                    )
+                )
+                .zIndex(3)
+                .transition(SearchView.presentTransition)
+            }
+            PinTrailingBottom(
+                content: FABView(
+                    action: {
+                        store.send(.setSearchPresented(true))
+                    }
+                )
+                .padding()
+            )
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .zIndex(2)
+        }
+    }
+}
+
+
 //  MARK: Action
 enum FeedAction {
     case search(SearchAction)
     case detail(DetailAction)
+
+    /// Set search view presented
+    case setSearchPresented(Bool)
+
     case ready
 
     case refreshAll
@@ -37,11 +106,6 @@ enum FeedAction {
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)
     /// Retitle entry succeeded. Lifecycle action from Detail.
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
-
-    /// Show/hide the search HUD
-    static func setSearchPresented(_ isPresented: Bool) -> FeedAction {
-        .search(.requestPresent(isPresented))
-    }
 
     static func loadAndPresentDetail(
         link: EntryLink?,
@@ -92,6 +156,8 @@ struct FeedSearchCursor: CursorProtocol {
         switch action {
         case .activatedSuggestion(let suggestion):
             return .activatedSuggestion(suggestion)
+        case .requestPresent(let isPresented):
+            return .setSearchPresented(isPresented)
         default:
             return .search(action)
         }
@@ -124,6 +190,8 @@ struct FeedDetailCursor: CursorProtocol {
 /// A feed of stories
 struct FeedModel: ModelProtocol {
     /// Search HUD
+    var isSearchPresented = false
+    /// Search HUD
     var search = SearchModel(
         placeholder: "Search or create..."
     )
@@ -149,6 +217,12 @@ struct FeedModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: environment
+            )
+        case .setSearchPresented(let isPresented):
+            return setSearchPresented(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
             )
         case .ready:
             return ready(
@@ -234,6 +308,17 @@ struct FeedModel: ModelProtocol {
         return Update(state: state)
     }
 
+    /// Set search presented flag
+    static func setSearchPresented(
+        state: FeedModel,
+        environment: AppEnvironment,
+        isPresented: Bool
+    ) -> Update<FeedModel> {
+        var model = state
+        model.isSearchPresented = isPresented
+        return Update(state: model)
+    }
+
     /// Handle appear lifecycle action.
     /// Currently this just calls out to `fetchFeed`. In future it may do more.
     static func ready(
@@ -293,66 +378,5 @@ struct FeedModel: ModelProtocol {
     ) -> Update<FeedModel> {
         environment.logger.warning("Not implemented")
         return Update(state: state)
-    }
-}
-
-//  MARK: View
-struct FeedView: View {
-    @ObservedObject var parent: Store<AppModel>
-    @StateObject private var store = Store(
-        state: FeedModel(),
-        environment: AppEnvironment.default
-    )
-
-    var body: some View {
-        ZStack {
-            NavigationStack {
-                VStack(spacing: 0) {
-                    ScrollView(.vertical, showsIndicators: false) {
-                        LazyVStack {
-                            ForEach(store.state.stories) { story in
-                                StoryView(
-                                    story: story,
-                                    action: { link, fallback in
-                                        store.send(
-                                            FeedAction.loadAndPresentDetail(
-                                                link: link,
-                                                fallback: fallback,
-                                                autofocus: false
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-                .navigationDestination(
-                    isPresented: .constant(false)
-                ) {
-                    Text("Not implemented")
-                }
-                .navigationTitle(Text("Latest"))
-            }
-            .zIndex(1)
-            PinTrailingBottom(
-                content: FABView(
-                    action: {
-                        store.send(.setSearchPresented(true))
-                    }
-                )
-                .padding()
-            )
-            .ignoresSafeArea(.keyboard, edges: .bottom)
-            .zIndex(2)
-            SearchView(
-                state: store.state.search,
-                send: Address.forward(
-                    send: store.send,
-                    tag: FeedSearchCursor.tag
-                )
-            )
-            .zIndex(3)
-        }
     }
 }

@@ -14,7 +14,7 @@ struct Config: Equatable, Codable {
 
     var noosphere = NoosphereConfig()
 
-    var appTabs = false
+    var appTabs = true
 
     var notesDirectory = "notes"
 
