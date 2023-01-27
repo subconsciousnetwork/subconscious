@@ -115,6 +115,9 @@ enum NotebookAction {
     case failDeleteEntry(String)
     case succeedDeleteEntry(Slug)
 
+    /// Entry was saved
+    case succeedSaveEntry(slug: Slug, modified: Date)
+
     /// Move entry succeeded. Lifecycle action.
     case succeedMoveEntry(from: EntryLink, to: EntryLink)
     /// Merge entry succeeded. Lifecycle action.
@@ -204,6 +207,8 @@ extension NotebookAction {
             return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedRetitleEntry(from, to):
             return .succeedRetitleEntry(from: from, to: to)
+        case let .succeedSaveEntry(slug, modified):
+            return .succeedSaveEntry(slug: slug, modified: modified)
         }
     }
 }
@@ -399,6 +404,14 @@ struct NotebookModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 slug: slug
+            )
+        case .succeedSaveEntry:
+            // Just refresh note after save, for now.
+            // This reorders list by modified.
+            return update(
+                state: state,
+                action: .listRecent,
+                environment: environment
             )
         case let .succeedMoveEntry(from, to):
             return succeedMoveEntry(

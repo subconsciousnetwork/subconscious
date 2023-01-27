@@ -291,6 +291,7 @@ enum DetailOuterAction: Hashable {
     case succeedMoveEntry(from: EntryLink, to: EntryLink)
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+    case succeedSaveEntry(slug: Slug, modified: Date)
 }
 
 extension DetailOuterAction {
@@ -302,6 +303,11 @@ extension DetailOuterAction {
             return .succeedMergeEntry(parent: parent, child: child)
         case let .succeedRetitleEntry(from, to):
             return .succeedRetitleEntry(from: from, to: to)
+        case let .succeedSave(entry):
+            return .succeedSaveEntry(
+                slug: entry.slug,
+                modified: entry.contents.modified
+            )
         default:
             return nil
         }
