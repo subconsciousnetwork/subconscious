@@ -10,8 +10,315 @@ import os
 import ObservableStore
 import Combine
 
+//  MARK: View
+struct DetailView: View {
+    /// Detail keeps a separate internal store for editor state that does not
+    /// need to be surfaced in higher level views.
+    ///
+    /// This gives us a pretty big efficiency win, since keystrokes will only
+    /// rerender this view, and not whole app view tree.
+    @StateObject private var store = Store(
+        state: DetailModel(),
+        action: .start,
+        environment: AppEnvironment.default
+    )
+    @Environment(\.scenePhase) private var scenePhase: ScenePhase
+    /// State passed down from parent
+    var state: DetailOuterModel
+    var send: (DetailOuterAction) -> Void
+
+    var body: some View {
+        VStack {
+            if store.state.slug != nil {
+                DetailReadyView(
+                    store: store,
+                    state: state,
+                    send: send
+                )
+            } else {
+                VStack {
+                    Spacer()
+                    Text("Nothing here")
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+            }
+        }
+        .navigationTitle(state.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            DetailToolbarContent(
+                link: EntryLink(slug: state.slug, title: state.title),
+                onRename: {
+                    store.send(
+                        .showRenameSheet(
+                            EntryLink(slug: state.slug, title: state.title)
+                        )
+                    )
+                },
+                onDelete: {
+                    store.send(.presentDeleteConfirmationDialog(true))
+                }
+            )
+        }
+        .onAppear {
+            // When an editor is presented, refresh if stale.
+            // This covers the case where the editor might have been in the
+            // background for a while, and the content changed in another tab.
+            store.send(
+                DetailAction.appear(
+                    slug: state.slug,
+                    title: state.title,
+                    fallback: state.fallback
+                )
+            )
+        }
+        .onDisappear {
+            store.send(.autosave)
+        }
+        /// Catch link taps and handle them here
+        .environment(\.openURL, OpenURLAction { url in
+            guard let link = EntryLink.decodefromSubEntryURL(url) else {
+                return .systemAction
+            }
+            send(
+                .requestDetail(
+                    slug: link.slug,
+                    title: link.linkableTitle,
+                    fallback: link.title
+                )
+            )
+            return .handled
+        })
+        // Track changes to scene phase so we know when app gets
+        // foregrounded/backgrounded.
+        // See https://developer.apple.com/documentation/swiftui/scenephase
+        // 2022-02-08 Gordon Brander
+        .onChange(of: self.scenePhase) { phase in
+            store.send(DetailAction.scenePhaseChange(phase))
+        }
+        .onReceive(store.actions) { action in
+            let message = String.loggable(action)
+            DetailModel.logger.debug("[action] \(message)")
+        }
+        // Filtermap actions to outer actions, and forward them to parent
+        .onReceive(
+            store.actions.compactMap(DetailOuterAction.from)
+        ) { action in
+            send(action)
+        }
+        .sheet(
+            isPresented: Binding(
+                get: { store.state.isLinkSheetPresented },
+                send: store.send,
+                tag: DetailAction.setLinkSheetPresented
+            )
+        ) {
+            LinkSearchView(
+                placeholder: "Search or create...",
+                suggestions: store.state.linkSuggestions,
+                text: Binding(
+                    get: { store.state.linkSearchText },
+                    send: store.send,
+                    tag: DetailAction.setLinkSearch
+                ),
+                onCancel: {
+                    store.send(.setLinkSheetPresented(false))
+                },
+                onSelect: { suggestion in
+                    store.send(.selectLinkSuggestion(suggestion))
+                }
+            )
+        }
+        .sheet(
+            isPresented: Binding(
+                get: { store.state.isRenameSheetShowing },
+                send: store.send,
+                tag: { _ in DetailAction.hideRenameSheet }
+            )
+        ) {
+            RenameSearchView(
+                current: EntryLink(store.state),
+                suggestions: store.state.renameSuggestions,
+                text: Binding(
+                    get: { store.state.renameField },
+                    send: store.send,
+                    tag: DetailAction.setRenameField
+                ),
+                onCancel: {
+                    store.send(.hideRenameSheet)
+                },
+                onSelect: { suggestion in
+                    store.send(DetailAction.from(suggestion))
+                }
+            )
+        }
+        .confirmationDialog(
+            "Are you sure?",
+            isPresented: Binding(
+                get: { store.state.isDeleteConfirmationDialogShowing },
+                send: store.send,
+                tag: DetailAction.presentDeleteConfirmationDialog
+            )
+        ) {
+            Button(
+                role: .destructive,
+                action: {
+                    send(.requestDelete(state.slug))
+                }
+            ) {
+                Text("Delete Immediately")
+            }
+        }
+    }
+}
+
+struct DetailReadyView: View {
+    @ObservedObject var store: Store<DetailModel>
+    @Environment(\.scenePhase) var scenePhase: ScenePhase
+    var state: DetailOuterModel
+    var send: (DetailOuterAction) -> Void
+
+    var body: some View {
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                Divider()
+                ScrollView(.vertical) {
+                    VStack(spacing: 0) {
+                        MarkupTextViewRepresentable(
+                            state: store.state.markupEditor,
+                            send: Address.forward(
+                                send: store.send,
+                                tag: DetailMarkupEditorCursor.tag
+                            ),
+                            frame: geometry.frame(in: .local),
+                            renderAttributesOf: Subtext.renderAttributesOf,
+                            onLink: { url, _, _, _ in
+                                guard let link = EntryLink.decodefromSubEntryURL(url) else {
+                                    return true
+                                }
+                                send(
+                                    .requestDetail(
+                                        slug: link.slug,
+                                        title: link.linkableTitle,
+                                        fallback: link.title
+                                    )
+                                )
+                                return false
+                            },
+                            logger: Logger.editor
+                        )
+                        .insets(
+                            EdgeInsets(
+                                top: AppTheme.padding,
+                                leading: AppTheme.padding,
+                                bottom: AppTheme.padding,
+                                trailing: AppTheme.padding
+                            )
+                        )
+                        .frame(
+                            minHeight: UIFont.appTextMono.lineHeight * 8
+
+                        )
+                        ThickDividerView()
+                            .padding(.bottom, AppTheme.unit4)
+                        BacklinksView(
+                            backlinks: store.state.backlinks,
+                            onSelect: { link in
+                                send(
+                                    .requestDetail(
+                                        slug: link.slug,
+                                        title: link.linkableTitle,
+                                        fallback: link.title
+                                    )
+                                )
+                            }
+                        )
+                    }
+                }
+                if store.state.markupEditor.focus {
+                    DetailKeyboardToolbarView(
+                        isSheetPresented: Binding(
+                            get: { store.state.isLinkSheetPresented },
+                            send: store.send,
+                            tag: DetailAction.setLinkSheetPresented
+                        ),
+                        selectedEntryLinkMarkup:
+                            store.state.selectedEntryLinkMarkup,
+                        suggestions: store.state.linkSuggestions,
+                        onSelectLinkCompletion: { link in
+                            store.send(.selectLinkCompletion(link))
+                        },
+                        onInsertWikilink: {
+                            store.send(.insertEditorWikilinkAtSelection)
+                        },
+                        onInsertBold: {
+                            store.send(.insertEditorBoldAtSelection)
+                        },
+                        onInsertItalic: {
+                            store.send(.insertEditorItalicAtSelection)
+                        },
+                        onInsertCode: {
+                            store.send(.insertEditorCodeAtSelection)
+                        },
+                        onDoneEditing: {
+                            store.send(.selectDoneEditing)
+                        }
+                    )
+                    .transition(
+                        .asymmetric(
+                            insertion: .opacity.animation(
+                                .easeOutCubic(duration: Duration.normal)
+                                .delay(Duration.keyboard)
+                            ),
+                            removal: .opacity.animation(
+                                .easeOutCubic(duration: Duration.normal)
+                            )
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
 //  MARK: Action
+
+/// Actions that are forwarded up to the parent component
+enum DetailOuterAction: Hashable {
+    case requestDetail(slug: Slug, title: String, fallback: String)
+    case requestDelete(Slug?)
+    case succeedMoveEntry(from: EntryLink, to: EntryLink)
+    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
+    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+    case succeedSaveEntry(slug: Slug, modified: Date)
+}
+
+extension DetailOuterAction {
+    static func from(_ action: DetailAction) -> Self? {
+        switch action {
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedRetitleEntry(from, to):
+            return .succeedRetitleEntry(from: from, to: to)
+        case let .succeedSave(entry):
+            return .succeedSaveEntry(
+                slug: entry.slug,
+                modified: entry.contents.modified
+            )
+        default:
+            return nil
+        }
+    }
+}
+
+/// Actions handled by detail's private store.
 enum DetailAction: Hashable, CustomLogStringConvertible {
+    /// Sent once and only once on Store initialization
+    case start
+
     /// When scene phase changes.
     /// E.g. when app is foregrounded, backgrounded, etc.
     case scenePhaseChange(ScenePhase)
@@ -19,15 +326,17 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Wrapper for editor actions
     case markupEditor(MarkupTextAction)
 
-    /// Link was tapped (disambiguates to browser or editor action)
-    case openURL(URL)
-    case openBrowserURL(URL)
-    case openEditorURL(URL)
+    case appear(
+        slug: Slug?,
+        title: String,
+        fallback: String,
+        autofocus: Bool = false
+    )
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
     /// if detail is already loaded.
-    case loadAndPresentDetail(
+    case loadDetail(
         link: EntryLink?,
         fallback: String,
         autofocus: Bool
@@ -44,18 +353,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Set EntryDetail on DetailModel, but only if last modification happened
     /// more recently than DetailModel.
     case setDetailLastWriteWins(EntryDetail)
-    /// Set detail and present detail
-    case setAndPresentDetail(detail: EntryDetail, autofocus: Bool)
-    /// Load detail
-    /// request detail for slug, using template file as a fallback
-    case loadAndPresentTemplateDetail(
-        link: EntryLink,
-        template: Slug,
-        autofocus: Bool
-    )
-    case loadAndPresentRandomDetail(autofocus: Bool)
-    /// Show detail panel
-    case presentDetail(Bool)
+    /// Set detail
+    case setDetail(detail: EntryDetail, autofocus: Bool)
     /// Set detail to initial conditions
     case resetDetail
 
@@ -85,16 +384,22 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case refreshRenameSuggestions
     case setRenameSuggestions([RenameSuggestion])
     case renameSuggestionsFailure(String)
-    /// Issue a rename action for an entry.
-    case renameEntry(RenameSuggestion)
+
+    // Rename entry
+    /// Move an entry from one location to another
+    case moveEntry(from: EntryLink, to: EntryLink)
     /// Move entry succeeded. Lifecycle action.
     case succeedMoveEntry(from: EntryLink, to: EntryLink)
     /// Move entry failed. Lifecycle action.
     case failMoveEntry(String)
+    /// Merge entries
+    case mergeEntry(parent: EntryLink, child: EntryLink)
     /// Merge entry succeeded. Lifecycle action.
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)
     /// Merge entry failed. Lifecycle action.
     case failMergeEntry(String)
+    /// Retitle an entry (change its title header)
+    case retitleEntry(from: EntryLink, to: EntryLink)
     /// Retitle entry succeeded. Lifecycle action.
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
     /// Retitle entry failed. Lifecycle action.
@@ -102,10 +407,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
-    case showDeleteConfirmationDialog(Bool)
-    /// Request that parent delete entry
-    case requestDeleteEntry(Slug?)
-    case entryDeleted(Slug)
+    case presentDeleteConfirmationDialog(Bool)
 
     case selectBacklink(EntryLink)
 
@@ -158,38 +460,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         .selectLinkSuggestion(.entry(link))
     }
 
-    private static func generateScratchFallback(date: Date) -> String {
-        let formatter = DateFormatter.yyyymmdd()
-        let yyyymmdd = formatter.string(from: date)
-        return "[[\(yyyymmdd)]]"
-    }
-
-    /// Generate a detail request from a suggestion
-    static func fromSuggestion(_ suggestion: Suggestion) -> Self {
-        switch suggestion {
-        case .entry(let entryLink):
-            return .loadAndPresentDetail(
-                link: entryLink,
-                fallback: entryLink.linkableTitle,
-                autofocus: false
-            )
-        case .search(let entryLink):
-            return .loadAndPresentDetail(
-                link: entryLink,
-                fallback: entryLink.linkableTitle,
-                autofocus: true
-            )
-        case .scratch(let entryLink):
-            return .loadAndPresentDetail(
-                link: entryLink,
-                fallback: generateScratchFallback(date: Date.now),
-                autofocus: true
-            )
-        case .random:
-            return .loadAndPresentRandomDetail(autofocus: false)
-        }
-    }
-
     // MARK: logDescription
     var logDescription: String {
         switch self {
@@ -201,6 +471,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "markupEditor(\(String.loggable(action)))"
         case let .setDetailLastWriteWins(detail):
             return "setDetailLastWriteWins(\(String.loggable(detail)))"
+        case let .forceSetDetail(detail):
+            return "forceSetDetail(\(String.loggable(detail)))"
         case .save(let entry):
             let slugString: String = entry.mapOr(
                 { entry in String(entry.slug) },
@@ -209,14 +481,27 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "save(\(slugString))"
         case .succeedSave(let entry):
             return "succeedSave(\(entry.slug))"
-        case .setAndPresentDetail(let detail, _):
-            return "setAndPresentDetail(\(String.loggable(detail)))"
+        case .setDetail(let detail, _):
+            return "setDetail(\(String.loggable(detail)))"
         case let .setEditor(_, saveState, modified):
             return "setEditor(text: ..., saveState: \(String(describing: saveState)), modified: \(modified))"
         case let .setEditorSelection(range, _):
             return "setEditorSelection(range: \(range), text: ...)"
         default:
             return String(describing: self)
+        }
+    }
+}
+
+extension DetailAction {
+    static func from(_ suggestion: RenameSuggestion) -> Self {
+        switch suggestion {
+        case let .move(from, to):
+            return .moveEntry(from: from, to: to)
+        case let .merge(parent, child):
+            return .mergeEntry(parent: parent, child: child)
+        case let .retitle(from, to):
+            return .retitleEntry(from: from, to: to)
         }
     }
 }
@@ -276,8 +561,6 @@ struct DetailModel: ModelProtocol {
     /// Is editor saved?
     var saveState = SaveState.saved
 
-    /// Is editor sliding panel showing?
-    var isPresented = false
     /// Is editor in loading state?
     var isLoading = true
     /// When was the last time the editor issued a fetch from source of truth?
@@ -326,6 +609,11 @@ struct DetailModel: ModelProtocol {
         )
     }
 
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "detail"
+    )
+
     //  MARK: Update
     static func update(
         state: DetailModel,
@@ -333,35 +621,31 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         switch action {
-        case .scenePhaseChange(let phase):
-            return scenePhaseChange(
-                state: state,
-                environment: environment,
-                phase: phase
-            )
         case .markupEditor(let action):
             return DetailMarkupEditorCursor.update(
                 state: state,
                 action: action,
                 environment: ()
             )
-        case .openURL(let url):
-            return openURL(
+        case .start:
+            return start(
                 state: state,
-                environment: environment,
-                url: url
+                environment: environment
             )
-        case .openBrowserURL(let url):
-            return openBrowserURL(
+        case .scenePhaseChange(let phase):
+            return scenePhaseChange(
                 state: state,
                 environment: environment,
-                url: url
+                phase: phase
             )
-        case .openEditorURL(let url):
-            return openEditorURL(
+        case let .appear(slug, title, fallback, autofocus):
+            return appear(
                 state: state,
                 environment: environment,
-                url: url
+                slug: slug,
+                title: title,
+                fallback: fallback,
+                autofocus: autofocus
             )
         case let .setEditor(text, saveState, modified):
             return setEditor(
@@ -391,14 +675,8 @@ struct DetailModel: ModelProtocol {
                 text: text,
                 range: range
             )
-        case .presentDetail(let isPresented):
-            return presentDetail(
-                state: state,
-                environment: environment,
-                isPresented: isPresented
-            )
-        case let .loadAndPresentDetail(link, fallback, autofocus):
-            return loadAndPresentDetail(
+        case let .loadDetail(link, fallback, autofocus):
+            return loadDetail(
                 state: state,
                 environment: environment,
                 link: link,
@@ -427,8 +705,8 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 detail: detail
             )
-        case let .setAndPresentDetail(detail, autofocus):
-            return setAndPresentDetail(
+        case let .setDetail(detail, autofocus):
+            return setDetail(
                 state: state,
                 environment: environment,
                 detail: detail,
@@ -439,20 +717,6 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 detail: detail
-            )
-        case let .loadAndPresentTemplateDetail(link, template, autofocus):
-            return loadAndPresentTemplateDetail(
-                state: state,
-                environment: environment,
-                link: link,
-                template: template,
-                autofocus: autofocus
-            )
-        case let .loadAndPresentRandomDetail(autofocus):
-            return loadAndPresentRandomDetail(
-                state: state,
-                environment: environment,
-                autofocus: autofocus
             )
         case .resetDetail:
             return resetDetail(
@@ -512,7 +776,7 @@ struct DetailModel: ModelProtocol {
             model.linkSuggestions = suggestions
             return Update(state: model)
         case let .linkSuggestionsFailure(message):
-            environment.logger.debug(
+            logger.debug(
                 "Link suggest failed: \(message)"
             )
             return Update(state: state)
@@ -547,11 +811,12 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case let .renameEntry(suggestion):
-            return renameEntry(
+        case .moveEntry(let from, let to):
+            return moveEntry(
                 state: state,
                 environment: environment,
-                suggestion: suggestion
+                from: from,
+                to: to
             )
         case let .succeedMoveEntry(from, to):
             return succeedMoveEntry(
@@ -560,11 +825,18 @@ struct DetailModel: ModelProtocol {
                 from: from,
                 to: to
             )
-        case let .failMoveEntry(error):
+        case .failMoveEntry(let error):
             return failMoveEntry(
                 state: state,
                 environment: environment,
                 error: error
+            )
+        case .mergeEntry(let parent, let child):
+            return mergeEntry(
+                state: state,
+                environment: environment,
+                parent: parent,
+                child: child
             )
         case let .succeedMergeEntry(parent, child):
             return succeedMergeEntry(
@@ -573,11 +845,18 @@ struct DetailModel: ModelProtocol {
                 parent: parent,
                 child: child
             )
-        case let .failMergeEntry(error):
+        case .failMergeEntry(let error):
             return failMergeEntry(
                 state: state,
                 environment: environment,
                 error: error
+            )
+        case .retitleEntry(let from, let to):
+            return retitleEntry(
+                state: state,
+                environment: environment,
+                from: from,
+                to: to
             )
         case let .succeedRetitleEntry(from, to):
             return succeedRetitleEntry(
@@ -586,34 +865,22 @@ struct DetailModel: ModelProtocol {
                 from: from,
                 to: to
             )
-        case let .failRetitleEntry(error):
+        case .failRetitleEntry(let error):
             return failRetitleEntry(
                 state: state,
                 environment: environment,
                 error: error
             )
-        case .showDeleteConfirmationDialog(let isPresented):
+        case .presentDeleteConfirmationDialog(let isPresented):
             return presentDeleteConfirmationDialog(
                 state: state,
                 environment: environment,
                 isPresented: isPresented
             )
-        case .requestDeleteEntry(_):
-            return logDebug(
-                state: state,
-                environment: environment,
-                message: "requestDeleteEntry should be handled by parent component"
-            )
-        case .entryDeleted(let slug):
-            return entryDeleted(
-                state: state,
-                environment: environment,
-                slug: slug
-            )
         case .selectBacklink(let link):
             return update(
                 state: state,
-                action: .loadAndPresentDetail(
+                action: .loadDetail(
                     link: link,
                     fallback: link.linkableTitle,
                     autofocus: false
@@ -662,7 +929,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         message: String
     ) -> Update<DetailModel> {
-        environment.logger.log("\(message)")
+        logger.log("\(message)")
         return Update(state: state)
     }
 
@@ -672,7 +939,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         message: String
     ) -> Update<DetailModel> {
-        environment.logger.debug("\(message)")
+        logger.debug("\(message)")
         return Update(state: state)
     }
 
@@ -682,8 +949,18 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         message: String
     ) -> Update<DetailModel> {
-        environment.logger.warning("\(message)")
+        logger.warning("\(message)")
         return Update(state: state)
+    }
+
+    static func start(
+        state: DetailModel,
+        environment: AppEnvironment
+    ) -> Update<DetailModel> {
+        let pollFx = AppEnvironment.poll(every: Config.default.pollingInterval)
+            .map({ _ in DetailAction.autosave })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: pollFx)
     }
 
     /// Handle scene phase change
@@ -705,53 +982,22 @@ struct DetailModel: ModelProtocol {
         }
     }
 
-    /// Disambiguate URL opens and forward to specialized action types
-    static func openURL(
+    /// Set the contents of the editor and mark save state and modified time.
+    static func appear(
         state: DetailModel,
         environment: AppEnvironment,
-        url: URL
+        slug: Slug?,
+        title: String,
+        fallback: String,
+        autofocus: Bool
     ) -> Update<DetailModel> {
-        // If link is not a sub:// link, then open it in browser
-        guard SubURL.isSubEntryURL(url) else {
-            return update(
-                state: state,
-                action: .openBrowserURL(url),
-                environment: environment
-            )
-        }
+        let link = slug.map({ slug in EntryLink(slug: slug, title: title) })
         return update(
             state: state,
-            action: .openEditorURL(url),
-            environment: environment
-        )
-    }
-
-    /// Open URL in browser
-    /// Request open URL in editor
-    static func openBrowserURL(
-        state: DetailModel,
-        environment: AppEnvironment,
-        url: URL
-    ) -> Update<DetailModel> {
-        /// Open in browser
-        UIApplication.shared.open(url)
-        return Update(state: state)
-    }
-
-    /// Request open URL in editor
-    static func openEditorURL(
-        state: DetailModel,
-        environment: AppEnvironment,
-        url: URL
-    ) -> Update<DetailModel> {
-        // Otherwise decode link from URL and request detail
-        let link = EntryLink.decodefromSubEntryURL(url)
-        return update(
-            state: state,
-            action: .loadAndPresentDetail(
+            action: .loadDetail(
                 link: link,
-                fallback: link?.linkableTitle ?? "",
-                autofocus: false
+                fallback: fallback,
+                autofocus: autofocus
             ),
             environment: environment
         )
@@ -837,7 +1083,7 @@ struct DetailModel: ModelProtocol {
         range nsRange: NSRange
     ) -> Update<DetailModel> {
         guard let range = Range(nsRange, in: state.markupEditor.text) else {
-            environment.logger.log(
+            logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
             return Update(state: state)
@@ -855,7 +1101,7 @@ struct DetailModel: ModelProtocol {
             offsetBy: text.count,
             limitedBy: markup.endIndex
         ) else {
-            environment.logger.log(
+            logger.log(
                 "Could not find new cursor position. Aborting text insert."
             )
             return Update(state: state)
@@ -879,17 +1125,6 @@ struct DetailModel: ModelProtocol {
         )
     }
 
-    /// Toggle detail presentation
-    static func presentDetail(
-        state: DetailModel,
-        environment: AppEnvironment,
-        isPresented: Bool
-    ) -> Update<DetailModel> {
-        var model = state
-        model.isPresented = isPresented
-        return Update(state: model)
-    }
-
     /// Mark properties on model in preparation for detail load
     static func prepareLoadDetail(_ state: DetailModel) -> DetailModel {
         var model = state
@@ -901,7 +1136,7 @@ struct DetailModel: ModelProtocol {
     }
 
     /// Load Detail from database and present detail
-    static func loadAndPresentDetail(
+    static func loadDetail(
         state: DetailModel,
         environment: AppEnvironment,
         link: EntryLink?,
@@ -909,7 +1144,7 @@ struct DetailModel: ModelProtocol {
         autofocus: Bool
     ) -> Update<DetailModel> {
         guard let link = link else {
-            environment.logger.log(
+            logger.log(
                 "Load and present detail requested, but nothing was being edited. Skipping."
             )
             return Update(state: state)
@@ -921,7 +1156,7 @@ struct DetailModel: ModelProtocol {
                 fallback: fallback
             )
             .map({ detail in
-                DetailAction.setAndPresentDetail(
+                DetailAction.setDetail(
                     detail: detail,
                     autofocus: autofocus
                 )
@@ -941,7 +1176,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         guard let slug = state.slug else {
-            environment.logger.log(
+            logger.log(
                 "Refresh detail requested when nothing was being edited. Skipping."
             )
             return Update(state: state)
@@ -970,19 +1205,19 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         guard let slug = state.slug else {
-            environment.logger.debug(
+            logger.debug(
                 "Refresh-detail-if-stale requested, but nothing was being edited. Skipping."
             )
             return Update(state: state)
         }
         let lastLoadElapsed = Date.now.timeIntervalSince(state.lastLoadStarted)
         guard lastLoadElapsed > Self.loadStaleInterval else {
-            environment.logger.debug(
+            logger.debug(
                 "Detail is fresh. No refresh needed. Skipping."
             )
             return Update(state: state)
         }
-        environment.logger.log(
+        logger.log(
             "Detail for \(slug) is stale. Refreshing."
         )
         return update(
@@ -1098,7 +1333,7 @@ struct DetailModel: ModelProtocol {
     /// - autofocus: automatically focus the editor,
     ///   and set cursor at end of document?
     /// - Returns: an update
-    static func setAndPresentDetail(
+    static func setDetail(
         state: DetailModel,
         environment: AppEnvironment,
         detail: EntryDetail,
@@ -1109,7 +1344,6 @@ struct DetailModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .presentDetail(true),
                     .setDetailLastWriteWins(detail),
                     .requestEditorFocus(false)
                 ],
@@ -1121,61 +1355,12 @@ struct DetailModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .presentDetail(true),
                 .setDetailLastWriteWins(detail),
                 .requestEditorFocus(true),
                 .setEditorSelectionAtEnd
             ],
             environment: environment
         )
-    }
-
-    /// Request detail view for entry.
-    /// Fall back on contents of template file when no detail
-    /// exists for this slug yet.
-    static func loadAndPresentTemplateDetail(
-        state: DetailModel,
-        environment: AppEnvironment,
-        link: EntryLink,
-        template: Slug,
-        autofocus: Bool
-    ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.data
-            .readEntryDetail(link: link, template: template)
-            .map({ detail in
-                DetailAction.setAndPresentDetail(
-                    detail: detail,
-                    autofocus: autofocus
-                )
-            })
-            .catch({ error in
-                Just(DetailAction.failLoadDetail(error.localizedDescription))
-            })
-            .eraseToAnyPublisher()
-
-        let model = prepareLoadDetail(state)
-        return Update(state: model, fx: fx)
-    }
-
-    /// Request detail for a random entry
-    static func loadAndPresentRandomDetail(
-        state: DetailModel,
-        environment: AppEnvironment,
-        autofocus: Bool
-    ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.data.readRandomEntryLink()
-            .map({ link in
-                DetailAction.loadAndPresentDetail(
-                    link: link,
-                    fallback: link.linkableTitle,
-                    autofocus: autofocus
-                )
-            })
-            .catch({ error in
-                Just(DetailAction.failLoadDetail(error.localizedDescription))
-            })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
     }
 
     /// Reset model to "none" condition
@@ -1192,12 +1377,12 @@ struct DetailModel: ModelProtocol {
             title: "",
             fileExtension: ContentType.subtext.fileExtension
         )
-        model.additionalHeaders = Headers()
+        model.additionalHeaders = []
         model.markupEditor = MarkupTextModel()
         model.backlinks = []
         model.isLoading = true
         model.saveState = .saved
-        return Update(state: state)
+        return Update(state: model)
     }
 
     static func autosave(
@@ -1504,40 +1689,6 @@ struct DetailModel: ModelProtocol {
         return Update(state: state)
     }
 
-    /// Rename an entry (change its slug).
-    /// If `next` does not already exist, this will change the slug
-    /// and move the file.
-    /// If next exists, this will merge documents.
-    static func renameEntry(
-        state: DetailModel,
-        environment: AppEnvironment,
-        suggestion: RenameSuggestion
-    ) -> Update<DetailModel> {
-        switch suggestion {
-        case .move(let from, let to):
-            return moveEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
-        case .merge(let parent, let child):
-            return mergeEntry(
-                state: state,
-                environment: environment,
-                parent: parent,
-                child: child
-            )
-        case .retitle(let from, let to):
-            return retitleEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
-        }
-    }
-
     /// Move entry
     static func moveEntry(
         state: DetailModel,
@@ -1558,11 +1709,10 @@ struct DetailModel: ModelProtocol {
                 )
             })
             .eraseToAnyPublisher()
-        return hideRenameSheet(
+        return Update(
             state: state,
-            environment: environment
+            fx: fx
         )
-        .mergeFx(fx)
         .animation(.easeOutCubic(duration: Duration.keyboard))
     }
 
@@ -1576,14 +1726,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         return update(
             state: state,
-            actions: [
-                .loadAndPresentDetail(
-                    link: to,
-                    fallback: to.linkableTitle,
-                    autofocus: false
-                ),
-                .refreshLists
-            ],
+            actions: [.hideRenameSheet, .refreshLists],
             environment: environment
         )
     }
@@ -1619,12 +1762,7 @@ struct DetailModel: ModelProtocol {
                 )
             })
             .eraseToAnyPublisher()
-        return hideRenameSheet(
-            state: state,
-            environment: environment
-        )
-        .mergeFx(fx)
-        .animation(.easeOutCubic(duration: Duration.keyboard))
+        return Update(state: state, fx: fx)
     }
 
     /// Merge success lifecycle handler.
@@ -1635,17 +1773,12 @@ struct DetailModel: ModelProtocol {
         parent: EntryLink,
         child: EntryLink
     ) -> Update<DetailModel> {
+        var model = state
+        model.slug = parent.slug
+        model.headers.title = parent.linkableTitle
         return update(
-            state: state,
-            actions: [
-                .loadAndPresentDetail(
-                    link: parent,
-                    fallback: parent.linkableTitle,
-                    autofocus: false
-                ),
-                // Refresh list views since old entry no longer exists
-                .refreshLists
-            ],
+            state: model,
+            actions: [.refreshLists, .hideRenameSheet, .refreshDetail],
             environment: environment
         )
     }
@@ -1683,12 +1816,7 @@ struct DetailModel: ModelProtocol {
                 )
             })
             .eraseToAnyPublisher()
-        return hideRenameSheet(
-            state: state,
-            environment: environment
-        )
-        .mergeFx(fx)
-        .animation(.easeOutCubic(duration: Duration.keyboard))
+        return Update(state: state, fx: fx)
     }
 
     /// Retitle success lifecycle handler.
@@ -1699,14 +1827,9 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
-        /// We succeeded in updating title header on disk.
-        /// Now set it in the view, so we see the updated state.
-        var model = state
-        model.headers.title = to.title
-
         return update(
-            state: model,
-            action: .refreshLists,
+            state: state,
+            actions: [.refreshLists, .hideRenameSheet],
             environment: environment
         )
     }
@@ -1718,11 +1841,12 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<DetailModel> {
-        environment.logger.warning(
+        logger.warning(
             "Failed to retitle entry with error: \(error)"
         )
         return Update(state: state)
     }
+
 
     /// Show/hide entry delete confirmation dialog.
     static func presentDeleteConfirmationDialog(
@@ -1736,35 +1860,6 @@ struct DetailModel: ModelProtocol {
             .animation(.default)
     }
 
-    static func entryDeleted(
-        state: DetailModel,
-        environment: AppEnvironment,
-        slug: Slug
-    ) -> Update<DetailModel> {
-        guard state.slug == slug else {
-            // If entry that was deleted was not this entry, then just
-            // refresh lists.
-            return update(
-                state: state,
-                action: .refreshLists,
-                environment: environment
-            )
-        }
-
-        // If the slug currently being edited was just deleted,
-        // - reset the editor
-        // - un-present detail
-        return DetailModel.update(
-            state: state,
-            actions: [
-                .resetDetail,
-                .refreshLists,
-                .presentDetail(false)
-            ],
-            environment: environment
-        )
-    }
-
     /// Insert wikilink markup into editor, begining at previous range
     /// and wrapping the contents of previous range
     static func insertTaggedMarkup<T>(
@@ -1776,7 +1871,7 @@ struct DetailModel: ModelProtocol {
     where T: TaggedMarkup
     {
         guard let range = Range(nsRange, in: state.markupEditor.text) else {
-            environment.logger.log(
+            logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
             return Update(state: state)
@@ -1797,7 +1892,7 @@ struct DetailModel: ModelProtocol {
             offsetBy: markup.markupWithoutClosingTag.count,
             limitedBy: editorText.endIndex
         ) else {
-            environment.logger.log(
+            logger.log(
                 "Could not find new cursor position. Aborting text insert."
             )
             return Update(state: state)
@@ -1846,6 +1941,22 @@ struct DetailModel: ModelProtocol {
     }
 }
 
+//  MARK: Outer Model
+/// A description of a detail suitible for pushing onto a navigation stack
+struct DetailOuterModel: Hashable, ModelProtocol {
+    var slug: Slug
+    var title: String
+    var fallback: String
+    
+    static func update(
+        state: DetailOuterModel,
+        action: DetailOuterAction,
+        environment: AppEnvironment
+    ) -> ObservableStore.Update<DetailOuterModel> {
+        Update(state: state)
+    }
+}
+
 extension EntryLink {
     init?(_ detail: DetailModel) {
         guard let slug = detail.slug else {
@@ -1885,223 +1996,5 @@ extension MemoEntry {
             additionalHeaders: detail.additionalHeaders,
             body: detail.markupEditor.text
         )
-    }
-}
-
-//  MARK: View
-struct DetailView: View {
-    private static func calcTextFieldHeight(
-        containerHeight: CGFloat,
-        isKeyboardUp: Bool,
-        hasBacklinks: Bool
-    ) -> CGFloat {
-        UIFont.appTextMono.lineHeight * 8
-    }
-
-    var store: ViewStore<DetailModel>
-    @Environment(\.scenePhase) var scenePhase: ScenePhase
-
-    var isReady: Bool {
-        let state = store.state
-        return !state.isLoading && state.slug != nil
-    }
-
-    var body: some View {
-        ZStack {
-            GeometryReader { geometry in
-                VStack(spacing: 0) {
-                    Divider()
-                        ScrollView(.vertical) {
-                            VStack(spacing: 0) {
-                                MarkupTextViewRepresentable(
-                                    store: ViewStore(
-                                        store: store,
-                                        cursor: DetailMarkupEditorCursor.self
-                                    ),
-                                    frame: geometry.frame(in: .local),
-                                    renderAttributesOf: Subtext.renderAttributesOf,
-                                    onLink: { url, _, _, _ in
-                                        store.send(.openURL(url))
-                                        return false
-                                    },
-                                    logger: Logger.editor
-                                )
-                                .insets(
-                                    EdgeInsets(
-                                        top: AppTheme.padding,
-                                        leading: AppTheme.padding,
-                                        bottom: AppTheme.padding,
-                                        trailing: AppTheme.padding
-                                    )
-                                )
-                                .frame(
-                                    minHeight: Self.calcTextFieldHeight(
-                                        containerHeight: geometry.size.height,
-                                        isKeyboardUp: store.state.markupEditor.focus,
-                                        hasBacklinks: store.state.backlinks.count > 0
-                                    )
-                                )
-                                ThickDividerView()
-                                    .padding(.bottom, AppTheme.unit4)
-                                BacklinksView(
-                                    backlinks: store.state.backlinks,
-                                    onSelect: { link in
-                                        store.send(.selectBacklink(link))
-                                    }
-                                )
-                            }
-                        }
-                    if store.state.markupEditor.focus {
-                        DetailKeyboardToolbarView(
-                            isSheetPresented: Binding(
-                                store: store,
-                                get: \.isLinkSheetPresented,
-                                tag: DetailAction.setLinkSheetPresented
-                            ),
-                            selectedEntryLinkMarkup:
-                                store.state.selectedEntryLinkMarkup,
-                            suggestions: store.state.linkSuggestions,
-                            onSelectLinkCompletion: { link in
-                                store.send(.selectLinkCompletion(link))
-                            },
-                            onInsertWikilink: {
-                                store.send(.insertEditorWikilinkAtSelection)
-                            },
-                            onInsertBold: {
-                                store.send(.insertEditorBoldAtSelection)
-                            },
-                            onInsertItalic: {
-                                store.send(.insertEditorItalicAtSelection)
-                            },
-                            onInsertCode: {
-                                store.send(.insertEditorCodeAtSelection)
-                            },
-                            onDoneEditing: {
-                                store.send(.selectDoneEditing)
-                            }
-                        )
-                        .transition(
-                            .asymmetric(
-                                insertion: .opacity.animation(
-                                    .easeOutCubic(duration: Duration.normal)
-                                    .delay(Duration.keyboard)
-                                ),
-                                removal: .opacity.animation(
-                                    .easeOutCubic(duration: Duration.normal)
-                                )
-                            )
-                        )
-                    }
-                }
-                .zIndex(1)
-                if !isReady {
-                    Color.background
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .transition(
-                            .asymmetric(
-                                insertion: .opacity.animation(.none),
-                                removal: .opacity.animation(.default)
-                            )
-                        )
-                        .zIndex(2)
-                }
-            }
-        }
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            // When an editor is presented, refresh if stale.
-            // This covers the case where the editor might have been in the
-            // background for a while, and the content changed in another tab.
-            store.send(.refreshDetailIfStale)
-        }
-        /// Catch link taps and handle them here
-        .environment(\.openURL, OpenURLAction { url in
-            store.send(.openURL(url))
-            return .handled
-        })
-        // Track changes to scene phase so we know when app gets
-        // foregrounded/backgrounded.
-        // See https://developer.apple.com/documentation/swiftui/scenephase
-        // 2022-02-08 Gordon Brander
-        .onChange(of: self.scenePhase) { phase in
-            store.send(DetailAction.scenePhaseChange(phase))
-        }
-        .sheet(
-            isPresented: Binding(
-                store: store,
-                get: \.isLinkSheetPresented,
-                tag: DetailAction.setLinkSheetPresented
-            )
-        ) {
-            LinkSearchView(
-                placeholder: "Search or create...",
-                suggestions: store.state.linkSuggestions,
-                text: Binding(
-                    store: store,
-                    get: \.linkSearchText,
-                    tag: DetailAction.setLinkSearch
-                ),
-                onCancel: {
-                    store.send(.setLinkSheetPresented(false))
-                },
-                onSelect: { suggestion in
-                    store.send(.selectLinkSuggestion(suggestion))
-                }
-            )
-        }
-        .sheet(
-            isPresented: Binding(
-                store: store,
-                get: \.isRenameSheetShowing,
-                tag: { _ in DetailAction.hideRenameSheet }
-            )
-        ) {
-            RenameSearchView(
-                current: EntryLink(store.state),
-                suggestions: store.state.renameSuggestions,
-                text: Binding(
-                    store: store,
-                    get: \.renameField,
-                    tag: DetailAction.setRenameField
-                ),
-                onCancel: {
-                    store.send(.hideRenameSheet)
-                },
-                onSelect: { suggestion in
-                    store.send(
-                        .renameEntry(suggestion)
-                    )
-                }
-            )
-        }
-        .confirmationDialog(
-            "Are you sure?",
-            isPresented: Binding(
-                store: store,
-                get: \.isDeleteConfirmationDialogShowing,
-                tag: DetailAction.showDeleteConfirmationDialog
-            )
-        ) {
-            Button(
-                role: .destructive,
-                action: {
-                    store.send(.requestDeleteEntry(store.state.slug))
-                }
-            ) {
-                Text("Delete Immediately")
-            }
-        }
-        .toolbar {
-            DetailToolbarContent(
-                link: EntryLink(store.state),
-                onRename: {
-                    store.send(.showRenameSheet(EntryLink(store.state)))
-                },
-                onDelete: {
-                    store.send(.showDeleteConfirmationDialog(true))
-                }
-            )
-        }
     }
 }

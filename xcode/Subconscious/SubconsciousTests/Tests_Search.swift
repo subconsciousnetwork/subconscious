@@ -31,7 +31,7 @@ class Tests_Search: XCTestCase {
         let state = SearchModel()
         let update = SearchModel.update(
             state: state,
-            action: .setPresented(false),
+            action: .requestPresent(false),
             environment: environment
         )
         

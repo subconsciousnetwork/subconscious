@@ -8,6 +8,14 @@
 
 import Foundation
 import OrderedCollections
+import Combine
+
+/// Enum representing the current readiness state of the database service
+enum DatabaseServiceState: String {
+    case initial = "initial"
+    case broken = "broken"
+    case ready = "ready"
+}
 
 struct DatabaseMigrationInfo: Hashable {
     var version: Int
@@ -15,12 +23,21 @@ struct DatabaseMigrationInfo: Hashable {
 }
 
 enum DatabaseServiceError: Error, LocalizedError {
+    case invalidStateTransition(
+        from: DatabaseServiceState,
+        to: DatabaseServiceState
+    )
+    case notReady
     case pathNotInFilePath
     case randomEntryFailed
     case fileExists(Slug)
 
     var errorDescription: String? {
         switch self {
+        case let .invalidStateTransition(from, to):
+            return "DatabaseServiceError.invalidStateTransition(\(from), \(to))"
+        case .notReady:
+            return "DatabaseServiceError.notReady"
         case .pathNotInFilePath:
             return "DatabaseServiceError.pathNotInFilePath"
         case .randomEntryFailed:
@@ -31,7 +48,10 @@ enum DatabaseServiceError: Error, LocalizedError {
     }
 }
 
-struct DatabaseService {
+final class DatabaseService {
+    /// Publishes the current state of the database.
+    /// Subscribe to be notified when database changes state.
+    @Published private(set) var state: DatabaseServiceState
     let migrations: Migrations
     let database: SQLite3Database
 
@@ -41,18 +61,28 @@ struct DatabaseService {
     ) {
         self.migrations = migrations
         self.database = database
+        self.state = .initial
     }
 
     /// Make sure database is up-to-date.
-    /// Checks the user version, and if it is out of date, it deletes
-    /// and recreates the database.
-    ///
-    /// Because we only use the database as a cache, we are able to rebuild
-    /// it from scratch using the file system.
-    ///
     /// - Returns the version of the database upon successful comple.
     func migrate() throws -> Int {
-        return try self.migrations.migrate(self.database)
+        guard state == .initial else {
+            throw DatabaseServiceError.invalidStateTransition(
+                from: state,
+                to: .ready
+            )
+        }
+        do {
+            let version = try self.migrations.migrate(self.database)
+            // If migration succeeded, mark state ready
+            self.state = .ready
+            return version
+        } catch {
+            // Mark state broken by default
+            self.state = .broken
+            throw error
+        }
     }
 
     /// Write entry syncronously
@@ -60,6 +90,9 @@ struct DatabaseService {
         entry: MemoEntry,
         info: FileInfo
     ) throws {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
         var entry = entry
         entry.contents.modified = info.modified
         entry.contents.created = info.created
@@ -112,6 +145,9 @@ struct DatabaseService {
     
     /// Delete entry from database
     func removeEntry(slug: Slug) throws {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
         try database.execute(
             sql: """
             DELETE FROM memo WHERE slug = ?
@@ -124,6 +160,9 @@ struct DatabaseService {
     
     /// Count all entries
     func countEntries() -> Int? {
+        guard self.state == .ready else {
+            return nil
+        }
         // Use stale body content from db. It's faster, and these
         // are read-only teaser views.
         guard let results = try? database.execute(
@@ -139,6 +178,9 @@ struct DatabaseService {
     
     /// List recent entries
     func listRecentEntries() -> [EntryStub] {
+        guard self.state == .ready else {
+            return []
+        }
         guard let results = try? database.execute(
             sql: """
             SELECT slug, modified, title, excerpt
@@ -170,25 +212,33 @@ struct DatabaseService {
     
     /// List file fingerprints for all memos.
     func listFingerprints() throws -> [FileFingerprint] {
-        try database.execute(sql: "SELECT slug, modified, size FROM memo")
-            .compactMap({ row in
-                if
-                    let slugString: String = row.get(0),
-                    let slug = Slug(slugString),
-                    let modified: Date = row.get(1),
-                    let size: Int = row.get(2)
-                {
-                    return FileFingerprint(
-                        slug: slug,
-                        modified: modified,
-                        size: size
-                    )
-                }
-                return nil
-            })
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        return try database.execute(
+            sql: "SELECT slug, modified, size FROM memo"
+        )
+        .compactMap({ row in
+            if
+                let slugString: String = row.get(0),
+                let slug = Slug(slugString),
+                let modified: Date = row.get(1),
+                let size: Int = row.get(2)
+            {
+                return FileFingerprint(
+                    slug: slug,
+                    modified: modified,
+                    size: size
+                )
+            }
+            return nil
+        })
     }
 
     private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
         let suggestions = try database.execute(
             sql: """
             SELECT slug, title
@@ -249,6 +299,9 @@ struct DatabaseService {
     private func searchSuggestionsForQuery(
         query: String
     ) throws -> [Suggestion] {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
         // If slug is invalid, return empty suggestions
         guard let queryEntryLink = EntryLink(title: query) else {
             return []
@@ -300,6 +353,9 @@ struct DatabaseService {
     func searchSuggestions(
         query: String
     ) throws -> [Suggestion] {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
         if query.isWhitespace {
             return try searchSuggestionsForZeroQuery()
         } else {
@@ -366,6 +422,10 @@ struct DatabaseService {
         query: String,
         current: EntryLink
     ) -> [RenameSuggestion] {
+        guard self.state == .ready else {
+            return []
+        }
+
         guard let queryEntryLink = EntryLink(title: query) else {
             return []
         }
@@ -412,6 +472,10 @@ struct DatabaseService {
         omitting invalidSuggestions: Set<Slug> = Set(),
         fallback: [LinkSuggestion] = []
     ) -> [LinkSuggestion] {
+        guard self.state == .ready else {
+            return fallback
+        }
+
         guard !query.isWhitespace else {
             return fallback
         }
@@ -467,6 +531,10 @@ struct DatabaseService {
     
     /// Log a search query in search history db
     func createSearchHistoryItem(query: String) -> String {
+        guard self.state == .ready else {
+            return query
+        }
+
         guard !query.isWhitespace else {
             return query
         }
@@ -493,6 +561,10 @@ struct DatabaseService {
     /// Used by public async APIs.
     /// - Returns a SubtextFile with mended headers.
     func readEntry(slug: Slug) -> MemoEntry? {
+        guard self.state == .ready else {
+            return nil
+        }
+
         let results = try? database.execute(
             sql: """
             SELECT
@@ -538,6 +610,10 @@ struct DatabaseService {
     }
     
     func readEntryBacklinks(slug: Slug) -> [EntryStub] {
+        guard self.state == .ready else {
+            return []
+        }
+
         // Get backlinks.
         // Use content indexed in database, even though it might be stale.
         guard let results = try? database.execute(
@@ -575,8 +651,15 @@ struct DatabaseService {
         })
     }
     
-    func readRandomEntryInDateRange(startDate: Date, endDate: Date) -> EntryStub? {
-        try? database.execute(
+    func readRandomEntryInDateRange(
+        startDate: Date,
+        endDate: Date
+    ) -> EntryStub? {
+        guard self.state == .ready else {
+            return nil
+        }
+        
+        return try? database.execute(
             sql: """
             SELECT slug, modified, title, excerpt
             FROM memo
@@ -611,7 +694,11 @@ struct DatabaseService {
 
     /// Select a random entry
     func readRandomEntry() -> EntryStub? {
-        try? database.execute(
+        guard self.state == .ready else {
+            return nil
+        }
+
+        return try? database.execute(
             sql: """
             SELECT slug, modified, title, excerpt
             FROM memo
@@ -643,7 +730,11 @@ struct DatabaseService {
     func readRandomEntryMatching(
         query: String
     ) -> EntryStub? {
-        try? database.execute(
+        guard self.state == .ready else {
+            return nil
+        }
+        
+        return try? database.execute(
             sql: """
             SELECT slug, modified, title, body
             FROM memo_search
@@ -677,7 +768,11 @@ struct DatabaseService {
     
     /// Choose a random entry and publish slug
     func readRandomEntryLink() -> EntryLink? {
-        try? database.execute(
+        guard self.state == .ready else {
+            return nil
+        }
+
+        return try? database.execute(
             sql: """
             SELECT slug, title
             FROM memo

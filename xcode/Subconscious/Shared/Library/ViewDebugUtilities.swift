@@ -16,18 +16,28 @@ extension Logger {
     )
 }
 
-struct DebugBodyRecalculationView<Inner: View>: View {
+struct DebugBodyRecalculationsView<Inner: View>: View {
     var view: Inner
     var tag: String
+    var debug = true
 
     var body: some View {
-        Logger.view.debug("Recalculated: \(tag)")
+        if debug {
+            Logger.view.debug("\(tag) view recalculated")
+        }
         return view
     }
 }
 
 extension View {
-    func debugBodyRecalculations(_ tag: String) -> some View {
-        DebugBodyRecalculationView(view: self, tag: tag)
+    func debugBodyRecalculations(
+        _ tag: String,
+        debug: Bool = true
+    ) -> some View {
+        return DebugBodyRecalculationsView(
+            view: self,
+            tag: tag,
+            debug: debug
+        )
     }
 }

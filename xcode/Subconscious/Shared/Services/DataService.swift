@@ -34,7 +34,7 @@ struct DataService {
 
     /// Migrate database off main thread, returning a publisher
     func migrateAsync() -> AnyPublisher<Int, Error> {
-        CombineUtilities.async(qos: .userInitiated) {
+        CombineUtilities.async(qos: .utility) {
             try database.migrate()
         }
     }

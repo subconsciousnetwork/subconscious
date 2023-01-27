@@ -14,7 +14,7 @@ import ObservableStore
 //  MARK: Action
 enum SearchAction: Hashable, CustomLogStringConvertible {
     /// Set search presented state
-    case setPresented(Bool)
+    case requestPresent(Bool)
     /// Set search presented to false, and clear query
     case hideAndClearQuery
     /// Cancel search `(proxy for isPresented(false)`)
@@ -52,10 +52,6 @@ enum SearchAction: Hashable, CustomLogStringConvertible {
 
 //  MARK: Model
 struct SearchModel: ModelProtocol {
-    /// Is search HUD showing?
-    var isPresented = false
-    /// Animation duration for hide/show
-    var presentAnimationDuration = Duration.keyboard
     var clearSearchTimeout = Duration.keyboard + 0.1
 
     /// Placeholder text when empty
@@ -71,12 +67,9 @@ struct SearchModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<SearchModel> {
         switch action {
-        case .setPresented(let isPresented):
-            return setPresented(
-                state: state,
-                environment: environment,
-                isPresented: isPresented
-            )
+        case .requestPresent:
+            environment.logger.debug("Should be handled by parent")
+            return Update(state: state)
         case .hideAndClearQuery:
             return hideAndClearQuery(
                 state: state,
@@ -155,21 +148,6 @@ struct SearchModel: ModelProtocol {
         }
     }
 
-    static func setPresented(
-        state: SearchModel,
-        environment: AppEnvironment,
-        isPresented: Bool
-    ) -> Update<SearchModel> {
-        var model = state
-        model.isPresented = isPresented
-        return Update(state: model)
-            .animation(
-                .easeOutCubic(
-                    duration: state.presentAnimationDuration
-                )
-            )
-    }
-
     /// Hide search and clear query after animation completes
     static func hideAndClearQuery(
         state: SearchModel,
@@ -177,18 +155,17 @@ struct SearchModel: ModelProtocol {
     ) -> Update<SearchModel> {
         /// Delay search clearing until hide animation completes
         let delay = state.clearSearchTimeout
-        let fx: Fx<SearchAction> = Just(
-            .setQuery("")
+        let query = Just(
+            SearchAction.setQuery("")
         )
         .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
-        .eraseToAnyPublisher()
 
-        return update(
-            state: state,
-            action: .setPresented(false),
-            environment: environment
-        )
-        .mergeFx(fx)
+        let present = Just(SearchAction.requestPresent(false))
+
+        let fx: Fx<SearchAction> = query.merge(with: present)
+            .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
     }
 
     static func setQuery(
@@ -314,75 +291,83 @@ struct SearchModel: ModelProtocol {
 
 //  MARK: View
 struct SearchView: View {
-    var store: ViewStore<SearchModel>
+    var state: SearchModel
+    var send: (SearchAction) -> Void
     var suggestionHeight: CGFloat = 56
-
+    
     var body: some View {
-        VStack {
-            if store.state.isPresented {
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack {
-                        SearchTextField(
-                            placeholder: store.state.placeholder,
-                            text: Binding(
-                                store: store,
-                                get: \.query,
-                                tag: SearchAction.setQuery
-                            ),
-                            autofocus: true
-                        )
-                        .submitLabel(.go)
-                        .onSubmit {
-                            store.send(.submitQuery(store.state.query))
-                        }
-                        Button(
-                            action: {
-                                store.send(.cancel)
-                            },
-                            label: {
-                                Text("Cancel")
-                            }
-                        )
-                    }
-                    .frame(height: AppTheme.unit * 10)
-                    .padding(AppTheme.tightPadding)
-                    List(store.state.suggestions) { suggestion in
-                        Button(
-                            action: {
-                                store.send(.activateSuggestion(suggestion))
-                            },
-                            label: {
-                                SuggestionLabelView(suggestion: suggestion)
-                            }
-                        )
-                        .modifier(
-                            SuggestionViewModifier(
-                                // Set suggestion height explicitly so we can
-                                // rely on it for our search modal height
-                                // calculations.
-                                // 2022-02-17 Gordon Brander
-                                height: suggestionHeight
-                            )
-                        )
-                    }
-                    .listStyle(.plain)
-                    .padding(.bottom, AppTheme.tightPadding)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                SearchTextField(
+                    placeholder: state.placeholder,
+                    text: Binding(
+                        get: { state.query },
+                        send: send,
+                        tag: SearchAction.setQuery
+                    ),
+                    autofocus: true
+                )
+                .submitLabel(.go)
+                .onSubmit {
+                    send(.submitQuery(state.query))
                 }
-                .background(Color.background)
+                Button(
+                    action: {
+                        send(.cancel)
+                    },
+                    label: {
+                        Text("Cancel")
+                    }
+                )
             }
+            .frame(height: AppTheme.unit * 10)
+            .padding(AppTheme.tightPadding)
+            List(state.suggestions) { suggestion in
+                Button(
+                    action: {
+                        send(.activateSuggestion(suggestion))
+                    },
+                    label: {
+                        SuggestionLabelView(suggestion: suggestion)
+                    }
+                )
+                .modifier(
+                    SuggestionViewModifier(
+                        // Set suggestion height explicitly so we can
+                        // rely on it for our search modal height
+                        // calculations.
+                        // 2022-02-17 Gordon Brander
+                        height: suggestionHeight
+                    )
+                )
+            }
+            .listStyle(.plain)
+            .padding(.bottom, AppTheme.tightPadding)
         }
+        .background(Color.background)
     }
+    
+    static var presentTransition: AnyTransition = .asymmetric(
+        insertion: .opacity.animation(
+            .easeOutCubic(
+                duration: Duration.keyboard
+            )
+        ),
+        removal: .opacity.animation(
+            .easeOut(
+                duration: Duration.keyboard / 2
+            )
+        )
+    )
 }
 
 struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
         SearchView(
-            store: ViewStore.constant(
-                state: SearchModel(
-                    isPresented: true,
-                    placeholder: "Search or create..."
-                )
-            )
+            state: SearchModel(
+                placeholder: "Search or create..."
+            ),
+            send: { action in }
         )
     }
 }

@@ -15,24 +15,14 @@ struct AppTabView: View {
 
     var body: some View {
         TabView {
-            FeedView(
-                store: ViewStore(
-                    store: store,
-                    cursor: FeedCursor.self
-                )
-            )
-            .tabItem {
-                Label("Feed", systemImage: "newspaper")
-            }
-            NotebookView(
-                store: ViewStore(
-                    store: store,
-                    cursor: NotebookCursor.self
-                )
-            )
-            .tabItem {
-                Label("Notes", systemImage: "folder")
-            }
+            FeedView(parent: store)
+                .tabItem {
+                    Label("Feed", systemImage: "newspaper")
+                }
+            NotebookView(parent: store)
+                .tabItem {
+                    Label("Notes", systemImage: "folder")
+                }
         }
     }
 }

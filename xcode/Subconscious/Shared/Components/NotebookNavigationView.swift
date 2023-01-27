@@ -8,18 +8,25 @@ import SwiftUI
 import ObservableStore
 
 struct NotebookNavigationView: View {
-    var store: ViewStore<NotebookModel>
+    @ObservedObject var store: Store<NotebookModel>
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(
+            path: Binding(
+                get: { store.state.details },
+                send: store.send,
+                tag: NotebookAction.setDetails
+            )
+        ) {
             VStack(spacing: 0) {
                 EntryListView(
                     entries: store.state.recent,
                     onEntryPress: { entry in
                         store.send(
-                            .loadAndPresentDetail(
-                                link: entry.link,
-                                fallback: entry.linkableTitle,
+                            .pushDetail(
+                                slug: entry.slug,
+                                title: entry.link.title,
+                                fallback: entry.link.title,
                                 autofocus: false
                             )
                         )
@@ -35,8 +42,8 @@ struct NotebookNavigationView: View {
                 .confirmationDialog(
                     "Are you sure?",
                     isPresented: Binding(
-                        store: store,
-                        get: \.isConfirmDeleteShowing,
+                        get: { store.state.isConfirmDeleteShowing },
+                        send: store.send,
                         tag: NotebookAction.setConfirmDeleteShowing
                     ),
                     presenting: store.state.entryToDelete
@@ -51,22 +58,16 @@ struct NotebookNavigationView: View {
                     }
                 }
             }
-            .navigationDestination(
-                isPresented: Binding(
-                    store: store,
-                    get: \.detail.isPresented,
-                    tag: NotebookAction.presentDetail
-                ),
-                destination: {
-                    DetailView(
-                        store: ViewStore(
-                            store: store,
-                            cursor: NotebookDetailCursor.self
-                        )
+            .navigationDestination(for: DetailOuterModel.self) { state in
+                DetailView(
+                    state: state,
+                    send: Address.forward(
+                        send: store.send,
+                        tag: NotebookAction.tag
                     )
-                }
-            )
-            .navigationTitle("")
+                )
+            }
+            .navigationTitle("Notes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .principal) {

@@ -24,8 +24,8 @@ struct FirstRunProfileView: View {
                         field: TextField(
                             "Your Name",
                             text: Binding(
-                                store: store,
-                                get: \.nickname,
+                                get: { store.state.nickname },
+                                send: store.send,
                                 tag: FirstRunAction.setNickname
                             )
                         )
@@ -35,8 +35,8 @@ struct FirstRunProfileView: View {
                         field: TextField(
                             "you@there.com",
                             text: Binding(
-                                store: store,
-                                get: \.email,
+                                get: { store.state.email },
+                                send: store.send,
                                 tag: FirstRunAction.setEmail
                             )
                         )

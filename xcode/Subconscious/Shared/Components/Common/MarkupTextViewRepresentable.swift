@@ -196,7 +196,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                 )
                 return
             }
-            self.representable.store.send(.setText(view.text))
+            self.representable.send(.setText(view.text))
         }
 
         /// Handle editing begin (focus)
@@ -208,7 +208,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                 )
                 return
             }
-            self.representable.store.send(.focusChange(true))
+            self.representable.send(.focusChange(true))
         }
 
         /// Handle editing end (blur)
@@ -219,7 +219,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                 )
                 return
             }
-            self.representable.store.send(.focusChange(false))
+            self.representable.send(.focusChange(false))
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
@@ -236,7 +236,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                 )
                 return
             }
-            representable.store.send(
+            representable.send(
                 .setSelection(
                     range: textView.selectedRange,
                     text: textView.text
@@ -246,7 +246,8 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     }
 
     //  MARK: Properties
-    var store: ViewStore<MarkupTextModel>
+    var state: MarkupTextModel
+    var send: (MarkupTextAction) -> Void
     /// Frame needed to determine textview height.
     /// Use `GeometryView` to find container width.
     var frame: CGRect
@@ -310,9 +311,9 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         }
 
         // Update text
-        if view.text != store.state.text {
+        if view.text != state.text {
             logger?.debug("updateUIView: set text")
-            view.text = store.state.text
+            view.text = state.text
         }
 
         // Update width
@@ -325,9 +326,9 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         self.updateUIViewFocus(view, context: context)
 
         // Set selection
-        if store.state.selection != view.selectedRange {
+        if state.selection != view.selectedRange {
             logger?.debug("updateUIView: set selection")
-            view.selectedRange = self.store.state.selection
+            view.selectedRange = self.state.selection
         }
 
         if self.textContainerInset != view.textContainerInset {
@@ -345,15 +346,15 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     /// more than once.
     func updateUIViewFocus(_ view: MarkupTextView, context: Context) {
         // Focus is clean, do nothing
-        guard store.state.focus != store.state.focusRequest else {
+        guard state.focus != state.focusRequest else {
             return
         }
         /// If focus change is already scheduled, return
-        guard !store.state.isFocusChangeScheduled else {
+        guard !state.isFocusChangeScheduled else {
             logger?.debug("updateUIViewFocus: Focus is dirty but focus change already scheduled. Skipping.")
             return
         }
-        store.send(.scheduleFocusChange)
+        send(.scheduleFocusChange)
         // Call for first responder change needs to be async,
         // or else we get an AttributeGraph cycle warning from SwiftUI.
         // This is true for both becomeFirstResponder and resignFirstResponder.
@@ -361,10 +362,10 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         DispatchQueue.main.async {
             // Check again in this tick to make sure we still need to
             // change first responder state.
-            guard store.state.focus != store.state.focusRequest else {
+            guard state.focus != state.focusRequest else {
                 return
             }
-            if store.state.focusRequest {
+            if state.focusRequest {
                 logger?.debug("async: call becomeFirstResponder")
                 view.becomeFirstResponder()
             } else {

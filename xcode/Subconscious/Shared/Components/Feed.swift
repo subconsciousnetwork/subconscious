@@ -9,10 +9,52 @@ import SwiftUI
 import ObservableStore
 import Combine
 
+//  MARK: View
+struct FeedView: View {
+    @ObservedObject var parent: Store<AppModel>
+    @StateObject private var store = Store(
+        state: FeedModel(),
+        environment: AppEnvironment.default
+    )
+
+    var body: some View {
+        ZStack {
+            NavigationStack {
+            }
+            .zIndex(1)
+            if store.state.isSearchPresented {
+                SearchView(
+                    state: store.state.search,
+                    send: Address.forward(
+                        send: store.send,
+                        tag: FeedSearchCursor.tag
+                    )
+                )
+                .zIndex(3)
+                .transition(SearchView.presentTransition)
+            }
+            PinTrailingBottom(
+                content: FABView(
+                    action: {
+                        store.send(.setSearchPresented(true))
+                    }
+                )
+                .padding()
+            )
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .zIndex(2)
+        }
+    }
+}
+
+
 //  MARK: Action
 enum FeedAction {
     case search(SearchAction)
-    case detail(DetailAction)
+
+    /// Set search view presented
+    case setSearchPresented(Bool)
+
     case ready
 
     case refreshAll
@@ -37,41 +79,11 @@ enum FeedAction {
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)
     /// Retitle entry succeeded. Lifecycle action from Detail.
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
-
-    /// Show/hide the search HUD
-    static func setSearchPresented(_ isPresented: Bool) -> FeedAction {
-        .search(.setPresented(isPresented))
-    }
-
-    static func loadAndPresentDetail(
-        link: EntryLink?,
-        fallback: String,
-        autofocus: Bool
-    ) -> FeedAction {
-        .detail(
-            .loadAndPresentDetail(
-                link: link,
-                fallback: fallback,
-                autofocus: autofocus
-            )
-        )
-    }
-
-    static func presentDetail(_ isPresented: Bool) -> FeedAction {
-        .detail(.presentDetail(isPresented))
-    }
-
-    /// Show/hide the search HUD
-    static var autosave: FeedAction {
-        .detail(.autosave)
-    }
 }
 
 extension FeedAction: CustomLogStringConvertible {
     var logDescription: String {
         switch self {
-        case .detail(let action):
-            return "detail(\(String.loggable(action)))"
         case .search(let action):
             return "search(\(String.loggable(action)))"
         case .setFeed(let items):
@@ -100,38 +112,10 @@ struct FeedSearchCursor: CursorProtocol {
         switch action {
         case .activatedSuggestion(let suggestion):
             return .activatedSuggestion(suggestion)
+        case .requestPresent(let isPresented):
+            return .setSearchPresented(isPresented)
         default:
             return .search(action)
-        }
-    }
-}
-
-struct FeedDetailCursor: CursorProtocol {
-    typealias Model = FeedModel
-    typealias ViewModel = DetailModel
-
-    static func get(state: FeedModel) -> DetailModel {
-        state.detail
-    }
-    
-    static func set(state: FeedModel, inner: DetailModel) -> FeedModel {
-        var model = state
-        model.detail = inner
-        return model
-    }
-    
-    static func tag(_ action: DetailAction) -> FeedAction {
-        switch action {
-        case .requestDeleteEntry(let slug):
-            return .requestDeleteEntry(slug)
-        case let .succeedMoveEntry(from, to):
-            return .succeedMoveEntry(from: from, to: to)
-        case let .succeedMergeEntry(parent, child):
-            return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedRetitleEntry(from, to):
-            return .succeedRetitleEntry(from: from, to: to)
-        default:
-            return .detail(action)
         }
     }
 }
@@ -139,6 +123,8 @@ struct FeedDetailCursor: CursorProtocol {
 //  MARK: Model
 /// A feed of stories
 struct FeedModel: ModelProtocol {
+    /// Search HUD
+    var isSearchPresented = false
     /// Search HUD
     var search = SearchModel(
         placeholder: "Search or create..."
@@ -160,11 +146,11 @@ struct FeedModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
-        case .detail(let action):
-            return FeedDetailCursor.update(
+        case .setSearchPresented(let isPresented):
+            return setSearchPresented(
                 state: state,
-                action: action,
-                environment: environment
+                environment: environment,
+                isPresented: isPresented
             )
         case .ready:
             return ready(
@@ -189,12 +175,9 @@ struct FeedModel: ModelProtocol {
             )
         case .failFetchFeed(let error):
             return log(state: state, environment: environment, error: error)
-        case .activatedSuggestion(let suggestion):
-            return FeedDetailCursor.update(
-                state: state,
-                action: DetailAction.fromSuggestion(suggestion),
-                environment: environment
-            )
+        case .activatedSuggestion:
+            environment.logger.warning("Not implemented")
+            return Update(state: state)
         case .requestDeleteEntry(_):
             environment.logger.debug(
                 "requestDeleteEntry should be handled by parent component"
@@ -206,29 +189,26 @@ struct FeedModel: ModelProtocol {
                 environment: environment,
                 slug: slug
             )
-        case let .succeedMoveEntry(from, to):
+        case .succeedMoveEntry(_, _):
             return update(
                 state: state,
                 actions: [
-                    .detail(.succeedMoveEntry(from: from, to: to)),
                     .search(.refreshSuggestions)
                 ],
                 environment: environment
             )
-        case let .succeedMergeEntry(parent, child):
+        case .succeedMergeEntry(_, _):
             return update(
                 state: state,
                 actions: [
-                    .detail(.succeedMergeEntry(parent: parent, child: child)),
                     .search(.refreshSuggestions)
                 ],
                 environment: environment
             )
-        case let .succeedRetitleEntry(from, to):
+        case .succeedRetitleEntry(_, _):
             return update(
                 state: state,
                 actions: [
-                    .detail(.succeedRetitleEntry(from: from, to: to)),
                     .search(.refreshSuggestions)
                 ],
                 environment: environment
@@ -254,6 +234,17 @@ struct FeedModel: ModelProtocol {
     ) -> Update<FeedModel> {
         environment.logger.warning("\(error.localizedDescription)")
         return Update(state: state)
+    }
+
+    /// Set search presented flag
+    static func setSearchPresented(
+        state: FeedModel,
+        environment: AppEnvironment,
+        isPresented: Bool
+    ) -> Update<FeedModel> {
+        var model = state
+        model.isSearchPresented = isPresented
+        return Update(state: model)
     }
 
     /// Handle appear lifecycle action.
@@ -313,78 +304,7 @@ struct FeedModel: ModelProtocol {
         environment: AppEnvironment,
         slug: Slug
     ) -> Update<FeedModel> {
-        return FeedModel.update(
-            state: state,
-            actions: [
-                .search(.entryDeleted(slug)),
-                .detail(.entryDeleted(slug))
-            ],
-            environment: environment
-        )
-    }
-}
-
-//  MARK: View
-struct FeedView: View {
-    var store: ViewStore<FeedModel>
-
-    var body: some View {
-        ZStack {
-            NavigationStack {
-                VStack(spacing: 0) {
-                    ScrollView(.vertical, showsIndicators: false) {
-                        LazyVStack {
-                            ForEach(store.state.stories) { story in
-                                StoryView(
-                                    story: story,
-                                    action: { link, fallback in
-                                        store.send(
-                                            FeedAction.loadAndPresentDetail(
-                                                link: link,
-                                                fallback: fallback,
-                                                autofocus: false
-                                            )
-                                        )
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-                .navigationDestination(
-                    isPresented: Binding(
-                        store: store,
-                        get: \.detail.isPresented,
-                        tag: FeedAction.presentDetail
-                    )
-                ) {
-                    DetailView(
-                        store: ViewStore(
-                            store: store,
-                            cursor: FeedDetailCursor.self
-                        )
-                    )
-                }
-                .navigationTitle(Text("Latest"))
-            }
-            .zIndex(1)
-            PinTrailingBottom(
-                content: FABView(
-                    action: {
-                        store.send(.setSearchPresented(true))
-                    }
-                )
-                .padding()
-            )
-            .ignoresSafeArea(.keyboard, edges: .bottom)
-            .zIndex(2)
-            SearchView(
-                store: ViewStore(
-                    store: store,
-                    cursor: FeedSearchCursor.self
-                )
-            )
-            .zIndex(3)
-        }
+        environment.logger.warning("Not implemented")
+        return Update(state: state)
     }
 }
