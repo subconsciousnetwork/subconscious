@@ -194,11 +194,43 @@ final class Tests_Sphere: XCTestCase {
         _ = try sphere.save()
         
         let changesB = try sphere.changes(a)
-        print(changesB)
         XCTAssertEqual(changesB.count, 2)
         XCTAssertTrue(changesB.contains("bar"))
         XCTAssertTrue(changesB.contains("baz"))
         XCTAssertFalse(changesB.contains("foo"))
+    }
+
+    func testRemove() throws {
+        let noosphere = noosphere!
+        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        
+        let sphere = try Sphere(
+            noosphere: noosphere,
+            identity: sphereReceipt.identity
+        )
+        
+        let body = "Test".toData(encoding: .utf8)!
+        
+        try sphere.write(
+            slug: "foo",
+            contentType: "text/subtext",
+            body: body
+        )
+        try sphere.write(
+            slug: "bar",
+            contentType: "text/subtext",
+            body: body
+        )
+
+        _ = try sphere.save()
+
+        try sphere.remove(slug: "foo")
+
+        let slugs = try sphere.list()
+        
+        XCTAssertEqual(slugs.count, 1)
+        XCTAssertTrue(slugs.contains("bar"))
+        XCTAssertFalse(slugs.contains("foo"))
     }
 
     func testSaveVersion() throws {
