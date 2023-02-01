@@ -125,9 +125,9 @@ final class Tests_Sphere: XCTestCase {
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
-
+        
         let body = "Test".toData(encoding: .utf8)!
-
+        
         try sphere.write(
             slug: "foo",
             contentType: "text/subtext",
@@ -143,7 +143,7 @@ final class Tests_Sphere: XCTestCase {
             contentType: "text/subtext",
             body: body
         )
-
+        
         let slugsA = try sphere.list()
         XCTAssertEqual(
             slugsA,
@@ -152,10 +152,44 @@ final class Tests_Sphere: XCTestCase {
         )
         
         _ = try sphere.save()
-
+        
         let slugsB = try sphere.list()
         XCTAssertTrue(slugsB.contains("foo"))
         XCTAssertTrue(slugsB.contains("bar"))
         XCTAssertTrue(slugsB.contains("baz"))
+    }
+    
+    func testSaveVersion() throws {
+        let noosphere = noosphere!
+        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        
+        let sphere = try Sphere(
+            noosphere: noosphere,
+            identity: sphereReceipt.identity
+        )
+
+        let versionA = try sphere.version()
+
+        try sphere.write(
+            slug: "foo",
+            contentType: "text/subtext",
+            body: "Test".toData(encoding: .utf8)!
+        )
+
+        let version = try sphere.save()
+
+        let versionB = try sphere.version()
+
+        XCTAssertNotEqual(
+            versionA,
+            versionB,
+            "Save updates version"
+        )
+        
+        XCTAssertEqual(
+            version,
+            versionB,
+            "Save returns current version"
+        )
     }
 }
