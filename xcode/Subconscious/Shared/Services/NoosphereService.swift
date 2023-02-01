@@ -145,12 +145,24 @@ public final class Sphere: SphereProtocol {
         self.noosphere = noosphere
         self.identity = identity
         
+        let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
+        defer {
+            ns_error_free(error.pointee)
+        }
+
         guard let fs = ns_sphere_fs_open(
             noosphere.noosphere,
-            identity
+            identity,
+            error
         ) else {
-            throw NoosphereError.foreignError("Failed to get pointer for sphere file system")
+            let errorMessagePointer = ns_error_string(error.pointee)
+            defer {
+                ns_string_free(errorMessagePointer)
+            }
+            let errorMessage = String.init(cString: errorMessagePointer!)
+            throw NoosphereError.foreignError(errorMessage)
         }
+
         self.fs = fs
     }
     
