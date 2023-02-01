@@ -159,6 +159,48 @@ final class Tests_Sphere: XCTestCase {
         XCTAssertTrue(slugsB.contains("baz"))
     }
     
+    func testChanges() throws {
+        let noosphere = noosphere!
+        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        
+        let sphere = try Sphere(
+            noosphere: noosphere,
+            identity: sphereReceipt.identity
+        )
+        
+        let body = "Test".toData(encoding: .utf8)!
+        
+        try sphere.write(
+            slug: "foo",
+            contentType: "text/subtext",
+            body: body
+        )
+
+        let a = try sphere.save()
+        let changesA = try sphere.changes()
+        XCTAssertEqual(changesA.count, 1)
+        XCTAssertTrue(changesA.contains("foo"))
+
+        try sphere.write(
+            slug: "bar",
+            contentType: "text/subtext",
+            body: body
+        )
+        try sphere.write(
+            slug: "baz",
+            contentType: "text/subtext",
+            body: body
+        )
+        _ = try sphere.save()
+        
+        let changesB = try sphere.changes(a)
+        print(changesB)
+        XCTAssertEqual(changesB.count, 2)
+        XCTAssertTrue(changesB.contains("bar"))
+        XCTAssertTrue(changesB.contains("baz"))
+        XCTAssertFalse(changesB.contains("foo"))
+    }
+
     func testSaveVersion() throws {
         let noosphere = noosphere!
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
@@ -167,19 +209,19 @@ final class Tests_Sphere: XCTestCase {
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
-
+        
         let versionA = try sphere.version()
-
+        
         try sphere.write(
             slug: "foo",
             contentType: "text/subtext",
             body: "Test".toData(encoding: .utf8)!
         )
-
+        
         let version = try sphere.save()
-
+        
         let versionB = try sphere.version()
-
+        
         XCTAssertNotEqual(
             versionA,
             versionB,

@@ -427,7 +427,7 @@ public final class Sphere: SphereProtocol {
     /// List all changed slugs between two versions of a sphere.
     /// This method lists which slugs changed between version, but not
     /// what changed.
-    public func changes(_ since: String?) throws -> [String] {
+    public func changes(_ since: String? = nil) throws -> [String] {
         let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
         defer {
             error.deallocate()
