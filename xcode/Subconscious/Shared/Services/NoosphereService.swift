@@ -155,6 +155,8 @@ public protocol SphereProtocol {
     func list() throws -> [String]
     
     func sync() throws -> String
+    
+    func changes(_ since: String?) throws -> [String]
 }
 
 public final class Sphere: SphereProtocol {
@@ -404,6 +406,40 @@ public final class Sphere: SphereProtocol {
         return String(cString: versionPointer)
     }
     
+    /// List all changed slugs between two versions of a sphere.
+    /// This method lists which slugs changed between version, but not
+    /// what changed.
+    public func changes(_ since: String?) throws -> [String] {
+        let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
+        defer {
+            ns_error_free(error.pointee)
+        }
+
+        let changes = ns_sphere_fs_changes(
+            noosphere.noosphere,
+            fs,
+            since,
+            error
+        )
+        defer {
+            ns_string_array_free(changes)
+        }
+        if let errorMessage = NoosphereError.readErrorMessage(error) {
+            throw NoosphereError.foreignError(errorMessage)
+        }
+
+        let changesCount = changes.len
+        var pointer = changes.ptr!
+        
+        var slugs: [String] = []
+        for _ in 0..<changesCount {
+            let slug = String.init(cString: pointer.pointee!)
+            slugs.append(slug)
+            pointer += 1;
+        }
+        return slugs
+    }
+
     deinit {
         ns_sphere_fs_free(fs)
     }
