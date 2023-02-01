@@ -337,8 +337,16 @@ public final class Sphere: SphereProtocol {
         return try self.version()
     }
     
+    /// Remove slug from sphere
     public func remove(slug: String) throws {
-        
+        let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
+        defer {
+            ns_error_free(error.pointee)
+        }
+        ns_sphere_fs_remove(noosphere.noosphere, fs, slug, error)
+        if let errorMessage = NoosphereError.readErrorMessage(error) {
+            throw NoosphereError.foreignError(errorMessage)
+        }
     }
     
     /// List all slugs in sphere
