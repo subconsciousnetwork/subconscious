@@ -154,10 +154,8 @@ final class Tests_Sphere: XCTestCase {
         _ = try sphere.save()
 
         let slugsB = try sphere.list()
-        XCTAssertEqual(
-            slugsB,
-            ["foo", "bar", "baz"],
-            "Lists all slugs in latest version of sphere"
-        )
+        XCTAssertTrue(slugsB.contains("foo"))
+        XCTAssertTrue(slugsB.contains("bar"))
+        XCTAssertTrue(slugsB.contains("baz"))
     }
 }

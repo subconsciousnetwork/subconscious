@@ -27,12 +27,15 @@ extension NoosphereError {
     static func readErrorMessageAndFree(
         _ error: UnsafeMutablePointer<OpaquePointer?>
     ) -> String? {
-        guard let errorMessagePointer = ns_error_string(error.pointee) else {
+        guard let errorPointer = error.pointee else {
+            return nil
+        }
+        guard let errorMessagePointer = ns_error_string(errorPointer) else {
             return nil
         }
         defer {
             ns_string_free(errorMessagePointer)
-            ns_error_free(error.pointee)
+            ns_error_free(errorPointer)
         }
         let errorMessage = String.init(cString: errorMessagePointer)
         return errorMessage
