@@ -131,7 +131,7 @@ public protocol SphereProtocol {
     associatedtype Memo
     
     func version() throws -> String
-
+    
     func readHeaderValueFirst(
         slashlink: String,
         name: String
@@ -149,10 +149,12 @@ public protocol SphereProtocol {
     ) throws
     
     func remove(slug: String) throws
-
+    
     func save() throws -> String
     
     func list() throws -> [String]
+    
+    func sync() throws -> String
 }
 
 public final class Sphere: SphereProtocol {
@@ -379,6 +381,27 @@ public final class Sphere: SphereProtocol {
             pointer += 1;
         }
         return output
+    }
+
+    /// Sync sphere with gateway.
+    /// Gateway must be configured when Noosphere was initialized.
+    public func sync() throws -> String {
+        let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
+        defer {
+            ns_error_free(error.pointee)
+        }
+        guard let versionPointer = ns_sphere_sync(
+            noosphere.noosphere,
+            identity,
+            error
+        ) else {
+            let errorMessage = NoosphereError.readErrorMessage(error) ?? ""
+            throw NoosphereError.foreignError(errorMessage)
+        }
+        defer {
+            ns_string_free(versionPointer)
+        }
+        return String(cString: versionPointer)
     }
     
     deinit {
