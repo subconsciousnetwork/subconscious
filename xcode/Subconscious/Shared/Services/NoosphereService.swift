@@ -25,6 +25,23 @@ public struct SphereReceipt {
     var mnemonic: String
 }
 
+struct NSUtils {
+    /// Read an error message from an unsafe mutable pointer to an error
+    /// on the Rust side.
+    static func readErrorMessage(
+        _ error: UnsafeMutablePointer<OpaquePointer?>
+    ) -> String? {
+        guard let errorMessagePointer = ns_error_string(error.pointee) else {
+            return nil
+        }
+        defer {
+            ns_string_free(errorMessagePointer)
+        }
+        let errorMessage = String.init(cString: errorMessagePointer)
+        return errorMessage
+    }
+}
+
 /// Create a Noosphere instance.
 ///
 /// - Property noosphere: pointer that holds all the internal book keeping.
@@ -95,7 +112,7 @@ public final class Noosphere {
         defer {
             ns_string_free(sphereMnemonicPointer)
         }
-
+        
         let sphereIdentity = String.init(cString: sphereIdentityPointer)
         let sphereMnemonic = String.init(cString: sphereMnemonicPointer)
         
@@ -155,12 +172,8 @@ public final class Sphere: SphereProtocol {
             identity,
             error
         ) else {
-            let errorMessagePointer = ns_error_string(error.pointee)
-            defer {
-                ns_string_free(errorMessagePointer)
-            }
-            let errorMessage = String.init(cString: errorMessagePointer!)
-            throw NoosphereError.foreignError(errorMessage)
+            let message = NSUtils.readErrorMessage(error) ?? "Unknown"
+            throw NoosphereError.foreignError(message)
         }
 
         self.fs = fs
