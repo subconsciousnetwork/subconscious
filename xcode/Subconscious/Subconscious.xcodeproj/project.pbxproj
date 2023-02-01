@@ -286,7 +286,7 @@
 		B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */; };
 		B8EF986E29034ADF0029363D /* Pathlike.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EF986D29034ADF0029363D /* Pathlike.swift */; };
 		B8EF986F29034ADF0029363D /* Pathlike.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EF986D29034ADF0029363D /* Pathlike.swift */; };
-		B8F27EE42970CD8F00A33E78 /* Tests_NoosphereService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F27EE32970CD8F00A33E78 /* Tests_NoosphereService.swift */; };
+		B8F27EE42970CD8F00A33E78 /* Tests_Sphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F27EE32970CD8F00A33E78 /* Tests_Sphere.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -494,7 +494,7 @@
 		B8EB2A1D26F27797006E97C3 /* Tests_macOSLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_macOSLaunchTests.swift; sourceTree = "<group>"; };
 		B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Database.swift; sourceTree = "<group>"; };
 		B8EF986D29034ADF0029363D /* Pathlike.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pathlike.swift; sourceTree = "<group>"; };
-		B8F27EE32970CD8F00A33E78 /* Tests_NoosphereService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_NoosphereService.swift; sourceTree = "<group>"; };
+		B8F27EE32970CD8F00A33E78 /* Tests_Sphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Sphere.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -558,7 +558,7 @@
 				B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */,
 				B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */,
 				B8B604E8291476E9006FCB77 /* Tests_Migrations.swift */,
-				B8F27EE32970CD8F00A33E78 /* Tests_NoosphereService.swift */,
+				B8F27EE32970CD8F00A33E78 /* Tests_Sphere.swift */,
 				B85D5E3C28BE4B2C00EE0078 /* Tests_NotebookUpdate.swift */,
 				B88CC95A284FF64300994928 /* Tests_OrderedCollectionUtilities.swift */,
 				B82BB7FD28243F32000C9FCC /* Tests_Parser.swift */,
@@ -1109,7 +1109,7 @@
 				B8B604EB29148C82006FCB77 /* Tests_AppMigrations.swift in Sources */,
 				B8AAAAD928CBD68600DBC8A9 /* Tests_Detail.swift in Sources */,
 				B8C7E8C0280A2B7700E439DC /* Test_Markup.swift in Sources */,
-				B8F27EE42970CD8F00A33E78 /* Tests_NoosphereService.swift in Sources */,
+				B8F27EE42970CD8F00A33E78 /* Tests_Sphere.swift in Sources */,
 				B82BB7FE28243F32000C9FCC /* Tests_Parser.swift in Sources */,
 				B84AD8E82811C827006B3153 /* Tests_URLComponentsUtilities.swift in Sources */,
 				B8D2CDF92919B2FF00181EF2 /* Tests_Entry.swift in Sources */,

@@ -8,9 +8,9 @@
 import XCTest
 @testable import Subconscious
 
-final class Tests_Noosphere: XCTestCase {
+final class Tests_Sphere: XCTestCase {
     var noosphere: Noosphere?
-
+    
     override func setUpWithError() throws {
         let globalStoragePath = FileManager.default.temporaryDirectory
             .appendingPathComponent(
@@ -33,7 +33,7 @@ final class Tests_Noosphere: XCTestCase {
             sphereStoragePath: sphereStoragePath
         )
     }
-
+    
     func testRoundtrip() throws {
         let noosphere = noosphere!
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
@@ -51,7 +51,7 @@ final class Tests_Noosphere: XCTestCase {
                 contentType: "text/subtext",
                 body: "Test".toData(encoding: .utf8)!
             )
-            try sphere.save()
+            _ = try sphere.save()
             guard let memo = sphere.read(slashlink: "/foo") else {
                 XCTFail("Could not read memo")
                 return
@@ -78,12 +78,12 @@ final class Tests_Noosphere: XCTestCase {
     func testHeadersRoundtrip() throws {
         let noosphere = noosphere!
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
-
+        
         let sphere = try Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
-
+        
         let then = Date.distantPast.ISO8601Format()
         try sphere.write(
             slug: "foo",
@@ -96,24 +96,68 @@ final class Tests_Noosphere: XCTestCase {
             ],
             body: "Test".toData(encoding: .utf8)!
         )
-        try sphere.save()
+        _ = try sphere.save()
         guard let memo = sphere.read(slashlink: "/foo") else {
             XCTFail("Could not read memo")
             return
         }
         XCTAssertEqual(memo.contentType, "text/subtext")
         XCTAssertEqual(memo.body.toString(), "Test")
-
+        
         let title = memo.additionalHeaders.get(first: "Title")
         XCTAssertEqual(title, "Foo")
-
+        
         let ext = memo.additionalHeaders.get(first: "File-Extension")
         XCTAssertEqual(ext, "subtext")
-
+        
         let created = memo.additionalHeaders.get(first: "Created")
         XCTAssertEqual(created, then)
-
+        
         let modified = memo.additionalHeaders.get(first: "Created")
         XCTAssertEqual(modified, then)
+    }
+    
+    func testList() throws {
+        let noosphere = noosphere!
+        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        
+        let sphere = try Sphere(
+            noosphere: noosphere,
+            identity: sphereReceipt.identity
+        )
+
+        let body = "Test".toData(encoding: .utf8)!
+
+        try sphere.write(
+            slug: "foo",
+            contentType: "text/subtext",
+            body: body
+        )
+        try sphere.write(
+            slug: "bar",
+            contentType: "text/subtext",
+            body: body
+        )
+        try sphere.write(
+            slug: "baz",
+            contentType: "text/subtext",
+            body: body
+        )
+
+        let slugsA = try sphere.list()
+        XCTAssertEqual(
+            slugsA,
+            [],
+            "Lists all slugs in latest version of sphere"
+        )
+        
+        _ = try sphere.save()
+
+        let slugsB = try sphere.list()
+        XCTAssertEqual(
+            slugsB,
+            ["foo", "bar", "baz"],
+            "Lists all slugs in latest version of sphere"
+        )
     }
 }
