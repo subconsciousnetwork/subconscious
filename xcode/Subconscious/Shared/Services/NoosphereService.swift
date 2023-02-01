@@ -130,6 +130,8 @@ public final class Noosphere {
 public protocol SphereProtocol {
     associatedtype Memo
     
+    func version() throws -> String
+
     func readHeaderValueFirst(
         slashlink: String,
         name: String
@@ -148,7 +150,7 @@ public protocol SphereProtocol {
     
     func remove(slug: String) throws
 
-    func save() throws
+    func save() throws -> String
     
     func list() throws -> [String]
 }
@@ -179,6 +181,28 @@ public final class Sphere: SphereProtocol {
         self.fs = fs
     }
     
+    /// Get current version of sphere
+    public func version() throws -> String {
+        let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
+        defer {
+            ns_error_free(error.pointee)
+        }
+
+        guard let sphereVersionPointer = ns_sphere_version_get(
+            noosphere.noosphere,
+            identity,
+            error
+        ) else {
+            let errorMessage = NoosphereError.readErrorMessage(error) ?? ""
+            throw NoosphereError.foreignError(errorMessage)
+        }
+        defer {
+            ns_string_free(sphereVersionPointer)
+        }
+
+        return String.init(cString: sphereVersionPointer)
+    }
+
     /// Read first header value for memo at slashlink
     /// - Returns: value, if any
     public func readHeaderValueFirst(
@@ -306,10 +330,11 @@ public final class Sphere: SphereProtocol {
             )
         })
     }
-    
-    /// Save outstanding writes
-    public func save() throws {
+
+    /// Save outstanding writes and return new Sphere version
+    public func save() throws -> String {
         ns_sphere_fs_save(noosphere.noosphere, fs, nil)
+        return try self.version()
     }
     
     public func remove(slug: String) throws {
