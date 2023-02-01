@@ -18,12 +18,13 @@ import SwiftNoosphere
 public enum NoosphereError: Error {
     /// Thrown when something unexpected happens on the other side of the FFI, and we don't know what went wrong.
     case foreignError(String)
+    case nullPointer
 }
 
 extension NoosphereError {
     /// Read an error message from an unsafe mutable pointer to an error
     /// on the Rust side.
-    static func readErrorMessage(
+    static func readErrorMessageAndFree(
         _ error: UnsafeMutablePointer<OpaquePointer?>
     ) -> String? {
         guard let errorMessagePointer = ns_error_string(error.pointee) else {
@@ -31,9 +32,19 @@ extension NoosphereError {
         }
         defer {
             ns_string_free(errorMessagePointer)
+            ns_error_free(error.pointee)
         }
         let errorMessage = String.init(cString: errorMessagePointer)
         return errorMessage
+    }
+    
+    static func readErrorAndFree(
+        _ error: UnsafeMutablePointer<OpaquePointer?>
+    ) -> Self? {
+        guard let errorMessage = readErrorMessageAndFree(error) else {
+            return nil
+        }
+        return Self.foreignError(errorMessage)
     }
 }
 
@@ -170,16 +181,18 @@ public final class Sphere: SphereProtocol {
         
         let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
         defer {
-            ns_error_free(error.pointee)
+            error.deallocate()
         }
-        
-        guard let fs = ns_sphere_fs_open(
+        let fs = ns_sphere_fs_open(
             noosphere.noosphere,
             identity,
             error
-        ) else {
-            let message = NoosphereError.readErrorMessage(error) ?? "Unknown"
-            throw NoosphereError.foreignError(message)
+        )
+        if let error = NoosphereError.readErrorAndFree(error) {
+            throw error
+        }
+        guard let fs = fs else {
+            throw NoosphereError.nullPointer
         }
         
         self.fs = fs
@@ -189,21 +202,22 @@ public final class Sphere: SphereProtocol {
     public func version() throws -> String {
         let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
         defer {
-            ns_error_free(error.pointee)
+            error.deallocate()
         }
-
-        guard let sphereVersionPointer = ns_sphere_version_get(
+        let sphereVersionPointer = ns_sphere_version_get(
             noosphere.noosphere,
             identity,
             error
-        ) else {
-            let errorMessage = NoosphereError.readErrorMessage(error) ?? ""
-            throw NoosphereError.foreignError(errorMessage)
+        )
+        if let error = NoosphereError.readErrorAndFree(error) {
+            throw error
+        }
+        guard let sphereVersionPointer = sphereVersionPointer else {
+            throw NoosphereError.nullPointer
         }
         defer {
             ns_string_free(sphereVersionPointer)
         }
-
         return String.init(cString: sphereVersionPointer)
     }
 
@@ -345,11 +359,11 @@ public final class Sphere: SphereProtocol {
     public func remove(slug: String) throws {
         let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
         defer {
-            ns_error_free(error.pointee)
+            error.deallocate()
         }
         ns_sphere_fs_remove(noosphere.noosphere, fs, slug, error)
-        if let errorMessage = NoosphereError.readErrorMessage(error) {
-            throw NoosphereError.foreignError(errorMessage)
+        if let error = NoosphereError.readErrorAndFree(error) {
+            throw error
         }
     }
     
@@ -357,9 +371,8 @@ public final class Sphere: SphereProtocol {
     public func list() throws -> [String] {
         let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
         defer {
-            ns_error_free(error.pointee)
+            error.deallocate()
         }
-        
         let slugs = ns_sphere_fs_list(
             self.noosphere.noosphere,
             self.fs,
@@ -368,9 +381,8 @@ public final class Sphere: SphereProtocol {
         defer {
             ns_string_array_free(slugs)
         }
-        
-        if let errorMessage = NoosphereError.readErrorMessage(error) {
-            throw NoosphereError.foreignError(errorMessage)
+        if let error = NoosphereError.readErrorAndFree(error) {
+            throw error
         }
 
         let slugCount = slugs.len
@@ -390,15 +402,18 @@ public final class Sphere: SphereProtocol {
     public func sync() throws -> String {
         let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
         defer {
-            ns_error_free(error.pointee)
+            error.deallocate()
         }
-        guard let versionPointer = ns_sphere_sync(
+        let versionPointer = ns_sphere_sync(
             noosphere.noosphere,
             identity,
             error
-        ) else {
-            let errorMessage = NoosphereError.readErrorMessage(error) ?? ""
-            throw NoosphereError.foreignError(errorMessage)
+        )
+        if let error = NoosphereError.readErrorAndFree(error) {
+            throw error
+        }
+        guard let versionPointer = versionPointer else {
+            throw NoosphereError.nullPointer
         }
         defer {
             ns_string_free(versionPointer)
@@ -412,9 +427,8 @@ public final class Sphere: SphereProtocol {
     public func changes(_ since: String?) throws -> [String] {
         let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
         defer {
-            ns_error_free(error.pointee)
+            error.deallocate()
         }
-
         let changes = ns_sphere_fs_changes(
             noosphere.noosphere,
             fs,
@@ -424,8 +438,8 @@ public final class Sphere: SphereProtocol {
         defer {
             ns_string_array_free(changes)
         }
-        if let errorMessage = NoosphereError.readErrorMessage(error) {
-            throw NoosphereError.foreignError(errorMessage)
+        if let error = NoosphereError.readErrorAndFree(error) {
+            throw error
         }
 
         let changesCount = changes.len
