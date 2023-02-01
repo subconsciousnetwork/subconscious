@@ -37,7 +37,7 @@ final class Tests_AppMigrations: XCTestCase {
                 modified: Date.now,
                 title: "Loomings",
                 fileExtension: ContentType.subtext.fileExtension,
-                other: [],
+                additionalHeaders: [],
                 body: "Call me Ishmael."
             )
         )

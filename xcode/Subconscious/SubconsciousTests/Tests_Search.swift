@@ -26,57 +26,17 @@ class Tests_Search: XCTestCase {
             "Set search returns same string"
         )
     }
-    
-    func testSearchPresented() throws {
-        let state = SearchModel()
-        let update = SearchModel.update(
-            state: state,
-            action: .requestPresent(false),
-            environment: environment
-        )
-        
-        XCTAssertEqual(
-            update.state.isPresented,
-            false,
-            "isPresented is false"
-        )
-    }
-
-    /// tests that .hideAndClearQueryUpdate has an animation transaction
-    func testSearchHideAndClearQueryUpdateHasTransaction() throws {
-        let state = SearchModel(
-            query: "I see red and orange and purple"
-        )
-        let update = SearchModel.update(
-            state: state,
-            action: .hideAndClearQuery,
-            environment: environment
-        )
-
-        XCTAssertNotNil(
-            update.transaction,
-            "Update has transaction (for hide animation)"
-        )
-    }
 
     /// Tests full .hideSearchAndClearQuery sequence, including running fx.
     func testSearchHideAndClearQuery() throws {
-        let presentAnimationDuration = Duration.keyboard
         let store = Store(
             state: SearchModel(
-                presentAnimationDuration: presentAnimationDuration,
                 query: "I see red and orange and purple"
             ),
             environment: environment
         )
 
         store.send(.hideAndClearQuery)
-
-        XCTAssertEqual(
-            store.state.isPresented,
-            false,
-            "Search is hidden immediately"
-        )
 
         XCTAssertEqual(
             store.state.query,
@@ -88,7 +48,7 @@ class Tests_Search: XCTestCase {
             description: "Query clears query after animation delay"
         )
 
-        let timeout = presentAnimationDuration + 0.1
+        let timeout = store.state.clearSearchTimeout + 0.1
         DispatchQueue.main.asyncAfter(
             deadline: .now() + timeout
         ) {
@@ -111,18 +71,9 @@ class Tests_Search: XCTestCase {
             environment: environment
         )
         XCTAssertEqual(
-            update.state.isPresented,
-            false,
-            "Search is hidden"
-        )
-        XCTAssertEqual(
             update.state.query,
             "",
             "Query is cleared"
-        )
-        XCTAssertNotNil(
-            update.transaction,
-            "Transaction is not nil (hide animation)"
         )
     }
 
@@ -139,18 +90,9 @@ class Tests_Search: XCTestCase {
             environment: environment
         )
         XCTAssertEqual(
-            update.state.isPresented,
-            false,
-            "isPresented is false"
-        )
-        XCTAssertEqual(
             update.state.query,
             "",
             "Query is cleared"
-        )
-        XCTAssertNotNil(
-            update.transaction,
-            "Transaction is not nil (hide animation)"
         )
     }
 }
