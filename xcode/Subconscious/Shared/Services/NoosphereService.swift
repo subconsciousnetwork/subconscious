@@ -21,33 +21,48 @@ public enum NoosphereError: Error {
     case nullPointer
 }
 
-extension NoosphereError {
-    /// Read an error message from an unsafe mutable pointer to an error
-    /// on the Rust side.
-    static func readErrorMessageAndFree(
-        _ error: UnsafeMutablePointer<OpaquePointer?>
-    ) -> String? {
-        guard let errorPointer = error.pointee else {
-            return nil
-        }
-        guard let errorMessagePointer = ns_error_string(errorPointer) else {
-            return nil
-        }
+struct NoosphereFFI {
+    static func callWithError<Z>(
+        _ perform: (UnsafeMutablePointer<OpaquePointer?>) -> Z
+    ) throws -> Z {
+        let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
         defer {
-            ns_string_free(errorMessagePointer)
-            ns_error_free(errorPointer)
+            error.deallocate()
         }
-        let errorMessage = String.init(cString: errorMessagePointer)
-        return errorMessage
+        let value = perform(error)
+        if let errorPointer = error.pointee {
+            defer {
+                ns_error_free(errorPointer)
+            }
+            guard let errorMessagePointer = ns_error_string(
+                errorPointer
+            ) else {
+                throw NoosphereError.foreignError("Unknown")
+            }
+            defer {
+                ns_string_free(errorMessagePointer)
+            }
+            let errorMessage = String.init(cString: errorMessagePointer)
+            throw NoosphereError.foreignError(errorMessage)
+        }
+        return value
     }
-    
-    static func readErrorAndFree(
-        _ error: UnsafeMutablePointer<OpaquePointer?>
-    ) -> Self? {
-        guard let errorMessage = readErrorMessageAndFree(error) else {
-            return nil
-        }
-        return Self.foreignError(errorMessage)
+
+    static func callWithError<A, B, Z>(
+        _ perform: (A, B, UnsafeMutablePointer<OpaquePointer?>) -> Z,
+        _ a: A,
+        _ b: B
+    ) throws -> Z {
+        try Self.callWithError { error in perform(a, b, error) }
+    }
+
+    static func callWithError<A, B, C, Z>(
+        _ perform: (A, B, C, UnsafeMutablePointer<OpaquePointer?>) -> Z,
+        _ a: A,
+        _ b: B,
+        _ c: C
+    ) throws -> Z {
+        try Self.callWithError { error in perform(a, b, c, error) }
     }
 }
 
@@ -182,18 +197,11 @@ public final class Sphere: SphereProtocol {
         self.noosphere = noosphere
         self.identity = identity
         
-        let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
-        defer {
-            error.deallocate()
-        }
-        let fs = ns_sphere_fs_open(
+        let fs = try NoosphereFFI.callWithError(
+            ns_sphere_fs_open,
             noosphere.noosphere,
-            identity,
-            error
+            identity
         )
-        if let error = NoosphereError.readErrorAndFree(error) {
-            throw error
-        }
         guard let fs = fs else {
             throw NoosphereError.nullPointer
         }
@@ -203,18 +211,11 @@ public final class Sphere: SphereProtocol {
     
     /// Get current version of sphere
     public func version() throws -> String {
-        let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
-        defer {
-            error.deallocate()
-        }
-        let sphereVersionPointer = ns_sphere_version_get(
+        let sphereVersionPointer = try NoosphereFFI.callWithError(
+            ns_sphere_version_get,
             noosphere.noosphere,
-            identity,
-            error
+            identity
         )
-        if let error = NoosphereError.readErrorAndFree(error) {
-            throw error
-        }
         guard let sphereVersionPointer = sphereVersionPointer else {
             throw NoosphereError.nullPointer
         }
@@ -360,32 +361,23 @@ public final class Sphere: SphereProtocol {
     
     /// Remove slug from sphere
     public func remove(slug: String) throws {
-        let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
-        defer {
-            error.deallocate()
-        }
-        ns_sphere_fs_remove(noosphere.noosphere, fs, slug, error)
-        if let error = NoosphereError.readErrorAndFree(error) {
-            throw error
-        }
+        try NoosphereFFI.callWithError(
+            ns_sphere_fs_remove,
+            noosphere.noosphere,
+            fs,
+            slug
+        )
     }
     
     /// List all slugs in sphere
     public func list() throws -> [String] {
-        let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
-        defer {
-            error.deallocate()
-        }
-        let slugs = ns_sphere_fs_list(
-            self.noosphere.noosphere,
-            self.fs,
-            error
+        let slugs = try NoosphereFFI.callWithError(
+            ns_sphere_fs_list,
+            noosphere.noosphere,
+            fs
         )
         defer {
             ns_string_array_free(slugs)
-        }
-        if let error = NoosphereError.readErrorAndFree(error) {
-            throw error
         }
 
         let slugCount = slugs.len
@@ -403,18 +395,11 @@ public final class Sphere: SphereProtocol {
     /// Sync sphere with gateway.
     /// Gateway must be configured when Noosphere was initialized.
     public func sync() throws -> String {
-        let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
-        defer {
-            error.deallocate()
-        }
-        let versionPointer = ns_sphere_sync(
+        let versionPointer = try NoosphereFFI.callWithError(
+            ns_sphere_sync,
             noosphere.noosphere,
-            identity,
-            error
+            identity
         )
-        if let error = NoosphereError.readErrorAndFree(error) {
-            throw error
-        }
         guard let versionPointer = versionPointer else {
             throw NoosphereError.nullPointer
         }
@@ -428,21 +413,14 @@ public final class Sphere: SphereProtocol {
     /// This method lists which slugs changed between version, but not
     /// what changed.
     public func changes(_ since: String? = nil) throws -> [String] {
-        let error = UnsafeMutablePointer<OpaquePointer?>.allocate(capacity: 1)
-        defer {
-            error.deallocate()
-        }
-        let changes = ns_sphere_fs_changes(
+        let changes = try NoosphereFFI.callWithError(
+            ns_sphere_fs_changes,
             noosphere.noosphere,
             fs,
-            since,
-            error
+            since
         )
         defer {
             ns_string_array_free(changes)
-        }
-        if let error = NoosphereError.readErrorAndFree(error) {
-            throw error
         }
 
         let changesCount = changes.len
