@@ -18,7 +18,7 @@ final class Tests_Entry: XCTestCase {
                 modified: Date.now,
                 title: "Example A",
                 fileExtension: ContentType.subtext.fileExtension,
-                other: [],
+                additionalHeaders: [],
                 body: "Example A"
             )
         )
@@ -31,7 +31,7 @@ final class Tests_Entry: XCTestCase {
                 modified: Date.now,
                 title: "Example B",
                 fileExtension: ContentType.subtext.fileExtension,
-                other: [],
+                additionalHeaders: [],
                 body: "Example B"
             )
         )
