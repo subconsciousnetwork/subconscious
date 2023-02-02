@@ -228,7 +228,6 @@ final class Tests_Sphere: XCTestCase {
 
         let slugs = try sphere.list()
         let foo = sphere.read(slashlink: "/foo")
-        print("!!!", foo)
         
         XCTAssertEqual(slugs.count, 1)
         XCTAssertTrue(slugs.contains("bar"))
