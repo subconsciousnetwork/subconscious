@@ -47,7 +47,14 @@ struct NoosphereFFI {
         }
         return value
     }
-
+    
+    static func callWithError<A, Z>(
+        _ perform: (A, UnsafeMutablePointer<OpaquePointer?>) -> Z,
+        _ a: A
+    ) throws -> Z {
+        try Self.callWithError { error in perform(a, error) }
+    }
+    
     static func callWithError<A, B, Z>(
         _ perform: (A, B, UnsafeMutablePointer<OpaquePointer?>) -> Z,
         _ a: A,
@@ -55,7 +62,7 @@ struct NoosphereFFI {
     ) throws -> Z {
         try Self.callWithError { error in perform(a, b, error) }
     }
-
+    
     static func callWithError<A, B, C, Z>(
         _ perform: (A, B, C, UnsafeMutablePointer<OpaquePointer?>) -> Z,
         _ a: A,
@@ -63,6 +70,46 @@ struct NoosphereFFI {
         _ c: C
     ) throws -> Z {
         try Self.callWithError { error in perform(a, b, c, error) }
+    }
+        
+    /// Read first header value for file pointer
+    static func readFileHeaderValueFirst(
+        file: OpaquePointer,
+        name: String
+    ) -> String? {
+        guard let valueRaw = ns_sphere_file_header_value_first(
+            file,
+            name
+        ) else {
+            return nil
+        }
+        defer {
+            ns_string_free(valueRaw)
+        }
+        return String(cString: valueRaw)
+    }
+
+    /// Get all header names for a given file pointer
+    static func readFileHeaderNames(
+        file: OpaquePointer
+    ) -> [String] {
+        let file_header_names = ns_sphere_file_header_names_read(file)
+        defer {
+            ns_string_array_free(file_header_names)
+        }
+
+        let name_count = file_header_names.len
+        guard var pointer = file_header_names.ptr else {
+            return []
+        }
+
+        var names: [String] = []
+        for _ in 0..<name_count {
+            let name = String(cString: pointer.pointee!)
+            names.append(name)
+            pointer += 1;
+        }
+        return names
     }
 }
 
@@ -242,7 +289,7 @@ public final class Sphere: SphereProtocol {
             ns_sphere_file_free(file)
         }
         
-        return Self.readFileHeaderValueFirst(
+        return NoosphereFFI.readFileHeaderValueFirst(
             file: file,
             name: name
         )
@@ -260,7 +307,7 @@ public final class Sphere: SphereProtocol {
         defer {
             ns_sphere_file_free(file)
         }
-        return Self.readFileHeaderNames(file: file)
+        return NoosphereFFI.readFileHeaderNames(file: file)
     }
     
     /// Read the value of a memo from a Sphere
@@ -277,7 +324,7 @@ public final class Sphere: SphereProtocol {
             ns_sphere_file_free(file)
         }
         
-        guard let contentType = Self.readFileHeaderValueFirst(
+        guard let contentType = NoosphereFFI.readFileHeaderValueFirst(
             file: file,
             name: "Content-Type"
         ) else {
@@ -291,13 +338,13 @@ public final class Sphere: SphereProtocol {
         let body = Data(bytes: bodyRaw.ptr, count: bodyRaw.len)
         
         var headers: [Header] = []
-        let headerNames = Self.readFileHeaderNames(file: file)
+        let headerNames = NoosphereFFI.readFileHeaderNames(file: file)
         for name in headerNames {
             // Skip content type. We've already retreived it.
             guard name != "Content-Type" else {
                 continue
             }
-            guard let value = Self.readFileHeaderValueFirst(
+            guard let value = NoosphereFFI.readFileHeaderValueFirst(
                 file: file,
                 name: name
             ) else {
@@ -437,46 +484,6 @@ public final class Sphere: SphereProtocol {
 
     deinit {
         ns_sphere_fs_free(fs)
-    }
-    
-    /// Read first header value for file pointer
-    static func readFileHeaderValueFirst(
-        file: OpaquePointer,
-        name: String
-    ) -> String? {
-        guard let valueRaw = ns_sphere_file_header_value_first(
-            file,
-            name
-        ) else {
-            return nil
-        }
-        defer {
-            ns_string_free(valueRaw)
-        }
-        return String(cString: valueRaw)
-    }
-
-    /// Get all header names for a given file pointer
-    static func readFileHeaderNames(
-        file: OpaquePointer
-    ) -> [String] {
-        let file_header_names = ns_sphere_file_header_names_read(file)
-        defer {
-            ns_string_array_free(file_header_names)
-        }
-
-        let name_count = file_header_names.len
-        guard var pointer = file_header_names.ptr else {
-            return []
-        }
-
-        var names: [String] = []
-        for _ in 0..<name_count {
-            let name = String(cString: pointer.pointee!)
-            names.append(name)
-            pointer += 1;
-        }
-        return names
     }
 }
 
