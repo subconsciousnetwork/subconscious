@@ -191,13 +191,26 @@ final class Tests_Sphere: XCTestCase {
             contentType: "text/subtext",
             body: body
         )
-        _ = try sphere.save()
+        let b = try sphere.save()
         
         let changesB = try sphere.changes(a)
         XCTAssertEqual(changesB.count, 2)
         XCTAssertTrue(changesB.contains("bar"))
         XCTAssertTrue(changesB.contains("baz"))
         XCTAssertFalse(changesB.contains("foo"))
+
+        try sphere.write(
+            slug: "bing",
+            contentType: "text/subtext",
+            body: body
+        )
+        _ = try sphere.save()
+
+        let changesC = try sphere.changes(b)
+        XCTAssertEqual(changesC.count, 1)
+        XCTAssertTrue(changesC.contains("bing"))
+        XCTAssertFalse(changesC.contains("baz"))
+        XCTAssertFalse(changesC.contains("foo"))
     }
 
     func testRemove() throws {
