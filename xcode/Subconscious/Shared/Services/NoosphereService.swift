@@ -18,6 +18,7 @@ import SwiftNoosphere
 public enum NoosphereError: Error {
     /// Thrown when something unexpected happens on the other side of the FFI, and we don't know what went wrong.
     case foreignError(String)
+    /// Thrown when an OpaquePointer? is unwrapped and found to be a null pointer.
     case nullPointer
 }
 
