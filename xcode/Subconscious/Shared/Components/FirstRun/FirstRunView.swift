@@ -79,7 +79,7 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
     ) -> Update<FirstRunModel> {
         // Does Sphere already exist? Get it and set on model
         let noosphere = environment.data.noosphere
-        if let sphereIdentity = noosphere.getSphereIdentity() {
+        if let sphereIdentity = noosphere.sphereIdentity() {
             var model = state
             model.sphereIdentity = sphereIdentity
             return Update(state: model)

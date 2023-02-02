@@ -509,11 +509,11 @@ final class NoosphereService {
     ) {
         self.globalStorageURL = globalStorageURL
         self.sphereStorageURL = sphereStorageURL
-        self._noosphere = try? getNoosphere()
+        self._noosphere = try? noosphere()
     }
     
     /// Gets or creates memoized Noosphere singleton instance
-    func getNoosphere() throws -> Noosphere {
+    func noosphere() throws -> Noosphere {
         if let noosphere = self._noosphere {
             return noosphere
         }
@@ -527,22 +527,22 @@ final class NoosphereService {
     
     /// Get the sphere identity stored in user defaults, if any
     /// - Returns: identity string, or nil
-    func getSphereIdentity() -> String? {
+    func sphereIdentity() -> String? {
         UserDefaults.standard.string(forKey: "sphereIdentity")
     }
     
     /// Get a Sphere for the identity stored in user defaults.
     /// - Returns: Sphere
-    func getSphere() throws -> Sphere {
+    func sphere() throws -> Sphere {
         if let sphere = self._sphere {
             return sphere
         }
-        guard let identity = getSphereIdentity() else {
+        guard let identity = sphereIdentity() else {
             throw NoosphereServiceError.sphereNotFound(
                 "Could not find sphere for user."
             )
         }
-        let noosphere = try getNoosphere()
+        let noosphere = try noosphere()
         let sphere = try Sphere(noosphere: noosphere, identity: identity)
         self._sphere = sphere
         return sphere
@@ -560,7 +560,7 @@ final class NoosphereService {
                 "A default Sphere already exists for this user. Doing nothing."
             )
         }
-        let noosphere = try getNoosphere()
+        let noosphere = try noosphere()
         let sphereReceipt = try noosphere.createSphere(
             ownerKeyName: ownerKeyName
         )

@@ -101,7 +101,7 @@ struct DataService {
         entry.contents.modified = Date.now
 
         guard !Config.default.noosphere.enabled else {
-            let sphere = try noosphere.getSphere()
+            let sphere = try noosphere.sphere()
             let body = try entry.contents.body.toData().unwrap()
             try sphere.write(
                 slug: entry.slug.description,
@@ -135,6 +135,13 @@ struct DataService {
     
     /// Delete entry from file system and database
     private func deleteEntry(slug: Slug) throws {
+        guard !Config.default.noosphere.enabled else {
+            let sphere = try noosphere.sphere()
+            try sphere.remove(slug: slug.description)
+            _ = try sphere.save()
+            try database.removeEntry(slug: slug)
+            return
+        }
         try memos.remove(slug)
         try database.removeEntry(slug: slug)
     }
@@ -308,7 +315,7 @@ struct DataService {
         guard !Config.default.noosphere.enabled else {
             // Retreive top entry from file system to ensure it is fresh.
             // If no file exists, return a draft, using fallback for title.
-            let sphere = try noosphere.getSphere()
+            let sphere = try noosphere.sphere()
             let slashlink = link.slug.toSlashlink()
             guard let memo = sphere.read(slashlink: slashlink)?.toMemo() else {
                 return EntryDetail(

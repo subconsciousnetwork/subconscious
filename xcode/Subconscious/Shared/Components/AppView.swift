@@ -218,7 +218,7 @@ struct AppModel: ModelProtocol {
         /// Get sphere identity, if any
         let setSphereIdentity = Just(
             AppAction.setSphereIdentity(
-                environment.data.noosphere.getSphereIdentity()
+                environment.data.noosphere.sphereIdentity()
             )
         )
 
