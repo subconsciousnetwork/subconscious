@@ -109,6 +109,7 @@ struct DataService {
                 additionalHeaders: entry.contents.headers,
                 body: body
             )
+            _ = try sphere.save()
             let info = FileInfo(
                 created: entry.contents.created,
                 modified: entry.contents.modified,
@@ -257,10 +258,20 @@ struct DataService {
         }
     }
 
+    func countEntries() throws -> Int {
+        guard !Config.default.noosphere.enabled else {
+            return try noosphere
+                .sphere()
+                .list()
+                .count
+        }
+        return try database.countEntries().unwrap()
+    }
+
     /// Count all entries
     func countEntries() -> AnyPublisher<Int, Error> {
         CombineUtilities.async(qos: .userInteractive) {
-            try database.countEntries().unwrap()
+            try countEntries()
         }
     }
 
@@ -375,7 +386,7 @@ struct DataService {
     /// We trust caller to slugify the string, if necessary.
     /// Allowing any string allows us to retreive files that don't have a
     /// clean slug.
-    func readEntryDetail(
+    func readEntryDetailAsync(
         link: EntryLink,
         fallback: String
     ) -> AnyPublisher<EntryDetail, Error> {
@@ -384,24 +395,24 @@ struct DataService {
         }
     }
     
-    /// Get entry and backlinks from slug, using template file as a fallback.
-    func readEntryDetail(
-        link: EntryLink,
-        template: Slug
-    ) -> AnyPublisher<EntryDetail, Error> {
-        CombineUtilities.async(qos: .utility) {
-            let fallback = memos.read(template)?.body ?? ""
-            return try readEntryDetail(link: link, fallback: fallback)
-        }
-    }
-    
     /// Choose a random entry and publish slug
-    func readRandomEntryLink() -> AnyPublisher<EntryLink, Error> {
+    func readRandomEntryLink() throws -> EntryLink {
+        guard !Config.default.noosphere.enabled else {
+            let slugStrings = try noosphere.sphere().list()
+            let slugString = try slugStrings.randomElement().unwrap()
+            let slug = try Slug(slugString).unwrap()
+            return EntryLink(slug: slug)
+        }
+        guard let link = database.readRandomEntryLink() else {
+            throw DatabaseServiceError.randomEntryFailed
+        }
+        return link
+    }
+
+    /// Choose a random entry and publish slug
+    func readRandomEntryLinkAsync() -> AnyPublisher<EntryLink, Error> {
         CombineUtilities.async(qos: .default) {
-            guard let link = database.readRandomEntryLink() else {
-                throw DatabaseServiceError.randomEntryFailed
-            }
-            return link
+            try readRandomEntryLink()
         }
     }
 }

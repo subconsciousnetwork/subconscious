@@ -815,7 +815,7 @@ struct NotebookModel: ModelProtocol {
         environment: AppEnvironment,
         autofocus: Bool
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data.readRandomEntryLink()
+        let fx: Fx<NotebookAction> = environment.data.readRandomEntryLinkAsync()
             .map({ link in
                 NotebookAction.pushDetail(
                     slug: link.slug,
