@@ -522,7 +522,7 @@ final class NoosphereService {
         let noosphere = try Noosphere(
             globalStoragePath: globalStorageURL.path(percentEncoded: false),
             sphereStoragePath: sphereStorageURL.path(percentEncoded: false),
-            gatewayURL: gatewayURL?.path(percentEncoded: false)
+            gatewayURL: gatewayURL?.absoluteString
         )
         self._noosphere = noosphere
         return noosphere
