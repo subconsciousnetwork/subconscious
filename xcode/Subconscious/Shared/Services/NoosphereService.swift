@@ -136,9 +136,7 @@ public final class Noosphere {
             sphereStoragePath,
             gatewayURL
         ) else {
-            throw NoosphereError.foreignError(
-                "Failed to get pointer for Noosphere"
-            )
+            throw NoosphereError.nullPointer
         }
         self.noosphere = noosphere
     }
