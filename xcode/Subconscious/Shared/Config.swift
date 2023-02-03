@@ -58,4 +58,5 @@ struct NoosphereConfig: Equatable, Codable {
     var sphereStoragePath = "sphere"
     /// Owner key name for spheres on this device
     var ownerKeyName = "Sphere"
+    var defaultGatewayURL = "https://example.com"
 }

@@ -128,12 +128,13 @@ public final class Noosphere {
     
     init(
         globalStoragePath: String,
-        sphereStoragePath: String
+        sphereStoragePath: String,
+        gatewayURL: String? = nil
     ) throws {
         guard let noosphere = ns_initialize(
             globalStoragePath,
             sphereStoragePath,
-            nil
+            gatewayURL
         ) else {
             throw NoosphereError.foreignError(
                 "Failed to get pointer for Noosphere"
@@ -498,6 +499,7 @@ enum NoosphereServiceError: Error {
 final class NoosphereService {
     var globalStorageURL: URL
     var sphereStorageURL: URL
+    var gatewayURL: URL?
     /// Memoized Noosphere instance
     private var _noosphere: Noosphere?
     /// Memoized Sphere instance for default user sphere
@@ -505,10 +507,12 @@ final class NoosphereService {
     
     init(
         globalStorageURL: URL,
-        sphereStorageURL: URL
+        sphereStorageURL: URL,
+        gatewayURL: URL? = nil
     ) {
         self.globalStorageURL = globalStorageURL
         self.sphereStorageURL = sphereStorageURL
+        self.gatewayURL = gatewayURL
         self._noosphere = try? noosphere()
     }
     
@@ -519,7 +523,8 @@ final class NoosphereService {
         }
         let noosphere = try Noosphere(
             globalStoragePath: globalStorageURL.path(percentEncoded: false),
-            sphereStoragePath: sphereStorageURL.path(percentEncoded: false)
+            sphereStoragePath: sphereStorageURL.path(percentEncoded: false),
+            gatewayURL: gatewayURL?.path(percentEncoded: false)
         )
         self._noosphere = noosphere
         return noosphere
