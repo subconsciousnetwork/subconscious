@@ -102,6 +102,69 @@ final class DatabaseService {
         }
     }
 
+    func readSphereVersion(identity: String) throws -> String {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        let rows = try database.execute(
+            sql: "SELECT version FROM sphere WHERE identity = ?",
+            parameters: [.text(identity)]
+        )
+        let version = rows.first?.col(0)?.toString()
+        return try version.unwrap()
+    }
+
+    /// Write sphere to database.
+    /// In the case where a sphere with this identity exists already, the
+    /// old record will be overwritten with the new data.
+    func writeSphere(
+        identity: String,
+        version: String,
+        ownerKeyName: String
+    ) throws {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        try database.execute(
+            sql: """
+            INSERT INTO sphere (
+                identity,
+                version,
+                owner_key_name
+            )
+            VALUES (?, ?, ?)
+            ON CONFLICT(slug) DO UPDATE SET
+                version=version,
+                owner_key_name=excluded.owner_key_name
+            """,
+            parameters: [
+                .text(identity),
+                .text(version),
+                .text(ownerKeyName)
+            ]
+        )
+    }
+
+    func writeSphereVersion(
+        identity: String,
+        version: String
+    ) throws {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        try database.execute(
+            sql: """
+            UPDATE sphere
+            SET version = ?
+            WHERE identity = ?
+            """,
+            parameters: [
+                .text(version),
+                .text(identity)
+            ]
+        )
+    }
+
     /// Write entry syncronously
     func writeEntry(
         entry: MemoEntry,
@@ -190,7 +253,7 @@ final class DatabaseService {
         ) else {
             return nil
         }
-        return results.get(0)?.get(0)
+        return results.first?.col(0)?.toInt()
     }
     
     /// List recent entries
@@ -596,7 +659,7 @@ final class DatabaseService {
             LIMIT 1
             """
         )
-        guard let first = results?.get(0) else {
+        guard let first = results?.first else {
             return nil
         }
         let contentType = ContentType.orFallback(
