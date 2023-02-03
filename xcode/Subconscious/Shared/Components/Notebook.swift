@@ -599,8 +599,8 @@ struct NotebookModel: ModelProtocol {
                     )
                 )
             })
-                .eraseToAnyPublisher()
-                    return Update(state: state, fx: fx)
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
     
     /// Delete entry with `slug`
