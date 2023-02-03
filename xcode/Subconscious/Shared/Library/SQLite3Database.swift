@@ -1,16 +1,6 @@
 import SQLite3
 import Foundation
 
-extension Array {
-    public func get(_ index: Array.Index) -> Element? {
-        if index >= 0 && index < self.count {
-            return self[index]
-        } else {
-            return nil
-        }
-    }
-}
-
 //  MARK: SQLite3 Database
 final class SQLite3Database {
     /// The default value of the user_version pragma.
@@ -70,24 +60,35 @@ final class SQLite3Database {
     public struct Row {
         public var columns: [Value] = []
 
+        /// Get value from a specific column, if that column exists.
+        /// Otherwise return nil.
+        /// Basically a bounds-checked array get.
+        public func col(_ i: Int) -> Value? {
+            if i >= 0 && i < self.columns.count {
+                return self.columns[i]
+            } else {
+                return nil
+            }
+        }
+
         public func get(_ i: Int) -> String? {
-            columns.get(i)?.unwrap()
+            self.col(i)?.toString()
         }
 
         public func get(_ i: Int) -> Date? {
-            columns.get(i)?.unwrap()
+            self.col(i)?.toDate()
         }
 
         public func get(_ i: Int) -> Int? {
-            columns.get(i)?.unwrap()
+            self.col(i)?.toInt()
         }
 
         public func get(_ i: Int) -> Double? {
-            columns.get(i)?.unwrap()
+            self.col(i)?.toDouble()
         }
 
         public func get(_ i: Int) -> Data? {
-            columns.get(i)?.unwrap()
+            self.col(i)?.toData()
         }
     }
 
@@ -163,7 +164,7 @@ final class SQLite3Database {
             text(escapePrefixQueryLike(query))
         }
 
-        public func unwrap() -> String? {
+        public func toString() -> String? {
             switch self {
             case .text(let value):
                 return value
@@ -172,7 +173,7 @@ final class SQLite3Database {
             }
         }
 
-        public func unwrap() -> Date? {
+        public func toDate() -> Date? {
             switch self {
             case .text(let value):
                 return Self.dateFormatter.date(from: value)
@@ -181,7 +182,7 @@ final class SQLite3Database {
             }
         }
 
-        public func unwrap() -> Int? {
+        public func toInt() -> Int? {
             switch self {
             case .integer(let value):
                 return value
@@ -190,7 +191,7 @@ final class SQLite3Database {
             }
         }
 
-        public func unwrap() -> Double? {
+        public func toDouble() -> Double? {
             switch self {
             case .real(let value):
                 return value
@@ -199,7 +200,7 @@ final class SQLite3Database {
             }
         }
 
-        public func unwrap() -> Data? {
+        public func toData() -> Data? {
             switch self {
             case .blob(let value):
                 return value
