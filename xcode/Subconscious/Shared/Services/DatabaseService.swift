@@ -882,7 +882,7 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-01-03T11:01:00")!,
+            version: Int.from(iso8601String: "2023-01-03T11:47:00")!,
             sql: """
             /* History of user search queries */
             CREATE TABLE search_history (
@@ -917,9 +917,7 @@ extension Config {
                 /* List of all slugs in body */
                 links TEXT NOT NULL DEFAULT '[]',
                 /* Size of body (used in combination with modified for sync) */
-                size INTEGER NOT NULL,
-                /* The sphere this content belongs to. If null, content is local-only. */
-                sphere STRING
+                size INTEGER NOT NULL
             );
 
             CREATE VIRTUAL TABLE memo_search USING fts5(
@@ -935,7 +933,6 @@ extension Config {
                 excerpt UNINDEXED,
                 links UNINDEXED,
                 size UNINDEXED,
-                sphere UNINDEXED,
                 content="memo",
                 tokenize="porter"
             );
@@ -971,8 +968,7 @@ extension Config {
                     description,
                     excerpt,
                     links,
-                    size,
-                    sphere
+                    size
                 )
                 VALUES (
                     new.rowid,
@@ -987,8 +983,7 @@ extension Config {
                     new.description,
                     new.excerpt,
                     new.links,
-                    new.size,
-                    new.sphere
+                    new.size
                 );
             END;
 
@@ -1006,8 +1001,7 @@ extension Config {
                     description,
                     excerpt,
                     links,
-                    size,
-                    sphere
+                    size
                 )
                 VALUES (
                     new.rowid,
@@ -1022,8 +1016,7 @@ extension Config {
                     new.description,
                     new.excerpt,
                     new.links,
-                    new.size,
-                    new.sphere
+                    new.size
                 );
             END;
             """
