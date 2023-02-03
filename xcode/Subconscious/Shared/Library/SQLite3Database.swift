@@ -634,14 +634,19 @@ final class SQLite3Database {
     /// We use this queue to make database instances threadsafe
     private var queue: DispatchQueue
     private var db: Connection?
-    let path: String
+    /// URL to the database file.
+    let file: URL
+    /// SQLite requires a file path string for many APIs.
+    /// We derive this from the file URL in the constructor.
+    private let path: String
     let mode: OpenMode
 
     public init(
-        path: String,
+        file: URL,
         mode: OpenMode = .readwrite
     ) {
-        self.path = path
+        self.file = file
+        self.path = file.absoluteString
         self.mode = mode
         // Create GCD dispatch queue for running database queries.
         // SQLite3Connection objects are threadsafe.
@@ -680,7 +685,10 @@ final class SQLite3Database {
         try queue.sync {
             self.db?.close()
             self.db = nil
-            try FileManager.default.removeItem(atPath: self.path)
+            // We must use the `at: URL` form of this method because the
+            // `atPath` form fails when given an absoluteString.
+            // 2023-02-03 Gordon Brander
+            try FileManager.default.removeItem(at: file)
         }
     }
 
