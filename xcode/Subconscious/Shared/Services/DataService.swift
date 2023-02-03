@@ -272,12 +272,6 @@ struct DataService {
     }
 
     func countEntries() throws -> Int {
-        guard !Config.default.noosphere.enabled else {
-            return try noosphere
-                .sphere()
-                .list()
-                .count
-        }
         return try database.countEntries().unwrap()
     }
 

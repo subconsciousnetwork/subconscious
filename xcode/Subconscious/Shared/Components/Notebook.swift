@@ -236,8 +236,10 @@ extension NotebookAction {
 extension NotebookAction {
     static func from(_ action: AppAction) -> Self? {
         switch action {
+        case .succeedMigrateDatabase:
+            return .ready
         case .syncSuccess:
-            return .listRecent
+            return .ready
         default:
             return nil
         }
@@ -499,13 +501,7 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        /// Subscribe to database state publisher to know when ready to query.
-        let databaseStateFx = environment.data.database.$state.map({ state in
-            NotebookAction.databaseStateChange(state)
-        })
-            .eraseToAnyPublisher()
-        
-        return Update(state: state, fx: databaseStateFx)
+        return Update(state: state)
     }
     
     /// View is ready
@@ -515,10 +511,7 @@ struct NotebookModel: ModelProtocol {
     ) -> Update<NotebookModel> {
         return update(
             state: state,
-            actions: [
-                .countEntries,
-                .refreshLists
-            ],
+            action: .refreshLists,
             environment: environment
         )
     }
