@@ -33,8 +33,11 @@ struct NotebookView: View {
         // See https://stackoverflow.com/a/58512696
         // 2021-12-16 Gordon Brander
         ZStack {
-            NotebookNavigationView(store: store)
-                .zIndex(1)
+            NotebookNavigationView(
+                app: app,
+                store: store
+            )
+            .zIndex(1)
             if store.state.isSearchPresented {
                 SearchView(
                     state: store.state.search,

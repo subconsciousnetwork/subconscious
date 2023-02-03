@@ -8,6 +8,7 @@ import SwiftUI
 import ObservableStore
 
 struct NotebookNavigationView: View {
+    @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<NotebookModel>
 
     var body: some View {
@@ -35,7 +36,7 @@ struct NotebookNavigationView: View {
                         store.send(.confirmDelete(slug))
                     },
                     onRefresh: {
-                        store.send(.listRecent)
+                        app.send(.sync)
                     }
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
