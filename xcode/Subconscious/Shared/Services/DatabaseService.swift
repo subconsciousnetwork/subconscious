@@ -819,7 +819,7 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-01-03T10:34:00")!,
+            version: Int.from(iso8601String: "2023-01-03T10:47:00")!,
             sql: """
             /* History of user search queries */
             CREATE TABLE search_history (

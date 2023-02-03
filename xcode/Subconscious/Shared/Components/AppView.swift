@@ -24,7 +24,7 @@ struct AppView: View {
                 if Config.default.appTabs {
                     AppTabView(store: store)
                 } else {
-                    NotebookView(parent: store)
+                    NotebookView(app: store)
                 }
             }
             .zIndex(0)

@@ -16,7 +16,7 @@ import Combine
 /// The file view for notes
 struct NotebookView: View {
     /// Global shared store
-    @ObservedObject var parent: Store<AppModel>
+    @ObservedObject var app: Store<AppModel>
     /// Local major view store
     @StateObject private var store = Store(
         state: NotebookModel(),
@@ -61,6 +61,11 @@ struct NotebookView: View {
         .onAppear {
             store.send(.appear)
         }
+        /// Wire up local store to respond to some events at app level
+        .onReceive(
+            app.actions.compactMap(NotebookAction.from),
+            perform: store.send
+        )
         .onReceive(store.actions) { action in
             let message = String.loggable(action)
             NotebookModel.logger.debug("[action] \(message)")
@@ -189,6 +194,21 @@ extension NotebookAction {
     }
 }
 
+extension NotebookAction: CustomLogStringConvertible {
+    var logDescription: String {
+        switch self {
+        case .search(let action):
+            return "search(\(String.loggable(action)))"
+        case .setRecent(let items):
+            return "setRecent(\(items.count) items)"
+        default:
+            return String(describing: self)
+        }
+    }
+}
+
+//  MARK: Cursors and tagging functions
+
 extension NotebookAction {
     static func tag(_ action: DetailOuterAction) -> Self {
         switch action {
@@ -213,20 +233,16 @@ extension NotebookAction {
     }
 }
 
-extension NotebookAction: CustomLogStringConvertible {
-    var logDescription: String {
-        switch self {
-        case .search(let action):
-            return "search(\(String.loggable(action)))"
-        case .setRecent(let items):
-            return "setRecent(\(items.count) items)"
+extension NotebookAction {
+    static func from(_ action: AppAction) -> Self? {
+        switch action {
+        case .syncSuccess:
+            return .listRecent
         default:
-            return String(describing: self)
+            return nil
         }
     }
 }
-
-//  MARK: Cursors
 
 struct NotebookSearchCursor: CursorProtocol {
     static func get(state: NotebookModel) -> SearchModel {

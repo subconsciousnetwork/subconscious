@@ -19,7 +19,7 @@ struct AppTabView: View {
                 .tabItem {
                     Label("Feed", systemImage: "newspaper")
                 }
-            NotebookView(parent: store)
+            NotebookView(app: store)
                 .tabItem {
                     Label("Notes", systemImage: "folder")
                 }
