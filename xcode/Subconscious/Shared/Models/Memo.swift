@@ -36,6 +36,10 @@ struct Memo: Hashable, CustomStringConvertible {
     
     var description: String { body }
     
+    func size() -> Int? {
+        body.toData()?.count
+    }
+
     /// Generates a plain text description
     func plain() -> String {
         switch ContentType(rawValue: contentType) {

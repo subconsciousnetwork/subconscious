@@ -79,7 +79,14 @@ enum AppAction: CustomLogStringConvertible {
     case succeedSyncSphereWithGateway(version: String)
     case failSyncSphereWithGateway(String)
 
-    /// Sync database with file system
+    /// Sync current sphere state with database state
+    /// Sphere always wins.
+    case syncSphereWithDatabase
+    case succeedSyncSphereWithDatabase(version: String)
+    case failSyncSphereWithDatabase(String)
+    
+    /// Sync database with file system.
+    /// File system always wins.
     case syncLocalFilesWithDatabase
     case succeedSyncLocalFilesWithDatabase([FileFingerprintChange])
     case failSyncLocalFilesWithDatabase(String)
@@ -184,6 +191,23 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
+        case .syncSphereWithDatabase:
+            return syncSphereWithDatabase(
+                state: state,
+                environment: environment
+            )
+        case let .succeedSyncSphereWithDatabase(version):
+            return succeedSyncSphereWithDatabase(
+                state: state,
+                environment: environment,
+                version: version
+            )
+        case let .failSyncSphereWithDatabase(error):
+            return failSyncSphereWithDatabase(
+                state: state,
+                environment: environment,
+                error: error
+            )
         case .syncLocalFilesWithDatabase:
             return syncLocalFilesWithDatabase(
                 state: state,
@@ -236,10 +260,11 @@ struct AppModel: ModelProtocol {
             AppAction.migrateDatabase
         )
 
+        let identity = try? environment.data.sphereIdentity()
         /// Get sphere identity, if any
         let setSphereIdentity = Just(
             AppAction.setSphereIdentity(
-                environment.data.noosphere.sphereIdentity()
+                identity ?? "unknown"
             )
         )
 
@@ -344,7 +369,10 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         return update(
             state: state,
-            action: AppAction.syncLocalFilesWithDatabase,
+            actions: [
+                AppAction.syncLocalFilesWithDatabase,
+                AppAction.syncSphereWithGateway
+            ],
             environment: environment
         )
     }
@@ -377,7 +405,7 @@ struct AppModel: ModelProtocol {
         logger.log("Sphere updated to version: \(version)")
         return update(
             state: state,
-            action: .syncLocalFilesWithDatabase,
+            action: .syncSphereWithDatabase,
             environment: environment
         )
     }
@@ -388,6 +416,42 @@ struct AppModel: ModelProtocol {
         error: String
     ) -> Update<AppModel> {
         logger.log("Sphere sync failed: \(error)")
+        return Update(state: state)
+    }
+
+    static func syncSphereWithDatabase(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = environment.data.syncSphereWithDatabaseAsync()
+            .map({ version in
+                AppAction.succeedSyncSphereWithDatabase(version: version)
+            })
+            .catch({ error in
+                Just(
+                    AppAction.failSyncSphereWithDatabase(error.localizedDescription)
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    static func succeedSyncSphereWithDatabase(
+        state: AppModel,
+        environment: AppEnvironment,
+        version: String
+    ) -> Update<AppModel> {
+        let identity = state.sphereIdentity ?? "unknown"
+        logger.log("Database synced to sphere \(identity) @ \(version)")
+        return Update(state: state)
+    }
+    
+    static func failSyncSphereWithDatabase(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.log("Database failed to sync with sphere: \(error)")
         return Update(state: state)
     }
 

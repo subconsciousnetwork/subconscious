@@ -30,7 +30,7 @@ enum DatabaseServiceError: Error, LocalizedError {
     case notReady
     case pathNotInFilePath
     case randomEntryFailed
-    case fileExists(Slug)
+    case notFound(String)
 
     var errorDescription: String? {
         switch self {
@@ -42,8 +42,8 @@ enum DatabaseServiceError: Error, LocalizedError {
             return "DatabaseServiceError.pathNotInFilePath"
         case .randomEntryFailed:
             return "DatabaseServiceError.randomEntryFailed"
-        case .fileExists(let slug):
-            return "DatabaseServiceError.fileExists(\(slug))"
+        default:
+            return String(describing: self)
         }
     }
 }
@@ -110,8 +110,12 @@ final class DatabaseService {
             sql: "SELECT version FROM sphere WHERE identity = ?",
             parameters: [.text(identity)]
         )
-        let version = rows.first?.col(0)?.toString()
-        return try version.unwrap()
+        guard let version = rows.first?.col(0)?.toString() else {
+            throw DatabaseServiceError.notFound(
+                "No record found for sphere with identity \(identity)"
+            )
+        }
+        return version
     }
 
     /// Write sphere to database.
@@ -167,15 +171,16 @@ final class DatabaseService {
 
     /// Write entry syncronously
     func writeEntry(
-        entry: MemoEntry,
-        info: FileInfo
+        entry: MemoEntry
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        var entry = entry
-        entry.contents.modified = info.modified
-        entry.contents.created = info.created
+        guard let size = entry.contents.size() else {
+            throw CodingError.encodingError(
+                message: "Faild to encode memo contents as utf-8"
+            )
+        }
         try database.execute(
             sql: """
             INSERT OR REPLACE INTO memo (
@@ -208,7 +213,7 @@ final class DatabaseService {
                 .text(entry.contents.plain()),
                 .text(entry.contents.excerpt()),
                 .json(entry.contents.slugs(), or: "[]"),
-                .integer(info.size)
+                .integer(size)
             ]
         )
     }

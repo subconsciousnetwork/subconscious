@@ -530,7 +530,7 @@ final class NoosphereService {
     
     /// Get the sphere identity stored in user defaults, if any
     /// - Returns: identity string, or nil
-    func sphereIdentity() -> String? {
+    private func persistedSphereIdentity() -> String? {
         UserDefaults.standard.string(forKey: "sphereIdentity")
     }
     
@@ -540,7 +540,7 @@ final class NoosphereService {
         if let sphere = self._sphere {
             return sphere
         }
-        guard let identity = sphereIdentity() else {
+        guard let identity = persistedSphereIdentity() else {
             throw NoosphereServiceError.sphereNotFound(
                 "Could not find sphere for user."
             )

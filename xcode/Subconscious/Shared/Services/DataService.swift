@@ -8,6 +8,10 @@
 import Foundation
 import Combine
 
+enum DataServiceError: Error {
+    case fileExists(Slug)
+}
+
 // MARK: SERVICE
 /// Wraps both database and source-of-truth store, providing data
 /// access methods for the app.
@@ -32,6 +36,10 @@ struct DataService {
         self.memos = memos
     }
 
+    func sphereIdentity() throws -> String {
+        try noosphere.sphere().identity
+    }
+
     /// Sync local state to gateway
     func syncSphereWithGateway() -> AnyPublisher<String, Error> {
         CombineUtilities.async(qos: .utility) {
@@ -49,6 +57,39 @@ struct DataService {
     func rebuildAsync() -> AnyPublisher<Int, Error> {
         CombineUtilities.async(qos: .utility) {
             try database.rebuild()
+        }
+    }
+
+    func syncSphereWithDatabase() throws -> String {
+        let identity = try noosphere.sphere().identity
+        let version = try noosphere.sphere().version()
+        let since = try database.readSphereVersion(identity: identity)
+        let sphere = try noosphere.sphere()
+        let changes = try sphere.changes(since)
+        for change in changes {
+            guard let slug = Slug(change) else {
+                continue
+            }
+            let slashlink = slug.toSlashlink()
+            // If memo does not exist, that means change was a remove
+            guard let memo = sphere.read(slashlink: slashlink)?.toMemo() else {
+                try database.removeEntry(slug: slug)
+                continue
+            }
+            let entry = Entry(
+                sphere: identity,
+                slug: slug,
+                contents: memo
+            )
+            // If memo does exist, write it to database
+            try database.writeEntry(entry: entry)
+        }
+        return version
+    }
+
+    func syncSphereWithDatabaseAsync() -> AnyPublisher<String, Error> {
+        CombineUtilities.async(qos: .utility) {
+            try syncSphereWithDatabase()
         }
     }
 
@@ -92,9 +133,11 @@ struct DataService {
                 // .conflict. Leader wins.
                 case .leftOnly(let left), .leftNewer(let left, _), .rightNewer(let left, _), .conflict(let left, _):
                     let memo = try memos.read(left.slug).unwrap()
-                    let entry = MemoEntry(slug: left.slug, contents: memo)
+                    var entry = MemoEntry(slug: left.slug, contents: memo)
+                    // Read info from file system and set modified time
                     let info = try memos.info(left.slug).unwrap()
-                    try database.writeEntry(entry: entry, info: info)
+                    entry.contents.modified = info.modified
+                    try database.writeEntry(entry: entry)
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly(let right):
                     try database.removeEntry(slug: right.slug)
@@ -123,12 +166,7 @@ struct DataService {
                 body: body
             )
             _ = try sphere.save()
-            let info = FileInfo(
-                created: entry.contents.created,
-                modified: entry.contents.modified,
-                size: body.count
-            )
-            try database.writeEntry(entry: entry, info: info)
+            try database.writeEntry(entry: entry)
             return
         }
 
@@ -138,7 +176,8 @@ struct DataService {
         // discrepencies to sneak in (e.g. different time between write and
         // persistence on file system).
         let info = try memos.info(entry.slug).unwrap()
-        try database.writeEntry(entry: entry, info: info)
+        entry.contents.modified = info.modified
+        try database.writeEntry(entry: entry)
     }
     
     func writeEntryAsync(_ entry: MemoEntry) -> AnyPublisher<Void, Error> {
@@ -170,11 +209,11 @@ struct DataService {
     /// Move entry to a new location, updating file system and database.
     private func moveEntry(from: EntryLink, to: EntryLink) throws {
         guard from.slug != to.slug else {
-            throw DatabaseServiceError.fileExists(to.slug)
+            throw DataServiceError.fileExists(to.slug)
         }
         // Make sure we're writing to an empty location
         guard memos.info(to.slug) == nil else {
-            throw DatabaseServiceError.fileExists(to.slug)
+            throw DataServiceError.fileExists(to.slug)
         }
         let fromMemo = try memos.read(from.slug).unwrap()
         let fromFile = MemoEntry(slug: from.slug, contents: fromMemo)
