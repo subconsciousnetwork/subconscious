@@ -190,7 +190,7 @@ struct AppModel: ModelProtocol {
                 changes: changes
             )
         case let .syncFailure(message):
-            environment.logger.warning(
+            logger.warning(
                 "File sync failed: \(message)"
             )
             return Update(state: state)
@@ -203,7 +203,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         message: String
     ) -> Update<AppModel> {
-        environment.logger.log("\(message)")
+        logger.log("\(message)")
         return Update(state: state)
     }
 
@@ -215,7 +215,7 @@ struct AppModel: ModelProtocol {
         var model = state
         model.sphereIdentity = sphereIdentity
         if let sphereIdentity = sphereIdentity {
-            environment.logger.debug("Sphere identity: \(sphereIdentity)")
+            logger.debug("Sphere identity: \(sphereIdentity)")
         }
         return Update(state: model)
     }
@@ -224,7 +224,7 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        environment.logger.debug(
+        logger.debug(
             "Documents: \(environment.documentURL)"
         )
 
@@ -254,7 +254,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         switch state.databaseState {
         case .initial:
-            environment.logger.log("Readying database")
+            logger.log("Readying database")
             let fx: Fx<AppAction> = environment.data
                 .migrateAsync()
                 .map({ version in
@@ -268,17 +268,17 @@ struct AppModel: ModelProtocol {
             model.databaseState = .migrating
             return Update(state: model, fx: fx)
         case .migrating:
-            environment.logger.log(
+            logger.log(
                 "Database already migrating. Doing nothing."
             )
             return Update(state: state)
         case .broken:
-            environment.logger.warning(
+            logger.warning(
                 "Database broken. Doing nothing."
             )
             return Update(state: state)
         case .ready:
-            environment.logger.log("Database ready.")
+            logger.log("Database ready.")
             let fx: Fx<AppAction> = Just(AppAction.ready)
             .eraseToAnyPublisher()
             return Update(state: state, fx: fx)
@@ -290,7 +290,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         version: Int
     ) -> Update<AppModel> {
-        environment.logger.log(
+        logger.log(
             "Database version: \(version)"
         )
         var model = state
@@ -303,7 +303,7 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        environment.logger.warning(
+        logger.warning(
             "Failed to migrate database. Retrying."
         )
         let fx: Fx<AppAction> = environment.data.migrateAsync()
@@ -326,7 +326,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<AppModel> {
-        environment.logger.warning(
+        logger.warning(
             "Could not rebuild database: \(error)"
         )
         var model = state
@@ -389,7 +389,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         changes: [FileFingerprintChange]
     ) -> Update<AppModel> {
-        environment.logger.debug(
+        logger.debug(
             "File sync finished: \(changes)"
         )
         return Update(state: state)
@@ -442,8 +442,7 @@ struct AppEnvironment {
             globalStorageURL: applicationSupportURL
                 .appending(path: Config.default.noosphere.globalStoragePath),
             sphereStorageURL: applicationSupportURL
-                .appending(path: Config.default.noosphere.sphereStoragePath),
-            gatewayURL: URL(string: Config.default.noosphere.defaultGatewayURL)
+                .appending(path: Config.default.noosphere.sphereStoragePath)
         )
 
         let databaseURL = self.applicationSupportURL
