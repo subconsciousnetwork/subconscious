@@ -241,7 +241,7 @@ extension NotebookAction {
         switch action {
         case .succeedMigrateDatabase:
             return .ready
-        case .syncSuccess:
+        case .succeedSyncLocalFilesWithDatabase:
             return .ready
         default:
             return nil

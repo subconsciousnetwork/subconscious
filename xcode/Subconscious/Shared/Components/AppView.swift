@@ -75,14 +75,14 @@ enum AppAction: CustomLogStringConvertible {
     case ready
 
     /// Sync local sphere with gateway sphere
-    case syncSphere
-    case succeedSyncSphere(version: String)
-    case failSyncSphere(String)
+    case syncSphereWithGateway
+    case succeedSyncSphereWithGateway(version: String)
+    case failSyncSphereWithGateway(String)
 
     /// Sync database with file system
-    case sync
-    case syncSuccess([FileFingerprintChange])
-    case syncFailure(String)
+    case syncLocalFilesWithDatabase
+    case succeedSyncLocalFilesWithDatabase([FileFingerprintChange])
+    case failSyncLocalFilesWithDatabase(String)
 
     var logDescription: String {
         switch self {
@@ -167,38 +167,36 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .syncSphere:
-            return syncSphere(
+        case .syncSphereWithGateway:
+            return syncSphereWithGateway(
                 state: state,
                 environment: environment
             )
-        case let .succeedSyncSphere(version):
-            return succeedSyncSphere(
+        case let .succeedSyncSphereWithGateway(version):
+            return succeedSyncSphereWithGateway(
                 state: state,
                 environment: environment,
                 version: version
             )
-        case let .failSyncSphere(error):
-            return failSyncSphere(
+        case let .failSyncSphereWithGateway(error):
+            return failSyncSphereWithGateway(
                 state: state,
                 environment: environment,
                 error: error
             )
-        case .sync:
-            return sync(
+        case .syncLocalFilesWithDatabase:
+            return syncLocalFilesWithDatabase(
                 state: state,
                 environment: environment
             )
-        case let .syncSuccess(changes):
-            return syncSuccess(
+        case let .succeedSyncLocalFilesWithDatabase(changes):
+            return succeedSyncLocalFilesWithDatabase(
                 state: state,
                 environment: environment,
                 changes: changes
             )
-        case let .syncFailure(message):
-            logger.warning(
-                "File sync failed: \(message)"
-            )
+        case let .failSyncLocalFilesWithDatabase(message):
+            logger.log("File sync failed: \(message)")
             return Update(state: state)
         }
     }
@@ -346,12 +344,12 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         return update(
             state: state,
-            action: AppAction.sync,
+            action: AppAction.syncLocalFilesWithDatabase,
             environment: environment
         )
     }
 
-    static func syncSphere(
+    static func syncSphereWithGateway(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
@@ -360,18 +358,18 @@ struct AppModel: ModelProtocol {
             return Update(state: state)
         }
         logger.log("Syncing with gateway: \(gatewayURL.absoluteString)")
-        let fx: Fx<AppAction> = environment.data.syncSphere()
+        let fx: Fx<AppAction> = environment.data.syncSphereWithGateway()
             .map({ version in
-                AppAction.succeedSyncSphere(version: version)
+                AppAction.succeedSyncSphereWithGateway(version: version)
             })
             .catch({ error in
-                Just(AppAction.failSyncSphere(error.localizedDescription))
+                Just(AppAction.failSyncSphereWithGateway(error.localizedDescription))
             })
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
 
-    static func succeedSyncSphere(
+    static func succeedSyncSphereWithGateway(
         state: AppModel,
         environment: AppEnvironment,
         version: String
@@ -379,12 +377,12 @@ struct AppModel: ModelProtocol {
         logger.log("Sphere updated to version: \(version)")
         return update(
             state: state,
-            action: .sync,
+            action: .syncLocalFilesWithDatabase,
             environment: environment
         )
     }
     
-    static func failSyncSphere(
+    static func failSyncSphereWithGateway(
         state: AppModel,
         environment: AppEnvironment,
         error: String
@@ -394,25 +392,25 @@ struct AppModel: ModelProtocol {
     }
 
     /// Start file sync
-    static func sync(
+    static func syncLocalFilesWithDatabase(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
         logger.log("File sync started")
         let fx: Fx<AppAction> = environment.data
-            .syncDatabase()
+            .syncLocalFilesWithDatabase()
             .map({ changes in
-                AppAction.syncSuccess(changes)
+                AppAction.succeedSyncLocalFilesWithDatabase(changes)
             })
             .catch({ error in
-                Just(AppAction.syncFailure(error.localizedDescription))
+                Just(AppAction.failSyncLocalFilesWithDatabase(error.localizedDescription))
             })
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
 
     /// Handle successful sync
-    static func syncSuccess(
+    static func succeedSyncLocalFilesWithDatabase(
         state: AppModel,
         environment: AppEnvironment,
         changes: [FileFingerprintChange]

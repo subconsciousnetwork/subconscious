@@ -33,7 +33,7 @@ struct DataService {
     }
 
     /// Sync local state to gateway
-    func syncSphere() -> AnyPublisher<String, Error> {
+    func syncSphereWithGateway() -> AnyPublisher<String, Error> {
         CombineUtilities.async(qos: .utility) {
             try noosphere.sphere().sync()
         }
@@ -55,7 +55,7 @@ struct DataService {
     /// Sync file system with database.
     /// Note file system is source-of-truth (leader).
     /// Syncing will never delete files on the file system.
-    func syncDatabase() -> AnyPublisher<[FileFingerprintChange], Error> {
+    func syncLocalFilesWithDatabase() -> AnyPublisher<[FileFingerprintChange], Error> {
         CombineUtilities.async(qos: .utility) {
             // Left = Leader (files)
             let left: [FileFingerprint] = try memos.list()
