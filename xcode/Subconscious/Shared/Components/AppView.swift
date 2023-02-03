@@ -73,6 +73,12 @@ enum AppAction: CustomLogStringConvertible {
     case failRebuildDatabase(String)
     /// App ready for database calls and interaction
     case ready
+
+    /// Sync local sphere with gateway sphere
+    case syncSphere
+    case succeedSyncSphere(version: String)
+    case failSyncSphere(String)
+
     /// Sync database with file system
     case sync
     case syncSuccess([FileFingerprintChange])
@@ -161,6 +167,17 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .syncSphere:
+            return syncSphere(
+                state: state,
+                environment: environment
+            )
+        case let .succeedSyncSphere(version):
+            logger.log("Sphere updated to version: \(version)")
+            return Update(state: state)
+        case let .failSyncSphere(error):
+            logger.log("Sphere sync failed: \(error)")
+            return Update(state: state)
         case .sync:
             return sync(
                 state: state,
@@ -328,12 +345,32 @@ struct AppModel: ModelProtocol {
         )
     }
 
+    static func syncSphere(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        guard let gatewayURL = environment.data.noosphere.gatewayURL else {
+            logger.log("No gateway configured. Skipping sync.")
+            return Update(state: state)
+        }
+        logger.log("Syncing with gateway: \(gatewayURL.absoluteString)")
+        let fx: Fx<AppAction> = environment.data.syncSphere()
+            .map({ version in
+                AppAction.succeedSyncSphere(version: version)
+            })
+            .catch({ error in
+                Just(AppAction.failSyncSphere(error.localizedDescription))
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
     /// Start file sync
     static func sync(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        environment.logger.log("File sync started")
+        logger.log("File sync started")
         let fx: Fx<AppAction> = environment.data
             .syncDatabase()
             .map({ changes in

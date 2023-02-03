@@ -32,6 +32,13 @@ struct DataService {
         self.memos = memos
     }
 
+    /// Sync local state to gateway
+    func syncSphere() -> AnyPublisher<String, Error> {
+        CombineUtilities.async(qos: .utility) {
+            try noosphere.sphere().sync()
+        }
+    }
+
     /// Migrate database off main thread, returning a publisher
     func migrateAsync() -> AnyPublisher<Int, Error> {
         CombineUtilities.async(qos: .utility) {
