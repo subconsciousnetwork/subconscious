@@ -173,11 +173,17 @@ struct AppModel: ModelProtocol {
                 environment: environment
             )
         case let .succeedSyncSphere(version):
-            logger.log("Sphere updated to version: \(version)")
-            return Update(state: state)
+            return succeedSyncSphere(
+                state: state,
+                environment: environment,
+                version: version
+            )
         case let .failSyncSphere(error):
-            logger.log("Sphere sync failed: \(error)")
-            return Update(state: state)
+            return failSyncSphere(
+                state: state,
+                environment: environment,
+                error: error
+            )
         case .sync:
             return sync(
                 state: state,
@@ -365,6 +371,28 @@ struct AppModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
 
+    static func succeedSyncSphere(
+        state: AppModel,
+        environment: AppEnvironment,
+        version: String
+    ) -> Update<AppModel> {
+        logger.log("Sphere updated to version: \(version)")
+        return update(
+            state: state,
+            action: .sync,
+            environment: environment
+        )
+    }
+    
+    static func failSyncSphere(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.log("Sphere sync failed: \(error)")
+        return Update(state: state)
+    }
+
     /// Start file sync
     static func sync(
         state: AppModel,
@@ -442,7 +470,8 @@ struct AppEnvironment {
             globalStorageURL: applicationSupportURL
                 .appending(path: Config.default.noosphere.globalStoragePath),
             sphereStorageURL: applicationSupportURL
-                .appending(path: Config.default.noosphere.sphereStoragePath)
+                .appending(path: Config.default.noosphere.sphereStoragePath),
+            gatewayURL: URL(string: Config.default.noosphere.defaultGatewayURL)
         )
 
         let databaseURL = self.applicationSupportURL
