@@ -85,6 +85,23 @@ final class DatabaseService {
         }
     }
 
+    /// Deletes and rebuilds the database by applying migrations to a new
+    /// database.
+    func rebuild() throws -> Int {
+        try self.database.delete()
+        self.state = .initial
+        do {
+            let version = try self.migrations.migrate(self.database)
+            // If migration succeeded, mark state ready
+            self.state = .ready
+            return version
+        } catch {
+            // Mark state broken by default
+            self.state = .broken
+            throw error
+        }
+    }
+
     /// Write entry syncronously
     func writeEntry(
         entry: MemoEntry,
@@ -802,96 +819,23 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2021-11-04T12:00:00")!,
+            version: Int.from(iso8601String: "2023-01-03T10:34:00")!,
             sql: """
+            /* History of user search queries */
             CREATE TABLE search_history (
                 id TEXT PRIMARY KEY,
                 query TEXT NOT NULL,
                 created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
-            CREATE TABLE entry (
-              slug TEXT PRIMARY KEY,
-              title TEXT NOT NULL DEFAULT '',
-              body TEXT NOT NULL,
-              modified TEXT NOT NULL,
-              size INTEGER NOT NULL
+
+            /* Sphere table keeps information on the spheres we're syncing with */
+            CREATE TABLE sphere (
+                identity TEXT PRIMARY KEY,
+                version TEXT NOT NULL,
+                owner_key_name TEXT NOT NULL
             );
-            CREATE VIRTUAL TABLE entry_search USING fts5(
-              slug,
-              title,
-              body,
-              modified UNINDEXED,
-              size UNINDEXED,
-              content="entry",
-              tokenize="porter"
-            );
-            /*
-            Create triggers to keep fts5 virtual table in sync with content table.
-            Note: SQLite documentation notes that you want to modify the fts table *before*
-            the external content table, hence the BEFORE commands.
-            These triggers are adapted from examples in the docs:
-            https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
-            */
-            CREATE TRIGGER entry_search_before_update BEFORE UPDATE ON entry BEGIN
-              DELETE FROM entry_search WHERE rowid=old.rowid;
-            END;
-            CREATE TRIGGER entry_search_before_delete BEFORE DELETE ON entry BEGIN
-              DELETE FROM entry_search WHERE rowid=old.rowid;
-            END;
-            CREATE TRIGGER entry_search_after_update AFTER UPDATE ON entry BEGIN
-              INSERT INTO entry_search
-                (
-                  rowid,
-                  slug,
-                  title,
-                  body,
-                  modified,
-                  size
-                )
-              VALUES
-                (
-                  new.rowid,
-                  new.slug,
-                  new.title,
-                  new.body,
-                  new.modified,
-                  new.size
-                );
-            END;
-            CREATE TRIGGER entry_search_after_insert AFTER INSERT ON entry BEGIN
-              INSERT INTO entry_search
-                (
-                  rowid,
-                  slug,
-                  title,
-                  body,
-                  modified,
-                  size
-                )
-              VALUES
-                (
-                  new.rowid,
-                  new.slug,
-                  new.title,
-                  new.body,
-                  new.modified,
-                  new.size
-                );
-            END;
-            """
-        ),
-        SQLMigration(
-            version: Int.from(iso8601String: "2022-11-04T15:38:00")!,
-            sql: """
-            /* Remove old tables */
-            DROP TABLE IF EXISTS entry;
-            DROP TABLE IF EXISTS entry_search;
-            DROP TRIGGER IF EXISTS entry_search_before_update;
-            DROP TRIGGER IF EXISTS entry_search_before_delete;
-            DROP TRIGGER IF EXISTS entry_search_after_update;
-            DROP TRIGGER IF EXISTS entry_search_after_insert;
-            
-            /* Create new memo table */
+
+            /* Memo table contains the content of any plain-text memo */
             CREATE TABLE memo (
                 slug TEXT PRIMARY KEY,
                 content_type TEXT NOT NULL,
@@ -912,7 +856,7 @@ extension Config {
                 /* Size of body (used in combination with modified for sync) */
                 size INTEGER NOT NULL
             );
-            
+
             CREATE VIRTUAL TABLE memo_search USING fts5(
                 slug,
                 content_type UNINDEXED,
@@ -929,7 +873,7 @@ extension Config {
                 content="memo",
                 tokenize="porter"
             );
-            
+
             /*
             Create triggers to keep fts5 virtual table in sync with content table.
 
@@ -942,11 +886,11 @@ extension Config {
             CREATE TRIGGER memo_search_before_update BEFORE UPDATE ON memo BEGIN
                 DELETE FROM memo_search WHERE rowid=old.rowid;
             END;
-            
+
             CREATE TRIGGER memo_search_before_delete BEFORE DELETE ON memo BEGIN
                 DELETE FROM memo_search WHERE rowid=old.rowid;
             END;
-            
+
             CREATE TRIGGER memo_search_after_update AFTER UPDATE ON memo BEGIN
                 INSERT INTO memo_search (
                     rowid,

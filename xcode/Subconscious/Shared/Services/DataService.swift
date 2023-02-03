@@ -46,6 +46,12 @@ struct DataService {
         }
     }
 
+    func rebuildAsync() -> AnyPublisher<Int, Error> {
+        CombineUtilities.async(qos: .utility) {
+            try database.rebuild()
+        }
+    }
+
     /// Sync file system with database.
     /// Note file system is source-of-truth (leader).
     /// Syncing will never delete files on the file system.

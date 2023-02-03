@@ -304,9 +304,9 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         logger.warning(
-            "Failed to migrate database. Retrying."
+            "No valid migrations for database. Rebuilding."
         )
-        let fx: Fx<AppAction> = environment.data.migrateAsync()
+        let fx: Fx<AppAction> = environment.data.rebuildAsync()
             .map({ info in
                 AppAction.succeedMigrateDatabase(info)
             })
@@ -450,7 +450,7 @@ struct AppEnvironment {
 
         let databaseService = DatabaseService(
             database: SQLite3Database(
-                path: databaseURL.absoluteString,
+                file: databaseURL,
                 mode: .readwrite
             ),
             migrations: Config.migrations
