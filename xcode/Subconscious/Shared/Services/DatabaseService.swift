@@ -178,7 +178,8 @@ final class DatabaseService {
         entry.contents.created = info.created
         try database.execute(
             sql: """
-            INSERT INTO memo (
+            INSERT OR REPLACE INTO memo (
+                sphere,
                 slug,
                 content_type,
                 created,
@@ -192,21 +193,10 @@ final class DatabaseService {
                 links,
                 size
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(slug) DO UPDATE SET
-                content_type=excluded.content_type,
-                created=excluded.created,
-                modified=excluded.modified,
-                title=excluded.title,
-                file_extension=excluded.file_extension,
-                headers=excluded.headers,
-                body=excluded.body,
-                description=excluded.description,
-                excerpt=excluded.excerpt,
-                links=excluded.links,
-                size=excluded.size
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             parameters: [
+                .text(entry.sphere),
                 .text(String(describing: entry.slug)),
                 .text(entry.contents.contentType),
                 .date(entry.contents.created),
@@ -882,7 +872,7 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-01-03T11:47:00")!,
+            version: Int.from(iso8601String: "2023-01-03T13:51:00")!,
             sql: """
             /* History of user search queries */
             CREATE TABLE search_history (
@@ -900,7 +890,8 @@ extension Config {
 
             /* Memo table contains the content of any plain-text memo */
             CREATE TABLE memo (
-                slug TEXT PRIMARY KEY,
+                sphere TEXT NOT NULL,
+                slug TEXT NOT NULL,
                 content_type TEXT NOT NULL,
                 created TEXT NOT NULL,
                 modified TEXT NOT NULL,
@@ -917,10 +908,12 @@ extension Config {
                 /* List of all slugs in body */
                 links TEXT NOT NULL DEFAULT '[]',
                 /* Size of body (used in combination with modified for sync) */
-                size INTEGER NOT NULL
+                size INTEGER NOT NULL,
+                PRIMARY KEY (sphere, slug)
             );
 
             CREATE VIRTUAL TABLE memo_search USING fts5(
+                sphere UNINDEXED,
                 slug,
                 content_type UNINDEXED,
                 created UNINDEXED,
@@ -957,6 +950,7 @@ extension Config {
             CREATE TRIGGER memo_search_after_update AFTER UPDATE ON memo BEGIN
                 INSERT INTO memo_search (
                     rowid,
+                    sphere,
                     slug,
                     content_type,
                     created,
@@ -972,6 +966,7 @@ extension Config {
                 )
                 VALUES (
                     new.rowid,
+                    new.sphere,
                     new.slug,
                     new.content_type,
                     new.created,
@@ -990,6 +985,7 @@ extension Config {
             CREATE TRIGGER memo_search_after_insert AFTER INSERT ON memo BEGIN
                 INSERT INTO memo_search (
                     rowid,
+                    sphere,
                     slug,
                     content_type,
                     created,
@@ -1005,6 +1001,7 @@ extension Config {
                 )
                 VALUES (
                     new.rowid,
+                    new.sphere,
                     new.slug,
                     new.content_type,
                     new.created,
