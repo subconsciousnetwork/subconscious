@@ -405,7 +405,8 @@ struct AppEnvironment {
             globalStorageURL: applicationSupportURL
                 .appending(path: Config.default.noosphere.globalStoragePath),
             sphereStorageURL: applicationSupportURL
-                .appending(path: Config.default.noosphere.sphereStoragePath)
+                .appending(path: Config.default.noosphere.sphereStoragePath),
+            gatewayURL: URL(string: Config.default.noosphere.defaultGatewayURL)
         )
 
         let databaseURL = self.applicationSupportURL
