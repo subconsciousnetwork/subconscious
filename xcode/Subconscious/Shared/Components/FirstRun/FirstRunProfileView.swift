@@ -56,6 +56,7 @@ struct FirstRunProfileView: View {
                         Text("Continue")
                     }
                 )
+                .buttonStyle(LargeButtonStyle())
                 .disabled(
                     !store.state.isEmailValid ||
                     !store.state.isNicknameValid

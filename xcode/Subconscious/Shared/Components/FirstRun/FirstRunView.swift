@@ -161,6 +161,7 @@ struct FirstRunView: View {
                         Text("Get Started")
                     }
                 )
+                .buttonStyle(LargeButtonStyle())
             }
             .navigationTitle("Welcome")
             .navigationBarTitleDisplayMode(.inline)

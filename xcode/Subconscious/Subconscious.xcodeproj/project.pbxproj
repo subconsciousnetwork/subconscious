@@ -131,6 +131,7 @@
 		B8879EAC26F944DA00A0B4FF /* Detail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EAB26F944DA00A0B4FF /* Detail.swift */; };
 		B8879EAD26F944DA00A0B4FF /* Detail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EAB26F944DA00A0B4FF /* Detail.swift */; };
 		B88B1CDE298DE66E0062CB7F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CDD298DE66E0062CB7F /* SettingsView.swift */; };
+		B88B1CE1298EAE730062CB7F /* LargeButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE0298EAE730062CB7F /* LargeButtonStyle.swift */; };
 		B88C9781276425E800B27DF0 /* IBMPlexMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */; };
 		B88C9782276425E900B27DF0 /* IBMPlexMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */; };
 		B88C9783276425E900B27DF0 /* IBMPlexMono-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977E276425E800B27DF0 /* IBMPlexMono-BoldItalic.ttf */; };
@@ -394,6 +395,7 @@
 		B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinksView.swift; sourceTree = "<group>"; };
 		B8879EAB26F944DA00A0B4FF /* Detail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Detail.swift; sourceTree = "<group>"; };
 		B88B1CDD298DE66E0062CB7F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B88B1CE0298EAE730062CB7F /* LargeButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeButtonStyle.swift; sourceTree = "<group>"; };
 		B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-Italic.ttf"; sourceTree = "<group>"; };
 		B88C977E276425E800B27DF0 /* IBMPlexMono-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-BoldItalic.ttf"; sourceTree = "<group>"; };
 		B88C977F276425E800B27DF0 /* IBMPlexMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-Bold.ttf"; sourceTree = "<group>"; };
@@ -629,6 +631,15 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
+		B88B1CDF298EAE520062CB7F /* Buttons */ = {
+			isa = PBXGroup;
+			children = (
+				B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */,
+				B88B1CE0298EAE730062CB7F /* LargeButtonStyle.swift */,
+			);
+			path = Buttons;
+			sourceTree = "<group>";
+		};
 		B88C977C276425C100B27DF0 /* Fonts */ = {
 			isa = PBXGroup;
 			children = (
@@ -842,6 +853,7 @@
 		B8EC568426F41A2C00AC64E5 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				B88B1CDF298EAE520062CB7F /* Buttons */,
 				B85A8057296E31860007F957 /* AudienceSelectorButton.swift */,
 				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B81EBB0827025C1500B87594 /* BacklinkButtonStyle.swift */,
@@ -859,7 +871,6 @@
 				B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */,
 				B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */,
 				B8AE34A9276A986000777FF0 /* PlaceholderTextView.swift */,
-				B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */,
 				B85EC45F296F099700558761 /* ProfilePic.swift */,
 				B85EC465296F0D0A00558761 /* ProfilePicMd.swift */,
 				B85EC462296F0CBD00558761 /* ProfilePicSm.swift */,
@@ -1252,6 +1263,7 @@
 				B85BF46F27BB0FA800F55730 /* RowViewModifier.swift in Sources */,
 				B8EA3EE529159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */,
 				B86DFF3127C06EBC002E57ED /* RenameSuggestion.swift in Sources */,
+				B88B1CE1298EAE730062CB7F /* LargeButtonStyle.swift in Sources */,
 				B8AE34A7276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
 				B8C0A1B4297C938000D59532 /* Error.swift in Sources */,
 				B8DEBF222798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,

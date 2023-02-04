@@ -33,6 +33,7 @@ struct FirstRunDoneView: View {
                 ) {
                     Text("Continue")
                 }
+                .buttonStyle(LargeButtonStyle())
                 .disabled(store.state.sphereIdentity == nil)
             }
             .padding()
