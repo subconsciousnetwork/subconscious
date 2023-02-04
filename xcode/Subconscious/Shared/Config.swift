@@ -16,8 +16,6 @@ struct Config: Equatable, Codable {
 
     var appTabs = true
 
-    var notesDirectory = "notes"
-
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
 
