@@ -16,12 +16,13 @@ struct FirstRunCreateSphereView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                VStack(alignment: .center, spacing: AppTheme.unit2) {
+                VStack(alignment: .center, spacing: AppTheme.unit4) {
                     Text("Recovery Phrase")
                         .font(.headline)
                     HStack {
                         Text(store.state.sphereMnemonic ?? "")
                             .monospaced()
+                            .textSelection(.enabled)
                         Spacer()
                     }
                     .padding()
@@ -29,6 +30,15 @@ struct FirstRunCreateSphereView: View {
                         RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLg)
                             .stroke(Color.separator, lineWidth: 0.5)
                     )
+                    Button(
+                        action: {
+                            UIPasteboard.general.string = store.state.sphereMnemonic
+                        },
+                        label: {
+                            Text("Copy to Clipboard")
+                        }
+                    )
+                    .buttonStyle(PrimaryButtonStyle())
                     VStack(alignment: .leading, spacing: AppTheme.unit2) {
                         Text("This is your secret recovery phrase. You can use it to recover your account if you lose access.")
                             .foregroundColor(.secondary)
@@ -60,7 +70,9 @@ struct FirstRunCreateSphereView_Previews: PreviewProvider {
     static var previews: some View {
         FirstRunCreateSphereView(
             store: Store(
-                state: FirstRunModel(),
+                state: FirstRunModel(
+                    sphereMnemonic: "foo bar baz bing bong boo biz boz bonk bink boop bop beep bleep bloop blorp blonk blink blip blop boom"
+                ),
                 environment: AppEnvironment.default
             ),
             onDone: { id in }
