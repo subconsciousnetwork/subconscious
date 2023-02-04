@@ -21,7 +21,7 @@ struct FirstRunCreateSphereView: View {
                         .font(.headline)
                     RecoveryPhraseView(text: store.state.sphereMnemonic ?? "")
                     VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                        Text("This is your secret recovery phrase. You can use it to recover your account if you lose access.")
+                        Text("This is your secret recovery phrase. You can use it to recover your data if you lose access.")
                             .foregroundColor(.secondary)
                         Text("This is for your eyes only. We don't store it. Write it down. Keep it secret, keep it safe.")
                             .foregroundColor(.secondary)
