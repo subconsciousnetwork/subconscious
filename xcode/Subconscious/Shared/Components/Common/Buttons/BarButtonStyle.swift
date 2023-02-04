@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-struct LargeButtonStyle: ButtonStyle {
+/// A button that is a full-width bar with a fill
+struct BarButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
@@ -16,7 +17,6 @@ struct LargeButtonStyle: ButtonStyle {
             configuration.label
             Spacer()
         }
-        .bold()
         .frame(
             height: AppTheme.unit * 12
         )
@@ -33,17 +33,16 @@ struct LargeButtonStyle: ButtonStyle {
             Color.chooseForState(
                 isPressed: configuration.isPressed,
                 isEnabled: isEnabled,
-                normal: Color.primaryButtonBackground,
-                pressed: Color.primaryButtonBackgroundPressed,
-                disabled: Color.primaryButtonBackgroundDisabled
+                normal: Color.secondaryBackground,
+                pressed: Color.secondaryBackground,
+                disabled: Color.secondaryBackground
             )
         )
-        .clipShape(Capsule())
         .animation(.default, value: configuration.isPressed)
     }
 }
 
-struct LargeButtonStyle_Previews: PreviewProvider {
+struct BarButtonStyle_Previews: PreviewProvider {
     static var previews: some View {
         Button(
             action: {},
@@ -51,7 +50,7 @@ struct LargeButtonStyle_Previews: PreviewProvider {
                 Text("Floop")
             }
         ).buttonStyle(
-            LargeButtonStyle()
+            BarButtonStyle()
         )
     }
 }

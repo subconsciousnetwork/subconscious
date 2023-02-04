@@ -19,34 +19,7 @@ struct FirstRunCreateSphereView: View {
                 VStack(alignment: .center, spacing: AppTheme.unit4) {
                     Text("Recovery Phrase")
                         .font(.headline)
-                    VStack(spacing: AppTheme.unit4) {
-                        HStack {
-                            Text(store.state.sphereMnemonic ?? "")
-                                .monospaced()
-                                .textSelection(.enabled)
-                            Spacer()
-                        }
-                        Button(
-                            action: {
-                                UIPasteboard.general.string = store.state.sphereMnemonic
-                            },
-                            label: {
-                                HStack {
-                                    Image(systemName: "doc.on.doc")
-                                    Text("Copy to clipboard")
-                                }
-                            }
-                        )
-                        .buttonStyle(.automatic)
-                    }
-                    .padding()
-                    .clipShape(
-                        RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLg)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLg)
-                            .stroke(Color.separator, lineWidth: 0.5)
-                    )
+                    RecoveryPhraseView(text: store.state.sphereMnemonic ?? "")
                     VStack(alignment: .leading, spacing: AppTheme.unit2) {
                         Text("This is your secret recovery phrase. You can use it to recover your account if you lose access.")
                             .foregroundColor(.secondary)

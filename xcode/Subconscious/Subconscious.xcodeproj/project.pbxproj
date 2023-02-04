@@ -132,6 +132,8 @@
 		B8879EAD26F944DA00A0B4FF /* Detail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EAB26F944DA00A0B4FF /* Detail.swift */; };
 		B88B1CDE298DE66E0062CB7F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CDD298DE66E0062CB7F /* SettingsView.swift */; };
 		B88B1CE1298EAE730062CB7F /* LargeButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE0298EAE730062CB7F /* LargeButtonStyle.swift */; };
+		B88B1CE3298EB0100062CB7F /* BarButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE2298EB0100062CB7F /* BarButtonStyle.swift */; };
+		B88B1CE5298EB10D0062CB7F /* RecoveryPhraseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE4298EB10D0062CB7F /* RecoveryPhraseView.swift */; };
 		B88C9781276425E800B27DF0 /* IBMPlexMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */; };
 		B88C9782276425E900B27DF0 /* IBMPlexMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */; };
 		B88C9783276425E900B27DF0 /* IBMPlexMono-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977E276425E800B27DF0 /* IBMPlexMono-BoldItalic.ttf */; };
@@ -396,6 +398,8 @@
 		B8879EAB26F944DA00A0B4FF /* Detail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Detail.swift; sourceTree = "<group>"; };
 		B88B1CDD298DE66E0062CB7F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B88B1CE0298EAE730062CB7F /* LargeButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeButtonStyle.swift; sourceTree = "<group>"; };
+		B88B1CE2298EB0100062CB7F /* BarButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarButtonStyle.swift; sourceTree = "<group>"; };
+		B88B1CE4298EB10D0062CB7F /* RecoveryPhraseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryPhraseView.swift; sourceTree = "<group>"; };
 		B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-Italic.ttf"; sourceTree = "<group>"; };
 		B88C977E276425E800B27DF0 /* IBMPlexMono-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-BoldItalic.ttf"; sourceTree = "<group>"; };
 		B88C977F276425E800B27DF0 /* IBMPlexMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-Bold.ttf"; sourceTree = "<group>"; };
@@ -636,6 +640,7 @@
 			children = (
 				B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */,
 				B88B1CE0298EAE730062CB7F /* LargeButtonStyle.swift */,
+				B88B1CE2298EB0100062CB7F /* BarButtonStyle.swift */,
 			);
 			path = Buttons;
 			sourceTree = "<group>";
@@ -663,8 +668,9 @@
 			children = (
 				B8B3EE74297AEE6600779B7F /* FirstRunCreateSphereView.swift */,
 				B8B3EE76297AEE8B00779B7F /* FirstRunDoneView.swift */,
-				B8B3EE722979DEE900779B7F /* FirstRunView.swift */,
 				B8B3EE78297AF6E500779B7F /* FirstRunProfileView.swift */,
+				B8B3EE722979DEE900779B7F /* FirstRunView.swift */,
+				B88B1CE4298EB10D0062CB7F /* RecoveryPhraseView.swift */,
 			);
 			path = FirstRun;
 			sourceTree = "<group>";
@@ -1191,6 +1197,7 @@
 				B8B4251528FDE8570081B8D5 /* Memo.swift in Sources */,
 				B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */,
 				B800ABE8297DE7D20024D1FD /* DataService.swift in Sources */,
+				B88B1CE3298EB0100062CB7F /* BarButtonStyle.swift in Sources */,
 				B81A535F272751EE001A6268 /* Subtext.swift in Sources */,
 				B8CA8F20288F1875005F8802 /* RandomPromptGeist.swift in Sources */,
 				B8B3EE79297AF6E500779B7F /* FirstRunProfileView.swift in Sources */,
@@ -1249,6 +1256,7 @@
 				B8B3EE7B297AFB9100779B7F /* TextFieldLabel.swift in Sources */,
 				B8B3194D2909E81D00A1E62A /* FileInfo.swift in Sources */,
 				B8AC648A278F53920099E96B /* EntryStub.swift in Sources */,
+				B88B1CE5298EB10D0062CB7F /* RecoveryPhraseView.swift in Sources */,
 				B8B4250C28FB43C90081B8D5 /* ContentType.swift in Sources */,
 				B8AE34C5276BF72500777FF0 /* LinkSearchView.swift in Sources */,
 				B8AE34CB276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
