@@ -134,6 +134,8 @@
 		B88B1CE1298EAE730062CB7F /* LargeButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE0298EAE730062CB7F /* LargeButtonStyle.swift */; };
 		B88B1CE3298EB0100062CB7F /* BarButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE2298EB0100062CB7F /* BarButtonStyle.swift */; };
 		B88B1CE5298EB10D0062CB7F /* RecoveryPhraseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE4298EB10D0062CB7F /* RecoveryPhraseView.swift */; };
+		B88B1CE7298EEC240062CB7F /* GatewaySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE6298EEC240062CB7F /* GatewaySettingsView.swift */; };
+		B88B1CE9298EEF870062CB7F /* KeyValueRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE8298EEF870062CB7F /* KeyValueRowView.swift */; };
 		B88C9781276425E800B27DF0 /* IBMPlexMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */; };
 		B88C9782276425E900B27DF0 /* IBMPlexMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */; };
 		B88C9783276425E900B27DF0 /* IBMPlexMono-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977E276425E800B27DF0 /* IBMPlexMono-BoldItalic.ttf */; };
@@ -400,6 +402,8 @@
 		B88B1CE0298EAE730062CB7F /* LargeButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeButtonStyle.swift; sourceTree = "<group>"; };
 		B88B1CE2298EB0100062CB7F /* BarButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarButtonStyle.swift; sourceTree = "<group>"; };
 		B88B1CE4298EB10D0062CB7F /* RecoveryPhraseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryPhraseView.swift; sourceTree = "<group>"; };
+		B88B1CE6298EEC240062CB7F /* GatewaySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewaySettingsView.swift; sourceTree = "<group>"; };
+		B88B1CE8298EEF870062CB7F /* KeyValueRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyValueRowView.swift; sourceTree = "<group>"; };
 		B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-Italic.ttf"; sourceTree = "<group>"; };
 		B88C977E276425E800B27DF0 /* IBMPlexMono-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-BoldItalic.ttf"; sourceTree = "<group>"; };
 		B88C977F276425E800B27DF0 /* IBMPlexMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-Bold.ttf"; sourceTree = "<group>"; };
@@ -631,6 +635,7 @@
 			isa = PBXGroup;
 			children = (
 				B88B1CDD298DE66E0062CB7F /* SettingsView.swift */,
+				B88B1CE6298EEC240062CB7F /* GatewaySettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -900,6 +905,7 @@
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B8A59D5F28B51D000010DB2F /* TranscludeView.swift */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
+				B88B1CE8298EEF870062CB7F /* KeyValueRowView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1248,6 +1254,7 @@
 				B85A805E296F08720007F957 /* AudienceSelectorButton.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B85EC469296F11F000558761 /* BylineSmView.swift in Sources */,
+				B88B1CE9298EEF870062CB7F /* KeyValueRowView.swift in Sources */,
 				B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
 				B85EC466296F0D0A00558761 /* ProfilePicMd.swift in Sources */,
@@ -1283,6 +1290,7 @@
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
 				B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */,
 				B89966C728B6EE2300DF1F8C /* Notebook.swift in Sources */,
+				B88B1CE7298EEC240062CB7F /* GatewaySettingsView.swift in Sources */,
 				B8B4251228FDE7780081B8D5 /* Mapping.swift in Sources */,
 				B8AE34AD276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8A41D4E2811E81E0096D2E7 /* WikilinkBarView.swift in Sources */,

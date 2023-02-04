@@ -20,9 +20,9 @@ struct SettingsView: View {
                         label: {
                             VStack(alignment: .leading) {
                                 Text("Gordon")
-                                Text("you@there.com")
-                                    .font(.subheadline)
+                                Text(verbatim: "you@there.com")
                                     .foregroundColor(.secondary)
+                                    .font(.subheadline)
                             }
                         }
                     )
@@ -31,21 +31,42 @@ struct SettingsView: View {
 
                 Section(header: Text("Noosphere")) {
                     Toggle("Enable Noosphere", isOn: .constant(false))
-                    
-                    NavigationLink("Gateway Settings") {
-                        
-                    }
                 }
 
                 Section(header: Text("Sphere")) {
-                    Text("Author Key")
-                    Text("Sphere Key")
-                    Text("Sphere Version")
+                    KeyValueRowView(
+                        key: Text("Author"),
+                        value: Text(
+                            "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
+                        )
+                        .textSelection(.enabled)
+                    )
+                    KeyValueRowView(
+                        key: Text("Sphere"),
+                        value: Text(
+                            "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
+                        )
+                        .textSelection(.enabled)
+                    )
+                    KeyValueRowView(
+                        key: Text("Version"),
+                        value: Text(
+                            "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
+                        )
+                        .textSelection(.enabled)
+                    )
                 }
-
-                Section {
-                    NavigationLink("Advanced") {
-                        
+                
+                Section(header: Text("Gateway")) {
+                    KeyValueRowView(
+                        key: Text("Gateway URL"),
+                        value: Text(
+                            "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
+                        )
+                        .textSelection(.enabled)
+                    )
+                    NavigationLink("Gateway Settings") {
+                        GatewaySettingsView(app: app)
                     }
                 }
             }
