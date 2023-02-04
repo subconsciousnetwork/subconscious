@@ -63,7 +63,7 @@ struct DataService {
     func syncSphereWithDatabase() throws -> String {
         let identity = try noosphere.sphere().identity
         let version = try noosphere.sphere().version()
-        let since = try database.readSphereVersion(identity: identity)
+        let since = try? database.readSphereVersion(identity: identity)
         let sphere = try noosphere.sphere()
         let changes = try sphere.changes(since)
         for change in changes {
@@ -84,6 +84,7 @@ struct DataService {
             // If memo does exist, write it to database
             try database.writeEntry(entry: entry)
         }
+        try database.writeSphereVersion(identity: identity, version: version)
         return version
     }
 
