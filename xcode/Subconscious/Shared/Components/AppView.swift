@@ -28,13 +28,12 @@ struct AppView: View {
                 }
             }
             .zIndex(0)
-            if (
-                Config.default.noosphere.enabled &&
-                store.state.sphereIdentity == nil
-            ) {
+            if (!store.state.isFirstRunComplete) {
                 FirstRunView(
                     onDone: { sphereIdentity in
-                        store.send(.setSphereIdentity(sphereIdentity))
+                        store.send(
+                            .firstRunComplete(sphereIdentity: sphereIdentity)
+                        )
                     }
                 )
                 .zIndex(1)
@@ -52,10 +51,17 @@ struct AppView: View {
 
 //  MARK: Action
 enum AppAction: CustomLogStringConvertible {
+    /// On view appear
+    case appear
+
     /// Set identity of sphere
     case setSphereIdentity(String?)
+    
+    /// Set and persist first run complete state
+    case persistFirstRunComplete(_ isComplete: Bool)
 
-    case appear
+    /// Sent when first run is done
+    case firstRunComplete(sphereIdentity: String)
 
     //  Database
     /// Kick off database migration.
@@ -114,12 +120,8 @@ enum AppDatabaseState {
 struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
+    var isFirstRunComplete = false
     var sphereIdentity: String?
-
-    /// Feed of stories
-    var feed = FeedModel()
-    /// Your notebook containing all your notes
-    var notebook = NotebookModel()
 
     /// Determine if the interface is ready for user interaction,
     /// even if all of the data isn't refreshed yet.
@@ -142,14 +144,26 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         switch action {
+        case .appear:
+            return appear(state: state, environment: environment)
         case let .setSphereIdentity(sphereIdentity):
             return setSphereIdentity(
                 state: state,
                 environment: environment,
                 sphereIdentity: sphereIdentity
             )
-        case .appear:
-            return appear(state: state, environment: environment)
+        case let .persistFirstRunComplete(isComplete):
+            return persistFirstRunComplete(
+                state: state,
+                environment: environment,
+                isComplete: isComplete
+            )
+        case let .firstRunComplete(sphereIdentity):
+            return firstRunComplete(
+                state: state,
+                environment: environment,
+                sphereIdentity: sphereIdentity
+            )
         case .migrateDatabase:
             return migrateDatabase(state: state, environment: environment)
         case let .succeedMigrateDatabase(version):
@@ -235,19 +249,6 @@ struct AppModel: ModelProtocol {
         return Update(state: state)
     }
 
-    static func setSphereIdentity(
-        state: AppModel,
-        environment: AppEnvironment,
-        sphereIdentity: String?
-    ) -> Update<AppModel> {
-        var model = state
-        model.sphereIdentity = sphereIdentity
-        if let sphereIdentity = sphereIdentity {
-            logger.debug("Sphere: \(sphereIdentity)")
-        }
-        return Update(state: model)
-    }
-
     static func appear(
         state: AppModel,
         environment: AppEnvironment
@@ -269,7 +270,54 @@ struct AppModel: ModelProtocol {
         let fx: Fx<AppAction> = setSphereIdentity.merge(with: migrate)
             .eraseToAnyPublisher()
 
-        return Update(state: state, fx: fx)
+        var model = state
+        // Set first run complete from persisted state.
+        model.isFirstRunComplete = environment.data.isFirstRunComplete()
+
+        return Update(state: model, fx: fx)
+    }
+
+    static func setSphereIdentity(
+        state: AppModel,
+        environment: AppEnvironment,
+        sphereIdentity: String?
+    ) -> Update<AppModel> {
+        var model = state
+        model.sphereIdentity = sphereIdentity
+        if let sphereIdentity = sphereIdentity {
+            logger.debug("Sphere: \(sphereIdentity)")
+        }
+        return Update(state: model)
+    }
+
+    /// Persist first run complete state
+    static func persistFirstRunComplete(
+        state: AppModel,
+        environment: AppEnvironment,
+        isComplete: Bool
+    ) -> Update<AppModel> {
+        // Persist value
+        environment.data.persistFirstRunComplete(true)
+        // Update state
+        var model = state
+        model.isFirstRunComplete = true
+        return Update(state: model)
+    }
+
+    /// Wrap up first run flow
+    static func firstRunComplete(
+        state: AppModel,
+        environment: AppEnvironment,
+        sphereIdentity: String
+    ) -> Update<AppModel> {
+        return update(
+            state: state,
+            actions: [
+                .persistFirstRunComplete(true),
+                .setSphereIdentity(sphereIdentity)
+            ],
+            environment: environment
+        )
     }
 
     /// Make database ready.

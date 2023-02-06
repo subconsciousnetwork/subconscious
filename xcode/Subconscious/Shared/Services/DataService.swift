@@ -16,6 +16,9 @@ enum DataServiceError: Error {
 
 enum DataUserDefaultKeys: String {
     case sphereIdentity = "sphereIdentity"
+    case nickname = "nickname"
+    case email = "email"
+    case firstRunComplete = "firstRunComplete"
 }
 
 // MARK: SERVICE
@@ -40,6 +43,24 @@ struct DataService {
         self.database = database
         self.noosphere = noosphere
         self.memos = memos
+    }
+
+    /// Get persisted state of first run completion
+    func isFirstRunComplete() -> Bool {
+        guard Config.default.noosphere.enabled else {
+            return false
+        }
+        return UserDefaults.standard.bool(
+            forKey: DataUserDefaultKeys.firstRunComplete.rawValue
+        )
+    }
+
+    /// Persist state of first run completion
+    func persistFirstRunComplete(_ isComplete: Bool) {
+        UserDefaults.standard.setValue(
+            isComplete,
+            forKey: DataUserDefaultKeys.firstRunComplete.rawValue
+        )
     }
 
     /// Get usere's persisted default sphere identity
