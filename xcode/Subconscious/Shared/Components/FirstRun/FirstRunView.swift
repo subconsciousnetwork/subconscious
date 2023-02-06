@@ -53,7 +53,7 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
             return Update(state: state)
         case .setNickname(let nickname):
             var model = state
-            model.nickname = nickname
+            model.nickname = Nickname.format(nickname)
             return Update(state: model)
         case .setEmail(let email):
             var model = state

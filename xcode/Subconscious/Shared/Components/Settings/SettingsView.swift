@@ -14,28 +14,20 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Profile Info")) {
-                    NavigationLink(
-                        destination: {},
-                        label: {
-                            VStack(alignment: .leading) {
-                                Text("Gordon")
-                                Text(verbatim: "you@there.com")
-                                    .foregroundColor(.secondary)
-                                    .font(.subheadline)
-                            }
-                        }
-                    )
-                }
-
-
                 Section(header: Text("Noosphere")) {
                     Toggle("Enable Noosphere", isOn: .constant(false))
                 }
 
                 Section(header: Text("Sphere")) {
                     KeyValueRowView(
-                        key: Text("Author"),
+                        key: Text("Nickname"),
+                        value: Text(
+                            "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
+                        )
+                        .textSelection(.enabled)
+                    )
+                    KeyValueRowView(
+                        key: Text("Public Key"),
                         value: Text(
                             "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
                         )
@@ -67,6 +59,12 @@ struct SettingsView: View {
                     )
                     NavigationLink("Gateway Settings") {
                         GatewaySettingsView(app: app)
+                    }
+                }
+
+                Section(header: Text("Developer")) {
+                    NavigationLink("Developer Settings") {
+                        DeveloperSettingsView(app: app)
                     }
                 }
             }

@@ -29,6 +29,7 @@ struct FirstRunProfileView: View {
                                 tag: FirstRunAction.setNickname
                             )
                         )
+                        .replaceDisabled()
                     )
                     TextFieldLabel(
                         label: Text("Email"),

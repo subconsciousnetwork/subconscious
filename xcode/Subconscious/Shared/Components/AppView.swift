@@ -36,6 +36,7 @@ struct AppView: View {
                         )
                     }
                 )
+                .animation(.default, value: store.state.isFirstRunComplete)
                 .zIndex(1)
             }
         }
@@ -297,10 +298,10 @@ struct AppModel: ModelProtocol {
         isComplete: Bool
     ) -> Update<AppModel> {
         // Persist value
-        environment.data.persistFirstRunComplete(true)
+        environment.data.persistFirstRunComplete(isComplete)
         // Update state
         var model = state
-        model.isFirstRunComplete = true
+        model.isFirstRunComplete = isComplete
         return Update(state: model)
     }
 
@@ -318,6 +319,7 @@ struct AppModel: ModelProtocol {
             ],
             environment: environment
         )
+        .animation(.default)
     }
 
     /// Make database ready.
