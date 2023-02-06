@@ -126,27 +126,29 @@ struct DataService {
         let identity = try self.sphereIdentity()
         let sphere = try noosphere.sphere(identity: identity)
         let version = try sphere.version()
-        let since = try? database.readSphereVersion(identity: identity)
+        let since = try? database.readMetadata(key: .sphereVersion)
         let changes = try sphere.changes(since)
         for change in changes {
             guard let slug = Slug(change) else {
                 continue
             }
             let slashlink = slug.toSlashlink()
-            // If memo does not exist, that means change was a remove
-            guard let memo = sphere.read(slashlink: slashlink)?.toMemo() else {
-                try database.removeEntry(slug: slug)
-                continue
-            }
-            let entry = Entry(
-                sphereIdentity: identity,
-                slug: slug,
-                contents: memo
-            )
             // If memo does exist, write it to database
-            try database.writeEntry(entry: entry)
+            // Sphere content is always public right now
+            if let memo = sphere.read(slashlink: slashlink)?.toMemo() {
+                try database.writeEntry(
+                    slug: slug,
+                    memo: memo,
+                    audience: .public
+                )
+            }
+            // If memo does not exist, that means change was a remove
+            else {
+                try database.removeEntry(slug: slug)
+            }
         }
-        try database.writeSphereVersion(identity: identity, version: version)
+        try database.writeMetadatadata(key: .sphereIdentity, value: identity)
+        try database.writeMetadatadata(key: .sphereVersion, value: version)
         return version
     }
 
@@ -195,12 +197,15 @@ struct DataService {
                 //               Leader wins.
                 // .conflict. Leader wins.
                 case .leftOnly(let left), .leftNewer(let left, _), .rightNewer(let left, _), .conflict(let left, _):
-                    let memo = try memos.read(left.slug).unwrap()
-                    var entry = MemoEntry(slug: left.slug, contents: memo)
+                    var memo = try memos.read(left.slug).unwrap()
                     // Read info from file system and set modified time
                     let info = try memos.info(left.slug).unwrap()
-                    entry.contents.modified = info.modified
-                    try database.writeEntry(entry: entry)
+                    memo.modified = info.modified
+                    try database.writeEntry(
+                        slug: left.slug,
+                        memo: memo,
+                        audience: .local
+                    )
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly(let right):
                     try database.removeEntry(slug: right.slug)
@@ -213,43 +218,72 @@ struct DataService {
         }
     }
 
+    /// Write entry to local file system
+    private func writeEntryToLocal(
+        slug: Slug,
+        memo: Memo
+    ) throws {
+        try memos.write(slug, value: memo)
+        // Read modified/size from file system directly after writing.
+        // Why: we use file system as source of truth and don't want any
+        // discrepencies to sneak in (e.g. different time between write and
+        // persistence on file system).
+        let info = try memos.info(slug).unwrap()
+        var memo = memo
+        memo.modified = info.modified
+        try database.writeEntry(
+            slug: slug,
+            memo: memo,
+            audience: .local
+        )
+    }
+
+    /// Write entry to sphere
+    private func writeEntryToSphere(
+        slug: Slug,
+        memo: Memo
+    ) throws {
+        let identity = try sphereIdentity()
+        let sphere = try noosphere.sphere(identity: identity)
+        let body = try memo.body.toData().unwrap()
+        try sphere.write(
+            slug: slug.description,
+            contentType: memo.contentType,
+            additionalHeaders: memo.headers,
+            body: body
+        )
+        _ = try sphere.save()
+        try database.writeEntry(
+            slug: slug,
+            memo: memo,
+            audience: .public
+        )
+    }
+
     /// Write entry to file system and database
     /// Also sets modified header to now.
     func writeEntry(_ entry: MemoEntry) throws {
         var entry = entry
         entry.contents.modified = Date.now
 
-        /// Check for sphereID in entry. If none found, write to file system.
-        guard let sphereIdentity = entry.sphereIdentity else {
-            try memos.write(entry.slug, value: entry.contents)
-            // Read modified/size from file system directly after writing.
-            // Why: we use file system as source of truth and don't want any
-            // discrepencies to sneak in (e.g. different time between write and
-            // persistence on file system).
-            let info = try memos.info(entry.slug).unwrap()
-            entry.contents.modified = info.modified
-            try database.writeEntry(entry: entry)
+        // If Noosphere is disabled, always write local-only.
+        guard Config.default.noosphere.enabled else {
+            try writeEntryToLocal(slug: entry.slug, memo: entry.contents)
             return
         }
         
-        // Make sure Noosphere is enabled before trying to write to sphere.
-        guard Config.default.noosphere.enabled else {
-            throw DataServiceError.noosphereNotEnabled(
-                "Attempted to write entry to sphere while Noosphere is disabled. Doing nothing."
+        switch entry.audience {
+        case .local:
+            return try writeEntryToLocal(
+                slug: entry.slug,
+                memo: entry.contents
+            )
+        case .public:
+            return try writeEntryToSphere(
+                slug: entry.slug,
+                memo: entry.contents
             )
         }
-
-        let sphere = try noosphere.sphere(identity: sphereIdentity)
-        let body = try entry.contents.body.toData().unwrap()
-        try sphere.write(
-            slug: entry.slug.description,
-            contentType: entry.contents.contentType,
-            additionalHeaders: entry.contents.headers,
-            body: body
-        )
-        _ = try sphere.save()
-        try database.writeEntry(entry: entry)
-        return
     }
     
     func writeEntryAsync(_ entry: MemoEntry) -> AnyPublisher<Void, Error> {
