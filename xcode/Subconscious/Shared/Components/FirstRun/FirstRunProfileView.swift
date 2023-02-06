@@ -19,30 +19,18 @@ struct FirstRunProfileView: View {
                 Spacer()
                 VStack(alignment: .leading, spacing: AppTheme.unit4) {
                     TextFieldLabel(
-                        label: Text("Nickname"),
-                        caption: Text("What do you want to go by? Your nickname can be your real name or something else."),
+                        label: Text("Your Nickname"),
+                        caption: Text("Lowercase letters, numbers and dashes only."),
                         field: TextField(
-                            "Your Name",
+                            "nickname",
                             text: Binding(
                                 get: { store.state.nickname },
                                 send: store.send,
                                 tag: FirstRunAction.setNickname
                             )
                         )
-                        .replaceDisabled()
-                    )
-                    TextFieldLabel(
-                        label: Text("Email"),
-                        field: TextField(
-                            "you@there.com",
-                            text: Binding(
-                                get: { store.state.email },
-                                send: store.send,
-                                tag: FirstRunAction.setEmail
-                            )
-                        )
-                        .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
                     )
                 }
                 Spacer()
@@ -58,10 +46,7 @@ struct FirstRunProfileView: View {
                     }
                 )
                 .buttonStyle(LargeButtonStyle())
-                .disabled(
-                    !store.state.isEmailValid ||
-                    !store.state.isNicknameValid
-                )
+                .disabled(!store.state.isNicknameValid)
                 .simultaneousGesture(TapGesture().onEnded {
                     store.send(.persistProfile)
                 })

@@ -12,7 +12,6 @@ enum FirstRunAction: Hashable {
     case createSphere
     case failCreateSphere(String)
     case setNickname(String)
-    case setEmail(String)
     case persistProfile
 }
 
@@ -21,18 +20,11 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
     typealias Environment = AppEnvironment
     
     var nickname: String = ""
-    var email: String = ""
     var sphereMnemonic: String?
     var sphereIdentity: String?
     
     var isNicknameValid: Bool {
-        let match = try? Self.nicknameRegex.prefixMatch(in: nickname)
-        return match != nil
-    }
-
-    var isEmailValid: Bool {
-        let match = try? Self.emailRegex.wholeMatch(in: email)
-        return match != nil
+        !nickname.isEmpty
     }
 
     static func update(
@@ -55,10 +47,6 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
             var model = state
             model.nickname = Nickname.format(nickname)
             return Update(state: model)
-        case .setEmail(let email):
-            var model = state
-            model.email = email
-            return Update(state: model)
         case .persistProfile:
             return persistProfile(
                 state: state,
@@ -66,12 +54,6 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
             )
         }
     }
-
-    /// Does an extremely simple hygiene check on email addresses.
-    static let nicknameRegex = try! Regex(#"\S"#)
-
-    /// Does an extremely simple hygiene check on email addresses.
-    static let emailRegex = try! Regex(#"^\S+@\S+$"#)
 
     static func appear(
         state: FirstRunModel,
@@ -118,9 +100,7 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
         environment: AppEnvironment
     ) -> Update<FirstRunModel> {
         UserDefaults.standard.set(state.nickname, forKey: "nickname")
-        UserDefaults.standard.set(state.email, forKey: "email")
         environment.logger.log("Saved nickname: \(state.nickname)")
-        environment.logger.log("Saved email: \(state.email)")
         return Update(state: state)
     }
 }
