@@ -8,9 +8,10 @@
 import Foundation
 
 /// Model enumerating the possible audience/scopes for a piece of content.
-/// Right now we only have two: fully public, or fully private
-/// (and for now, local).
-enum Audience: Hashable {
-    case `public`
-    case `private`
+/// Right now we only have two: local-only draft or fully public
+enum Audience: Int {
+    /// A local-only draft
+    case local = 0
+    /// Public sphere content
+    case `public` = 1
 }
