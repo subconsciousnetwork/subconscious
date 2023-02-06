@@ -22,6 +22,12 @@ struct DatabaseMigrationInfo: Hashable {
     var didRebuild: Bool
 }
 
+enum DatabaseMetaKeys: String {
+    case sphereIdentity = "sphere_identity"
+    case sphereVersion = "sphere_version"
+    case ownerKeyName = "owner_key_name"
+}
+
 enum DatabaseServiceError: Error, LocalizedError {
     case invalidStateTransition(
         from: DatabaseServiceState,
@@ -106,81 +112,60 @@ final class DatabaseService {
         }
     }
 
-    func readSphereVersion(identity: String) throws -> String {
+    /// Read database metadata from string key
+    func readMetadata(key: String) throws -> String {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         let rows = try database.execute(
-            sql: "SELECT version FROM sphere WHERE identity = ?",
-            parameters: [.text(identity)]
+            sql: "SELECT value FROM database_metadata WHERE key = ?",
+            parameters: [.text(key)]
         )
         guard let version = rows.first?.col(0)?.toString() else {
             throw DatabaseServiceError.notFound(
-                "No record found for sphere \(identity)"
+                "No value found for key \(key)"
             )
         }
         return version
     }
 
-    /// Write sphere to database.
-    /// In the case where a sphere with this identity exists already, the
-    /// old record will be overwritten with the new data.
-    func writeSphere(
-        identity: String,
-        version: String,
-        ownerKeyName: String
-    ) throws {
+    /// Read metadata from type-safe metadata key
+    func readMetadata(key: DatabaseMetaKeys) throws -> String {
+        try readMetadata(key: key.rawValue)
+    }
+
+    /// Write database metadata at string key
+    func writeMetadatadata(key: String, value: String) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         try database.execute(
             sql: """
-            INSERT INTO sphere (
-                identity,
-                version,
-                owner_key_name
+            INSERT OR REPLACE INTO database_metadata (
+                key,
+                value
             )
-            VALUES (?, ?, ?)
-            ON CONFLICT(slug) DO UPDATE SET
-                version=version,
-                owner_key_name=excluded.owner_key_name
+            VALUES (?, ?)
             """,
-            parameters: [
-                .text(identity),
-                .text(version),
-                .text(ownerKeyName)
-            ]
+            parameters: [.text(key), .text(value)]
         )
     }
 
-    func writeSphereVersion(
-        identity: String,
-        version: String
-    ) throws {
-        guard self.state == .ready else {
-            throw DatabaseServiceError.notReady
-        }
-        try database.execute(
-            sql: """
-            UPDATE sphere
-            SET version = ?
-            WHERE identity = ?
-            """,
-            parameters: [
-                .text(version),
-                .text(identity)
-            ]
-        )
+    /// Write database metadata at type-safe metadata key
+    func writeMetadatadata(key: DatabaseMetaKeys, value: String) throws {
+        try writeMetadatadata(key: key.rawValue, value: value)
     }
 
     /// Write entry syncronously
     func writeEntry(
-        entry: MemoEntry
+        slug: Slug,
+        memo: Memo,
+        audience: Audience
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        guard let size = entry.contents.size() else {
+        guard let size = memo.size() else {
             throw CodingError.encodingError(
                 message: "Faild to encode memo contents as utf-8"
             )
@@ -188,7 +173,6 @@ final class DatabaseService {
         try database.execute(
             sql: """
             INSERT OR REPLACE INTO memo (
-                sphere,
                 slug,
                 content_type,
                 created,
@@ -200,24 +184,25 @@ final class DatabaseService {
                 description,
                 excerpt,
                 links,
-                size
+                size,
+                audience
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             parameters: [
-                .text(entry.sphereIdentity ?? Self.noSphereIdentityKey),
-                .text(String(describing: entry.slug)),
-                .text(entry.contents.contentType),
-                .date(entry.contents.created),
-                .date(entry.contents.modified),
-                .text(entry.contents.title),
-                .text(entry.contents.fileExtension),
-                .json(entry.contents.headers, or: "[]"),
-                .text(entry.contents.body),
-                .text(entry.contents.plain()),
-                .text(entry.contents.excerpt()),
-                .json(entry.contents.slugs(), or: "[]"),
-                .integer(size)
+                .text(String(describing: slug)),
+                .text(memo.contentType),
+                .date(memo.created),
+                .date(memo.modified),
+                .text(memo.title),
+                .text(memo.fileExtension),
+                .json(memo.headers, or: "[]"),
+                .text(memo.body),
+                .text(memo.plain()),
+                .text(memo.excerpt()),
+                .json(memo.slugs(), or: "[]"),
+                .integer(size),
+                .integer(audience.rawValue)
             ]
         )
     }
@@ -881,8 +866,21 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-01-03T13:51:00")!,
+            version: Int.from(iso8601String: "2023-01-06T16:34:00")!,
             sql: """
+            /*
+            Key-value metadata related to the database.
+            Note that database is not source of truth, and may be deleted
+            and rebuilt. Metadata stored in this table should be about the
+            database and expected to exist only for the lifetime of the
+            database. Anything that needs to be persisted more permanently
+            should be persisted via other mechanisms.
+            */
+            CREATE TABLE database_metadata (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            );
+
             /* History of user search queries */
             CREATE TABLE search_history (
                 id TEXT PRIMARY KEY,
@@ -890,17 +888,9 @@ extension Config {
                 created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
-            /* Sphere table keeps information on the spheres we're syncing with */
-            CREATE TABLE sphere (
-                identity TEXT PRIMARY KEY,
-                version TEXT NOT NULL,
-                owner_key_name TEXT NOT NULL
-            );
-
             /* Memo table contains the content of any plain-text memo */
             CREATE TABLE memo (
-                sphere TEXT NOT NULL,
-                slug TEXT NOT NULL,
+                slug TEXT PRIMARY KEY,
                 content_type TEXT NOT NULL,
                 created TEXT NOT NULL,
                 modified TEXT NOT NULL,
@@ -918,11 +908,16 @@ extension Config {
                 links TEXT NOT NULL DEFAULT '[]',
                 /* Size of body (used in combination with modified for sync) */
                 size INTEGER NOT NULL,
-                PRIMARY KEY (sphere, slug)
+                /*
+                Audience is an integer constant denoting scope to which content
+                is published.
+                0 = local-only draft
+                1 = public sphere
+                */
+                audience INTEGER NOT NULL DEFAULT 0
             );
 
             CREATE VIRTUAL TABLE memo_search USING fts5(
-                sphere UNINDEXED,
                 slug,
                 content_type UNINDEXED,
                 created UNINDEXED,
@@ -935,6 +930,7 @@ extension Config {
                 excerpt UNINDEXED,
                 links UNINDEXED,
                 size UNINDEXED,
+                audience UNINDEXED,
                 content="memo",
                 tokenize="porter"
             );
@@ -959,7 +955,6 @@ extension Config {
             CREATE TRIGGER memo_search_after_update AFTER UPDATE ON memo BEGIN
                 INSERT INTO memo_search (
                     rowid,
-                    sphere,
                     slug,
                     content_type,
                     created,
@@ -971,11 +966,11 @@ extension Config {
                     description,
                     excerpt,
                     links,
-                    size
+                    size,
+                    audience
                 )
                 VALUES (
                     new.rowid,
-                    new.sphere,
                     new.slug,
                     new.content_type,
                     new.created,
@@ -987,14 +982,14 @@ extension Config {
                     new.description,
                     new.excerpt,
                     new.links,
-                    new.size
+                    new.size,
+                    new.audience
                 );
             END;
 
             CREATE TRIGGER memo_search_after_insert AFTER INSERT ON memo BEGIN
                 INSERT INTO memo_search (
                     rowid,
-                    sphere,
                     slug,
                     content_type,
                     created,
@@ -1006,11 +1001,11 @@ extension Config {
                     description,
                     excerpt,
                     links,
-                    size
+                    size,
+                    audience
                 )
                 VALUES (
                     new.rowid,
-                    new.sphere,
                     new.slug,
                     new.content_type,
                     new.created,
@@ -1022,7 +1017,8 @@ extension Config {
                     new.description,
                     new.excerpt,
                     new.links,
-                    new.size
+                    new.size,
+                    new.audience
                 );
             END;
             """
