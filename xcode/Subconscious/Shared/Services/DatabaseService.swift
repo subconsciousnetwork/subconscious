@@ -49,6 +49,10 @@ enum DatabaseServiceError: Error, LocalizedError {
 }
 
 final class DatabaseService {
+    /// String used for identifying content with no sphere identity
+    /// i.e. local content
+    static let noSphereIdentityKey = "none"
+
     /// Publishes the current state of the database.
     /// Subscribe to be notified when database changes state.
     @Published private(set) var state: DatabaseServiceState
@@ -112,7 +116,7 @@ final class DatabaseService {
         )
         guard let version = rows.first?.col(0)?.toString() else {
             throw DatabaseServiceError.notFound(
-                "No record found for sphere with identity \(identity)"
+                "No record found for sphere \(identity)"
             )
         }
         return version
@@ -201,7 +205,7 @@ final class DatabaseService {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             parameters: [
-                .text(entry.sphere),
+                .text(entry.sphereIdentity ?? Self.noSphereIdentityKey),
                 .text(String(describing: entry.slug)),
                 .text(entry.contents.contentType),
                 .date(entry.contents.created),

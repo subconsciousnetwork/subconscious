@@ -11,7 +11,8 @@ import Foundation
 struct Entry<T>: Hashable, Identifiable
 where T: Hashable
 {
-    var sphere: String = "none"
+    /// The identity of the sphere this entry belongs to, if any
+    var sphereIdentity: String?
     var slug: Slug
     var id: Slug { slug }
     var contents: T

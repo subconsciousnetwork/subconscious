@@ -243,7 +243,7 @@ struct AppModel: ModelProtocol {
         var model = state
         model.sphereIdentity = sphereIdentity
         if let sphereIdentity = sphereIdentity {
-            logger.debug("Sphere identity: \(sphereIdentity)")
+            logger.debug("Sphere: \(sphereIdentity)")
         }
         return Update(state: model)
     }
@@ -263,9 +263,7 @@ struct AppModel: ModelProtocol {
         let identity = try? environment.data.sphereIdentity()
         /// Get sphere identity, if any
         let setSphereIdentity = Just(
-            AppAction.setSphereIdentity(
-                identity ?? "unknown"
-            )
+            AppAction.setSphereIdentity(identity)
         )
 
         let fx: Fx<AppAction> = setSphereIdentity.merge(with: migrate)

@@ -96,7 +96,7 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
                 Config.default.noosphere.ownerKeyName :
                 state.nickname
             )
-            let receipt = try environment.data.noosphere.createSphere(
+            let receipt = try environment.data.createSphere(
                 ownerKeyName: ownerKeyName
             )
             var model = state

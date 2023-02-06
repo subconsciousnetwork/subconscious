@@ -237,8 +237,8 @@ public protocol SphereProtocol {
 
 public final class Sphere: SphereProtocol {
     private let noosphere: Noosphere
-    let fs: OpaquePointer
-    let identity: String
+    public let fs: OpaquePointer
+    public let identity: String
     
     init(noosphere: Noosphere, identity: String) throws {
         self.noosphere = noosphere
@@ -493,15 +493,14 @@ enum NoosphereServiceError: Error {
 }
 
 /// Creates and manages Noosphere and Spheres.
-/// Handles persisting settings to UserDefaults.
 final class NoosphereService {
     var globalStorageURL: URL
     var sphereStorageURL: URL
     var gatewayURL: URL?
     /// Memoized Noosphere instance
     private var _noosphere: Noosphere?
-    /// Memoized Sphere instance for default user sphere
-    private var _sphere: Sphere?
+    /// Memoized Sphere instances, keyed by sphere identity
+    private var _spheres: [String: Sphere]
     
     init(
         globalStorageURL: URL,
@@ -511,7 +510,7 @@ final class NoosphereService {
         self.globalStorageURL = globalStorageURL
         self.sphereStorageURL = sphereStorageURL
         self.gatewayURL = gatewayURL
-        self._noosphere = try? noosphere()
+        self._spheres = [:]
     }
     
     /// Gets or creates memoized Noosphere singleton instance
@@ -528,53 +527,21 @@ final class NoosphereService {
         return noosphere
     }
     
-    /// Get the sphere identity stored in user defaults, if any
-    /// - Returns: identity string, or nil
-    private func persistedSphereIdentity() -> String? {
-        UserDefaults.standard.string(forKey: "sphereIdentity")
-    }
-    
-    /// Get a Sphere for the identity stored in user defaults.
+    /// Get a Sphere by its identity.
+    /// Memoizes spheres by identity string.
     /// - Returns: Sphere
-    func sphere() throws -> Sphere {
-        if let sphere = self._sphere {
+    func sphere(identity: String) throws -> Sphere {
+        if let sphere = self._spheres[identity] {
             return sphere
-        }
-        guard let identity = persistedSphereIdentity() else {
-            throw NoosphereServiceError.sphereNotFound(
-                "Could not find sphere for user."
-            )
         }
         let noosphere = try noosphere()
         let sphere = try Sphere(noosphere: noosphere, identity: identity)
-        self._sphere = sphere
+        self._spheres[identity] = sphere
         return sphere
     }
     
-    /// Create a default sphere for user.
-    /// - Returns: SphereReceipt
-    /// Will not create sphere if a sphereIdentity already appears in
-    /// the user defaults.
-    func createSphere(ownerKeyName: String) throws -> SphereReceipt {
-        guard UserDefaults.standard.string(
-            forKey: "sphereIdentity"
-        ) == nil else {
-            throw NoosphereServiceError.sphereExists(
-                "A default Sphere already exists for this user. Doing nothing."
-            )
-        }
-        let noosphere = try noosphere()
-        let sphereReceipt = try noosphere.createSphere(
-            ownerKeyName: ownerKeyName
-        )
-        // Persist sphere identity to user defaults.
-        // NOTE: we do not persist the mnemonic, since it would be insecure.
-        // Instead, we return the receipt so that mnemonic can be displayed
-        // and discarded.
-        UserDefaults.standard.set(
-            sphereReceipt.identity,
-            forKey: "sphereIdentity"
-        )
-        return sphereReceipt
+    /// Clear the memoized cache of spheres
+    func clearSphereCache() {
+        self._spheres = [:]
     }
 }
