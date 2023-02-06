@@ -47,8 +47,9 @@ struct DataService {
 
     /// Get persisted state of first run completion
     func isFirstRunComplete() -> Bool {
+        // Do not show first run if Noosphere is disabled
         guard Config.default.noosphere.enabled else {
-            return false
+            return true
         }
         return UserDefaults.standard.bool(
             forKey: DataUserDefaultKeys.firstRunComplete.rawValue
