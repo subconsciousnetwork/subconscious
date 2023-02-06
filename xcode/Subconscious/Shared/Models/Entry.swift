@@ -11,11 +11,10 @@ import Foundation
 struct Entry<T>: Hashable, Identifiable
 where T: Hashable
 {
-    /// The identity of the sphere this entry belongs to, if any
-    var sphereIdentity: String?
     var slug: Slug
     var id: Slug { slug }
     var contents: T
+    var audience: Audience = .local
 }
 
 /// A Subtext entry is an Entry containing a SubtextMemo
