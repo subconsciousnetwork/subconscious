@@ -214,6 +214,7 @@ final class SQLite3Database {
         case database(code: Int32, message: String)
         case parameter(_ message: String)
         case value(_ message: String)
+        case delete(_ message: String)
     }
 
     /// Enum representing the most common flag combinations for `sqlite3_open_v2`.
@@ -635,19 +636,16 @@ final class SQLite3Database {
     /// We use this queue to make database instances threadsafe
     private var queue: DispatchQueue
     private var db: Connection?
-    /// URL to the database file.
-    let file: URL
     /// SQLite requires a file path string for many APIs.
     /// We derive this from the file URL in the constructor.
-    private let path: String
+    let path: String
     let mode: OpenMode
 
     public init(
-        file: URL,
+        path: String,
         mode: OpenMode = .readwrite
     ) {
-        self.file = file
-        self.path = file.absoluteString
+        self.path = path
         self.mode = mode
         // Create GCD dispatch queue for running database queries.
         // SQLite3Connection objects are threadsafe.
@@ -686,9 +684,15 @@ final class SQLite3Database {
         try queue.sync {
             self.db?.close()
             self.db = nil
+            // Get URL from path, if path is a valid URL.
             // We must use the `at: URL` form of this method because the
             // `atPath` form fails when given an absoluteString.
             // 2023-02-03 Gordon Brander
+            guard let file = URL(string: self.path) else {
+                throw SQLite3DatabaseError.delete(
+                    "Could not get URL for database from path: \(path)"
+                )
+            }
             try FileManager.default.removeItem(at: file)
         }
     }

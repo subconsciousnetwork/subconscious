@@ -541,7 +541,7 @@ struct AppEnvironment {
 
         let databaseService = DatabaseService(
             database: SQLite3Database(
-                file: databaseURL,
+                path: databaseURL.absoluteString,
                 mode: .readwrite
             ),
             migrations: Config.migrations
