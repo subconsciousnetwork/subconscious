@@ -575,13 +575,16 @@ struct AppEnvironment {
 
         let files = FileStore(documentURL: documentURL)
         let memos = HeaderSubtextMemoStore(store: files)
+        let defaults = AppDefaultsService()
+
+        let defaultGateway = defaults.defaultGatewayURL.get()
 
         let noosphere = NoosphereService(
             globalStorageURL: applicationSupportURL
                 .appending(path: Config.default.noosphere.globalStoragePath),
             sphereStorageURL: applicationSupportURL
                 .appending(path: Config.default.noosphere.sphereStoragePath),
-            gatewayURL: URL(string: Config.default.noosphere.defaultGatewayURL)
+            gatewayURL: URL(string: defaultGateway)
         )
 
         let databaseURL = self.applicationSupportURL
@@ -595,8 +598,6 @@ struct AppEnvironment {
             migrations: Config.migrations
         )
         
-        let defaults = AppDefaultsService()
-
         self.data = DataService(
             documentURL: self.documentURL,
             databaseURL: databaseURL,
