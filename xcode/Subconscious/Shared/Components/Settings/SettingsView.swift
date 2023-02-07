@@ -16,14 +16,19 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    Toggle(
-                        "Enable Noosphere",
-                        isOn: Binding(
-                            get: { app.state.isNoosphereEnabled },
-                            send: app.send,
-                            tag: AppAction.setNoosphereEnabled
+                    VStack(alignment: .leading) {
+                        Toggle(
+                            "Enable Noosphere",
+                            isOn: Binding(
+                                get: { app.state.isNoosphereEnabled },
+                                send: app.send,
+                                tag: AppAction.setNoosphereEnabled
+                            )
                         )
-                    )
+                        Text("**Beta**. Noosphere is a decentralized protocol for publishing and sharing linked notes.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    }
                 }
 
                 Section(header: Text("Sphere")) {
@@ -47,6 +52,7 @@ struct SettingsView: View {
                         value: app.state.sphereVersion ?? unknown
                     )
                     .textSelection(.enabled)
+
                 }
                 
                 Section {
