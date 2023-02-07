@@ -121,8 +121,10 @@ enum AppDatabaseState {
 struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
-    var isFirstRunComplete = false
-    var sphereIdentity: String?
+    var isFirstRunComplete = AppDefaults.firstRunComplete.get()
+    var sphereIdentity = AppDefaults.sphereIdentity.get()
+    var isNoosphereEnabled = AppDefaults.noosphereEnabled.get()
+    var gatewayURL = AppDefaults.gatewayURL.get()
 
     /// Determine if the interface is ready for user interaction,
     /// even if all of the data isn't refreshed yet.
