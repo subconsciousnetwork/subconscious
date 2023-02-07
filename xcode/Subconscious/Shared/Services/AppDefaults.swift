@@ -8,29 +8,29 @@
 import Foundation
 
 /// Exposes getters/setters for user defaults keys that we use.
-struct AppDefaultsService {
-    var nickname = OptionalUserDefaultsProperty(
+struct AppDefaults {
+    static let nickname = OptionalUserDefaultsProperty(
         key: "nickname",
         type: String.self
     )
     
-    var sphereIdentity = OptionalUserDefaultsProperty(
+    static let sphereIdentity = OptionalUserDefaultsProperty(
         key: "sphereIdentity",
         type: String.self
     )
     
-    var firstRunComplete = UserDefaultsProperty(
+    static let firstRunComplete = UserDefaultsProperty(
         key: "firstRunComplete",
         default: false
     )
     
-    var noosphereEnabled = UserDefaultsProperty(
+    static let noosphereEnabled = UserDefaultsProperty(
         key: "noosphereEnabled",
         default: false
     )
     
-    var defaultGatewayURL = UserDefaultsProperty(
-        key: "defaultGatewayURL",
+    static let gatewayURL = UserDefaultsProperty(
+        key: "gatewayURL",
         default: "http://127.0.0.1:4433"
     )
 }

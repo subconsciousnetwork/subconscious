@@ -298,7 +298,7 @@ struct AppModel: ModelProtocol {
         isComplete: Bool
     ) -> Update<AppModel> {
         // Persist value
-        environment.data.persistFirstRunComplete(isComplete)
+        AppDefaults.firstRunComplete.set(isComplete)
         // Update state
         var model = state
         model.isFirstRunComplete = isComplete
@@ -575,9 +575,8 @@ struct AppEnvironment {
 
         let files = FileStore(documentURL: documentURL)
         let memos = HeaderSubtextMemoStore(store: files)
-        let defaults = AppDefaultsService()
 
-        let defaultGateway = defaults.defaultGatewayURL.get()
+        let defaultGateway = AppDefaults.gatewayURL.get()
 
         let noosphere = NoosphereService(
             globalStorageURL: applicationSupportURL
@@ -603,8 +602,7 @@ struct AppEnvironment {
             databaseURL: databaseURL,
             noosphere: noosphere,
             database: databaseService,
-            memos: memos,
-            defaults: defaults
+            memos: memos
         )
 
         self.feed = FeedService()
