@@ -40,6 +40,15 @@ struct AppView: View {
                 .zIndex(1)
             }
         }
+        .sheet(
+            isPresented: Binding(
+                get: { store.state.isSettingsSheetPresented },
+                send: store.send,
+                tag: AppAction.presentSettingsSheet
+            )
+        ) {
+            SettingsView(app: store)
+        }
         .onAppear {
             store.send(.appear)
         }
@@ -105,6 +114,9 @@ enum AppAction: CustomLogStringConvertible {
     case succeedSyncLocalFilesWithDatabase([FileFingerprintChange])
     case failSyncLocalFilesWithDatabase(String)
 
+    /// Set settings sheet presented?
+    case presentSettingsSheet(_ isPresented: Bool)
+
     var logDescription: String {
         switch self {
         case let .succeedMigrateDatabase(version):
@@ -138,20 +150,23 @@ struct AppModel: ModelProtocol {
     var sphereIdentity = AppDefaults.sphereIdentity.get()
     var sphereVersion: String?
     var gatewayURL = AppDefaults.gatewayURL.get()
-
+    
+    /// Show settings sheet?
+    var isSettingsSheetPresented = false
+    
     /// Determine if the interface is ready for user interaction,
     /// even if all of the data isn't refreshed yet.
     /// This is the point at which the main interface is ready to be shown.
     var isReadyForInteraction: Bool {
         self.databaseState == .ready
     }
-
+    
     // Logger for actions
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "app"
     )
-
+    
     //  MARK: Update
     /// Main update function
     static func update(
@@ -270,9 +285,15 @@ struct AppModel: ModelProtocol {
         case let .failSyncLocalFilesWithDatabase(message):
             logger.log("File sync failed: \(message)")
             return Update(state: state)
+        case let .presentSettingsSheet(isPresented):
+            return presentSettingsSheet(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
         }
     }
-
+    
     /// Log message and no-op
     static func log(
         state: AppModel,
@@ -282,7 +303,7 @@ struct AppModel: ModelProtocol {
         logger.log("\(message)")
         return Update(state: state)
     }
-
+    
     static func appear(
         state: AppModel,
         environment: AppEnvironment
@@ -290,17 +311,17 @@ struct AppModel: ModelProtocol {
         logger.debug(
             "Documents: \(environment.documentURL)"
         )
-
+        
         let migrate: Fx<AppAction> = Just(AppAction.migrateDatabase)
             .eraseToAnyPublisher()
-
+        
         var model = state
         // Set first run complete from persisted state.
         model.shouldShowFirstRun = environment.data.shouldShowFirstRun()
-
+        
         return Update(state: model, fx: migrate)
     }
-
+    
     static func setNoosphereEnabled(
         state: AppModel,
         environment: AppEnvironment,
@@ -311,7 +332,7 @@ struct AppModel: ModelProtocol {
         AppDefaults.noosphereEnabled.set(isEnabled)
         return Update(state: model)
     }
-
+    
     static func setNickname(
         state: AppModel,
         environment: AppEnvironment,
@@ -333,7 +354,7 @@ struct AppModel: ModelProtocol {
         /// Only set valid nicknames
         return Update(state: model)
     }
-
+    
     static func setNicknameTextField(
         state: AppModel,
         environment: AppEnvironment,
@@ -347,7 +368,7 @@ struct AppModel: ModelProtocol {
         }
         return Update(state: model)
     }
-
+    
     static func setSphereIdentity(
         state: AppModel,
         environment: AppEnvironment,
@@ -360,7 +381,7 @@ struct AppModel: ModelProtocol {
         }
         return Update(state: model)
     }
-
+    
     /// Persist first run complete state
     static func persistFirstRunComplete(
         state: AppModel,
@@ -374,7 +395,7 @@ struct AppModel: ModelProtocol {
         model.shouldShowFirstRun = isComplete
         return Update(state: model)
     }
-
+    
     /// Wrap up first run flow
     static func firstRunComplete(
         state: AppModel,
@@ -391,7 +412,7 @@ struct AppModel: ModelProtocol {
         )
         .animation(.default)
     }
-
+    
     /// Make database ready.
     /// This will kick off a migration IF a successful migration
     /// has not already occurred.
@@ -427,11 +448,11 @@ struct AppModel: ModelProtocol {
         case .ready:
             logger.log("Database ready.")
             let fx: Fx<AppAction> = Just(AppAction.ready)
-            .eraseToAnyPublisher()
+                .eraseToAnyPublisher()
             return Update(state: state, fx: fx)
         }
     }
-
+    
     static func succeedMigrateDatabase(
         state: AppModel,
         environment: AppEnvironment,
@@ -445,7 +466,7 @@ struct AppModel: ModelProtocol {
         model.databaseState = .ready
         return update(state: model, action: .ready, environment: environment)
     }
-
+    
     static func rebuildDatabase(
         state: AppModel,
         environment: AppEnvironment
@@ -464,10 +485,10 @@ struct AppModel: ModelProtocol {
                     )
                 )
             })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+                .eraseToAnyPublisher()
+                    return Update(state: state, fx: fx)
     }
-
+    
     static func failRebuildDatabase(
         state: AppModel,
         environment: AppEnvironment,
@@ -480,7 +501,7 @@ struct AppModel: ModelProtocol {
         model.databaseState = .broken
         return Update(state: model)
     }
-
+    
     static func ready(
         state: AppModel,
         environment: AppEnvironment
@@ -494,7 +515,7 @@ struct AppModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     static func syncSphereWithGateway(
         state: AppModel,
         environment: AppEnvironment
@@ -511,10 +532,10 @@ struct AppModel: ModelProtocol {
             .catch({ error in
                 Just(AppAction.failSyncSphereWithGateway(error.localizedDescription))
             })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+                .eraseToAnyPublisher()
+                    return Update(state: state, fx: fx)
     }
-
+    
     static func succeedSyncSphereWithGateway(
         state: AppModel,
         environment: AppEnvironment,
@@ -536,7 +557,7 @@ struct AppModel: ModelProtocol {
         logger.log("Sphere sync failed: \(error)")
         return Update(state: state)
     }
-
+    
     static func syncSphereWithDatabase(
         state: AppModel,
         environment: AppEnvironment
@@ -550,10 +571,10 @@ struct AppModel: ModelProtocol {
                     AppAction.failSyncSphereWithDatabase(error.localizedDescription)
                 )
             })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+                .eraseToAnyPublisher()
+                    return Update(state: state, fx: fx)
     }
-
+    
     static func succeedSyncSphereWithDatabase(
         state: AppModel,
         environment: AppEnvironment,
@@ -572,7 +593,7 @@ struct AppModel: ModelProtocol {
         logger.log("Database failed to sync with sphere: \(error)")
         return Update(state: state)
     }
-
+    
     /// Start file sync
     static func syncLocalFilesWithDatabase(
         state: AppModel,
@@ -587,10 +608,10 @@ struct AppModel: ModelProtocol {
             .catch({ error in
                 Just(AppAction.failSyncLocalFilesWithDatabase(error.localizedDescription))
             })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+                .eraseToAnyPublisher()
+                    return Update(state: state, fx: fx)
     }
-
+    
     /// Handle successful sync
     static func succeedSyncLocalFilesWithDatabase(
         state: AppModel,
@@ -601,6 +622,16 @@ struct AppModel: ModelProtocol {
             "File sync finished: \(changes)"
         )
         return Update(state: state)
+    }
+    
+    static func presentSettingsSheet(
+        state: AppModel,
+        environment: AppEnvironment,
+        isPresented: Bool
+    ) -> Update<AppModel> {
+        var model = state
+        model.isSettingsSheetPresented = isPresented
+        return Update(state: model)
     }
 }
 

@@ -14,7 +14,7 @@ struct Config: Equatable, Codable {
 
     var noosphere = NoosphereConfig()
 
-    var appTabs = true
+    var appTabs = false
 
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15

@@ -76,7 +76,15 @@ struct NotebookNavigationView: View {
                         Text("Notes").bold()
                         CountChip(count: store.state.entryCount)
                     }
-                    .frame(minWidth: 200, maxWidth: .infinity)
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button(
+                        action: {
+                            app.send(.presentSettingsSheet(true))
+                        }
+                    ) {
+                        Image(systemName: "gearshape")
+                    }
                 }
             }
         }

@@ -73,6 +73,13 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") {
+                        app.send(.presentSettingsSheet(false))
+                    }
+                }
+            }
             .navigationBarTitleDisplayMode(.inline)
         }
     }

@@ -23,10 +23,6 @@ struct AppTabView: View {
                 .tabItem {
                     Label("Notes", systemImage: "folder")
                 }
-            SettingsView(app: store)
-                .tabItem {
-                    Label("Settings", systemImage: "gear")
-                }
         }
     }
 }
