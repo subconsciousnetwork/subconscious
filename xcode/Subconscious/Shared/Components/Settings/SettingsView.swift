@@ -10,6 +10,7 @@ import ObservableStore
 
 struct SettingsView: View {
     @ObservedObject var app: Store<AppModel>
+    var unknown = "Unknown"
 
     var body: some View {
         NavigationStack {
@@ -21,29 +22,20 @@ struct SettingsView: View {
                 Section(header: Text("Sphere")) {
                     KeyValueRowView(
                         key: Text("Nickname"),
-                        value: Text(
-                            "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
-                        )
-                        .textSelection(.enabled)
-                    )
-                    KeyValueRowView(
-                        key: Text("Public Key"),
-                        value: Text(
-                            "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
-                        )
-                        .textSelection(.enabled)
+                        value: Text(verbatim: app.state.nickname ?? unknown)
+                            .textSelection(.enabled)
                     )
                     KeyValueRowView(
                         key: Text("Sphere"),
                         value: Text(
-                            "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
+                            verbatim: app.state.sphereIdentity ?? unknown
                         )
                         .textSelection(.enabled)
                     )
                     KeyValueRowView(
                         key: Text("Version"),
                         value: Text(
-                            "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
+                            verbatim: app.state.sphereVersion ?? unknown
                         )
                         .textSelection(.enabled)
                     )
@@ -52,10 +44,8 @@ struct SettingsView: View {
                 Section(header: Text("Gateway")) {
                     KeyValueRowView(
                         key: Text("Gateway URL"),
-                        value: Text(
-                            "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"
-                        )
-                        .textSelection(.enabled)
+                        value: Text(verbatim: app.state.gatewayURL)
+                            .textSelection(.enabled)
                     )
                     NavigationLink("Gateway Settings") {
                         GatewaySettingsView(app: app)

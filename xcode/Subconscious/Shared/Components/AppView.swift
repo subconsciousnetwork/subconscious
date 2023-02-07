@@ -28,7 +28,7 @@ struct AppView: View {
                 }
             }
             .zIndex(0)
-            if (!store.state.isFirstRunComplete) {
+            if (store.state.shouldShowFirstRun) {
                 FirstRunView(
                     onDone: { sphereIdentity in
                         store.send(
@@ -36,7 +36,7 @@ struct AppView: View {
                         )
                     }
                 )
-                .animation(.default, value: store.state.isFirstRunComplete)
+                .animation(.default, value: store.state.shouldShowFirstRun)
                 .zIndex(1)
             }
         }
@@ -121,9 +121,13 @@ enum AppDatabaseState {
 struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
-    var isFirstRunComplete = AppDefaults.firstRunComplete.get()
-    var sphereIdentity = AppDefaults.sphereIdentity.get()
     var isNoosphereEnabled = AppDefaults.noosphereEnabled.get()
+    /// Should first run show?
+    /// Distinct from whether first run has actually run.
+    var shouldShowFirstRun = false
+    var nickname = AppDefaults.nickname.get()
+    var sphereIdentity = AppDefaults.sphereIdentity.get()
+    var sphereVersion: String?
     var gatewayURL = AppDefaults.gatewayURL.get()
 
     /// Determine if the interface is ready for user interaction,
@@ -260,24 +264,14 @@ struct AppModel: ModelProtocol {
             "Documents: \(environment.documentURL)"
         )
 
-        let migrate = Just(
-            AppAction.migrateDatabase
-        )
-
-        let identity = try? environment.data.sphereIdentity()
-        /// Get sphere identity, if any
-        let setSphereIdentity = Just(
-            AppAction.setSphereIdentity(identity)
-        )
-
-        let fx: Fx<AppAction> = setSphereIdentity.merge(with: migrate)
+        let migrate: Fx<AppAction> = Just(AppAction.migrateDatabase)
             .eraseToAnyPublisher()
 
         var model = state
         // Set first run complete from persisted state.
-        model.isFirstRunComplete = environment.data.isFirstRunComplete()
+        model.shouldShowFirstRun = environment.data.shouldShowFirstRun()
 
-        return Update(state: model, fx: fx)
+        return Update(state: model, fx: migrate)
     }
 
     static func setSphereIdentity(
@@ -303,7 +297,7 @@ struct AppModel: ModelProtocol {
         AppDefaults.firstRunComplete.set(isComplete)
         // Update state
         var model = state
-        model.isFirstRunComplete = isComplete
+        model.shouldShowFirstRun = isComplete
         return Update(state: model)
     }
 

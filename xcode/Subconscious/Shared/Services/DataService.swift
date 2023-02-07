@@ -38,13 +38,14 @@ struct DataService {
         self.memos = memos
     }
 
-    /// Get persisted state of first run completion
-    func isFirstRunComplete() -> Bool {
+    /// Determine if first run should show
+    func shouldShowFirstRun() -> Bool {
         // Do not show first run if Noosphere is disabled
         guard Config.default.noosphere.enabled else {
-            return true
+            return false
         }
-        return AppDefaults.firstRunComplete.get()
+        let isComplete = AppDefaults.firstRunComplete.get()
+        return !isComplete
     }
 
     /// Get usere's persisted default sphere identity
