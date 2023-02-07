@@ -595,12 +595,15 @@ struct AppEnvironment {
             migrations: Config.migrations
         )
         
+        let defaults = AppDefaultsService()
+
         self.data = DataService(
             documentURL: self.documentURL,
             databaseURL: databaseURL,
             noosphere: noosphere,
             database: databaseService,
-            memos: memos
+            memos: memos,
+            defaults: defaults
         )
 
         self.feed = FeedService()

@@ -276,6 +276,10 @@
 		B8DEBF232798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */; };
 		B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */; };
 		B8DEBF262798EF6A007CB528 /* RenameSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */; };
+		B8E00A2A29928DD2003B40C1 /* UserDefaultsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E00A2929928DD2003B40C1 /* UserDefaultsService.swift */; };
+		B8E00A2B29928DD2003B40C1 /* UserDefaultsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E00A2929928DD2003B40C1 /* UserDefaultsService.swift */; };
+		B8E00A2D299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */; };
+		B8E00A2E299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */; };
 		B8E1BB79296DECE700B86E0E /* SwiftNoosphere in Frameworks */ = {isa = PBXBuildFile; productRef = B8E1BB78296DECE700B86E0E /* SwiftNoosphere */; };
 		B8E1BB7B296DEF3200B86E0E /* NoosphereService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1BB7A296DEF3200B86E0E /* NoosphereService.swift */; };
 		B8E4724C2912A42C00D89C84 /* StoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4724B2912A42C00D89C84 /* StoreProtocol.swift */; };
@@ -494,6 +498,8 @@
 		B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleGroupView.swift; sourceTree = "<group>"; };
 		B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSuggestionLabelView.swift; sourceTree = "<group>"; };
 		B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSearchView.swift; sourceTree = "<group>"; };
+		B8E00A2929928DD2003B40C1 /* UserDefaultsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsService.swift; sourceTree = "<group>"; };
+		B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsProperty.swift; sourceTree = "<group>"; };
 		B8E1BB7A296DEF3200B86E0E /* NoosphereService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoosphereService.swift; sourceTree = "<group>"; };
 		B8E4724B2912A42C00D89C84 /* StoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreProtocol.swift; sourceTree = "<group>"; };
 		B8EA3EE429159C5500B92C2E /* HeaderSubtextMemoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderSubtextMemoStore.swift; sourceTree = "<group>"; };
@@ -634,6 +640,7 @@
 				B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */,
 				B8CA8F1F288F1875005F8802 /* RandomPromptGeist.swift */,
 				B8E4724B2912A42C00D89C84 /* StoreProtocol.swift */,
+				B8E00A2929928DD2003B40C1 /* UserDefaultsService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -864,6 +871,7 @@
 				B824FDD326FAB1BC00B81BBD /* Truncate.swift */,
 				B84AD8E92811C863006B3153 /* URLComponentsUtilities.swift */,
 				B82C3A6126F576FB00833CC8 /* URLUtilities.swift */,
+				B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */,
 				B8B3EE7C297B1A1000779B7F /* ViewDebugUtilities.swift */,
 				B8249DA227E2753800BCDFBA /* ViewUtilities.swift */,
 			);
@@ -1242,6 +1250,7 @@
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
 				B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
 				B8879EA626F9348600A0B4FF /* SubURL.swift in Sources */,
+				B8E00A2D299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */,
 				B8B604E629146DF6006FCB77 /* MemoryStore.swift in Sources */,
 				B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B822F18D27C9C0AB00943C6B /* CountChip.swift in Sources */,
@@ -1280,6 +1289,7 @@
 				B8AE34CB276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
 				B8AC648C278F757B0099E96B /* ProgressScrimView.swift in Sources */,
 				B89E307D2911D7F900A4721F /* IntUtilities.swift in Sources */,
+				B8E00A2A29928DD2003B40C1 /* UserDefaultsService.swift in Sources */,
 				B82C3A5326F528B000833CC8 /* DatabaseService.swift in Sources */,
 				B8A41D512811F87C0096D2E7 /* SlashlinkBarView.swift in Sources */,
 				B8879EA026F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */,
@@ -1370,6 +1380,7 @@
 				B81A535D27275138001A6268 /* Tape.swift in Sources */,
 				B85BF47027BB0FA800F55730 /* RowViewModifier.swift in Sources */,
 				B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
+				B8E00A2B29928DD2003B40C1 /* UserDefaultsService.swift in Sources */,
 				B8AE34C9276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B82C3A5726F529EF00833CC8 /* CombineUtilities.swift in Sources */,
 				B8B4251C28FE1DA60081B8D5 /* Entry.swift in Sources */,
@@ -1412,6 +1423,7 @@
 				B8879EA126F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */,
 				B8EB2A2426F27797006E97C3 /* AppView.swift in Sources */,
 				B82C3A6026F576C600833CC8 /* FileManagerUtilities.swift in Sources */,
+				B8E00A2E299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */,
 				B8B4251628FDE8570081B8D5 /* Memo.swift in Sources */,
 				B85EC461296F099700558761 /* ProfilePic.swift in Sources */,
 				B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */,

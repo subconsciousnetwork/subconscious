@@ -99,7 +99,7 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
         state: FirstRunModel,
         environment: AppEnvironment
     ) -> Update<FirstRunModel> {
-        UserDefaults.standard.set(state.nickname, forKey: "nickname")
+        environment.data.defaults.nickname.set(state.nickname)
         environment.logger.log("Saved nickname: \(state.nickname)")
         return Update(state: state)
     }

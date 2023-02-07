@@ -14,13 +14,6 @@ enum DataServiceError: Error {
     case noosphereNotEnabled(String)
 }
 
-enum DataUserDefaultKeys: String {
-    case sphereIdentity = "sphereIdentity"
-    case nickname = "nickname"
-    case email = "email"
-    case firstRunComplete = "firstRunComplete"
-}
-
 // MARK: SERVICE
 /// Wraps both database and source-of-truth store, providing data
 /// access methods for the app.
@@ -30,19 +23,22 @@ struct DataService {
     var noosphere: NoosphereService
     var database: DatabaseService
     var memos: HeaderSubtextMemoStore
+    var defaults: AppDefaultsService
 
     init(
         documentURL: URL,
         databaseURL: URL,
         noosphere: NoosphereService,
         database: DatabaseService,
-        memos: HeaderSubtextMemoStore
+        memos: HeaderSubtextMemoStore,
+        defaults: AppDefaultsService
     ) {
         self.documentURL = documentURL
         self.databaseURL = databaseURL
         self.database = database
         self.noosphere = noosphere
         self.memos = memos
+        self.defaults = defaults
     }
 
     /// Get persisted state of first run completion
@@ -51,24 +47,17 @@ struct DataService {
         guard Config.default.noosphere.enabled else {
             return true
         }
-        return UserDefaults.standard.bool(
-            forKey: DataUserDefaultKeys.firstRunComplete.rawValue
-        )
+        return defaults.firstRunComplete.get()
     }
 
     /// Persist state of first run completion
     func persistFirstRunComplete(_ isComplete: Bool) {
-        UserDefaults.standard.setValue(
-            isComplete,
-            forKey: DataUserDefaultKeys.firstRunComplete.rawValue
-        )
+        defaults.firstRunComplete.set(isComplete)
     }
 
     /// Get usere's persisted default sphere identity
     func sphereIdentity() throws -> String {
-        guard let id = UserDefaults.standard.string(
-            forKey: DataUserDefaultKeys.sphereIdentity.rawValue
-        ) else {
+        guard let id = defaults.sphereIdentity.get() else {
             throw DataServiceError.defaultSphereNotFound
         }
         return id
@@ -79,9 +68,7 @@ struct DataService {
     /// Will not create sphere if a sphereIdentity already appears in
     /// the user defaults.
     func createSphere(ownerKeyName: String) throws -> SphereReceipt {
-        guard UserDefaults.standard.string(
-            forKey: DataUserDefaultKeys.sphereIdentity.rawValue
-        ) == nil else {
+        guard defaults.sphereIdentity.get() == nil else {
             throw NoosphereServiceError.sphereExists(
                 "A default Sphere already exists for this user. Doing nothing."
             )
@@ -94,10 +81,7 @@ struct DataService {
         // NOTE: we do not persist the mnemonic, since it would be insecure.
         // Instead, we return the receipt so that mnemonic can be displayed
         // and discarded.
-        UserDefaults.standard.set(
-            sphereReceipt.identity,
-            forKey: DataUserDefaultKeys.sphereIdentity.rawValue
-        )
+        defaults.sphereIdentity.set(sphereReceipt.identity)
         return sphereReceipt
     }
 
