@@ -551,13 +551,6 @@ struct DataService {
     
     /// Choose a random entry and publish slug
     func readRandomEntryLink() throws -> EntryLink {
-        guard !Config.default.noosphere.enabled else {
-            let identity = try self.sphereIdentity()
-            let slugStrings = try noosphere.sphere(identity: identity).list()
-            let slugString = try slugStrings.randomElement().unwrap()
-            let slug = try Slug(slugString).unwrap()
-            return EntryLink(slug: slug)
-        }
         guard let link = database.readRandomEntryLink() else {
             throw DatabaseServiceError.randomEntryFailed
         }

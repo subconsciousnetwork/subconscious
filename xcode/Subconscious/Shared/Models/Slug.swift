@@ -161,3 +161,9 @@ extension URL {
         Slug(url: self, relativeTo: base)
     }
 }
+
+extension String {
+    func toSlug() -> Slug? {
+        Slug(formatting: self)
+    }
+}

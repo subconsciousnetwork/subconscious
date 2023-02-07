@@ -19,6 +19,7 @@ struct EntryStub:
     let link: EntryLink
     let excerpt: String
     let modified: Date
+    let audience: Audience
 
     var slug: Slug { link.slug }
     var linkableTitle: String { link.linkableTitle }

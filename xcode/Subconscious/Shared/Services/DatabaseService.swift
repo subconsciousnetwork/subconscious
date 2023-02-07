@@ -247,7 +247,7 @@ final class DatabaseService {
         }
         guard let results = try? database.execute(
             sql: """
-            SELECT slug, modified, title, excerpt
+            SELECT slug, modified, title, excerpt, audience
             FROM memo
             ORDER BY modified DESC
             LIMIT 1000
@@ -257,19 +257,19 @@ final class DatabaseService {
         }
         return results.compactMap({ row in
             guard
-                let slug: Slug = row.get(0).flatMap({ string in
-                    Slug(formatting: string)
-                }),
-                let modified: Date = row.get(1),
-                let title: String = row.get(2),
-                let excerpt: String = row.get(3)
+                let slug = row.col(0)?.toString()?.toSlug(),
+                let modified = row.col(1)?.toDate(),
+                let title = row.col(2)?.toString(),
+                let excerpt = row.col(3)?.toString(),
+                let audience = row.col(4)?.toInt()?.toAudience()
             else {
                 return nil
             }
             return EntryStub(
                 link: EntryLink(slug: slug, title: title),
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                audience: audience
             )
         })
     }
@@ -682,7 +682,7 @@ final class DatabaseService {
         // Use content indexed in database, even though it might be stale.
         guard let results = try? database.execute(
             sql: """
-            SELECT slug, modified, title, excerpt
+            SELECT slug, modified, title, excerpt, audience
             FROM memo_search
             WHERE slug != ? AND memo_search.description MATCH ?
             ORDER BY rank
@@ -698,19 +698,19 @@ final class DatabaseService {
         
         return results.compactMap({ row in
             guard
-                let slug: Slug = row.get(0).flatMap({ string in
-                    Slug(formatting: string)
-                }),
-                let modified: Date = row.get(1),
-                let title: String = row.get(2),
-                let excerpt: String = row.get(3)
+                let slug = row.col(0)?.toString()?.toSlug(),
+                let modified = row.col(1)?.toDate(),
+                let title = row.col(2)?.toString(),
+                let excerpt = row.col(3)?.toString(),
+                let audience = row.col(4)?.toInt()?.toAudience()
             else {
                 return nil
             }
             return EntryStub(
                 link: EntryLink(slug: slug, title: title),
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                audience: audience
             )
         })
     }
@@ -725,7 +725,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT slug, modified, title, excerpt
+            SELECT slug, modified, title, excerpt, audience
             FROM memo
             WHERE memo.modified BETWEEN ? AND ?
             ORDER BY RANDOM()
@@ -738,19 +738,19 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slug: Slug = row.get(0).flatMap({ string in
-                    Slug(formatting: string)
-                }),
-                let modified: Date = row.get(1),
-                let title: String = row.get(2),
-                let excerpt: String = row.get(3)
+                let slug = row.col(0)?.toString()?.toSlug(),
+                let modified = row.col(1)?.toDate(),
+                let title = row.col(2)?.toString(),
+                let excerpt = row.col(3)?.toString(),
+                let audience = row.col(4)?.toInt()?.toAudience()
             else {
                 return nil
             }
             return EntryStub(
                 link: EntryLink(slug: slug, title: title),
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                audience: audience
             )
         })
         .first
@@ -764,7 +764,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT slug, modified, title, excerpt
+            SELECT slug, modified, title, excerpt, audience
             FROM memo
             ORDER BY RANDOM()
             LIMIT 1
@@ -772,19 +772,19 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slug: Slug = row.get(0).flatMap({ string in
-                    Slug(formatting: string)
-                }),
-                let modified: Date = row.get(1),
-                let title: String = row.get(2),
-                let excerpt: String = row.get(3)
+                let slug = row.col(0)?.toString()?.toSlug(),
+                let modified = row.col(1)?.toDate(),
+                let title = row.col(2)?.toString(),
+                let excerpt = row.col(3)?.toString(),
+                let audience = row.col(4)?.toInt()?.toAudience()
             else {
                 return nil
             }
             return EntryStub(
                 link: EntryLink(slug: slug, title: title),
                 excerpt: excerpt,
-                modified: modified
+                modified: modified,
+                audience: audience
             )
         })
         .first
@@ -800,7 +800,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT slug, modified, title, body
+            SELECT slug, modified, title, excerpt, audience
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY RANDOM()
@@ -812,19 +812,19 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slug: Slug = row.get(0).flatMap({ string in
-                    Slug(formatting: string)
-                }),
-                let modified: Date = row.get(1),
-                let title: String = row.get(2),
-                let body: String = row.get(3)
+                let slug = row.col(0)?.toString()?.toSlug(),
+                let modified = row.col(1)?.toDate(),
+                let title = row.col(2)?.toString(),
+                let excerpt = row.col(3)?.toString(),
+                let audience = row.col(4)?.toInt()?.toAudience()
             else {
                 return nil
             }
             return EntryStub(
                 link: EntryLink(slug: slug, title: title),
-                excerpt: Subtext(markup: body).excerpt(),
-                modified: modified
+                excerpt: excerpt,
+                modified: modified,
+                audience: audience
             )
         })
         .first

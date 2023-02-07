@@ -58,5 +58,6 @@ extension EntryStub {
         self.link = EntryLink(entry)
         self.excerpt = entry.contents.excerpt()
         self.modified = entry.contents.modified
+        self.audience = entry.audience
     }
 }

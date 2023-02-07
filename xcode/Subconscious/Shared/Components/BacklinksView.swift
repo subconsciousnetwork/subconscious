@@ -63,7 +63,14 @@ struct BacklinksView_Previews: PreviewProvider {
                     EntryStub(
                         link: EntryLink(title: "Floop")!,
                         excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
-                        modified: Date.now
+                        modified: Date.now,
+                        audience: .local
+                    ),
+                    EntryStub(
+                        link: EntryLink(title: "Floop")!,
+                        excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
+                        modified: Date.now,
+                        audience: .public
                     )
                 ],
                 onSelect: { title in }
