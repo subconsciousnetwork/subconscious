@@ -19,7 +19,7 @@ struct ProfileSettingsView: View {
 
     var body: some View {
         Form {
-            Section(header: Text("Nickname")) {
+            Section {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     HStack {
                         TextField(
