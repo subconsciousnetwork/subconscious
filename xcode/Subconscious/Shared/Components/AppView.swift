@@ -55,6 +55,13 @@ enum AppAction: CustomLogStringConvertible {
     /// On view appear
     case appear
 
+    /// Enable/disable Noosphere
+    case setNoosphereEnabled(_ isEnabled: Bool)
+
+    /// Set sphere/user nickname
+    case setNickname(_ nickname: String?)
+    case setNicknameTextField(_ nickname: String)
+
     /// Set identity of sphere
     case setSphereIdentity(String?)
     
@@ -121,11 +128,13 @@ enum AppDatabaseState {
 struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
+    /// Load intial state from persisted app defaults
     var isNoosphereEnabled = AppDefaults.noosphereEnabled.get()
     /// Should first run show?
     /// Distinct from whether first run has actually run.
     var shouldShowFirstRun = false
     var nickname = AppDefaults.nickname.get()
+    var nicknameTextField = AppDefaults.nickname.get() ?? ""
     var sphereIdentity = AppDefaults.sphereIdentity.get()
     var sphereVersion: String?
     var gatewayURL = AppDefaults.gatewayURL.get()
@@ -153,6 +162,24 @@ struct AppModel: ModelProtocol {
         switch action {
         case .appear:
             return appear(state: state, environment: environment)
+        case let .setNoosphereEnabled(isEnabled):
+            return setNoosphereEnabled(
+                state: state,
+                environment: environment,
+                isEnabled: isEnabled
+            )
+        case let .setNickname(nickname):
+            return setNickname(
+                state: state,
+                environment: environment,
+                nickname: nickname
+            )
+        case let .setNicknameTextField(nickname):
+            return setNicknameTextField(
+                state: state,
+                environment: environment,
+                text: nickname
+            )
         case let .setSphereIdentity(sphereIdentity):
             return setSphereIdentity(
                 state: state,
@@ -272,6 +299,53 @@ struct AppModel: ModelProtocol {
         model.shouldShowFirstRun = environment.data.shouldShowFirstRun()
 
         return Update(state: model, fx: migrate)
+    }
+
+    static func setNoosphereEnabled(
+        state: AppModel,
+        environment: AppEnvironment,
+        isEnabled: Bool
+    ) -> Update<AppModel> {
+        var model = state
+        model.isNoosphereEnabled = isEnabled
+        AppDefaults.noosphereEnabled.set(isEnabled)
+        return Update(state: model)
+    }
+
+    static func setNickname(
+        state: AppModel,
+        environment: AppEnvironment,
+        nickname: String?
+    ) -> Update<AppModel> {
+        guard let nickname = nickname else {
+            var model = state
+            model.nickname = nil
+            model.nicknameTextField = ""
+            AppDefaults.nickname.set(nil)
+            return Update(state: model)
+        }
+        var model = state
+        if let validNickname = Nickname.format(nickname) {
+            model.nickname = validNickname
+            model.nicknameTextField = validNickname
+            AppDefaults.nickname.set(validNickname)
+        }
+        /// Only set valid nicknames
+        return Update(state: model)
+    }
+
+    static func setNicknameTextField(
+        state: AppModel,
+        environment: AppEnvironment,
+        text: String
+    ) -> Update<AppModel> {
+        var model = state
+        model.nicknameTextField = text
+        if let validNickname = Nickname.format(text) {
+            model.nickname = validNickname
+            AppDefaults.nickname.set(validNickname)
+        }
+        return Update(state: model)
     }
 
     static func setSphereIdentity(

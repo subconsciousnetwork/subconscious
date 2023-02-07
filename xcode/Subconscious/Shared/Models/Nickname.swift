@@ -24,15 +24,21 @@ struct Nickname:
     }
     
     init?(_ string: String) {
-        let formatted = Self.format(string)
+        guard let formatted = Self.format(string) else {
+            return nil
+        }
         guard formatted == string else {
             return nil
         }
         self.description = formatted
     }
 
-    init(formatting string: String) {
-        self.description = Self.format(string)
+    /// Create a nickname by sanitizing/reformatting string
+    init?(formatting string: String) {
+        guard let formatted = Self.format(string) else {
+            return nil
+        }
+        self.description = formatted
     }
 
     /// Compare slugs by alpha
@@ -41,7 +47,10 @@ struct Nickname:
     }
 
     /// Format a string to a slashlink-compatible string
-    static func format(_ string: String) -> String {
+    static func format(_ string: String) -> String? {
+        guard !string.isEmpty else {
+            return nil
+        }
         return string
             .replacingOccurrences(
                 of: #"[^\w\d\s\-]"#,

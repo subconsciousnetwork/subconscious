@@ -47,9 +47,12 @@ class Tests_Nickname: XCTestCase {
 
     func testFormatUnicodeCharacters0() throws {
         // Note the apostrophe-like character here is a word character
-        let nickname = Nickname(
+        guard let nickname = Nickname(
             formatting: "Baháʼí"
-        )
+        ) else {
+            XCTFail("Failed to format text")
+            return
+        }
         XCTAssertEqual(
             String(nickname),
             "baháʼí"
@@ -57,9 +60,12 @@ class Tests_Nickname: XCTestCase {
     }
 
     func testFormatUnicodeCharacters1() throws {
-        let nickname = Nickname(
+        guard let nickname = Nickname(
             formatting: "Fédération Aéronautique Internationale"
-        )
+        ) else {
+            XCTFail("Failed to format text")
+            return
+        }
         XCTAssertEqual(
             String(nickname),
             "fédération-aéronautique-internationale"

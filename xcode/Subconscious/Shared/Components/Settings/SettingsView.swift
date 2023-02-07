@@ -16,37 +16,38 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section(header: Text("Noosphere")) {
-                    Toggle("Enable Noosphere", isOn: .constant(false))
+                    Toggle(
+                        "Enable Noosphere",
+                        isOn: Binding(
+                            get: { app.state.isNoosphereEnabled },
+                            send: app.send,
+                            tag: AppAction.setNoosphereEnabled
+                        )
+                    )
                 }
 
                 Section(header: Text("Sphere")) {
-                    KeyValueRowView(
-                        key: Text("Nickname"),
-                        value: Text(verbatim: app.state.nickname ?? unknown)
-                            .textSelection(.enabled)
-                    )
-                    KeyValueRowView(
-                        key: Text("Sphere"),
-                        value: Text(
-                            verbatim: app.state.sphereIdentity ?? unknown
-                        )
+                    LabeledContent("Nickname", value: app.state.nickname ?? "")
                         .textSelection(.enabled)
+                    LabeledContent(
+                        "Sphere",
+                        value: app.state.sphereIdentity ?? unknown
                     )
-                    KeyValueRowView(
-                        key: Text("Version"),
-                        value: Text(
-                            verbatim: app.state.sphereVersion ?? unknown
-                        )
-                        .textSelection(.enabled)
+                    .lineLimit(1)
+                    .textSelection(.enabled)
+                    LabeledContent(
+                        "Version",
+                        value: app.state.sphereVersion ?? unknown
                     )
+                    .textSelection(.enabled)
                 }
                 
                 Section(header: Text("Gateway")) {
-                    KeyValueRowView(
-                        key: Text("Gateway URL"),
-                        value: Text(verbatim: app.state.gatewayURL)
-                            .textSelection(.enabled)
+                    LabeledContent(
+                        "Gateway URL",
+                        value: app.state.gatewayURL
                     )
+                    .textSelection(.enabled)
                     NavigationLink("Gateway Settings") {
                         GatewaySettingsView(app: app)
                     }

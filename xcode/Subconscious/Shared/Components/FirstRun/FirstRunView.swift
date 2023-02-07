@@ -45,7 +45,9 @@ struct FirstRunModel: ModelProtocol, Codable, Hashable {
             return Update(state: state)
         case .setNickname(let nickname):
             var model = state
-            model.nickname = Nickname.format(nickname)
+            if let nickname = Nickname.format(nickname) {
+                model.nickname = nickname
+            }
             return Update(state: model)
         case .persistProfile:
             return persistProfile(
