@@ -20,34 +20,22 @@ struct ProfileSettingsView: View {
     var body: some View {
         Form {
             Section {
-                VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                    HStack {
-                        TextField(
-                            "nickname", text: Binding(
-                                get: { app.state.nicknameTextField },
-                                send: app.send,
-                                tag: AppAction.setNicknameTextField
-                            )
-                        )
-                        .disableAutocorrection(true)
-                        .autocapitalization(.none)
-                        .onDisappear {
-                            app.send(
-                                .setNickname(app.state.nicknameTextField)
-                            )
-                        }
-                        if !isNicknameValid {
-                            Image(systemName: "exclamationmark.circle")
-                                .foregroundColor(.red)
-                                .transition(.opacity.animation(.default))
-                        }
-                    }
-                    Text("Lowercase letters, numbers, and dashes only")
-                        .foregroundColor(
-                            isNicknameValid ? Color.secondary : Color.red
-                        )
-                        .animation(.default, value: isNicknameValid)
-                        .font(.caption)
+                ValidatedTextField(
+                    placeholder: "nickname",
+                    text: Binding(
+                        get: { app.state.nicknameTextField },
+                        send: app.send,
+                        tag: AppAction.setNicknameTextField
+                    ),
+                    caption: "Lowercase letters, numbers, and dashes only",
+                    isValid: isNicknameValid
+                )
+                .disableAutocorrection(true)
+                .autocapitalization(.none)
+                .onDisappear {
+                    app.send(
+                        .setNickname(app.state.nicknameTextField)
+                    )
                 }
             }
         }
