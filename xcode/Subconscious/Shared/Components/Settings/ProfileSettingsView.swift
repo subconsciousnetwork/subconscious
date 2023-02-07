@@ -10,12 +10,6 @@ import ObservableStore
 
 struct ProfileSettingsView: View {
     @ObservedObject var app: Store<AppModel>
-    var isNicknameValid: Bool {
-        (
-            (app.state.nickname == app.state.nicknameTextField)
-            && app.state.nickname != nil
-        )
-    }
 
     var body: some View {
         Form {
@@ -28,13 +22,13 @@ struct ProfileSettingsView: View {
                         tag: AppAction.setNicknameTextField
                     ),
                     caption: "Lowercase letters, numbers, and dashes only",
-                    isValid: isNicknameValid
+                    isValid: app.state.isNicknameTextFieldValid
                 )
                 .disableAutocorrection(true)
                 .autocapitalization(.none)
                 .onDisappear {
                     app.send(
-                        .setNickname(app.state.nicknameTextField)
+                        .submitNickname(app.state.nicknameTextField)
                     )
                 }
             }

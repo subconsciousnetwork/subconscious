@@ -68,8 +68,12 @@ enum AppAction: CustomLogStringConvertible {
     case setNoosphereEnabled(_ isEnabled: Bool)
 
     /// Set sphere/user nickname
-    case setNickname(_ nickname: String?)
     case setNicknameTextField(_ nickname: String)
+    case submitNickname(_ nickname: String?)
+
+    /// Set gateway URL
+    case setGatewayURLTextField(_ gateway: String)
+    case submitGatewayURL(_ gateway: String)
 
     /// Set identity of sphere
     case setSphereIdentity(String?)
@@ -147,9 +151,14 @@ struct AppModel: ModelProtocol {
     var shouldShowFirstRun = false
     var nickname = AppDefaults.nickname.get()
     var nicknameTextField = AppDefaults.nickname.get() ?? ""
+    var isNicknameTextFieldValid = true
+
     var sphereIdentity = AppDefaults.sphereIdentity.get()
     var sphereVersion: String?
+
     var gatewayURL = AppDefaults.gatewayURL.get()
+    var gatewayURLTextField = AppDefaults.gatewayURL.get()
+    var isGatewayURLTextFieldValid = true
     
     /// Show settings sheet?
     var isSettingsSheetPresented = false
@@ -183,17 +192,29 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 isEnabled: isEnabled
             )
-        case let .setNickname(nickname):
-            return setNickname(
-                state: state,
-                environment: environment,
-                nickname: nickname
-            )
         case let .setNicknameTextField(nickname):
             return setNicknameTextField(
                 state: state,
                 environment: environment,
                 text: nickname
+            )
+        case let .submitNickname(nickname):
+            return submitNickname(
+                state: state,
+                environment: environment,
+                nickname: nickname
+            )
+        case let .setGatewayURLTextField(text):
+            return setGatewayURLTextField(
+                state: state,
+                environment: environment,
+                text: text
+            )
+        case let .submitGatewayURL(gateway):
+            return submitGatewayURL(
+                state: state,
+                environment: environment,
+                gatewayURL: gateway
             )
         case let .setSphereIdentity(sphereIdentity):
             return setSphereIdentity(
@@ -333,7 +354,17 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func setNickname(
+    static func setNicknameTextField(
+        state: AppModel,
+        environment: AppEnvironment,
+        text: String
+    ) -> Update<AppModel> {
+        var model = state
+        model.nicknameTextField = text
+        return Update(state: model)
+    }
+    
+    static func submitNickname(
         state: AppModel,
         environment: AppEnvironment,
         nickname: String?
@@ -345,30 +376,58 @@ struct AppModel: ModelProtocol {
             AppDefaults.nickname.set(nil)
             return Update(state: model)
         }
-        var model = state
-        if let validNickname = Nickname.format(nickname) {
-            model.nickname = validNickname
-            model.nicknameTextField = validNickname
-            AppDefaults.nickname.set(validNickname)
+        guard let validNickname = Nickname.format(nickname) else {
+            var model = state
+            model.nicknameTextField = nickname
+            return Update(state: model)
         }
+        var model = state
+        model.nickname = validNickname
+        model.nicknameTextField = validNickname
+        AppDefaults.nickname.set(nickname)
         /// Only set valid nicknames
         return Update(state: model)
     }
-    
-    static func setNicknameTextField(
+
+    static func isValidWebURL(_ string: String) -> Bool {
+        guard let url = URL(string: string) else {
+            return false
+        }
+        return url.scheme == "http" || url.scheme == "https"
+    }
+
+    static func setGatewayURLTextField(
         state: AppModel,
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
         var model = state
-        model.nicknameTextField = text
-        if let validNickname = Nickname.format(text) {
-            model.nickname = validNickname
-            AppDefaults.nickname.set(validNickname)
-        }
+        model.gatewayURLTextField = text
+        model.isGatewayURLTextFieldValid = isValidWebURL(text)
         return Update(state: model)
     }
     
+    static func submitGatewayURL(
+        state: AppModel,
+        environment: AppEnvironment,
+        gatewayURL: String
+    ) -> Update<AppModel> {
+        // If URL given is not valid, reset back to original value.
+        guard isValidWebURL(gatewayURL) else {
+            var model = state
+            model.gatewayURLTextField = model.gatewayURL
+            model.isGatewayURLTextFieldValid = true
+            return Update(state: model)
+        }
+        var model = state
+        model.gatewayURL = gatewayURL
+        model.gatewayURLTextField = gatewayURL
+        model.isGatewayURLTextFieldValid = true
+        AppDefaults.gatewayURL.set(gatewayURL)
+        /// Only set valid nicknames
+        return Update(state: model)
+    }
+
     static func setSphereIdentity(
         state: AppModel,
         environment: AppEnvironment,

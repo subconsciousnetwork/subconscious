@@ -11,7 +11,7 @@ import SwiftUI
 struct ValidatedTextField: View {
     var placeholder: String
     @Binding var text: String
-    var caption: String = ""
+    var caption: String
     var isValid: Bool = true
 
     var body: some View {
@@ -21,12 +21,10 @@ struct ValidatedTextField: View {
                     placeholder,
                     text: $text
                 )
-                if !isValid {
-                    Image(systemName: "exclamationmark.circle")
-                        .foregroundColor(.red)
-                        .opacity(isValid ? 0 : 1)
-                        .animation(.default, value: isValid)
-                }
+                Image(systemName: "exclamationmark.circle")
+                    .foregroundColor(.red)
+                    .opacity(isValid ? 0 : 1)
+                    .animation(.default, value: isValid)
             }
             Text(caption)
                 .foregroundColor(
