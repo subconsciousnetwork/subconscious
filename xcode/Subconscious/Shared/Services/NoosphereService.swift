@@ -235,7 +235,7 @@ public protocol SphereProtocol {
     func changes(_ since: String?) throws -> [String]
 }
 
-public final class Sphere: SphereProtocol {
+public final class SphereFS: SphereProtocol {
     private let noosphere: Noosphere
     public let fs: OpaquePointer
     public let identity: String
@@ -295,6 +295,28 @@ public final class Sphere: SphereProtocol {
         )
     }
     
+    /// Get the base64-encoded CID v1 string for the memo that refers to the
+    /// content of this sphere file.
+    public func getFileVersion(slashlink: String) -> String? {
+        guard let file = ns_sphere_fs_read(
+            noosphere.noosphere,
+            fs,
+            slashlink
+        ) else {
+            return nil
+        }
+        guard let cid = try? NoosphereFFI.callWithError(
+            ns_sphere_file_version_get,
+            file
+        ) else {
+            return nil
+        }
+        defer {
+            ns_string_free(cid)
+        }
+        return String.init(cString: cid)
+    }
+
     /// Read all header names for a given slashlink
     public func readHeaderNames(slashlink: String) -> [String] {
         guard let file = ns_sphere_fs_read(
@@ -500,7 +522,7 @@ final class NoosphereService {
     /// Memoized Noosphere instance
     private var _noosphere: Noosphere?
     /// Memoized Sphere instances, keyed by sphere identity
-    private var _spheres: [String: Sphere]
+    private var _spheres: [String: SphereFS]
     
     init(
         globalStorageURL: URL,
@@ -530,12 +552,12 @@ final class NoosphereService {
     /// Get a Sphere by its identity.
     /// Memoizes spheres by identity string.
     /// - Returns: Sphere
-    func sphere(identity: String) throws -> Sphere {
+    func sphere(identity: String) throws -> SphereFS {
         if let sphere = self._spheres[identity] {
             return sphere
         }
         let noosphere = try noosphere()
-        let sphere = try Sphere(noosphere: noosphere, identity: identity)
+        let sphere = try SphereFS(noosphere: noosphere, identity: identity)
         self._spheres[identity] = sphere
         return sphere
     }
@@ -543,5 +565,18 @@ final class NoosphereService {
     /// Clear the memoized cache of spheres
     func clearSphereCache() {
         self._spheres = [:]
+    }
+    
+    /// Update Gateway.
+    /// Resets memoized Noosphere and Sphere instances.
+    func updateGateway(url: URL) throws {
+        let noosphere = try Noosphere(
+            globalStoragePath: globalStorageURL.path(percentEncoded: false),
+            sphereStoragePath: sphereStorageURL.path(percentEncoded: false),
+            gatewayURL: url.absoluteString
+        )
+        self.gatewayURL = url
+        self._noosphere = noosphere
+        self.clearSphereCache()
     }
 }

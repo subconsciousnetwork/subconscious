@@ -8,7 +8,7 @@
 import XCTest
 @testable import Subconscious
 
-final class Tests_Sphere: XCTestCase {
+final class Tests_SphereFS: XCTestCase {
     var noosphere: Noosphere?
     
     override func setUpWithError() throws {
@@ -41,7 +41,7 @@ final class Tests_Sphere: XCTestCase {
         print("Sphere mnemonic: \(sphereReceipt.mnemonic)")
         
         do {
-            let sphere = try Sphere(
+            let sphere = try SphereFS(
                 noosphere: noosphere,
                 identity: sphereReceipt.identity
             )
@@ -63,7 +63,7 @@ final class Tests_Sphere: XCTestCase {
         
         // Re-open sphere
         do {
-            let sphere = try Sphere(
+            let sphere = try SphereFS(
                 noosphere: noosphere,
                 identity: sphereReceipt.identity
             )
@@ -79,7 +79,7 @@ final class Tests_Sphere: XCTestCase {
         let noosphere = noosphere!
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
-        let sphere = try Sphere(
+        let sphere = try SphereFS(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -121,7 +121,7 @@ final class Tests_Sphere: XCTestCase {
         let noosphere = noosphere!
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
-        let sphere = try Sphere(
+        let sphere = try SphereFS(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -163,7 +163,7 @@ final class Tests_Sphere: XCTestCase {
         let noosphere = noosphere!
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
-        let sphere = try Sphere(
+        let sphere = try SphereFS(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -217,7 +217,7 @@ final class Tests_Sphere: XCTestCase {
         let noosphere = noosphere!
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
-        let sphere = try Sphere(
+        let sphere = try SphereFS(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -252,7 +252,7 @@ final class Tests_Sphere: XCTestCase {
         let noosphere = noosphere!
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
-        let sphere = try Sphere(
+        let sphere = try SphereFS(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
