@@ -138,7 +138,6 @@
 		B88B1CE3298EB0100062CB7F /* BarButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE2298EB0100062CB7F /* BarButtonStyle.swift */; };
 		B88B1CE5298EB10D0062CB7F /* RecoveryPhraseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE4298EB10D0062CB7F /* RecoveryPhraseView.swift */; };
 		B88B1CE7298EEC240062CB7F /* GatewaySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE6298EEC240062CB7F /* GatewaySettingsView.swift */; };
-		B88B1CE9298EEF870062CB7F /* KeyValueRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE8298EEF870062CB7F /* KeyValueRowView.swift */; };
 		B88C9781276425E800B27DF0 /* IBMPlexMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */; };
 		B88C9782276425E900B27DF0 /* IBMPlexMono-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */; };
 		B88C9783276425E900B27DF0 /* IBMPlexMono-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B88C977E276425E800B27DF0 /* IBMPlexMono-BoldItalic.ttf */; };
@@ -280,6 +279,8 @@
 		B8E00A2B29928DD2003B40C1 /* AppDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E00A2929928DD2003B40C1 /* AppDefaults.swift */; };
 		B8E00A2D299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */; };
 		B8E00A2E299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */; };
+		B8E00A302992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E00A2F2992DAA9003B40C1 /* ProfileSettingsView.swift */; };
+		B8E00A312992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E00A2F2992DAA9003B40C1 /* ProfileSettingsView.swift */; };
 		B8E1BB79296DECE700B86E0E /* SwiftNoosphere in Frameworks */ = {isa = PBXBuildFile; productRef = B8E1BB78296DECE700B86E0E /* SwiftNoosphere */; };
 		B8E1BB7B296DEF3200B86E0E /* NoosphereService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E1BB7A296DEF3200B86E0E /* NoosphereService.swift */; };
 		B8E4724C2912A42C00D89C84 /* StoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4724B2912A42C00D89C84 /* StoreProtocol.swift */; };
@@ -413,7 +414,6 @@
 		B88B1CE2298EB0100062CB7F /* BarButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarButtonStyle.swift; sourceTree = "<group>"; };
 		B88B1CE4298EB10D0062CB7F /* RecoveryPhraseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryPhraseView.swift; sourceTree = "<group>"; };
 		B88B1CE6298EEC240062CB7F /* GatewaySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GatewaySettingsView.swift; sourceTree = "<group>"; };
-		B88B1CE8298EEF870062CB7F /* KeyValueRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyValueRowView.swift; sourceTree = "<group>"; };
 		B88C977D276425E800B27DF0 /* IBMPlexMono-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-Italic.ttf"; sourceTree = "<group>"; };
 		B88C977E276425E800B27DF0 /* IBMPlexMono-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-BoldItalic.ttf"; sourceTree = "<group>"; };
 		B88C977F276425E800B27DF0 /* IBMPlexMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "IBMPlexMono-Bold.ttf"; sourceTree = "<group>"; };
@@ -500,6 +500,7 @@
 		B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSearchView.swift; sourceTree = "<group>"; };
 		B8E00A2929928DD2003B40C1 /* AppDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDefaults.swift; sourceTree = "<group>"; };
 		B8E00A2C299294A0003B40C1 /* UserDefaultsProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsProperty.swift; sourceTree = "<group>"; };
+		B8E00A2F2992DAA9003B40C1 /* ProfileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsView.swift; sourceTree = "<group>"; };
 		B8E1BB7A296DEF3200B86E0E /* NoosphereService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoosphereService.swift; sourceTree = "<group>"; };
 		B8E4724B2912A42C00D89C84 /* StoreProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreProtocol.swift; sourceTree = "<group>"; };
 		B8EA3EE429159C5500B92C2E /* HeaderSubtextMemoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderSubtextMemoStore.swift; sourceTree = "<group>"; };
@@ -651,6 +652,7 @@
 				B848FDA82991836900245115 /* DeveloperSettingsView.swift */,
 				B88B1CE6298EEC240062CB7F /* GatewaySettingsView.swift */,
 				B88B1CDD298DE66E0062CB7F /* SettingsView.swift */,
+				B8E00A2F2992DAA9003B40C1 /* ProfileSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -922,7 +924,6 @@
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B8A59D5F28B51D000010DB2F /* TranscludeView.swift */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
-				B88B1CE8298EEF870062CB7F /* KeyValueRowView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1205,6 +1206,7 @@
 				B8EF986E29034ADF0029363D /* Pathlike.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
+				B8E00A302992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
 				B85652222975F16B00B7FCA0 /* BylineView.swift in Sources */,
 				B8B3EE732979DEE900779B7F /* FirstRunView.swift in Sources */,
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
@@ -1273,7 +1275,6 @@
 				B85A805E296F08720007F957 /* AudienceSelectorButton.swift in Sources */,
 				B8AE34C8276BF77000777FF0 /* SearchTextField.swift in Sources */,
 				B85EC469296F11F000558761 /* BylineSmView.swift in Sources */,
-				B88B1CE9298EEF870062CB7F /* KeyValueRowView.swift in Sources */,
 				B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
 				B85EC466296F0D0A00558761 /* ProfilePicMd.swift in Sources */,
@@ -1379,6 +1380,7 @@
 				B8EB2A2026F27797006E97C3 /* SubconsciousApp.swift in Sources */,
 				B81A535D27275138001A6268 /* Tape.swift in Sources */,
 				B85BF47027BB0FA800F55730 /* RowViewModifier.swift in Sources */,
+				B8E00A312992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
 				B8AE34B1276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8E00A2B29928DD2003B40C1 /* AppDefaults.swift in Sources */,
 				B8AE34C9276BF77000777FF0 /* SearchTextField.swift in Sources */,
