@@ -31,6 +31,11 @@ struct ProfileSettingsView: View {
                         )
                         .disableAutocorrection(true)
                         .autocapitalization(.none)
+                        .onDisappear {
+                            app.send(
+                                .setNickname(app.state.nicknameTextField)
+                            )
+                        }
                         if !isNicknameValid {
                             Image(systemName: "exclamationmark.circle")
                                 .foregroundColor(.red)

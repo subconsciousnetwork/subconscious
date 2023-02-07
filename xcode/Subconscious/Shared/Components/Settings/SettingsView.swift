@@ -15,7 +15,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Noosphere")) {
+                Section {
                     Toggle(
                         "Enable Noosphere",
                         isOn: Binding(
@@ -27,8 +27,15 @@ struct SettingsView: View {
                 }
 
                 Section(header: Text("Sphere")) {
-                    LabeledContent("Nickname", value: app.state.nickname ?? "")
-                        .textSelection(.enabled)
+                    NavigationLink(
+                        destination: {
+                            ProfileSettingsView(app: app)
+                        },
+                        label: {
+                            LabeledContent("Nickname", value: app.state.nickname ?? "")
+                                .textSelection(.enabled)
+                        }
+                    )
                     LabeledContent(
                         "Sphere",
                         value: app.state.sphereIdentity ?? unknown
@@ -42,18 +49,18 @@ struct SettingsView: View {
                     .textSelection(.enabled)
                 }
                 
-                Section(header: Text("Gateway")) {
-                    LabeledContent(
-                        "Gateway URL",
-                        value: app.state.gatewayURL
+                Section {
+                    NavigationLink(
+                        destination: {
+                            GatewaySettingsView(app: app)
+                        },
+                        label: {
+                            LabeledContent("Gateway", value: app.state.gatewayURL)
+                        }
                     )
-                    .textSelection(.enabled)
-                    NavigationLink("Gateway Settings") {
-                        GatewaySettingsView(app: app)
-                    }
                 }
 
-                Section(header: Text("Developer")) {
+                Section {
                     NavigationLink("Developer Settings") {
                         DeveloperSettingsView(app: app)
                     }

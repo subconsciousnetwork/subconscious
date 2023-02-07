@@ -18,7 +18,7 @@ struct GatewaySettingsView: View {
                     app.send(.syncSphereWithGateway)
                 },
                 label: {
-                    Text("Sync with gateway")
+                    Text("Sync with Gateway")
                 }
             )
         }
