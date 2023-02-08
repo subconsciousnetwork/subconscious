@@ -81,9 +81,6 @@ enum AppAction: CustomLogStringConvertible {
     /// Set and persist first run complete state
     case persistFirstRunComplete(_ isComplete: Bool)
 
-    /// Sent when first run is done
-    case firstRunComplete(sphereIdentity: String)
-
     //  Database
     /// Kick off database migration.
     /// This action is idempotent. It will only kick off a migration if a
@@ -246,12 +243,6 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 isComplete: isComplete
-            )
-        case let .firstRunComplete(sphereIdentity):
-            return firstRunComplete(
-                state: state,
-                environment: environment,
-                sphereIdentity: sphereIdentity
             )
         case .migrateDatabase:
             return migrateDatabase(state: state, environment: environment)
@@ -501,27 +492,11 @@ struct AppModel: ModelProtocol {
         AppDefaults.standard.firstRunComplete = isComplete
         // Update state
         var model = state
-        model.shouldShowFirstRun = isComplete
+        model.shouldShowFirstRun = !isComplete
         return Update(state: model)
+            .animation(.default)
     }
-    
-    /// Wrap up first run flow
-    static func firstRunComplete(
-        state: AppModel,
-        environment: AppEnvironment,
-        sphereIdentity: String
-    ) -> Update<AppModel> {
-        return update(
-            state: state,
-            actions: [
-                .persistFirstRunComplete(true),
-                .setSphereIdentity(sphereIdentity)
-            ],
-            environment: environment
-        )
-        .animation(.default)
-    }
-    
+
     /// Make database ready.
     /// This will kick off a migration IF a successful migration
     /// has not already occurred.

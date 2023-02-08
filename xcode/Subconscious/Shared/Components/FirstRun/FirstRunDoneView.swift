@@ -24,11 +24,7 @@ struct FirstRunDoneView: View {
                 Spacer()
                 Button(
                     action: {
-                        if let identity = app.state.sphereIdentity {
-                            app.send(
-                                .firstRunComplete(sphereIdentity: identity)
-                            )
-                        }
+                        app.send(.persistFirstRunComplete(true))
                     }
                 ) {
                     Text("Continue")

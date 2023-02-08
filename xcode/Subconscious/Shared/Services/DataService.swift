@@ -44,13 +44,13 @@ struct DataService {
         guard Config.default.noosphere.enabled else {
             return false
         }
-        let isComplete = AppDefaults.firstRunComplete.get()
+        let isComplete = AppDefaults.standard.firstRunComplete
         return !isComplete
     }
 
     /// Get usere's persisted default sphere identity
     func sphereIdentity() throws -> String {
-        guard let id = AppDefaults.sphereIdentity.get() else {
+        guard let id = AppDefaults.standard.sphereIdentity else {
             throw DataServiceError.defaultSphereNotFound
         }
         return id
@@ -58,7 +58,7 @@ struct DataService {
 
     /// Get usere's default sphere version
     func sphereVersion() throws -> String {
-        guard let identity = AppDefaults.sphereIdentity.get() else {
+        guard let identity = AppDefaults.standard.sphereIdentity else {
             throw DataServiceError.defaultSphereNotFound
         }
         return try noosphere.sphere(identity: identity).version()
@@ -69,7 +69,7 @@ struct DataService {
     /// Will not create sphere if a sphereIdentity already appears in
     /// the user defaults.
     func createSphere(ownerKeyName: String) throws -> SphereReceipt {
-        guard AppDefaults.sphereIdentity.get() == nil else {
+        guard AppDefaults.standard.sphereIdentity == nil else {
             throw NoosphereServiceError.sphereExists(
                 "A default Sphere already exists for this user. Doing nothing."
             )
@@ -82,7 +82,8 @@ struct DataService {
         // NOTE: we do not persist the mnemonic, since it would be insecure.
         // Instead, we return the receipt so that mnemonic can be displayed
         // and discarded.
-        AppDefaults.sphereIdentity.set(sphereReceipt.identity)
+        AppDefaults.standard.sphereIdentity = sphereReceipt.identity
+        AppDefaults.standard.ownerKeyName = ownerKeyName
         return sphereReceipt
     }
 

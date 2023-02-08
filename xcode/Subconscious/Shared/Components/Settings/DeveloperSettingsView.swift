@@ -18,7 +18,7 @@ struct DeveloperSettingsView: View {
                     app.send(.persistFirstRunComplete(false))
                 },
                 label: {
-                    Text("Launch First Run Experience")
+                    Text("Reset First Run Experience")
                 }
             )
         }
