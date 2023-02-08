@@ -59,10 +59,18 @@ struct SettingsView: View {
                 Section {
                     NavigationLink(
                         destination: {
-                            GatewaySettingsView(app: app)
+                            GatewayURLSettingsView(app: app)
                         },
                         label: {
                             LabeledContent("Gateway", value: app.state.gatewayURL)
+                        }
+                    )
+                    Button(
+                        action: {
+                            app.send(.syncSphereWithGateway)
+                        },
+                        label: {
+                            Text("Sync with Gateway")
                         }
                     )
                 }
