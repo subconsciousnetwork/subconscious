@@ -26,11 +26,6 @@ struct ProfileSettingsView: View {
                 )
                 .disableAutocorrection(true)
                 .autocapitalization(.none)
-                .onDisappear {
-                    app.send(
-                        .submitNickname(app.state.nicknameTextField)
-                    )
-                }
             }
         }
         .formStyle(.automatic)

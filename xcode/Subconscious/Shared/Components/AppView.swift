@@ -63,7 +63,6 @@ enum AppAction: CustomLogStringConvertible {
 
     /// Set sphere/user nickname
     case setNicknameTextField(_ nickname: String)
-    case submitNickname(_ nickname: String)
 
     /// Set gateway URL
     case setGatewayURLTextField(_ gateway: String)
@@ -199,12 +198,6 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 text: nickname
-            )
-        case let .submitNickname(nickname):
-            return submitNickname(
-                state: state,
-                environment: environment,
-                nickname: nickname
             )
         case let .setGatewayURLTextField(text):
             return setGatewayURLTextField(
@@ -370,34 +363,28 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
+        guard let nickname = Nickname.format(text) else {
+            var model = state
+            model.nicknameTextField = text
+            model.isNicknameTextFieldValid = false
+            return Update(state: model)
+        }
+        guard nickname == text else {
+            var model = state
+            model.nicknameTextField = text
+            model.isNicknameTextFieldValid = false
+            return Update(state: model)
+        }
+        logger.log("Nickname saved: \(nickname)")
         var model = state
         model.nicknameTextField = text
-        let validNickname = Nickname.format(text)
-        model.isNicknameTextFieldValid = validNickname == text
+        model.nickname = nickname
+        // Persist
+        AppDefaults.standard.nickname = nickname
+        model.isNicknameTextFieldValid = true
         return Update(state: model)
     }
     
-    static func submitNickname(
-        state: AppModel,
-        environment: AppEnvironment,
-        nickname: String
-    ) -> Update<AppModel> {
-        // If nickname is not valid, set the textfield back to the last nickname.
-        guard let validNickname = Nickname.format(nickname) else {
-            var model = state
-            model.nicknameTextField = model.nickname ?? ""
-            model.isNicknameTextFieldValid = model.nickname != nil
-            return Update(state: model)
-        }
-        var model = state
-        model.nickname = validNickname
-        model.nicknameTextField = validNickname
-        model.isNicknameTextFieldValid = true
-        AppDefaults.standard.nickname = nickname
-        /// Only set valid nicknames
-        return Update(state: model)
-    }
-
     static func isValidWebURL(_ string: String) -> Bool {
         guard let url = URL(string: string) else {
             return false

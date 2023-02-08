@@ -40,10 +40,10 @@ struct FirstRunProfileView: View {
                     }
                 )
                 .buttonStyle(LargeButtonStyle())
-                .disabled(!app.state.isNicknameTextFieldValid)
                 .simultaneousGesture(TapGesture().onEnded {
-                    app.send(.submitNickname(app.state.nicknameTextField))
+                    app.send(.createSphere(app.state.nickname))
                 })
+                .disabled(!app.state.isNicknameTextFieldValid)
             }
             .padding()
             .navigationTitle("Your Profile")
