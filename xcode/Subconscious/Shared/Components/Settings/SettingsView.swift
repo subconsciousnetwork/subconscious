@@ -51,6 +51,7 @@ struct SettingsView: View {
                         "Version",
                         value: app.state.sphereVersion ?? unknown
                     )
+                    .lineLimit(1)
                     .textSelection(.enabled)
 
                 }
@@ -81,6 +82,9 @@ struct SettingsView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                app.send(.refreshSphereVersion)
+            }
         }
     }
 }

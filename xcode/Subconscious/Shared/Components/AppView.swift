@@ -77,7 +77,9 @@ enum AppAction: CustomLogStringConvertible {
 
     /// Set identity of sphere
     case setSphereIdentity(String?)
-    
+    /// Fetch the latest sphere version, and store on model
+    case refreshSphereVersion
+
     /// Set and persist first run complete state
     case persistFirstRunComplete(_ isComplete: Bool)
 
@@ -221,6 +223,11 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 sphereIdentity: sphereIdentity
+            )
+        case let .refreshSphereVersion:
+            return refreshSphereVersion(
+                state: state,
+                environment: environment
             )
         case let .persistFirstRunComplete(isComplete):
             return persistFirstRunComplete(
@@ -439,6 +446,15 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
     
+    static func refreshSphereVersion(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        var model = state
+        model.sphereVersion = try? environment.data.sphereVersion()
+        return Update(state: model)
+    }
+
     /// Persist first run complete state
     static func persistFirstRunComplete(
         state: AppModel,

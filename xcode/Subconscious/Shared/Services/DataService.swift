@@ -56,6 +56,14 @@ struct DataService {
         return id
     }
 
+    /// Get usere's default sphere version
+    func sphereVersion() throws -> String {
+        guard let identity = AppDefaults.sphereIdentity.get() else {
+            throw DataServiceError.defaultSphereNotFound
+        }
+        return try noosphere.sphere(identity: identity).version()
+    }
+
     /// Create a default sphere for user and persist sphere details
     /// - Returns: SphereReceipt
     /// Will not create sphere if a sphereIdentity already appears in
