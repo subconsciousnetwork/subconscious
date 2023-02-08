@@ -214,7 +214,7 @@ struct DetailReadyView: View {
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
                         HStack {
-                            AudienceMenuButton(
+                            AudienceMenuButtonView(
                                 audience: Binding(
                                     get: { store.state.audience },
                                     send: store.send,
