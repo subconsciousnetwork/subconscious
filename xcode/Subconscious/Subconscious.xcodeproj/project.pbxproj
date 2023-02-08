@@ -662,7 +662,6 @@
 		B88B1CDF298EAE520062CB7F /* Buttons */ = {
 			isa = PBXGroup;
 			children = (
-				B8CBAFA32994491B0079107E /* MenuButtonView.swift */,
 				B8AE34AC276A9CDB00777FF0 /* PrimaryButtonStyle.swift */,
 				B88B1CE0298EAE730062CB7F /* LargeButtonStyle.swift */,
 				B88B1CE2298EB0100062CB7F /* BarButtonStyle.swift */,
@@ -764,6 +763,7 @@
 			children = (
 				B8CBAFA62994499A0079107E /* AudienceIconView.swift */,
 				B85A8057296E31860007F957 /* AudienceMenuButtonView.swift */,
+				B8CBAFA32994491B0079107E /* MenuButtonView.swift */,
 			);
 			path = Audience;
 			sourceTree = "<group>";
