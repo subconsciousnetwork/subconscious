@@ -2049,6 +2049,7 @@ extension MemoEntry {
             return nil
         }
         self.slug = slug
+        self.audience = detail.audience
         self.contents = Memo(
             contentType: detail.headers.contentType,
             created: detail.headers.created,
