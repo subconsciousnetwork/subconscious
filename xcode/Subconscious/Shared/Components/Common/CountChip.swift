@@ -26,7 +26,7 @@ struct CountChip: View, Equatable {
             .padding(.horizontal, AppTheme.unit2)
             .padding(.vertical, AppTheme.unit)
             .background(Color.secondaryBackground)
-            .foregroundColor(Color.secondaryText)
+            .foregroundColor(Color.secondary)
             .clipShape(Capsule())
     }
 }

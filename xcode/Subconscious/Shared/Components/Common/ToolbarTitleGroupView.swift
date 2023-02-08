@@ -22,7 +22,7 @@ struct ToolbarTitleGroupView: View, Equatable {
                 subtitle
                     .font(.caption)
                     .frame(height: AppTheme.captionSize)
-                    .foregroundColor(Color.secondaryText)
+                    .foregroundColor(Color.secondary)
                     .lineLimit(1)
             }
             Spacer()

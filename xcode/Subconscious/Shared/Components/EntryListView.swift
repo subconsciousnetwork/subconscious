@@ -86,7 +86,7 @@ struct EntryListView: View {
                 .multilineTextAlignment(.center)
                 .padding()
                 .frame(maxWidth: .infinity)
-                .foregroundColor(Color.secondaryText)
+                .foregroundColor(Color.secondary)
                 .background(Color.background)
                 .transition(.opacity)
             }

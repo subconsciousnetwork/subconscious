@@ -22,8 +22,12 @@ struct EntryRow: View, Equatable {
                     entry.link.title :
                     emptyTitle
                 )
-                .font(.body)
+                .lineLimit(1)
                 .foregroundColor(Color.text)
+                .multilineTextAlignment(.leading)
+                // Aligns this text's vertical center to icon vertical
+                // center in a label.
+                .frame(minHeight: AppTheme.icon)
                 Spacer()
                 Text(
                     NiceDateFormatter.shared.string(
@@ -34,14 +38,20 @@ struct EntryRow: View, Equatable {
                 .font(.callout)
                 .foregroundColor(Color.secondary)
             }
-            .lineLimit(1)
-            Text(
-                entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt
-            )
-            .lineLimit(2)
+            Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
+                .lineLimit(1)
+                .font(.callout)
+                .multilineTextAlignment(.leading)
+                .foregroundColor(Color.secondary)
+            HStack(spacing: AppTheme.unit) {
+                AudienceIconView(audience: entry.audience)
+                    .font(.system(size: 12))
+                Text(entry.slug.description)
+            }
             .font(.callout)
-            .multilineTextAlignment(.leading)
+            .lineLimit(1)
             .foregroundColor(Color.secondary)
+            .multilineTextAlignment(.leading)
         }
     }
 }
@@ -55,6 +65,14 @@ struct EntryRow_Previews: PreviewProvider {
                     excerpt: "Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
                     modified: Date.now,
                     audience: .local
+                )
+            )
+            EntryRow(
+                entry: EntryStub(
+                    link: EntryLink(title: "Anything that can be derived should be derived")!,
+                    excerpt: "Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
+                    modified: Date.now,
+                    audience: .public
                 )
             )
         }

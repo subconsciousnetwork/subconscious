@@ -15,7 +15,7 @@ struct AudienceIconView: View {
         case .public:
             Image(systemName: "network")
         case .local:
-            Image(systemName: "tray.full")
+            Image(systemName: "circle.dashed")
         }
     }
 }

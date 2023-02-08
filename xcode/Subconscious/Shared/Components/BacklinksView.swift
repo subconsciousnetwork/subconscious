@@ -43,7 +43,7 @@ struct BacklinksView: View {
                 Divider()
                 TitleGroupView(
                     title: Text("No backlinks yet")
-                        .foregroundColor(Color.secondaryText),
+                        .foregroundColor(Color.secondary),
                     subtitle: Text(
                         "Links to this note will appear here"
                     )
