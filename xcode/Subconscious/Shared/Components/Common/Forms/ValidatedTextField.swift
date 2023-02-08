@@ -21,10 +21,18 @@ struct ValidatedTextField: View {
                     placeholder,
                     text: $text
                 )
-                Image(systemName: "exclamationmark.circle")
-                    .foregroundColor(.red)
+                .overlay(alignment: .trailing) {
+                    VStack {
+                        Image(systemName: "exclamationmark.circle")
+                            .frame(width: 24, height: 22)
+                            .padding(.horizontal, 8)
+                            .foregroundColor(.red)
+                            .background(.white)
+                    }
+                    .padding(.trailing, 1)
                     .opacity(isValid ? 0 : 1)
                     .animation(.default, value: isValid)
+                }
             }
             Text(caption)
                 .foregroundColor(
@@ -38,10 +46,32 @@ struct ValidatedTextField: View {
 
 struct ValidatedTextField_Previews: PreviewProvider {
     static var previews: some View {
-        ValidatedTextField(
-            placeholder: "nickname",
-            text: .constant(""),
-            caption: "Lowercase letters and numbers only."
-        )
+        VStack {
+            ValidatedTextField(
+                placeholder: "nickname",
+                text: .constant(""),
+                caption: "Lowercase letters and numbers only."
+            )
+            ValidatedTextField(
+                placeholder: "nickname",
+                text: .constant(""),
+                caption: "Lowercase letters and numbers only.",
+                isValid: false
+            )
+            ValidatedTextField(
+                placeholder: "nickname",
+                text: .constant(""),
+                caption: "Lowercase letters and numbers only."
+            )
+            .textFieldStyle(.roundedBorder)
+            ValidatedTextField(
+                placeholder: "nickname",
+                text: .constant("A very long run of text to test how this interacts with the icon"),
+                caption: "Lowercase letters and numbers only.",
+                isValid: false
+            )
+            .textFieldStyle(.roundedBorder)
+        }
+        .padding()
     }
 }

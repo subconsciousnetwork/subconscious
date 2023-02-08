@@ -373,7 +373,7 @@ struct AppModel: ModelProtocol {
         var model = state
         model.nicknameTextField = text
         let validNickname = Nickname.format(text)
-        model.isNicknameTextFieldValid = validNickname != nil
+        model.isNicknameTextFieldValid = validNickname == text
         return Update(state: model)
     }
     
@@ -382,7 +382,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         nickname: String
     ) -> Update<AppModel> {
-        // If nickname is not valid, set the textfiel back to the last nickname.
+        // If nickname is not valid, set the textfield back to the last nickname.
         guard let validNickname = Nickname.format(nickname) else {
             var model = state
             model.nicknameTextField = model.nickname ?? ""
