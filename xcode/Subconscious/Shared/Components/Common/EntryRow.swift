@@ -15,19 +15,15 @@ struct EntryRow: View, Equatable {
     var emptyExcerpt = "No additional text"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text(
                     !entry.link.title.isEmpty ?
                     entry.link.title :
                     emptyTitle
                 )
-                .lineLimit(1)
+                .font(.body)
                 .foregroundColor(Color.text)
-                .multilineTextAlignment(.leading)
-                // Aligns this text's vertical center to icon vertical
-                // center in a label.
-                .frame(minHeight: AppTheme.icon)
                 Spacer()
                 Text(
                     NiceDateFormatter.shared.string(
@@ -36,20 +32,31 @@ struct EntryRow: View, Equatable {
                     )
                 )
                 .font(.callout)
-                .foregroundColor(Color.secondaryText)
-            }
-            Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
-                .lineLimit(1)
-                .multilineTextAlignment(.leading)
-                .foregroundColor(Color.secondaryText)
-            HStack(spacing: AppTheme.unit) {
-                Image(systemName: "doc")
-                    .font(.system(size: 12))
-                Text(entry.slug.description)
+                .foregroundColor(Color.secondary)
             }
             .lineLimit(1)
-            .foregroundColor(Color.secondaryText)
+            Text(
+                entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt
+            )
+            .lineLimit(2)
+            .font(.callout)
             .multilineTextAlignment(.leading)
+            .foregroundColor(Color.secondary)
+        }
+    }
+}
+
+struct EntryRow_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack {
+            EntryRow(
+                entry: EntryStub(
+                    link: EntryLink(title: "Anything that can be derived should be derived")!,
+                    excerpt: "Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
+                    modified: Date.now,
+                    audience: .local
+                )
+            )
         }
     }
 }

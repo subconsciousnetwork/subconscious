@@ -202,12 +202,12 @@ class Tests_Detail: XCTestCase {
         let link = EntryLink(title: "Floop the Pig")!
         let update = DetailModel.update(
             state: state,
-            action: .showRenameSheet(link),
+            action: .presentRenameSheet(link),
             environment: environment
         )
 
         XCTAssertEqual(
-            update.state.isRenameSheetShowing,
+            update.state.isRenameSheetPresented,
             true,
             "Rename sheet is shown"
         )
@@ -222,12 +222,12 @@ class Tests_Detail: XCTestCase {
         let state = DetailModel()
         let update = DetailModel.update(
             state: state,
-            action: .hideRenameSheet,
+            action: .unpresentRenameSheet,
             environment: environment
         )
 
         XCTAssertEqual(
-            update.state.isRenameSheetShowing,
+            update.state.isRenameSheetPresented,
             false,
             "Rename sheet is hidden"
         )

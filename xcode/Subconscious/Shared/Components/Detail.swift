@@ -47,19 +47,48 @@ struct DetailView: View {
         .navigationTitle(state.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            DetailToolbarContent(
-                link: EntryLink(slug: state.slug, title: state.title),
-                onRename: {
-                    store.send(
-                        .showRenameSheet(
-                            EntryLink(slug: state.slug, title: state.title)
-                        )
-                    )
-                },
-                onDelete: {
-                    store.send(.presentDeleteConfirmationDialog(true))
-                }
-            )
+            ToolbarItem(placement: .principal) {
+                OmniboxView(
+                    icon: Image(systemName: "network"),
+                    title: store.state.slug?.description ?? "None"
+                )
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu(
+                    content: {
+                        Section {
+                            Button(
+                                action: {
+                                    store.send(
+                                        .presentRenameSheet(
+                                            EntryLink(
+                                                slug: state.slug,
+                                                title: state.title
+                                            )
+                                        )
+                                    )
+                                }
+                            ) {
+                                Label("Rename", systemImage: "pencil")
+                            }
+                        }
+                        Section {
+                            Button(
+                                action: {
+                                    store.send(
+                                        .presentDeleteConfirmationDialog(true)
+                                    )
+                                }
+                            ) {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    },
+                    label: {
+                        Image(systemName: "ellipsis")
+                    }
+                )
+            }
         }
         .onAppear {
             // When an editor is presented, refresh if stale.
@@ -132,9 +161,9 @@ struct DetailView: View {
         }
         .sheet(
             isPresented: Binding(
-                get: { store.state.isRenameSheetShowing },
+                get: { store.state.isRenameSheetPresented },
                 send: store.send,
-                tag: { _ in DetailAction.hideRenameSheet }
+                tag: { _ in DetailAction.unpresentRenameSheet }
             )
         ) {
             RenameSearchView(
@@ -146,7 +175,7 @@ struct DetailView: View {
                     tag: DetailAction.setRenameField
                 ),
                 onCancel: {
-                    store.send(.hideRenameSheet)
+                    store.send(.unpresentRenameSheet)
                 },
                 onSelect: { suggestion in
                     store.send(DetailAction.from(suggestion))
@@ -156,7 +185,7 @@ struct DetailView: View {
         .confirmationDialog(
             "Are you sure?",
             isPresented: Binding(
-                get: { store.state.isDeleteConfirmationDialogShowing },
+                get: { store.state.isDeleteConfirmationDialogPresented },
                 send: store.send,
                 tag: DetailAction.presentDeleteConfirmationDialog
             )
@@ -182,9 +211,20 @@ struct DetailReadyView: View {
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                Divider()
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
+                        HStack {
+                            AudienceMenuButton(
+                                audience: Binding(
+                                    get: { store.state.audience },
+                                    send: store.send,
+                                    tag: DetailAction.updateAudience
+                                )
+                            )
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.top)
                         MarkupTextViewRepresentable(
                             state: store.state.markupEditor,
                             send: Address.forward(
@@ -358,6 +398,9 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Set detail to initial conditions
     case resetDetail
 
+    // Change audience
+    case updateAudience(_ audience: Audience)
+
     //  Saving entry
     /// Trigger autosave of current state
     case autosave
@@ -378,8 +421,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case linkSuggestionsFailure(String)
 
     // Rename
-    case showRenameSheet(EntryLink?)
-    case hideRenameSheet
+    case presentRenameSheet(EntryLink?)
+    case unpresentRenameSheet
     case setRenameField(String)
     case refreshRenameSuggestions
     case setRenameSuggestions([RenameSuggestion])
@@ -556,6 +599,7 @@ struct DetailModel: ModelProtocol {
     )
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
+    var audience: Audience = .local
     var backlinks: [EntryStub] = []
     
     /// Is editor saved?
@@ -579,7 +623,7 @@ struct DetailModel: ModelProtocol {
 
     //  Note renaming
     /// Is rename sheet showing?
-    var isRenameSheetShowing = false
+    var isRenameSheetPresented = false
     /// Link to the candidate for renaming
     var entryToRename: EntryLink?
     /// Text for slug rename TextField.
@@ -590,7 +634,7 @@ struct DetailModel: ModelProtocol {
     var renameSuggestions: [RenameSuggestion] = []
 
     /// Is delete confirmation dialog presented?
-    var isDeleteConfirmationDialogShowing = false
+    var isDeleteConfirmationDialogPresented = false
 
     /// Time interval after which a load is considered stale, and should be
     /// reloaded to make sure it is fresh.
@@ -723,6 +767,12 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case let .updateAudience(audience):
+            return updateAudience(
+                state: state,
+                environment: environment,
+                audience: audience
+            )
         case .autosave:
             return autosave(
                 state: state,
@@ -780,14 +830,14 @@ struct DetailModel: ModelProtocol {
                 "Link suggest failed: \(message)"
             )
             return Update(state: state)
-        case let .showRenameSheet(entry):
-            return showRenameSheet(
+        case let .presentRenameSheet(entry):
+            return presentRenameSheet(
                 state: state,
                 environment: environment,
                 entry: entry
             )
-        case .hideRenameSheet:
-            return hideRenameSheet(
+        case .unpresentRenameSheet:
+            return unpresentRenameSheet(
                 state: state,
                 environment: environment
             )
@@ -1132,6 +1182,7 @@ struct DetailModel: ModelProtocol {
         model.isLoading = true
         // Mark time of load start
         model.lastLoadStarted = Date.now
+        model.audience = .local
         return model
     }
 
@@ -1248,6 +1299,7 @@ struct DetailModel: ModelProtocol {
         model.slug = detail.slug
         model.headers = detail.entry.contents.wellKnownHeaders()
         model.additionalHeaders = detail.entry.contents.additionalHeaders
+        model.audience = detail.entry.audience
         model.backlinks = detail.backlinks
         model.saveState = detail.saveState
 
@@ -1382,6 +1434,16 @@ struct DetailModel: ModelProtocol {
         model.backlinks = []
         model.isLoading = true
         model.saveState = .saved
+        return Update(state: model)
+    }
+
+    static func updateAudience(
+        state: DetailModel,
+        environment: AppEnvironment,
+        audience: Audience
+    ) -> Update<DetailModel> {
+        var model = state
+        model.audience = audience
         return Update(state: model)
     }
 
@@ -1591,7 +1653,7 @@ struct DetailModel: ModelProtocol {
 
     /// Show rename sheet.
     /// Do rename-flow-related setup.
-    static func showRenameSheet(
+    static func presentRenameSheet(
         state: DetailModel,
         environment: AppEnvironment,
         entry: EntryLink?
@@ -1604,7 +1666,7 @@ struct DetailModel: ModelProtocol {
         }
 
         var model = state
-        model.isRenameSheetShowing = true
+        model.isRenameSheetPresented = true
         model.entryToRename = entry
 
         let title = entry.linkableTitle
@@ -1621,12 +1683,12 @@ struct DetailModel: ModelProtocol {
 
     /// Hide rename sheet.
     /// Do rename-flow-related teardown.
-    static func hideRenameSheet(
+    static func unpresentRenameSheet(
         state: DetailModel,
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         var model = state
-        model.isRenameSheetShowing = false
+        model.isRenameSheetPresented = false
         model.entryToRename = nil
 
         return DetailModel.update(
@@ -1726,7 +1788,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         return update(
             state: state,
-            actions: [.hideRenameSheet, .refreshLists],
+            actions: [.unpresentRenameSheet, .refreshLists],
             environment: environment
         )
     }
@@ -1778,7 +1840,7 @@ struct DetailModel: ModelProtocol {
         model.headers.title = parent.linkableTitle
         return update(
             state: model,
-            actions: [.refreshLists, .hideRenameSheet, .refreshDetail],
+            actions: [.refreshLists, .unpresentRenameSheet, .refreshDetail],
             environment: environment
         )
     }
@@ -1829,7 +1891,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         return update(
             state: state,
-            actions: [.refreshLists, .hideRenameSheet],
+            actions: [.refreshLists, .unpresentRenameSheet],
             environment: environment
         )
     }
@@ -1855,7 +1917,7 @@ struct DetailModel: ModelProtocol {
         isPresented: Bool
     ) -> Update<DetailModel> {
         var model = state
-        model.isDeleteConfirmationDialogShowing = isPresented
+        model.isDeleteConfirmationDialogPresented = isPresented
         return Update(state: model)
             .animation(.default)
     }
@@ -1995,6 +2057,19 @@ extension MemoEntry {
             fileExtension: detail.headers.fileExtension,
             additionalHeaders: detail.additionalHeaders,
             body: detail.markupEditor.text
+        )
+    }
+}
+
+struct Detail_Previews: PreviewProvider {
+    static var previews: some View {
+        DetailView(
+            state: DetailOuterModel(
+                slug: Slug("nothing-is-lost")!,
+                title: "Nothing is lost in the universe",
+                fallback: "Nothing is lost in the universe"
+            ),
+            send: { action in }
         )
     }
 }
