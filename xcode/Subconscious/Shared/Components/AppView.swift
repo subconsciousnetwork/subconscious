@@ -29,15 +29,9 @@ struct AppView: View {
             }
             .zIndex(0)
             if (store.state.shouldShowFirstRun) {
-                FirstRunView(
-                    onDone: { sphereIdentity in
-                        store.send(
-                            .firstRunComplete(sphereIdentity: sphereIdentity)
-                        )
-                    }
-                )
-                .animation(.default, value: store.state.shouldShowFirstRun)
-                .zIndex(1)
+                FirstRunView(app: store)
+                    .animation(.default, value: store.state.shouldShowFirstRun)
+                    .zIndex(1)
             }
         }
         .sheet(
@@ -74,6 +68,10 @@ enum AppAction: CustomLogStringConvertible {
     /// Set gateway URL
     case setGatewayURLTextField(_ gateway: String)
     case submitGatewayURL(_ gateway: String)
+
+    /// Create a new sphere given an owner key name
+    case createSphere(_ ownerKeyName: String?)
+    case failCreateSphere(_ message: String)
 
     /// Set identity of sphere
     case setSphereIdentity(String?)
@@ -147,19 +145,24 @@ struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
     /// Load intial state from persisted app defaults
-    var isNoosphereEnabled = AppDefaults.noosphereEnabled.get()
+    var isNoosphereEnabled = AppDefaults.standard.noosphereEnabled
     /// Should first run show?
     /// Distinct from whether first run has actually run.
     var shouldShowFirstRun = false
-    var nickname = AppDefaults.nickname.get()
-    var nicknameTextField = AppDefaults.nickname.get() ?? ""
+    var nickname = AppDefaults.standard.nickname
+    var nicknameTextField = AppDefaults.standard.nickname ?? ""
     var isNicknameTextFieldValid = true
 
-    var sphereIdentity = AppDefaults.sphereIdentity.get()
+    /// Default sphere identity
+    var sphereIdentity = AppDefaults.standard.sphereIdentity
+    /// Default sphere version, if any.
     var sphereVersion: String?
+    /// Temporary state for storing mnemonic for rendering.
+    /// not persisted.
+    var sphereMnemonic: String?
 
-    var gatewayURL = AppDefaults.gatewayURL.get()
-    var gatewayURLTextField = AppDefaults.gatewayURL.get()
+    var gatewayURL = AppDefaults.standard.gatewayURL
+    var gatewayURLTextField = AppDefaults.standard.gatewayURL
     var isGatewayURLTextFieldValid = true
     
     /// Show settings sheet?
@@ -218,13 +221,22 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 gatewayURL: gateway
             )
+        case let .createSphere(ownerKeyName):
+            return createSphere(
+                state: state,
+                environment: environment,
+                ownerKeyName: ownerKeyName
+            )
+        case .failCreateSphere(let message):
+            logger.warning("Failed to create Sphere: \(message)")
+            return Update(state: state)
         case let .setSphereIdentity(sphereIdentity):
             return setSphereIdentity(
                 state: state,
                 environment: environment,
                 sphereIdentity: sphereIdentity
             )
-        case let .refreshSphereVersion:
+        case .refreshSphereVersion:
             return refreshSphereVersion(
                 state: state,
                 environment: environment
@@ -357,7 +369,8 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         var model = state
         model.isNoosphereEnabled = isEnabled
-        AppDefaults.noosphereEnabled.set(isEnabled)
+        // Persist to app defaults
+        AppDefaults.standard.noosphereEnabled = isEnabled
         return Update(state: model)
     }
     
@@ -389,7 +402,7 @@ struct AppModel: ModelProtocol {
         model.nickname = validNickname
         model.nicknameTextField = validNickname
         model.isNicknameTextFieldValid = true
-        AppDefaults.nickname.set(nickname)
+        AppDefaults.standard.nickname = nickname
         /// Only set valid nicknames
         return Update(state: model)
     }
@@ -428,9 +441,32 @@ struct AppModel: ModelProtocol {
         model.gatewayURL = gatewayURL
         model.gatewayURLTextField = gatewayURL
         model.isGatewayURLTextFieldValid = true
-        AppDefaults.gatewayURL.set(gatewayURL)
+        AppDefaults.standard.gatewayURL = gatewayURL
         /// Only set valid nicknames
         return Update(state: model)
+    }
+
+    static func createSphere(
+        state: AppModel,
+        environment: AppEnvironment,
+        ownerKeyName: String?
+    ) -> Update<AppModel> {
+        let ownerKeyName = ownerKeyName ?? Config.default.noosphere.ownerKeyName
+        do {
+            let receipt = try environment.data.createSphere(
+                ownerKeyName: ownerKeyName
+            )
+            var model = state
+            model.sphereMnemonic = receipt.mnemonic
+            model.sphereIdentity = receipt.identity
+            return Update(state: model)
+        }  catch {
+            return update(
+                state: state,
+                action: .failCreateSphere(error.localizedDescription),
+                environment: environment
+            )
+        }
     }
 
     static func setSphereIdentity(
@@ -462,7 +498,7 @@ struct AppModel: ModelProtocol {
         isComplete: Bool
     ) -> Update<AppModel> {
         // Persist value
-        AppDefaults.firstRunComplete.set(isComplete)
+        AppDefaults.standard.firstRunComplete = isComplete
         // Update state
         var model = state
         model.shouldShowFirstRun = isComplete
@@ -750,7 +786,7 @@ struct AppEnvironment {
         let files = FileStore(documentURL: documentURL)
         let memos = HeaderSubtextMemoStore(store: files)
 
-        let defaultGateway = AppDefaults.gatewayURL.get()
+        let defaultGateway = AppDefaults.standard.gatewayURL
 
         let noosphere = NoosphereService(
             globalStorageURL: applicationSupportURL

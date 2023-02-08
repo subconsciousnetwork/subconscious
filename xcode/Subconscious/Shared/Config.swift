@@ -54,7 +54,7 @@ struct NoosphereConfig: Equatable, Codable {
     /// NOTE: In future, we might support multiple spheres. If so, this
     /// flag will be deprecated in favor of multiple spheres
     var sphereStoragePath = "sphere"
-    /// Owner key name for spheres on this device
-    var ownerKeyName = "Sphere"
+    /// Default owner key name for spheres on this device
+    var ownerKeyName = "User"
     var defaultGatewayURL = "http://127.0.0.1:4433"
 }

@@ -7,30 +7,26 @@
 
 import Foundation
 
-/// Exposes getters/setters for user defaults keys that we use.
+/// Exposes getters/setters for UserDefaults-persisted keys that we use.
 struct AppDefaults {
-    static let nickname = OptionalUserDefaultsProperty(
-        key: "nickname",
-        type: String.self
-    )
+    static var standard = AppDefaults()
+
+    @UserDefaultsProperty(forKey: "ownerKeyName")
+    var ownerKeyName: String? = nil
+
+    /// The user/sphere nickname.
+    @UserDefaultsProperty(forKey: "nickname")
+    var nickname: String? = nil
     
-    static let sphereIdentity = OptionalUserDefaultsProperty(
-        key: "sphereIdentity",
-        type: String.self
-    )
+    @UserDefaultsProperty(forKey: "sphereIdentity")
+    var sphereIdentity: String? = nil
+
+    @UserDefaultsProperty(forKey: "firstRunComplete")
+    var firstRunComplete = false
     
-    static let firstRunComplete = UserDefaultsProperty(
-        key: "firstRunComplete",
-        default: false
-    )
+    @UserDefaultsProperty(forKey: "noosphereEnabled")
+    var noosphereEnabled = false
     
-    static let noosphereEnabled = UserDefaultsProperty(
-        key: "noosphereEnabled",
-        default: false
-    )
-    
-    static let gatewayURL = UserDefaultsProperty(
-        key: "gatewayURL",
-        default: "http://127.0.0.1:4433"
-    )
+    @UserDefaultsProperty(forKey: "gatewayURL")
+    var gatewayURL = "http://127.0.0.1:4433"
 }

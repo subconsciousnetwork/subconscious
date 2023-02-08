@@ -8,9 +8,7 @@ import ObservableStore
 import SwiftUI
 
 struct FirstRunCreateSphereView: View {
-    /// FirstRunView is a major view that manages its own state in a store.
-    @ObservedObject var store: Store<FirstRunModel>
-    var onDone: (String) -> Void
+    @ObservedObject var app: Store<AppModel>
 
     var body: some View {
         NavigationStack {
@@ -19,7 +17,7 @@ struct FirstRunCreateSphereView: View {
                 VStack(alignment: .center, spacing: AppTheme.unit4) {
                     Text("Recovery Phrase")
                         .font(.headline)
-                    RecoveryPhraseView(text: store.state.sphereMnemonic ?? "")
+                    RecoveryPhraseView(text: app.state.sphereMnemonic ?? "")
                     VStack(alignment: .leading, spacing: AppTheme.unit2) {
                         Text("This is your secret recovery phrase. You can use it to recover your data if you lose access.")
                             .foregroundColor(.secondary)
@@ -30,7 +28,7 @@ struct FirstRunCreateSphereView: View {
                 Spacer()
                 NavigationLink(
                     destination: {
-                        FirstRunDoneView(store: store, onDone: onDone)
+                        FirstRunDoneView(app: app)
                     },
                     label: {
                         Text("Ok, I wrote it down")
@@ -41,7 +39,7 @@ struct FirstRunCreateSphereView: View {
             .padding()
         }
         .task {
-            store.send(.createSphere)
+            app.send(.createSphere(app.state.nickname))
         }
         .navigationTitle("Recovery Phrase")
         .navigationBarTitleDisplayMode(.inline)
@@ -51,13 +49,10 @@ struct FirstRunCreateSphereView: View {
 struct FirstRunCreateSphereView_Previews: PreviewProvider {
     static var previews: some View {
         FirstRunCreateSphereView(
-            store: Store(
-                state: FirstRunModel(
-                    sphereMnemonic: "foo bar baz bing bong boo biz boz bonk bink boop bop beep bleep bloop blorp blonk blink blip blop boom"
-                ),
-                environment: AppEnvironment.default
-            ),
-            onDone: { id in }
+            app: Store(
+                state: AppModel(),
+                environment: AppEnvironment()
+            )
         )
     }
 }

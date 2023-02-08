@@ -8,9 +8,7 @@ import ObservableStore
 import SwiftUI
 
 struct FirstRunDoneView: View {
-    /// FirstRunView is a major view that manages its own state in a store.
-    @ObservedObject var store: Store<FirstRunModel>
-    var onDone: (String) -> Void
+    @ObservedObject var app: Store<AppModel>
 
     var body: some View {
         NavigationStack {
@@ -26,15 +24,17 @@ struct FirstRunDoneView: View {
                 Spacer()
                 Button(
                     action: {
-                        if let sphereIdentity = store.state.sphereIdentity {
-                            onDone(sphereIdentity)
+                        if let identity = app.state.sphereIdentity {
+                            app.send(
+                                .firstRunComplete(sphereIdentity: identity)
+                            )
                         }
                     }
                 ) {
                     Text("Continue")
                 }
                 .buttonStyle(LargeButtonStyle())
-                .disabled(store.state.sphereIdentity == nil)
+                .disabled(app.state.sphereIdentity == nil)
             }
             .padding()
         }
@@ -44,11 +44,10 @@ struct FirstRunDoneView: View {
 struct FirstRunDoneView_Previews: PreviewProvider {
     static var previews: some View {
         FirstRunDoneView(
-            store: Store(
-                state: FirstRunModel(),
-                environment: AppEnvironment.default
-            ),
-            onDone: { id in }
+            app: Store(
+                state: AppModel(),
+                environment: AppEnvironment()
+            )
         )
     }
 }
