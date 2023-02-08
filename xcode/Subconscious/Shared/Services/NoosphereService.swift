@@ -436,7 +436,7 @@ public final class SphereFS: SphereProtocol {
     }
 
     /// Save outstanding writes and return new Sphere version
-    public func save() throws -> String {
+    @discardableResult public func save() throws -> String {
         try NoosphereFFI.callWithError(
             ns_sphere_fs_save,
             noosphere.noosphere,

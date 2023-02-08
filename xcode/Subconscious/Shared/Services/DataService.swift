@@ -4,7 +4,6 @@
 //
 //  Created by Gordon Brander on 1/22/23.
 //
-
 import Foundation
 import Combine
 
@@ -209,6 +208,8 @@ struct DataService {
         slug: Slug,
         memo: Memo
     ) throws {
+        let identity = try sphereIdentity()
+        let sphere = try noosphere.sphere(identity: identity)
         try memos.write(slug, value: memo)
         // Read modified/size from file system directly after writing.
         // Why: we use file system as source of truth and don't want any
@@ -222,6 +223,11 @@ struct DataService {
             memo: memo,
             audience: .local
         )
+        /// Remove old sphere content, if any
+        if sphere.getFileVersion(slashlink: slug.toSlashlink()) != nil {
+            try sphere.remove(slug: slug.description)
+            try sphere.save()
+        }
     }
 
     /// Write entry to sphere
@@ -238,12 +244,17 @@ struct DataService {
             additionalHeaders: memo.headers,
             body: body
         )
-        _ = try sphere.save()
+        try sphere.save()
+
+        // Write to database
         try database.writeEntry(
             slug: slug,
             memo: memo,
             audience: .public
         )
+
+        // Finally, remove any local file with this slug
+        try? memos.remove(slug)
     }
 
     /// Write entry to file system and database
@@ -252,12 +263,6 @@ struct DataService {
         var entry = entry
         entry.contents.modified = Date.now
 
-        // If Noosphere is disabled, always write local-only.
-        guard Config.default.noosphere.enabled else {
-            try writeEntryToLocal(slug: entry.slug, memo: entry.contents)
-            return
-        }
-        
         switch entry.audience {
         case .local:
             return try writeEntryToLocal(
@@ -284,7 +289,7 @@ struct DataService {
             let identity = try self.sphereIdentity()
             let sphere = try noosphere.sphere(identity: identity)
             try sphere.remove(slug: slug.description)
-            _ = try sphere.save()
+            try sphere.save()
             try database.removeEntry(slug: slug)
             return
         }
