@@ -465,7 +465,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         var model = state
-        model.sphereVersion = try? environment.data.sphereVersion()
+        model.sphereVersion = try? environment.data.noosphere.version()
         return Update(state: model)
     }
 
@@ -746,16 +746,22 @@ struct AppEnvironment {
         self.logger = Logger.main
 
         let files = FileStore(documentURL: documentURL)
-        let memos = HeaderSubtextMemoStore(store: files)
+        let local = HeaderSubtextMemoStore(store: files)
 
-        let defaultGateway = AppDefaults.standard.gatewayURL
+        let globalStorageURL = applicationSupportURL.appending(
+            path: Config.default.noosphere.globalStoragePath
+        )
+        let sphereStorageURL = applicationSupportURL.appending(
+            path: Config.default.noosphere.sphereStoragePath
+        )
+        let defaultGateway = URL(string: AppDefaults.standard.gatewayURL)
+        let defaultSphereIdentity = AppDefaults.standard.sphereIdentity
 
         let noosphere = NoosphereService(
-            globalStorageURL: applicationSupportURL
-                .appending(path: Config.default.noosphere.globalStoragePath),
-            sphereStorageURL: applicationSupportURL
-                .appending(path: Config.default.noosphere.sphereStoragePath),
-            gatewayURL: URL(string: defaultGateway)
+            globalStorageURL: globalStorageURL,
+            sphereStorageURL: sphereStorageURL,
+            gatewayURL: defaultGateway,
+            sphereIdentity: defaultSphereIdentity
         )
 
         let databaseURL = self.applicationSupportURL
@@ -774,7 +780,7 @@ struct AppEnvironment {
             databaseURL: databaseURL,
             noosphere: noosphere,
             database: databaseService,
-            memos: memos
+            local: local
         )
 
         self.feed = FeedService()

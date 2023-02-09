@@ -1202,7 +1202,7 @@ struct DetailModel: ModelProtocol {
         }
 
         let fx: Fx<DetailAction> = environment.data
-            .readEntryDetailAsync(
+            .readDetailAsync(
                 link: link,
                 fallback: fallback
             )
@@ -1236,7 +1236,7 @@ struct DetailModel: ModelProtocol {
         let model = prepareLoadDetail(state)
 
         let fx: Fx<DetailAction> = environment.data
-            .readEntryDetailAsync(
+            .readDetailAsync(
                 link: EntryLink(slug: slug),
                 fallback: model.markupEditor.text
             )

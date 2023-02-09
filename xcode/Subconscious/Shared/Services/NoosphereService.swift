@@ -528,33 +528,58 @@ public final class SphereFS: SphereProtocol {
 }
 
 enum NoosphereServiceError: Error {
-    case sphereNotFound(String)
-    case sphereExists(String)
+    case defaultSphereNotFound
 }
 
-/// Creates and manages Noosphere and Spheres.
-final class NoosphereService {
+/// Creates and manages Noosphere and default sphere singletons.
+final class NoosphereService: SphereProtocol {
     var globalStorageURL: URL
     var sphereStorageURL: URL
     var gatewayURL: URL?
     /// Memoized Noosphere instance
     private var _noosphere: Noosphere?
-    /// Memoized Sphere instances, keyed by sphere identity
-    private var _spheres: [String: SphereFS]
+    /// Identity of default sphere
+    private var _sphereIdentity: String?
+    /// Memoized Sphere instance
+    private var _sphere: SphereFS?
     
     init(
         globalStorageURL: URL,
         sphereStorageURL: URL,
-        gatewayURL: URL? = nil
+        gatewayURL: URL? = nil,
+        sphereIdentity: String?
     ) {
         self.globalStorageURL = globalStorageURL
         self.sphereStorageURL = sphereStorageURL
         self.gatewayURL = gatewayURL
-        self._spheres = [:]
+        self._sphereIdentity = sphereIdentity
+    }
+    
+    /// Create a default sphere for user and persist sphere details
+    /// This creates, but does not save the sphere as default.
+    /// - Returns: SphereReceipt
+    func createSphere(ownerKeyName: String) throws -> SphereReceipt {
+        try self.noosphere().createSphere(
+            ownerKeyName: ownerKeyName
+        )
+    }
+    
+    /// Set a new default sphere
+    func updateDefaultSphere(_ identity: String?) {
+        self._sphereIdentity = identity
+        self._sphere = nil
+    }
+    
+    /// Update Gateway.
+    /// Resets memoized Noosphere and Sphere instances.
+    func updateGateway(url: URL?) {
+        self.gatewayURL = url
+        self._noosphere = nil
+        self._sphere = nil
     }
     
     /// Gets or creates memoized Noosphere singleton instance
-    func noosphere() throws -> Noosphere {
+    private func noosphere() throws -> Noosphere {
         if let noosphere = self._noosphere {
             return noosphere
         }
@@ -567,34 +592,82 @@ final class NoosphereService {
         return noosphere
     }
     
-    /// Get a Sphere by its identity.
-    /// Memoizes spheres by identity string.
-    /// - Returns: Sphere
-    func sphere(identity: String) throws -> SphereFS {
-        if let sphere = self._spheres[identity] {
+    /// Get or open default Sphere.
+    private func sphere() throws -> SphereFS {
+        if let sphere = self._sphere {
             return sphere
         }
+        guard let identity = self._sphereIdentity else {
+            throw NoosphereServiceError.defaultSphereNotFound
+        }
         let noosphere = try noosphere()
-        let sphere = try SphereFS(noosphere: noosphere, identity: identity)
-        self._spheres[identity] = sphere
+        let sphere = try SphereFS(
+            noosphere: noosphere,
+            identity: identity
+        )
+        self._sphere = sphere
         return sphere
     }
     
-    /// Clear the memoized cache of spheres
-    func clearSphereCache() {
-        self._spheres = [:]
+    func identity() throws -> String {
+        try self.sphere().identity
+    }
+
+    func version() throws -> String {
+        try self.sphere().version()
     }
     
-    /// Update Gateway.
-    /// Resets memoized Noosphere and Sphere instances.
-    func updateGateway(url: URL) throws {
-        let noosphere = try Noosphere(
-            globalStoragePath: globalStorageURL.path(percentEncoded: false),
-            sphereStoragePath: sphereStorageURL.path(percentEncoded: false),
-            gatewayURL: url.absoluteString
+    func readHeaderValueFirst(slashlink: String, name: String) -> String? {
+        try? self.sphere().readHeaderValueFirst(
+            slashlink: slashlink,
+            name: name
         )
-        self.gatewayURL = url
-        self._noosphere = noosphere
-        self.clearSphereCache()
+    }
+    
+    func readHeaderNames(slashlink: String) -> [String] {
+        guard let names = try? self.sphere().readHeaderNames(
+            slashlink: slashlink
+        ) else {
+            return []
+        }
+        return names
+    }
+    
+    func read(slashlink: String) -> MemoData? {
+        try? self.sphere().read(slashlink: slashlink)
+    }
+    
+    func write(
+        slug: String,
+        contentType: String,
+        additionalHeaders: [Header],
+        body: Data
+    ) throws {
+        try self.sphere().write(
+            slug: slug,
+            contentType: contentType,
+            additionalHeaders: additionalHeaders,
+            body: body
+        )
+    }
+    
+    func remove(slug: String) throws {
+        try self.sphere().remove(slug: slug)
+    }
+    
+    @discardableResult func save() throws -> String {
+        try self.sphere().save()
+    }
+    
+    func list() throws -> [String] {
+        try self.sphere().list()
+    }
+    
+    func sync() throws -> String {
+        try self.sphere().sync()
+    }
+    
+    func changes(_ since: String?) throws -> [String] {
+        try self.sphere().changes(since)
     }
 }
