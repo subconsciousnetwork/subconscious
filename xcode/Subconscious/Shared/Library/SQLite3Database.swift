@@ -210,11 +210,24 @@ final class SQLite3Database {
         }
     }
 
-    public enum SQLite3DatabaseError: Error {
+    public enum SQLite3DatabaseError: Error, LocalizedError {
         case database(code: Int32, message: String)
         case parameter(_ message: String)
         case value(_ message: String)
         case delete(_ message: String)
+
+        public var errorDescription: String? {
+            switch self {
+            case let .database(code, message):
+                return "Database error. Code: \(code). Message: \(message)."
+            case let .parameter(message):
+                return "Parameter error. Message: \(message)."
+            case let .value(message):
+                return "Value error. Message: \(message)."
+            case let .delete(message):
+                return "Delete error. Message: \(message)."
+            }
+        }
     }
 
     /// Enum representing the most common flag combinations for `sqlite3_open_v2`.
