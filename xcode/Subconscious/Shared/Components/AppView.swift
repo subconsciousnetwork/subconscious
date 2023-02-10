@@ -672,7 +672,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         logger.log("File sync started")
         let fx: Fx<AppAction> = environment.data
-            .syncLocalMemosWithDatabase()
+            .syncLocalWithDatabase()
             .map({ changes in
                 AppAction.succeedSyncLocalFilesWithDatabase(changes)
             })

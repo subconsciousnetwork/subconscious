@@ -223,7 +223,7 @@ final class DatabaseService {
     }
     
     /// Count all entries
-    func countEntries() -> Int? {
+    func countMemos() -> Int? {
         guard self.state == .ready else {
             return nil
         }
@@ -241,7 +241,7 @@ final class DatabaseService {
     }
     
     /// List recent entries
-    func listRecentEntries() -> [EntryStub] {
+    func listRecentMemos() -> [EntryStub] {
         guard self.state == .ready else {
             return []
         }
