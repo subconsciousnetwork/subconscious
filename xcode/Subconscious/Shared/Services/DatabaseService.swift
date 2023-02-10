@@ -307,24 +307,24 @@ final class DatabaseService {
         }
         let suggestions = try database.execute(
             sql: """
-            SELECT slug, title
+            SELECT slug, audience, title
             FROM memo
             ORDER BY modified DESC
             LIMIT 25
             """
         )
         .compactMap({ row in
-            if
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let title: String = row.get(1)
-            {
-                return EntryLink(
-                    slug: slug,
-                    title: title
-                )
+            guard
+                let slug = row.col(0)?.toString()?.toSlug(),
+                let audience = row.col(1)?.toString()?.toAudience(),
+                let title = row.col(2)?.toString()
+            else {
+                return nil
             }
-            return nil
+            return EntryLink(
+                address: MemoAddress(slug: slug, audience: audience),
+                title: title
+            )
         })
         .map({ link in
             Suggestion.entry(link)
@@ -342,7 +342,7 @@ final class DatabaseService {
                 special.append(
                     .scratch(
                         EntryLink(
-                            slug: slug,
+                            address: MemoAddress(slug: slug, audience: .local),
                             title: Config.default.scratchDefaultTitle
                         )
                     )
@@ -369,18 +369,23 @@ final class DatabaseService {
             throw DatabaseServiceError.notReady
         }
         // If slug is invalid, return empty suggestions
-        guard let queryEntryLink = EntryLink(title: query) else {
+        guard let queryEntrySlug = Slug(formatting: query) else {
             return []
         }
         
         var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
         
         // Create a suggestion for the literal query
-        suggestions[queryEntryLink.slug] = .search(queryEntryLink)
+        suggestions[queryEntrySlug] = .search(
+            EntryLink(
+                address: MemoAddress(slug: queryEntrySlug, audience: .local),
+                title: query
+            )
+        )
         
         let entries: [EntryLink] = try database.execute(
             sql: """
-            SELECT slug, title
+            SELECT slug, audience, title
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY rank
@@ -392,12 +397,12 @@ final class DatabaseService {
         )
             .compactMap({ row in
                 if
-                    let slugString: String = row.get(0),
-                    let slug = Slug(slugString),
-                    let title: String = row.get(1)
+                    let slug = row.col(0)?.toString()?.toSlug(),
+                    let audience = row.col(1)?.toString()?.toAudience(),
+                    let title: String = row.get(2)
                 {
                     return EntryLink(
-                        slug: slug,
+                        address: MemoAddress(slug: slug, audience: audience),
                         title: title
                     )
                 }
@@ -408,7 +413,7 @@ final class DatabaseService {
         // If literal query and an entry have the same slug,
         // entry will overwrite query.
         for entry in entries {
-            suggestions.updateValue(.entry(entry), forKey: entry.slug)
+            suggestions.updateValue(.entry(entry), forKey: entry.address.slug)
         }
         
         return Array(suggestions.values)
@@ -446,13 +451,13 @@ final class DatabaseService {
     ) -> [RenameSuggestion] {
         var suggestions: OrderedDictionary<Slug, RenameSuggestion> = [:]
         // First append result for literal query
-        if query.slug != current.slug {
+        if query.address.slug != current.address.slug {
             suggestions.updateValue(
                 .move(
                     from: current,
                     to: query
                 ),
-                forKey: query.slug
+                forKey: query.address.slug
             )
         }
         // If slug is the same but title changed, this is a retitle
@@ -462,20 +467,20 @@ final class DatabaseService {
                     from: current,
                     to: query
                 ),
-                forKey: current.slug
+                forKey: current.address.slug
             )
         }
         // Then append results from existing entries, potentially overwriting
         // result for literal query if identical.
         for result in results {
             /// If slug changed, this is a move
-            if result.slug != current.slug {
+            if result.address.slug != current.address.slug {
                 suggestions.updateValue(
                     .merge(
                         parent: result,
                         child: current
                     ),
-                    forKey: result.slug
+                    forKey: result.address.slug
                 )
             }
         }
@@ -492,13 +497,16 @@ final class DatabaseService {
             return []
         }
 
-        guard let queryEntryLink = EntryLink(title: query) else {
+        guard let queryEntryLink = EntryLink(
+            title: query,
+            audience: current.address.audience
+        ) else {
             return []
         }
         
         guard let results = try? database.execute(
             sql: """
-            SELECT slug, title
+            SELECT slug, audience, title
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY rank
@@ -512,12 +520,12 @@ final class DatabaseService {
         }
         let entries = results.compactMap({ row in
             if
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let title: String = row.get(1)
+                let slug = row.col(0)?.toString()?.toSlug(),
+                let audience = row.col(1)?.toString()?.toAudience(),
+                let title: String = row.get(2)
             {
                 return EntryLink(
-                    slug: slug,
+                    address: MemoAddress(slug: slug, audience: audience),
                     title: title
                 )
             }
@@ -535,7 +543,7 @@ final class DatabaseService {
     /// A whitespace query string will fetch zero-query suggestions.
     func searchLinkSuggestions(
         query: String,
-        omitting invalidSuggestions: Set<Slug> = Set(),
+        omitting invalidSuggestions: Set<MemoAddress> = Set(),
         fallback: [LinkSuggestion] = []
     ) -> [LinkSuggestion] {
         guard self.state == .ready else {
@@ -549,13 +557,13 @@ final class DatabaseService {
         var suggestions: OrderedDictionary<Slug, LinkSuggestion> = [:]
         
         // Append literal
-        if let literal = EntryLink(title: query) {
-            suggestions[literal.slug] = .new(literal)
+        if let literal = EntryLink(title: query, audience: .local) {
+            suggestions[literal.address.slug] = .new(literal)
         }
         
         guard let results = try? database.execute(
             sql: """
-            SELECT slug, title
+            SELECT slug, audience, title
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY rank
@@ -567,18 +575,18 @@ final class DatabaseService {
         ) else {
             return Array(suggestions.values)
         }
-        let entries = results.compactMap({ row in
-            if
-                let slugString: String = row.get(0),
-                let titleString: String = row.get(1),
-                let slug = Slug(slugString)
-            {
-                return EntryLink(
-                    slug: slug,
-                    title: titleString
-                )
+        let entries: [EntryLink] = results.compactMap({ row in
+            guard
+                let slug = row.col(0)?.toString()?.toSlug(),
+                let audience = row.col(1)?.toString()?.toAudience(),
+                let title = row.col(2)?.toString()
+            else {
+                return nil
             }
-            return nil
+            return EntryLink(
+                address: MemoAddress(slug: slug, audience: audience),
+                title: title
+            )
         })
         
         // Insert entries into suggestions.
@@ -587,8 +595,11 @@ final class DatabaseService {
         for entry in entries {
             // Only insert suggestion if it is not in the set of
             // suggestions to omit.
-            if !invalidSuggestions.contains(entry.slug) {
-                suggestions.updateValue(.entry(entry), forKey: entry.slug)
+            if !invalidSuggestions.contains(entry.address) {
+                suggestions.updateValue(
+                    .entry(entry),
+                    forKey: entry.address.slug
+                )
             }
         }
         
@@ -791,7 +802,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT slug, title
+            SELECT slug, audience, title
             FROM memo
             ORDER BY RANDOM()
             LIMIT 1
@@ -799,14 +810,14 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let title: String = row.get(1)
+                let slug = row.col(0)?.toString()?.toSlug(),
+                let audience = row.col(1)?.toString()?.toAudience(),
+                let title = row.col(2)?.toString()
             else {
                 return nil
             }
             return EntryLink(
-                slug: slug,
+                address: MemoAddress(slug: slug, audience: audience),
                 title: title
             )
         })

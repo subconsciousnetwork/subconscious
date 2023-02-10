@@ -112,19 +112,19 @@ enum NotebookAction {
     case listRecentFailure(String)
     
     // Delete entries
-    case confirmDelete(Slug?)
+    case confirmDelete(MemoAddress?)
     case setConfirmDeleteShowing(Bool)
     /// Stage an entry deletion immediately before requesting.
     /// We do this for swipe-to-delete, where we must remove the entry
     /// from the list before requesting delete for the animation to work.
-    case stageDeleteEntry(Slug)
+    case stageDeleteEntry(MemoAddress)
     /// Delete entry identified by slug.
-    case deleteEntry(Slug?)
+    case deleteEntry(MemoAddress?)
     case failDeleteEntry(String)
-    case succeedDeleteEntry(Slug)
+    case succeedDeleteEntry(MemoAddress)
 
     /// Entry was saved
-    case succeedSaveEntry(slug: Slug, modified: Date)
+    case succeedSaveEntry(slug: MemoAddress, modified: Date)
 
     /// Move entry succeeded. Lifecycle action.
     case succeedMoveEntry(from: EntryLink, to: EntryLink)
@@ -143,9 +143,15 @@ enum NotebookAction {
     
     /// Set entire navigation stack
     case setDetails([DetailOuterModel])
+
+    /// Find the first existing detail for a given slug.
+    /// If public content exists for this slug, that will be pushed.
+    /// Otherwise, will push local content.
+    case findAndPushDetail(slug: Slug, title: String, fallback: String)
+
     /// Push detail onto navigation stack
     case pushDetail(
-        slug: Slug,
+        address: MemoAddress,
         title: String,
         fallback: String,
         autofocus: Bool
@@ -172,21 +178,21 @@ extension NotebookAction {
         switch suggestion {
         case .entry(let entryLink):
             return .pushDetail(
-                slug: entryLink.slug,
+                address: entryLink.address,
                 title: entryLink.linkableTitle,
                 fallback: entryLink.title,
                 autofocus: false
             )
         case .search(let entryLink):
             return .pushDetail(
-                slug: entryLink.slug,
+                address: entryLink.address,
                 title: entryLink.linkableTitle,
                 fallback: entryLink.title,
                 autofocus: false
             )
         case .scratch(let entryLink):
             return .pushDetail(
-                slug: entryLink.slug,
+                address: entryLink.address,
                 title: entryLink.linkableTitle,
                 fallback: generateScratchFallback(date: Date.now),
                 autofocus: false
@@ -215,14 +221,20 @@ extension NotebookAction: CustomLogStringConvertible {
 extension NotebookAction {
     static func tag(_ action: DetailOuterAction) -> Self {
         switch action {
-        case .requestDelete(let slug):
-            return .deleteEntry(slug)
-        case let .requestDetail(slug, title, fallback):
+        case .requestDelete(let address):
+            return .deleteEntry(address)
+        case let .requestDetail(address, title, fallback):
             return .pushDetail(
-                slug: slug,
+                address: address,
                 title: title,
                 fallback: fallback,
                 autofocus: false
+            )
+        case let .requestFindDetail(slug, title, fallback):
+            return .findAndPushDetail(
+                slug: slug,
+                title: title,
+                fallback: fallback
             )
         case let .succeedMoveEntry(from, to):
             return .succeedMoveEntry(from: from, to: to)
@@ -297,7 +309,7 @@ struct NotebookModel: ModelProtocol {
     
     //  Note deletion action sheet
     /// Delete confirmation action sheet
-    var entryToDelete: Slug? = nil
+    var entryToDelete: MemoAddress? = nil
     /// Delete confirmation action sheet
     var isConfirmDeleteShowing = false
     
@@ -405,26 +417,26 @@ struct NotebookModel: ModelProtocol {
                 model.entryToDelete = nil
             }
             return Update(state: model)
-        case let .stageDeleteEntry(slug):
+        case let .stageDeleteEntry(address):
             return stageDeleteEntry(
                 state: state,
                 environment: environment,
-                slug: slug
+                address: address
             )
-        case .deleteEntry(let slug):
+        case .deleteEntry(let address):
             return deleteEntry(
                 state: state,
                 environment: environment,
-                slug: slug
+                address: address
             )
         case .failDeleteEntry(let error):
             logger.log("failDeleteEntry: \(error)")
             return Update(state: state)
-        case .succeedDeleteEntry(let slug):
+        case .succeedDeleteEntry(let address):
             return succeedDeleteEntry(
                 state: state,
                 environment: environment,
-                slug: slug
+                address: address
             )
         case .succeedSaveEntry:
             // Just refresh note after save, for now.
@@ -471,11 +483,19 @@ struct NotebookModel: ModelProtocol {
             var model = state
             model.details = details
             return Update(state: model)
-        case let .pushDetail(slug, title, fallback, _):
+        case let .findAndPushDetail(slug, title, fallback):
+            return findAndPushDetail(
+                state: state,
+                environment: environment,
+                slug: slug,
+                title: title,
+                fallback: fallback
+            )
+        case let .pushDetail(address, title, fallback, _):
             var model = state
             model.details.append(
                 DetailOuterModel(
-                    slug: slug,
+                    address: address,
                     title: title,
                     fallback: fallback
                 )
@@ -619,7 +639,7 @@ struct NotebookModel: ModelProtocol {
     static func stageDeleteEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        slug: Slug
+        address: MemoAddress
     ) -> Update<NotebookModel> {
         var model = state
         
@@ -635,16 +655,15 @@ struct NotebookModel: ModelProtocol {
         // 2022-02-18 Gordon Brander
         if
             var recent = model.recent,
-            let index = recent.firstIndex(
-                where: { stub in stub.id == slug }
-            ) {
+            let index = recent.firstIndex(where: {
+                stub in stub.address == address
+            })
+        {
             recent.remove(at: index)
             model.recent = recent
         }
         
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.deleteEntry(slug)
-        )
+        let fx: Fx<NotebookAction> = Just(NotebookAction.deleteEntry(address))
             .eraseToAnyPublisher()
         
         return Update(state: model, fx: fx)
@@ -655,18 +674,18 @@ struct NotebookModel: ModelProtocol {
     static func deleteEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        slug: Slug?
+        address: MemoAddress?
     ) -> Update<NotebookModel> {
-        guard let slug = slug else {
+        guard let address = address else {
             logger.log(
-                "Delete requested for nil slug. Doing nothing."
+                "Delete requested for nil address. Doing nothing."
             )
             return Update(state: state)
         }
         let fx: Fx<NotebookAction> = environment.data
-            .deleteEntryAsync(slug: slug)
+            .deleteEntryAsync(address)
             .map({ _ in
-                NotebookAction.succeedDeleteEntry(slug)
+                NotebookAction.succeedDeleteEntry(address)
             })
             .catch({ error in
                 Just(
@@ -681,12 +700,12 @@ struct NotebookModel: ModelProtocol {
     static func succeedDeleteEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        slug: Slug
+        address: MemoAddress
     ) -> Update<NotebookModel> {
-        logger.log("Deleted entry: \(slug)")
+        logger.log("Deleted entry: \(address)")
         var model = state
         model.details = state.details.filter({ detail in
-            detail.slug != slug
+            detail.address != address
         })
         return update(
             state: model,
@@ -707,11 +726,11 @@ struct NotebookModel: ModelProtocol {
 
         /// Find all instances of this model in the stack and update them
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.slug == from.slug else {
+            guard detail.address == from.address else {
                 return detail
             }
             var model = detail
-            model.slug = to.slug
+            model.address = to.address
             model.title = to.linkableTitle
             model.fallback = to.title
             return model
@@ -736,11 +755,11 @@ struct NotebookModel: ModelProtocol {
 
         /// Find all instances of child and update them to become parent
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.slug == child.slug else {
+            guard detail.address == child.address else {
                 return detail
             }
             var model = detail
-            model.slug = parent.slug
+            model.address = parent.address
             model.title = parent.linkableTitle
             model.fallback = parent.title
             return model
@@ -765,7 +784,7 @@ struct NotebookModel: ModelProtocol {
 
         /// Find all instances of this model in the stack and update them
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.slug == from.slug else {
+            guard detail.address == from.address else {
                 return detail
             }
             var model = detail
@@ -784,7 +803,8 @@ struct NotebookModel: ModelProtocol {
     static func submitSearch(
         state: NotebookModel,
         environment: AppEnvironment,
-        query: String
+        query: String,
+        defaultAudience: Audience = .local
     ) -> Update<NotebookModel> {
         // Duration of keyboard animation
         let duration = Duration.keyboard
@@ -799,7 +819,10 @@ struct NotebookModel: ModelProtocol {
         
         // Derive slug. If we can't (e.g. invalid query such as empty string),
         // just hide the search HUD and do nothing.
-        guard let link = EntryLink(title: query) else {
+        guard let link = EntryLink(
+            title: query,
+            audience: defaultAudience
+        ) else {
             environment.logger.log(
                 "Query could not be converted to link: \(query)"
             )
@@ -809,7 +832,7 @@ struct NotebookModel: ModelProtocol {
         // Request detail AFTER animaiton completes
         let fx: Fx<NotebookAction> = Just(
             NotebookAction.pushDetail(
-                slug: link.slug,
+                address: link.address,
                 title: link.linkableTitle,
                 fallback: link.title,
                 autofocus: false
@@ -821,6 +844,32 @@ struct NotebookModel: ModelProtocol {
         return update.mergeFx(fx)
     }
     
+    /// Find and push a specific detail for slug
+    static func findAndPushDetail(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        slug: Slug,
+        title: String,
+        fallback: String
+    ) -> Update<NotebookModel> {
+        guard let address = environment.data.findAddress(slug: slug) else {
+            logger.log(
+                "Could not find address for slug \(slug)"
+            )
+            return Update(state: state)
+        }
+        return update(
+            state: state,
+            action: .pushDetail(
+                address: address,
+                title: title,
+                fallback: fallback,
+                autofocus: false
+            ),
+            environment: environment
+        )
+    }
+
     /// Request detail for a random entry
     static func pushRandomDetail(
         state: NotebookModel,
@@ -830,7 +879,7 @@ struct NotebookModel: ModelProtocol {
         let fx: Fx<NotebookAction> = environment.data.readRandomEntryLinkAsync()
             .map({ link in
                 NotebookAction.pushDetail(
-                    slug: link.slug,
+                    address: link.address,
                     title: link.linkableTitle,
                     fallback: link.title,
                     autofocus: autofocus

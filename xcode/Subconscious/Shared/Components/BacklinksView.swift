@@ -21,20 +21,16 @@ struct BacklinksView: View {
             .padding(.horizontal, AppTheme.unit4)
             .padding(.vertical, AppTheme.unit2)
             if backlinks.count > 0 {
-                ForEach(backlinks) { entry in
+                ForEach(backlinks) { stub in
                     Divider()
                     Button(
                         action: {
                             onSelect(
-                                EntryLink(
-                                    slug: entry.slug,
-                                    title: entry.linkableTitle
-                                )
+                                EntryLink(stub)
                             )
                         },
                         label: {
-                            EntryRow(entry: entry)
-                                .equatable()
+                            EntryRow(entry: stub).equatable()
                         }
                     )
                     .buttonStyle(BacklinkButtonStyle())
@@ -61,16 +57,22 @@ struct BacklinksView_Previews: PreviewProvider {
             BacklinksView(
                 backlinks: [
                     EntryStub(
-                        link: EntryLink(title: "Floop")!,
+                        address: MemoAddress(
+                            formatting: "The Lee Shore",
+                            audience: .local
+                        )!,
+                        title: "The Lee Shore",
                         excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
-                        modified: Date.now,
-                        audience: .local
+                        modified: Date.now
                     ),
                     EntryStub(
-                        link: EntryLink(title: "Floop")!,
+                        address: MemoAddress(
+                            formatting: "Loomings",
+                            audience: .public
+                        )!,
+                        title: "Floop",
                         excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
-                        modified: Date.now,
-                        audience: .public
+                        modified: Date.now
                     )
                 ],
                 onSelect: { title in }

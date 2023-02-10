@@ -7,15 +7,13 @@
 
 import SwiftUI
 
-struct AudienceIconView: View {
-    var audience: Audience
-
-    var body: some View {
+extension Image {
+    init(audience: Audience) {
         switch audience {
         case .public:
-            Image(systemName: "network")
+            self.init(systemName: "network")
         case .local:
-            Image(systemName: "circle.dashed")
+            self.init(systemName: "circle.dashed")
         }
     }
 }
@@ -23,10 +21,10 @@ struct AudienceIconView: View {
 struct AudienceIconView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            AudienceIconView(
+            Image(
                 audience: .public
             )
-            AudienceIconView(
+            Image(
                 audience: .local
             )
         }

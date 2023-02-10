@@ -27,3 +27,9 @@ struct EntryStub:
         "Subconscious.EntryStub(\(slug))"
     }
 }
+
+extension EntryLink {
+    init(_ stub: EntryStub) {
+        self.init(address: stub.address, title: stub.title)
+    }
+}

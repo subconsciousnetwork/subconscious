@@ -259,6 +259,8 @@
 		B8CBAFAA299580E50079107E /* StoreProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CBAFA8299580E50079107E /* StoreProtocol.swift */; };
 		B8CBAFAC2995C4750079107E /* MemoAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CBAFAB2995C4750079107E /* MemoAddress.swift */; };
 		B8CBAFAD2995C4750079107E /* MemoAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CBAFAB2995C4750079107E /* MemoAddress.swift */; };
+		B8CBAFB02996A7D50079107E /* UnqualifiedLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CBAFAF2996A7D50079107E /* UnqualifiedLink.swift */; };
+		B8CBAFB12996A7D50079107E /* UnqualifiedLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CBAFAF2996A7D50079107E /* UnqualifiedLink.swift */; };
 		B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433C27A07CE10079D2F9 /* ScrimView.swift */; };
 		B8CC433E27A07CE10079D2F9 /* ScrimView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC433C27A07CE10079D2F9 /* ScrimView.swift */; };
 		B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */; };
@@ -494,6 +496,7 @@
 		B8CBAFA62994499A0079107E /* AudienceIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudienceIconView.swift; sourceTree = "<group>"; };
 		B8CBAFA8299580E50079107E /* StoreProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoreProtocol.swift; sourceTree = "<group>"; };
 		B8CBAFAB2995C4750079107E /* MemoAddress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoAddress.swift; sourceTree = "<group>"; };
+		B8CBAFAF2996A7D50079107E /* UnqualifiedLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnqualifiedLink.swift; sourceTree = "<group>"; };
 		B8CC433C27A07CE10079D2F9 /* ScrimView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrimView.swift; sourceTree = "<group>"; };
 		B8CC434827A0CA8D0079D2F9 /* AnimationUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationUtilities.swift; sourceTree = "<group>"; };
 		B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryPromptGeist.swift; sourceTree = "<group>"; };
@@ -716,6 +719,7 @@
 				B86DFF3427C07438002E57ED /* LinkSuggestion.swift */,
 				B8C7E8BD2809F19500E439DC /* Markup.swift */,
 				B8B4251428FDE8570081B8D5 /* Memo.swift */,
+				B8CBAFAB2995C4750079107E /* MemoAddress.swift */,
 				B8B4251728FDE8AA0081B8D5 /* MemoData.swift */,
 				B848FDA129916F4600245115 /* Nickname.swift */,
 				B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */,
@@ -726,7 +730,7 @@
 				B58FE48B28DED9B600E000CC /* StoryCombo.swift */,
 				B8A59D6828B692900010DB2F /* StoryPrompt.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
-				B8CBAFAB2995C4750079107E /* MemoAddress.swift */,
+				B8CBAFAF2996A7D50079107E /* UnqualifiedLink.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1271,6 +1275,7 @@
 				B86DFF3527C07438002E57ED /* LinkSuggestion.swift in Sources */,
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8A59D7528B694C40010DB2F /* Geist.swift in Sources */,
+				B8CBAFB02996A7D50079107E /* UnqualifiedLink.swift in Sources */,
 				B8B4250F28FDE6960081B8D5 /* FileStore.swift in Sources */,
 				B8A617202971D3000054D410 /* Slashlink.swift in Sources */,
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
@@ -1385,6 +1390,7 @@
 				B8EF986F29034ADF0029363D /* Pathlike.swift in Sources */,
 				B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */,
 				B824FDD526FAB1BC00B81BBD /* Truncate.swift in Sources */,
+				B8CBAFB12996A7D50079107E /* UnqualifiedLink.swift in Sources */,
 				B82C3A5B26F5761700833CC8 /* FileSync.swift in Sources */,
 				B85EC467296F0D0A00558761 /* ProfilePicMd.swift in Sources */,
 				B85BF47927BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,

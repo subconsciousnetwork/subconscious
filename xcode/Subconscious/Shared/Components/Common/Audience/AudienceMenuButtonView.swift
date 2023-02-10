@@ -21,7 +21,7 @@ struct AudienceMenuButtonView: View {
                     ) {
                         Label(
                             title: { Text(Audience.local.description) },
-                            icon: { AudienceIconView(audience: .local) }
+                            icon: { Image(audience: .local) }
                         )
                     }
                     Button(
@@ -31,7 +31,7 @@ struct AudienceMenuButtonView: View {
                     ) {
                         Label(
                             title: { Text(Audience.public.description) },
-                            icon: { AudienceIconView(audience: .public) }
+                            icon: { Image(audience: .public) }
                         )
                     }
                 }
@@ -41,12 +41,12 @@ struct AudienceMenuButtonView: View {
                     switch audience {
                     case .local:
                         MenuButtonView(
-                            icon: AudienceIconView(audience: .local),
+                            icon: Image(audience: .local),
                             label: "Local"
                         )
                     case .public:
                         MenuButtonView(
-                            icon: AudienceIconView(audience: .public),
+                            icon: Image(audience: .public),
                             label: Audience.public.description
                         )
                     }

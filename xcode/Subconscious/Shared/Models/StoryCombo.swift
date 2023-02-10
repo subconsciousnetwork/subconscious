@@ -36,14 +36,15 @@ extension MemoEntry {
             }
         })
 
-        guard let link = EntryLink.init(
-            title: "\(x.title) x \(y.title)"
+        guard let link = EntryLink(
+            title: "\(x.title) x \(y.title)",
+            audience: .local
         ) else {
             return nil
         }
 
         self.init(
-            address: MemoAddress(slug: link.slug, audience: .local),
+            address: link.address,
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now, modified: Date.now,

@@ -29,7 +29,7 @@ struct DetailView: View {
 
     var body: some View {
         VStack {
-            if store.state.slug != nil {
+            if store.state.address != nil {
                 DetailReadyView(
                     store: store,
                     state: state,
@@ -46,11 +46,11 @@ struct DetailView: View {
         }
         .navigationTitle(state.title)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
+        .toolbar(content: {
             ToolbarItem(placement: .principal) {
                 OmniboxView(
-                    icon: Image(systemName: "network"),
-                    title: store.state.slug?.description ?? "None"
+                    audience: store.state.address?.audience,
+                    title: store.state.address?.description
                 )
             }
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -62,7 +62,7 @@ struct DetailView: View {
                                     store.send(
                                         .presentRenameSheet(
                                             EntryLink(
-                                                slug: state.slug,
+                                                address: state.address,
                                                 title: state.title
                                             )
                                         )
@@ -89,14 +89,14 @@ struct DetailView: View {
                     }
                 )
             }
-        }
+        })
         .onAppear {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
             store.send(
                 DetailAction.appear(
-                    slug: state.slug,
+                    address: state.address,
                     title: state.title,
                     fallback: state.fallback
                 )
@@ -107,13 +107,13 @@ struct DetailView: View {
         }
         /// Catch link taps and handle them here
         .environment(\.openURL, OpenURLAction { url in
-            guard let link = EntryLink.decodefromSubEntryURL(url) else {
+            guard let link = UnqualifiedLink.decodefromSubEntryURL(url) else {
                 return .systemAction
             }
             send(
-                .requestDetail(
+                .requestFindDetail(
                     slug: link.slug,
-                    title: link.linkableTitle,
+                    title: link.title,
                     fallback: link.title
                 )
             )
@@ -193,7 +193,7 @@ struct DetailView: View {
             Button(
                 role: .destructive,
                 action: {
-                    send(.requestDelete(state.slug))
+                    send(.requestDelete(state.address))
                 }
             ) {
                 Text("Delete Immediately")
@@ -207,6 +207,27 @@ struct DetailReadyView: View {
     @Environment(\.scenePhase) var scenePhase: ScenePhase
     var state: DetailOuterModel
     var send: (DetailOuterAction) -> Void
+
+    private func onLink(
+        url: URL,
+        attributedString: NSAttributedString,
+        selection: NSRange,
+        interaction: UITextItemInteraction
+    ) -> Bool {
+        guard let link = UnqualifiedLink.decodefromSubEntryURL(
+            url
+        ) else {
+            return true
+        }
+        send(
+            .requestFindDetail(
+                slug: link.slug,
+                title: link.title,
+                fallback: link.title
+            )
+        )
+        return false
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -233,19 +254,7 @@ struct DetailReadyView: View {
                             ),
                             frame: geometry.frame(in: .local),
                             renderAttributesOf: Subtext.renderAttributesOf,
-                            onLink: { url, _, _, _ in
-                                guard let link = EntryLink.decodefromSubEntryURL(url) else {
-                                    return true
-                                }
-                                send(
-                                    .requestDetail(
-                                        slug: link.slug,
-                                        title: link.linkableTitle,
-                                        fallback: link.title
-                                    )
-                                )
-                                return false
-                            },
+                            onLink: self.onLink,
                             logger: Logger.editor
                         )
                         .insets(
@@ -267,7 +276,7 @@ struct DetailReadyView: View {
                             onSelect: { link in
                                 send(
                                     .requestDetail(
-                                        slug: link.slug,
+                                        address: link.address,
                                         title: link.linkableTitle,
                                         fallback: link.title
                                     )
@@ -283,8 +292,7 @@ struct DetailReadyView: View {
                             send: store.send,
                             tag: DetailAction.setLinkSheetPresented
                         ),
-                        selectedEntryLinkMarkup:
-                            store.state.selectedEntryLinkMarkup,
+                        selectedShortlink: store.state.selectedShortlink,
                         suggestions: store.state.linkSuggestions,
                         onSelectLinkCompletion: { link in
                             store.send(.selectLinkCompletion(link))
@@ -326,12 +334,15 @@ struct DetailReadyView: View {
 
 /// Actions that are forwarded up to the parent component
 enum DetailOuterAction: Hashable {
-    case requestDetail(slug: Slug, title: String, fallback: String)
-    case requestDelete(Slug?)
+    /// Request specific detail
+    case requestDetail(address: MemoAddress, title: String, fallback: String)
+    /// Request detail from any audience scope
+    case requestFindDetail(slug: Slug, title: String, fallback: String)
+    case requestDelete(MemoAddress?)
     case succeedMoveEntry(from: EntryLink, to: EntryLink)
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
-    case succeedSaveEntry(slug: Slug, modified: Date)
+    case succeedSaveEntry(address: MemoAddress, modified: Date)
 }
 
 extension DetailOuterAction {
@@ -345,7 +356,7 @@ extension DetailOuterAction {
             return .succeedRetitleEntry(from: from, to: to)
         case let .succeedSave(entry):
             return .succeedSaveEntry(
-                slug: entry.slug,
+                address: entry.address,
                 modified: entry.contents.modified
             )
         default:
@@ -367,7 +378,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case markupEditor(MarkupTextAction)
 
     case appear(
-        slug: Slug?,
+        address: MemoAddress?,
         title: String,
         fallback: String,
         autofocus: Bool = false
@@ -408,7 +419,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case save(MemoEntry?)
     case succeedSave(MemoEntry)
     case failSave(
-        slug: Slug,
+        address: MemoAddress,
         message: String
     )
 
@@ -517,13 +528,9 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         case let .forceSetDetail(detail):
             return "forceSetDetail(\(String.loggable(detail)))"
         case .save(let entry):
-            let slugString: String = entry.mapOr(
-                { entry in String(entry.slug) },
-                default: "nil"
-            )
-            return "save(\(slugString))"
+            return "save(\(entry?.address.description ?? "nil"))"
         case .succeedSave(let entry):
-            return "succeedSave(\(entry.slug))"
+            return "succeedSave(\(entry.address))"
         case .setDetail(let detail, _):
             return "setDetail(\(String.loggable(detail)))"
         case let .setEditor(_, saveState, modified):
@@ -587,7 +594,10 @@ struct DetailMarkupEditorCursor: CursorProtocol {
 
 //  MARK: Model
 struct DetailModel: ModelProtocol {
-    var slug: Slug?
+    var address: MemoAddress?
+    var audience: Audience {
+        address?.audience ?? .local
+    }
     /// Required headers
     /// Initialize date with Unix Epoch
     var headers = WellKnownHeaders(
@@ -599,7 +609,6 @@ struct DetailModel: ModelProtocol {
     )
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
-    var audience: Audience = .local
     var backlinks: [EntryStub] = []
     
     /// Is editor saved?
@@ -611,7 +620,7 @@ struct DetailModel: ModelProtocol {
     var lastLoadStarted = Date.distantPast
 
     /// The entry link within the text
-    var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
+    var selectedShortlink: Subtext.Shortlink?
 
     /// The text editor
     var markupEditor = MarkupTextModel()
@@ -644,11 +653,8 @@ struct DetailModel: ModelProtocol {
     /// currently match it, such that we could say the editor is
     /// displaying that entry?
     func stateMatches(entry: MemoEntry) -> Bool {
-        guard let slug = self.slug else {
-            return false
-        }
         return (
-            slug == entry.slug &&
+            self.address == entry.address &&
             markupEditor.text == entry.contents.body.description
         )
     }
@@ -682,11 +688,11 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 phase: phase
             )
-        case let .appear(slug, title, fallback, autofocus):
+        case let .appear(address, title, fallback, autofocus):
             return appear(
                 state: state,
                 environment: environment,
-                slug: slug,
+                address: address,
                 title: title,
                 fallback: fallback,
                 autofocus: autofocus
@@ -790,11 +796,11 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 entry: entry
             )
-        case let .failSave(slug, message):
+        case let .failSave(address, message):
             return failSave(
                 state: state,
                 environment: environment,
-                slug: slug,
+                address: address,
                 message: message
             )
         case let .setLinkSheetPresented(isPresented):
@@ -1036,12 +1042,14 @@ struct DetailModel: ModelProtocol {
     static func appear(
         state: DetailModel,
         environment: AppEnvironment,
-        slug: Slug?,
+        address: MemoAddress?,
         title: String,
         fallback: String,
         autofocus: Bool
     ) -> Update<DetailModel> {
-        let link = slug.map({ slug in EntryLink(slug: slug, title: title) })
+        let link = address.map({ address in
+            EntryLink(address: address, title: title)
+        })
         return update(
             state: state,
             action: .loadDetail(
@@ -1106,9 +1114,9 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         // Set entry link based on selection
         let dom = Subtext.parse(markup: text)
-        let link = dom.entryLinkFor(range: nsRange)
+        let link = dom.shortlinkFor(range: nsRange)
         var model = state
-        model.selectedEntryLinkMarkup = link
+        model.selectedShortlink = link
 
         let linkSearchText = link?.toTitle() ?? ""
 
@@ -1182,7 +1190,6 @@ struct DetailModel: ModelProtocol {
         model.isLoading = true
         // Mark time of load start
         model.lastLoadStarted = Date.now
-        model.audience = .local
         return model
     }
 
@@ -1203,7 +1210,8 @@ struct DetailModel: ModelProtocol {
 
         let fx: Fx<DetailAction> = environment.data
             .readDetailAsync(
-                link: link,
+                address: link.address,
+                title: link.title,
                 fallback: fallback
             )
             .map({ detail in
@@ -1226,7 +1234,7 @@ struct DetailModel: ModelProtocol {
         state: DetailModel,
         environment: AppEnvironment
     ) -> Update<DetailModel> {
-        guard let slug = state.slug else {
+        guard let address = state.address else {
             logger.log(
                 "Refresh detail requested when nothing was being edited. Skipping."
             )
@@ -1237,7 +1245,8 @@ struct DetailModel: ModelProtocol {
 
         let fx: Fx<DetailAction> = environment.data
             .readDetailAsync(
-                link: EntryLink(slug: slug),
+                address: address,
+                title: model.headers.title,
                 fallback: model.markupEditor.text
             )
             .map({ detail in
@@ -1255,7 +1264,7 @@ struct DetailModel: ModelProtocol {
         state: DetailModel,
         environment: AppEnvironment
     ) -> Update<DetailModel> {
-        guard let slug = state.slug else {
+        guard let address = state.address else {
             logger.debug(
                 "Refresh-detail-if-stale requested, but nothing was being edited. Skipping."
             )
@@ -1269,7 +1278,7 @@ struct DetailModel: ModelProtocol {
             return Update(state: state)
         }
         logger.log(
-            "Detail for \(slug) is stale. Refreshing."
+            "Detail for \(address) is stale. Refreshing."
         )
         return update(
             state: state,
@@ -1296,10 +1305,9 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         var model = state
         model.isLoading = false
-        model.slug = detail.slug
+        model.address = detail.entry.address
         model.headers = detail.entry.contents.wellKnownHeaders()
         model.additionalHeaders = detail.entry.contents.additionalHeaders
-        model.audience = detail.entry.audience
         model.backlinks = detail.backlinks
         model.saveState = detail.saveState
 
@@ -1421,7 +1429,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         var model = state
-        model.slug = nil
+        model.address = nil
         model.headers = WellKnownHeaders(
             contentType: ContentType.subtext.rawValue,
             created: Date.distantPast,
@@ -1442,8 +1450,14 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         audience: Audience
     ) -> Update<DetailModel> {
+        guard let address = state.address else {
+            logger.log(
+                "Update audience requested, but no memo is being edited."
+            )
+            return Update(state: state)
+        }
         var model = state
-        model.audience = audience
+        model.address = MemoAddress(slug: address.slug, audience: audience)
         return Update(state: model)
     }
 
@@ -1491,7 +1505,7 @@ struct DetailModel: ModelProtocol {
             .catch({ error in
                 Just(
                     DetailAction.failSave(
-                        slug: entry.slug,
+                        address: entry.address,
                         message: error.localizedDescription
                     )
                 )
@@ -1507,7 +1521,7 @@ struct DetailModel: ModelProtocol {
         entry: MemoEntry
     ) -> Update<DetailModel> {
         environment.logger.debug(
-            "Saved entry: \(entry.slug)"
+            "Saved entry: \(entry.address)"
         )
         var model = state
 
@@ -1532,12 +1546,12 @@ struct DetailModel: ModelProtocol {
     static func failSave(
         state: DetailModel,
         environment: AppEnvironment,
-        slug: Slug,
+        address: MemoAddress,
         message: String
     ) -> Update<DetailModel> {
         //  TODO: show user a "try again" banner
         environment.logger.warning(
-            "Save failed for entry (\(slug)) with error: \(message)"
+            "Save failed for entry (\(address)) with error: \(message)"
         )
         // Mark modified, since we failed to save
         var model = state
@@ -1564,10 +1578,10 @@ struct DetailModel: ModelProtocol {
         model.linkSearchText = text
 
         // Omit current slug from results
-        let omitting = state.slug.mapOr(
-            { slug in Set([slug]) },
-            default: Set()
-        )
+        var omitting: Set<MemoAddress> = Set()
+        if let address = state.address {
+            omitting.insert(address)
+        }
 
         // Search link suggestions
         let fx: Fx<DetailAction> = environment.data
@@ -1611,11 +1625,11 @@ struct DetailModel: ModelProtocol {
         // If there is a selected link, use that range
         // instead of selection
         let (range, replacement): (NSRange, String) = Func.pipe(
-            state.selectedEntryLinkMarkup,
+            state.selectedShortlink,
             through: { markup in
                 switch markup {
                 case .slashlink(let slashlink):
-                    let replacement = link.slug.toSlashlink()
+                    let replacement = link.address.slug.toSlashlink()
                     let range = NSRange(
                         slashlink.span.range,
                         in: state.markupEditor.text
@@ -1836,7 +1850,7 @@ struct DetailModel: ModelProtocol {
         child: EntryLink
     ) -> Update<DetailModel> {
         var model = state
-        model.slug = parent.slug
+        model.address = parent.address
         model.headers.title = parent.linkableTitle
         return update(
             state: model,
@@ -1865,8 +1879,10 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
+        let address = from.address
+        let title = to.title
         let fx: Fx<DetailAction> = environment.data
-            .retitleEntryAsync(from: from, to: to)
+            .retitleEntryAsync(address: address, title: title)
             .map({ _ in
                 DetailAction.succeedRetitleEntry(from: from, to: to)
             })
@@ -2006,7 +2022,7 @@ struct DetailModel: ModelProtocol {
 //  MARK: Outer Model
 /// A description of a detail suitible for pushing onto a navigation stack
 struct DetailOuterModel: Hashable, ModelProtocol {
-    var slug: Slug
+    var address: MemoAddress
     var title: String
     var fallback: String
     
@@ -2021,10 +2037,10 @@ struct DetailOuterModel: Hashable, ModelProtocol {
 
 extension EntryLink {
     init?(_ detail: DetailModel) {
-        guard let slug = detail.slug else {
+        guard let address = detail.address else {
             return nil
         }
-        self.init(slug: slug, title: detail.headers.title)
+        self.init(address: address, title: detail.headers.title)
     }
 }
 
@@ -2032,7 +2048,7 @@ extension FileFingerprint {
     /// Initialize FileFingerprint from DetailModel.
     /// We use this to do last-write-wins.
     init?(_ detail: DetailModel) {
-        guard let slug = detail.slug else {
+        guard let slug = detail.address?.slug else {
             return nil
         }
         self.init(
@@ -2045,11 +2061,10 @@ extension FileFingerprint {
 
 extension MemoEntry {
     init?(_ detail: DetailModel) {
-        guard let slug = detail.slug else {
+        guard let address = detail.address else {
             return nil
         }
-        self.slug = slug
-        self.audience = detail.audience
+        self.address = address
         self.contents = Memo(
             contentType: detail.headers.contentType,
             created: detail.headers.created,
@@ -2066,7 +2081,10 @@ struct Detail_Previews: PreviewProvider {
     static var previews: some View {
         DetailView(
             state: DetailOuterModel(
-                slug: Slug("nothing-is-lost")!,
+                address: MemoAddress(
+                    formatting: "Nothing is lost in the universe",
+                    audience: .public
+                )!,
                 title: "Nothing is lost in the universe",
                 fallback: "Nothing is lost in the universe"
             ),

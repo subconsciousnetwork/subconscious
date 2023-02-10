@@ -32,6 +32,20 @@ struct OmniboxView: View {
     }
 }
 
+extension OmniboxView {
+    init(
+        audience: Audience?,
+        title: String?
+    ) {
+        let audience = audience ?? .local
+        let title = title ?? ""
+        self.init(
+            icon: Image(audience: audience),
+            title: title
+        )
+    }
+}
+
 struct OmniboxView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {

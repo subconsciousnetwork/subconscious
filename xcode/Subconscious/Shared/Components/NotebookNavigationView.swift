@@ -25,15 +25,15 @@ struct NotebookNavigationView: View {
                     onEntryPress: { entry in
                         store.send(
                             .pushDetail(
-                                slug: entry.slug,
-                                title: entry.link.title,
-                                fallback: entry.link.title,
+                                address: entry.address,
+                                title: entry.title,
+                                fallback: entry.title,
                                 autofocus: false
                             )
                         )
                     },
-                    onEntryDelete: { slug in
-                        store.send(.confirmDelete(slug))
+                    onEntryDelete: { address in
+                        store.send(.confirmDelete(address))
                     },
                     onRefresh: {
                         app.send(.syncSphereWithGateway)

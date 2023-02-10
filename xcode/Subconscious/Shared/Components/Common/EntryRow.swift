@@ -44,7 +44,7 @@ struct EntryRow: View, Equatable {
                 .multilineTextAlignment(.leading)
                 .foregroundColor(Color.secondary)
             HStack(spacing: AppTheme.unit) {
-                AudienceIconView(audience: entry.address.audience)
+                Image(audience: entry.address.audience)
                     .font(.system(size: 12))
                 Text(entry.slug.description)
             }

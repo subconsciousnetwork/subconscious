@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 
+
 struct Subtext: Hashable, Equatable, LosslessStringConvertible {
     let base: Substring
     let blocks: [Block]
@@ -106,12 +107,12 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
     struct Slashlink: Hashable, Equatable, CustomStringConvertible {
         var span: Substring
 
+        var text: Substring {
+            span.dropFirst(1)
+        }
+        
         var description: String {
             String(span)
-        }
-
-        func toTitle() -> String? {
-            Slug(formatting: String(span))?.toTitle()
         }
     }
 
@@ -124,10 +125,6 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
 
         var description: String {
             String(span)
-        }
-
-        func toTitle() -> String? {
-            String(text)
         }
     }
 
@@ -177,19 +174,17 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
         case code(Code)
     }
 
-    /// One of the two link forms
-    enum EntryLinkMarkup: Hashable, Equatable {
+    /// One of the two wiki link forms
+    enum Shortlink: Hashable, Equatable {
         case slashlink(Slashlink)
         case wikilink(Wikilink)
 
-        /// Get sentence version of link (nice text).
-        /// Used to create default content for note from link text.
-        func toTitle() -> String? {
+        func toTitle() -> String {
             switch self {
-            case .wikilink(let wikilink):
-                return wikilink.toTitle()
             case .slashlink(let slashlink):
-                return slashlink.toTitle()
+                return String(slashlink.text)
+            case .wikilink(let wikilink):
+                return String(wikilink.text)
             }
         }
     }
@@ -428,7 +423,7 @@ extension Subtext {
     private static func renderInlineAttributeOf(
         _ attributedString: NSMutableAttributedString,
         inline: Subtext.Inline,
-        url: (EntryLink) -> URL?
+        url: (String, String) -> URL?
     ) {
         switch inline {
         case let .link(link):
@@ -464,7 +459,7 @@ extension Subtext {
         case let .slashlink(slashlink):
             if
                 let slug = Slug(formatting: String(describing: slashlink)),
-                let url = url(EntryLink(slug: slug, title: slug.toTitle()))
+                let url = url(slug.description, slug.toTitle())
             {
                 attributedString.addAttribute(
                     .link,
@@ -479,7 +474,7 @@ extension Subtext {
             let text = String(wikilink.text)
             if
                 let slug = Slug(formatting: text),
-                let urlString = url(EntryLink(slug: slug, title: text))
+                let url = url(slug.description, text)
             {
                 attributedString.addAttribute(
                     .foregroundColor,
@@ -491,7 +486,7 @@ extension Subtext {
                 )
                 attributedString.addAttribute(
                     .link,
-                    value: urlString,
+                    value: url,
                     range: NSRange(
                         wikilink.text.range,
                         in: attributedString.string
@@ -533,7 +528,7 @@ extension Subtext {
     /// corresponding to the semantic meaning of Subtext markup.
     static func renderAttributesOf(
         _ attributedString: NSMutableAttributedString,
-        url: (EntryLink) -> URL?
+        url: (String, String) -> URL?
     ) {
         let dom = Subtext(markup: attributedString.string)
 
@@ -651,15 +646,13 @@ extension Subtext.Block {
     }
 
     /// Extract all wikilinks and slashlinks from inline
-    var entryLinks: [EntryLink] {
+    var shortlinks: [Subtext.Shortlink] {
         self.inline.compactMap({ inline in
             switch inline {
             case .slashlink(let slashlink):
-                return Slug(formatting: String(slashlink.span)).map({ slug in
-                    EntryLink(slug: slug)
-                })
+                return Subtext.Shortlink.slashlink(slashlink)
             case .wikilink(let wikilink):
-                return EntryLink(title: String(wikilink.text))
+                return Subtext.Shortlink.wikilink(wikilink)
             default:
                 return nil
             }
@@ -697,19 +690,19 @@ extension Subtext {
         blocks.flatMap({ block in block.inline })
     }
 
-    /// Get all entry links from Subtext.
-    /// Contains both wikilinks and slashlinks.
-    /// Simple array. Does not de-duplicate.
-    var entryLinks: [EntryLink] {
-        blocks.flatMap({ block in block.entryLinks })
-    }
-
     /// Get the set of slugs within a range of Subtext.
     /// Contains slugs for both wikilinks and slashlinks.
     var slugs: Set<Slug> {
         let slugs = blocks
-            .flatMap({ block in block.entryLinks })
-            .map({ link in link.slug })
+            .flatMap({ block in block.shortlinks })
+            .compactMap({ link in
+                switch link {
+                case .slashlink(let slashlink):
+                    return Slug(String(slashlink.text))
+                case .wikilink(let wikilink):
+                    return Slug(formatting: String(wikilink.text))
+                }
+            })
         return Set(slugs)
     }
 
@@ -763,17 +756,17 @@ extension Subtext {
     }
 
     /// Get EntryLinkMarkup for index, if any
-    func entryLinkFor(index: String.Index) -> Subtext.EntryLinkMarkup? {
+    func shortlinkFor(index: String.Index) -> Subtext.Shortlink? {
         for markup in inline {
             switch markup {
             case .slashlink(let slashlink):
                 if slashlink.span.range.upperBound == index {
-                    return EntryLinkMarkup.slashlink(slashlink)
+                    return Shortlink.slashlink(slashlink)
                 }
                 break
             case .wikilink(let wikilink):
                 if wikilink.text.range.upperBound == index {
-                    return EntryLinkMarkup.wikilink(wikilink)
+                    return Shortlink.wikilink(wikilink)
                 }
                 break
             default:
@@ -783,10 +776,10 @@ extension Subtext {
         return nil
     }
 
-    func entryLinkFor(range nsRange: NSRange) -> Subtext.EntryLinkMarkup? {
+    func shortlinkFor(range nsRange: NSRange) -> Subtext.Shortlink? {
         guard let range = Range(nsRange, in: base) else {
             return nil
         }
-        return entryLinkFor(index: range.lowerBound)
+        return shortlinkFor(index: range.lowerBound)
     }
 }

@@ -35,7 +35,7 @@ struct DetailToolbarContent: ToolbarContent {
                 if let link = link {
                     ToolbarTitleGroupView(
                         title: Text(link.title),
-                        subtitle: Text(String(describing: link.slug))
+                        subtitle: Text(String(describing: link.address.slug))
                     )
                     .frame(maxWidth: titleMaxWidth)
                 } else {

@@ -15,12 +15,12 @@ struct MemoAddress: Hashable, CustomStringConvertible, Codable {
     var description: String {
         return "\(audience.rawValue)::\(slug)"
     }
-
+    
     init(slug: Slug, audience: Audience) {
         self.slug = slug
         self.audience = audience
     }
-
+    
     init?(formatting title: String, audience: Audience) {
         guard let slug = Slug(formatting: title) else {
             return nil

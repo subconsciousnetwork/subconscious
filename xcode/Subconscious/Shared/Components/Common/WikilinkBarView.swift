@@ -34,8 +34,18 @@ struct EntryLinkSuggestionBarView_Previews: PreviewProvider {
     static var previews: some View {
         WikilinkBarView(
             links: [
-                EntryLink(title: "Finn the Human")!,
-                EntryLink(title: "Land of OOO")!
+                EntryLink(
+                    address: MemoAddress(
+                        formatting: "Loomings",
+                        audience: .local
+                    )!
+                ),
+                EntryLink(
+                    address: MemoAddress(
+                        formatting: "The Lee Shore",
+                        audience: .local
+                    )!
+                )
             ],
             onSelectLink: { _ in }
         )

@@ -36,7 +36,7 @@ extension MemoEntry {
 extension EntryLink {
     init(_ entry: MemoEntry) {
         self.init(
-            slug: entry.address.slug,
+            address: entry.address,
             title: entry.contents.title
         )
     }

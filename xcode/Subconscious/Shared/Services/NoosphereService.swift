@@ -214,6 +214,8 @@ public protocol SphereProtocol {
     
     func version() throws -> String
     
+    func getFileVersion(slashlink: String) -> String?
+    
     func readHeaderValueFirst(
         slashlink: String,
         name: String
@@ -615,6 +617,10 @@ final class NoosphereService: SphereProtocol {
 
     func version() throws -> String {
         try self.sphere().version()
+    }
+    
+    func getFileVersion(slashlink: String) -> String? {
+        try? self.sphere().getFileVersion(slashlink: slashlink)
     }
     
     func readHeaderValueFirst(slashlink: String, name: String) -> String? {
