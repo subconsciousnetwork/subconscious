@@ -9,6 +9,7 @@ import Combine
 
 enum DataServiceError: Error {
     case fileExists(String)
+    case memoNotFound(String)
     case defaultSphereNotFound
     case sphereExists
     case noosphereNotEnabled(String)
@@ -186,11 +187,27 @@ struct DataService {
         }
     }
 
+    /// Read memo from sphere or local
+    func readMemo(
+        address: MemoAddress
+    ) -> Memo? {
+        switch address.audience {
+        case .public:
+            return noosphere
+                .read(slashlink: address.slug.toSlashlink())?
+                .toMemo()
+        case .local:
+            return local.read(address.slug)
+        }
+    }
+
     /// Write entry to file system and database
     /// Also sets modified header to now.
-    func writeEntry(_ entry: MemoEntry) throws {
-        let address = entry.address
-        var memo = entry.contents
+    func writeMemo(
+        address: MemoAddress,
+        memo: Memo
+    ) throws {
+        var memo = memo
         memo.modified = Date.now
 
         switch address.audience {
@@ -206,25 +223,29 @@ struct DataService {
             // Write to database
             try database.writeMemo(
                 address,
-                memo: entry.contents
+                memo: memo
             )
             return
         case .local:
-            try local.write(entry.address.slug, value: memo)
+            try local.write(address.slug, value: memo)
             // Read modified/size from file system directly after writing.
             // Why: we use file system as source of truth and don't want any
             // discrepencies to sneak in (e.g. different time between write and
             // persistence on file system).
-            let info = try local.info(entry.address.slug).unwrap()
+            let info = try local.info(address.slug).unwrap()
             memo.modified = info.modified
             try database.writeMemo(
                 address,
-                memo: entry.contents
+                memo: memo
             )
             return
         }
     }
-    
+
+    func writeEntry(_ entry: MemoEntry) throws {
+        try writeMemo(address: entry.address, memo: entry.contents)
+    }
+
     func writeEntryAsync(_ entry: MemoEntry) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .utility) {
             try writeEntry(entry)
@@ -253,20 +274,40 @@ struct DataService {
         }
     }
     
-//    /// Update audience for memo.
-//    /// This moves memo from sphere to local or vise versa.
-//    private func updateAudience(
-//        address: MemoAddress,
-//        audience: Audience
-//    ) throws {
-//        // Exit early if no change is needed
-//        guard address.audience != audience else {
-//            return
-//        }
-//        switch address.audience {
-//        case .public
-//        }
-//    }
+    /// Update audience for memo.
+    /// This moves memo from sphere to local or vise versa.
+    private func updateAudience(
+        address: MemoAddress,
+        audience: Audience
+    ) throws -> MemoAddress {
+        // Exit early if no change is needed
+        guard address.audience != audience else {
+            return address
+        }
+        guard let memo = readMemo(address: address) else {
+            throw DataServiceError.memoNotFound(
+                "No memo found for address: \(address)"
+            )
+        }
+        let newAddress = address.withAudience(audience)
+        try writeMemo(
+            address: newAddress,
+            memo: memo
+        )
+        try deleteMemo(address)
+        return newAddress
+    }
+
+    /// Update audience for memo.
+    /// This moves memo from sphere to local or vise versa.
+    func updateAudienceAsync(
+        address: MemoAddress,
+        audience: Audience
+    ) -> AnyPublisher<MemoAddress, Error> {
+        CombineUtilities.async {
+            return try updateAudience(address: address, audience: audience)
+        }
+    }
 
     /// Move entry to a new location, updating file system and database.
     private func moveEntry(from: EntryLink, to: EntryLink) throws {

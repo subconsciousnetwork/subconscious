@@ -408,6 +408,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     // Change audience
     case updateAudience(_ audience: Audience)
+    case succeedUpdateAudience(_ address: MemoAddress)
+    case failUpdateAudience(_ message: String)
 
     //  Saving entry
     /// Trigger autosave of current state
@@ -863,6 +865,24 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
+            )
+        case let .updateAudience(audience):
+            return updateAudience(
+                state: state,
+                environment: environment,
+                audience: audience
+            )
+        case let .succeedUpdateAudience(address):
+            return succeedUpdateAudience(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case let .failUpdateAudience(message):
+            return log(
+                state: state,
+                environment: environment,
+                message: message
             )
         case .moveEntry(let from, let to):
             return moveEntry(
@@ -1453,8 +1473,32 @@ struct DetailModel: ModelProtocol {
             )
             return Update(state: state)
         }
+        let fx: Fx<DetailAction> = environment.data.updateAudienceAsync(
+            address: address,
+            audience: audience
+        )
+        .map({ address in
+            DetailAction.succeedUpdateAudience(address)
+        })
+        .catch({ error in
+            Just(DetailAction.failUpdateAudience(error.localizedDescription))
+        })
+        .eraseToAnyPublisher()
         var model = state
-        model.address = MemoAddress(slug: address.slug, audience: audience)
+        model.address = address.withAudience(audience)
+        return Update(state: model, fx: fx)
+    }
+
+    static func succeedUpdateAudience(
+        state: DetailModel,
+        environment: AppEnvironment,
+        address: MemoAddress
+    ) -> Update<DetailModel> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        var model = state
+        model.address = address
         return Update(state: model)
     }
 

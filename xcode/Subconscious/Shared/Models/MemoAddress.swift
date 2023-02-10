@@ -28,6 +28,10 @@ struct MemoAddress: Hashable, CustomStringConvertible, Codable {
         self.slug = slug
         self.audience = audience
     }
+    
+    func withAudience(_ audience: Audience) -> Self {
+        MemoAddress(slug: self.slug, audience: audience)
+    }
 }
 
 extension String {
