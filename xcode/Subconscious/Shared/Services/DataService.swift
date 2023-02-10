@@ -128,7 +128,7 @@ struct DataService {
     /// Sync file system with database.
     /// Note file system is source-of-truth (leader).
     /// Syncing will never delete files on the file system.
-    func syncLocalMemosWithDatabase() -> AnyPublisher<[FileFingerprintChange], Error> {
+    func syncLocalWithDatabase() -> AnyPublisher<[FileFingerprintChange], Error> {
         CombineUtilities.async(qos: .utility) {
             // Left = Leader (files)
             let left: [FileFingerprint] = try local.list()
@@ -232,7 +232,7 @@ struct DataService {
     }
     
     /// Delete entry from file system and database
-    private func deleteEntry(_ address: MemoAddress) throws {
+    private func deleteMemo(_ address: MemoAddress) throws {
         switch address.audience {
         case .local:
             try local.remove(address.slug)
@@ -247,12 +247,27 @@ struct DataService {
     }
     
     /// Delete entry from file system and database
-    func deleteEntryAsync(_ address: MemoAddress) -> AnyPublisher<Void, Error> {
+    func deleteMemoAsync(_ address: MemoAddress) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .background) {
-            try deleteEntry(address)
+            try deleteMemo(address)
         }
     }
     
+//    /// Update audience for memo.
+//    /// This moves memo from sphere to local or vise versa.
+//    private func updateAudience(
+//        address: MemoAddress,
+//        audience: Audience
+//    ) throws {
+//        // Exit early if no change is needed
+//        guard address.audience != audience else {
+//            return
+//        }
+//        switch address.audience {
+//        case .public
+//        }
+//    }
+
     /// Move entry to a new location, updating file system and database.
     private func moveEntry(from: EntryLink, to: EntryLink) throws {
         guard from.address.slug != to.address.slug else {
@@ -270,7 +285,7 @@ struct DataService {
         // Write to new destination
         try writeEntry(toFile)
         // ...Then delete old entry
-        try deleteEntry(fromFile.address)
+        try deleteMemo(fromFile.address)
     }
     
     /// Move entry to a new location, updating file system and database.
@@ -307,7 +322,7 @@ struct DataService {
         try writeEntry(parentEntry)
         //  Then delete child entry *afterwards*.
         //  We do this last to avoid data loss in case of write errors.
-        try deleteEntry(childEntry.address)
+        try deleteMemo(childEntry.address)
     }
     
     /// Merge child entry into parent entry.
@@ -348,20 +363,20 @@ struct DataService {
         }
     }
     
-    func listRecentEntries() -> AnyPublisher<[EntryStub], Error> {
+    func listRecentMemos() -> AnyPublisher<[EntryStub], Error> {
         CombineUtilities.async(qos: .default) {
-            database.listRecentEntries()
+            database.listRecentMemos()
         }
     }
 
-    func countEntries() throws -> Int {
-        return try database.countEntries().unwrap()
+    func countMemos() throws -> Int {
+        return try database.countMemos().unwrap()
     }
 
     /// Count all entries
-    func countEntries() -> AnyPublisher<Int, Error> {
+    func countMemos() -> AnyPublisher<Int, Error> {
         CombineUtilities.async(qos: .userInteractive) {
-            try countEntries()
+            try countMemos()
         }
     }
 
