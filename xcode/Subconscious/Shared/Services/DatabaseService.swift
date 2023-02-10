@@ -830,7 +830,7 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-02-10T08:58:00")!,
+            version: Int.from(iso8601String: "2023-02-10T17:23:00")!,
             sql: """
             /*
             Key-value metadata related to the database.
