@@ -48,10 +48,7 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             ToolbarItem(placement: .principal) {
-                OmniboxView(
-                    audience: store.state.address?.audience,
-                    title: store.state.address?.description
-                )
+                OmniboxView(address: store.state.address)
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu(

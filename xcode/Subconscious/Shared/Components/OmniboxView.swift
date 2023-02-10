@@ -34,11 +34,10 @@ struct OmniboxView: View {
 
 extension OmniboxView {
     init(
-        audience: Audience?,
-        title: String?
+        address: MemoAddress?
     ) {
-        let audience = audience ?? .local
-        let title = title ?? ""
+        let audience = address?.audience ?? .local
+        let title = address?.slug.description ?? ""
         self.init(
             icon: Image(audience: audience),
             title: title
