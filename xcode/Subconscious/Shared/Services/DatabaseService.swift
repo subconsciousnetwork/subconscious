@@ -157,23 +157,23 @@ final class DatabaseService {
     }
 
     /// Write entry syncronously
-    func writeEntry(
-        slug: Slug,
-        memo: Memo,
-        audience: Audience
+    func writeMemo(
+        _ address: MemoAddress,
+        memo: Memo
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         guard let size = memo.size() else {
             throw CodingError.encodingError(
-                message: "Faild to encode memo contents as utf-8"
+                message: "Faild to encode memo contents as UTF-8"
             )
         }
         try database.execute(
             sql: """
             INSERT OR REPLACE INTO memo (
                 slug,
+                audience,
                 content_type,
                 created,
                 modified,
@@ -184,13 +184,13 @@ final class DatabaseService {
                 description,
                 excerpt,
                 links,
-                size,
-                audience
+                size
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             parameters: [
-                .text(String(describing: slug)),
+                .text(address.slug.description),
+                .text(address.audience.rawValue),
                 .text(memo.contentType),
                 .date(memo.created),
                 .date(memo.modified),
@@ -201,23 +201,23 @@ final class DatabaseService {
                 .text(memo.plain()),
                 .text(memo.excerpt()),
                 .json(memo.slugs(), or: "[]"),
-                .integer(size),
-                .integer(audience.rawValue)
+                .integer(size)
             ]
         )
     }
     
     /// Delete entry from database
-    func removeEntry(slug: Slug) throws {
+    func removeMemo(_ address: MemoAddress) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         try database.execute(
             sql: """
-            DELETE FROM memo WHERE slug = ?
+            DELETE FROM memo WHERE slug = ? AND audience = ?
             """,
             parameters: [
-                .text(slug.description)
+                .text(address.slug.description),
+                .text(address.audience.rawValue)
             ]
         )
     }
@@ -247,7 +247,7 @@ final class DatabaseService {
         }
         guard let results = try? database.execute(
             sql: """
-            SELECT slug, modified, title, excerpt, audience
+            SELECT slug, audience, modified, title, excerpt
             FROM memo
             ORDER BY modified DESC
             LIMIT 1000
@@ -258,36 +258,38 @@ final class DatabaseService {
         return results.compactMap({ row in
             guard
                 let slug = row.col(0)?.toString()?.toSlug(),
-                let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString(),
-                let audience = row.col(4)?.toInt()?.toAudience()
+                let audience = row.col(1)?.toString()?.toAudience(),
+                let modified = row.col(2)?.toDate(),
+                let title = row.col(3)?.toString(),
+                let excerpt = row.col(4)?.toString()
             else {
                 return nil
             }
+            let address = MemoAddress(slug: slug, audience: audience)
             return EntryStub(
-                link: EntryLink(slug: slug, title: title),
+                address: address,
+                title: title,
                 excerpt: excerpt,
-                modified: modified,
-                audience: audience
+                modified: modified
             )
         })
     }
     
     /// List file fingerprints for all memos.
-    func listFingerprints() throws -> [FileFingerprint] {
+    func listLocalMemoFingerprints() throws -> [FileFingerprint] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         return try database.execute(
-            sql: "SELECT slug, modified, size FROM memo"
+            sql: """
+            SELECT slug, modified, size FROM memo WHERE audience = 'local'
+            """
         )
         .compactMap({ row in
             if
-                let slugString: String = row.get(0),
-                let slug = Slug(slugString),
-                let modified: Date = row.get(1),
-                let size: Int = row.get(2)
+                let slug = row.col(0)?.toString()?.toSlug(),
+                let modified = row.col(1)?.toDate(),
+                let size = row.col(2)?.toInt()
             {
                 return FileFingerprint(
                     slug: slug,
@@ -620,59 +622,6 @@ final class DatabaseService {
         return query
     }
     
-    /// Read an entry from the file system.
-    /// Private syncronous API to read a Subtext file via its Slug
-    /// Used by public async APIs.
-    /// - Returns a SubtextFile with mended headers.
-    func readEntry(slug: Slug) -> MemoEntry? {
-        guard self.state == .ready else {
-            return nil
-        }
-
-        let results = try? database.execute(
-            sql: """
-            SELECT
-                slug,
-                content_type,
-                created,
-                modified,
-                title,
-                file_extension,
-                body
-            FROM memo
-            LIMIT 1
-            """
-        )
-        guard let first = results?.first else {
-            return nil
-        }
-        let contentType = ContentType.orFallback(
-            string: first.get(1),
-            fallback: .subtext
-        )
-        let created: Date = Date.from(first.get(2)) ?? Date.now
-        let modified: Date = Date.from(first.get(3)) ?? Date.now
-        let title = first.get(4) ?? ""
-        guard let body: String = first.get(5) else {
-            return nil
-        }
-
-        let memo = Memo(
-            contentType: contentType.rawValue,
-            created: created,
-            modified: modified,
-            title: title,
-            fileExtension: contentType.fileExtension,
-            additionalHeaders: [],
-            body: body
-        )
-
-        return MemoEntry(
-            slug: slug,
-            contents: memo
-        )
-    }
-    
     func readEntryBacklinks(slug: Slug) -> [EntryStub] {
         guard self.state == .ready else {
             return []
@@ -682,7 +631,7 @@ final class DatabaseService {
         // Use content indexed in database, even though it might be stale.
         guard let results = try? database.execute(
             sql: """
-            SELECT slug, modified, title, excerpt, audience
+            SELECT slug, audience, modified, title, excerpt
             FROM memo_search
             WHERE slug != ? AND memo_search.description MATCH ?
             ORDER BY rank
@@ -699,18 +648,19 @@ final class DatabaseService {
         return results.compactMap({ row in
             guard
                 let slug = row.col(0)?.toString()?.toSlug(),
-                let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString(),
-                let audience = row.col(4)?.toInt()?.toAudience()
+                let audience = row.col(1)?.toString()?.toAudience(),
+                let modified = row.col(2)?.toDate(),
+                let title = row.col(3)?.toString(),
+                let excerpt = row.col(4)?.toString()
             else {
                 return nil
             }
+            let address = MemoAddress(slug: slug, audience: audience)
             return EntryStub(
-                link: EntryLink(slug: slug, title: title),
+                address: address,
+                title: title,
                 excerpt: excerpt,
-                modified: modified,
-                audience: audience
+                modified: modified
             )
         })
     }
@@ -725,7 +675,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT slug, modified, title, excerpt, audience
+            SELECT slug, audience, modified, title, excerpt
             FROM memo
             WHERE memo.modified BETWEEN ? AND ?
             ORDER BY RANDOM()
@@ -739,18 +689,19 @@ final class DatabaseService {
         .compactMap({ row in
             guard
                 let slug = row.col(0)?.toString()?.toSlug(),
-                let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString(),
-                let audience = row.col(4)?.toInt()?.toAudience()
+                let audience = row.col(1)?.toString()?.toAudience(),
+                let modified = row.col(2)?.toDate(),
+                let title = row.col(3)?.toString(),
+                let excerpt = row.col(4)?.toString()
             else {
                 return nil
             }
+            let address = MemoAddress(slug: slug, audience: audience)
             return EntryStub(
-                link: EntryLink(slug: slug, title: title),
+                address: address,
+                title: title,
                 excerpt: excerpt,
-                modified: modified,
-                audience: audience
+                modified: modified
             )
         })
         .first
@@ -764,7 +715,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT slug, modified, title, excerpt, audience
+            SELECT slug, audience, modified, title, excerpt
             FROM memo
             ORDER BY RANDOM()
             LIMIT 1
@@ -773,18 +724,19 @@ final class DatabaseService {
         .compactMap({ row in
             guard
                 let slug = row.col(0)?.toString()?.toSlug(),
-                let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString(),
-                let audience = row.col(4)?.toInt()?.toAudience()
+                let audience = row.col(1)?.toString()?.toAudience(),
+                let modified = row.col(2)?.toDate(),
+                let title = row.col(3)?.toString(),
+                let excerpt = row.col(4)?.toString()
             else {
                 return nil
             }
+            let address = MemoAddress(slug: slug, audience: audience)
             return EntryStub(
-                link: EntryLink(slug: slug, title: title),
+                address: address,
+                title: title,
                 excerpt: excerpt,
-                modified: modified,
-                audience: audience
+                modified: modified
             )
         })
         .first
@@ -800,7 +752,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT slug, modified, title, excerpt, audience
+            SELECT slug, audience, modified, title, excerpt
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY RANDOM()
@@ -813,18 +765,19 @@ final class DatabaseService {
         .compactMap({ row in
             guard
                 let slug = row.col(0)?.toString()?.toSlug(),
-                let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString(),
-                let audience = row.col(4)?.toInt()?.toAudience()
+                let audience = row.col(1)?.toString()?.toAudience(),
+                let modified = row.col(2)?.toDate(),
+                let title = row.col(3)?.toString(),
+                let excerpt = row.col(4)?.toString()
             else {
                 return nil
             }
+            let address = MemoAddress(slug: slug, audience: audience)
             return EntryStub(
-                link: EntryLink(slug: slug, title: title),
+                address: address,
+                title: title,
                 excerpt: excerpt,
-                modified: modified,
-                audience: audience
+                modified: modified
             )
         })
         .first
@@ -866,7 +819,7 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-01-06T16:34:00")!,
+            version: Int.from(iso8601String: "2023-02-10T08:58:00")!,
             sql: """
             /*
             Key-value metadata related to the database.
@@ -890,7 +843,8 @@ extension Config {
 
             /* Memo table contains the content of any plain-text memo */
             CREATE TABLE memo (
-                slug TEXT PRIMARY KEY,
+                slug TEXT NOT NULL,
+                audience TEXT NOT NULL,
                 content_type TEXT NOT NULL,
                 created TEXT NOT NULL,
                 modified TEXT NOT NULL,
@@ -908,17 +862,12 @@ extension Config {
                 links TEXT NOT NULL DEFAULT '[]',
                 /* Size of body (used in combination with modified for sync) */
                 size INTEGER NOT NULL,
-                /*
-                Audience is an integer constant denoting scope to which content
-                is published.
-                0 = local-only draft
-                1 = public sphere
-                */
-                audience INTEGER NOT NULL DEFAULT 0
+                PRIMARY KEY (slug, audience)
             );
 
             CREATE VIRTUAL TABLE memo_search USING fts5(
                 slug,
+                audience UNINDEXED,
                 content_type UNINDEXED,
                 created UNINDEXED,
                 modified UNINDEXED,
@@ -930,7 +879,6 @@ extension Config {
                 excerpt UNINDEXED,
                 links UNINDEXED,
                 size UNINDEXED,
-                audience UNINDEXED,
                 content="memo",
                 tokenize="porter"
             );
@@ -956,6 +904,7 @@ extension Config {
                 INSERT INTO memo_search (
                     rowid,
                     slug,
+                    audience,
                     content_type,
                     created,
                     modified,
@@ -966,12 +915,12 @@ extension Config {
                     description,
                     excerpt,
                     links,
-                    size,
-                    audience
+                    size
                 )
                 VALUES (
                     new.rowid,
                     new.slug,
+                    new.audience,
                     new.content_type,
                     new.created,
                     new.modified,
@@ -982,8 +931,7 @@ extension Config {
                     new.description,
                     new.excerpt,
                     new.links,
-                    new.size,
-                    new.audience
+                    new.size
                 );
             END;
 
@@ -991,6 +939,7 @@ extension Config {
                 INSERT INTO memo_search (
                     rowid,
                     slug,
+                    audience,
                     content_type,
                     created,
                     modified,
@@ -1001,12 +950,12 @@ extension Config {
                     description,
                     excerpt,
                     links,
-                    size,
-                    audience
+                    size
                 )
                 VALUES (
                     new.rowid,
                     new.slug,
+                    new.audience,
                     new.content_type,
                     new.created,
                     new.modified,
@@ -1017,8 +966,7 @@ extension Config {
                     new.description,
                     new.excerpt,
                     new.links,
-                    new.size,
-                    new.audience
+                    new.size
                 );
             END;
             """

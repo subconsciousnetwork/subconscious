@@ -94,22 +94,21 @@ struct DataService {
         let since = try? database.readMetadata(key: .sphereVersion)
         let changes = try noosphere.changes(since)
         for change in changes {
-            guard let slug = Slug(change) else {
+            guard let address = MemoAddress(change, isDraft: false) else {
                 continue
             }
-            let slashlink = slug.toSlashlink()
+            let slashlink = address.slug.toSlashlink()
             // If memo does exist, write it to database
             // Sphere content is always public right now
             if let memo = noosphere.read(slashlink: slashlink)?.toMemo() {
-                try database.writeEntry(
-                    slug: slug,
-                    memo: memo,
-                    audience: .public
+                try database.writeMemo(
+                    address,
+                    memo: memo
                 )
             }
             // If memo does not exist, that means change was a remove
             else {
-                try database.removeEntry(slug: slug)
+                try database.removeMemo(address)
             }
         }
         try database.writeMetadatadata(key: .sphereIdentity, value: identity)
@@ -126,7 +125,7 @@ struct DataService {
     /// Sync file system with database.
     /// Note file system is source-of-truth (leader).
     /// Syncing will never delete files on the file system.
-    func syncLocalFilesWithDatabase() -> AnyPublisher<[FileFingerprintChange], Error> {
+    func syncLocalMemosWithDatabase() -> AnyPublisher<[FileFingerprintChange], Error> {
         CombineUtilities.async(qos: .utility) {
             // Left = Leader (files)
             let left: [FileFingerprint] = try local.list()
@@ -140,7 +139,7 @@ struct DataService {
                     )
                 })
             // Right = Follower (search index)
-            let right: [FileFingerprint] = try database.listFingerprints()
+            let right = try database.listLocalMemoFingerprints()
             
             let changes = FileSync.calcChanges(
                 left: left,
@@ -166,14 +165,15 @@ struct DataService {
                     // Read info from file system and set modified time
                     let info = try local.info(left.slug).unwrap()
                     memo.modified = info.modified
-                    try database.writeEntry(
-                        slug: left.slug,
-                        memo: memo,
-                        audience: .local
+                    try database.writeMemo(
+                        MemoAddress(left.slug, isDraft: true),
+                        memo: memo
                     )
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly(let right):
-                    try database.removeEntry(slug: right.slug)
+                    try database.removeMemo(
+                        MemoAddress(right.slug, isDraft: true)
+                    )
                 // .same = no change. Do nothing.
                 case .same:
                     break
@@ -183,69 +183,42 @@ struct DataService {
         }
     }
 
-    /// Write entry to local file system
-    private func writeEntryToLocal(
-        slug: Slug,
-        memo: Memo
-    ) throws {
-        try local.write(slug, value: memo)
+    /// Write entry to file system and database
+    /// Also sets modified header to now.
+    func writeEntry(_ entry: MemoEntry) throws {
+        let address = entry.address
+        var memo = entry.contents
+        memo.modified = Date.now
+
+        guard entry.address.isDraft else {
+            let body = try memo.body.toData().unwrap()
+            try noosphere.write(
+                slug: address.slug.description,
+                contentType: memo.contentType,
+                additionalHeaders: memo.headers,
+                body: body
+            )
+            try noosphere.save()
+
+            // Write to database
+            try database.writeMemo(
+                address,
+                memo: entry.contents
+            )
+            return
+        }
+
+        try local.write(entry.address.slug, value: memo)
         // Read modified/size from file system directly after writing.
         // Why: we use file system as source of truth and don't want any
         // discrepencies to sneak in (e.g. different time between write and
         // persistence on file system).
-        let info = try local.info(slug).unwrap()
-        var memo = memo
+        let info = try local.info(entry.address.slug).unwrap()
         memo.modified = info.modified
-        try database.writeEntry(
-            slug: slug,
-            memo: memo,
-            audience: .local
+        try database.writeMemo(
+            address,
+            memo: entry.contents
         )
-    }
-
-    /// Write entry to sphere
-    private func writeEntryToSphere(
-        slug: Slug,
-        memo: Memo
-    ) throws {
-        let body = try memo.body.toData().unwrap()
-        try noosphere.write(
-            slug: slug.description,
-            contentType: memo.contentType,
-            additionalHeaders: memo.headers,
-            body: body
-        )
-        try noosphere.save()
-
-        // Write to database
-        try database.writeEntry(
-            slug: slug,
-            memo: memo,
-            audience: .public
-        )
-
-        // Finally, remove any local file with this slug
-        try? local.remove(slug)
-    }
-
-    /// Write entry to file system and database
-    /// Also sets modified header to now.
-    func writeEntry(_ entry: MemoEntry) throws {
-        var entry = entry
-        entry.contents.modified = Date.now
-
-        switch entry.audience {
-        case .local:
-            return try writeEntryToLocal(
-                slug: entry.slug,
-                memo: entry.contents
-            )
-        case .public:
-            return try writeEntryToSphere(
-                slug: entry.slug,
-                memo: entry.contents
-            )
-        }
     }
     
     func writeEntryAsync(_ entry: MemoEntry) -> AnyPublisher<Void, Error> {
@@ -255,26 +228,26 @@ struct DataService {
     }
     
     /// Delete entry from file system and database
-    private func deleteEntry(slug: Slug) throws {
-        guard !Config.default.noosphere.enabled else {
-            try noosphere.remove(slug: slug.description)
+    private func deleteEntry(_ address: MemoAddress) throws {
+        if address.isDraft {
+            try local.remove(address.slug)
+            try database.removeMemo(address)
+        } else {
+            try noosphere.remove(slug: address.slug.description)
             try noosphere.save()
-            try database.removeEntry(slug: slug)
-            return
+            try database.removeMemo(address)
         }
-        try local.remove(slug)
-        try database.removeEntry(slug: slug)
     }
     
     /// Delete entry from file system and database
-    func deleteEntryAsync(slug: Slug) -> AnyPublisher<Void, Error> {
+    func deleteEntryAsync(_ address: MemoAddress) -> AnyPublisher<Void, Error> {
         CombineUtilities.async(qos: .background) {
-            try deleteEntry(slug: slug)
+            try deleteEntry(address)
         }
     }
     
     /// Move entry to a new location, updating file system and database.
-    private func moveEntry(from: EntryLink, to: EntryLink) throws {
+    private func moveEntry(from: MemoAddress, to: MemoAddress) throws {
         guard from.slug != to.slug else {
             throw DataServiceError.fileExists(to.slug)
         }
@@ -283,21 +256,21 @@ struct DataService {
             throw DataServiceError.fileExists(to.slug)
         }
         let fromMemo = try local.read(from.slug).unwrap()
-        let fromFile = MemoEntry(slug: from.slug, contents: fromMemo)
+        let fromFile = MemoEntry(address: from, contents: fromMemo)
         // Make a copy representing new location and set new title and slug
         var toFile = fromFile
-        toFile.setLink(to)
+        toFile.address = to
         // Write to new destination
         try writeEntry(toFile)
         // ...Then delete old entry
-        try deleteEntry(slug: fromFile.slug)
+        try deleteEntry(fromFile.address)
     }
     
     /// Move entry to a new location, updating file system and database.
     /// - Returns a combine publisher
     func moveEntryAsync(
-        from: EntryLink,
-        to: EntryLink
+        from: MemoAddress,
+        to: MemoAddress
     ) -> AnyPublisher<Void, Error> {
         CombineUtilities.async {
             try moveEntry(from: from, to: to)
@@ -309,17 +282,17 @@ struct DataService {
     /// - Writes the combined content to `parent`
     /// - Deletes `child`
     private func mergeEntry(
-        parent: Slug,
-        child: Slug
+        parent: MemoAddress,
+        child: MemoAddress
     ) throws {
         let childEntry = MemoEntry(
-            slug: child,
-            contents: try local.read(child).unwrap()
+            address: child,
+            contents: try local.read(child.slug).unwrap()
         )
         
         let parentEntry = MemoEntry(
-            slug: parent,
-            contents: try local.read(parent).unwrap()
+            address: parent,
+            contents: try local.read(parent.slug).unwrap()
         )
         .merge(childEntry)
         
@@ -327,7 +300,7 @@ struct DataService {
         try writeEntry(parentEntry)
         //  Then delete child entry *afterwards*.
         //  We do this last to avoid data loss in case of write errors.
-        try deleteEntry(slug: childEntry.slug)
+        try deleteEntry(childEntry.address)
     }
     
     /// Merge child entry into parent entry.
@@ -336,38 +309,35 @@ struct DataService {
     /// - Deletes `child`
     /// - Returns combine publisher
     func mergeEntryAsync(
-        parent: EntryLink,
-        child: EntryLink
+        parent: MemoAddress,
+        child: MemoAddress
     ) -> AnyPublisher<Void, Error> {
         CombineUtilities.async {
-            try mergeEntry(parent: parent.slug, child: child.slug)
+            try mergeEntry(parent: parent, child: child)
         }
     }
     
     /// Update the title of an entry, without changing its slug
     private func retitleEntry(
-        from: EntryLink,
-        to: EntryLink
+        address: MemoAddress,
+        title: String
     ) throws {
-        guard from.linkableTitle != to.linkableTitle else {
-            return
-        }
         var entry = MemoEntry(
-            slug: from.slug,
-            contents: try local.read(from.slug).unwrap()
+            address: address,
+            contents: try local.read(address.slug).unwrap()
         )
-        entry.contents.title = to.linkableTitle
+        entry.contents.title = title
         try writeEntry(entry)
     }
     
     /// Change title header of entry, without moving it.
     /// - Returns combine publisher
     func retitleEntryAsync(
-        from: EntryLink,
-        to: EntryLink
+        address: MemoAddress,
+        title: String
     ) -> AnyPublisher<Void, Error> {
         CombineUtilities.async {
-            try retitleEntry(from: from, to: to)
+            try retitleEntry(address: address, title: title)
         }
     }
     
@@ -428,75 +398,59 @@ struct DataService {
         }
     }
     
-    
-    /// Read detail for memo from local store
-    private func readDetailFromLocal(
-        slug: Slug
-    ) -> EntryDetail? {
-        // Retreive top entry from file system to ensure it is fresh.
-        // If no file exists, return a draft, using fallback for title.
-        guard let memo = local.read(slug) else {
-            return nil
-        }
-        let backlinks = database.readEntryBacklinks(slug: slug)
-        // Return entry
-        return EntryDetail(
-            saveState: .saved,
-            entry: Entry(
-                slug: slug,
-                contents: memo,
-                audience: .local
-            ),
-            backlinks: backlinks
-        )
-    }
-
-    /// Read detail for memo from sphere
-    private func readDetailFromSphere(
-        slug: Slug
-    ) -> EntryDetail? {
-        let slashlink = slug.toSlashlink()
-        guard let memo = noosphere.read(slashlink: slashlink)?.toMemo() else {
-            return nil
-        }
-        let backlinks = database.readEntryBacklinks(slug: slug)
-        return EntryDetail(
-            saveState: .saved,
-            entry: Entry(
-                slug: slug,
-                contents: memo,
-                audience: .public
-            ),
-            backlinks: backlinks
-        )
-    }
-
     private func readDetail(
-        link: EntryLink,
-        fallback: String,
-        audience: Audience = .public
+        address: MemoAddress,
+        title: String,
+        fallback: String
     ) throws -> EntryDetail {
-        if let detail = readDetailFromSphere(slug: link.slug) {
-            return detail
-        }
-        if let detail = readDetailFromLocal(slug: link.slug) {
-            return detail
-        }
-        return EntryDetail(
+        let backlinks = database.readEntryBacklinks(slug: address.slug)
+
+        let draft = EntryDetail(
             saveState: .draft,
             entry: Entry(
-                slug: link.slug,
+                address: address,
                 contents: Memo(
                     contentType: ContentType.subtext.rawValue,
                     created: Date.now,
                     modified: Date.now,
-                    title: link.title,
+                    title: title,
                     fileExtension: ContentType.subtext.fileExtension,
                     additionalHeaders: [],
                     body: fallback
-                ),
-                audience: audience
+                )
             )
+        )
+
+        guard address.isDraft else {
+            let slashlink = address.slug.toSlashlink()
+            guard let memo = noosphere.read(
+                slashlink: slashlink
+            )?.toMemo() else {
+                return draft
+            }
+            return EntryDetail(
+                saveState: .saved,
+                entry: Entry(
+                    address: address,
+                    contents: memo
+                ),
+                backlinks: backlinks
+            )
+        }
+
+        // Retreive top entry from file system to ensure it is fresh.
+        // If no file exists, return a draft, using fallback for title.
+        guard let memo = local.read(address.slug) else {
+            return draft
+        }
+        // Return entry
+        return EntryDetail(
+            saveState: .saved,
+            entry: Entry(
+                address: address,
+                contents: memo
+            ),
+            backlinks: backlinks
         )
     }
 
@@ -505,11 +459,12 @@ struct DataService {
     /// Allowing any string allows us to retreive files that don't have a
     /// clean slug.
     func readDetailAsync(
-        link: EntryLink,
+        address: MemoAddress,
+        title: String,
         fallback: String
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .utility) {
-            try readDetail(link: link, fallback: fallback)
+            try readDetail(address: address, title: title, fallback: fallback)
         }
     }
     

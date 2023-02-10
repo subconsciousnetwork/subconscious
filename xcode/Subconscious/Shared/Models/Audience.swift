@@ -9,14 +9,14 @@ import Foundation
 
 /// Model enumerating the possible audience/scopes for a piece of content.
 /// Right now we only have two: local-only draft or fully public
-enum Audience: Int, Codable, CustomStringConvertible {
+enum Audience: String, Codable {
     /// A local-only draft
-    case local = 0
+    case local = "local"
     /// Public sphere content
-    case `public` = 1
+    case `public` = "public"
 }
 
-extension Audience {
+extension Audience: CustomStringConvertible {
     var description: String {
         switch self {
         case .local:
@@ -29,7 +29,7 @@ extension Audience {
     
 }
 
-extension Int {
+extension String {
     func toAudience() -> Audience? {
         Audience(rawValue: self)
     }

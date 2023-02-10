@@ -18,8 +18,8 @@ struct EntryRow: View, Equatable {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text(
-                    !entry.link.title.isEmpty ?
-                    entry.link.title :
+                    !entry.title.isEmpty ?
+                    entry.title :
                     emptyTitle
                 )
                 .lineLimit(1)
@@ -44,7 +44,7 @@ struct EntryRow: View, Equatable {
                 .multilineTextAlignment(.leading)
                 .foregroundColor(Color.secondary)
             HStack(spacing: AppTheme.unit) {
-                AudienceIconView(audience: entry.audience)
+                AudienceIconView(audience: entry.address.audience)
                     .font(.system(size: 12))
                 Text(entry.slug.description)
             }
@@ -61,18 +61,24 @@ struct EntryRow_Previews: PreviewProvider {
         VStack {
             EntryRow(
                 entry: EntryStub(
-                    link: EntryLink(title: "Anything that can be derived should be derived")!,
+                    address: MemoAddress(
+                        slug: Slug(formatting: "Anything that can be derived should be derived")!,
+                        audience: .local
+                    ),
+                    title: "Anything that can be derived should be derived",
                     excerpt: "Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
-                    modified: Date.now,
-                    audience: .local
+                    modified: Date.now
                 )
             )
             EntryRow(
                 entry: EntryStub(
-                    link: EntryLink(title: "Anything that can be derived should be derived")!,
+                    address: MemoAddress(
+                        slug: Slug(formatting: "Anything that can be derived should be derived")!,
+                        audience: .public
+                    ),
+                    title: "Anything that can be derived should be derived",
                     excerpt: "Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
-                    modified: Date.now,
-                    audience: .public
+                    modified: Date.now
                 )
             )
         }

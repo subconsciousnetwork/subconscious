@@ -121,6 +121,13 @@ final class SQLite3Database {
             return Self.text(text)
         }
         
+        /// Encode a boolean as an integer value.
+        /// (SQLite3 represents booleans as integers)
+        /// - Returns a `Value.integer`
+        public static func bool(_ bool: Bool) -> Self {
+            .integer(bool ? 1 : 0)
+        }
+
         /// Encode a structure to JSON and wrap as a `.text` value.
         /// - Returns a `Value.text` if successful, `or` fallback otherwise.
         public static func json<T: Encodable>(
@@ -186,6 +193,15 @@ final class SQLite3Database {
             switch self {
             case .integer(let value):
                 return value
+            default:
+                return nil
+            }
+        }
+
+        public func toBool() -> Bool? {
+            switch self {
+            case .integer(let value):
+                return value > 0
             default:
                 return nil
             }

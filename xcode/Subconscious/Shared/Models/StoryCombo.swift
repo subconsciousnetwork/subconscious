@@ -37,24 +37,24 @@ extension MemoEntry {
         })
 
         guard let link = EntryLink.init(
-            title: "\(x.linkableTitle) x \(y.linkableTitle)"
+            title: "\(x.title) x \(y.title)"
         ) else {
             return nil
         }
 
         self.init(
-            slug: link.slug,
+            address: MemoAddress(slug: link.slug, audience: .local),
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now, modified: Date.now,
-                title: link.title,
+                title: link.linkableTitle,
                 fileExtension: ContentType.subtext.fileExtension,
                 additionalHeaders: [],
                 body: """
                 \(story.prompt)
                 
-                \(x.link.slug.toSlashlink())
-                \(y.link.slug.toSlashlink())
+                \(x.address.slug.toSlashlink())
+                \(y.address.slug.toSlashlink())
                 """
             )
         )
