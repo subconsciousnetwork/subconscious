@@ -11,7 +11,7 @@ import XCTest
 final class Tests_Entry: XCTestCase {
     func testMemoEntryMerge() {
         let a = MemoEntry(
-            slug: Slug("example-a")!,
+            address: MemoAddress(formatting: "example-a", audience: .public)!,
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -24,7 +24,7 @@ final class Tests_Entry: XCTestCase {
         )
 
         let b = MemoEntry(
-            slug: Slug("example-b")!,
+            address: MemoAddress(formatting: "example-b", audience: .public)!,
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -37,7 +37,7 @@ final class Tests_Entry: XCTestCase {
         )
 
         let c = a.merge(b)
-        XCTAssertEqual(c.slug, a.slug, "Keeps subject slug")
+        XCTAssertEqual(c.address, a.address, "Keeps subject address")
         XCTAssertEqual(c.contents.title, a.contents.title, "Keeps subject title")
         XCTAssertEqual(
             c.contents.body,
