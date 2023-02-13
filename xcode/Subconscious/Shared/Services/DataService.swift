@@ -219,11 +219,16 @@ struct DataService {
                 additionalHeaders: memo.headers,
                 body: body
             )
-            try noosphere.save()
+            let version = try noosphere.save()
             // Write to database
             try database.writeMemo(
                 address,
                 memo: memo
+            )
+            // Write new sphere version to database
+            try database.writeMetadatadata(
+                key: .sphereVersion,
+                value: version
             )
             return
         case .local:
@@ -261,8 +266,9 @@ struct DataService {
             return
         case .public:
             try noosphere.remove(slug: address.slug.description)
-            try noosphere.save()
+            let version = try noosphere.save()
             try database.removeMemo(address)
+            try database.writeMetadatadata(key: .sphereVersion, value: version)
             return
         }
     }
