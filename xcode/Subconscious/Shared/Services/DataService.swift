@@ -188,7 +188,7 @@ struct DataService {
     }
 
     /// Read memo from sphere or local
-    func readMemo(
+    private func readMemo(
         address: MemoAddress
     ) -> Memo? {
         switch address.audience {
@@ -203,7 +203,7 @@ struct DataService {
 
     /// Write entry to file system and database
     /// Also sets modified header to now.
-    func writeMemo(
+    private func writeMemo(
         address: MemoAddress,
         memo: Memo
     ) throws {
@@ -242,7 +242,7 @@ struct DataService {
         }
     }
 
-    func writeEntry(_ entry: MemoEntry) throws {
+    private func writeEntry(_ entry: MemoEntry) throws {
         try writeMemo(address: entry.address, memo: entry.contents)
     }
 
