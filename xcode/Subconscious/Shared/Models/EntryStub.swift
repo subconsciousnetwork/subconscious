@@ -21,10 +21,9 @@ struct EntryStub:
     let excerpt: String
     let modified: Date
 
-    var slug: Slug { address.slug }
-    var id: Slug { slug }
+    var id: MemoAddress { address }
     var debugDescription: String {
-        "Subconscious.EntryStub(\(slug))"
+        "Subconscious.EntryStub(\(address))"
     }
 }
 
