@@ -133,6 +133,9 @@ enum NotebookAction {
     /// Retitle entry succeeded. Lifecycle action.
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
 
+    /// Audience was changed for address
+    case succeedUpdateAudience(MemoAddress)
+
     //  Search
     /// Hit submit ("go") while focused on search field
     case submitSearch(String)
@@ -244,6 +247,8 @@ extension NotebookAction {
             return .succeedRetitleEntry(from: from, to: to)
         case let .succeedSaveEntry(slug, modified):
             return .succeedSaveEntry(slug: slug, modified: modified)
+        case let .succeedUpdateAudience(address):
+            return .succeedUpdateAudience(address)
         }
     }
 }
@@ -466,6 +471,12 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 from: from,
                 to: to
+            )
+        case let .succeedUpdateAudience(address):
+            return succeedUpdateAudience(
+                state: state,
+                environment: environment,
+                address: address
             )
         case .submitSearch(let query):
             return submitSearch(
@@ -789,6 +800,32 @@ struct NotebookModel: ModelProtocol {
             }
             var model = detail
             model.title = to.linkableTitle
+            return model
+        })
+        
+        return update(
+            state: model,
+            action: .refreshLists,
+            environment: environment
+        )
+    }
+
+    /// Retitle success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedUpdateAudience(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        address: MemoAddress
+    ) -> Update<NotebookModel> {
+        var model = state
+
+        /// Find all instances of this model in the stack and update them
+        model.details = state.details.map({ (detail: DetailOuterModel) in
+            guard detail.address.slug == address.slug else {
+                return detail
+            }
+            var model = detail
+            model.address = address
             return model
         })
         

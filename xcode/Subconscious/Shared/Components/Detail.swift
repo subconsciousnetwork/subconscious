@@ -340,6 +340,7 @@ enum DetailOuterAction: Hashable {
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
     case succeedSaveEntry(address: MemoAddress, modified: Date)
+    case succeedUpdateAudience(_ address: MemoAddress)
 }
 
 extension DetailOuterAction {
@@ -356,6 +357,8 @@ extension DetailOuterAction {
                 address: entry.address,
                 modified: entry.contents.modified
             )
+        case .succeedUpdateAudience(let address):
+            return .succeedUpdateAudience(address)
         default:
             return nil
         }
