@@ -46,7 +46,7 @@ struct EntryRow: View, Equatable {
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.audience)
                     .font(.system(size: 12))
-                Text(entry.slug.description)
+                Text(entry.address.slug.description)
             }
             .font(.callout)
             .lineLimit(1)

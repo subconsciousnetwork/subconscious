@@ -29,7 +29,7 @@ extension MemoEntry {
     init?(_ story: StoryCombo) {
         // Order by slug alpha
         let (x, y) = Func.block({
-            if story.entryA.slug < story.entryB.slug {
+            if story.entryA.address.slug < story.entryB.address.slug {
                 return (story.entryA, story.entryB)
             } else {
                 return (story.entryB, story.entryA)
