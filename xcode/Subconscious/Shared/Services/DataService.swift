@@ -7,12 +7,24 @@
 import Foundation
 import Combine
 
-enum DataServiceError: Error {
+enum DataServiceError: Error, LocalizedError {
     case fileExists(String)
     case memoNotFound(String)
     case defaultSphereNotFound
-    case sphereExists
-    case noosphereNotEnabled(String)
+    case sphereExists(_ sphereIdentity: String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .fileExists(let message):
+            return "File exists: \(message)"
+        case .memoNotFound(let message):
+            return "Memo not found: \(message)"
+        case .defaultSphereNotFound:
+            return "Default sphere not found"
+        case let .sphereExists(sphereIdentity):
+            return "Sphere exists: \(sphereIdentity)"
+        }
+    }
 }
 
 // MARK: SERVICE
@@ -54,8 +66,9 @@ struct DataService {
     /// Will not create sphere if a sphereIdentity already appears in
     /// the user defaults.
     func createSphere(ownerKeyName: String) throws -> SphereReceipt {
-        guard AppDefaults.standard.sphereIdentity == nil else {
-            throw DataServiceError.sphereExists
+        // Do not create sphere if one already exists
+        if let sphereIdentity = AppDefaults.standard.sphereIdentity {
+            throw DataServiceError.sphereExists(sphereIdentity)
         }
         let sphereReceipt = try noosphere.createSphere(
             ownerKeyName: ownerKeyName
