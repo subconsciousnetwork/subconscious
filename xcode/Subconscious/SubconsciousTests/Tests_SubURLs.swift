@@ -10,7 +10,7 @@ import XCTest
 
 class Tests_SubURLs: XCTestCase {
     func testEncodeAsSubEntryURL() throws {
-        let link = EntryLink(
+        let link = UnqualifiedLink(
             slug: Slug("hidecs")!,
             title: "HIDECS"
         )
@@ -25,7 +25,7 @@ class Tests_SubURLs: XCTestCase {
     }
 
     func testEncodeAsSubEntryURLNonMatchingTitle() throws {
-        let link = EntryLink(
+        let link = UnqualifiedLink(
             slug: Slug("title")!,
             title: "Some other title"
         )
@@ -40,7 +40,7 @@ class Tests_SubURLs: XCTestCase {
     }
 
     func testEncodeDecodeRoundTrip0() throws {
-        let link = EntryLink(
+        let link = UnqualifiedLink(
             slug: Slug("evergreen-notes")!,
             title: "Evergreen Notes"
         )
@@ -48,7 +48,7 @@ class Tests_SubURLs: XCTestCase {
             XCTFail("Expected URL")
             return
         }
-        guard let link = EntryLink.decodefromSubEntryURL(url) else {
+        guard let link = UnqualifiedLink.decodefromSubEntryURL(url) else {
             XCTFail("Expected EntryLink")
             return
         }
@@ -63,17 +63,15 @@ class Tests_SubURLs: XCTestCase {
     }
 
     func testEncodeDecodeRoundTrip1() throws {
-        guard let link = EntryLink(
+        let link = UnqualifiedLink(
+            slug: Slug(formatting: "Baháʼí")!,
             title: "Baháʼí"
-        ) else {
-            XCTFail("Expected EntryLink")
-            return
-        }
+        )
         guard let url = link.encodeAsSubEntryURL() else {
             XCTFail("Expected URL")
             return
         }
-        guard let link = EntryLink.decodefromSubEntryURL(url) else {
+        guard let link = UnqualifiedLink.decodefromSubEntryURL(url) else {
             XCTFail("Expected EntryLink")
             return
         }
@@ -88,17 +86,15 @@ class Tests_SubURLs: XCTestCase {
     }
 
     func testEncodeDecodeRoundTrip2() throws {
-        guard let link = EntryLink(
+        let link = UnqualifiedLink(
+            slug: Slug(formatting: "Fédération Aéronautique Internationale")!,
             title: "Fédération Aéronautique Internationale"
-        ) else {
-            XCTFail("Expected EntryLink")
-            return
-        }
+        )
         guard let url = link.encodeAsSubEntryURL() else {
             XCTFail("Expected URL")
             return
         }
-        guard let link = EntryLink.decodefromSubEntryURL(url) else {
+        guard let link = UnqualifiedLink.decodefromSubEntryURL(url) else {
             XCTFail("Expected EntryLink")
             return
         }
