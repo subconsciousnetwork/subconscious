@@ -11,21 +11,33 @@ import XCTest
 class Tests_DatabaseService: XCTestCase {
     func testCollateRenameSuggestionsRetitle() throws {
         let current = EntryLink(
-            slug: Slug("ye-three-unsurrendered-spires-of-mine")!,
-            title: "Ye three unsurrendered spires of mine"
-        )
+            title: "Ye three unsurrendered spires of mine",
+            audience: .public
+        )!
         let query = EntryLink(
-            slug: Slug("ye-three-unsurrendered-spires-of-mine")!,
-            title: "Ye Three Unsurrendered Spires of Mine"
-        )
+            title: "Ye Three Unsurrendered Spires of Mine",
+            audience: .public
+        )!
         let suggestions = DatabaseService.collateRenameSuggestions(
             current: current,
             query: query,
             results: [
-                EntryLink(title: "The whale, the whale")!,
-                EntryLink(title: "Oh, all ye sweet powers of air, now hug me close")!,
-                EntryLink(title: "Stubb's own unwinking eye")!,
-                EntryLink(title: "Pole-pointed prow")!,
+                EntryLink(
+                    title: "The whale, the whale",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "Oh, all ye sweet powers of air, now hug me close",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "Stubb's own unwinking eye",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "Pole-pointed prow",
+                    audience: .public
+                )!,
             ]
         )
         guard case let .retitle(from, to) = suggestions[0] else {
@@ -47,25 +59,37 @@ class Tests_DatabaseService: XCTestCase {
 
     func testCollateRenameSuggestionsRetitleWithSelfInResults() throws {
         let current = EntryLink(
-            slug: Slug("ye-three-unsurrendered-spires-of-mine")!,
-            title: "Ye three unsurrendered spires of mine"
-        )
+            title: "Ye three unsurrendered spires of mine",
+            audience: .public
+        )!
         let query = EntryLink(
-            slug: Slug("ye-three-unsurrendered-spires-of-mine")!,
-            title: "Ye Three Unsurrendered Spires of Mine"
-        )
+            title: "Ye Three Unsurrendered Spires of Mine",
+            audience: .public
+        )!
         let suggestions = DatabaseService.collateRenameSuggestions(
             current: current,
             query: query,
             results: [
                 EntryLink(
-                    slug: Slug("ye-three-unsurrendered-spires-of-mine")!,
-                    title: "Ye three unsurrendered spires of mine"
-                ),
-                EntryLink(title: "The whale, the whale")!,
-                EntryLink(title: "Oh, all ye sweet powers of air, now hug me close")!,
-                EntryLink(title: "Stubb's own unwinking eye")!,
-                EntryLink(title: "Pole-pointed prow")!,
+                    title: "Ye three unsurrendered spires of mine",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "The whale, the whale",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "Oh, all ye sweet powers of air, now hug me close",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "Stubb's own unwinking eye",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "Pole-pointed prow",
+                    audience: .public
+                )!,
             ]
         )
         guard case let .retitle(from, to) = suggestions[0] else {
@@ -87,17 +111,30 @@ class Tests_DatabaseService: XCTestCase {
 
     func testCollateRenameSuggestionsMove() throws {
         let current = EntryLink(
-            title: "Ye three unsurrendered spires of mine"
+            title: "Ye three unsurrendered spires of mine",
+            audience: .public
         )!
-        let query = EntryLink(title: "The whale, the whale")!
+        let query = EntryLink(
+            title: "The whale, the whale",
+            audience: .public
+        )!
         let suggestions = DatabaseService.collateRenameSuggestions(
             current: current,
             query: query,
             results: [
                 current,
-                EntryLink(title: "Oh, all ye sweet powers of air, now hug me close")!,
-                EntryLink(title: "Stubb's own unwinking eye")!,
-                EntryLink(title: "Pole-pointed prow")!,
+                EntryLink(
+                    title: "Oh, all ye sweet powers of air, now hug me close",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "Stubb's own unwinking eye",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "Pole-pointed prow",
+                    audience: .public
+                )!,
             ]
         )
         guard case let .move(from, to) = suggestions[0] else {
@@ -119,22 +156,37 @@ class Tests_DatabaseService: XCTestCase {
 
     func testCollateRenameSuggestionsMerge() throws {
         let current = EntryLink(
-            slug: Slug("ye-three-unsurrendered-spires-of-mine")!,
-            title: "Ye three unsurrendered spires of mine"
-        )
-        let query = EntryLink(title: "The whale, the whale")!
+            title: "Ye three unsurrendered spires of mine",
+            audience: .public
+        )!
+        let query = EntryLink(
+            title: "The whale, the whale",
+            audience: .public
+        )!
         let suggestions = DatabaseService.collateRenameSuggestions(
             current: current,
             query: query,
             results: [
                 EntryLink(
-                    slug: Slug("ye-three-unsurrendered-spires-of-mine")!,
-                    title: "Ye three unsurrendered spires of mine"
-                ),
-                EntryLink(title: "Oh, all ye sweet powers of air, now hug me close")!,
-                EntryLink(title: "The whale, the whale")!,
-                EntryLink(title: "Stubb's own unwinking eye")!,
-                EntryLink(title: "Pole-pointed prow")!,
+                    title: "Ye three unsurrendered spires of mine",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "The whale, the whale",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "Oh, all ye sweet powers of air, now hug me close",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "Stubb's own unwinking eye",
+                    audience: .public
+                )!,
+                EntryLink(
+                    title: "Pole-pointed prow",
+                    audience: .public
+                )!,
             ]
         )
         guard case let .merge(parent, child) = suggestions[0] else {
