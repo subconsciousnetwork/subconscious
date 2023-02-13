@@ -51,16 +51,6 @@ struct DataService {
         self.local = local
     }
 
-    /// Determine if first run should show
-    func shouldShowFirstRun() -> Bool {
-        // Do not show first run if Noosphere is disabled
-        guard Config.default.noosphere.enabled else {
-            return false
-        }
-        let isComplete = AppDefaults.standard.firstRunComplete
-        return !isComplete
-    }
-
     /// Create a default sphere for user and persist sphere details
     /// - Returns: SphereReceipt
     /// Will not create sphere if a sphereIdentity already appears in
