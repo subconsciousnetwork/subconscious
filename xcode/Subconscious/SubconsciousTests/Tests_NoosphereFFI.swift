@@ -19,7 +19,7 @@ final class Tests_NoosphereFFI: XCTestCase {
         let bad_sphere_identity = "doesnotexist"
         
         XCTAssertThrowsError(
-            try NoosphereFFI.callWithError(
+            try Noosphere.callWithError(
                 ns_sphere_fs_open,
                 noosphere,
                 bad_sphere_identity
