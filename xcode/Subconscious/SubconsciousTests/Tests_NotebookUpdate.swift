@@ -28,34 +28,34 @@ class Tests_NotebookUpdate: XCTestCase {
     }
 
     func testDeleteEntry() throws {
-        let a = EntryLink(title: "A")!
-        let b = EntryLink(title: "B")!
-        let c = EntryLink(title: "C")!
+        let a = MemoAddress(formatting: "A", audience: .public)!
+        let b = MemoAddress(formatting: "B", audience: .local)!
+        let c = MemoAddress(formatting: "C", audience: .local)!
         let state = NotebookModel(
             recent: [
                 EntryStub(
-                    link: a,
+                    address: a,
+                    title: "A",
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
-                    modified: Date.now,
-                    audience: .local
+                    modified: Date.now
                 ),
                 EntryStub(
-                    link: b,
+                    address: b,
+                    title: "B",
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
-                    modified: Date.now,
-                    audience: .local
+                    modified: Date.now
                 ),
                 EntryStub(
-                    link: c,
+                    address: c,
+                    title: "C",
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
-                    modified: Date.now,
-                    audience: .local
+                    modified: Date.now
                 )
             ]
         )
         let update = NotebookModel.update(
             state: state,
-            action: .stageDeleteEntry(b.slug),
+            action: .stageDeleteEntry(b),
             environment: environment
         )
         XCTAssertEqual(
@@ -65,12 +65,12 @@ class Tests_NotebookUpdate: XCTestCase {
         )
         XCTAssertEqual(
             update.state.recent![0].id,
-            a.id,
+            a,
             "Slug A is still first"
         )
         XCTAssertEqual(
             update.state.recent![1].id,
-            c.id,
+            c,
             "Slug C moved up because slug B was removed"
         )
     }
