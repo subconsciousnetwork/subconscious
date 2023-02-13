@@ -20,8 +20,6 @@ public enum NoosphereError: Error, LocalizedError {
     case foreignError(String)
     /// Thrown when an OpaquePointer? is unwrapped and found to be a null pointer.
     case nullPointer
-    case contentTypeMissing(_ slashlink: String)
-    case fileDoesNotExist(_ slashlink: String)
     
     public var errorDescription: String? {
         switch self {
@@ -29,15 +27,104 @@ public enum NoosphereError: Error, LocalizedError {
             return "Foreign Error: \(message)"
         case .nullPointer:
             return "Null pointer"
-        case .contentTypeMissing(let slashlink):
-            return "Content-Type header is missing for file: \(slashlink)"
-        case .fileDoesNotExist(let slashlink):
-            return "File does not exist: \(slashlink)"
         }
     }
 }
 
-struct NoosphereFFI {
+public struct SphereReceipt {
+    var identity: String
+    var mnemonic: String
+}
+
+/// Create a Noosphere instance.
+///
+/// - Property noosphere: pointer that holds all the internal book keeping.
+///   DB pointers, key storage interfaces, active HTTP clients etc.
+public final class Noosphere {
+    let noosphere: OpaquePointer
+    
+    init(
+        globalStoragePath: String,
+        sphereStoragePath: String,
+        gatewayURL: String? = nil
+    ) throws {
+        guard let noosphere = try Self.callWithError(
+            ns_initialize,
+            globalStoragePath,
+            sphereStoragePath,
+            gatewayURL
+        ) else {
+            throw NoosphereError.nullPointer
+        }
+        self.noosphere = noosphere
+    }
+    
+    /// Create and configure a user and sphere
+    /// - Important: the identity should be persisted
+    /// - Important: the mnemonic should be displayed to user and then discarded.
+    /// - Returns: a SphereConfig containing the sphere identity and mnemonic
+    ///
+    /// What it does:
+    /// - Initializes a namespace
+    /// - Creates a key
+    /// - Creates a sphere for that key
+    public func createSphere(
+        ownerKeyName: String
+    ) throws -> SphereReceipt {
+        try Self.callWithError(
+            ns_key_create,
+            noosphere,
+            ownerKeyName
+        )
+        
+        guard let sphereReceipt = try Self.callWithError(
+            ns_sphere_create,
+            noosphere,
+            ownerKeyName
+        ) else {
+            throw NoosphereError.nullPointer
+        }
+        defer {
+            ns_sphere_receipt_free(sphereReceipt)
+        }
+        
+        guard let sphereIdentityPointer = try Self.callWithError(
+            ns_sphere_receipt_identity,
+            sphereReceipt
+        ) else {
+            throw NoosphereError.foreignError(
+                "Failed to get pointer for identity"
+            )
+        }
+        defer {
+            ns_string_free(sphereIdentityPointer)
+        }
+        
+        guard let sphereMnemonicPointer = try Self.callWithError(
+            ns_sphere_receipt_mnemonic,
+            sphereReceipt
+        ) else {
+            throw NoosphereError.foreignError(
+                "Failed to get pointer for mnemonic"
+            )
+        }
+        defer {
+            ns_string_free(sphereMnemonicPointer)
+        }
+        
+        let sphereIdentity = String.init(cString: sphereIdentityPointer)
+        let sphereMnemonic = String.init(cString: sphereMnemonicPointer)
+        
+        return SphereReceipt(
+            identity: sphereIdentity,
+            mnemonic: sphereMnemonic
+        )
+    }
+    
+    deinit {
+        ns_free(noosphere)
+    }
+    
     static func callWithError<Z>(
         _ perform: (UnsafeMutablePointer<OpaquePointer?>) -> Z
     ) throws -> Z {
@@ -86,140 +173,5 @@ struct NoosphereFFI {
         _ c: C
     ) throws -> Z {
         try Self.callWithError { error in perform(a, b, c, error) }
-    }
-
-    /// Read first header value for file pointer
-    static func readFileHeaderValueFirst(
-        file: OpaquePointer,
-        name: String
-    ) -> String? {
-        guard let valueRaw = ns_sphere_file_header_value_first(
-            file,
-            name
-        ) else {
-            return nil
-        }
-        defer {
-            ns_string_free(valueRaw)
-        }
-        return String(cString: valueRaw)
-    }
-
-    /// Get all header names for a given file pointer
-    static func readFileHeaderNames(
-        file: OpaquePointer
-    ) -> [String] {
-        let file_header_names = ns_sphere_file_header_names_read(file)
-        defer {
-            ns_string_array_free(file_header_names)
-        }
-
-        let name_count = file_header_names.len
-        guard var pointer = file_header_names.ptr else {
-            return []
-        }
-
-        var names: [String] = []
-        for _ in 0..<name_count {
-            let name = String(cString: pointer.pointee!)
-            names.append(name)
-            pointer += 1;
-        }
-        return names
-    }
-}
-
-public struct SphereReceipt {
-    var identity: String
-    var mnemonic: String
-}
-
-/// Create a Noosphere instance.
-///
-/// - Property noosphere: pointer that holds all the internal book keeping.
-///   DB pointers, key storage interfaces, active HTTP clients etc.
-public final class Noosphere {
-    let noosphere: OpaquePointer
-    
-    init(
-        globalStoragePath: String,
-        sphereStoragePath: String,
-        gatewayURL: String? = nil
-    ) throws {
-        guard let noosphere = try NoosphereFFI.callWithError(
-            ns_initialize,
-            globalStoragePath,
-            sphereStoragePath,
-            gatewayURL
-        ) else {
-            throw NoosphereError.nullPointer
-        }
-        self.noosphere = noosphere
-    }
-    
-    /// Create and configure a user and sphere
-    /// - Important: the identity should be persisted
-    /// - Important: the mnemonic should be displayed to user and then discarded.
-    /// - Returns: a SphereConfig containing the sphere identity and mnemonic
-    ///
-    /// What it does:
-    /// - Initializes a namespace
-    /// - Creates a key
-    /// - Creates a sphere for that key
-    public func createSphere(
-        ownerKeyName: String
-    ) throws -> SphereReceipt {
-        try NoosphereFFI.callWithError(
-            ns_key_create,
-            noosphere,
-            ownerKeyName
-        )
-        
-        guard let sphereReceipt = try NoosphereFFI.callWithError(
-            ns_sphere_create,
-            noosphere,
-            ownerKeyName
-        ) else {
-            throw NoosphereError.nullPointer
-        }
-        defer {
-            ns_sphere_receipt_free(sphereReceipt)
-        }
-        
-        guard let sphereIdentityPointer = try NoosphereFFI.callWithError(
-            ns_sphere_receipt_identity,
-            sphereReceipt
-        ) else {
-            throw NoosphereError.foreignError(
-                "Failed to get pointer for identity"
-            )
-        }
-        defer {
-            ns_string_free(sphereIdentityPointer)
-        }
-        
-        guard let sphereMnemonicPointer = try NoosphereFFI.callWithError(
-            ns_sphere_receipt_mnemonic,
-            sphereReceipt
-        ) else {
-            throw NoosphereError.foreignError(
-                "Failed to get pointer for mnemonic"
-            )
-        }
-        defer {
-            ns_string_free(sphereMnemonicPointer)
-        }
-        
-        let sphereIdentity = String.init(cString: sphereIdentityPointer)
-        let sphereMnemonic = String.init(cString: sphereMnemonicPointer)
-        
-        return SphereReceipt(
-            identity: sphereIdentity,
-            mnemonic: sphereMnemonic
-        )
-    }
-    
-    deinit {
-        ns_free(noosphere)
     }
 }
