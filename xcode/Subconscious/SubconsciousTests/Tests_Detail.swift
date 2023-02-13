@@ -18,7 +18,7 @@ class Tests_Detail: XCTestCase {
         let modified = Date.now
 
         let entry = MemoEntry(
-            slug: Slug("example")!,
+            address: MemoAddress(formatting: "example", audience: .public)!,
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -55,8 +55,8 @@ class Tests_Detail: XCTestCase {
             "Modified is set from entry"
         )
         XCTAssertEqual(
-            update.state.slug,
-            detail.slug,
+            update.state.address,
+            detail.entry.address,
             "Sets the slug"
         )
         XCTAssertEqual(
@@ -78,7 +78,7 @@ class Tests_Detail: XCTestCase {
         )
 
         let entry = MemoEntry(
-            slug: Slug("example")!,
+            address: MemoAddress(formatting: "example", audience: .public)!,
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -115,7 +115,7 @@ class Tests_Detail: XCTestCase {
         let state = DetailModel()
 
         let entry = MemoEntry(
-            slug: Slug("example")!,
+            address: MemoAddress(formatting: "example", audience: .public)!,
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -149,7 +149,7 @@ class Tests_Detail: XCTestCase {
 
     func testAutosave() throws {
         let state = DetailModel(
-            slug: Slug("floop-the-pig")!,
+            address: MemoAddress(formatting: "example", audience: .public)!,
             saveState: .modified
         )
         let update = DetailModel.update(
@@ -166,7 +166,7 @@ class Tests_Detail: XCTestCase {
 
     func testSaveAlreadySaved() throws {
         let state = DetailModel(
-            slug: Slug("floop-the-pig")!,
+            address: MemoAddress(formatting: "example", audience: .public)!,
             saveState: .saved
         )
         let update = DetailModel.update(
@@ -183,7 +183,7 @@ class Tests_Detail: XCTestCase {
 
     func testEditorSnapshotModified() throws {
         let state = DetailModel(
-            slug: Slug("floop-the-pig")!,
+            address: MemoAddress(formatting: "example", audience: .public)!,
             saveState: .saved
         )
         guard let entry = state.snapshotEntry() else {
@@ -199,7 +199,7 @@ class Tests_Detail: XCTestCase {
 
     func testShowRenameSheet() throws {
         let state = DetailModel()
-        let link = EntryLink(title: "Floop the Pig")!
+        let link = EntryLink(title: "Loomings", audience: .public)!
         let update = DetailModel.update(
             state: state,
             action: .presentRenameSheet(link),
@@ -241,7 +241,8 @@ class Tests_Detail: XCTestCase {
     func testRenameField() throws {
         let state = DetailModel(
             entryToRename: EntryLink(
-                title: "Dawson spoke and there was music"
+                title: "Dawson spoke and there was music",
+                audience: .public
             )!
         )
         let update = DetailModel.update(
