@@ -879,58 +879,6 @@ class Tests_Subtext: XCTestCase {
         )
     }
     
-    func testEntryLinksCount() throws {
-        let markup = """
-        [[The quick]] [[brown]]
-        [[fox]] [[JUMPS]] /over-the-lazy-dog
-        """
-        let dom = Subtext.parse(markup: markup)
-        XCTAssertEqual(
-            dom.entryLinks.count,
-            5,
-            "Correct number of links parsed"
-        )
-    }
-    
-    func testEntryLinksCasing() throws {
-        let markup = """
-        [[HAMLET]]
-        Let me see.
-        Takes the /skull
-        
-        Alas, poor [[Yorick]]! I knew him, [[Horatio]]: a fellow
-        of [[infinite jest]], of most /excellent-fancy: he hath
-        borne me on his back a thousand times; and now, how
-        abhorred in my imagination it is!
-        """
-        let dom = Subtext.parse(markup: markup)
-        let entryLinks = dom.entryLinks
-        XCTAssertEqual(
-            entryLinks[0].title,
-            "HAMLET"
-        )
-        XCTAssertEqual(
-            entryLinks[1].title,
-            "Skull"
-        )
-        XCTAssertEqual(
-            entryLinks[2].title,
-            "Yorick"
-        )
-        XCTAssertEqual(
-            entryLinks[3].title,
-            "Horatio"
-        )
-        XCTAssertEqual(
-            entryLinks[4].title,
-            "infinite jest"
-        )
-        XCTAssertEqual(
-            entryLinks[5].title,
-            "Excellent fancy"
-        )
-    }
-    
     /// Test that Subtext correctly aggregates and de-duplicates slugs
     func testSlugs() throws {
         let dom = Subtext(
@@ -991,13 +939,13 @@ class Tests_Subtext: XCTestCase {
         till he find it stopping a bung-hole?
         """
         let dom = Subtext.parse(markup: markup)
-        guard let entryLinkMarkup = dom.entryLinkFor(
+        guard let shortlink = dom.shortlinkFor(
             range: NSRange(location: 45, length: 45)
         ) else {
             XCTFail("Expected entry link markup to be found")
             return
         }
-        guard case let .slashlink(slashlink) = entryLinkMarkup else {
+        guard case let .slashlink(slashlink) = shortlink else {
             XCTFail("Expected slashlink markup to be found")
             return
         }
@@ -1015,13 +963,13 @@ class Tests_Subtext: XCTestCase {
         till he find it stopping a bung-hole?
         """
         let dom = Subtext.parse(markup: markup)
-        guard let entryLinkMarkup = dom.entryLinkFor(
+        guard let shortlink = dom.shortlinkFor(
             range: NSRange(location: 19, length: 19)
         ) else {
             XCTFail("Expected entry link markup to be found")
             return
         }
-        guard case let .wikilink(wikilink) = entryLinkMarkup else {
+        guard case let .wikilink(wikilink) = shortlink else {
             XCTFail("Expected wikilink markup to be found")
             return
         }
