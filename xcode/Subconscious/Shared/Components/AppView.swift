@@ -28,9 +28,9 @@ struct AppView: View {
                 }
             }
             .zIndex(0)
-            if (store.state.shouldShowFirstRun) {
+            if (store.state.shouldPresentFirstRun) {
                 FirstRunView(app: store)
-                    .animation(.default, value: store.state.shouldShowFirstRun)
+                    .animation(.default, value: store.state.shouldPresentFirstRun)
                     .zIndex(1)
             }
         }
@@ -144,7 +144,8 @@ struct AppModel: ModelProtocol {
     var isNoosphereEnabled = AppDefaults.standard.noosphereEnabled
     /// Should first run show?
     /// Distinct from whether first run has actually run.
-    var shouldShowFirstRun = false
+    var shouldPresentFirstRun = AppDefaults.standard.shouldPresentFirstRun
+
     var nickname = AppDefaults.standard.nickname
     var nicknameTextField = AppDefaults.standard.nickname ?? ""
     var isNicknameTextFieldValid = true
@@ -336,14 +337,14 @@ struct AppModel: ModelProtocol {
             "Documents: \(environment.documentURL)"
         )
         
-        let migrate: Fx<AppAction> = Just(AppAction.migrateDatabase)
-            .eraseToAnyPublisher()
-        
-        var model = state
-        // Set first run complete from persisted state.
-        model.shouldShowFirstRun = environment.data.shouldShowFirstRun()
-        
-        return Update(state: model, fx: migrate)
+        return update(
+            state: state,
+            actions: [
+                .migrateDatabase,
+                .refreshSphereVersion
+            ],
+            environment: environment
+        )
     }
     
     static func setNoosphereEnabled(
@@ -460,12 +461,17 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
     
+    /// Check for latest sphere version and store on the model
     static func refreshSphereVersion(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
+        guard let version = try? environment.data.noosphere.version() else {
+            return Update(state: state)
+        }
         var model = state
-        model.sphereVersion = try? environment.data.noosphere.version()
+        model.sphereVersion = version
+        logger.log("Refreshed sphere version: \(version)")
         return Update(state: model)
     }
 
@@ -479,7 +485,7 @@ struct AppModel: ModelProtocol {
         AppDefaults.standard.firstRunComplete = isComplete
         // Update state
         var model = state
-        model.shouldShowFirstRun = !isComplete
+        model.shouldPresentFirstRun = !isComplete
         return Update(state: model)
             .animation(.default)
     }
