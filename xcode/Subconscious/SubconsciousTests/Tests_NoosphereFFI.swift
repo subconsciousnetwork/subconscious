@@ -11,7 +11,7 @@ import Noosphere
 
 final class Tests_NoosphereFFI: XCTestCase {
     func testCallWithError() throws {
-        let noosphere = ns_initialize("/tmp/foo", "/tmp/bar", nil)
+        let noosphere = ns_initialize("/tmp/foo", "/tmp/bar", nil, nil)
         defer {
             ns_free(noosphere)
         }
