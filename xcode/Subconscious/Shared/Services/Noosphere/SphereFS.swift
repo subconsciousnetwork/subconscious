@@ -180,7 +180,8 @@ public final class SphereFS: SphereProtocol {
         
         let bodyRaw = try Noosphere.callWithError(
             ns_sphere_file_contents_read,
-            noosphere.noosphere, file
+            noosphere.noosphere,
+            file
         )
         defer {
             ns_bytes_free(bodyRaw)
