@@ -772,12 +772,6 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case let .updateAudience(audience):
-            return updateAudience(
-                state: state,
-                environment: environment,
-                audience: audience
-            )
         case .autosave:
             return autosave(
                 state: state,
