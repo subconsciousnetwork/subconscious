@@ -124,6 +124,8 @@
 		B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF3627C09CA2002E57ED /* DateUtilities.swift */; };
 		B86DFF3927C15B77002E57ED /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF3827C15B77002E57ED /* Config.swift */; };
 		B86F1AB728C77E8C00DA264E /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F1AB628C77E8C00DA264E /* Search.swift */; };
+		B87288DC299AB01800EF7E07 /* Noosphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DB299AB01800EF7E07 /* Noosphere.swift */; };
+		B87288DE299AB02400EF7E07 /* SphereFS.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DD299AB02400EF7E07 /* SphereFS.swift */; };
 		B8879EA026F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */; };
 		B8879EA126F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */; };
 		B8879EA626F9348600A0B4FF /* SubURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA526F9348600A0B4FF /* SubURL.swift */; };
@@ -408,6 +410,8 @@
 		B86DFF3627C09CA2002E57ED /* DateUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateUtilities.swift; sourceTree = "<group>"; };
 		B86DFF3827C15B77002E57ED /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		B86F1AB628C77E8C00DA264E /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
+		B87288DB299AB01800EF7E07 /* Noosphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Noosphere.swift; sourceTree = "<group>"; };
+		B87288DD299AB02400EF7E07 /* SphereFS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SphereFS.swift; sourceTree = "<group>"; };
 		B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookNavigationView.swift; sourceTree = "<group>"; };
 		B8879EA526F9348600A0B4FF /* SubURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubURL.swift; sourceTree = "<group>"; };
 		B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinksView.swift; sourceTree = "<group>"; };
@@ -633,9 +637,20 @@
 			path = Story;
 			sourceTree = "<group>";
 		};
+		B87288DA299AB00700EF7E07 /* Noosphere */ = {
+			isa = PBXGroup;
+			children = (
+				B87288DB299AB01800EF7E07 /* Noosphere.swift */,
+				B8E1BB7A296DEF3200B86E0E /* NoosphereService.swift */,
+				B87288DD299AB02400EF7E07 /* SphereFS.swift */,
+			);
+			path = Noosphere;
+			sourceTree = "<group>";
+		};
 		B8879E9B26F8F3BD00A0B4FF /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				B87288DA299AB00700EF7E07 /* Noosphere */,
 				B8E00A2929928DD2003B40C1 /* AppDefaults.swift */,
 				B58FE48928DED93F00E000CC /* ComboGeist.swift */,
 				B82C3A5226F528B000833CC8 /* DatabaseService.swift */,
@@ -646,7 +661,6 @@
 				B8EA3EE429159C5500B92C2E /* HeaderSubtextMemoStore.swift */,
 				B54B922728E669D6003ACA1F /* MementoGeist.swift */,
 				B8B604E529146DF6006FCB77 /* MemoryStore.swift */,
-				B8E1BB7A296DEF3200B86E0E /* NoosphereService.swift */,
 				B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */,
 				B8CA8F1F288F1875005F8802 /* RandomPromptGeist.swift */,
 				B8CBAFA8299580E50079107E /* StoreProtocol.swift */,
@@ -1285,6 +1299,7 @@
 				B8B604E629146DF6006FCB77 /* MemoryStore.swift in Sources */,
 				B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B822F18D27C9C0AB00943C6B /* CountChip.swift in Sources */,
+				B87288DE299AB02400EF7E07 /* SphereFS.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* Detail.swift in Sources */,
 				B82C3A7626F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B85BF47827BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
@@ -1322,6 +1337,7 @@
 				B8AE34CB276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
 				B8AC648C278F757B0099E96B /* ProgressScrimView.swift in Sources */,
 				B89E307D2911D7F900A4721F /* IntUtilities.swift in Sources */,
+				B87288DC299AB01800EF7E07 /* Noosphere.swift in Sources */,
 				B8E00A2A29928DD2003B40C1 /* AppDefaults.swift in Sources */,
 				B82C3A5326F528B000833CC8 /* DatabaseService.swift in Sources */,
 				B8A41D512811F87C0096D2E7 /* SlashlinkBarView.swift in Sources */,

@@ -104,7 +104,7 @@ struct DataService {
             let slashlink = address.slug.toSlashlink()
             // If memo does exist, write it to database
             // Sphere content is always public right now
-            if let memo = noosphere.read(slashlink: slashlink)?.toMemo() {
+            if let memo = try? noosphere.read(slashlink: slashlink).toMemo() {
                 try database.writeMemo(
                     address,
                     memo: memo
@@ -193,9 +193,10 @@ struct DataService {
     ) -> Memo? {
         switch address.audience {
         case .public:
-            return noosphere
-                .read(slashlink: address.slug.toSlashlink())?
+            let memo = try? noosphere
+                .read(slashlink: address.slug.toSlashlink())
                 .toMemo()
+            return memo
         case .local:
             return local.read(address.slug)
         }
@@ -510,19 +511,21 @@ struct DataService {
         switch address.audience {
         case .public:
             let slashlink = address.slug.toSlashlink()
-            guard let memo = noosphere.read(
-                slashlink: slashlink
-            )?.toMemo() else {
-                return draft
-            }
-            return EntryDetail(
-                saveState: .saved,
-                entry: Entry(
-                    address: address,
-                    contents: memo
-                ),
-                backlinks: backlinks
-            )
+//            do {
+                let memo = try noosphere.read(slashlink: slashlink)
+                    .toMemo()
+                    .unwrap()
+                return EntryDetail(
+                    saveState: .saved,
+                    entry: Entry(
+                        address: address,
+                        contents: memo
+                    ),
+                    backlinks: backlinks
+                )
+//            } catch NoosphereError.fileDoesNotExist {
+//                return draft
+//            }
         case .local:
             // Retreive top entry from file system to ensure it is fresh.
             // If no file exists, return a draft, using fallback for title.
