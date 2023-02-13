@@ -336,7 +336,10 @@ struct AppModel: ModelProtocol {
         logger.debug(
             "Documents: \(environment.documentURL)"
         )
-        
+        let sphereIdentity = state.sphereIdentity ?? "Unknown"
+        logger.debug(
+            "Sphere ID: \(sphereIdentity)"
+        )
         return update(
             state: state,
             actions: [
@@ -456,7 +459,7 @@ struct AppModel: ModelProtocol {
         var model = state
         model.sphereIdentity = sphereIdentity
         if let sphereIdentity = sphereIdentity {
-            logger.debug("Sphere: \(sphereIdentity)")
+            logger.debug("Set sphere ID: \(sphereIdentity)")
         }
         return Update(state: model)
     }
@@ -471,7 +474,7 @@ struct AppModel: ModelProtocol {
         }
         var model = state
         model.sphereVersion = version
-        logger.log("Refreshed sphere version: \(version)")
+        logger.debug("Refreshed sphere version: \(version)")
         return Update(state: model)
     }
 
