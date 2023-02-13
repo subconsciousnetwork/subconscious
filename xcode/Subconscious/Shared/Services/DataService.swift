@@ -6,6 +6,7 @@
 //
 import Foundation
 import Combine
+import os
 
 enum DataServiceError: Error, LocalizedError {
     case fileExists(String)
@@ -36,6 +37,7 @@ struct DataService {
     var noosphere: NoosphereService
     var database: DatabaseService
     var local: HeaderSubtextMemoStore
+    var logger: Logger
 
     init(
         documentURL: URL,
@@ -49,6 +51,10 @@ struct DataService {
         self.database = database
         self.noosphere = noosphere
         self.local = local
+        self.logger = Logger(
+            subsystem: Config.default.rdns,
+            category: "DataService"
+        )
     }
 
     /// Create a default sphere for user and persist sphere details
@@ -511,10 +517,10 @@ struct DataService {
             )
         )
 
+        let slashlink = address.slug.toSlashlink()
         switch address.audience {
         case .public:
-            let slashlink = address.slug.toSlashlink()
-//            do {
+            do {
                 let memo = try noosphere.read(slashlink: slashlink)
                     .toMemo()
                     .unwrap()
@@ -526,13 +532,15 @@ struct DataService {
                     ),
                     backlinks: backlinks
                 )
-//            } catch NoosphereError.fileDoesNotExist {
-//                return draft
-//            }
+            } catch let SphereFSError.fileDoesNotExist(slashlink) {
+                logger.debug("Sphere file does not exist: \(slashlink). Returning new draft.")
+                return draft
+            }
         case .local:
             // Retreive top entry from file system to ensure it is fresh.
             // If no file exists, return a draft, using fallback for title.
             guard let memo = local.read(address.slug) else {
+                logger.debug("Local file does not exist: \(slashlink). Returning new draft.")
                 return draft
             }
             // Return entry
