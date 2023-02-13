@@ -63,7 +63,7 @@
 		B82F053828D60EE60025A8B5 /* AppTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82F053628D60EE60025A8B5 /* AppTabView.swift */; };
 		B82FD4562730A62C002CB641 /* EntryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82FD4552730A62C002CB641 /* EntryRow.swift */; };
 		B82FD4572730A62C002CB641 /* EntryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82FD4552730A62C002CB641 /* EntryRow.swift */; };
-		B82FF242298C0DAF0097D688 /* Tests_NoosphereFFI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82FF241298C0DAF0097D688 /* Tests_NoosphereFFI.swift */; };
+		B82FF242298C0DAF0097D688 /* Tests_Noosphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82FF241298C0DAF0097D688 /* Tests_Noosphere.swift */; };
 		B831BDB72824DA9700C4CE92 /* Tests_Tape.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDB62824DA9700C4CE92 /* Tests_Tape.swift */; };
 		B831BDB92825A28A00C4CE92 /* Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDB82825A28A00C4CE92 /* Header.swift */; };
 		B831BDBA2825A28A00C4CE92 /* Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = B831BDB82825A28A00C4CE92 /* Header.swift */; };
@@ -367,7 +367,7 @@
 		B82C3A7526F6B5BF00833CC8 /* StringUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringUtilities.swift; sourceTree = "<group>"; };
 		B82F053628D60EE60025A8B5 /* AppTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTabView.swift; sourceTree = "<group>"; };
 		B82FD4552730A62C002CB641 /* EntryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryRow.swift; sourceTree = "<group>"; };
-		B82FF241298C0DAF0097D688 /* Tests_NoosphereFFI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_NoosphereFFI.swift; sourceTree = "<group>"; };
+		B82FF241298C0DAF0097D688 /* Tests_Noosphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Noosphere.swift; sourceTree = "<group>"; };
 		B831BDB62824DA9700C4CE92 /* Tests_Tape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Tape.swift; sourceTree = "<group>"; };
 		B831BDB82825A28A00C4CE92 /* Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Header.swift; sourceTree = "<group>"; };
 		B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Header.swift; sourceTree = "<group>"; };
@@ -598,7 +598,7 @@
 				B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */,
 				B8B604E8291476E9006FCB77 /* Tests_Migrations.swift */,
 				B848FDA32991701500245115 /* Tests_Nickname.swift */,
-				B82FF241298C0DAF0097D688 /* Tests_NoosphereFFI.swift */,
+				B82FF241298C0DAF0097D688 /* Tests_Noosphere.swift */,
 				B85D5E3C28BE4B2C00EE0078 /* Tests_NotebookUpdate.swift */,
 				B88CC95A284FF64300994928 /* Tests_OrderedCollectionUtilities.swift */,
 				B82BB7FD28243F32000C9FCC /* Tests_Parser.swift */,
@@ -1203,7 +1203,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B84AD8E62810B74E006B3153 /* Tests_SubURLs.swift in Sources */,
-				B82FF242298C0DAF0097D688 /* Tests_NoosphereFFI.swift in Sources */,
+				B82FF242298C0DAF0097D688 /* Tests_Noosphere.swift in Sources */,
 				B84AD8E1280F7A19006B3153 /* Tests_StringUtilities.swift in Sources */,
 				B8B604EB29148C82006FCB77 /* Tests_AppMigrations.swift in Sources */,
 				B8AAAAD928CBD68600DBC8A9 /* Tests_Detail.swift in Sources */,

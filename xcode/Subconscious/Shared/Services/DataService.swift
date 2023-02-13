@@ -532,7 +532,7 @@ struct DataService {
                     ),
                     backlinks: backlinks
                 )
-            } catch let SphereFSError.fileDoesNotExist(slashlink) {
+            } catch SphereFSError.fileDoesNotExist(let slashlink) {
                 logger.debug("Sphere file does not exist: \(slashlink). Returning new draft.")
                 return draft
             }

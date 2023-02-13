@@ -166,12 +166,12 @@ final class Tests_SphereFS: XCTestCase {
             contentType: "text/subtext",
             body: body
         )
-
+        
         let a = try sphere.save()
         let changesA = try sphere.changes()
         XCTAssertEqual(changesA.count, 1)
         XCTAssertTrue(changesA.contains("foo"))
-
+        
         try sphere.write(
             slug: "bar",
             contentType: "text/subtext",
@@ -189,21 +189,21 @@ final class Tests_SphereFS: XCTestCase {
         XCTAssertTrue(changesB.contains("bar"))
         XCTAssertTrue(changesB.contains("baz"))
         XCTAssertFalse(changesB.contains("foo"))
-
+        
         try sphere.write(
             slug: "bing",
             contentType: "text/subtext",
             body: body
         )
         _ = try sphere.save()
-
+        
         let changesC = try sphere.changes(b)
         XCTAssertEqual(changesC.count, 1)
         XCTAssertTrue(changesC.contains("bing"))
         XCTAssertFalse(changesC.contains("baz"))
         XCTAssertFalse(changesC.contains("foo"))
     }
-
+    
     func testRemove() throws {
         let noosphere = noosphere!
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
@@ -225,20 +225,20 @@ final class Tests_SphereFS: XCTestCase {
             contentType: "text/subtext",
             body: body
         )
-
+        
         _ = try sphere.save()
-
+        
         try sphere.remove(slug: "foo")
-
+        
         _ = try sphere.save()
-
+        
         let slugs = try sphere.list()
         
         XCTAssertEqual(slugs.count, 1)
         XCTAssertTrue(slugs.contains("bar"))
         XCTAssertFalse(slugs.contains("foo"))
     }
-
+    
     func testSaveVersion() throws {
         let noosphere = noosphere!
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
@@ -270,6 +270,56 @@ final class Tests_SphereFS: XCTestCase {
             version,
             versionB,
             "Save returns current version"
+        )
+    }
+    
+    func testFailedSync() throws {
+        let globalStoragePath = FileManager.default.temporaryDirectory
+            .appendingPathComponent(
+                "noosphere_sync_test",
+                isDirectory: true
+            )
+            .path(percentEncoded: false)
+        
+        let sphereStoragePath = FileManager.default.temporaryDirectory
+            .appendingPathComponent(
+                "sphere_sync_test",
+                isDirectory: true
+            )
+            .path(percentEncoded: false)
+
+        let noosphere = try Noosphere(
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath,
+            gatewayURL: "http://fake-gateway.fake"
+        )
+        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        
+        let sphere = try SphereFS(
+            noosphere: noosphere,
+            identity: sphereReceipt.identity
+        )
+        
+        // Should fail
+        _ = try? sphere.sync()
+
+        try sphere.write(
+            slug: "foo",
+            contentType: "text/subtext",
+            body: "Test".toData(encoding: .utf8)!
+        )
+
+        try sphere.save()
+        
+        let foo = try sphere.read(slashlink: "/foo")
+
+        // Should fail
+        _ = try? sphere.sync()
+
+        XCTAssertEqual(
+            foo.body.toString(),
+            "Test",
+            "Read current version"
         )
     }
 }
