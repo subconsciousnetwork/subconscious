@@ -10,7 +10,10 @@ import XCTest
 
 class Tests_EntryLink: XCTestCase {
     func testTitle() throws {
-        guard let link = EntryLink(title: "RAND Corporation") else {
+        guard let link = EntryLink(
+            title: "RAND Corporation",
+            audience: .public
+        ) else {
             XCTFail("Expected title to parse to slug successfully")
             return
         }
@@ -20,19 +23,22 @@ class Tests_EntryLink: XCTestCase {
             "Title matches title given"
         )
         XCTAssertEqual(
-            String(link.slug),
+            String(link.address.slug),
             "rand-corporation",
             "Title is slugified correctly"
         )
     }
 
     func testDeepTitle() throws {
-        guard let link = EntryLink(title: "A deep title/With children") else {
+        guard let link = EntryLink(
+            title: "A deep title/With children",
+            audience: .public
+        ) else {
             XCTFail("Expected title to parse to slug successfully")
             return
         }
         XCTAssertEqual(
-            String(link.slug),
+            String(link.address.slug),
             "a-deep-title/with-children",
             "Title with slashes is converted to deep slug"
         )
@@ -48,7 +54,10 @@ class Tests_EntryLink: XCTestCase {
     }
 
     func testSanitizesTitle() throws {
-        guard let link = EntryLink(title: "  RAND\nCorporation    ") else {
+        guard let link = EntryLink(
+            title: "  RAND\nCorporation    ",
+            audience: .local
+        ) else {
             XCTFail("Expected title to parse to slug successfully")
             return
         }
@@ -58,7 +67,7 @@ class Tests_EntryLink: XCTestCase {
             "Title is santized"
         )
         XCTAssertEqual(
-            String(link.slug),
+            String(link.address.slug),
             "rand-corporation",
             "Title is slugified correctly"
         )
@@ -67,7 +76,7 @@ class Tests_EntryLink: XCTestCase {
     func testSanitizesLinkableTitle() throws {
         let text = "  RAND\nCorporation    "
         let link = EntryLink(
-            slug: Slug(formatting: text)!,
+            address: MemoAddress(formatting: text, audience: .local)!,
             title: text
         )
         XCTAssertEqual(
@@ -81,7 +90,7 @@ class Tests_EntryLink: XCTestCase {
             "Linkable title is sanitized"
         )
         XCTAssertEqual(
-            String(link.slug),
+            String(link.address.slug),
             "rand-corporation",
             "Title is slugified correctly"
         )
@@ -89,7 +98,7 @@ class Tests_EntryLink: XCTestCase {
 
     func testSanitizesNonLinkableTitle() throws {
         let link = EntryLink(
-            slug: Slug("something")!,
+            address: MemoAddress(formatting: "something", audience: .local)!,
             title: "  Something else    "
         )
         XCTAssertEqual(
@@ -108,12 +117,15 @@ class Tests_EntryLink: XCTestCase {
     /// the various sanitization steps don't somehow change the title.
     func testLeavesLinkableTitleFormattingAlone() throws {
         let stringDate = "2022-10-10 10:45:35"
-        guard let slug = Slug(formatting: stringDate) else {
+        guard let address = MemoAddress(
+            formatting: stringDate,
+            audience: .public
+        ) else {
             XCTFail("Expected slug")
             return
         }
         let link = EntryLink(
-            slug: slug,
+            address: address,
             title: stringDate
         )
         XCTAssertEqual(link.linkableTitle, stringDate)
@@ -121,11 +133,14 @@ class Tests_EntryLink: XCTestCase {
     }
 
     func testSlugOnlyEntryLinkToLinkableSentence() throws {
-        guard let slug = Slug("rand") else {
+        guard let address = MemoAddress(
+            formatting: "rand",
+            audience: .public
+        ) else {
             XCTFail("Expected slug")
             return
         }
-        let title = EntryLink(slug: slug).linkableTitle
+        let title = EntryLink(address: address).linkableTitle
         XCTAssertEqual(
             title,
             "Rand",
@@ -134,7 +149,7 @@ class Tests_EntryLink: XCTestCase {
     }
 
     func testWikilinkMarkupWithTitleMatchingSlug() throws {
-        guard let link = EntryLink(title: "RAND") else {
+        guard let link = EntryLink(title: "RAND", audience: .public) else {
             XCTFail("Expected title to parse to slug successfully")
             return
         }
@@ -147,12 +162,15 @@ class Tests_EntryLink: XCTestCase {
     }
 
     func testWikilinkMarkupWithTitleNotMatchingSlug() throws {
-        guard let slug = Slug("rand") else {
+        guard let address = MemoAddress(
+            formatting: "rand",
+            audience: .public
+        ) else {
             XCTFail("Expected slug")
             return
         }
         let link = EntryLink(
-            slug: slug,
+            address: address,
             title: "RAND Corporation"
         )
         let title = link.linkableTitle
