@@ -842,11 +842,11 @@ struct DetailModel: ModelProtocol {
                 "Link suggest failed: \(message)"
             )
             return Update(state: state)
-        case let .presentRenameSheet(entry):
+        case let .presentRenameSheet(link):
             return presentRenameSheet(
                 state: state,
                 environment: environment,
-                entry: entry
+                link: link
             )
         case .unpresentRenameSheet:
             return unpresentRenameSheet(
@@ -1718,9 +1718,9 @@ struct DetailModel: ModelProtocol {
     static func presentRenameSheet(
         state: DetailModel,
         environment: AppEnvironment,
-        entry: EntryLink?
+        link: EntryLink?
     ) -> Update<DetailModel> {
-        guard let entry = entry else {
+        guard let link = link else {
             environment.logger.warning(
                 "Rename sheet invoked on missing entry"
             )
@@ -1729,9 +1729,9 @@ struct DetailModel: ModelProtocol {
 
         var model = state
         model.isRenameSheetPresented = true
-        model.entryToRename = entry
+        model.entryToRename = link
 
-        let title = entry.linkableTitle
+        let title = link.linkableTitle
 
         return DetailModel.update(
             state: model,
