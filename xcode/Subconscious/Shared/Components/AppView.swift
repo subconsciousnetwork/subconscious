@@ -97,6 +97,9 @@ enum AppAction: CustomLogStringConvertible {
     /// App ready for database calls and interaction
     case ready
 
+    /// Sync gateway to sphere, sphere to DB, and local file system to DB
+    case syncAll
+
     /// Sync local sphere with gateway sphere
     case syncSphereWithGateway
     case succeedSyncSphereWithGateway(version: String)
@@ -259,6 +262,11 @@ struct AppModel: ModelProtocol {
             )
         case .ready:
             return ready(
+                state: state,
+                environment: environment
+            )
+        case .syncAll:
+            return syncAll(
                 state: state,
                 environment: environment
             )
@@ -586,11 +594,23 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
+        // For now, we just sync everything on ready.
+        return update(
+            state: state,
+            action: .syncAll,
+            environment: environment
+        )
+    }
+
+    static func syncAll(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
         return update(
             state: state,
             actions: [
-                AppAction.syncLocalFilesWithDatabase,
-                AppAction.syncSphereWithGateway
+                .syncLocalFilesWithDatabase,
+                .syncSphereWithGateway
             ],
             environment: environment
         )

@@ -36,7 +36,7 @@ struct NotebookNavigationView: View {
                         store.send(.confirmDelete(address))
                     },
                     onRefresh: {
-                        app.send(.syncSphereWithGateway)
+                        app.send(.syncAll)
                     }
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
