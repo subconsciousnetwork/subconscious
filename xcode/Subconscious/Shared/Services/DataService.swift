@@ -457,7 +457,10 @@ struct DataService {
         current: EntryLink
     ) -> AnyPublisher<[RenameSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            database.searchRenameSuggestions(query: query, current: current)
+            try database.searchRenameSuggestions(
+                query: query,
+                current: current
+            )
         }
     }
 

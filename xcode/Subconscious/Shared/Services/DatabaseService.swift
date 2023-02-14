@@ -496,11 +496,10 @@ final class DatabaseService {
     func searchRenameSuggestions(
         query: String,
         current: EntryLink
-    ) -> [RenameSuggestion] {
+    ) throws -> [RenameSuggestion] {
         guard self.state == .ready else {
             return []
         }
-
         guard let queryEntryLink = EntryLink(
             title: query,
             audience: current.address.audience
@@ -508,7 +507,7 @@ final class DatabaseService {
             return []
         }
         
-        guard let results = try? database.execute(
+        let results = try database.execute(
             sql: """
             SELECT slug, audience, title
             FROM memo_search
@@ -519,14 +518,13 @@ final class DatabaseService {
             parameters: [
                 .prefixQueryFTS5(query)
             ]
-        ) else {
-            return []
-        }
+        )
+
         let entries = results.compactMap({ row in
             if
                 let slug = row.col(0)?.toString()?.toSlug(),
                 let audience = row.col(1)?.toString()?.toAudience(),
-                let title: String = row.get(2)
+                let title = row.col(2)?.toString()
             {
                 return EntryLink(
                     address: MemoAddress(slug: slug, audience: audience),
