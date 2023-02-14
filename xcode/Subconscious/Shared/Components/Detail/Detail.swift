@@ -22,6 +22,9 @@ struct DetailView: View {
         action: .start,
         environment: AppEnvironment.default
     )
+    /// Is this view presented? Used to detect when back button is pressed.
+    /// We trigger an autosave when isPresented is false below.
+    @Environment(\.isPresented) var isPresented
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
     /// State passed down from parent
     var state: DetailOuterModel
@@ -99,8 +102,23 @@ struct DetailView: View {
                 )
             )
         }
-        .onDisappear {
-            store.send(.autosave)
+        // Track changes to scene phase so we know when app gets
+        // foregrounded/backgrounded.
+        // See https://developer.apple.com/documentation/swiftui/scenephase
+        // 2022-02-08 Gordon Brander
+        .onChange(of: self.scenePhase) { phase in
+            store.send(DetailAction.scenePhaseChange(phase))
+        }
+        // Save when back button pressed.
+        // Note that .onDisappear is too late, because by the time the save
+        // succeeds, the store for this view is already thrown away, so
+        // we never receive the save-succeeded action.
+        // Reacting to isPresented is soon enough.
+        // 2023-02-14
+        .onChange(of: self.isPresented) { isPresented in
+            if !isPresented {
+                store.send(.autosave)
+            }
         }
         /// Catch link taps and handle them here
         .environment(\.openURL, OpenURLAction { url in
@@ -116,13 +134,6 @@ struct DetailView: View {
             )
             return .handled
         })
-        // Track changes to scene phase so we know when app gets
-        // foregrounded/backgrounded.
-        // See https://developer.apple.com/documentation/swiftui/scenephase
-        // 2022-02-08 Gordon Brander
-        .onChange(of: self.scenePhase) { phase in
-            store.send(DetailAction.scenePhaseChange(phase))
-        }
         .onReceive(store.actions) { action in
             let message = String.loggable(action)
             DetailModel.logger.debug("[action] \(message)")
@@ -201,7 +212,6 @@ struct DetailView: View {
 
 struct DetailReadyView: View {
     @ObservedObject var store: Store<DetailModel>
-    @Environment(\.scenePhase) var scenePhase: ScenePhase
     var state: DetailOuterModel
     var send: (DetailOuterAction) -> Void
 
