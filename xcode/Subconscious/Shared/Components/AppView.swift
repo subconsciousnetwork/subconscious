@@ -612,8 +612,8 @@ struct AppModel: ModelProtocol {
             .catch({ error in
                 Just(AppAction.failSyncSphereWithGateway(error.localizedDescription))
             })
-                .eraseToAnyPublisher()
-                    return Update(state: state, fx: fx)
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
     
     static func succeedSyncSphereWithGateway(
