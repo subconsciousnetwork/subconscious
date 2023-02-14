@@ -35,7 +35,7 @@ final class NoosphereService: SphereProtocol {
         globalStorageURL: URL,
         sphereStorageURL: URL,
         gatewayURL: URL? = nil,
-        sphereIdentity: String?
+        sphereIdentity: String? = nil
     ) {
         self.globalStorageURL = globalStorageURL
         self.sphereStorageURL = sphereStorageURL

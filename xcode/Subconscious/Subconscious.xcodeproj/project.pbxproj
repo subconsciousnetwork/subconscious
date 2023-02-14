@@ -126,6 +126,7 @@
 		B86F1AB728C77E8C00DA264E /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F1AB628C77E8C00DA264E /* Search.swift */; };
 		B87288DC299AB01800EF7E07 /* Noosphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DB299AB01800EF7E07 /* Noosphere.swift */; };
 		B87288DE299AB02400EF7E07 /* SphereFS.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DD299AB02400EF7E07 /* SphereFS.swift */; };
+		B87288E0299B05B500EF7E07 /* Tests_DataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DF299B05B500EF7E07 /* Tests_DataService.swift */; };
 		B8879EA026F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */; };
 		B8879EA126F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */; };
 		B8879EA626F9348600A0B4FF /* SubURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA526F9348600A0B4FF /* SubURL.swift */; };
@@ -412,6 +413,7 @@
 		B86F1AB628C77E8C00DA264E /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
 		B87288DB299AB01800EF7E07 /* Noosphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Noosphere.swift; sourceTree = "<group>"; };
 		B87288DD299AB02400EF7E07 /* SphereFS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SphereFS.swift; sourceTree = "<group>"; };
+		B87288DF299B05B500EF7E07 /* Tests_DataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_DataService.swift; sourceTree = "<group>"; };
 		B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookNavigationView.swift; sourceTree = "<group>"; };
 		B8879EA526F9348600A0B4FF /* SubURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubURL.swift; sourceTree = "<group>"; };
 		B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinksView.swift; sourceTree = "<group>"; };
@@ -589,6 +591,7 @@
 				B8B604EA29148C82006FCB77 /* Tests_AppMigrations.swift */,
 				B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */,
 				B88CC955284FCF8C00994928 /* Tests_DatabaseService.swift */,
+				B87288DF299B05B500EF7E07 /* Tests_DataService.swift */,
 				B8AAAAD828CBD68600DBC8A9 /* Tests_Detail.swift */,
 				B8D2CDF82919B2FF00181EF2 /* Tests_Entry.swift */,
 				B84AD8DE280F3659006B3153 /* Tests_EntryLink.swift */,
@@ -1213,6 +1216,7 @@
 				B82BB7FE28243F32000C9FCC /* Tests_Parser.swift in Sources */,
 				B84AD8E82811C827006B3153 /* Tests_URLComponentsUtilities.swift in Sources */,
 				B8D2CDF92919B2FF00181EF2 /* Tests_Entry.swift in Sources */,
+				B87288E0299B05B500EF7E07 /* Tests_DataService.swift in Sources */,
 				B8AAAADB28CBDED800DBC8A9 /* Tests_Search.swift in Sources */,
 				B809AFF428D8E7BC00D0589A /* Tests_MarkupText.swift in Sources */,
 				B85D5E3D28BE4B2C00EE0078 /* Tests_NotebookUpdate.swift in Sources */,
