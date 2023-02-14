@@ -15,8 +15,15 @@
 import Foundation
 import SwiftNoosphere
 
-enum NoosphereServiceError: Error {
+enum NoosphereServiceError: Error, LocalizedError {
     case defaultSphereNotFound
+    
+    var errorDescription: String? {
+        switch self {
+        case .defaultSphereNotFound:
+            return "Default sphere not found"
+        }
+    }
 }
 
 /// Creates and manages Noosphere and default sphere singletons.
