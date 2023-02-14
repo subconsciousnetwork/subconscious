@@ -164,7 +164,15 @@ final class DatabaseService {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        let size = memo.toHeaderSubtext().size()
+        // If memo is local, calculate what the size of the file will be
+        // as header subtext. We use this as a smell test for whether to sync.
+        // If memo is not local, we don't need a size, and default to 0.
+        // TODO: remove size when we migrate local content to private sphere
+        let size = (
+            address.audience == .local ?
+            memo.toHeaderSubtext().size() :
+            0
+        )
         try database.execute(
             sql: """
             INSERT OR REPLACE INTO memo (
