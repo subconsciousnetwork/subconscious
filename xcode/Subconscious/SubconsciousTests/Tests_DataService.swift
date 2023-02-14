@@ -97,6 +97,14 @@ final class Tests_DataService: XCTestCase {
         XCTAssertEqual(memoOut.body, memoIn.body)
     }
     
+    func testReadMemoBeforeWrite() throws {
+        let data = self.data!
+        
+        let address = MemoAddress(formatting: "Test", audience: .public)!
+        
+        XCTAssertThrowsError(try data.readMemo(address: address))
+    }
+
     func testWriteThenBadSyncThenReadMemo() throws {
         let data = self.data!
         
