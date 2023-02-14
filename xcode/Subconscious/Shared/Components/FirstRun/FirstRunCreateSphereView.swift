@@ -38,9 +38,6 @@ struct FirstRunCreateSphereView: View {
             }
             .padding()
         }
-        .task {
-            app.send(.createSphere(app.state.nickname))
-        }
         .navigationTitle("Recovery Phrase")
         .navigationBarTitleDisplayMode(.inline)
     }
