@@ -51,7 +51,7 @@ struct DataService {
         )
     }
 
-    /// Create a default sphere for user and persist sphere details
+    /// Create a default sphere for user if needed, and persist sphere details.
     /// - Returns: SphereReceipt
     /// Will not create sphere if a sphereIdentity already appears in
     /// the user defaults.
@@ -69,6 +69,8 @@ struct DataService {
         // and discarded.
         AppDefaults.standard.sphereIdentity = sphereReceipt.identity
         AppDefaults.standard.ownerKeyName = ownerKeyName
+        // Set sphere identity on NoosphereService
+        noosphere.updateDefaultSphere(sphereReceipt.identity)
         return sphereReceipt
     }
 
