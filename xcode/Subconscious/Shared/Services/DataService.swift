@@ -32,22 +32,16 @@ enum DataServiceError: Error, LocalizedError {
 /// Wraps both database and source-of-truth store, providing data
 /// access methods for the app.
 struct DataService {
-    var documentURL: URL
-    var databaseURL: URL
     var noosphere: NoosphereService
     var database: DatabaseService
     var local: HeaderSubtextMemoStore
     var logger: Logger
 
     init(
-        documentURL: URL,
-        databaseURL: URL,
         noosphere: NoosphereService,
         database: DatabaseService,
         local: HeaderSubtextMemoStore
     ) {
-        self.documentURL = documentURL
-        self.databaseURL = databaseURL
         self.database = database
         self.noosphere = noosphere
         self.local = local

@@ -785,8 +785,6 @@ struct AppEnvironment {
         )
         
         self.data = DataService(
-            documentURL: self.documentURL,
-            databaseURL: databaseURL,
             noosphere: noosphere,
             database: databaseService,
             local: local
