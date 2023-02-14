@@ -46,8 +46,6 @@ extension Config {
 
 // MARK: Noosphere configuration
 struct NoosphereConfig: Equatable, Codable {
-    /// Enable Noosphere?
-    var enabled = true
     /// Name of directory used for Noosphere storage
     var globalStoragePath = "noosphere"
     /// Name of directory used for sphere storage.
