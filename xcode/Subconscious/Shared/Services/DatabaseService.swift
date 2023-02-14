@@ -164,11 +164,7 @@ final class DatabaseService {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        guard let size = memo.size() else {
-            throw CodingError.encodingError(
-                message: "Faild to encode memo contents as UTF-8"
-            )
-        }
+        let size = memo.toHeaderSubtext().size()
         try database.execute(
             sql: """
             INSERT OR REPLACE INTO memo (
