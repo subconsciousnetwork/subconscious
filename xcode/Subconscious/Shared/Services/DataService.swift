@@ -191,23 +191,25 @@ struct DataService {
     }
 
     /// Read memo from sphere or local
-    private func readMemo(
+    func readMemo(
         address: MemoAddress
-    ) -> Memo? {
+    ) throws -> Memo {
         switch address.audience {
         case .public:
-            let memo = try? noosphere
+            return try noosphere
                 .read(slashlink: address.slug.toSlashlink())
                 .toMemo()
-            return memo
+                .unwrap()
         case .local:
-            return local.read(address.slug)
+            return try local
+                .read(address.slug)
+                .unwrap()
         }
     }
 
     /// Write entry to file system and database
     /// Also sets modified header to now.
-    private func writeMemo(
+    func writeMemo(
         address: MemoAddress,
         memo: Memo
     ) throws {
@@ -251,7 +253,7 @@ struct DataService {
         }
     }
 
-    private func writeEntry(_ entry: MemoEntry) throws {
+    func writeEntry(_ entry: MemoEntry) throws {
         try writeMemo(address: entry.address, memo: entry.contents)
     }
 
@@ -262,7 +264,7 @@ struct DataService {
     }
     
     /// Delete entry from file system and database
-    private func deleteMemo(_ address: MemoAddress) throws {
+    func deleteMemo(_ address: MemoAddress) throws {
         switch address.audience {
         case .local:
             try local.remove(address.slug)
@@ -286,7 +288,7 @@ struct DataService {
     
     /// Update audience for memo.
     /// This moves memo from sphere to local or vise versa.
-    private func updateAudience(
+    func updateAudience(
         address: MemoAddress,
         audience: Audience
     ) throws -> MemoAddress {
@@ -294,11 +296,7 @@ struct DataService {
         guard address.audience != audience else {
             return address
         }
-        guard let memo = readMemo(address: address) else {
-            throw DataServiceError.memoNotFound(
-                "No memo found for address: \(address)"
-            )
-        }
+        let memo = try readMemo(address: address)
         let newAddress = address.withAudience(audience)
         try writeMemo(
             address: newAddress,
@@ -320,7 +318,7 @@ struct DataService {
     }
 
     /// Move entry to a new location, updating file system and database.
-    private func moveEntry(from: EntryLink, to: EntryLink) throws {
+    func moveEntry(from: EntryLink, to: EntryLink) throws {
         guard from.address.slug != to.address.slug else {
             throw DataServiceError.fileExists(to.address.slug.description)
         }
@@ -354,7 +352,7 @@ struct DataService {
     /// - Appends `child` to `parent`
     /// - Writes the combined content to `parent`
     /// - Deletes `child`
-    private func mergeEntry(
+    func mergeEntry(
         parent: EntryLink,
         child: EntryLink
     ) throws {
@@ -391,7 +389,7 @@ struct DataService {
     }
     
     /// Update the title of an entry, without changing its slug
-    private func retitleEntry(
+    func retitleEntry(
         address: MemoAddress,
         title: String
     ) throws {
@@ -488,7 +486,7 @@ struct DataService {
         return nil
     }
 
-    private func readDetail(
+    func readDetail(
         address: MemoAddress,
         title: String,
         fallback: String
