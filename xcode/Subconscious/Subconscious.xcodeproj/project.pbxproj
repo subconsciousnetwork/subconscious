@@ -650,6 +650,25 @@
 			path = Noosphere;
 			sourceTree = "<group>";
 		};
+		B87288E1299C02BA00EF7E07 /* Notebook */ = {
+			isa = PBXGroup;
+			children = (
+				B89966C628B6EE2300DF1F8C /* Notebook.swift */,
+				B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */,
+			);
+			path = Notebook;
+			sourceTree = "<group>";
+		};
+		B87288E2299C02E200EF7E07 /* Detail */ = {
+			isa = PBXGroup;
+			children = (
+				B8879EAB26F944DA00A0B4FF /* Detail.swift */,
+				B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */,
+				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
+			);
+			path = Detail;
+			sourceTree = "<group>";
+		};
 		B8879E9B26F8F3BD00A0B4FF /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -878,15 +897,11 @@
 				B8EB29F526F27794006E97C3 /* AppView.swift */,
 				B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */,
 				B8EC568426F41A2C00AC64E5 /* Common */,
-				B8879EAB26F944DA00A0B4FF /* Detail.swift */,
-				B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */,
-				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
-				B86DFF2C27C0280B002E57ED /* EntryListView.swift */,
+				B87288E2299C02E200EF7E07 /* Detail */,
 				B8CA8F2528909E66005F8802 /* Feed.swift */,
 				B8B3EE712979DEDF00779B7F /* FirstRun */,
 				B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */,
-				B89966C628B6EE2300DF1F8C /* Notebook.swift */,
-				B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */,
+				B87288E1299C02BA00EF7E07 /* Notebook */,
 				B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */,
 				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 				B88B1CDC298DE65E0062CB7F /* Settings */,
@@ -942,6 +957,7 @@
 				B85652212975F16B00B7FCA0 /* BylineView.swift */,
 				B822F18C27C9C0AB00943C6B /* CountChip.swift */,
 				B8B4D7ED27EA8AA000633B5F /* DragHandleView.swift */,
+				B86DFF2C27C0280B002E57ED /* EntryListView.swift */,
 				B82FD4552730A62C002CB641 /* EntryRow.swift */,
 				B83E91D627692EC600045C6A /* FAB.swift */,
 				B8CBAFA029930C5D0079107E /* Forms */,

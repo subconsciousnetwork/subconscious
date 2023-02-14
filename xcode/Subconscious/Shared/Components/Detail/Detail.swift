@@ -1525,7 +1525,7 @@ struct DetailModel: ModelProtocol {
         guard let entry = entry else {
             let saveState = String(reflecting: state.saveState)
             environment.logger.warning(
-                "Entry save state is marked \(saveState) but no entry could be derived for state. Doing nothing."
+                "Entry save state is marked \(saveState) but no entry was given. Doing nothing."
             )
             return Update(state: state)
         }
