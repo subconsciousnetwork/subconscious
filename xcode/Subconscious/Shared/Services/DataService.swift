@@ -322,19 +322,18 @@ struct DataService {
         guard from.address.slug != to.address.slug else {
             throw DataServiceError.fileExists(to.address.slug.description)
         }
-        // Make sure we're writing to an empty location
-        guard local.info(to.address.slug) == nil else {
+        guard !self.exists(to.address) else {
             throw DataServiceError.fileExists(to.address.slug.description)
         }
-        let fromMemo = try local.read(from.address.slug).unwrap()
-        let fromFile = MemoEntry(address: from.address, contents: fromMemo)
+        let fromMemo = try readMemo(address: from.address)
         // Make a copy representing new location and set new title and slug
-        var toFile = fromFile
-        toFile.address = to.address
+        var toMemo = fromMemo
+        // Update title
+        toMemo.title = to.title
         // Write to new destination
-        try writeEntry(toFile)
+        try writeMemo(address: to.address, memo: toMemo)
         // ...Then delete old entry
-        try deleteMemo(fromFile.address)
+        try deleteMemo(from.address)
     }
     
     /// Move entry to a new location, updating file system and database.
@@ -469,6 +468,20 @@ struct DataService {
         }
     }
     
+    /// Check if a given address exists
+    func exists(_ address: MemoAddress) -> Bool {
+        switch address.audience {
+        case .public:
+            let version = noosphere.getFileVersion(
+                slashlink: address.slug.toSlashlink()
+            )
+            return version != nil
+        case .local:
+            let info = local.info(address.slug)
+            return info != nil
+        }
+    }
+
     /// Given a slug, get back a resolved MemoAddress
     /// If there is public content, that will be returned.
     /// Otherwise, if there is local content, that will be returned.
