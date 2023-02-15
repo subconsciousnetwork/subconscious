@@ -268,6 +268,9 @@ final class SQLite3Database {
     /// Connection lifetime is object lifetime.
     /// Initializing opens a connection to the database.
     /// Deinitializing closes the connection.
+    ///
+    /// Connections are NOT threadsafe. Use SQLite3Database instead to perform
+    /// actions using a threadsafe dispatch queue.
     final class Connection {
         /// Internal handle to the currently open SQLite DB instance
         private var db: OpaquePointer?
