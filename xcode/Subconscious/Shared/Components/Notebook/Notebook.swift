@@ -395,13 +395,13 @@ struct NotebookModel: ModelProtocol {
             model.recent = entries
             return Update(state: model)
         case let .listRecentFailure(error):
-            environment.logger.warning(
+            logger.warning(
                 "Failed to list recent entries: \(error)"
             )
             return Update(state: state)
         case let .confirmDelete(slug):
             guard let slug = slug else {
-                environment.logger.log(
+                logger.log(
                     "Delete confirmation flow passed nil slug. Doing nothing."
                 )
                 var model = state
@@ -860,7 +860,7 @@ struct NotebookModel: ModelProtocol {
             title: query,
             audience: defaultAudience
         ) else {
-            environment.logger.log(
+            logger.log(
                 "Query could not be converted to link: \(query)"
             )
             return update

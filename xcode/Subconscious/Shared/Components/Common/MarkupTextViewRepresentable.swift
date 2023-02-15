@@ -157,7 +157,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
             range: NSRange,
             changeInLength: Int
         ) {
-            representable.logger?.debug(
+            MarkupTextViewRepresentable.logger.debug(
                 "textStorage: render markup attributes"
             )
             textStorage.setAttributes(
@@ -191,7 +191,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         func textViewDidChange(_ view: UITextView) {
             // Return early if view is updating.
             guard !isUIViewUpdating else {
-                representable.logger?.debug(
+                MarkupTextViewRepresentable.logger.debug(
                     "textViewDidChange: View updating. Skipping."
                 )
                 return
@@ -203,7 +203,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         func textViewDidBeginEditing(_ textView: UITextView) {
             // Mark focus clean
             guard !isUIViewUpdating else {
-                representable.logger?.debug(
+                MarkupTextViewRepresentable.logger.debug(
                     "textViewDidBeginEditing: View updating. Skipping."
                 )
                 return
@@ -214,7 +214,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         /// Handle editing end (blur)
         func textViewDidEndEditing(_ textView: UITextView) {
             guard !isUIViewUpdating else {
-                representable.logger?.debug(
+                MarkupTextViewRepresentable.logger.debug(
                     "textViewDidEndEditing: View updating. Skipping."
                 )
                 return
@@ -231,7 +231,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
             // mutation goes from representable to view during an update.
             // 2021-10-06 Gordon Brander
             guard !isUIViewUpdating else {
-                representable.logger?.debug(
+                MarkupTextViewRepresentable.logger.debug(
                     "textViewDidChangeSelection: View updating. Skipping."
                 )
                 return
@@ -244,6 +244,11 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
             )
         }
     }
+
+    static var logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "editor"
+    )
 
     //  MARK: Properties
     var state: MarkupTextModel
@@ -262,11 +267,10 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         NSRange,
         UITextItemInteraction
     ) -> Bool
-    var logger: Logger?
 
     //  MARK: makeUIView
     func makeUIView(context: Context) -> MarkupTextView {
-        logger?.debug("makeUIView")
+        Self.logger.debug("makeUIView")
         let view = MarkupTextView()
 
         // Coordinator is both an UITextViewDelegate
@@ -301,7 +305,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     /// out of sync with the binding before setting, using an if-statement
     /// or guard.
     func updateUIView(_ view: MarkupTextView, context: Context) {
-        logger?.debug("updateUIView")
+        MarkupTextViewRepresentable.logger.debug("updateUIView")
         // Set updating flag on coordinator so that event callbacks
         // can know if they are being called during an update.
         context.coordinator.isUIViewUpdating = true
@@ -312,13 +316,13 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
 
         // Update text
         if view.text != state.text {
-            logger?.debug("updateUIView: set text")
+            MarkupTextViewRepresentable.logger.debug("updateUIView: set text")
             view.text = state.text
         }
 
         // Update width
         if view.fixedWidth != self.frame.width {
-            logger?.debug("updateUIView: set width")
+            MarkupTextViewRepresentable.logger.debug("updateUIView: set width")
             view.fixedWidth = self.frame.width
         }
 
@@ -327,12 +331,12 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
 
         // Set selection
         if state.selection != view.selectedRange {
-            logger?.debug("updateUIView: set selection")
+            MarkupTextViewRepresentable.logger.debug("updateUIView: set selection")
             view.selectedRange = self.state.selection
         }
 
         if self.textContainerInset != view.textContainerInset {
-            logger?.debug("updateUIView: set inset")
+            MarkupTextViewRepresentable.logger.debug("updateUIView: set inset")
             // Set inner padding
             view.textContainerInset = self.textContainerInset
         }
@@ -351,7 +355,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         }
         /// If focus change is already scheduled, return
         guard !state.isFocusChangeScheduled else {
-            logger?.debug("updateUIViewFocus: Focus is dirty but focus change already scheduled. Skipping.")
+            MarkupTextViewRepresentable.logger.debug("updateUIViewFocus: Focus is dirty but focus change already scheduled. Skipping.")
             return
         }
         send(.scheduleFocusChange)
@@ -366,10 +370,10 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                 return
             }
             if state.focusRequest {
-                logger?.debug("async: call becomeFirstResponder")
+                MarkupTextViewRepresentable.logger.debug("async: call becomeFirstResponder")
                 view.becomeFirstResponder()
             } else {
-                logger?.debug("async: call resignFirstResponder")
+                MarkupTextViewRepresentable.logger.debug("async: call resignFirstResponder")
                 view.resignFirstResponder()
             }
         }

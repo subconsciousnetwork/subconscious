@@ -239,8 +239,7 @@ struct DetailReadyView: View {
                             ),
                             frame: geometry.frame(in: .local),
                             renderAttributesOf: Subtext.renderAttributesOf,
-                            onLink: self.onLink,
-                            logger: Logger.editor
+                            onLink: self.onLink
                         )
                         .insets(
                             EdgeInsets(
@@ -1299,7 +1298,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         message: String
     ) -> Update<DetailModel> {
-        environment.logger.log("Detail load failed with message: \(message)")
+        logger.log("Detail load failed with message: \(message)")
         return Update(state: state)
     }
 
@@ -1516,7 +1515,7 @@ struct DetailModel: ModelProtocol {
         // If there is no entry, nothing to save
         guard let entry = entry else {
             let saveState = String(reflecting: state.saveState)
-            environment.logger.warning(
+            logger.warning(
                 "Entry save state is marked \(saveState) but no entry was given. Doing nothing."
             )
             return Update(state: state)
@@ -1550,7 +1549,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         entry: MemoEntry
     ) -> Update<DetailModel> {
-        environment.logger.debug(
+        logger.debug(
             "Saved entry: \(entry.address)"
         )
         var model = state
@@ -1580,7 +1579,7 @@ struct DetailModel: ModelProtocol {
         message: String
     ) -> Update<DetailModel> {
         //  TODO: show user a "try again" banner
-        environment.logger.warning(
+        logger.warning(
             "Save failed for entry (\(address)) with error: \(message)"
         )
         // Mark modified, since we failed to save
@@ -1704,7 +1703,7 @@ struct DetailModel: ModelProtocol {
         title: String?
     ) -> Update<DetailModel> {
         guard let address = address else {
-            environment.logger.warning(
+            logger.warning(
                 "Rename sheet invoked on missing entry"
             )
             return Update(state: state)
@@ -1792,7 +1791,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<DetailModel> {
-        environment.logger.warning(
+        logger.warning(
             "Failed to read suggestions from database: \(error)"
         )
         return Update(state: state)
@@ -1847,7 +1846,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<DetailModel> {
-        environment.logger.warning(
+        logger.warning(
             "Failed to move entry with error: \(error)"
         )
         return Update(state: state)
@@ -1899,7 +1898,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<DetailModel> {
-        environment.logger.warning(
+        logger.warning(
             "Failed to merge entry with error: \(error)"
         )
         return Update(state: state)

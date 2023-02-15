@@ -735,7 +735,6 @@ struct AppEnvironment {
     var documentURL: URL
     var applicationSupportURL: URL
 
-    var logger: Logger
     var data: DataService
     var feed: FeedService
     
@@ -762,8 +761,6 @@ struct AppEnvironment {
             appropriateFor: nil,
             create: true
         )
-
-        self.logger = Logger.main
 
         let files = FileStore(documentURL: documentURL)
         let local = HeaderSubtextMemoStore(store: files)

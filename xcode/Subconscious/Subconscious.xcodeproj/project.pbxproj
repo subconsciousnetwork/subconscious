@@ -171,7 +171,6 @@
 		B8901CF327978FDE007C9021 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8901CF227978FDE007C9021 /* Slug.swift */; };
 		B89966C728B6EE2300DF1F8C /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89966C628B6EE2300DF1F8C /* Notebook.swift */; };
 		B89966C828B6EE2300DF1F8C /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89966C628B6EE2300DF1F8C /* Notebook.swift */; };
-		B89D296827E832DC009E0DED /* LoggerUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89D296727E832DC009E0DED /* LoggerUtilities.swift */; };
 		B89E30772911B51A00A4721F /* Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E30762911B51A00A4721F /* Migration.swift */; };
 		B89E30782911B51A00A4721F /* Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E30762911B51A00A4721F /* Migration.swift */; };
 		B89E307D2911D7F900A4721F /* IntUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E307C2911D7F900A4721F /* IntUtilities.swift */; };
@@ -442,7 +441,6 @@
 		B88CC95A284FF64300994928 /* Tests_OrderedCollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_OrderedCollectionUtilities.swift; sourceTree = "<group>"; };
 		B8901CF227978FDE007C9021 /* Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
 		B89966C628B6EE2300DF1F8C /* Notebook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notebook.swift; sourceTree = "<group>"; };
-		B89D296727E832DC009E0DED /* LoggerUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerUtilities.swift; sourceTree = "<group>"; };
 		B89E30762911B51A00A4721F /* Migration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Migration.swift; sourceTree = "<group>"; };
 		B89E307C2911D7F900A4721F /* IntUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntUtilities.swift; sourceTree = "<group>"; };
 		B8A408A828F61BA000A5651D /* project.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = project.json; sourceTree = "<group>"; };
@@ -927,7 +925,6 @@
 				B82C3A5826F5761700833CC8 /* FileSync.swift */,
 				B86DFF3227C072CD002E57ED /* Func.swift */,
 				B89E307C2911D7F900A4721F /* IntUtilities.swift */,
-				B89D296727E832DC009E0DED /* LoggerUtilities.swift */,
 				B8B4251128FDE7780081B8D5 /* Mapping.swift */,
 				B89E30762911B51A00A4721F /* Migration.swift */,
 				B866868027AC4EF100A03A55 /* NSRangeUtilities.swift */,
@@ -1349,7 +1346,6 @@
 				B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
 				B85EC466296F0D0A00558761 /* ProfilePicMd.swift in Sources */,
-				B89D296827E832DC009E0DED /* LoggerUtilities.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
 				B8B3EE7B297AFB9100779B7F /* TextFieldLabel.swift in Sources */,
 				B848FDA229916F4600245115 /* Nickname.swift in Sources */,
