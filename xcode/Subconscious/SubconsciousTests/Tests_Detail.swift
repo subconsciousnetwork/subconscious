@@ -202,7 +202,10 @@ class Tests_Detail: XCTestCase {
         let link = EntryLink(title: "Loomings", audience: .public)!
         let update = DetailModel.update(
             state: state,
-            action: .presentRenameSheet(link),
+            action: .presentRenameSheet(
+                address: link.address,
+                title: link.title
+            ),
             environment: environment
         )
 
