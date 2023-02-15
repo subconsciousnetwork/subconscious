@@ -386,12 +386,9 @@ struct DataService {
         address: MemoAddress,
         title: String
     ) throws {
-        var entry = MemoEntry(
-            address: address,
-            contents: try local.read(address.slug).unwrap()
-        )
-        entry.contents.title = title
-        try writeEntry(entry)
+        var memo = try readMemo(address: address)
+        memo.title = title
+        try writeMemo(address: address, memo: memo)
     }
     
     /// Change title header of entry, without moving it.
