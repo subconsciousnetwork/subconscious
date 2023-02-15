@@ -668,8 +668,6 @@ final class SQLite3Database {
     /// We use this queue to make database instances threadsafe
     private var queue: DispatchQueue
     private var db: Connection?
-    /// SQLite requires a file path string for many APIs.
-    /// We derive this from the file URL in the constructor.
     let path: String
     let mode: OpenMode
 
