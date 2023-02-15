@@ -18,6 +18,7 @@
 		B800ABE9297DE7D20024D1FD /* DataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B800ABE7297DE7D20024D1FD /* DataService.swift */; };
 		B809AFF428D8E7BC00D0589A /* Tests_MarkupText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */; };
 		B80CC805299D14C900C4D7C0 /* Tests_Memo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80CC804299D14C900C4D7C0 /* Tests_Memo.swift */; };
+		B80CC807299D4DF000C4D7C0 /* Tests_SQLite3Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80CC806299D4DF000C4D7C0 /* Tests_SQLite3Database.swift */; };
 		B8109C2827A8879C00CD2B6D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8109C2727A8879C00CD2B6D /* AppTheme.swift */; };
 		B8109C2927A8879C00CD2B6D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8109C2727A8879C00CD2B6D /* AppTheme.swift */; };
 		B813749A28BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B813749928BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift */; };
@@ -346,6 +347,7 @@
 		B800ABE7297DE7D20024D1FD /* DataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataService.swift; sourceTree = "<group>"; };
 		B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_MarkupText.swift; sourceTree = "<group>"; };
 		B80CC804299D14C900C4D7C0 /* Tests_Memo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Memo.swift; sourceTree = "<group>"; };
+		B80CC806299D4DF000C4D7C0 /* Tests_SQLite3Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_SQLite3Database.swift; sourceTree = "<group>"; };
 		B8109C2727A8879C00CD2B6D /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		B813749928BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkupTextViewRepresentable.swift; sourceTree = "<group>"; };
 		B81A535B27275138001A6268 /* Tape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tape.swift; sourceTree = "<group>"; };
@@ -609,6 +611,7 @@
 				B8A617212971E4860054D410 /* Tests_Slashlink.swift */,
 				B80057F327DC35BE002C0129 /* Tests_Slug.swift */,
 				B8F27EE32970CD8F00A33E78 /* Tests_SphereFS.swift */,
+				B80CC806299D4DF000C4D7C0 /* Tests_SQLite3Database.swift */,
 				B84AD8E0280F7A19006B3153 /* Tests_StringUtilities.swift */,
 				B8682DCA2804BF04001CD8DD /* Tests_Subtext.swift */,
 				B84AD8E52810B74E006B3153 /* Tests_SubURLs.swift */,
@@ -1223,6 +1226,7 @@
 			files = (
 				B84AD8E62810B74E006B3153 /* Tests_SubURLs.swift in Sources */,
 				B82FF242298C0DAF0097D688 /* Tests_Noosphere.swift in Sources */,
+				B80CC807299D4DF000C4D7C0 /* Tests_SQLite3Database.swift in Sources */,
 				B84AD8E1280F7A19006B3153 /* Tests_StringUtilities.swift in Sources */,
 				B8B604EB29148C82006FCB77 /* Tests_AppMigrations.swift in Sources */,
 				B8AAAAD928CBD68600DBC8A9 /* Tests_Detail.swift in Sources */,
