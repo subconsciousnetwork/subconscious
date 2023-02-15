@@ -21,16 +21,16 @@ struct BacklinksView: View {
             .padding(.horizontal, AppTheme.unit4)
             .padding(.vertical, AppTheme.unit2)
             if backlinks.count > 0 {
-                ForEach(backlinks) { stub in
+                ForEach(backlinks) { entry in
                     Divider()
                     Button(
                         action: {
                             onSelect(
-                                EntryLink(stub)
+                                EntryLink(entry)
                             )
                         },
                         label: {
-                            EntryRow(entry: stub).equatable()
+                            EntryRow(entry: entry).equatable()
                         }
                     )
                     .buttonStyle(BacklinkButtonStyle())
