@@ -24,13 +24,6 @@ struct AppDefaults {
     @UserDefaultsProperty(forKey: "firstRunComplete")
     var firstRunComplete = false
     
-    @UserDefaultsProperty(forKey: "noosphereEnabled")
-    var noosphereEnabled = false
-    
     @UserDefaultsProperty(forKey: "gatewayURL")
     var gatewayURL = "http://127.0.0.1:4433"
-    
-    var shouldPresentFirstRun: Bool {
-        noosphereEnabled && !firstRunComplete
-    }
 }

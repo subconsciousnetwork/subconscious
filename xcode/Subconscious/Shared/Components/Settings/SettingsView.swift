@@ -15,23 +15,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    VStack(alignment: .leading) {
-                        Toggle(
-                            "Enable Noosphere",
-                            isOn: Binding(
-                                get: { app.state.isNoosphereEnabled },
-                                send: app.send,
-                                tag: AppAction.setNoosphereEnabled
-                            )
-                        )
-                        Text("**Beta**. Noosphere is a decentralized protocol for publishing and sharing linked notes.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    }
-                }
-
-                Section(header: Text("Sphere")) {
+                Section(header: Text("Noosphere")) {
                     NavigationLink(
                         destination: {
                             ProfileSettingsView(app: app)
@@ -53,10 +37,9 @@ struct SettingsView: View {
                     )
                     .lineLimit(1)
                     .textSelection(.enabled)
-
                 }
                 
-                Section {
+                Section(header: Text("Gateway")) {
                     NavigationLink(
                         destination: {
                             GatewayURLSettingsView(app: app)

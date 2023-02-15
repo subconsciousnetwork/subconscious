@@ -58,9 +58,6 @@ enum AppAction: CustomLogStringConvertible {
     /// On view appear
     case appear
 
-    /// Enable/disable Noosphere
-    case setNoosphereEnabled(_ isEnabled: Bool)
-
     /// Set sphere/user nickname
     case setNicknameTextField(_ nickname: String)
 
@@ -143,11 +140,9 @@ enum AppDatabaseState {
 struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
-    /// Load intial state from persisted app defaults
-    var isNoosphereEnabled = AppDefaults.standard.noosphereEnabled
     /// Should first run show?
     /// Distinct from whether first run has actually run.
-    var shouldPresentFirstRun = AppDefaults.standard.shouldPresentFirstRun
+    var shouldPresentFirstRun = !AppDefaults.standard.firstRunComplete
 
     var nickname = AppDefaults.standard.nickname
     var nicknameTextField = AppDefaults.standard.nickname ?? ""
@@ -191,12 +186,6 @@ struct AppModel: ModelProtocol {
         switch action {
         case .appear:
             return appear(state: state, environment: environment)
-        case let .setNoosphereEnabled(isEnabled):
-            return setNoosphereEnabled(
-                state: state,
-                environment: environment,
-                isEnabled: isEnabled
-            )
         case let .setNicknameTextField(nickname):
             return setNicknameTextField(
                 state: state,
@@ -356,18 +345,6 @@ struct AppModel: ModelProtocol {
             ],
             environment: environment
         )
-    }
-    
-    static func setNoosphereEnabled(
-        state: AppModel,
-        environment: AppEnvironment,
-        isEnabled: Bool
-    ) -> Update<AppModel> {
-        var model = state
-        model.isNoosphereEnabled = isEnabled
-        // Persist to app defaults
-        AppDefaults.standard.noosphereEnabled = isEnabled
-        return Update(state: model)
     }
     
     static func setNicknameTextField(
@@ -747,7 +724,7 @@ struct AppEnvironment {
     var logger: Logger
     var data: DataService
     var feed: FeedService
-
+    
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
         Timer.publish(
