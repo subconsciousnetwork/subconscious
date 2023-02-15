@@ -11,10 +11,13 @@ import ObservableStore
 @testable import Subconscious
 
 final class Tests_DataService: XCTestCase {
-    /// Get URL to temp dir for this test instance
-    func createTmp(path: String) throws -> URL {
-        let url = FileManager.default.temporaryDirectory
-            .appending(path: path, directoryHint: .isDirectory)
+    /// Create a unique temp dir and return URL
+    func createTmpDir() throws -> URL {
+        let path = UUID().uuidString
+        let url = FileManager.default.temporaryDirectory.appending(
+            path: path,
+            directoryHint: .isDirectory
+        )
         try FileManager.default.createDirectory(
             at: url,
             withIntermediateDirectories: true
@@ -22,14 +25,10 @@ final class Tests_DataService: XCTestCase {
         return url
     }
     
-    /// A place to put cancellables from publishers
-    var cancellables: Set<AnyCancellable> = Set()
-    
-    var data: DataService?
-    
-    override func setUpWithError() throws {
-        let id = UUID()
-        let tmp = try createTmp(path: id.uuidString)
+    /// Set up and return a data service instance
+    func createDataService(
+        tmp: URL
+    ) throws -> DataService {
         let globalStorageURL = tmp.appending(path: "noosphere")
         let sphereStorageURL = tmp.appending(path: "sphere")
         
@@ -63,17 +62,21 @@ final class Tests_DataService: XCTestCase {
         
         let local = HeaderSubtextMemoStore(store: files)
         
-        let data = DataService(
+        return DataService(
             noosphere: noosphere,
             database: database,
             local: local
         )
-        
-        self.data = data
     }
+
+    /// A place to put cancellables from publishers
+    var cancellables: Set<AnyCancellable> = Set()
+    
+    var data: DataService?
     
     func testWriteThenReadMemo() throws {
-        let data = self.data!
+        let tmp = try createTmpDir()
+        let data = try createDataService(tmp: tmp)
         
         let address = MemoAddress(formatting: "Test", audience: .public)!
         let memoIn = Memo(
@@ -98,15 +101,17 @@ final class Tests_DataService: XCTestCase {
     }
     
     func testReadMemoBeforeWrite() throws {
-        let data = self.data!
-        
+        let tmp = try createTmpDir()
+        let data = try createDataService(tmp: tmp)
+
         let address = MemoAddress(formatting: "Test", audience: .public)!
         
         XCTAssertThrowsError(try data.readMemo(address: address))
     }
-
+    
     func testWriteThenBadSyncThenReadMemo() throws {
-        let data = self.data!
+        let tmp = try createTmpDir()
+        let data = try createDataService(tmp: tmp)
         
         let address = MemoAddress(formatting: "Test", audience: .public)!
         let memoIn = Memo(
@@ -134,7 +139,8 @@ final class Tests_DataService: XCTestCase {
     }
     
     func testWriteThenBadSyncThenReadDetail() throws {
-        let data = self.data!
+        let tmp = try createTmpDir()
+        let data = try createDataService(tmp: tmp)
         
         let address = MemoAddress(formatting: "Test", audience: .public)!
         let memo = Memo(
@@ -164,5 +170,59 @@ final class Tests_DataService: XCTestCase {
         XCTAssertEqual(detail.entry.address, address)
         XCTAssertEqual(detail.entry.contents.body, memo.body)
         XCTAssertEqual(detail.entry.contents.title, memo.title)
+    }
+    
+    func testManyWritesThenCloseThenReopen() throws {
+        let tmp = try createTmpDir()
+        var data = try createDataService(tmp: tmp)
+        
+        let versionX = try data.noosphere.version()
+        print("!!! X", versionX)
+
+        let addressA = MemoAddress(formatting: "a", audience: .public)!
+        let addressB = MemoAddress(formatting: "b", audience: .public)!
+        let addressC = MemoAddress(formatting: "c", audience: .public)!
+        let addressD = MemoAddress(formatting: "d", audience: .public)!
+        
+        let memo = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            title: "Test",
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "Test content"
+        )
+        
+        try data.writeMemo(address: addressA, memo: memo)
+        let versionA = try data.noosphere.version()
+        print("!!! A", versionA)
+        try data.writeMemo(address: addressB, memo: memo)
+        let versionB = try data.noosphere.version()
+        print("!!! B", versionB)
+        try data.writeMemo(address: addressC, memo: memo)
+        let versionC = try data.noosphere.version()
+        print("!!! C", versionC)
+        try data.writeMemo(address: addressD, memo: memo)
+        let versionD = try data.noosphere.version()
+        print("!!! D", versionD)
+
+        // Create a new instance
+        data = try createDataService(tmp: tmp)
+
+        let versionY = try data.noosphere.version()
+        print("!!! Y", versionY)
+
+        XCTAssertNotEqual(versionY, versionX)
+        XCTAssertNotEqual(versionY, versionA)
+        XCTAssertNotEqual(versionY, versionB)
+        XCTAssertNotEqual(versionY, versionC)
+        XCTAssertEqual(versionY, versionD)
+
+        let memoB = try data.readMemo(address: addressB)
+        XCTAssertEqual(memoB.body, "Test content")
+
+        let memoD = try data.readMemo(address: addressD)
+        XCTAssertEqual(memoD.body, "Test content")
     }
 }
