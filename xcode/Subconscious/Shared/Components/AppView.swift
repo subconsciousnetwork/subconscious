@@ -571,6 +571,15 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
+        do {
+            let sphereIdentity = try environment.data.database
+                .readMetadata(key: .sphereIdentity)
+            let sphereVersion = try environment.data.database
+                .readMetadata(key: .sphereVersion)
+            logger.log("Database last-known sphere state: \(sphereIdentity) @ \(sphereVersion)")
+        } catch {
+            logger.log("Database last-known sphere state: unknown")
+        }
         // For now, we just sync everything on ready.
         return update(
             state: state,
@@ -618,7 +627,7 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         version: String
     ) -> Update<AppModel> {
-        logger.log("Sphere updated to version: \(version)")
+        logger.log("Sphere synced with gateway @ \(version)")
         return update(
             state: state,
             action: .syncSphereWithDatabase,
@@ -631,15 +640,20 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<AppModel> {
-        logger.log("Sphere sync failed: \(error)")
-        return Update(state: state)
+        logger.log("Sphere failed to sync with gateway: \(error)")
+        return update(
+            state: state,
+            action: .syncSphereWithDatabase,
+            environment: environment
+        )
     }
     
     static func syncSphereWithDatabase(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let fx: Fx<AppAction> = environment.data.syncSphereWithDatabaseAsync()
+        let fx: Fx<AppAction> = environment.data
+            .syncSphereWithDatabaseAsync()
             .map({ version in
                 AppAction.succeedSyncSphereWithDatabase(version: version)
             })
@@ -648,8 +662,8 @@ struct AppModel: ModelProtocol {
                     AppAction.failSyncSphereWithDatabase(error.localizedDescription)
                 )
             })
-                .eraseToAnyPublisher()
-                    return Update(state: state, fx: fx)
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
     
     static func succeedSyncSphereWithDatabase(
