@@ -82,6 +82,18 @@ struct Memo: Hashable, CustomStringConvertible {
             fileExtension: fileExtension
         )
     }
+    
+    /// Merge another memo into this one.
+    /// Headers from this instance win, however additional headers are merged.
+    func merge(_ that: Memo) -> Self {
+        var this = self
+        this.additionalHeaders = this.additionalHeaders.merge(
+            that.additionalHeaders
+        )
+        let concatenated = "\(this.body)\n\n\(that.body)"
+        this.body = concatenated
+        return this
+    }
 }
 
 extension MemoData {

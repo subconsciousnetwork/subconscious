@@ -357,22 +357,14 @@ struct DataService {
         parent: EntryLink,
         child: EntryLink
     ) throws {
-        let childEntry = MemoEntry(
-            address: child.address,
-            contents: try local.read(child.address.slug).unwrap()
-        )
-        
-        let parentEntry = MemoEntry(
-            address: parent.address,
-            contents: try local.read(parent.address.slug).unwrap()
-        )
-        .merge(childEntry)
-        
+        let childMemo = try readMemo(address: child.address)
+        let parentMemo = try readMemo(address: parent.address)
+        let mergedMemo = parentMemo.merge(childMemo)
         //  First write the merged file to "to" location
-        try writeEntry(parentEntry)
+        try writeMemo(address: parent.address, memo: mergedMemo)
         //  Then delete child entry *afterwards*.
         //  We do this last to avoid data loss in case of write errors.
-        try deleteMemo(childEntry.address)
+        try deleteMemo(child.address)
     }
     
     /// Merge child entry into parent entry.
