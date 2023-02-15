@@ -889,12 +889,9 @@ struct NotebookModel: ModelProtocol {
         title: String,
         fallback: String
     ) -> Update<NotebookModel> {
-        guard let address = environment.data.findAddress(slug: slug) else {
-            logger.log(
-                "Could not find address for slug \(slug)"
-            )
-            return Update(state: state)
-        }
+        let fallbackAddress = MemoAddress(slug: slug, audience: .local)
+        let address = environment.data
+            .findAddress(slug: slug) ?? fallbackAddress
         return update(
             state: state,
             action: .pushDetail(
