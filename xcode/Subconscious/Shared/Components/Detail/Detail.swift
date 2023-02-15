@@ -50,45 +50,23 @@ struct DetailView: View {
         .navigationTitle(state.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
-            ToolbarItem(placement: .principal) {
-                OmniboxView(address: store.state.address)
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Menu(
-                    content: {
-                        Section {
-                            Button(
-                                action: {
-                                    store.send(
-                                        .presentRenameSheet(
-                                            EntryLink(
-                                                address: state.address,
-                                                title: state.title
-                                            )
-                                        )
-                                    )
-                                }
-                            ) {
-                                Label("Rename", systemImage: "pencil")
-                            }
-                        }
-                        Section {
-                            Button(
-                                action: {
-                                    store.send(
-                                        .presentDeleteConfirmationDialog(true)
-                                    )
-                                }
-                            ) {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
-                    },
-                    label: {
-                        Image(systemName: "ellipsis")
-                    }
-                )
-            }
+            DetailToolbarContent(
+                title: store.state.headers.title,
+                slug: store.state.address?.slug.description,
+                onRename: {
+                    store.send(
+                        DetailAction.presentRenameSheet(
+                            address: store.state.address,
+                            title: store.state.headers.title
+                        )
+                    )
+                },
+                onDelete: {
+                    store.send(
+                        DetailAction.presentDeleteConfirmationDialog(true)
+                    )
+                }
+            )
         })
         .onAppear {
             // When an editor is presented, refresh if stale.
@@ -444,7 +422,10 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case linkSuggestionsFailure(String)
 
     // Rename
-    case presentRenameSheet(EntryLink?)
+    case presentRenameSheet(
+        address: MemoAddress?,
+        title: String?
+    )
     case unpresentRenameSheet
     case setRenameField(String)
     case refreshRenameSuggestions
@@ -842,11 +823,12 @@ struct DetailModel: ModelProtocol {
                 "Link suggest failed: \(message)"
             )
             return Update(state: state)
-        case let .presentRenameSheet(link):
+        case let .presentRenameSheet(address, title):
             return presentRenameSheet(
                 state: state,
                 environment: environment,
-                link: link
+                address: address,
+                title: title
             )
         case .unpresentRenameSheet:
             return unpresentRenameSheet(
@@ -1718,14 +1700,17 @@ struct DetailModel: ModelProtocol {
     static func presentRenameSheet(
         state: DetailModel,
         environment: AppEnvironment,
-        link: EntryLink?
+        address: MemoAddress?,
+        title: String?
     ) -> Update<DetailModel> {
-        guard let link = link else {
+        guard let address = address else {
             environment.logger.warning(
                 "Rename sheet invoked on missing entry"
             )
             return Update(state: state)
         }
+
+        let link = EntryLink(address: address, title: title)
 
         var model = state
         model.isRenameSheetPresented = true

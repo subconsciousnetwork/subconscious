@@ -32,7 +32,7 @@ struct EntryLink:
         self.linkableTitle = (
             titleSlug != address.slug ?
             Self.sanitizeTitle(address.slug.toTitle()) :
-                title
+            title
         )
     }
     
@@ -50,11 +50,9 @@ struct EntryLink:
     
     /// Construct an EntryLink from a slug.
     /// Title is generated using `slug.toTitle()`.
-    init(address: MemoAddress) {
-        self.address = address
-        let title = Self.sanitizeTitle(address.slug.toTitle())
-        self.title = title
-        self.linkableTitle = title
+    init(address: MemoAddress, title: String? = nil) {
+        let title = title ?? address.slug.toTitle()
+        self.init(address: address, title: title)
     }
     
     var id: MemoAddress { address }
