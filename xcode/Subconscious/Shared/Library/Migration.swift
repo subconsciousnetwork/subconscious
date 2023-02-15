@@ -17,8 +17,8 @@ struct SQLMigration: MigrationProtocol {
     var version: Int
     var sql: String
 
-    func migrate(_ connection: SQLite3Database) throws {
-        try connection.executescript(sql: sql)
+    func migrate(_ database: SQLite3Database) throws {
+        try database.executescript(sql: sql)
     }
 }
 
