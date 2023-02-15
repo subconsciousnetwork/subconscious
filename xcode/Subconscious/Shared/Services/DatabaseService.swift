@@ -175,7 +175,8 @@ final class DatabaseService {
         )
         try database.execute(
             sql: """
-            INSERT OR REPLACE INTO memo (
+            INSERT INTO memo (
+                id,
                 slug,
                 audience,
                 content_type,
@@ -190,9 +191,24 @@ final class DatabaseService {
                 links,
                 size
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                slug=excluded.slug,
+                audience=excluded.audience,
+                content_type=excluded.content_type,
+                created=excluded.created,
+                modified=excluded.modified,
+                title=excluded.title,
+                file_extension=excluded.file_extension,
+                headers=excluded.headers,
+                body=excluded.body,
+                description=excluded.description,
+                excerpt=excluded.excerpt,
+                links=excluded.links,
+                size=excluded.size
             """,
             parameters: [
+                .text(address.description),
                 .text(address.slug.description),
                 .text(address.audience.rawValue),
                 .text(memo.contentType),
@@ -217,11 +233,10 @@ final class DatabaseService {
         }
         try database.execute(
             sql: """
-            DELETE FROM memo WHERE slug = ? AND audience = ?
+            DELETE FROM memo WHERE id = ?
             """,
             parameters: [
-                .text(address.slug.description),
-                .text(address.audience.rawValue)
+                .text(address.description)
             ]
         )
     }
@@ -832,7 +847,7 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-02-10T17:23:00")!,
+            version: Int.from(iso8601String: "2023-02-15T10:23:00")!,
             sql: """
             /*
             Key-value metadata related to the database.
@@ -846,16 +861,17 @@ extension Config {
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             );
-
+            
             /* History of user search queries */
             CREATE TABLE search_history (
                 id TEXT PRIMARY KEY,
                 query TEXT NOT NULL,
                 created TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
-
+            
             /* Memo table contains the content of any plain-text memo */
             CREATE TABLE memo (
+                id TEXT PRIMARY KEY,
                 slug TEXT NOT NULL,
                 audience TEXT NOT NULL,
                 content_type TEXT NOT NULL,
@@ -874,11 +890,11 @@ extension Config {
                 /* List of all slugs in body */
                 links TEXT NOT NULL DEFAULT '[]',
                 /* Size of body (used in combination with modified for sync) */
-                size INTEGER NOT NULL,
-                PRIMARY KEY (slug, audience)
+                size INTEGER NOT NULL
             );
-
+            
             CREATE VIRTUAL TABLE memo_search USING fts5(
+                id,
                 slug,
                 audience UNINDEXED,
                 content_type UNINDEXED,
@@ -895,27 +911,26 @@ extension Config {
                 content="memo",
                 tokenize="porter"
             );
-
+            
             /*
             Create triggers to keep fts5 virtual table in sync with content table.
-
             Note: SQLite documentation notes that you want to modify the fts table *before*
             the external content table, hence the BEFORE commands.
-
             These triggers are adapted from examples in the docs:
             https://www.sqlite.org/fts3.html#_external_content_fts4_tables_
             */
             CREATE TRIGGER memo_search_before_update BEFORE UPDATE ON memo BEGIN
                 DELETE FROM memo_search WHERE rowid=old.rowid;
             END;
-
+            
             CREATE TRIGGER memo_search_before_delete BEFORE DELETE ON memo BEGIN
                 DELETE FROM memo_search WHERE rowid=old.rowid;
             END;
-
+            
             CREATE TRIGGER memo_search_after_update AFTER UPDATE ON memo BEGIN
                 INSERT INTO memo_search (
                     rowid,
+                    id,
                     slug,
                     audience,
                     content_type,
@@ -932,6 +947,7 @@ extension Config {
                 )
                 VALUES (
                     new.rowid,
+                    new.id,
                     new.slug,
                     new.audience,
                     new.content_type,
@@ -947,10 +963,10 @@ extension Config {
                     new.size
                 );
             END;
-
             CREATE TRIGGER memo_search_after_insert AFTER INSERT ON memo BEGIN
                 INSERT INTO memo_search (
                     rowid,
+                    id,
                     slug,
                     audience,
                     content_type,
@@ -967,6 +983,7 @@ extension Config {
                 )
                 VALUES (
                     new.rowid,
+                    new.id,
                     new.slug,
                     new.audience,
                     new.content_type,
