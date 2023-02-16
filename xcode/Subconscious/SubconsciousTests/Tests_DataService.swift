@@ -39,7 +39,7 @@ final class Tests_DataService: XCTestCase {
         )
         
         let receipt = try noosphere.createSphere(ownerKeyName: "bob")
-        noosphere.updateDefaultSphere(receipt.identity)
+        noosphere.resetSphere(receipt.identity)
         
         let databaseURL = tmp.appending(
             path: "database.sqlite",
