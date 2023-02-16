@@ -68,7 +68,7 @@ public final class Noosphere {
         self.globalStoragePath = globalStoragePath
         self.sphereStoragePath = sphereStoragePath
         self.gatewayURL = gatewayURL
-        logger.debug("Noosphere.init")
+        logger.debug("init")
     }
     
     /// Create and configure a user and sphere
@@ -127,7 +127,7 @@ public final class Noosphere {
         let sphereIdentity = String.init(cString: sphereIdentityPointer)
         let sphereMnemonic = String.init(cString: sphereMnemonicPointer)
 
-        logger.log("Created sphere \(sphereIdentity)")
+        logger.log("Created sphere with identity \(sphereIdentity)")
 
         return SphereReceipt(
             identity: sphereIdentity,
@@ -137,7 +137,7 @@ public final class Noosphere {
     
     deinit {
         ns_free(noosphere)
-        logger.debug("Noosphere.deinit")
+        logger.debug("deinit")
     }
     
     static func callWithError<Z>(

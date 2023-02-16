@@ -82,7 +82,7 @@ public final class SphereFS: SphereProtocol {
             throw NoosphereError.nullPointer
         }
         self.fs = fs
-        logger.debug("SphereFS init with identity: \(identity)")
+        logger.debug("init with identity: \(identity)")
     }
     
     /// Get current version of sphere
@@ -349,7 +349,7 @@ public final class SphereFS: SphereProtocol {
     
     deinit {
         ns_sphere_fs_free(fs)
-        logger.debug("SphereFS.deinit with identity \(self.identity)")
+        logger.debug("deinit with identity \(self.identity)")
     }
     
     /// Read first header value for file pointer

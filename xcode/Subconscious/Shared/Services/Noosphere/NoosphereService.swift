@@ -14,6 +14,7 @@
 
 import Foundation
 import SwiftNoosphere
+import os
 
 enum NoosphereServiceError: Error, LocalizedError {
     case defaultSphereNotFound
@@ -28,6 +29,10 @@ enum NoosphereServiceError: Error, LocalizedError {
 
 /// Creates and manages Noosphere and default sphere singletons.
 final class NoosphereService: SphereProtocol {
+    private var logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "NoosphereService"
+    )
     var globalStorageURL: URL
     var sphereStorageURL: URL
     var gatewayURL: URL?
@@ -48,6 +53,8 @@ final class NoosphereService: SphereProtocol {
         self.sphereStorageURL = sphereStorageURL
         self.gatewayURL = gatewayURL
         self._sphereIdentity = sphereIdentity
+        logger.debug("Global storage URL: \(globalStorageURL.absoluteString)")
+        logger.debug("Sphere storage URL: \(sphereStorageURL.absoluteString)")
     }
     
     /// Create a default sphere for user and persist sphere details
@@ -63,6 +70,7 @@ final class NoosphereService: SphereProtocol {
     func updateDefaultSphere(_ identity: String?) {
         self._sphereIdentity = identity
         self._sphere = nil
+        logger.debug("Sphere identity updated: \(identity ?? "none")")
     }
     
     /// Update Gateway.
@@ -71,6 +79,7 @@ final class NoosphereService: SphereProtocol {
         self.gatewayURL = url
         self._noosphere = nil
         self._sphere = nil
+        logger.debug("Gateway updated: \(url?.absoluteString ?? "none")")
     }
     
     /// Gets or creates memoized Noosphere singleton instance
@@ -84,6 +93,7 @@ final class NoosphereService: SphereProtocol {
             gatewayURL: gatewayURL?.absoluteString
         )
         self._noosphere = noosphere
+        logger.debug("Initialized Noosphere")
         return noosphere
     }
     
@@ -101,6 +111,7 @@ final class NoosphereService: SphereProtocol {
             identity: identity
         )
         self._sphere = sphere
+        logger.debug("Initialized SphereFS \(sphere.identity)")
         return sphere
     }
     
