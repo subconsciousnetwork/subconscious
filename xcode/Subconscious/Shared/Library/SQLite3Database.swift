@@ -678,7 +678,7 @@ final class SQLite3Database {
         self.path = path
         self.mode = mode
         // Create GCD dispatch queue for running database queries.
-        // SQLite3Connection objects are threadsafe.
+        // We use this to ensure calls to SQLite3Database are threadsafe.
         // The queue is *always* serial, ensuring that SQL queries to this
         // database are run in-order, whether called sync or async.
         self.queue = DispatchQueue(
