@@ -17,7 +17,8 @@ struct AppView: View {
         state: AppModel(),
         environment: AppEnvironment.default
     )
-    
+    @Environment(\.scenePhase) private var scenePhase: ScenePhase
+
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -50,11 +51,22 @@ struct AppView: View {
             let message = String.loggable(action)
             AppModel.logger.debug("[action] \(message)")
         }
+        // Track changes to scene phase so we know when app gets
+        // foregrounded/backgrounded.
+        // See https://developer.apple.com/documentation/swiftui/scenephase
+        // 2023-02-16 Gordon Brander
+        .onChange(of: self.scenePhase) { phase in
+            store.send(.scenePhaseChange(phase))
+        }
     }
 }
 
 //  MARK: Action
 enum AppAction: CustomLogStringConvertible {
+    /// Scene phase events
+    /// See https://developer.apple.com/documentation/swiftui/scenephase
+    case scenePhaseChange(ScenePhase)
+
     /// On view appear
     case appear
 
@@ -76,6 +88,11 @@ enum AppAction: CustomLogStringConvertible {
 
     /// Set and persist first run complete state
     case persistFirstRunComplete(_ isComplete: Bool)
+
+    /// Reset Noosphere Service.
+    /// This calls `Noosphere.reset` which resets memoized instances of
+    /// `Noosphere` and `SphereFS`.
+    case resetNoosphereService
 
     //  Database
     /// Kick off database migration.
@@ -184,8 +201,17 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         switch action {
+        case .scenePhaseChange(let scenePhase):
+            return scenePhaseChange(
+                state: state,
+                environment: environment,
+                scenePhase: scenePhase
+            )
         case .appear:
-            return appear(state: state, environment: environment)
+            return appear(
+                state: state,
+                environment: environment
+            )
         case let .setNicknameTextField(nickname):
             return setNicknameTextField(
                 state: state,
@@ -229,6 +255,11 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 isComplete: isComplete
+            )
+        case .resetNoosphereService:
+            return resetNoosphereService(
+                state: state,
+                environment: environment
             )
         case .migrateDatabase:
             return migrateDatabase(state: state, environment: environment)
@@ -326,6 +357,24 @@ struct AppModel: ModelProtocol {
         return Update(state: state)
     }
     
+    /// Handle scene phase change
+    static func scenePhaseChange(
+        state: AppModel,
+        environment: AppEnvironment,
+        scenePhase: ScenePhase
+    ) -> Update<AppModel> {
+        switch scenePhase {
+        case .inactive:
+            return update(
+                state: state,
+                action: .resetNoosphereService,
+                environment: environment
+            )
+        default:
+            return Update(state: state)
+        }
+    }
+
     static func appear(
         state: AppModel,
         environment: AppEnvironment
@@ -476,6 +525,15 @@ struct AppModel: ModelProtocol {
         model.shouldPresentFirstRun = !isComplete
         return Update(state: model)
             .animation(.default)
+    }
+
+    /// Reset NoosphereService managed instances of `Noosphere` and `SphereFS`.
+    static func resetNoosphereService(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        environment.data.noosphere.reset()
+        return Update(state: state)
     }
 
     /// Make database ready.

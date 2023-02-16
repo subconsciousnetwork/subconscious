@@ -49,12 +49,15 @@ final class NoosphereService: SphereProtocol {
         gatewayURL: URL? = nil,
         sphereIdentity: String? = nil
     ) {
+        logger.debug("init NoosphereService")
+        logger.debug("Global storage URL: \(globalStorageURL.absoluteString)")
+        logger.debug("Sphere storage URL: \(sphereStorageURL.absoluteString)")
+        logger.debug("Gateway URL: \(gatewayURL?.absoluteString ?? "none")")
+        logger.debug("Sphere identity: \(sphereIdentity ?? "none")")
         self.globalStorageURL = globalStorageURL
         self.sphereStorageURL = sphereStorageURL
         self.gatewayURL = gatewayURL
         self._sphereIdentity = sphereIdentity
-        logger.debug("Global storage URL: \(globalStorageURL.absoluteString)")
-        logger.debug("Sphere storage URL: \(sphereStorageURL.absoluteString)")
     }
     
     /// Create a default sphere for user and persist sphere details
@@ -67,19 +70,26 @@ final class NoosphereService: SphereProtocol {
     }
     
     /// Set a new default sphere
-    func updateDefaultSphere(_ identity: String?) {
+    func resetSphere(_ identity: String?) {
+        logger.debug("Reset sphere identity: \(identity ?? "none")")
         self._sphereIdentity = identity
         self._sphere = nil
-        logger.debug("Sphere identity updated: \(identity ?? "none")")
     }
     
     /// Update Gateway.
     /// Resets memoized Noosphere and Sphere instances.
-    func updateGateway(url: URL?) {
+    func resetGateway(url: URL?) {
+        logger.debug("Reset gateway: \(url?.absoluteString ?? "none")")
         self.gatewayURL = url
         self._noosphere = nil
         self._sphere = nil
-        logger.debug("Gateway updated: \(url?.absoluteString ?? "none")")
+    }
+    
+    /// Reset managed instances of Noosphere and SphereFS
+    func reset() {
+        logger.debug("Reset memoized instances of Noosphere and Sphere")
+        self._noosphere = nil
+        self._sphere = nil
     }
     
     /// Gets or creates memoized Noosphere singleton instance
@@ -87,13 +97,13 @@ final class NoosphereService: SphereProtocol {
         if let noosphere = self._noosphere {
             return noosphere
         }
+        logger.debug("init Noosphere")
         let noosphere = try Noosphere(
             globalStoragePath: globalStorageURL.path(percentEncoded: false),
             sphereStoragePath: sphereStorageURL.path(percentEncoded: false),
             gatewayURL: gatewayURL?.absoluteString
         )
         self._noosphere = noosphere
-        logger.debug("Initialized Noosphere")
         return noosphere
     }
     
@@ -106,12 +116,12 @@ final class NoosphereService: SphereProtocol {
             throw NoosphereServiceError.defaultSphereNotFound
         }
         let noosphere = try noosphere()
+        logger.debug("init SphereFS with identity: \(identity)")
         let sphere = try SphereFS(
             noosphere: noosphere,
             identity: identity
         )
         self._sphere = sphere
-        logger.debug("Initialized SphereFS \(sphere.identity)")
         return sphere
     }
     

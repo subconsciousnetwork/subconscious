@@ -70,7 +70,7 @@ struct DataService {
         AppDefaults.standard.sphereIdentity = sphereReceipt.identity
         AppDefaults.standard.ownerKeyName = ownerKeyName
         // Set sphere identity on NoosphereService
-        noosphere.updateDefaultSphere(sphereReceipt.identity)
+        noosphere.resetSphere(sphereReceipt.identity)
         return sphereReceipt
     }
 
