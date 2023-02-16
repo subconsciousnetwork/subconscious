@@ -42,6 +42,9 @@ public struct SphereReceipt {
 ///   DB pointers, key storage interfaces, active HTTP clients etc.
 public final class Noosphere {
     let noosphere: OpaquePointer
+    let globalStoragePath: String
+    let sphereStoragePath: String
+    let gatewayURL: String?
     
     init(
         globalStoragePath: String,
@@ -57,6 +60,9 @@ public final class Noosphere {
             throw NoosphereError.nullPointer
         }
         self.noosphere = noosphere
+        self.globalStoragePath = globalStoragePath
+        self.sphereStoragePath = sphereStoragePath
+        self.gatewayURL = gatewayURL
     }
     
     /// Create and configure a user and sphere

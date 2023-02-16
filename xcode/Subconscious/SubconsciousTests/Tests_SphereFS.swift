@@ -22,23 +22,20 @@ final class Tests_SphereFS: XCTestCase {
         return url
     }
     
-    func createNoosphere(base: UUID = UUID()) throws -> Noosphere {
-        let base = UUID().uuidString
-
+    func testRoundtrip() throws {
+        let base = UUID()
+        
         let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
             .path()
         
         let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
             .path()
         
-        return try Noosphere(
+        let noosphere = try Noosphere(
             globalStoragePath: globalStoragePath,
             sphereStoragePath: sphereStoragePath
         )
-    }
-
-    func testRoundtrip() throws {
-        let noosphere = try createNoosphere()
+        
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
         do {
@@ -71,7 +68,19 @@ final class Tests_SphereFS: XCTestCase {
     }
     
     func testHeadersRoundtrip() throws {
-        let noosphere = try createNoosphere()
+        let base = UUID()
+        
+        let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
+            .path()
+        
+        let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
+            .path()
+        
+        let noosphere = try Noosphere(
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath
+        )
+        
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
         let sphere = try SphereFS(
@@ -110,7 +119,19 @@ final class Tests_SphereFS: XCTestCase {
     }
     
     func testList() throws {
-        let noosphere = try createNoosphere()
+        let base = UUID()
+        
+        let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
+            .path()
+        
+        let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
+            .path()
+        
+        let noosphere = try Noosphere(
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath
+        )
+        
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
         let sphere = try SphereFS(
@@ -152,7 +173,19 @@ final class Tests_SphereFS: XCTestCase {
     }
     
     func testChanges() throws {
-        let noosphere = try createNoosphere()
+        let base = UUID()
+        
+        let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
+            .path()
+        
+        let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
+            .path()
+        
+        let noosphere = try Noosphere(
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath
+        )
+        
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
         let sphere = try SphereFS(
@@ -206,7 +239,19 @@ final class Tests_SphereFS: XCTestCase {
     }
     
     func testRemove() throws {
-        let noosphere = try createNoosphere()
+        let base = UUID()
+        
+        let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
+            .path()
+        
+        let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
+            .path()
+        
+        let noosphere = try Noosphere(
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath
+        )
+        
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
         let sphere = try SphereFS(
@@ -241,7 +286,19 @@ final class Tests_SphereFS: XCTestCase {
     }
     
     func testSaveVersion() throws {
-        let noosphere = try createNoosphere()
+        let base = UUID()
+        
+        let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
+            .path()
+        
+        let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
+            .path()
+        
+        let noosphere = try Noosphere(
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath
+        )
+        
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
         let sphere = try SphereFS(
@@ -275,12 +332,12 @@ final class Tests_SphereFS: XCTestCase {
     }
     
     func testFailedSync() throws {
-        let scope = UUID().uuidString
-
-        let globalStoragePath = try createTmpDir(path: "\(scope)/noosphere")
+        let base = UUID()
+        
+        let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
             .path()
         
-        let sphereStoragePath = try createTmpDir(path: "\(scope)/sphere")
+        let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
             .path()
         
         let noosphere = try Noosphere(
@@ -318,32 +375,122 @@ final class Tests_SphereFS: XCTestCase {
             "Read current version"
         )
     }
+    
+    func testWritesThenCloseThenReopenWithScopes() throws {
+        let base = UUID()
+        
+        let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
+            .path()
+        
+        let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
+            .path()
+        
+        let sphereIdentity: String
+        let startVersion: String
+        let endVersion: String
+        do {
+            let noosphere = try Noosphere(
+                globalStoragePath: globalStoragePath,
+                sphereStoragePath: sphereStoragePath
+            )
+            
+            let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+            
+            sphereIdentity = sphereReceipt.identity
+            
+            let sphere = try SphereFS(
+                noosphere: noosphere,
+                identity: sphereReceipt.identity
+            )
+            
+            startVersion = try sphere.version()
+            
+            let body = try "Test content".toData().unwrap()
+            let contentType = "text/subtext"
+            try sphere.write(slug: "a", contentType: contentType, body: body)
+            try sphere.write(slug: "b", contentType: contentType, body: body)
+            try sphere.write(slug: "c", contentType: contentType, body: body)
+            let version = try sphere.save()
+            endVersion = try sphere.version()
+            XCTAssertEqual(version, endVersion)
+            XCTAssertNotEqual(startVersion, endVersion)
+        }
+        
+        do {
+            let noosphere = try Noosphere(
+                globalStoragePath: globalStoragePath,
+                sphereStoragePath: sphereStoragePath
+            )
+            
+            let sphere = try SphereFS(
+                noosphere: noosphere,
+                identity: sphereIdentity
+            )
+            let version = try sphere.version()
+            
+            XCTAssertEqual(version, endVersion)
+        }
+    }
+    
+    func testWritesThenCloseThenReopenWithVars() throws {
+        let base = UUID()
 
-    func testWritesThenCloseThenReopen() throws {
-        let uuid = UUID()
-        var noosphere = try createNoosphere(base: uuid)
+        let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
+            .path()
+        
+        let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
+            .path()
+        
+        var noosphere = try Noosphere(
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath
+        )
+
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
+        let sphereIdentity = sphereReceipt.identity
+
         var sphere = try SphereFS(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
-        let versionX = try sphere.version()
+
+        let versionA0 = try sphere.version()
+        print("Sphere @ \(versionA0)")
 
         let body = try "Test content".toData().unwrap()
         let contentType = "text/subtext"
         try sphere.write(slug: "a", contentType: contentType, body: body)
+
+        let versionA1 = try sphere.save()
+        print("Sphere saved @ \(versionA1)")
+
         try sphere.write(slug: "b", contentType: contentType, body: body)
         try sphere.write(slug: "c", contentType: contentType, body: body)
-        let versionY = try sphere.version()
+        let versionA2 = try sphere.save()
+        print("Sphere saved @ \(versionA2)")
 
-        noosphere = try createNoosphere(base: uuid)
+        let versionAN = try sphere.version()
+        print("Sphere version @ \(versionAN)")
+
+        XCTAssertNotEqual(versionA0, versionAN)
+        XCTAssertNotEqual(versionA1, versionAN)
+        XCTAssertEqual(versionA2, versionAN)
+
+        // Overwrite var with new instance
+        noosphere = try Noosphere(
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath
+        )
+        // Overwrite sphere with new sphere
         sphere = try SphereFS(
             noosphere: noosphere,
-            identity: sphereReceipt.identity
+            identity: sphereIdentity
         )
-        let versionZ = try sphere.version()
+        print("Sphere re-opened")
+        let versionB0 = try sphere.version()
+        print("Sphere version @ \(versionB0)")
 
-        XCTAssertEqual(versionY, versionZ)
+        XCTAssertEqual(versionB0, versionAN)
     }
 }
