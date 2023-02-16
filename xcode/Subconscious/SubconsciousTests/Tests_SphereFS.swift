@@ -456,22 +456,18 @@ final class Tests_SphereFS: XCTestCase {
         )
 
         let versionA0 = try sphere.version()
-        print("Sphere @ \(versionA0)")
 
         let body = try "Test content".toData().unwrap()
         let contentType = "text/subtext"
         try sphere.write(slug: "a", contentType: contentType, body: body)
 
         let versionA1 = try sphere.save()
-        print("Sphere saved @ \(versionA1)")
 
         try sphere.write(slug: "b", contentType: contentType, body: body)
         try sphere.write(slug: "c", contentType: contentType, body: body)
         let versionA2 = try sphere.save()
-        print("Sphere saved @ \(versionA2)")
 
         let versionAN = try sphere.version()
-        print("Sphere version @ \(versionAN)")
 
         XCTAssertNotEqual(versionA0, versionAN)
         XCTAssertNotEqual(versionA1, versionAN)
@@ -487,9 +483,7 @@ final class Tests_SphereFS: XCTestCase {
             noosphere: noosphere,
             identity: sphereIdentity
         )
-        print("Sphere re-opened")
         let versionB0 = try sphere.version()
-        print("Sphere version @ \(versionB0)")
 
         XCTAssertEqual(versionB0, versionAN)
     }
