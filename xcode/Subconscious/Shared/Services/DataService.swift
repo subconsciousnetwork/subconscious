@@ -176,7 +176,8 @@ struct DataService {
                     memo.modified = info.modified
                     try database.writeMemo(
                         MemoAddress(slug: left.slug, audience: .local),
-                        memo: memo
+                        memo: memo,
+                        size: info.size
                     )
                 // .rightOnly = delete. Remove from search index
                 case .rightOnly(let right):
