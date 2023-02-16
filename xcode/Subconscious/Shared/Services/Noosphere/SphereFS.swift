@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftNoosphere
+import os
 
 /// Describes a Sphere.
 /// See `SphereFS` for a concrete implementation.
@@ -62,6 +63,10 @@ enum SphereFSError: Error, LocalizedError {
 /// Sphere file system access.
 /// Provides sphere file system methods and manages lifetime of sphere pointer.
 public final class SphereFS: SphereProtocol {
+    private let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "SphereFS"
+    )
     private let noosphere: Noosphere
     public let fs: OpaquePointer
     public let identity: String
@@ -77,6 +82,7 @@ public final class SphereFS: SphereProtocol {
             throw NoosphereError.nullPointer
         }
         self.fs = fs
+        logger.debug("SphereFS init with identity: \(identity)")
     }
     
     /// Get current version of sphere
@@ -343,6 +349,7 @@ public final class SphereFS: SphereProtocol {
     
     deinit {
         ns_sphere_fs_free(fs)
+        logger.debug("SphereFS.deinit with identity \(self.identity)")
     }
     
     /// Read first header value for file pointer

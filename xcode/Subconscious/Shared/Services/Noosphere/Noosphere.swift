@@ -42,11 +42,14 @@ public struct SphereReceipt {
 /// - Property noosphere: pointer that holds all the internal book keeping.
 ///   DB pointers, key storage interfaces, active HTTP clients etc.
 public final class Noosphere {
+    private let logger: Logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "Noosphere"
+    )
     let noosphere: OpaquePointer
     let globalStoragePath: String
     let sphereStoragePath: String
     let gatewayURL: String?
-    let logger: Logger
     
     init(
         globalStoragePath: String,
@@ -65,10 +68,6 @@ public final class Noosphere {
         self.globalStoragePath = globalStoragePath
         self.sphereStoragePath = sphereStoragePath
         self.gatewayURL = gatewayURL
-        self.logger = Logger(
-            subsystem: Config.default.rdns,
-            category: "Noosphere"
-        )
         logger.debug("Noosphere.init")
     }
     
