@@ -14,6 +14,7 @@
 
 import Foundation
 import SwiftNoosphere
+import os
 
 public enum NoosphereError: Error, LocalizedError {
     /// Thrown when something unexpected happens on the other side of the FFI, and we don't know what went wrong.
@@ -45,6 +46,7 @@ public final class Noosphere {
     let globalStoragePath: String
     let sphereStoragePath: String
     let gatewayURL: String?
+    let logger: Logger
     
     init(
         globalStoragePath: String,
@@ -63,6 +65,11 @@ public final class Noosphere {
         self.globalStoragePath = globalStoragePath
         self.sphereStoragePath = sphereStoragePath
         self.gatewayURL = gatewayURL
+        self.logger = Logger(
+            subsystem: Config.default.rdns,
+            category: "Noosphere"
+        )
+        logger.debug("Noosphere.init")
     }
     
     /// Create and configure a user and sphere
@@ -120,7 +127,9 @@ public final class Noosphere {
         
         let sphereIdentity = String.init(cString: sphereIdentityPointer)
         let sphereMnemonic = String.init(cString: sphereMnemonicPointer)
-        
+
+        logger.log("Created sphere \(sphereIdentity)")
+
         return SphereReceipt(
             identity: sphereIdentity,
             mnemonic: sphereMnemonic
@@ -129,6 +138,7 @@ public final class Noosphere {
     
     deinit {
         ns_free(noosphere)
+        logger.debug("Noosphere.deinit")
     }
     
     static func callWithError<Z>(
