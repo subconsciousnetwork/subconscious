@@ -90,25 +90,31 @@ final class NoosphereService: SphereProtocol {
     
     /// Set a new default sphere
     func resetSphere(_ identity: String?) {
-        logger.debug("Reset sphere identity: \(identity ?? "none")")
-        self._sphereIdentity = identity
-        self._sphere = nil
+        queue.sync {
+            logger.debug("Reset sphere identity: \(identity ?? "none")")
+            self._sphereIdentity = identity
+            self._sphere = nil
+        }
     }
     
     /// Update Gateway.
     /// Resets memoized Noosphere and Sphere instances.
     func resetGateway(url: URL?) {
-        logger.debug("Reset gateway: \(url?.absoluteString ?? "none")")
-        self.gatewayURL = url
-        self._noosphere = nil
-        self._sphere = nil
+        queue.sync {
+            logger.debug("Reset gateway: \(url?.absoluteString ?? "none")")
+            self.gatewayURL = url
+            self._noosphere = nil
+            self._sphere = nil
+        }
     }
     
     /// Reset managed instances of Noosphere and SphereFS
     func reset() {
-        logger.debug("Reset memoized instances of Noosphere and Sphere")
-        self._noosphere = nil
-        self._sphere = nil
+        queue.sync {
+            logger.debug("Reset memoized instances of Noosphere and Sphere")
+            self._noosphere = nil
+            self._sphere = nil
+        }
     }
     
     /// Gets or creates memoized Noosphere singleton instance
