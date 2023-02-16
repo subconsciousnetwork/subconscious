@@ -138,6 +138,8 @@ enum AppAction: CustomLogStringConvertible {
         switch self {
         case let .succeedMigrateDatabase(version):
             return "succeedMigrateDatabase(\(version))"
+        case let .succeedSyncLocalFilesWithDatabase(fingerprints):
+            return "succeedSyncLocalFilesWithDatabase(...) \(fingerprints.count) items"
         default:
             return String(describing: self)
         }
