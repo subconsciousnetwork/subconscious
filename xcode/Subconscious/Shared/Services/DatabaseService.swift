@@ -37,19 +37,22 @@ enum DatabaseServiceError: Error, LocalizedError {
     case pathNotInFilePath
     case randomEntryFailed
     case notFound(String)
+    case sizeMissingForLocal
 
     var errorDescription: String? {
         switch self {
         case let .invalidStateTransition(from, to):
-            return "DatabaseServiceError.invalidStateTransition(\(from), \(to))"
+            return "Invalid state transition \(from) -> \(to)"
         case .notReady:
-            return "DatabaseServiceError.notReady"
+            return "Database not ready"
         case .pathNotInFilePath:
-            return "DatabaseServiceError.pathNotInFilePath"
+            return "Path not in file path"
         case .randomEntryFailed:
-            return "DatabaseServiceError.randomEntryFailed"
-        default:
-            return String(describing: self)
+            return "Failed to get random entry"
+        case .sizeMissingForLocal:
+            return "Size missing for local memo. Size is required for local memos."
+        case .notFound(let message):
+            return "Not found: \(message)"
         }
     }
 }
@@ -159,20 +162,15 @@ final class DatabaseService {
     /// Write entry syncronously
     func writeMemo(
         _ address: MemoAddress,
-        memo: Memo
+        memo: Memo,
+        size: Int? = nil
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        // If memo is local, calculate what the size of the file will be
-        // as header subtext. We use this as a smell test for whether to sync.
-        // If memo is not local, we don't need a size, and default to 0.
-        // TODO: remove size when we migrate local content to private sphere
-        let size = (
-            address.audience == .local ?
-            memo.toHeaderSubtext().size() :
-            0
-        )
+        if address.audience == .local && size == nil {
+            throw DatabaseServiceError.sizeMissingForLocal
+        }
         try database.execute(
             sql: """
             INSERT INTO memo (
@@ -221,7 +219,7 @@ final class DatabaseService {
                 .text(memo.plain()),
                 .text(memo.excerpt()),
                 .json(memo.slugs(), or: "[]"),
-                .integer(size)
+                .integer(size ?? 0)
             ]
         )
     }

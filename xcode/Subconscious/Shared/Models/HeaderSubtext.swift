@@ -18,10 +18,6 @@ struct HeaderSubtext: Hashable, CustomStringConvertible {
     func toMarkup() -> String {
         self.description
     }
-    
-    func size() -> Int {
-        self.toMarkup().lengthOfBytes(using: .utf8)
-    }
 }
 
 extension String {

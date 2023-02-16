@@ -249,7 +249,8 @@ struct DataService {
             memo.modified = info.modified
             try database.writeMemo(
                 address,
-                memo: memo
+                memo: memo,
+                size: info.size
             )
             return
         }
