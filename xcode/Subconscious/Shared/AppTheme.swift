@@ -12,6 +12,7 @@ enum AppTheme {}
 //  MARK: Theme units
 extension AppTheme {
     static let unit: CGFloat = 4
+    static let unitHalf: CGFloat = unit / 2
     static let unit2 = unit * 2
     static let unit3 = unit * 3
     static let unit4 = unit * 4

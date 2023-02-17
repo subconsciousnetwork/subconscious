@@ -15,7 +15,7 @@ struct EntryRow: View, Equatable {
     var emptyExcerpt = "No additional text"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
             HStack {
                 Text(
                     !entry.title.isEmpty ?
