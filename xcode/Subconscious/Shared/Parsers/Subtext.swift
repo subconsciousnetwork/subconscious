@@ -441,7 +441,7 @@ extension Subtext {
             if let url = bracketlink.url {
                 attributedString.addAttribute(
                     .foregroundColor,
-                    value: UIColor(Color.tertiaryText),
+                    value: UIColor(Color.tertiaryLabel),
                     range: NSRange(
                         bracketlink.span.range,
                         in: attributedString.string
@@ -478,7 +478,7 @@ extension Subtext {
             {
                 attributedString.addAttribute(
                     .foregroundColor,
-                    value: UIColor(Color.tertiaryText),
+                    value: UIColor(Color.tertiaryLabel),
                     range: NSRange(
                         wikilink.span.range,
                         in: attributedString.string
@@ -559,7 +559,7 @@ extension Subtext {
         // Set text color
         attributedString.addAttribute(
             .foregroundColor,
-            value: UIColor(Color.text),
+            value: UIColor(Color.primary),
             range: baseNSRange
         )
 

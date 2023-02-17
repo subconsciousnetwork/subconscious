@@ -18,7 +18,7 @@ struct RowButtonStyle: ButtonStyle {
                 Rectangle()
                     .foregroundColor(
                         configuration.isPressed ?
-                        Color.pressedBackground :
+                        Color.backgroundPressed :
                         Color.clear
                     )
             }

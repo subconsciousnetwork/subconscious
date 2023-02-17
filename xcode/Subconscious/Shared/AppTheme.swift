@@ -57,26 +57,26 @@ extension UIFont {
 }
 
 //  MARK: Color
-//  String color names are references to ColorSet assets, and can be found
-//  in Assets.xassets. Each ColorSet contains a light and dark mode, and color
-//  is resolved at runtime.
-//  2021-12-15 Gordon Brander
 extension Color {
     static let separator = SwiftUI.Color(uiColor: UIColor.separator)
-    static let text = SwiftUI.Color("TextColor")
-    static let placeholderText = SwiftUI.Color("PlaceholderTextColor")
-    static let textPressed = text.opacity(0.5)
-    static let textDisabled = placeholderText
-    static let tertiaryText = placeholderText
+    static let placeholderText = SwiftUI.Color(
+        uiColor: UIColor.placeholderText
+    )
+    static let disabled = placeholderText
+    static let tertiaryLabel = SwiftUI.Color(uiColor: .tertiaryLabel)
     static let icon = SwiftUI.Color.accentColor
     static let secondaryIcon = SwiftUI.Color.secondary
-    static let tertiaryIcon = SwiftUI.Color(UIColor.tertiarySystemFill)
+    static let tertiaryIcon = SwiftUI.Color(
+        uiColor: UIColor.tertiarySystemFill
+    )
     static let buttonText = SwiftUI.Color.accentColor
     /// Fill for pressed-state overlays
-    static let pressedBackground = SwiftUI.Color(UIColor.systemFill)
-    static let background = SwiftUI.Color("BackgroundColor")
-    static let secondaryBackground = SwiftUI.Color("SecondaryBackgroundColor")
-    static let inputBackground = SwiftUI.Color("InputBackgroundColor")
+    static let background = SwiftUI.Color(uiColor: UIColor.systemBackground)
+    static let secondaryBackground = SwiftUI.Color(
+        uiColor: UIColor.secondarySystemBackground
+    )
+    static let backgroundPressed = SwiftUI.Color(UIColor.systemFill)
+    static let inputBackground = SwiftUI.Color(uiColor: .secondarySystemFill)
     static let primaryButtonBackground = Color.accentColor.opacity(0.2)
     static let primaryButtonBackgroundPressed = primaryButtonBackground
         .opacity(0.5)

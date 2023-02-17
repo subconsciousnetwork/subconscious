@@ -16,7 +16,7 @@ struct ToolbarTitleGroupView: View, Equatable {
             Spacer()
             VStack(spacing: AppTheme.unit) {
                 title
-                    .foregroundColor(Color.text)
+                    .foregroundColor(Color.primary)
                     .frame(height: AppTheme.textSize)
                     .lineLimit(1)
                 subtitle

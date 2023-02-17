@@ -19,7 +19,7 @@ struct TitleGroupView: View, Equatable {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 title
-                    .foregroundColor(Color.text)
+                    .foregroundColor(Color.primary)
                 Spacer()
             }
             .frame(minHeight: AppTheme.icon)

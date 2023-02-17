@@ -45,7 +45,7 @@ struct MetaTableRowView: View {
                             .textCase(.uppercase)
                         text
                             .lineLimit(1)
-                            .foregroundColor(.text)
+                            .foregroundColor(.primary)
                     }
                     Spacer()
                 }
