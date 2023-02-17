@@ -9,7 +9,7 @@ import Foundation
 
 protocol MigrationProtocol {
     var version: Int { get }
-    func migrate(_ connection: SQLite3Database.Connection) throws
+    func migrate(_ connection: SQLite3Database) throws
 }
 
 /// A declarative SQL-only migration
@@ -17,8 +17,8 @@ struct SQLMigration: MigrationProtocol {
     var version: Int
     var sql: String
 
-    func migrate(_ connection: SQLite3Database.Connection) throws {
-        try connection.executescript(sql: sql)
+    func migrate(_ database: SQLite3Database) throws {
+        try database.executescript(sql: sql)
     }
 }
 
@@ -27,15 +27,15 @@ struct Migration<Environment>: MigrationProtocol {
     var version: Int
     private var environment: Environment
     private var perform: (
-        SQLite3Database.Connection,
+        SQLite3Database,
         Environment
     ) throws -> Void
-    
+
     init(
         version: Int,
         environment: Environment,
         perform: @escaping (
-            SQLite3Database.Connection,
+            SQLite3Database,
             Environment
         ) throws -> Void
     ) {
@@ -43,9 +43,9 @@ struct Migration<Environment>: MigrationProtocol {
         self.environment = environment
         self.perform = perform
     }
-    
-    func migrate(_ connection: SQLite3Database.Connection) throws {
-        try self.perform(connection, self.environment)
+
+    func migrate(_ database: SQLite3Database) throws {
+        try self.perform(database, self.environment)
     }
 }
 
@@ -79,8 +79,7 @@ struct Migrations {
     /// Applies migrations in sequence, skipping everything up to and including
     /// current version, then applying versions after that one by one.
     func migrate(_ database: SQLite3Database) throws -> Int {
-        let connection = try database.open()
-        let version = try connection.getUserVersion()
+        let version = try database.getUserVersion()
         var versions: Set<Int> = Set(
             migrations.map({ migration in migration.version })
         )
@@ -93,18 +92,18 @@ struct Migrations {
                 continue
             }
             // Mark rollback savepoint
-            try connection.executescript(sql: "SAVEPOINT premigration;")
+            try database.executescript(sql: "SAVEPOINT premigration;")
             do {
                 // Try migration
-                try migration.migrate(connection)
+                try migration.migrate(database)
                 // Mark version
-                try connection.executescript(
+                try database.executescript(
                     sql: """
                     PRAGMA user_version = \(migration.version);
                     """
                 )
                 // Release savepoint
-                try connection.executescript(
+                try database.executescript(
                     sql: "RELEASE SAVEPOINT premigration;"
                 )
             } catch {
@@ -113,7 +112,7 @@ struct Migrations {
                 // out as if it never happened, whereas ROLLBACK TO rewinds
                 // to the beginning of the transaction. We want the former.
                 // https://sqlite.org/lang_savepoint.html
-                try connection.executescript(
+                try database.executescript(
                     sql: "ROLLBACK TO SAVEPOINT premigration;"
                 )
                 throw MigrationsError.migrationFailed(
@@ -122,6 +121,6 @@ struct Migrations {
                 )
             }
         }
-        return try connection.getUserVersion()
+        return try database.getUserVersion()
     }
 }

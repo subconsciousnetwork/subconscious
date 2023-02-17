@@ -63,27 +63,27 @@ struct RenameSearchView: View {
 struct RenameSearchView_Previews: PreviewProvider {
     static var previews: some View {
         RenameSearchView(
-            current: EntryLink(title: "Flop")!,
+            current: EntryLink(title: "Loomings", audience: .local)!,
             suggestions: [
                 .move(
                     from: EntryLink(
-                        slug: Slug("flop")!,
-                        title: "Flop"
-                    ),
+                        title: "Loomings",
+                        audience: .public
+                    )!,
                     to: EntryLink(
-                        slug: Slug("zoom")!,
-                        title: "Zoom"
-                    )
+                        title: "The Lee Shore",
+                        audience: .public
+                    )!
                 ),
                 .merge(
                     parent: EntryLink(
-                        slug: Slug("card-wars")!,
-                        title: "Card wars"
-                    ),
+                        title: "Breakfast",
+                        audience: .public
+                    )!,
                     child: EntryLink(
-                        slug: Slug("floop")!,
-                        title: "Floop"
-                    )
+                        title: "The Street",
+                        audience: .public
+                    )!
                 )
             ],
             text: .constant(""),

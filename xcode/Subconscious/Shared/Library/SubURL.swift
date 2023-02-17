@@ -7,17 +7,7 @@
 
 import Foundation
 
-/// Namespace for functions related to custom `sub://` protocol
-/// used by in-app links.
-enum SubURL {}
-
-extension SubURL {
-    static func isSubEntryURL(_ url: URL) -> Bool {
-        url.scheme == "sub" && url.host == "entry"
-    }
-}
-
-extension EntryLink {
+extension UnqualifiedLink {
     /// Create a Subconscious app-specific URL encoding entry title and slug
     func encodeAsSubEntryURL() -> URL? {
         guard var components = URLComponents(
@@ -33,7 +23,7 @@ extension EntryLink {
     }
 
     /// Construct entry link from sub entry URL
-    static func decodefromSubEntryURL(_ url: URL) -> EntryLink? {
+    static func decodefromSubEntryURL(_ url: URL) -> UnqualifiedLink? {
         guard url.scheme == "sub" && url.host == "entry" else {
             return nil
         }
@@ -43,22 +33,22 @@ extension EntryLink {
         ) else {
             return nil
         }
-        let slug = Slug(formatting: components.path)
-        let title = components.firstQueryItemWhere(name: "title")?.value
-        if let title = title, let slug = slug {
-            return EntryLink(slug: slug, title: title)
-        } else if let slug = slug {
-            return EntryLink(slug: slug)
+        guard let slug = Slug(formatting: components.path) else {
+            return nil
         }
-        return nil
+        let title = components.firstQueryItemWhere(name: "title")?.value
+        return slug.toUnqualifiedLink(title: title)
     }
 }
 
 extension Subtext {
     private static func linkToURLString(
-        _ link: EntryLink
+        slug: String,
+        title: String
     ) -> URL? {
-        link.encodeAsSubEntryURL()
+        Slug(formatting: slug)?
+            .toUnqualifiedLink(title: title)?
+            .encodeAsSubEntryURL()
     }
 
     static func renderAttributesOf(

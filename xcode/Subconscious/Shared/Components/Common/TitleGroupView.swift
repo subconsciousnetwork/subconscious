@@ -26,7 +26,7 @@ struct TitleGroupView: View, Equatable {
             HStack {
                 subtitle
                     .font(.caption)
-                    .foregroundColor(Color.secondaryText)
+                    .foregroundColor(Color.secondary)
                 Spacer()
             }
             .frame(minHeight: AppTheme.captionSize)

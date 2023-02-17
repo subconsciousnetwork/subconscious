@@ -11,7 +11,7 @@ import SwiftUI
 struct EntryListView: View {
     var entries: [EntryStub]?
     var onEntryPress: (EntryStub) -> Void
-    var onEntryDelete: (Slug) -> Void
+    var onEntryDelete: (MemoAddress) -> Void
     var onRefresh: () -> Void
 
     var body: some View {
@@ -35,7 +35,7 @@ struct EntryListView: View {
                             Button(
                                 role: .destructive,
                                 action: {
-                                    onEntryDelete(entry.slug)
+                                    onEntryDelete(entry.address)
                                 }
                             ) {
                                 Text("Delete")
@@ -86,7 +86,7 @@ struct EntryListView: View {
                 .multilineTextAlignment(.center)
                 .padding()
                 .frame(maxWidth: .infinity)
-                .foregroundColor(Color.secondaryText)
+                .foregroundColor(Color.secondary)
                 .background(Color.background)
                 .transition(.opacity)
             }

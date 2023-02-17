@@ -10,7 +10,7 @@ import SwiftUI
 /// A story is a single update within the FeedView
 struct StoryPromptView: View {
     var story: StoryPrompt
-    var action: (EntryLink, String) -> Void
+    var action: (MemoAddress, String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -31,16 +31,16 @@ struct StoryPromptView: View {
                 Button(
                     action: {
                         action(
-                            story.entry.link,
-                            story.entry.link.linkableTitle
+                            story.entry.address,
+                            story.entry.title
                         )
                     },
                     label: {
                         TranscludeView(
                             pfp: Image("pfp-dog"),
                             petname: "@doge",
-                            slug: story.entry.slug.toSlashlink(),
-                            title: story.entry.linkableTitle,
+                            slug: story.entry.address.slug.toSlashlink(),
+                            title: story.entry.title,
                             excerpt: story.entry.excerpt
                         )
                     }
@@ -53,8 +53,8 @@ struct StoryPromptView: View {
                 Button(
                     action: {
                         action(
-                            story.entry.link,
-                            story.entry.link.linkableTitle
+                            story.entry.address,
+                            story.entry.title
                         )
                     },
                     label: {
@@ -76,7 +76,10 @@ struct StoryPromptView_Previews: PreviewProvider {
             story: StoryPrompt(
                 entry: EntryStub(
                     MemoEntry(
-                        slug: Slug("meme")!,
+                        address: MemoAddress(
+                            slug: Slug("meme")!,
+                            audience: .public
+                        ),
                         contents: Memo(
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,

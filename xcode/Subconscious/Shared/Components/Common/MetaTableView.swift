@@ -38,7 +38,7 @@ struct MetaTableRowView: View {
                     icon
                         .frame(width: AppTheme.icon, height: AppTheme.icon)
                         .foregroundColor(Color.accentColor)
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
                         label
                             .font(.caption2)
                             .foregroundColor(.secondary)

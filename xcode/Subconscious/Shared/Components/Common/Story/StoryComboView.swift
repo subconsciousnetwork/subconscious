@@ -10,7 +10,7 @@ import SwiftUI
 /// A story is a single update within the FeedView
 struct StoryComboView: View {
     var story: StoryCombo
-    var action: (EntryLink, String) -> Void
+    var action: (MemoAddress, String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -31,14 +31,14 @@ struct StoryComboView: View {
                 
                 Button(
                     action: {
-                        action(story.entryA.link, story.entryA.linkableTitle)
+                        action(story.entryA.address, story.entryA.title)
                     },
                     label: {
                         TranscludeView(
                             pfp: Image("pfp-dog"),
                             petname: "@doge",
-                            slug: story.entryA.slug.toSlashlink(),
-                            title: story.entryA.linkableTitle,
+                            slug: story.entryA.address.slug.toSlashlink(),
+                            title: story.entryA.title,
                             excerpt: story.entryA.excerpt
                         )
                     }
@@ -47,14 +47,14 @@ struct StoryComboView: View {
                 
                 Button(
                     action: {
-                        action(story.entryB.link, story.entryB.linkableTitle)
+                        action(story.entryB.address, story.entryB.title)
                     },
                     label: {
                         TranscludeView(
                             pfp: Image("pfp-dog"),
                             petname: "@doge",
-                            slug: story.entryB.slug.toSlashlink(),
-                            title: story.entryB.linkableTitle,
+                            slug: story.entryB.address.slug.toSlashlink(),
+                            title: story.entryB.title,
                             excerpt: story.entryB.excerpt
                         )
                     }
@@ -70,7 +70,7 @@ struct StoryComboView: View {
                             return
                         }
                         let link = EntryLink(entry)
-                        self.action(link, entry.contents.body.description)
+                        self.action(entry.address, entry.contents.title)
                     },
                     label: {
                         Text("Create")
@@ -92,7 +92,10 @@ struct StoryComboView_Previews: PreviewProvider {
                 prompt: "How are these similar?",
                 entryA: EntryStub(
                     MemoEntry(
-                        slug: Slug("meme")!,
+                        address: MemoAddress(
+                            slug: Slug("meme")!,
+                            audience: .local
+                        ),
                         contents: Memo(
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,
@@ -110,7 +113,10 @@ struct StoryComboView_Previews: PreviewProvider {
                 ),
                 entryB: EntryStub(
                     MemoEntry(
-                        slug: Slug("meme")!,
+                        address: MemoAddress(
+                            slug: Slug("meme")!,
+                            audience: .local
+                        ),
                         contents: Memo(
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,

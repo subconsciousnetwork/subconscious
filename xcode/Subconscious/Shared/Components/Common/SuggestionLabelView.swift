@@ -22,7 +22,7 @@ struct SuggestionLabelView: View, Equatable {
                 title: {
                     TitleGroupView(
                         title: Text(readTitle(entryLink.title)),
-                        subtitle: Text(String(entryLink.slug))
+                        subtitle: Text(String(entryLink.address.slug))
                     )
                 },
                 icon: {
@@ -34,7 +34,7 @@ struct SuggestionLabelView: View, Equatable {
                 title: {
                     TitleGroupView(
                         title: Text(readTitle(entryLink.title)),
-                        subtitle: Text(String(entryLink.slug))
+                        subtitle: Text(String(entryLink.address.slug))
                     )
                 },
                 icon: {
@@ -46,7 +46,7 @@ struct SuggestionLabelView: View, Equatable {
                 title: {
                     TitleGroupView(
                         title: Text("Create note"),
-                        subtitle: Text(String(entryLink.slug))
+                        subtitle: Text(String(entryLink.address.slug))
                     )
                 },
                 icon: {
@@ -74,9 +74,9 @@ struct SuggestionLabelView_Previews: PreviewProvider {
         SuggestionLabelView(
             suggestion: .search(
                 EntryLink(
-                    slug: Slug("floop")!,
-                    title: "Floop the pig"
-                )
+                    title: "Floop the pig",
+                    audience: .public
+                )!
             )
         )
     }

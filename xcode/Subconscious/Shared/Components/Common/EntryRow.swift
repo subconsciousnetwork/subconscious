@@ -15,11 +15,11 @@ struct EntryRow: View, Equatable {
     var emptyExcerpt = "No additional text"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
             HStack {
                 Text(
-                    !entry.link.title.isEmpty ?
-                    entry.link.title :
+                    !entry.title.isEmpty ?
+                    entry.title :
                     emptyTitle
                 )
                 .lineLimit(1)
@@ -36,20 +36,51 @@ struct EntryRow: View, Equatable {
                     )
                 )
                 .font(.callout)
-                .foregroundColor(Color.secondaryText)
+                .foregroundColor(Color.secondary)
             }
             Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
                 .lineLimit(1)
+                .font(.callout)
                 .multilineTextAlignment(.leading)
-                .foregroundColor(Color.secondaryText)
+                .foregroundColor(Color.secondary)
             HStack(spacing: AppTheme.unit) {
-                Image(systemName: "doc")
+                Image(audience: entry.address.audience)
                     .font(.system(size: 12))
-                Text(entry.slug.description)
+                Text(entry.address.slug.description)
             }
+            .font(.callout)
             .lineLimit(1)
-            .foregroundColor(Color.secondaryText)
+            .foregroundColor(Color.secondary)
             .multilineTextAlignment(.leading)
+        }
+    }
+}
+
+struct EntryRow_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack {
+            EntryRow(
+                entry: EntryStub(
+                    address: MemoAddress(
+                        slug: Slug(formatting: "Anything that can be derived should be derived")!,
+                        audience: .local
+                    ),
+                    title: "Anything that can be derived should be derived",
+                    excerpt: "Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
+                    modified: Date.now
+                )
+            )
+            EntryRow(
+                entry: EntryStub(
+                    address: MemoAddress(
+                        slug: Slug(formatting: "Anything that can be derived should be derived")!,
+                        audience: .public
+                    ),
+                    title: "Anything that can be derived should be derived",
+                    excerpt: "Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
+                    modified: Date.now
+                )
+            )
         }
     }
 }

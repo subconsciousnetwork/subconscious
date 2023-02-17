@@ -16,8 +16,6 @@ struct Config: Equatable, Codable {
 
     var appTabs = false
 
-    var notesDirectory = "notes"
-
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
 
@@ -48,14 +46,13 @@ extension Config {
 
 // MARK: Noosphere configuration
 struct NoosphereConfig: Equatable, Codable {
-    /// Enable Noosphere?
-    var enabled = false
     /// Name of directory used for Noosphere storage
     var globalStoragePath = "noosphere"
     /// Name of directory used for sphere storage.
     /// NOTE: In future, we might support multiple spheres. If so, this
     /// flag will be deprecated in favor of multiple spheres
     var sphereStoragePath = "sphere"
-    /// Owner key name for spheres on this device
-    var ownerKeyName = "Sphere"
+    /// Default owner key name for spheres on this device
+    var ownerKeyName = "User"
+    var defaultGatewayURL = "http://127.0.0.1:4433"
 }

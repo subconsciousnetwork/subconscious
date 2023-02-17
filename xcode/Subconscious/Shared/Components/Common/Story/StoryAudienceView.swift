@@ -19,10 +19,10 @@ struct StoryAudienceView: View {
                         icon: Image(systemName: "network"),
                         text: Text("**Public**: everyone can see this")
                     )
-                case .private:
+                case .local:
                     StoryAudienceTemplateView(
                         icon: Image(systemName: "eye.fill"),
-                        text: Text("**Private**: only you can see this")
+                        text: Text("**Local**: only you can see this")
                     )
                 }
                 Spacer()
@@ -52,7 +52,7 @@ struct StoryAudienceInfoView_Previews: PreviewProvider {
     static var previews: some View {
         VStack(spacing: 0) {
             StoryAudienceView(audience: .public)
-            StoryAudienceView(audience: .private)
+            StoryAudienceView(audience: .local)
         }
     }
 }

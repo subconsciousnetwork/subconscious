@@ -16,14 +16,19 @@ struct EntryStub:
     CustomDebugStringConvertible,
     Codable
 {
-    let link: EntryLink
+    let address: MemoAddress
+    let title: String
     let excerpt: String
     let modified: Date
 
-    var slug: Slug { link.slug }
-    var linkableTitle: String { link.linkableTitle }
-    var id: Slug { slug }
+    var id: MemoAddress { address }
     var debugDescription: String {
-        "Subconscious.EntryStub(\(slug))"
+        "Subconscious.EntryStub(\(address))"
+    }
+}
+
+extension EntryLink {
+    init(_ stub: EntryStub) {
+        self.init(address: stub.address, title: stub.title)
     }
 }

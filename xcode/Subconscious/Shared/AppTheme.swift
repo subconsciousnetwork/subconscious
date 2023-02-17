@@ -12,6 +12,7 @@ enum AppTheme {}
 //  MARK: Theme units
 extension AppTheme {
     static let unit: CGFloat = 4
+    static let unitHalf: CGFloat = unit / 2
     static let unit2 = unit * 2
     static let unit3 = unit * 3
     static let unit4 = unit * 4
@@ -66,10 +67,9 @@ extension Color {
     static let placeholderText = SwiftUI.Color("PlaceholderTextColor")
     static let textPressed = text.opacity(0.5)
     static let textDisabled = placeholderText
-    static let secondaryText = SwiftUI.Color("SecondaryTextColor")
     static let tertiaryText = placeholderText
     static let icon = SwiftUI.Color.accentColor
-    static let secondaryIcon = SwiftUI.Color.secondaryText
+    static let secondaryIcon = SwiftUI.Color.secondary
     static let tertiaryIcon = SwiftUI.Color(UIColor.tertiarySystemFill)
     static let buttonText = SwiftUI.Color.accentColor
     /// Fill for pressed-state overlays

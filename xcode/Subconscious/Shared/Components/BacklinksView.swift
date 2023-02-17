@@ -26,15 +26,11 @@ struct BacklinksView: View {
                     Button(
                         action: {
                             onSelect(
-                                EntryLink(
-                                    slug: entry.slug,
-                                    title: entry.linkableTitle
-                                )
+                                EntryLink(entry)
                             )
                         },
                         label: {
-                            EntryRow(entry: entry)
-                                .equatable()
+                            EntryRow(entry: entry).equatable()
                         }
                     )
                     .buttonStyle(BacklinkButtonStyle())
@@ -43,7 +39,7 @@ struct BacklinksView: View {
                 Divider()
                 TitleGroupView(
                     title: Text("No backlinks yet")
-                        .foregroundColor(Color.secondaryText),
+                        .foregroundColor(Color.secondary),
                     subtitle: Text(
                         "Links to this note will appear here"
                     )
@@ -61,7 +57,20 @@ struct BacklinksView_Previews: PreviewProvider {
             BacklinksView(
                 backlinks: [
                     EntryStub(
-                        link: EntryLink(title: "Floop")!,
+                        address: MemoAddress(
+                            formatting: "The Lee Shore",
+                            audience: .local
+                        )!,
+                        title: "The Lee Shore",
+                        excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
+                        modified: Date.now
+                    ),
+                    EntryStub(
+                        address: MemoAddress(
+                            formatting: "Loomings",
+                            audience: .public
+                        )!,
+                        title: "Floop",
                         excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
                         modified: Date.now
                     )

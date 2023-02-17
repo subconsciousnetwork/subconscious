@@ -57,11 +57,17 @@ struct RenameSuggestionLabel_Previews: PreviewProvider {
         RenameSuggestionLabelView(
             suggestion: .move(
                 from: EntryLink(
-                    slug: Slug("loomings")!,
+                    address: MemoAddress(
+                        formatting: "loomings",
+                        audience: .public
+                    )!,
                     title: "Loomings"
                 ),
                 to: EntryLink(
-                    slug: Slug("the-lee-shore")!,
+                    address: MemoAddress(
+                        formatting: "the-lee-shore",
+                        audience: .public
+                    )!,
                     title: "The Lee Shore"
                 )
             )

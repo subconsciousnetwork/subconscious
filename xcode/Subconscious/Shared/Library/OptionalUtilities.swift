@@ -7,42 +7,25 @@
 
 import Foundation
 
-extension Optional {
-    struct NilError: Error {
-        let file: String
-        let line: Int
-        let column: Int
-        let function: String
-    }
-}
-
-extension Optional {
-    /// Unwrap an optional, throwing a NilError if nil.
-    func unwrap(
-        file: String = #file,
-        line: Int = #line,
-        column: Int = #column,
-        function: String = #function
-    ) throws -> Wrapped {
-        return try unwrap(
-            NilError(
-                file: file,
-                line: line,
-                column: column,
-                function: function
-            )
-        )
+enum UnwrapError: Error, LocalizedError {
+    case nilError
+    
+    var errorDescription: String? {
+        switch self {
+        case .nilError:
+            return "Failed to unwrap value"
+        }
     }
 }
 
 extension Optional {
     /// Unwrap an optional, throwing an error if nil.
-    func unwrap(_ error: @autoclosure () -> Error) throws -> Wrapped {
+    func unwrap(_ error: Error = UnwrapError.nilError) throws -> Wrapped {
         switch self {
         case .some(let value):
             return value
         case .none:
-            throw error()
+            throw error
         }
     }
 }
@@ -56,18 +39,6 @@ extension Optional {
         case .none:
             return fallback
         }
-    }
-}
-
-extension Optional.NilError: LocalizedError {
-    public var errorDescription: String? {
-        """
-        Failed to unwrap nil value (Optional.NilError)
-        File: \(self.file)
-        Line: \(self.line)
-        Column: \(self.column)
-        Function: \(self.function)
-        """
     }
 }
 

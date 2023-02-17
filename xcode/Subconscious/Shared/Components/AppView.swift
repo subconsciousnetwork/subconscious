@@ -17,28 +17,32 @@ struct AppView: View {
         state: AppModel(),
         environment: AppEnvironment.default
     )
-    
+    @Environment(\.scenePhase) private var scenePhase: ScenePhase
+
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
                 if Config.default.appTabs {
                     AppTabView(store: store)
                 } else {
-                    NotebookView(parent: store)
+                    NotebookView(app: store)
                 }
             }
             .zIndex(0)
-            if (
-                Config.default.noosphere.enabled &&
-                store.state.sphereIdentity == nil
-            ) {
-                FirstRunView(
-                    onDone: { sphereIdentity in
-                        store.send(.setSphereIdentity(sphereIdentity))
-                    }
-                )
-                .zIndex(1)
+            if (store.state.shouldPresentFirstRun) {
+                FirstRunView(app: store)
+                    .animation(.default, value: store.state.shouldPresentFirstRun)
+                    .zIndex(1)
             }
+        }
+        .sheet(
+            isPresented: Binding(
+                get: { store.state.isSettingsSheetPresented },
+                send: store.send,
+                tag: AppAction.presentSettingsSheet
+            )
+        ) {
+            SettingsView(app: store)
         }
         .onAppear {
             store.send(.appear)
@@ -47,15 +51,48 @@ struct AppView: View {
             let message = String.loggable(action)
             AppModel.logger.debug("[action] \(message)")
         }
+        // Track changes to scene phase so we know when app gets
+        // foregrounded/backgrounded.
+        // See https://developer.apple.com/documentation/swiftui/scenephase
+        // 2023-02-16 Gordon Brander
+        .onChange(of: self.scenePhase) { phase in
+            store.send(.scenePhaseChange(phase))
+        }
     }
 }
 
 //  MARK: Action
 enum AppAction: CustomLogStringConvertible {
+    /// Scene phase events
+    /// See https://developer.apple.com/documentation/swiftui/scenephase
+    case scenePhaseChange(ScenePhase)
+
+    /// On view appear
+    case appear
+
+    /// Set sphere/user nickname
+    case setNicknameTextField(_ nickname: String)
+
+    /// Set gateway URL
+    case setGatewayURLTextField(_ gateway: String)
+    case submitGatewayURL(_ gateway: String)
+
+    /// Create a new sphere given an owner key name
+    case createSphere(_ ownerKeyName: String?)
+    case failCreateSphere(_ message: String)
+
     /// Set identity of sphere
     case setSphereIdentity(String?)
+    /// Fetch the latest sphere version, and store on model
+    case refreshSphereVersion
 
-    case appear
+    /// Set and persist first run complete state
+    case persistFirstRunComplete(_ isComplete: Bool)
+
+    /// Reset Noosphere Service.
+    /// This calls `Noosphere.reset` which resets memoized instances of
+    /// `Noosphere` and `SphereFS`.
+    case resetNoosphereService
 
     //  Database
     /// Kick off database migration.
@@ -73,15 +110,36 @@ enum AppAction: CustomLogStringConvertible {
     case failRebuildDatabase(String)
     /// App ready for database calls and interaction
     case ready
-    /// Sync database with file system
-    case sync
-    case syncSuccess([FileFingerprintChange])
-    case syncFailure(String)
+
+    /// Sync gateway to sphere, sphere to DB, and local file system to DB
+    case syncAll
+
+    /// Sync local sphere with gateway sphere
+    case syncSphereWithGateway
+    case succeedSyncSphereWithGateway(version: String)
+    case failSyncSphereWithGateway(String)
+
+    /// Sync current sphere state with database state
+    /// Sphere always wins.
+    case syncSphereWithDatabase
+    case succeedSyncSphereWithDatabase(version: String)
+    case failSyncSphereWithDatabase(String)
+    
+    /// Sync database with file system.
+    /// File system always wins.
+    case syncLocalFilesWithDatabase
+    case succeedSyncLocalFilesWithDatabase([FileFingerprintChange])
+    case failSyncLocalFilesWithDatabase(String)
+
+    /// Set settings sheet presented?
+    case presentSettingsSheet(_ isPresented: Bool)
 
     var logDescription: String {
         switch self {
         case let .succeedMigrateDatabase(version):
             return "succeedMigrateDatabase(\(version))"
+        case let .succeedSyncLocalFilesWithDatabase(fingerprints):
+            return "succeedSyncLocalFilesWithDatabase(...) \(fingerprints.count) items"
         default:
             return String(describing: self)
         }
@@ -101,26 +159,42 @@ enum AppDatabaseState {
 struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
-    var sphereIdentity: String?
+    /// Should first run show?
+    /// Distinct from whether first run has actually run.
+    var shouldPresentFirstRun = !AppDefaults.standard.firstRunComplete
 
-    /// Feed of stories
-    var feed = FeedModel()
-    /// Your notebook containing all your notes
-    var notebook = NotebookModel()
+    var nickname = AppDefaults.standard.nickname
+    var nicknameTextField = AppDefaults.standard.nickname ?? ""
+    var isNicknameTextFieldValid = true
 
+    /// Default sphere identity
+    var sphereIdentity = AppDefaults.standard.sphereIdentity
+    /// Default sphere version, if any.
+    var sphereVersion: String?
+    /// Temporary state for storing mnemonic for rendering.
+    /// not persisted.
+    var sphereMnemonic: String?
+
+    var gatewayURL = AppDefaults.standard.gatewayURL
+    var gatewayURLTextField = AppDefaults.standard.gatewayURL
+    var isGatewayURLTextFieldValid = true
+    
+    /// Show settings sheet?
+    var isSettingsSheetPresented = false
+    
     /// Determine if the interface is ready for user interaction,
     /// even if all of the data isn't refreshed yet.
     /// This is the point at which the main interface is ready to be shown.
     var isReadyForInteraction: Bool {
         self.databaseState == .ready
     }
-
+    
     // Logger for actions
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "app"
     )
-
+    
     //  MARK: Update
     /// Main update function
     static func update(
@@ -129,14 +203,66 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         switch action {
+        case .scenePhaseChange(let scenePhase):
+            return scenePhaseChange(
+                state: state,
+                environment: environment,
+                scenePhase: scenePhase
+            )
+        case .appear:
+            return appear(
+                state: state,
+                environment: environment
+            )
+        case let .setNicknameTextField(nickname):
+            return setNicknameTextField(
+                state: state,
+                environment: environment,
+                text: nickname
+            )
+        case let .setGatewayURLTextField(text):
+            return setGatewayURLTextField(
+                state: state,
+                environment: environment,
+                text: text
+            )
+        case let .submitGatewayURL(gateway):
+            return submitGatewayURL(
+                state: state,
+                environment: environment,
+                gatewayURL: gateway
+            )
+        case let .createSphere(ownerKeyName):
+            return createSphere(
+                state: state,
+                environment: environment,
+                ownerKeyName: ownerKeyName
+            )
+        case .failCreateSphere(let message):
+            logger.warning("Failed to create Sphere: \(message)")
+            return Update(state: state)
         case let .setSphereIdentity(sphereIdentity):
             return setSphereIdentity(
                 state: state,
                 environment: environment,
                 sphereIdentity: sphereIdentity
             )
-        case .appear:
-            return appear(state: state, environment: environment)
+        case .refreshSphereVersion:
+            return refreshSphereVersion(
+                state: state,
+                environment: environment
+            )
+        case let .persistFirstRunComplete(isComplete):
+            return persistFirstRunComplete(
+                state: state,
+                environment: environment,
+                isComplete: isComplete
+            )
+        case .resetNoosphereService:
+            return resetNoosphereService(
+                state: state,
+                environment: environment
+            )
         case .migrateDatabase:
             return migrateDatabase(state: state, environment: environment)
         case let .succeedMigrateDatabase(version):
@@ -161,33 +287,204 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
-        case .sync:
-            return sync(
+        case .syncAll:
+            return syncAll(
                 state: state,
                 environment: environment
             )
-        case let .syncSuccess(changes):
-            return syncSuccess(
+        case .syncSphereWithGateway:
+            return syncSphereWithGateway(
+                state: state,
+                environment: environment
+            )
+        case let .succeedSyncSphereWithGateway(version):
+            return succeedSyncSphereWithGateway(
+                state: state,
+                environment: environment,
+                version: version
+            )
+        case let .failSyncSphereWithGateway(error):
+            return failSyncSphereWithGateway(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .syncSphereWithDatabase:
+            return syncSphereWithDatabase(
+                state: state,
+                environment: environment
+            )
+        case let .succeedSyncSphereWithDatabase(version):
+            return succeedSyncSphereWithDatabase(
+                state: state,
+                environment: environment,
+                version: version
+            )
+        case let .failSyncSphereWithDatabase(error):
+            return failSyncSphereWithDatabase(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .syncLocalFilesWithDatabase:
+            return syncLocalFilesWithDatabase(
+                state: state,
+                environment: environment
+            )
+        case let .succeedSyncLocalFilesWithDatabase(changes):
+            return succeedSyncLocalFilesWithDatabase(
                 state: state,
                 environment: environment,
                 changes: changes
             )
-        case let .syncFailure(message):
-            environment.logger.warning(
-                "File sync failed: \(message)"
-            )
+        case let .failSyncLocalFilesWithDatabase(message):
+            logger.log("File sync failed: \(message)")
             return Update(state: state)
+        case let .presentSettingsSheet(isPresented):
+            return presentSettingsSheet(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
         }
     }
-
+    
     /// Log message and no-op
     static func log(
         state: AppModel,
         environment: AppEnvironment,
         message: String
     ) -> Update<AppModel> {
-        environment.logger.log("\(message)")
+        logger.log("\(message)")
         return Update(state: state)
+    }
+    
+    /// Handle scene phase change
+    static func scenePhaseChange(
+        state: AppModel,
+        environment: AppEnvironment,
+        scenePhase: ScenePhase
+    ) -> Update<AppModel> {
+        switch scenePhase {
+        case .inactive:
+            return update(
+                state: state,
+                action: .resetNoosphereService,
+                environment: environment
+            )
+        default:
+            return Update(state: state)
+        }
+    }
+
+    static func appear(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        logger.debug(
+            "Documents: \(environment.documentURL)"
+        )
+        let sphereIdentity = state.sphereIdentity ?? "Unknown"
+        logger.debug(
+            "Sphere ID: \(sphereIdentity)"
+        )
+        return update(
+            state: state,
+            actions: [
+                .migrateDatabase,
+                .refreshSphereVersion
+            ],
+            environment: environment
+        )
+    }
+    
+    static func setNicknameTextField(
+        state: AppModel,
+        environment: AppEnvironment,
+        text: String
+    ) -> Update<AppModel> {
+        guard let nickname = Nickname.format(text) else {
+            var model = state
+            model.nicknameTextField = text
+            model.isNicknameTextFieldValid = false
+            return Update(state: model)
+        }
+        guard nickname == text else {
+            var model = state
+            model.nicknameTextField = text
+            model.isNicknameTextFieldValid = false
+            return Update(state: model)
+        }
+        logger.log("Nickname saved: \(nickname)")
+        var model = state
+        model.nicknameTextField = text
+        model.nickname = nickname
+        // Persist
+        AppDefaults.standard.nickname = nickname
+        model.isNicknameTextFieldValid = true
+        return Update(state: model)
+    }
+    
+    static func isValidWebURL(_ string: String) -> Bool {
+        guard let url = URL(string: string) else {
+            return false
+        }
+        return url.scheme == "http" || url.scheme == "https"
+    }
+
+    static func setGatewayURLTextField(
+        state: AppModel,
+        environment: AppEnvironment,
+        text: String
+    ) -> Update<AppModel> {
+        var model = state
+        model.gatewayURLTextField = text
+        model.isGatewayURLTextFieldValid = isValidWebURL(text)
+        return Update(state: model)
+    }
+    
+    static func submitGatewayURL(
+        state: AppModel,
+        environment: AppEnvironment,
+        gatewayURL: String
+    ) -> Update<AppModel> {
+        // If URL given is not valid, reset back to original value.
+        guard isValidWebURL(gatewayURL) else {
+            var model = state
+            model.gatewayURLTextField = model.gatewayURL
+            model.isGatewayURLTextFieldValid = true
+            return Update(state: model)
+        }
+        var model = state
+        model.gatewayURL = gatewayURL
+        model.gatewayURLTextField = gatewayURL
+        model.isGatewayURLTextFieldValid = true
+        AppDefaults.standard.gatewayURL = gatewayURL
+        /// Only set valid nicknames
+        return Update(state: model)
+    }
+
+    static func createSphere(
+        state: AppModel,
+        environment: AppEnvironment,
+        ownerKeyName: String?
+    ) -> Update<AppModel> {
+        let ownerKeyName = ownerKeyName ?? Config.default.noosphere.ownerKeyName
+        do {
+            let receipt = try environment.data.createSphere(
+                ownerKeyName: ownerKeyName
+            )
+            var model = state
+            model.sphereMnemonic = receipt.mnemonic
+            model.sphereIdentity = receipt.identity
+            return Update(state: model)
+        }  catch {
+            return update(
+                state: state,
+                action: .failCreateSphere(error.localizedDescription),
+                environment: environment
+            )
+        }
     }
 
     static func setSphereIdentity(
@@ -198,34 +495,47 @@ struct AppModel: ModelProtocol {
         var model = state
         model.sphereIdentity = sphereIdentity
         if let sphereIdentity = sphereIdentity {
-            environment.logger.debug("Sphere identity: \(sphereIdentity)")
+            logger.debug("Set sphere ID: \(sphereIdentity)")
         }
         return Update(state: model)
     }
-
-    static func appear(
+    
+    /// Check for latest sphere version and store on the model
+    static func refreshSphereVersion(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        environment.logger.debug(
-            "Documents: \(environment.documentURL)"
-        )
+        guard let version = try? environment.data.noosphere.version() else {
+            return Update(state: state)
+        }
+        var model = state
+        model.sphereVersion = version
+        logger.debug("Refreshed sphere version: \(version)")
+        return Update(state: model)
+    }
 
-        let migrate = Just(
-            AppAction.migrateDatabase
-        )
+    /// Persist first run complete state
+    static func persistFirstRunComplete(
+        state: AppModel,
+        environment: AppEnvironment,
+        isComplete: Bool
+    ) -> Update<AppModel> {
+        // Persist value
+        AppDefaults.standard.firstRunComplete = isComplete
+        // Update state
+        var model = state
+        model.shouldPresentFirstRun = !isComplete
+        return Update(state: model)
+            .animation(.default)
+    }
 
-        /// Get sphere identity, if any
-        let setSphereIdentity = Just(
-            AppAction.setSphereIdentity(
-                environment.data.noosphere.getSphereIdentity()
-            )
-        )
-
-        let fx: Fx<AppAction> = setSphereIdentity.merge(with: migrate)
-            .eraseToAnyPublisher()
-
-        return Update(state: state, fx: fx)
+    /// Reset NoosphereService managed instances of `Noosphere` and `SphereFS`.
+    static func resetNoosphereService(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        environment.data.noosphere.reset()
+        return Update(state: state)
     }
 
     /// Make database ready.
@@ -237,7 +547,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         switch state.databaseState {
         case .initial:
-            environment.logger.log("Readying database")
+            logger.log("Readying database")
             let fx: Fx<AppAction> = environment.data
                 .migrateAsync()
                 .map({ version in
@@ -251,29 +561,29 @@ struct AppModel: ModelProtocol {
             model.databaseState = .migrating
             return Update(state: model, fx: fx)
         case .migrating:
-            environment.logger.log(
+            logger.log(
                 "Database already migrating. Doing nothing."
             )
             return Update(state: state)
         case .broken:
-            environment.logger.warning(
+            logger.warning(
                 "Database broken. Doing nothing."
             )
             return Update(state: state)
         case .ready:
-            environment.logger.log("Database ready.")
+            logger.log("Database ready.")
             let fx: Fx<AppAction> = Just(AppAction.ready)
-            .eraseToAnyPublisher()
+                .eraseToAnyPublisher()
             return Update(state: state, fx: fx)
         }
     }
-
+    
     static func succeedMigrateDatabase(
         state: AppModel,
         environment: AppEnvironment,
         version: Int
     ) -> Update<AppModel> {
-        environment.logger.log(
+        logger.log(
             "Database version: \(version)"
         )
         var model = state
@@ -281,15 +591,15 @@ struct AppModel: ModelProtocol {
         model.databaseState = .ready
         return update(state: model, action: .ready, environment: environment)
     }
-
+    
     static func rebuildDatabase(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        environment.logger.warning(
-            "Failed to migrate database. Retrying."
+        logger.warning(
+            "No valid migrations for database. Rebuilding."
         )
-        let fx: Fx<AppAction> = environment.data.migrateAsync()
+        let fx: Fx<AppAction> = environment.data.rebuildAsync()
             .map({ info in
                 AppAction.succeedMigrateDatabase(info)
             })
@@ -300,62 +610,179 @@ struct AppModel: ModelProtocol {
                     )
                 )
             })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+                .eraseToAnyPublisher()
+                    return Update(state: state, fx: fx)
     }
-
+    
     static func failRebuildDatabase(
         state: AppModel,
         environment: AppEnvironment,
         error: String
     ) -> Update<AppModel> {
-        environment.logger.warning(
+        logger.warning(
             "Could not rebuild database: \(error)"
         )
         var model = state
         model.databaseState = .broken
         return Update(state: model)
     }
-
+    
     static func ready(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        do {
+            let sphereIdentity = try environment.data.database
+                .readMetadata(key: .sphereIdentity)
+            let sphereVersion = try environment.data.database
+                .readMetadata(key: .sphereVersion)
+            logger.log("Database last-known sphere state: \(sphereIdentity) @ \(sphereVersion)")
+        } catch {
+            logger.log("Database last-known sphere state: unknown")
+        }
+        // For now, we just sync everything on ready.
+        return update(
+            state: state,
+            action: .syncAll,
+            environment: environment
+        )
+    }
+
+    static func syncAll(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
         return update(
             state: state,
-            action: AppAction.sync,
+            actions: [
+                .syncLocalFilesWithDatabase,
+                .syncSphereWithGateway
+            ],
             environment: environment
         )
     }
-
-    /// Start file sync
-    static func sync(
+    
+    static func syncSphereWithGateway(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        environment.logger.log("File sync started")
-        let fx: Fx<AppAction> = environment.data
-            .syncDatabase()
-            .map({ changes in
-                AppAction.syncSuccess(changes)
+        guard let gatewayURL = environment.data.noosphere.gatewayURL else {
+            logger.log("No gateway configured. Skipping sync.")
+            return Update(state: state)
+        }
+        logger.log("Syncing with gateway: \(gatewayURL.absoluteString)")
+        let fx: Fx<AppAction> = environment.data.syncSphereWithGateway()
+            .map({ version in
+                AppAction.succeedSyncSphereWithGateway(version: version)
             })
             .catch({ error in
-                Just(AppAction.syncFailure(error.localizedDescription))
+                Just(AppAction.failSyncSphereWithGateway(error.localizedDescription))
             })
             .eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
-
+    
+    static func succeedSyncSphereWithGateway(
+        state: AppModel,
+        environment: AppEnvironment,
+        version: String
+    ) -> Update<AppModel> {
+        logger.log("Sphere synced with gateway @ \(version)")
+        return update(
+            state: state,
+            action: .syncSphereWithDatabase,
+            environment: environment
+        )
+    }
+    
+    static func failSyncSphereWithGateway(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.log("Sphere failed to sync with gateway: \(error)")
+        return update(
+            state: state,
+            action: .syncSphereWithDatabase,
+            environment: environment
+        )
+    }
+    
+    static func syncSphereWithDatabase(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = environment.data
+            .syncSphereWithDatabaseAsync()
+            .map({ version in
+                AppAction.succeedSyncSphereWithDatabase(version: version)
+            })
+            .catch({ error in
+                Just(
+                    AppAction.failSyncSphereWithDatabase(error.localizedDescription)
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+    
+    static func succeedSyncSphereWithDatabase(
+        state: AppModel,
+        environment: AppEnvironment,
+        version: String
+    ) -> Update<AppModel> {
+        let identity = state.sphereIdentity ?? "unknown"
+        logger.log("Database synced to sphere \(identity) @ \(version)")
+        return Update(state: state)
+    }
+    
+    static func failSyncSphereWithDatabase(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.log("Database failed to sync with sphere: \(error)")
+        return Update(state: state)
+    }
+    
+    /// Start file sync
+    static func syncLocalFilesWithDatabase(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        logger.log("File sync started")
+        let fx: Fx<AppAction> = environment.data
+            .syncLocalWithDatabase()
+            .map({ changes in
+                AppAction.succeedSyncLocalFilesWithDatabase(changes)
+            })
+            .catch({ error in
+                Just(AppAction.failSyncLocalFilesWithDatabase(error.localizedDescription))
+            })
+                .eraseToAnyPublisher()
+                    return Update(state: state, fx: fx)
+    }
+    
     /// Handle successful sync
-    static func syncSuccess(
+    static func succeedSyncLocalFilesWithDatabase(
         state: AppModel,
         environment: AppEnvironment,
         changes: [FileFingerprintChange]
     ) -> Update<AppModel> {
-        environment.logger.debug(
+        logger.debug(
             "File sync finished: \(changes)"
         )
         return Update(state: state)
+    }
+    
+    static func presentSettingsSheet(
+        state: AppModel,
+        environment: AppEnvironment,
+        isPresented: Bool
+    ) -> Update<AppModel> {
+        var model = state
+        model.isSettingsSheetPresented = isPresented
+        return Update(state: model)
     }
 }
 
@@ -368,10 +795,9 @@ struct AppEnvironment {
     var documentURL: URL
     var applicationSupportURL: URL
 
-    var logger: Logger
     var data: DataService
     var feed: FeedService
-
+    
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
         Timer.publish(
@@ -396,16 +822,23 @@ struct AppEnvironment {
             create: true
         )
 
-        self.logger = Logger.main
-
         let files = FileStore(documentURL: documentURL)
-        let memos = HeaderSubtextMemoStore(store: files)
+        let local = HeaderSubtextMemoStore(store: files)
+
+        let globalStorageURL = applicationSupportURL.appending(
+            path: Config.default.noosphere.globalStoragePath
+        )
+        let sphereStorageURL = applicationSupportURL.appending(
+            path: Config.default.noosphere.sphereStoragePath
+        )
+        let defaultGateway = URL(string: AppDefaults.standard.gatewayURL)
+        let defaultSphereIdentity = AppDefaults.standard.sphereIdentity
 
         let noosphere = NoosphereService(
-            globalStorageURL: applicationSupportURL
-                .appending(path: Config.default.noosphere.globalStoragePath),
-            sphereStorageURL: applicationSupportURL
-                .appending(path: Config.default.noosphere.sphereStoragePath)
+            globalStorageURL: globalStorageURL,
+            sphereStorageURL: sphereStorageURL,
+            gatewayURL: defaultGateway,
+            sphereIdentity: defaultSphereIdentity
         )
 
         let databaseURL = self.applicationSupportURL
@@ -420,11 +853,9 @@ struct AppEnvironment {
         )
         
         self.data = DataService(
-            documentURL: self.documentURL,
-            databaseURL: databaseURL,
             noosphere: noosphere,
             database: databaseService,
-            memos: memos
+            local: local
         )
 
         self.feed = FeedService()

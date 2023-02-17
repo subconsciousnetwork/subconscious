@@ -22,6 +22,9 @@ struct DetailView: View {
         action: .start,
         environment: AppEnvironment.default
     )
+    /// Is this view presented? Used to detect when back button is pressed.
+    /// We trigger an autosave when isPresented is false below.
+    @Environment(\.isPresented) var isPresented
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
     /// State passed down from parent
     var state: DetailOuterModel
@@ -29,7 +32,7 @@ struct DetailView: View {
 
     var body: some View {
         VStack {
-            if store.state.slug != nil {
+            if store.state.address != nil {
                 DetailReadyView(
                     store: store,
                     state: state,
@@ -46,50 +49,37 @@ struct DetailView: View {
         }
         .navigationTitle(state.title)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
+        .toolbar(content: {
             DetailToolbarContent(
-                link: EntryLink(slug: state.slug, title: state.title),
+                title: store.state.headers.title,
+                slug: store.state.address?.slug.description,
                 onRename: {
                     store.send(
-                        .showRenameSheet(
-                            EntryLink(slug: state.slug, title: state.title)
+                        DetailAction.presentRenameSheet(
+                            address: store.state.address,
+                            title: store.state.headers.title
                         )
                     )
                 },
                 onDelete: {
-                    store.send(.presentDeleteConfirmationDialog(true))
+                    store.send(
+                        DetailAction.presentDeleteConfirmationDialog(true)
+                    )
                 }
             )
-        }
+        })
         .onAppear {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
             store.send(
                 DetailAction.appear(
-                    slug: state.slug,
+                    address: state.address,
                     title: state.title,
                     fallback: state.fallback
                 )
             )
         }
-        .onDisappear {
-            store.send(.autosave)
-        }
-        /// Catch link taps and handle them here
-        .environment(\.openURL, OpenURLAction { url in
-            guard let link = EntryLink.decodefromSubEntryURL(url) else {
-                return .systemAction
-            }
-            send(
-                .requestDetail(
-                    slug: link.slug,
-                    title: link.linkableTitle,
-                    fallback: link.title
-                )
-            )
-            return .handled
-        })
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
         // See https://developer.apple.com/documentation/swiftui/scenephase
@@ -97,6 +87,31 @@ struct DetailView: View {
         .onChange(of: self.scenePhase) { phase in
             store.send(DetailAction.scenePhaseChange(phase))
         }
+        // Save when back button pressed.
+        // Note that .onDisappear is too late, because by the time the save
+        // succeeds, the store for this view is already thrown away, so
+        // we never receive the save-succeeded action.
+        // Reacting to isPresented is soon enough.
+        // 2023-02-14
+        .onChange(of: self.isPresented) { isPresented in
+            if !isPresented {
+                store.send(.autosave)
+            }
+        }
+        /// Catch link taps and handle them here
+        .environment(\.openURL, OpenURLAction { url in
+            guard let link = UnqualifiedLink.decodefromSubEntryURL(url) else {
+                return .systemAction
+            }
+            send(
+                .requestFindDetail(
+                    slug: link.slug,
+                    title: link.title,
+                    fallback: link.title
+                )
+            )
+            return .handled
+        })
         .onReceive(store.actions) { action in
             let message = String.loggable(action)
             DetailModel.logger.debug("[action] \(message)")
@@ -132,9 +147,9 @@ struct DetailView: View {
         }
         .sheet(
             isPresented: Binding(
-                get: { store.state.isRenameSheetShowing },
+                get: { store.state.isRenameSheetPresented },
                 send: store.send,
-                tag: { _ in DetailAction.hideRenameSheet }
+                tag: { _ in DetailAction.unpresentRenameSheet }
             )
         ) {
             RenameSearchView(
@@ -146,7 +161,7 @@ struct DetailView: View {
                     tag: DetailAction.setRenameField
                 ),
                 onCancel: {
-                    store.send(.hideRenameSheet)
+                    store.send(.unpresentRenameSheet)
                 },
                 onSelect: { suggestion in
                     store.send(DetailAction.from(suggestion))
@@ -156,7 +171,7 @@ struct DetailView: View {
         .confirmationDialog(
             "Are you sure?",
             isPresented: Binding(
-                get: { store.state.isDeleteConfirmationDialogShowing },
+                get: { store.state.isDeleteConfirmationDialogPresented },
                 send: store.send,
                 tag: DetailAction.presentDeleteConfirmationDialog
             )
@@ -164,7 +179,7 @@ struct DetailView: View {
             Button(
                 role: .destructive,
                 action: {
-                    send(.requestDelete(state.slug))
+                    send(.requestDelete(state.address))
                 }
             ) {
                 Text("Delete Immediately")
@@ -175,16 +190,47 @@ struct DetailView: View {
 
 struct DetailReadyView: View {
     @ObservedObject var store: Store<DetailModel>
-    @Environment(\.scenePhase) var scenePhase: ScenePhase
     var state: DetailOuterModel
     var send: (DetailOuterAction) -> Void
+
+    private func onLink(
+        url: URL,
+        attributedString: NSAttributedString,
+        selection: NSRange,
+        interaction: UITextItemInteraction
+    ) -> Bool {
+        guard let link = UnqualifiedLink.decodefromSubEntryURL(
+            url
+        ) else {
+            return true
+        }
+        send(
+            .requestFindDetail(
+                slug: link.slug,
+                title: link.title,
+                fallback: link.title
+            )
+        )
+        return false
+    }
 
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                Divider()
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
+                        HStack {
+                            AudienceMenuButtonView(
+                                audience: Binding(
+                                    get: { store.state.audience },
+                                    send: store.send,
+                                    tag: DetailAction.updateAudience
+                                )
+                            )
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.top)
                         MarkupTextViewRepresentable(
                             state: store.state.markupEditor,
                             send: Address.forward(
@@ -193,20 +239,7 @@ struct DetailReadyView: View {
                             ),
                             frame: geometry.frame(in: .local),
                             renderAttributesOf: Subtext.renderAttributesOf,
-                            onLink: { url, _, _, _ in
-                                guard let link = EntryLink.decodefromSubEntryURL(url) else {
-                                    return true
-                                }
-                                send(
-                                    .requestDetail(
-                                        slug: link.slug,
-                                        title: link.linkableTitle,
-                                        fallback: link.title
-                                    )
-                                )
-                                return false
-                            },
-                            logger: Logger.editor
+                            onLink: self.onLink
                         )
                         .insets(
                             EdgeInsets(
@@ -227,7 +260,7 @@ struct DetailReadyView: View {
                             onSelect: { link in
                                 send(
                                     .requestDetail(
-                                        slug: link.slug,
+                                        address: link.address,
                                         title: link.linkableTitle,
                                         fallback: link.title
                                     )
@@ -243,8 +276,7 @@ struct DetailReadyView: View {
                             send: store.send,
                             tag: DetailAction.setLinkSheetPresented
                         ),
-                        selectedEntryLinkMarkup:
-                            store.state.selectedEntryLinkMarkup,
+                        selectedShortlink: store.state.selectedShortlink,
                         suggestions: store.state.linkSuggestions,
                         onSelectLinkCompletion: { link in
                             store.send(.selectLinkCompletion(link))
@@ -286,12 +318,16 @@ struct DetailReadyView: View {
 
 /// Actions that are forwarded up to the parent component
 enum DetailOuterAction: Hashable {
-    case requestDetail(slug: Slug, title: String, fallback: String)
-    case requestDelete(Slug?)
+    /// Request specific detail
+    case requestDetail(address: MemoAddress, title: String, fallback: String)
+    /// Request detail from any audience scope
+    case requestFindDetail(slug: Slug, title: String, fallback: String)
+    case requestDelete(MemoAddress?)
     case succeedMoveEntry(from: EntryLink, to: EntryLink)
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
-    case succeedSaveEntry(slug: Slug, modified: Date)
+    case succeedSaveEntry(address: MemoAddress, modified: Date)
+    case succeedUpdateAudience(_ address: MemoAddress)
 }
 
 extension DetailOuterAction {
@@ -305,9 +341,11 @@ extension DetailOuterAction {
             return .succeedRetitleEntry(from: from, to: to)
         case let .succeedSave(entry):
             return .succeedSaveEntry(
-                slug: entry.slug,
+                address: entry.address,
                 modified: entry.contents.modified
             )
+        case .succeedUpdateAudience(let address):
+            return .succeedUpdateAudience(address)
         default:
             return nil
         }
@@ -327,7 +365,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case markupEditor(MarkupTextAction)
 
     case appear(
-        slug: Slug?,
+        address: MemoAddress?,
         title: String,
         fallback: String,
         autofocus: Bool = false
@@ -358,6 +396,11 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Set detail to initial conditions
     case resetDetail
 
+    // Change audience
+    case updateAudience(_ audience: Audience)
+    case succeedUpdateAudience(_ address: MemoAddress)
+    case failUpdateAudience(_ message: String)
+
     //  Saving entry
     /// Trigger autosave of current state
     case autosave
@@ -365,7 +408,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case save(MemoEntry?)
     case succeedSave(MemoEntry)
     case failSave(
-        slug: Slug,
+        address: MemoAddress,
         message: String
     )
 
@@ -378,8 +421,11 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case linkSuggestionsFailure(String)
 
     // Rename
-    case showRenameSheet(EntryLink?)
-    case hideRenameSheet
+    case presentRenameSheet(
+        address: MemoAddress?,
+        title: String?
+    )
+    case unpresentRenameSheet
     case setRenameField(String)
     case refreshRenameSuggestions
     case setRenameSuggestions([RenameSuggestion])
@@ -474,13 +520,9 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         case let .forceSetDetail(detail):
             return "forceSetDetail(\(String.loggable(detail)))"
         case .save(let entry):
-            let slugString: String = entry.mapOr(
-                { entry in String(entry.slug) },
-                default: "nil"
-            )
-            return "save(\(slugString))"
+            return "save(\(entry?.address.description ?? "nil"))"
         case .succeedSave(let entry):
-            return "succeedSave(\(entry.slug))"
+            return "succeedSave(\(entry.address))"
         case .setDetail(let detail, _):
             return "setDetail(\(String.loggable(detail)))"
         case let .setEditor(_, saveState, modified):
@@ -544,7 +586,10 @@ struct DetailMarkupEditorCursor: CursorProtocol {
 
 //  MARK: Model
 struct DetailModel: ModelProtocol {
-    var slug: Slug?
+    var address: MemoAddress?
+    var audience: Audience {
+        address?.audience ?? .local
+    }
     /// Required headers
     /// Initialize date with Unix Epoch
     var headers = WellKnownHeaders(
@@ -567,7 +612,7 @@ struct DetailModel: ModelProtocol {
     var lastLoadStarted = Date.distantPast
 
     /// The entry link within the text
-    var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
+    var selectedShortlink: Subtext.Shortlink?
 
     /// The text editor
     var markupEditor = MarkupTextModel()
@@ -579,7 +624,7 @@ struct DetailModel: ModelProtocol {
 
     //  Note renaming
     /// Is rename sheet showing?
-    var isRenameSheetShowing = false
+    var isRenameSheetPresented = false
     /// Link to the candidate for renaming
     var entryToRename: EntryLink?
     /// Text for slug rename TextField.
@@ -590,7 +635,7 @@ struct DetailModel: ModelProtocol {
     var renameSuggestions: [RenameSuggestion] = []
 
     /// Is delete confirmation dialog presented?
-    var isDeleteConfirmationDialogShowing = false
+    var isDeleteConfirmationDialogPresented = false
 
     /// Time interval after which a load is considered stale, and should be
     /// reloaded to make sure it is fresh.
@@ -600,11 +645,8 @@ struct DetailModel: ModelProtocol {
     /// currently match it, such that we could say the editor is
     /// displaying that entry?
     func stateMatches(entry: MemoEntry) -> Bool {
-        guard let slug = self.slug else {
-            return false
-        }
         return (
-            slug == entry.slug &&
+            self.address == entry.address &&
             markupEditor.text == entry.contents.body.description
         )
     }
@@ -638,11 +680,11 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 phase: phase
             )
-        case let .appear(slug, title, fallback, autofocus):
+        case let .appear(address, title, fallback, autofocus):
             return appear(
                 state: state,
                 environment: environment,
-                slug: slug,
+                address: address,
                 title: title,
                 fallback: fallback,
                 autofocus: autofocus
@@ -740,11 +782,11 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 entry: entry
             )
-        case let .failSave(slug, message):
+        case let .failSave(address, message):
             return failSave(
                 state: state,
                 environment: environment,
-                slug: slug,
+                address: address,
                 message: message
             )
         case let .setLinkSheetPresented(isPresented):
@@ -780,14 +822,15 @@ struct DetailModel: ModelProtocol {
                 "Link suggest failed: \(message)"
             )
             return Update(state: state)
-        case let .showRenameSheet(entry):
-            return showRenameSheet(
+        case let .presentRenameSheet(address, title):
+            return presentRenameSheet(
                 state: state,
                 environment: environment,
-                entry: entry
+                address: address,
+                title: title
             )
-        case .hideRenameSheet:
-            return hideRenameSheet(
+        case .unpresentRenameSheet:
+            return unpresentRenameSheet(
                 state: state,
                 environment: environment
             )
@@ -810,6 +853,24 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
+            )
+        case let .updateAudience(audience):
+            return updateAudience(
+                state: state,
+                environment: environment,
+                audience: audience
+            )
+        case let .succeedUpdateAudience(address):
+            return succeedUpdateAudience(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case let .failUpdateAudience(message):
+            return log(
+                state: state,
+                environment: environment,
+                message: message
             )
         case .moveEntry(let from, let to):
             return moveEntry(
@@ -986,12 +1047,14 @@ struct DetailModel: ModelProtocol {
     static func appear(
         state: DetailModel,
         environment: AppEnvironment,
-        slug: Slug?,
+        address: MemoAddress?,
         title: String,
         fallback: String,
         autofocus: Bool
     ) -> Update<DetailModel> {
-        let link = slug.map({ slug in EntryLink(slug: slug, title: title) })
+        let link = address.map({ address in
+            EntryLink(address: address, title: title)
+        })
         return update(
             state: state,
             action: .loadDetail(
@@ -1056,9 +1119,9 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         // Set entry link based on selection
         let dom = Subtext.parse(markup: text)
-        let link = dom.entryLinkFor(range: nsRange)
+        let link = dom.shortlinkFor(range: nsRange)
         var model = state
-        model.selectedEntryLinkMarkup = link
+        model.selectedShortlink = link
 
         let linkSearchText = link?.toTitle() ?? ""
 
@@ -1151,8 +1214,9 @@ struct DetailModel: ModelProtocol {
         }
 
         let fx: Fx<DetailAction> = environment.data
-            .readEntryDetail(
-                link: link,
+            .readDetailAsync(
+                address: link.address,
+                title: link.title,
                 fallback: fallback
             )
             .map({ detail in
@@ -1175,7 +1239,7 @@ struct DetailModel: ModelProtocol {
         state: DetailModel,
         environment: AppEnvironment
     ) -> Update<DetailModel> {
-        guard let slug = state.slug else {
+        guard let address = state.address else {
             logger.log(
                 "Refresh detail requested when nothing was being edited. Skipping."
             )
@@ -1185,8 +1249,9 @@ struct DetailModel: ModelProtocol {
         let model = prepareLoadDetail(state)
 
         let fx: Fx<DetailAction> = environment.data
-            .readEntryDetail(
-                link: EntryLink(slug: slug),
+            .readDetailAsync(
+                address: address,
+                title: model.headers.title,
                 fallback: model.markupEditor.text
             )
             .map({ detail in
@@ -1204,7 +1269,7 @@ struct DetailModel: ModelProtocol {
         state: DetailModel,
         environment: AppEnvironment
     ) -> Update<DetailModel> {
-        guard let slug = state.slug else {
+        guard let address = state.address else {
             logger.debug(
                 "Refresh-detail-if-stale requested, but nothing was being edited. Skipping."
             )
@@ -1218,7 +1283,7 @@ struct DetailModel: ModelProtocol {
             return Update(state: state)
         }
         logger.log(
-            "Detail for \(slug) is stale. Refreshing."
+            "Detail for \(address) is stale. Refreshing."
         )
         return update(
             state: state,
@@ -1233,7 +1298,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         message: String
     ) -> Update<DetailModel> {
-        environment.logger.log("Detail load failed with message: \(message)")
+        logger.log("Detail load failed with message: \(message)")
         return Update(state: state)
     }
 
@@ -1245,7 +1310,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         var model = state
         model.isLoading = false
-        model.slug = detail.slug
+        model.address = detail.entry.address
         model.headers = detail.entry.contents.wellKnownHeaders()
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.backlinks = detail.backlinks
@@ -1369,7 +1434,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         var model = state
-        model.slug = nil
+        model.address = nil
         model.headers = WellKnownHeaders(
             contentType: ContentType.subtext.rawValue,
             created: Date.distantPast,
@@ -1382,6 +1447,46 @@ struct DetailModel: ModelProtocol {
         model.backlinks = []
         model.isLoading = true
         model.saveState = .saved
+        return Update(state: model)
+    }
+
+    static func updateAudience(
+        state: DetailModel,
+        environment: AppEnvironment,
+        audience: Audience
+    ) -> Update<DetailModel> {
+        guard let address = state.address else {
+            logger.log(
+                "Update audience requested, but no memo is being edited."
+            )
+            return Update(state: state)
+        }
+        let fx: Fx<DetailAction> = environment.data.updateAudienceAsync(
+            address: address,
+            audience: audience
+        )
+        .map({ address in
+            DetailAction.succeedUpdateAudience(address)
+        })
+        .catch({ error in
+            Just(DetailAction.failUpdateAudience(error.localizedDescription))
+        })
+        .eraseToAnyPublisher()
+        var model = state
+        model.address = address.withAudience(audience)
+        return Update(state: model, fx: fx)
+    }
+
+    static func succeedUpdateAudience(
+        state: DetailModel,
+        environment: AppEnvironment,
+        address: MemoAddress
+    ) -> Update<DetailModel> {
+        guard let address = state.address else {
+            return Update(state: state)
+        }
+        var model = state
+        model.address = address
         return Update(state: model)
     }
 
@@ -1410,8 +1515,8 @@ struct DetailModel: ModelProtocol {
         // If there is no entry, nothing to save
         guard let entry = entry else {
             let saveState = String(reflecting: state.saveState)
-            environment.logger.warning(
-                "Entry save state is marked \(saveState) but no entry could be derived for state. Doing nothing."
+            logger.warning(
+                "Entry save state is marked \(saveState) but no entry was given. Doing nothing."
             )
             return Update(state: state)
         }
@@ -1429,7 +1534,7 @@ struct DetailModel: ModelProtocol {
             .catch({ error in
                 Just(
                     DetailAction.failSave(
-                        slug: entry.slug,
+                        address: entry.address,
                         message: error.localizedDescription
                     )
                 )
@@ -1444,8 +1549,8 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         entry: MemoEntry
     ) -> Update<DetailModel> {
-        environment.logger.debug(
-            "Saved entry: \(entry.slug)"
+        logger.debug(
+            "Saved entry: \(entry.address)"
         )
         var model = state
 
@@ -1470,12 +1575,12 @@ struct DetailModel: ModelProtocol {
     static func failSave(
         state: DetailModel,
         environment: AppEnvironment,
-        slug: Slug,
+        address: MemoAddress,
         message: String
     ) -> Update<DetailModel> {
         //  TODO: show user a "try again" banner
-        environment.logger.warning(
-            "Save failed for entry (\(slug)) with error: \(message)"
+        logger.warning(
+            "Save failed for entry (\(address)) with error: \(message)"
         )
         // Mark modified, since we failed to save
         var model = state
@@ -1502,10 +1607,10 @@ struct DetailModel: ModelProtocol {
         model.linkSearchText = text
 
         // Omit current slug from results
-        let omitting = state.slug.mapOr(
-            { slug in Set([slug]) },
-            default: Set()
-        )
+        var omitting: Set<MemoAddress> = Set()
+        if let address = state.address {
+            omitting.insert(address)
+        }
 
         // Search link suggestions
         let fx: Fx<DetailAction> = environment.data
@@ -1549,11 +1654,11 @@ struct DetailModel: ModelProtocol {
         // If there is a selected link, use that range
         // instead of selection
         let (range, replacement): (NSRange, String) = Func.pipe(
-            state.selectedEntryLinkMarkup,
+            state.selectedShortlink,
             through: { markup in
                 switch markup {
                 case .slashlink(let slashlink):
-                    let replacement = link.slug.toSlashlink()
+                    let replacement = link.address.slug.toSlashlink()
                     let range = NSRange(
                         slashlink.span.range,
                         in: state.markupEditor.text
@@ -1591,23 +1696,26 @@ struct DetailModel: ModelProtocol {
 
     /// Show rename sheet.
     /// Do rename-flow-related setup.
-    static func showRenameSheet(
+    static func presentRenameSheet(
         state: DetailModel,
         environment: AppEnvironment,
-        entry: EntryLink?
+        address: MemoAddress?,
+        title: String?
     ) -> Update<DetailModel> {
-        guard let entry = entry else {
-            environment.logger.warning(
+        guard let address = address else {
+            logger.warning(
                 "Rename sheet invoked on missing entry"
             )
             return Update(state: state)
         }
 
-        var model = state
-        model.isRenameSheetShowing = true
-        model.entryToRename = entry
+        let link = EntryLink(address: address, title: title)
 
-        let title = entry.linkableTitle
+        var model = state
+        model.isRenameSheetPresented = true
+        model.entryToRename = link
+
+        let title = link.linkableTitle
 
         return DetailModel.update(
             state: model,
@@ -1621,12 +1729,12 @@ struct DetailModel: ModelProtocol {
 
     /// Hide rename sheet.
     /// Do rename-flow-related teardown.
-    static func hideRenameSheet(
+    static func unpresentRenameSheet(
         state: DetailModel,
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         var model = state
-        model.isRenameSheetShowing = false
+        model.isRenameSheetPresented = false
         model.entryToRename = nil
 
         return DetailModel.update(
@@ -1683,7 +1791,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<DetailModel> {
-        environment.logger.warning(
+        logger.warning(
             "Failed to read suggestions from database: \(error)"
         )
         return Update(state: state)
@@ -1726,7 +1834,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         return update(
             state: state,
-            actions: [.hideRenameSheet, .refreshLists],
+            actions: [.unpresentRenameSheet, .refreshLists],
             environment: environment
         )
     }
@@ -1738,7 +1846,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<DetailModel> {
-        environment.logger.warning(
+        logger.warning(
             "Failed to move entry with error: \(error)"
         )
         return Update(state: state)
@@ -1774,11 +1882,11 @@ struct DetailModel: ModelProtocol {
         child: EntryLink
     ) -> Update<DetailModel> {
         var model = state
-        model.slug = parent.slug
+        model.address = parent.address
         model.headers.title = parent.linkableTitle
         return update(
             state: model,
-            actions: [.refreshLists, .hideRenameSheet, .refreshDetail],
+            actions: [.refreshLists, .unpresentRenameSheet, .refreshDetail],
             environment: environment
         )
     }
@@ -1790,7 +1898,7 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<DetailModel> {
-        environment.logger.warning(
+        logger.warning(
             "Failed to merge entry with error: \(error)"
         )
         return Update(state: state)
@@ -1803,8 +1911,10 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
+        let address = from.address
+        let title = to.title
         let fx: Fx<DetailAction> = environment.data
-            .retitleEntryAsync(from: from, to: to)
+            .retitleEntryAsync(address: address, title: title)
             .map({ _ in
                 DetailAction.succeedRetitleEntry(from: from, to: to)
             })
@@ -1829,7 +1939,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         return update(
             state: state,
-            actions: [.refreshLists, .hideRenameSheet],
+            actions: [.refreshLists, .unpresentRenameSheet],
             environment: environment
         )
     }
@@ -1855,7 +1965,7 @@ struct DetailModel: ModelProtocol {
         isPresented: Bool
     ) -> Update<DetailModel> {
         var model = state
-        model.isDeleteConfirmationDialogShowing = isPresented
+        model.isDeleteConfirmationDialogPresented = isPresented
         return Update(state: model)
             .animation(.default)
     }
@@ -1944,7 +2054,7 @@ struct DetailModel: ModelProtocol {
 //  MARK: Outer Model
 /// A description of a detail suitible for pushing onto a navigation stack
 struct DetailOuterModel: Hashable, ModelProtocol {
-    var slug: Slug
+    var address: MemoAddress
     var title: String
     var fallback: String
     
@@ -1959,10 +2069,10 @@ struct DetailOuterModel: Hashable, ModelProtocol {
 
 extension EntryLink {
     init?(_ detail: DetailModel) {
-        guard let slug = detail.slug else {
+        guard let address = detail.address else {
             return nil
         }
-        self.init(slug: slug, title: detail.headers.title)
+        self.init(address: address, title: detail.headers.title)
     }
 }
 
@@ -1970,7 +2080,7 @@ extension FileFingerprint {
     /// Initialize FileFingerprint from DetailModel.
     /// We use this to do last-write-wins.
     init?(_ detail: DetailModel) {
-        guard let slug = detail.slug else {
+        guard let slug = detail.address?.slug else {
             return nil
         }
         self.init(
@@ -1983,10 +2093,10 @@ extension FileFingerprint {
 
 extension MemoEntry {
     init?(_ detail: DetailModel) {
-        guard let slug = detail.slug else {
+        guard let address = detail.address else {
             return nil
         }
-        self.slug = slug
+        self.address = address
         self.contents = Memo(
             contentType: detail.headers.contentType,
             created: detail.headers.created,
@@ -1995,6 +2105,22 @@ extension MemoEntry {
             fileExtension: detail.headers.fileExtension,
             additionalHeaders: detail.additionalHeaders,
             body: detail.markupEditor.text
+        )
+    }
+}
+
+struct Detail_Previews: PreviewProvider {
+    static var previews: some View {
+        DetailView(
+            state: DetailOuterModel(
+                address: MemoAddress(
+                    formatting: "Nothing is lost in the universe",
+                    audience: .public
+                )!,
+                title: "Nothing is lost in the universe",
+                fallback: "Nothing is lost in the universe"
+            ),
+            send: { action in }
         )
     }
 }

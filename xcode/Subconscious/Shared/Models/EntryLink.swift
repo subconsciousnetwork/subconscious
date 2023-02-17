@@ -17,49 +17,47 @@ struct EntryLink:
     CustomStringConvertible,
     Codable
 {
-    /// Slug for link
-    let slug: Slug
+    /// Address for link
+    let address: MemoAddress
     /// Actual title of link
     let title: String
     /// Linkable title that is always formattable to slug
     let linkableTitle: String
-
-    init(slug: Slug, title: String) {
-        self.slug = slug
+    
+    init(address: MemoAddress, title: String) {
+        self.address = address
         let title = Self.sanitizeTitle(title)
         self.title = title
         let titleSlug = Slug(formatting: title)
         self.linkableTitle = (
-            titleSlug != self.slug ?
-            Self.sanitizeTitle(slug.toTitle()) :
+            titleSlug != address.slug ?
+            Self.sanitizeTitle(address.slug.toTitle()) :
             title
         )
     }
-
+    
     /// Construct an EntryLink from a string.
     /// Slug is generated for string using lossy approach.
-    init?(title: String) {
+    init?(title: String, audience: Audience) {
         let title = Self.sanitizeTitle(title)
-        guard let slug = Slug(formatting: title) else {
+        guard let address = title.toMemoAddress(audience: audience) else {
             return nil
         }
         self.title = title
         self.linkableTitle = title
-        self.slug = slug
+        self.address = address
     }
-
+    
     /// Construct an EntryLink from a slug.
     /// Title is generated using `slug.toTitle()`.
-    init(slug: Slug) {
-        self.slug = slug
-        let title = Self.sanitizeTitle(slug.toTitle())
-        self.title = title
-        self.linkableTitle = title
+    init(address: MemoAddress, title: String? = nil) {
+        let title = title ?? address.slug.toTitle()
+        self.init(address: address, title: title)
     }
-
-    var id: Slug { slug }
+    
+    var id: MemoAddress { address }
     var description: String { linkableTitle }
-
+    
     static func sanitizeTitle(_ text: String) -> String {
         text
             .trimmingCharacters(in: .whitespaces)

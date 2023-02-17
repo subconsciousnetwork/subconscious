@@ -27,7 +27,7 @@ struct TextFieldLabel<Field: View>: View {
     }
 }
 
-struct LabeledTextField_Previews: PreviewProvider {
+struct TextFieldLabel_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             TextFieldLabel(

@@ -8,6 +8,7 @@
 import SwiftUI
 import ObservableStore
 import Combine
+import os
 
 //  MARK: View
 struct FeedView: View {
@@ -133,6 +134,11 @@ struct FeedModel: ModelProtocol {
     var detail = DetailModel()
     var stories: [Story] = []
 
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "Feed"
+    )
+
     //  MARK: Update
     static func update(
         state: FeedModel,
@@ -176,10 +182,10 @@ struct FeedModel: ModelProtocol {
         case .failFetchFeed(let error):
             return log(state: state, environment: environment, error: error)
         case .activatedSuggestion:
-            environment.logger.warning("Not implemented")
+            logger.warning("Not implemented")
             return Update(state: state)
         case .requestDeleteEntry(_):
-            environment.logger.debug(
+            logger.debug(
                 "requestDeleteEntry should be handled by parent component"
             )
             return Update(state: state)
@@ -222,7 +228,7 @@ struct FeedModel: ModelProtocol {
         environment: AppEnvironment,
         error: Error
     ) -> Update<FeedModel> {
-        environment.logger.log("\(error.localizedDescription)")
+        logger.log("\(error.localizedDescription)")
         return Update(state: state)
     }
 
@@ -232,7 +238,7 @@ struct FeedModel: ModelProtocol {
         environment: AppEnvironment,
         error: Error
     ) -> Update<FeedModel> {
-        environment.logger.warning("\(error.localizedDescription)")
+        logger.warning("\(error.localizedDescription)")
         return Update(state: state)
     }
 
@@ -304,7 +310,7 @@ struct FeedModel: ModelProtocol {
         environment: AppEnvironment,
         slug: Slug
     ) -> Update<FeedModel> {
-        environment.logger.warning("Not implemented")
+        logger.warning("Not implemented")
         return Update(state: state)
     }
 }

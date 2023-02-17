@@ -8,6 +8,7 @@ import SwiftUI
 import ObservableStore
 
 struct NotebookNavigationView: View {
+    @ObservedObject var app: Store<AppModel>
     @ObservedObject var store: Store<NotebookModel>
 
     var body: some View {
@@ -24,18 +25,18 @@ struct NotebookNavigationView: View {
                     onEntryPress: { entry in
                         store.send(
                             .pushDetail(
-                                slug: entry.slug,
-                                title: entry.link.title,
-                                fallback: entry.link.title,
+                                address: entry.address,
+                                title: entry.title,
+                                fallback: entry.title,
                                 autofocus: false
                             )
                         )
                     },
-                    onEntryDelete: { slug in
-                        store.send(.confirmDelete(slug))
+                    onEntryDelete: { address in
+                        store.send(.confirmDelete(address))
                     },
                     onRefresh: {
-                        store.send(.listRecent)
+                        app.send(.syncAll)
                     }
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -75,7 +76,15 @@ struct NotebookNavigationView: View {
                         Text("Notes").bold()
                         CountChip(count: store.state.entryCount)
                     }
-                    .frame(minWidth: 200, maxWidth: .infinity)
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button(
+                        action: {
+                            app.send(.presentSettingsSheet(true))
+                        }
+                    ) {
+                        Image(systemName: "gearshape")
+                    }
                 }
             }
         }

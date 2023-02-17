@@ -1,16 +1,6 @@
 import SQLite3
 import Foundation
 
-extension Array {
-    public func get(_ index: Array.Index) -> Element? {
-        if index >= 0 && index < self.count {
-            return self[index]
-        } else {
-            return nil
-        }
-    }
-}
-
 //  MARK: SQLite3 Database
 final class SQLite3Database {
     /// The default value of the user_version pragma.
@@ -70,24 +60,35 @@ final class SQLite3Database {
     public struct Row {
         public var columns: [Value] = []
 
+        /// Get value from a specific column, if that column exists.
+        /// Otherwise return nil.
+        /// Basically a bounds-checked array get.
+        public func col(_ i: Int) -> Value? {
+            if i >= 0 && i < self.columns.count {
+                return self.columns[i]
+            } else {
+                return nil
+            }
+        }
+
         public func get(_ i: Int) -> String? {
-            columns.get(i)?.unwrap()
+            self.col(i)?.toString()
         }
 
         public func get(_ i: Int) -> Date? {
-            columns.get(i)?.unwrap()
+            self.col(i)?.toDate()
         }
 
         public func get(_ i: Int) -> Int? {
-            columns.get(i)?.unwrap()
+            self.col(i)?.toInt()
         }
 
         public func get(_ i: Int) -> Double? {
-            columns.get(i)?.unwrap()
+            self.col(i)?.toDouble()
         }
 
         public func get(_ i: Int) -> Data? {
-            columns.get(i)?.unwrap()
+            self.col(i)?.toData()
         }
     }
 
@@ -120,6 +121,13 @@ final class SQLite3Database {
             return Self.text(text)
         }
         
+        /// Encode a boolean as an integer value.
+        /// (SQLite3 represents booleans as integers)
+        /// - Returns a `Value.integer`
+        public static func bool(_ bool: Bool) -> Self {
+            .integer(bool ? 1 : 0)
+        }
+
         /// Encode a structure to JSON and wrap as a `.text` value.
         /// - Returns a `Value.text` if successful, `or` fallback otherwise.
         public static func json<T: Encodable>(
@@ -163,7 +171,7 @@ final class SQLite3Database {
             text(escapePrefixQueryLike(query))
         }
 
-        public func unwrap() -> String? {
+        public func toString() -> String? {
             switch self {
             case .text(let value):
                 return value
@@ -172,7 +180,7 @@ final class SQLite3Database {
             }
         }
 
-        public func unwrap() -> Date? {
+        public func toDate() -> Date? {
             switch self {
             case .text(let value):
                 return Self.dateFormatter.date(from: value)
@@ -181,7 +189,7 @@ final class SQLite3Database {
             }
         }
 
-        public func unwrap() -> Int? {
+        public func toInt() -> Int? {
             switch self {
             case .integer(let value):
                 return value
@@ -190,7 +198,16 @@ final class SQLite3Database {
             }
         }
 
-        public func unwrap() -> Double? {
+        public func toBool() -> Bool? {
+            switch self {
+            case .integer(let value):
+                return value > 0
+            default:
+                return nil
+            }
+        }
+
+        public func toDouble() -> Double? {
             switch self {
             case .real(let value):
                 return value
@@ -199,7 +216,7 @@ final class SQLite3Database {
             }
         }
 
-        public func unwrap() -> Data? {
+        public func toData() -> Data? {
             switch self {
             case .blob(let value):
                 return value
@@ -209,10 +226,24 @@ final class SQLite3Database {
         }
     }
 
-    public enum SQLite3DatabaseError: Error {
+    public enum SQLite3DatabaseError: Error, LocalizedError {
         case database(code: Int32, message: String)
         case parameter(_ message: String)
         case value(_ message: String)
+        case delete(_ message: String)
+
+        public var errorDescription: String? {
+            switch self {
+            case let .database(code, message):
+                return "Database error. Code: \(code). Message: \(message)."
+            case let .parameter(message):
+                return "Parameter error. Message: \(message)."
+            case let .value(message):
+                return "Value error. Message: \(message)."
+            case let .delete(message):
+                return "Delete error. Message: \(message)."
+            }
+        }
     }
 
     /// Enum representing the most common flag combinations for `sqlite3_open_v2`.
@@ -237,6 +268,9 @@ final class SQLite3Database {
     /// Connection lifetime is object lifetime.
     /// Initializing opens a connection to the database.
     /// Deinitializing closes the connection.
+    ///
+    /// Connections are NOT threadsafe. Use SQLite3Database instead to perform
+    /// actions using a threadsafe dispatch queue.
     final class Connection {
         /// Internal handle to the currently open SQLite DB instance
         private var db: OpaquePointer?
@@ -644,7 +678,7 @@ final class SQLite3Database {
         self.path = path
         self.mode = mode
         // Create GCD dispatch queue for running database queries.
-        // SQLite3Connection objects are threadsafe.
+        // We use this to ensure calls to SQLite3Database are threadsafe.
         // The queue is *always* serial, ensuring that SQL queries to this
         // database are run in-order, whether called sync or async.
         self.queue = DispatchQueue(
@@ -680,7 +714,16 @@ final class SQLite3Database {
         try queue.sync {
             self.db?.close()
             self.db = nil
-            try FileManager.default.removeItem(atPath: self.path)
+            // Get URL from path, if path is a valid URL.
+            // We must use the `at: URL` form of this method because the
+            // `atPath` form fails when given an absoluteString.
+            // 2023-02-03 Gordon Brander
+            guard let file = URL(string: self.path) else {
+                throw SQLite3DatabaseError.delete(
+                    "Could not get URL for database from path: \(path)"
+                )
+            }
+            try FileManager.default.removeItem(at: file)
         }
     }
 

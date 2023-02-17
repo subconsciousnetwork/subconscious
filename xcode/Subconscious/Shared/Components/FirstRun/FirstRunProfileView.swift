@@ -9,60 +9,41 @@ import SwiftUI
 import ObservableStore
 
 struct FirstRunProfileView: View {
-    /// FirstRunView is a major view that manages its own state in a store.
-    @ObservedObject var store: Store<FirstRunModel>
-    var onDone: (String) -> Void
+    @ObservedObject var app: Store<AppModel>
 
     var body: some View {
         NavigationStack {
             VStack {
                 Spacer()
                 VStack(alignment: .leading, spacing: AppTheme.unit4) {
-                    TextFieldLabel(
-                        label: Text("Nickname"),
-                        caption: Text("What do you want to go by? Your nickname can be your real name or something else."),
-                        field: TextField(
-                            "Your Name",
-                            text: Binding(
-                                get: { store.state.nickname },
-                                send: store.send,
-                                tag: FirstRunAction.setNickname
-                            )
-                        )
+                    ValidatedTextField(
+                        placeholder: "nickname",
+                        text: Binding(
+                            get: { app.state.nicknameTextField },
+                            send: app.send,
+                            tag: AppAction.setNicknameTextField
+                        ),
+                        caption: "Lowercase letters, numbers and dashes only.",
+                        isValid: app.state.isNicknameTextFieldValid
                     )
-                    TextFieldLabel(
-                        label: Text("Email"),
-                        field: TextField(
-                            "you@there.com",
-                            text: Binding(
-                                get: { store.state.email },
-                                send: store.send,
-                                tag: FirstRunAction.setEmail
-                            )
-                        )
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                    )
+                    .textFieldStyle(.roundedBorder)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
                 }
                 Spacer()
                 NavigationLink(
                     destination: {
-                        FirstRunCreateSphereView(
-                            store: store,
-                            onDone: onDone
-                        )
+                        FirstRunCreateSphereView(app: app)
                     },
                     label: {
                         Text("Continue")
                     }
                 )
-                .disabled(
-                    !store.state.isEmailValid ||
-                    !store.state.isNicknameValid
-                )
+                .buttonStyle(LargeButtonStyle())
                 .simultaneousGesture(TapGesture().onEnded {
-                    store.send(.persistProfile)
+                    app.send(.createSphere(app.state.nickname))
                 })
+                .disabled(!app.state.isNicknameTextFieldValid)
             }
             .padding()
             .navigationTitle("Your Profile")
@@ -74,11 +55,10 @@ struct FirstRunProfileView: View {
 struct FirstRunProfileView_Previews: PreviewProvider {
     static var previews: some View {
         FirstRunProfileView(
-            store: Store(
-                state: FirstRunModel(),
-                environment: AppEnvironment.default
-            ),
-            onDone: { id in }
+            app: Store(
+                state: AppModel(),
+                environment: AppEnvironment()
+            )
         )
     }
 }

@@ -9,7 +9,6 @@ import XCTest
 @testable import Subconscious
 
 class Tests_CollectionUtilities: XCTestCase {
-
     func testCollectionGetValidBounds() throws {
         let collection = [0, 1, 2, 3]
         let value = collection.get(1)

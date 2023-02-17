@@ -16,7 +16,7 @@ import Combine
 /// The file view for notes
 struct NotebookView: View {
     /// Global shared store
-    @ObservedObject var parent: Store<AppModel>
+    @ObservedObject var app: Store<AppModel>
     /// Local major view store
     @StateObject private var store = Store(
         state: NotebookModel(),
@@ -33,8 +33,11 @@ struct NotebookView: View {
         // See https://stackoverflow.com/a/58512696
         // 2021-12-16 Gordon Brander
         ZStack {
-            NotebookNavigationView(store: store)
-                .zIndex(1)
+            NotebookNavigationView(
+                app: app,
+                store: store
+            )
+            .zIndex(1)
             if store.state.isSearchPresented {
                 SearchView(
                     state: store.state.search,
@@ -61,6 +64,11 @@ struct NotebookView: View {
         .onAppear {
             store.send(.appear)
         }
+        /// Wire up local store to respond to some events at app level
+        .onReceive(
+            app.actions.compactMap(NotebookAction.from),
+            perform: store.send
+        )
         .onReceive(store.actions) { action in
             let message = String.loggable(action)
             NotebookModel.logger.debug("[action] \(message)")
@@ -104,19 +112,19 @@ enum NotebookAction {
     case listRecentFailure(String)
     
     // Delete entries
-    case confirmDelete(Slug?)
+    case confirmDelete(MemoAddress?)
     case setConfirmDeleteShowing(Bool)
     /// Stage an entry deletion immediately before requesting.
     /// We do this for swipe-to-delete, where we must remove the entry
     /// from the list before requesting delete for the animation to work.
-    case stageDeleteEntry(Slug)
+    case stageDeleteEntry(MemoAddress)
     /// Delete entry identified by slug.
-    case deleteEntry(Slug?)
+    case deleteEntry(MemoAddress?)
     case failDeleteEntry(String)
-    case succeedDeleteEntry(Slug)
+    case succeedDeleteEntry(MemoAddress)
 
     /// Entry was saved
-    case succeedSaveEntry(slug: Slug, modified: Date)
+    case succeedSaveEntry(slug: MemoAddress, modified: Date)
 
     /// Move entry succeeded. Lifecycle action.
     case succeedMoveEntry(from: EntryLink, to: EntryLink)
@@ -124,6 +132,9 @@ enum NotebookAction {
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)
     /// Retitle entry succeeded. Lifecycle action.
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+
+    /// Audience was changed for address
+    case succeedUpdateAudience(MemoAddress)
 
     //  Search
     /// Hit submit ("go") while focused on search field
@@ -135,9 +146,15 @@ enum NotebookAction {
     
     /// Set entire navigation stack
     case setDetails([DetailOuterModel])
+
+    /// Find the first existing detail for a given slug.
+    /// If public content exists for this slug, that will be pushed.
+    /// Otherwise, will push local content.
+    case findAndPushDetail(slug: Slug, title: String, fallback: String)
+
     /// Push detail onto navigation stack
     case pushDetail(
-        slug: Slug,
+        address: MemoAddress,
         title: String,
         fallback: String,
         autofocus: Bool
@@ -164,51 +181,27 @@ extension NotebookAction {
         switch suggestion {
         case .entry(let entryLink):
             return .pushDetail(
-                slug: entryLink.slug,
+                address: entryLink.address,
                 title: entryLink.linkableTitle,
                 fallback: entryLink.title,
                 autofocus: false
             )
         case .search(let entryLink):
             return .pushDetail(
-                slug: entryLink.slug,
+                address: entryLink.address,
                 title: entryLink.linkableTitle,
                 fallback: entryLink.title,
                 autofocus: false
             )
         case .scratch(let entryLink):
             return .pushDetail(
-                slug: entryLink.slug,
+                address: entryLink.address,
                 title: entryLink.linkableTitle,
                 fallback: generateScratchFallback(date: Date.now),
                 autofocus: false
             )
         case .random:
             return .pushRandomDetail(autofocus: false)
-        }
-    }
-}
-
-extension NotebookAction {
-    static func tag(_ action: DetailOuterAction) -> Self {
-        switch action {
-        case .requestDelete(let slug):
-            return .deleteEntry(slug)
-        case let .requestDetail(slug, title, fallback):
-            return .pushDetail(
-                slug: slug,
-                title: title,
-                fallback: fallback,
-                autofocus: false
-            )
-        case let .succeedMoveEntry(from, to):
-            return .succeedMoveEntry(from: from, to: to)
-        case let .succeedMergeEntry(parent, child):
-            return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedRetitleEntry(from, to):
-            return .succeedRetitleEntry(from: from, to: to)
-        case let .succeedSaveEntry(slug, modified):
-            return .succeedSaveEntry(slug: slug, modified: modified)
         }
     }
 }
@@ -226,7 +219,52 @@ extension NotebookAction: CustomLogStringConvertible {
     }
 }
 
-//  MARK: Cursors
+//  MARK: Cursors and tagging functions
+
+extension NotebookAction {
+    static func tag(_ action: DetailOuterAction) -> Self {
+        switch action {
+        case .requestDelete(let address):
+            return .deleteEntry(address)
+        case let .requestDetail(address, title, fallback):
+            return .pushDetail(
+                address: address,
+                title: title,
+                fallback: fallback,
+                autofocus: false
+            )
+        case let .requestFindDetail(slug, title, fallback):
+            return .findAndPushDetail(
+                slug: slug,
+                title: title,
+                fallback: fallback
+            )
+        case let .succeedMoveEntry(from, to):
+            return .succeedMoveEntry(from: from, to: to)
+        case let .succeedMergeEntry(parent, child):
+            return .succeedMergeEntry(parent: parent, child: child)
+        case let .succeedRetitleEntry(from, to):
+            return .succeedRetitleEntry(from: from, to: to)
+        case let .succeedSaveEntry(slug, modified):
+            return .succeedSaveEntry(slug: slug, modified: modified)
+        case let .succeedUpdateAudience(address):
+            return .succeedUpdateAudience(address)
+        }
+    }
+}
+
+extension NotebookAction {
+    static func from(_ action: AppAction) -> Self? {
+        switch action {
+        case .succeedMigrateDatabase:
+            return .ready
+        case .succeedSyncLocalFilesWithDatabase:
+            return .ready
+        default:
+            return nil
+        }
+    }
+}
 
 struct NotebookSearchCursor: CursorProtocol {
     static func get(state: NotebookModel) -> SearchModel {
@@ -276,7 +314,7 @@ struct NotebookModel: ModelProtocol {
     
     //  Note deletion action sheet
     /// Delete confirmation action sheet
-    var entryToDelete: Slug? = nil
+    var entryToDelete: MemoAddress? = nil
     /// Delete confirmation action sheet
     var isConfirmDeleteShowing = false
     
@@ -357,13 +395,13 @@ struct NotebookModel: ModelProtocol {
             model.recent = entries
             return Update(state: model)
         case let .listRecentFailure(error):
-            environment.logger.warning(
+            logger.warning(
                 "Failed to list recent entries: \(error)"
             )
             return Update(state: state)
         case let .confirmDelete(slug):
             guard let slug = slug else {
-                environment.logger.log(
+                logger.log(
                     "Delete confirmation flow passed nil slug. Doing nothing."
                 )
                 var model = state
@@ -384,26 +422,26 @@ struct NotebookModel: ModelProtocol {
                 model.entryToDelete = nil
             }
             return Update(state: model)
-        case let .stageDeleteEntry(slug):
+        case let .stageDeleteEntry(address):
             return stageDeleteEntry(
                 state: state,
                 environment: environment,
-                slug: slug
+                address: address
             )
-        case .deleteEntry(let slug):
+        case .deleteEntry(let address):
             return deleteEntry(
                 state: state,
                 environment: environment,
-                slug: slug
+                address: address
             )
         case .failDeleteEntry(let error):
             logger.log("failDeleteEntry: \(error)")
             return Update(state: state)
-        case .succeedDeleteEntry(let slug):
+        case .succeedDeleteEntry(let address):
             return succeedDeleteEntry(
                 state: state,
                 environment: environment,
-                slug: slug
+                address: address
             )
         case .succeedSaveEntry:
             // Just refresh note after save, for now.
@@ -434,6 +472,12 @@ struct NotebookModel: ModelProtocol {
                 from: from,
                 to: to
             )
+        case let .succeedUpdateAudience(address):
+            return succeedUpdateAudience(
+                state: state,
+                environment: environment,
+                address: address
+            )
         case .submitSearch(let query):
             return submitSearch(
                 state: state,
@@ -450,11 +494,19 @@ struct NotebookModel: ModelProtocol {
             var model = state
             model.details = details
             return Update(state: model)
-        case let .pushDetail(slug, title, fallback, _):
+        case let .findAndPushDetail(slug, title, fallback):
+            return findAndPushDetail(
+                state: state,
+                environment: environment,
+                slug: slug,
+                title: title,
+                fallback: fallback
+            )
+        case let .pushDetail(address, title, fallback, _):
             var model = state
             model.details.append(
                 DetailOuterModel(
-                    slug: slug,
+                    address: address,
                     title: title,
                     fallback: fallback
                 )
@@ -483,13 +535,7 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        /// Subscribe to database state publisher to know when ready to query.
-        let databaseStateFx = environment.data.database.$state.map({ state in
-            NotebookAction.databaseStateChange(state)
-        })
-            .eraseToAnyPublisher()
-        
-        return Update(state: state, fx: databaseStateFx)
+        return Update(state: state)
     }
     
     /// View is ready
@@ -499,10 +545,7 @@ struct NotebookModel: ModelProtocol {
     ) -> Update<NotebookModel> {
         return update(
             state: state,
-            actions: [
-                .countEntries,
-                .refreshLists
-            ],
+            action: .refreshLists,
             environment: environment
         )
     }
@@ -562,7 +605,7 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data.countEntries()
+        let fx: Fx<NotebookAction> = environment.data.countMemos()
             .map({ count in
                 NotebookAction.setEntryCount(count)
             })
@@ -588,7 +631,7 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data.listRecentEntries()
+        let fx: Fx<NotebookAction> = environment.data.listRecentMemos()
             .map({ entries in
                 NotebookAction.setRecent(entries)
             })
@@ -599,15 +642,15 @@ struct NotebookModel: ModelProtocol {
                     )
                 )
             })
-                .eraseToAnyPublisher()
-                    return Update(state: state, fx: fx)
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
     
     /// Delete entry with `slug`
     static func stageDeleteEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        slug: Slug
+        address: MemoAddress
     ) -> Update<NotebookModel> {
         var model = state
         
@@ -623,16 +666,15 @@ struct NotebookModel: ModelProtocol {
         // 2022-02-18 Gordon Brander
         if
             var recent = model.recent,
-            let index = recent.firstIndex(
-                where: { stub in stub.id == slug }
-            ) {
+            let index = recent.firstIndex(where: {
+                stub in stub.address == address
+            })
+        {
             recent.remove(at: index)
             model.recent = recent
         }
         
-        let fx: Fx<NotebookAction> = Just(
-            NotebookAction.deleteEntry(slug)
-        )
+        let fx: Fx<NotebookAction> = Just(NotebookAction.deleteEntry(address))
             .eraseToAnyPublisher()
         
         return Update(state: model, fx: fx)
@@ -643,18 +685,18 @@ struct NotebookModel: ModelProtocol {
     static func deleteEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        slug: Slug?
+        address: MemoAddress?
     ) -> Update<NotebookModel> {
-        guard let slug = slug else {
+        guard let address = address else {
             logger.log(
-                "Delete requested for nil slug. Doing nothing."
+                "Delete requested for nil address. Doing nothing."
             )
             return Update(state: state)
         }
         let fx: Fx<NotebookAction> = environment.data
-            .deleteEntryAsync(slug: slug)
+            .deleteMemoAsync(address)
             .map({ _ in
-                NotebookAction.succeedDeleteEntry(slug)
+                NotebookAction.succeedDeleteEntry(address)
             })
             .catch({ error in
                 Just(
@@ -669,12 +711,12 @@ struct NotebookModel: ModelProtocol {
     static func succeedDeleteEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        slug: Slug
+        address: MemoAddress
     ) -> Update<NotebookModel> {
-        logger.log("Deleted entry: \(slug)")
+        logger.log("Deleted entry: \(address)")
         var model = state
         model.details = state.details.filter({ detail in
-            detail.slug != slug
+            detail.address != address
         })
         return update(
             state: model,
@@ -695,11 +737,11 @@ struct NotebookModel: ModelProtocol {
 
         /// Find all instances of this model in the stack and update them
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.slug == from.slug else {
+            guard detail.address == from.address else {
                 return detail
             }
             var model = detail
-            model.slug = to.slug
+            model.address = to.address
             model.title = to.linkableTitle
             model.fallback = to.title
             return model
@@ -724,11 +766,11 @@ struct NotebookModel: ModelProtocol {
 
         /// Find all instances of child and update them to become parent
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.slug == child.slug else {
+            guard detail.address == child.address else {
                 return detail
             }
             var model = detail
-            model.slug = parent.slug
+            model.address = parent.address
             model.title = parent.linkableTitle
             model.fallback = parent.title
             return model
@@ -753,7 +795,7 @@ struct NotebookModel: ModelProtocol {
 
         /// Find all instances of this model in the stack and update them
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.slug == from.slug else {
+            guard detail.address == from.address else {
                 return detail
             }
             var model = detail
@@ -768,11 +810,38 @@ struct NotebookModel: ModelProtocol {
         )
     }
 
+    /// Retitle success lifecycle handler.
+    /// Updates UI in response.
+    static func succeedUpdateAudience(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        address: MemoAddress
+    ) -> Update<NotebookModel> {
+        var model = state
+
+        /// Find all instances of this model in the stack and update them
+        model.details = state.details.map({ (detail: DetailOuterModel) in
+            guard detail.address.slug == address.slug else {
+                return detail
+            }
+            var model = detail
+            model.address = address
+            return model
+        })
+        
+        return update(
+            state: model,
+            action: .refreshLists,
+            environment: environment
+        )
+    }
+
     /// Submit a search query (typically by hitting "go" on keyboard)
     static func submitSearch(
         state: NotebookModel,
         environment: AppEnvironment,
-        query: String
+        query: String,
+        defaultAudience: Audience = .local
     ) -> Update<NotebookModel> {
         // Duration of keyboard animation
         let duration = Duration.keyboard
@@ -787,8 +856,11 @@ struct NotebookModel: ModelProtocol {
         
         // Derive slug. If we can't (e.g. invalid query such as empty string),
         // just hide the search HUD and do nothing.
-        guard let link = EntryLink(title: query) else {
-            environment.logger.log(
+        guard let link = EntryLink(
+            title: query,
+            audience: defaultAudience
+        ) else {
+            logger.log(
                 "Query could not be converted to link: \(query)"
             )
             return update
@@ -797,7 +869,7 @@ struct NotebookModel: ModelProtocol {
         // Request detail AFTER animaiton completes
         let fx: Fx<NotebookAction> = Just(
             NotebookAction.pushDetail(
-                slug: link.slug,
+                address: link.address,
                 title: link.linkableTitle,
                 fallback: link.title,
                 autofocus: false
@@ -809,16 +881,39 @@ struct NotebookModel: ModelProtocol {
         return update.mergeFx(fx)
     }
     
+    /// Find and push a specific detail for slug
+    static func findAndPushDetail(
+        state: NotebookModel,
+        environment: AppEnvironment,
+        slug: Slug,
+        title: String,
+        fallback: String
+    ) -> Update<NotebookModel> {
+        let fallbackAddress = MemoAddress(slug: slug, audience: .local)
+        let address = environment.data
+            .findAddress(slug: slug) ?? fallbackAddress
+        return update(
+            state: state,
+            action: .pushDetail(
+                address: address,
+                title: title,
+                fallback: fallback,
+                autofocus: false
+            ),
+            environment: environment
+        )
+    }
+
     /// Request detail for a random entry
     static func pushRandomDetail(
         state: NotebookModel,
         environment: AppEnvironment,
         autofocus: Bool
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data.readRandomEntryLink()
+        let fx: Fx<NotebookAction> = environment.data.readRandomEntryLinkAsync()
             .map({ link in
                 NotebookAction.pushDetail(
-                    slug: link.slug,
+                    address: link.address,
                     title: link.linkableTitle,
                     fallback: link.title,
                     autofocus: autofocus

@@ -28,35 +28,34 @@ struct Slug:
     ///
     /// If you need a value to truly be a slug, use the Slug constructor.
     static func format(_ string: String) -> String? {
-        let slugString = string
         // Strip all non-allowed characters
-            .replacingOccurrences(
-                of: #"[^a-zA-Z0-9_\-\/\s]"#,
-                with: "",
-                options: .regularExpression,
-                range: nil
-            )
+        let slugString = string.replacingOccurrences(
+            of: #"[^a-zA-Z0-9_\-\/\s]"#,
+            with: "",
+            options: .regularExpression,
+            range: nil
+        )
         // Trim leading/trailing whitespace
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        .trimmingCharacters(in: .whitespacesAndNewlines)
         // Then trim leading/trailing slashes
-            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-            .lowercased()
+        .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        .lowercased()
         // Replace runs of one or more space with a single dash
-            .replacingOccurrences(
-                of: #"\s+"#,
-                with: "-",
-                options: .regularExpression,
-                range: nil
-            )
+        .replacingOccurrences(
+            of: #"\s+"#,
+            with: "-",
+            options: .regularExpression,
+            range: nil
+        )
         // Replace all instances of two or more consecutive slashes
         // with a single slash.
-            .replacingOccurrences(
-                of: #"/+"#,
-                with: "/",
-                options: .regularExpression,
-                range: nil
-            )
-            .truncatingSafeFileNameLength()
+        .replacingOccurrences(
+            of: #"/+"#,
+            with: "/",
+            options: .regularExpression,
+            range: nil
+        )
+        .truncatingSafeFileNameLength()
         guard !slugString.isEmpty else {
             return nil
         }
@@ -159,5 +158,11 @@ extension URL {
     /// In other words, return the last path component without the extension.
     func toSlug(relativeTo base: URL) -> Slug? {
         Slug(url: self, relativeTo: base)
+    }
+}
+
+extension String {
+    func toSlug() -> Slug? {
+        Slug(formatting: self)
     }
 }

@@ -10,7 +10,7 @@ import SwiftUI
 /// Root toolbar
 struct DetailKeyboardToolbarView: View {
     @Binding var isSheetPresented: Bool
-    var selectedEntryLinkMarkup: Subtext.EntryLinkMarkup?
+    var selectedShortlink: Subtext.Shortlink?
     var suggestions: [LinkSuggestion]
     var onSelectLinkCompletion: (EntryLink) -> Void
     var onInsertWikilink: () -> Void
@@ -47,7 +47,7 @@ struct DetailKeyboardToolbarView: View {
                     }
                 )
                 Divider()
-                switch selectedEntryLinkMarkup {
+                switch selectedShortlink {
                 case .wikilink:
                     WikilinkBarView(
                         links: entryLinks,
@@ -89,7 +89,11 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
             suggestions: [
                 .entry(
                     EntryLink(
-                        slug: Slug("an-organism-is-a-living-system")!
+                        address: MemoAddress(
+                            slug: Slug("an-organism-is-a-living-system")!,
+                            audience: .local
+                        ),
+                        title: "An organism is a living system"
                     )
                 )
             ],

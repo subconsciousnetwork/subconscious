@@ -18,7 +18,7 @@ struct LinkSuggestionLabelView: View, Equatable {
                     TitleGroupView(
                         title: Text(link.title),
                         subtitle: Text(
-                            #"Link to "\#(String(describing: link.slug))""#
+                            #"Link to "\#(String(describing: link.address.slug))""#
                         )
                     )
                 },
@@ -48,7 +48,10 @@ struct LinkSuggestionLabel_Previews: PreviewProvider {
         LinkSuggestionLabelView(
             suggestion: .new(
                 EntryLink(
-                    slug: Slug("floop")!
+                    address: MemoAddress(
+                        slug: Slug("A muse is more interesting than an oracle")!,
+                        audience: .public
+                    )
                 )
             )
         )

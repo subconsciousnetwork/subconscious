@@ -10,6 +10,7 @@
 import SwiftUI
 import Combine
 import ObservableStore
+import os
 
 //  MARK: Action
 enum SearchAction: Hashable, CustomLogStringConvertible {
@@ -60,6 +61,11 @@ struct SearchModel: ModelProtocol {
     var query = ""
     var suggestions: [Suggestion] = []
 
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "Search"
+    )
+
     //  MARK: Update
     static func update(
         state: SearchModel,
@@ -68,7 +74,7 @@ struct SearchModel: ModelProtocol {
     ) -> Update<SearchModel> {
         switch action {
         case .requestPresent:
-            environment.logger.debug("Should be handled by parent")
+            logger.debug("Should be handled by parent")
             return Update(state: state)
         case .hideAndClearQuery:
             return hideAndClearQuery(
@@ -107,7 +113,7 @@ struct SearchModel: ModelProtocol {
             model.suggestions = suggestions
             return Update(state: model)
         case .failSuggestions(let message):
-            environment.logger.warning("\(message)")
+            logger.log("\(message)")
             return Update(state: state)
         case .activateSuggestion(let suggestion):
             return activateSuggestion(
@@ -116,7 +122,7 @@ struct SearchModel: ModelProtocol {
                 suggestion: suggestion
             )
         case .activatedSuggestion:
-            environment.logger.debug(
+            logger.debug(
                 ".activatedSuggestion should be handled by parent component"
             )
             return Update(state: state)
@@ -270,7 +276,7 @@ struct SearchModel: ModelProtocol {
         environment: AppEnvironment,
         query: String
     ) -> Update<SearchModel> {
-        environment.logger.log(
+        logger.log(
             "Created search history entry: \(query)"
         )
         return Update(state: state)
@@ -282,7 +288,7 @@ struct SearchModel: ModelProtocol {
         environment: AppEnvironment,
         error: String
     ) -> Update<SearchModel> {
-        environment.logger.warning(
+        logger.log(
             "Failed to create search history entry: \(error)"
         )
         return Update(state: state)
