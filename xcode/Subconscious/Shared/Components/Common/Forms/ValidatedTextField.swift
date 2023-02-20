@@ -27,7 +27,7 @@ struct ValidatedTextField: View {
                             .frame(width: 24, height: 22)
                             .padding(.horizontal, 8)
                             .foregroundColor(.red)
-                            .background(Color.background)
+                            .background(.white)
                     }
                     .padding(.trailing, 1)
                     .opacity(isValid ? 0 : 1)
