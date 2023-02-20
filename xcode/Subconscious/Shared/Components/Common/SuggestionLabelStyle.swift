@@ -22,7 +22,7 @@ struct SuggestionLabelStyle: LabelStyle {
                 )
                 .foregroundColor(iconColor)
             configuration.title
-                .foregroundColor(Color.text)
+                .foregroundColor(Color.primary)
                 .multilineTextAlignment(.leading)
                 .lineLimit(1)
         }

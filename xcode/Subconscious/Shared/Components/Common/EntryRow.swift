@@ -23,7 +23,7 @@ struct EntryRow: View, Equatable {
                     emptyTitle
                 )
                 .lineLimit(1)
-                .foregroundColor(Color.text)
+                .foregroundColor(Color.primary)
                 .multilineTextAlignment(.leading)
                 // Aligns this text's vertical center to icon vertical
                 // center in a label.

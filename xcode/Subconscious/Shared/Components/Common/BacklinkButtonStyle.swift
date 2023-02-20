@@ -18,10 +18,10 @@ struct BacklinkButtonStyle: ButtonStyle {
             .contentShape(Rectangle())
             .background(
                 configuration.isPressed ?
-                Color.pressedBackground :
+                Color.backgroundPressed :
                 Color.clear
             )
-            .foregroundColor(!isEnabled ? Color.textDisabled : Color.text)
+            .foregroundColor(!isEnabled ? Color.disabled : Color.primary)
             .animation(
                 .easeOutCubic(duration: Duration.fast),
                 value: configuration.isPressed
