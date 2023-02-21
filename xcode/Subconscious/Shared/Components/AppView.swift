@@ -63,6 +63,8 @@ struct AppView: View {
 
 //  MARK: Action
 enum AppAction: CustomLogStringConvertible {
+    case recoveryPhrase(RecoveryPhraseAction)
+
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
     case scenePhaseChange(ScenePhase)
@@ -134,6 +136,11 @@ enum AppAction: CustomLogStringConvertible {
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
 
+    /// Set recovery phrase on recovery phrase component
+    static func setRecoveryPhrase(_ phrase: String) -> AppAction {
+        .recoveryPhrase(.setPhrase(phrase))
+    }
+
     var logDescription: String {
         switch self {
         case let .succeedMigrateDatabase(version):
@@ -147,6 +154,22 @@ enum AppAction: CustomLogStringConvertible {
 }
 
 //  MARK: Cursors
+
+struct AppRecoveryPhraseCursor: CursorProtocol {
+    static func get(state: AppModel) -> RecoveryPhraseModel {
+        state.recoveryPhrase
+    }
+    
+    static func set(state: AppModel, inner: RecoveryPhraseModel) -> AppModel {
+        var model = state
+        model.recoveryPhrase = inner
+        return model
+    }
+    
+    static func tag(_ action: RecoveryPhraseAction) -> AppAction {
+        .recoveryPhrase(action)
+    }
+}
 
 enum AppDatabaseState {
     case initial
@@ -171,9 +194,9 @@ struct AppModel: ModelProtocol {
     var sphereIdentity = AppDefaults.standard.sphereIdentity
     /// Default sphere version, if any.
     var sphereVersion: String?
-    /// Temporary state for storing mnemonic for rendering.
-    /// not persisted.
-    var sphereMnemonic: String?
+    /// State for rendering mnemonic/recovery phrase UI.
+    /// Not persisted.
+    var recoveryPhrase = RecoveryPhraseModel()
 
     var gatewayURL = AppDefaults.standard.gatewayURL
     var gatewayURLTextField = AppDefaults.standard.gatewayURL
@@ -203,6 +226,12 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         switch action {
+        case .recoveryPhrase(let action):
+            return AppRecoveryPhraseCursor.update(
+                state: state,
+                action: action,
+                environment: ()
+            )
         case .scenePhaseChange(let scenePhase):
             return scenePhaseChange(
                 state: state,
@@ -474,10 +503,14 @@ struct AppModel: ModelProtocol {
             let receipt = try environment.data.createSphere(
                 ownerKeyName: ownerKeyName
             )
-            var model = state
-            model.sphereMnemonic = receipt.mnemonic
-            model.sphereIdentity = receipt.identity
-            return Update(state: model)
+            return update(
+                state: state,
+                actions: [
+                    .setSphereIdentity(receipt.identity),
+                    .setRecoveryPhrase(receipt.mnemonic)
+                ],
+                environment: environment
+            )
         }  catch {
             return update(
                 state: state,

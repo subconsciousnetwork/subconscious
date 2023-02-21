@@ -17,11 +17,17 @@ struct FirstRunCreateSphereView: View {
                 VStack(alignment: .center, spacing: AppTheme.unit4) {
                     Text("Recovery Phrase")
                         .font(.headline)
-                    RecoveryPhraseView(text: app.state.sphereMnemonic ?? "")
+                    RecoveryPhraseView(
+                        state: app.state.recoveryPhrase,
+                        send: Address.forward(
+                            send: app.send,
+                            tag: AppRecoveryPhraseCursor.tag
+                        )
+                    )
                     VStack(alignment: .leading, spacing: AppTheme.unit2) {
                         Text("This is your secret recovery phrase. You can use it to recover your data if you lose access.")
                             .foregroundColor(.secondary)
-                        Text("This is for your eyes only. We don't store it. Write it down. Keep it secret, keep it safe.")
+                        Text("This is for your eyes only. We don't store it. Write it down or add it to your password manager. Keep it secret, keep it safe.")
                             .foregroundColor(.secondary)
                     }
                 }
