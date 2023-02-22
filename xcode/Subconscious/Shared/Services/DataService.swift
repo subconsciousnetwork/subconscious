@@ -468,7 +468,7 @@ struct DataService {
     func exists(_ address: MemoAddress) -> Bool {
         switch address.audience {
         case .public:
-            let version = noosphere.getFileVersion(
+            let version = try? noosphere.getFileVersion(
                 slashlink: address.slug.toSlashlink()
             )
             return version != nil
@@ -485,7 +485,10 @@ struct DataService {
         slug: Slug
     ) -> MemoAddress? {
         // If slug exists in default sphere, return that.
-        if noosphere.getFileVersion(slashlink: slug.toSlashlink()) != nil {
+        let version = try? noosphere.getFileVersion(
+            slashlink: slug.toSlashlink()
+        )
+        if version != nil {
             return MemoAddress(slug: slug, audience: .public)
         }
         // Otherwise if slug exists on local, return that.
@@ -525,13 +528,23 @@ struct DataService {
                 let memo = try noosphere.read(slashlink: slashlink)
                     .toMemo()
                     .unwrap()
+
+                let sphereIdentity = try? noosphere.identity()
+                let sphereVersion = try? noosphere.version()
+                let fileVersion = try? noosphere.getFileVersion(
+                    slashlink: slashlink
+                )
+
                 return EntryDetail(
                     saveState: .saved,
                     entry: Entry(
                         address: address,
                         contents: memo
                     ),
-                    backlinks: backlinks
+                    backlinks: backlinks,
+                    sphereIdentity: sphereIdentity,
+                    sphereVersion: sphereVersion,
+                    fileVersion: fileVersion
                 )
             } catch SphereFSError.fileDoesNotExist(let slashlink) {
                 logger.debug("Sphere file does not exist: \(slashlink). Returning new draft.")
