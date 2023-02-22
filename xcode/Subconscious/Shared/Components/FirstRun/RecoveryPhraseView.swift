@@ -80,7 +80,7 @@ struct RecoveryPhraseModel: ModelProtocol {
     static func update(
         state: RecoveryPhraseModel,
         action: RecoveryPhraseAction,
-        environment: Void
+        environment: RecoveryPhraseEnvironment
     ) -> Update<RecoveryPhraseModel> {
         switch action {
         case .setPhrase(let phrase):
@@ -89,7 +89,7 @@ struct RecoveryPhraseModel: ModelProtocol {
             return Update(state: model)
         case .copy:
             // Copy to clipboard
-            UIPasteboard.general.string = state.phrase
+            environment.pasteboard.string = state.phrase
             logger.log("Copied recovery phrase to clipboard")
             var model = state
             model.didCopy = true
@@ -99,6 +99,18 @@ struct RecoveryPhraseModel: ModelProtocol {
     }
 }
 
+/// Exposes a minimal API surface to the pasteboard.
+/// Just the parts we use here.
+protocol RecoveryPhrasePasteboardProtocol {
+    var string: String? { get nonmutating set }
+}
+
+extension UIPasteboard: RecoveryPhrasePasteboardProtocol {}
+
+struct RecoveryPhraseEnvironment {
+    // Pasteboard is defined as a protocol. This allows us to mock for testing.
+    var pasteboard: RecoveryPhrasePasteboardProtocol = UIPasteboard.general
+}
 
 struct RecoveryPhraseView_Previews: PreviewProvider {
     struct TestView: View {
@@ -106,7 +118,7 @@ struct RecoveryPhraseView_Previews: PreviewProvider {
             state: RecoveryPhraseModel(
                 phrase: "foo bar baz bing bong boo biz boz bonk bink boop bop beep bleep bloop blorp blonk blink blip blop boom"
             ),
-            environment: ()
+            environment: RecoveryPhraseEnvironment()
         )
 
         var body: some View {

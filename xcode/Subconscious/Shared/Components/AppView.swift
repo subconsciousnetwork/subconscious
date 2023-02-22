@@ -230,7 +230,7 @@ struct AppModel: ModelProtocol {
             return AppRecoveryPhraseCursor.update(
                 state: state,
                 action: action,
-                environment: ()
+                environment: environment.recoveryPhrase
             )
         case .scenePhaseChange(let scenePhase):
             return scenePhaseChange(
@@ -831,6 +831,8 @@ struct AppEnvironment {
     var data: DataService
     var feed: FeedService
     
+    var recoveryPhrase = RecoveryPhraseEnvironment()
+
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
         Timer.publish(
