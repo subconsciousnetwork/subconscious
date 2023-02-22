@@ -431,7 +431,7 @@ struct AppModel: ModelProtocol {
         text: String
     ) -> Update<AppModel> {
         let url = URL(string: text)
-        var isGatewayURLTextFieldValid = url?.isHTTP() ?? false
+        let isGatewayURLTextFieldValid = url?.isHTTP() ?? false
 
         var model = state
         model.gatewayURLTextField = text
