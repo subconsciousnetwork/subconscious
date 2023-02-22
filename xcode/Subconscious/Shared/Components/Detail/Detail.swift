@@ -1832,6 +1832,18 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
+        guard state.address == from.address else {
+            logger.warning(
+                """
+                Detail got a succeedMoveEntry action that doesn't match address. Doing nothing.
+                Detail address: \(state.address?.description ?? "None")
+                From address: \(from.address.description)
+                To address: \(to.address.description)
+                """
+            )
+            return Update(state: state)
+        }
+        
         var model = state
         model.address = to.address
         model.headers.title = to.linkableTitle
@@ -1941,6 +1953,20 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
+        guard
+            state.address == from.address &&
+            from.address == to.address
+        else {
+            logger.warning(
+                """
+                Detail got a succeedRetitleEntry action that doesn't match detail address. Doing nothing.
+                Detail address: \(state.address?.description ?? "None")
+                From address: \(from.address.description)
+                To address: \(to.address.description)
+                """
+            )
+            return Update(state: state)
+        }
         var model = state
         model.headers.title = to.linkableTitle
         return update(
