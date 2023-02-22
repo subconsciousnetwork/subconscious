@@ -425,21 +425,17 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func isValidWebURL(_ string: String) -> Bool {
-        guard let url = URL(string: string) else {
-            return false
-        }
-        return url.scheme == "http" || url.scheme == "https"
-    }
-
     static func setGatewayURLTextField(
         state: AppModel,
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
+        let url = URL(string: text)
+        var isGatewayURLTextFieldValid = url?.isHTTP() ?? false
+
         var model = state
         model.gatewayURLTextField = text
-        model.isGatewayURLTextFieldValid = isValidWebURL(text)
+        model.isGatewayURLTextFieldValid = isGatewayURLTextFieldValid
         return Update(state: model)
     }
     
@@ -448,18 +444,30 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         gatewayURL: String
     ) -> Update<AppModel> {
-        // If URL given is not valid, reset back to original value.
-        guard isValidWebURL(gatewayURL) else {
-            var model = state
-            model.gatewayURLTextField = model.gatewayURL
-            model.isGatewayURLTextFieldValid = true
-            return Update(state: model)
+        var fallback = state
+        fallback.gatewayURLTextField = state.gatewayURL
+        fallback.isGatewayURLTextFieldValid = true
+
+        // If URL given is not valid, fall back to original value.
+        guard let url = URL(string: gatewayURL) else {
+            return Update(state: fallback)
         }
+
+        // If URL given is not HTTP, fall back to original value.
+        guard url.isHTTP() else {
+            return Update(state: fallback)
+        }
+
         var model = state
         model.gatewayURL = gatewayURL
         model.gatewayURLTextField = gatewayURL
         model.isGatewayURLTextFieldValid = true
+
+        // Persist to UserDefaults
         AppDefaults.standard.gatewayURL = gatewayURL
+        // Reset gateway on environment
+        environment.data.noosphere.resetGateway(url: url)
+
         /// Only set valid nicknames
         return Update(state: model)
     }
