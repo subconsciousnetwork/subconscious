@@ -11,9 +11,6 @@ struct EntryDetail: Hashable {
     var saveState: SaveState
     var entry: MemoEntry
     var backlinks: [EntryStub] = []
-    var sphereIdentity: String?
-    var sphereVersion: String?
-    var fileVersion: String?
 }
 
 extension EntryDetail: CustomLogStringConvertible {

@@ -14,6 +14,9 @@ where T: Hashable
     var address: MemoAddress
     var id: String { address.description }
     var contents: T
+    var sphereIdentity: String?
+    var sphereVersion: String?
+    var fileVersion: String?
 }
 
 /// A Subtext entry is an Entry containing a SubtextMemo

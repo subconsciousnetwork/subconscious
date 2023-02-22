@@ -539,12 +539,12 @@ struct DataService {
                     saveState: .saved,
                     entry: Entry(
                         address: address,
-                        contents: memo
+                        contents: memo,
+                        sphereIdentity: sphereIdentity,
+                        sphereVersion: sphereVersion,
+                        fileVersion: fileVersion
                     ),
-                    backlinks: backlinks,
-                    sphereIdentity: sphereIdentity,
-                    sphereVersion: sphereVersion,
-                    fileVersion: fileVersion
+                    backlinks: backlinks
                 )
             } catch SphereFSError.fileDoesNotExist(let slashlink) {
                 logger.debug("Sphere file does not exist: \(slashlink). Returning new draft.")

@@ -267,8 +267,38 @@ struct DetailReadyView: View {
                                 )
                             }
                         )
+                        Divider()
+                        MetaTableView {
+                            MetaTableRowView(
+                                icon: Image(systemName: "number"),
+                                label: Text("Note Version"),
+                                text: store.state.fileVersion.mapOr(
+                                    { string in Text(verbatim: string) },
+                                    default: Text("•••")
+                                )
+                            )
+                            MetaTableRowView(
+                                icon: Image(systemName: "network"),
+                                label: Text("Sphere Version"),
+                                text: store.state.sphereVersion.mapOr(
+                                    { string in Text(verbatim: string) },
+                                    default: Text("•••")
+                                )
+                            )
+                            MetaTableRowView(
+                                icon: Image(systemName: "key"),
+                                label: Text("Sphere ID"),
+                                text: store.state.sphereIdentity.mapOr(
+                                    { string in Text(verbatim: string) },
+                                    default: Text("•••")
+                                ),
+                                hasDivider: false
+                            )
+                        }
+                        .padding()
                     }
                 }
+
                 if store.state.markupEditor.focus {
                     DetailKeyboardToolbarView(
                         isSheetPresented: Binding(
@@ -602,6 +632,11 @@ struct DetailModel: ModelProtocol {
     /// Additional headers that are not well-known headers.
     var additionalHeaders: Headers = []
     var backlinks: [EntryStub] = []
+
+    // Version details
+    var sphereIdentity: String?
+    var sphereVersion: String?
+    var fileVersion: String?
     
     /// Is editor saved?
     var saveState = SaveState.saved
@@ -1314,6 +1349,9 @@ struct DetailModel: ModelProtocol {
         model.headers = detail.entry.contents.wellKnownHeaders()
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.backlinks = detail.backlinks
+        model.sphereIdentity = detail.entry.sphereIdentity
+        model.sphereVersion = detail.entry.sphereVersion
+        model.fileVersion = detail.entry.fileVersion
         model.saveState = detail.saveState
 
         let subtext = detail.entry.contents.body

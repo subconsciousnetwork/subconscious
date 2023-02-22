@@ -29,35 +29,31 @@ struct MetaTableRowView: View {
     var label: Text
     var text: Text
     var hasDivider = true
-    var action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 0) {
-                HStack(spacing: AppTheme.unit2) {
-                    icon
-                        .frame(width: AppTheme.icon, height: AppTheme.icon)
-                        .foregroundColor(Color.accentColor)
-                    VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
-                        label
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .textCase(.uppercase)
-                        text
-                            .lineLimit(1)
-                            .foregroundColor(.primary)
-                    }
-                    Spacer()
+        VStack(spacing: 0) {
+            HStack(spacing: AppTheme.unit2) {
+                icon
+                    .frame(width: AppTheme.icon, height: AppTheme.icon)
+                    .foregroundColor(Color.accentColor)
+                VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
+                    label
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .textCase(.uppercase)
+                    text
+                        .lineLimit(1)
+                        .foregroundColor(.primary)
                 }
-                .padding(.horizontal, AppTheme.unit2)
-                .padding(.vertical, AppTheme.unit2)
-                if hasDivider {
-                    Divider()
-                        .padding(.leading, AppTheme.icon + (AppTheme.unit2 * 2))
-                }
+                Spacer()
+            }
+            .padding(.horizontal, AppTheme.unit2)
+            .padding(.vertical, AppTheme.unit2)
+            if hasDivider {
+                Divider()
+                    .padding(.leading, AppTheme.icon + (AppTheme.unit2 * 2))
             }
         }
-        .buttonStyle(RowButtonStyle())
     }
 }
 
@@ -69,24 +65,18 @@ struct MetaTableView_Previews: PreviewProvider {
                     icon: Image(systemName: "number"),
                     label: Text("Note Revision"),
                     text: Text(verbatim: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf")
-                ) {
-                    
-                }
+                )
                 MetaTableRowView(
                     icon: Image(systemName: "network"),
                     label: Text("Sphere Revision"),
                     text: Text(verbatim: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf")
-                ) {
-                    
-                }
+                )
                 MetaTableRowView(
                     icon: Image(systemName: "key"),
                     label: Text("Author Key"),
                     text: Text(verbatim: "0xb794f5ea0ba39494ce8"),
                     hasDivider: false
-                ) {
-                    
-                }
+                )
             }
             VStack {
                 MetaTableView {
@@ -94,24 +84,18 @@ struct MetaTableView_Previews: PreviewProvider {
                         icon: Image(systemName: "number"),
                         label: Text("Note Revision"),
                         text: Text(verbatim: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf")
-                    ) {
-                        
-                    }
+                    )
                     MetaTableRowView(
                         icon: Image(systemName: "network"),
                         label: Text("Sphere Revision"),
                         text: Text(verbatim: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf")
-                    ) {
-                        
-                    }
+                    )
                     MetaTableRowView(
                         icon: Image(systemName: "key"),
                         label: Text("Author Key"),
                         text: Text(verbatim: "0xb794f5ea0ba39494ce8"),
                         hasDivider: false
-                    ) {
-                        
-                    }
+                    )
                 }
             }
             .padding()
