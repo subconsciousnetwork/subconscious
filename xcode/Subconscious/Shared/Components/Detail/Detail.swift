@@ -1832,8 +1832,12 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
+        var model = state
+        model.address = to.address
+        model.headers.title = to.linkableTitle
+
         return update(
-            state: state,
+            state: model,
             actions: [.unpresentRenameSheet, .refreshLists],
             environment: environment
         )
@@ -1937,8 +1941,10 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
+        var model = state
+        model.headers.title = to.linkableTitle
         return update(
-            state: state,
+            state: model,
             actions: [.refreshLists, .unpresentRenameSheet],
             environment: environment
         )
