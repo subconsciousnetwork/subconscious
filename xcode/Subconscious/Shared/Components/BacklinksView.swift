@@ -12,17 +12,14 @@ struct BacklinksView: View {
     var onSelect: (EntryLink) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: AppTheme.unit2) {
             HStack {
                 Text("Backlinks")
                     .font(.caption)
                 Spacer()
             }
-            .padding(.horizontal, AppTheme.unit4)
-            .padding(.vertical, AppTheme.unit2)
             if backlinks.count > 0 {
                 ForEach(backlinks) { entry in
-                    Divider()
                     Button(
                         action: {
                             onSelect(
@@ -30,13 +27,16 @@ struct BacklinksView: View {
                             )
                         },
                         label: {
-                            EntryRow(entry: entry).equatable()
+                            Transclude2View(
+                                slashlink: entry.address.slug.toSlashlink(),
+                                title: entry.title,
+                                excerpt: entry.excerpt
+                            )
                         }
                     )
-                    .buttonStyle(BacklinkButtonStyle())
+                    .buttonStyle(.plain)
                 }
             } else {
-                Divider()
                 TitleGroupView(
                     title: Text("No backlinks yet")
                         .foregroundColor(Color.secondary),
@@ -44,10 +44,10 @@ struct BacklinksView: View {
                         "Links to this note will appear here"
                     )
                 )
-                .padding(.horizontal, AppTheme.unit4)
-                .padding(.vertical, AppTheme.unit3)
             }
         }
+        .padding(.horizontal, AppTheme.unit4)
+        .padding(.vertical, AppTheme.unit2)
     }
 }
 
