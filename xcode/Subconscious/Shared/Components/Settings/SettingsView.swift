@@ -45,7 +45,11 @@ struct SettingsView: View {
                             GatewayURLSettingsView(app: app)
                         },
                         label: {
-                            LabeledContent("Gateway", value: app.state.gatewayURL)
+                            LabeledContent(
+                                "Gateway",
+                                value: app.state.gatewayURL
+                            )
+                            .lineLimit(1)
                         }
                     )
                     Button(
