@@ -16,7 +16,7 @@ public protocol SphereProtocol {
     
     func version() throws -> String
     
-    func getFileVersion(slashlink: String) -> String?
+    func getFileVersion(slashlink: String) throws -> String
     
     func readHeaderValueFirst(
         slashlink: String,
@@ -125,20 +125,20 @@ public final class SphereFS: SphereProtocol {
     
     /// Get the base64-encoded CID v1 string for the memo that refers to the
     /// content of this sphere file.
-    public func getFileVersion(slashlink: String) -> String? {
+    public func getFileVersion(slashlink: String) throws -> String {
         guard let file = try? Noosphere.callWithError(
             ns_sphere_fs_read,
             noosphere.noosphere,
             fs,
             slashlink
         ) else {
-            return nil
+            throw NoosphereError.nullPointer
         }
         guard let cid = try? Noosphere.callWithError(
             ns_sphere_file_version_get,
             file
         ) else {
-            return nil
+            throw NoosphereError.nullPointer
         }
         defer {
             ns_string_free(cid)

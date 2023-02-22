@@ -162,9 +162,9 @@ final class NoosphereService: SphereProtocol {
         }
     }
     
-    func getFileVersion(slashlink: String) -> String? {
-        queue.sync {
-            try? self.sphere().getFileVersion(slashlink: slashlink)
+    func getFileVersion(slashlink: String) throws -> String {
+        try queue.sync {
+            try self.sphere().getFileVersion(slashlink: slashlink)
         }
     }
     
