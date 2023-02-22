@@ -23,6 +23,9 @@ struct GatewayURLSettingsView: View {
                 caption: "The URL of your preferred Noosphere gateway",
                 isValid: app.state.isGatewayURLTextFieldValid
             )
+            .autocapitalization(.none)
+            .autocorrectionDisabled(true)
+            .keyboardType(.URL)
             .onDisappear {
                 app.send(.submitGatewayURL(app.state.gatewayURLTextField))
             }
