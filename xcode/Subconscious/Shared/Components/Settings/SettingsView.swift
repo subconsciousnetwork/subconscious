@@ -21,8 +21,12 @@ struct SettingsView: View {
                             ProfileSettingsView(app: app)
                         },
                         label: {
-                            LabeledContent("Nickname", value: app.state.nickname ?? "")
-                                .textSelection(.enabled)
+                            LabeledContent(
+                                "Nickname",
+                                value: app.state.nickname ?? ""
+                            )
+                            .lineLimit(1)
+                            .textSelection(.enabled)
                         }
                     )
                     LabeledContent(
