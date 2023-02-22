@@ -291,7 +291,7 @@ class Tests_Detail: XCTestCase {
             "Changes title"
         )
     }
-
+    
     func testSucceedMoveEntryMismatch() throws {
         let state = DetailModel(
             address: MemoAddress(formatting: "loomings", audience: .public)!,
@@ -383,6 +383,37 @@ class Tests_Detail: XCTestCase {
             update.state.headers.title,
             "Loomings",
             "Does not change title, because addresses don't match"
+        )
+    }
+    
+    func testSucceedMergeEntry() throws {
+        let state = DetailModel(
+            address: MemoAddress(formatting: "loomings", audience: .public)!,
+            headers: WellKnownHeaders(
+                contentType: ContentType.subtext.rawValue,
+                created: Date.now,
+                modified: Date.now,
+                title: "Loomings",
+                fileExtension: ContentType.subtext.fileExtension
+            )
+        )
+        let update = DetailModel.update(
+            state: state,
+            action: .succeedMergeEntry(
+                parent: EntryLink(title: "The Lee Tide", audience: .public)!,
+                child: EntryLink(title: "Loomings", audience: .public)!
+            ),
+            environment: environment
+        )
+        XCTAssertEqual(
+            update.state.address,
+            MemoAddress(formatting: "The Lee Tide", audience: .public)!,
+            "Changes address"
+        )
+        XCTAssertEqual(
+            update.state.headers.title,
+            "The Lee Tide",
+            "Changes title"
         )
     }
 }
