@@ -21,8 +21,12 @@ struct SettingsView: View {
                             ProfileSettingsView(app: app)
                         },
                         label: {
-                            LabeledContent("Nickname", value: app.state.nickname ?? "")
-                                .textSelection(.enabled)
+                            LabeledContent(
+                                "Nickname",
+                                value: app.state.nickname ?? ""
+                            )
+                            .lineLimit(1)
+                            .textSelection(.enabled)
                         }
                     )
                     LabeledContent(
@@ -45,7 +49,11 @@ struct SettingsView: View {
                             GatewayURLSettingsView(app: app)
                         },
                         label: {
-                            LabeledContent("Gateway", value: app.state.gatewayURL)
+                            LabeledContent(
+                                "Gateway",
+                                value: app.state.gatewayURL
+                            )
+                            .lineLimit(1)
                         }
                     )
                     Button(
