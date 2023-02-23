@@ -134,7 +134,7 @@ enum NotebookAction {
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
 
     /// Audience was changed for address
-    case succeedUpdateAudience(MemoAddress)
+    case succeedUpdateAudience(MoveReceipt)
 
     //  Search
     /// Hit submit ("go") while focused on search field
@@ -247,8 +247,8 @@ extension NotebookAction {
             return .succeedRetitleEntry(from: from, to: to)
         case let .succeedSaveEntry(slug, modified):
             return .succeedSaveEntry(slug: slug, modified: modified)
-        case let .succeedUpdateAudience(address):
-            return .succeedUpdateAudience(address)
+        case let .succeedUpdateAudience(receipt):
+            return .succeedUpdateAudience(receipt)
         }
     }
 }
@@ -472,11 +472,11 @@ struct NotebookModel: ModelProtocol {
                 from: from,
                 to: to
             )
-        case let .succeedUpdateAudience(address):
+        case let .succeedUpdateAudience(receipt):
             return succeedUpdateAudience(
                 state: state,
                 environment: environment,
-                address: address
+                receipt: receipt
             )
         case .submitSearch(let query):
             return submitSearch(
@@ -815,17 +815,17 @@ struct NotebookModel: ModelProtocol {
     static func succeedUpdateAudience(
         state: NotebookModel,
         environment: AppEnvironment,
-        address: MemoAddress
+        receipt: MoveReceipt
     ) -> Update<NotebookModel> {
         var model = state
 
         /// Find all instances of this model in the stack and update them
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.address.slug == address.slug else {
+            guard detail.address.slug == receipt.to.slug else {
                 return detail
             }
             var model = detail
-            model.address = address
+            model.address = receipt.to
             return model
         })
         
@@ -840,8 +840,7 @@ struct NotebookModel: ModelProtocol {
     static func submitSearch(
         state: NotebookModel,
         environment: AppEnvironment,
-        query: String,
-        defaultAudience: Audience = .local
+        query: String
     ) -> Update<NotebookModel> {
         // Duration of keyboard animation
         let duration = Duration.keyboard
@@ -856,10 +855,11 @@ struct NotebookModel: ModelProtocol {
         
         // Derive slug. If we can't (e.g. invalid query such as empty string),
         // just hide the search HUD and do nothing.
-        guard let link = EntryLink(
-            title: query,
-            audience: defaultAudience
-        ) else {
+        guard
+            let link = Slug(formatting: query)?
+                .toLocalMemoAddress()
+                .toEntryLink(title: query)
+        else {
             logger.log(
                 "Query could not be converted to link: \(query)"
             )
@@ -889,7 +889,7 @@ struct NotebookModel: ModelProtocol {
         title: String,
         fallback: String
     ) -> Update<NotebookModel> {
-        let fallbackAddress = MemoAddress(slug: slug, audience: .local)
+        let fallbackAddress = slug.toLocalMemoAddress()
         let address = environment.data
             .findAddress(slug: slug) ?? fallbackAddress
         return update(

@@ -18,7 +18,7 @@ class Tests_Detail: XCTestCase {
         let modified = Date.now
         
         let entry = MemoEntry(
-            address: MemoAddress(formatting: "example", audience: .public)!,
+            address: Slug(formatting: "example")!.toPublicMemoAddress(),
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -78,7 +78,7 @@ class Tests_Detail: XCTestCase {
         )
         
         let entry = MemoEntry(
-            address: MemoAddress(formatting: "example", audience: .public)!,
+            address: Slug(formatting: "example")!.toPublicMemoAddress(),
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -115,7 +115,7 @@ class Tests_Detail: XCTestCase {
         let state = DetailModel()
         
         let entry = MemoEntry(
-            address: MemoAddress(formatting: "example", audience: .public)!,
+            address: Slug(formatting: "example")!.toPublicMemoAddress(),
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -149,7 +149,7 @@ class Tests_Detail: XCTestCase {
     
     func testAutosave() throws {
         let state = DetailModel(
-            address: MemoAddress(formatting: "example", audience: .public)!,
+            address: Slug(formatting: "example")!.toPublicMemoAddress(),
             saveState: .modified
         )
         let update = DetailModel.update(
@@ -166,7 +166,7 @@ class Tests_Detail: XCTestCase {
     
     func testSaveAlreadySaved() throws {
         let state = DetailModel(
-            address: MemoAddress(formatting: "example", audience: .public)!,
+            address: Slug(formatting: "example")!.toPublicMemoAddress(),
             saveState: .saved
         )
         let update = DetailModel.update(
@@ -183,7 +183,7 @@ class Tests_Detail: XCTestCase {
     
     func testEditorSnapshotModified() throws {
         let state = DetailModel(
-            address: MemoAddress(formatting: "example", audience: .public)!,
+            address: Slug(formatting: "example")!.toPublicMemoAddress(),
             saveState: .saved
         )
         guard let entry = state.snapshotEntry() else {
@@ -199,7 +199,9 @@ class Tests_Detail: XCTestCase {
     
     func testShowRenameSheet() throws {
         let state = DetailModel()
-        let link = EntryLink(title: "Loomings", audience: .public)!
+        let link = Slug(formatting: "Loomings")!
+            .toPublicMemoAddress()
+            .toEntryLink()
         let update = DetailModel.update(
             state: state,
             action: .presentRenameSheet(
@@ -243,10 +245,9 @@ class Tests_Detail: XCTestCase {
     
     func testRenameField() throws {
         let state = DetailModel(
-            entryToRename: EntryLink(
-                title: "Dawson spoke and there was music",
-                audience: .public
-            )!
+            entryToRename: Slug(formatting: "Dawson spoke and there was music")!
+                .toPublicMemoAddress()
+                .toEntryLink()
         )
         let update = DetailModel.update(
             state: state,
@@ -262,8 +263,14 @@ class Tests_Detail: XCTestCase {
     }
     
     func testSucceedMoveEntry() throws {
+        let from = Slug(formatting: "loomings")!
+            .toPublicMemoAddress()
+            .toEntryLink()
+        let to = Slug(formatting: "The lee tide")!
+            .toPublicMemoAddress()
+            .toEntryLink(title: "The Lee Tide")
         let state = DetailModel(
-            address: MemoAddress(formatting: "loomings", audience: .public)!,
+            address: from.address,
             headers: WellKnownHeaders(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -275,14 +282,14 @@ class Tests_Detail: XCTestCase {
         let update = DetailModel.update(
             state: state,
             action: .succeedMoveEntry(
-                from: EntryLink(title: "Loomings", audience: .public)!,
-                to: EntryLink(title: "The Lee Tide", audience: .public)!
+                from: from,
+                to: to
             ),
             environment: environment
         )
         XCTAssertEqual(
             update.state.address,
-            MemoAddress(formatting: "The Lee Tide", audience: .public)!,
+            to.address,
             "Changes address"
         )
         XCTAssertEqual(
@@ -294,7 +301,7 @@ class Tests_Detail: XCTestCase {
     
     func testSucceedMoveEntryMismatch() throws {
         let state = DetailModel(
-            address: MemoAddress(formatting: "loomings", audience: .public)!,
+            address: Slug(formatting: "loomings")!.toPublicMemoAddress(),
             headers: WellKnownHeaders(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -306,14 +313,18 @@ class Tests_Detail: XCTestCase {
         let update = DetailModel.update(
             state: state,
             action: .succeedMoveEntry(
-                from: EntryLink(title: "The White Whale", audience: .public)!,
-                to: EntryLink(title: "The Lee Tide", audience: .public)!
+                from: Slug(formatting: "The White Whale")!
+                    .toPublicMemoAddress()
+                    .toEntryLink(),
+                to: Slug(formatting: "The Lee Tide")!
+                    .toPublicMemoAddress()
+                    .toEntryLink()
             ),
             environment: environment
         )
         XCTAssertEqual(
             update.state.address,
-            MemoAddress(formatting: "loomings", audience: .public)!,
+            Slug(formatting: "loomings")!.toPublicMemoAddress(),
             "Does not change address, because addresses don't match"
         )
         XCTAssertEqual(
@@ -324,8 +335,9 @@ class Tests_Detail: XCTestCase {
     }
     
     func testSucceedRetitleEntry() throws {
+        let address = Slug(formatting: "loomings")!.toPublicMemoAddress()
         let state = DetailModel(
-            address: MemoAddress(formatting: "loomings", audience: .public)!,
+            address: address,
             headers: WellKnownHeaders(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -337,14 +349,14 @@ class Tests_Detail: XCTestCase {
         let update = DetailModel.update(
             state: state,
             action: .succeedRetitleEntry(
-                from: EntryLink(title: "Loomings", audience: .public)!,
-                to: EntryLink(title: "LOOMINGS", audience: .public)!
+                from: address.toEntryLink(title: "Loomings"),
+                to: address.toEntryLink(title: "LOOMINGS")
             ),
             environment: environment
         )
         XCTAssertEqual(
             update.state.address,
-            MemoAddress(formatting: "loomings", audience: .public)!,
+            address,
             "Does not change address"
         )
         XCTAssertEqual(
@@ -356,8 +368,9 @@ class Tests_Detail: XCTestCase {
     
     /// Tests against a mis-matched from/to slug
     func testSucceedRetitleEntryMismatch() throws {
+        let address = Slug(formatting: "loomings")!.toPublicMemoAddress()
         let state = DetailModel(
-            address: MemoAddress(formatting: "loomings", audience: .public)!,
+            address: address,
             headers: WellKnownHeaders(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -369,14 +382,18 @@ class Tests_Detail: XCTestCase {
         let update = DetailModel.update(
             state: state,
             action: .succeedRetitleEntry(
-                from: EntryLink(title: "Wrong", audience: .public)!,
-                to: EntryLink(title: "WRONG", audience: .public)!
+                from: Slug(formatting: "wrong")!
+                    .toPublicMemoAddress()
+                    .toEntryLink(title: "Wrong"),
+                to: Slug(formatting: "wrong")!
+                    .toPublicMemoAddress()
+                    .toEntryLink(title: "WRONG")
             ),
             environment: environment
         )
         XCTAssertEqual(
             update.state.address,
-            MemoAddress(formatting: "loomings", audience: .public)!,
+            address,
             "Does not change address"
         )
         XCTAssertEqual(
@@ -387,8 +404,9 @@ class Tests_Detail: XCTestCase {
     }
     
     func testSucceedMergeEntry() throws {
+        let address = Slug(formatting: "loomings")!.toPublicMemoAddress()
         let state = DetailModel(
-            address: MemoAddress(formatting: "loomings", audience: .public)!,
+            address: address,
             headers: WellKnownHeaders(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -397,17 +415,22 @@ class Tests_Detail: XCTestCase {
                 fileExtension: ContentType.subtext.fileExtension
             )
         )
+
+        let parentLink = Slug(formatting: "The Lee Tide")!
+            .toPublicMemoAddress()
+            .toEntryLink(title: "The Lee Tide")
+
         let update = DetailModel.update(
             state: state,
             action: .succeedMergeEntry(
-                parent: EntryLink(title: "The Lee Tide", audience: .public)!,
-                child: EntryLink(title: "Loomings", audience: .public)!
+                parent: parentLink,
+                child: address.toEntryLink()
             ),
             environment: environment
         )
         XCTAssertEqual(
             update.state.address,
-            MemoAddress(formatting: "The Lee Tide", audience: .public)!,
+            parentLink.address,
             "Changes address"
         )
         XCTAssertEqual(

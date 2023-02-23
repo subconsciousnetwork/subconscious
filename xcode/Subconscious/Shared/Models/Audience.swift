@@ -25,8 +25,6 @@ extension Audience: CustomStringConvertible {
             return "Everyone"
         }
     }
-    
-    
 }
 
 extension String {
@@ -34,3 +32,4 @@ extension String {
         Audience(rawValue: self)
     }
 }
+

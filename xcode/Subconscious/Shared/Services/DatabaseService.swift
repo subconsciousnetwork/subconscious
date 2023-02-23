@@ -168,7 +168,8 @@ final class DatabaseService {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        if address.audience == .local && size == nil {
+
+        if address.isLocal() && size == nil {
             throw DatabaseServiceError.sizeMissingForLocal
         }
         try database.execute(
@@ -208,7 +209,7 @@ final class DatabaseService {
             parameters: [
                 .text(address.description),
                 .text(address.slug.description),
-                .text(address.audience.rawValue),
+                .text(address.toAudience().rawValue),
                 .text(memo.contentType),
                 .date(memo.created),
                 .date(memo.modified),
@@ -258,31 +259,28 @@ final class DatabaseService {
     }
     
     /// List recent entries
-    func listRecentMemos() -> [EntryStub] {
+    func listRecentMemos() throws -> [EntryStub] {
         guard self.state == .ready else {
-            return []
+            throw DatabaseServiceError.notReady
+
         }
-        guard let results = try? database.execute(
+        let results = try database.execute(
             sql: """
-            SELECT slug, audience, modified, title, excerpt
+            SELECT id, modified, title, excerpt
             FROM memo
             ORDER BY modified DESC
             LIMIT 1000
             """
-        ) else {
-            return []
-        }
+        )
         return results.compactMap({ row in
             guard
-                let slug = row.col(0)?.toString()?.toSlug(),
-                let audience = row.col(1)?.toString()?.toAudience(),
-                let modified = row.col(2)?.toDate(),
-                let title = row.col(3)?.toString(),
-                let excerpt = row.col(4)?.toString()
+                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let modified = row.col(1)?.toDate(),
+                let title = row.col(2)?.toString(),
+                let excerpt = row.col(3)?.toString()
             else {
                 return nil
             }
-            let address = MemoAddress(slug: slug, audience: audience)
             return EntryStub(
                 address: address,
                 title: title,
@@ -324,7 +322,7 @@ final class DatabaseService {
         }
         let suggestions = try database.execute(
             sql: """
-            SELECT slug, audience, title
+            SELECT id, title
             FROM memo
             ORDER BY modified DESC
             LIMIT 25
@@ -332,14 +330,13 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slug = row.col(0)?.toString()?.toSlug(),
-                let audience = row.col(1)?.toString()?.toAudience(),
-                let title = row.col(2)?.toString()
+                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let title = row.col(1)?.toString()
             else {
                 return nil
             }
             return EntryLink(
-                address: MemoAddress(slug: slug, audience: audience),
+                address: address,
                 title: title
             )
         })
@@ -353,13 +350,13 @@ final class DatabaseService {
         if Config.default.scratchSuggestionEnabled {
             let now = Date.now
             let formatter = DateFormatter.scratchDateFormatter()
-            if let slug = Slug(
+            if let address = Slug(
                 formatting: "inbox/\(formatter.string(from: now))"
-            ) {
+            )?.toLocalMemoAddress() {
                 special.append(
                     .scratch(
                         EntryLink(
-                            address: MemoAddress(slug: slug, audience: .local),
+                            address: address,
                             title: Config.default.scratchDefaultTitle
                         )
                     )
@@ -395,14 +392,14 @@ final class DatabaseService {
         // Create a suggestion for the literal query
         suggestions[queryEntrySlug] = .search(
             EntryLink(
-                address: MemoAddress(slug: queryEntrySlug, audience: .local),
+                address: queryEntrySlug.toLocalMemoAddress(),
                 title: query
             )
         )
         
         let entries: [EntryLink] = try database.execute(
             sql: """
-            SELECT slug, audience, title
+            SELECT id, title
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY rank
@@ -411,20 +408,18 @@ final class DatabaseService {
             parameters: [
                 .prefixQueryFTS5(query)
             ]
-        )
-            .compactMap({ row in
-                if
-                    let slug = row.col(0)?.toString()?.toSlug(),
-                    let audience = row.col(1)?.toString()?.toAudience(),
-                    let title: String = row.get(2)
-                {
-                    return EntryLink(
-                        address: MemoAddress(slug: slug, audience: audience),
-                        title: title
-                    )
-                }
-                return nil
-            })
+        ).compactMap({ row in
+            guard
+                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let title = row.col(1)?.toString()
+            else {
+                return  nil
+            }
+            return EntryLink(
+                address: address,
+                title: title
+            )
+        })
         
         // Insert entries into suggestions.
         // If literal query and an entry have the same slug,
@@ -513,16 +508,27 @@ final class DatabaseService {
         guard self.state == .ready else {
             return []
         }
-        guard let queryEntryLink = EntryLink(
-            title: query,
-            audience: current.address.audience
-        ) else {
+        // Create a suggestion for the literal query that has same
+        // audience as current.
+        guard let queryEntryLink = Func.block({
+            switch current.address {
+            case .public:
+                return query
+                    .toSlug()?
+                    .toPublicMemoAddress()
+                    .toEntryLink(title: query)
+            case .local:
+                return query.toSlug()?
+                    .toLocalMemoAddress()
+                    .toEntryLink(title: query)
+            }
+        }) else {
             return []
         }
         
         let results = try database.execute(
             sql: """
-            SELECT slug, audience, title
+            SELECT id, title
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY rank
@@ -533,18 +539,17 @@ final class DatabaseService {
             ]
         )
 
-        let entries = results.compactMap({ row in
-            if
-                let slug = row.col(0)?.toString()?.toSlug(),
-                let audience = row.col(1)?.toString()?.toAudience(),
-                let title = row.col(2)?.toString()
-            {
-                return EntryLink(
-                    address: MemoAddress(slug: slug, audience: audience),
-                    title: title
-                )
+        let entries: [EntryLink] = results.compactMap({ row in
+            guard
+                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let title = row.col(1)?.toString()
+            else {
+                return nil
             }
-            return nil
+            return EntryLink(
+                address: address,
+                title: title
+            )
         })
         
         return Self.collateRenameSuggestions(
@@ -572,13 +577,17 @@ final class DatabaseService {
         var suggestions: OrderedDictionary<Slug, LinkSuggestion> = [:]
         
         // Append literal
-        if let literal = EntryLink(title: query, audience: .local) {
+        if
+            let literal = query.toSlug()?
+                .toLocalMemoAddress()
+                .toEntryLink(title: query)
+        {
             suggestions[literal.address.slug] = .new(literal)
         }
         
         guard let results = try? database.execute(
             sql: """
-            SELECT slug, audience, title
+            SELECT id, title
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY rank
@@ -592,14 +601,13 @@ final class DatabaseService {
         }
         let entries: [EntryLink] = results.compactMap({ row in
             guard
-                let slug = row.col(0)?.toString()?.toSlug(),
-                let audience = row.col(1)?.toString()?.toAudience(),
-                let title = row.col(2)?.toString()
+                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let title = row.col(1)?.toString()
             else {
                 return nil
             }
             return EntryLink(
-                address: MemoAddress(slug: slug, audience: audience),
+                address: address,
                 title: title
             )
         })
@@ -657,7 +665,7 @@ final class DatabaseService {
         // Use content indexed in database, even though it might be stale.
         guard let results = try? database.execute(
             sql: """
-            SELECT slug, audience, modified, title, excerpt
+            SELECT id, modified, title, excerpt
             FROM memo_search
             WHERE slug != ? AND memo_search.description MATCH ?
             ORDER BY rank
@@ -673,15 +681,13 @@ final class DatabaseService {
         
         return results.compactMap({ row in
             guard
-                let slug = row.col(0)?.toString()?.toSlug(),
-                let audience = row.col(1)?.toString()?.toAudience(),
-                let modified = row.col(2)?.toDate(),
-                let title = row.col(3)?.toString(),
-                let excerpt = row.col(4)?.toString()
+                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let modified = row.col(1)?.toDate(),
+                let title = row.col(2)?.toString(),
+                let excerpt = row.col(3)?.toString()
             else {
                 return nil
             }
-            let address = MemoAddress(slug: slug, audience: audience)
             return EntryStub(
                 address: address,
                 title: title,
@@ -701,7 +707,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT slug, audience, modified, title, excerpt
+            SELECT id, modified, title, excerpt
             FROM memo
             WHERE memo.modified BETWEEN ? AND ?
             ORDER BY RANDOM()
@@ -714,15 +720,13 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slug = row.col(0)?.toString()?.toSlug(),
-                let audience = row.col(1)?.toString()?.toAudience(),
-                let modified = row.col(2)?.toDate(),
-                let title = row.col(3)?.toString(),
-                let excerpt = row.col(4)?.toString()
+                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let modified = row.col(1)?.toDate(),
+                let title = row.col(2)?.toString(),
+                let excerpt = row.col(3)?.toString()
             else {
                 return nil
             }
-            let address = MemoAddress(slug: slug, audience: audience)
             return EntryStub(
                 address: address,
                 title: title,
@@ -741,7 +745,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT slug, audience, modified, title, excerpt
+            SELECT id, modified, title, excerpt
             FROM memo
             ORDER BY RANDOM()
             LIMIT 1
@@ -749,15 +753,13 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slug = row.col(0)?.toString()?.toSlug(),
-                let audience = row.col(1)?.toString()?.toAudience(),
-                let modified = row.col(2)?.toDate(),
-                let title = row.col(3)?.toString(),
-                let excerpt = row.col(4)?.toString()
+                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let modified = row.col(1)?.toDate(),
+                let title = row.col(2)?.toString(),
+                let excerpt = row.col(3)?.toString()
             else {
                 return nil
             }
-            let address = MemoAddress(slug: slug, audience: audience)
             return EntryStub(
                 address: address,
                 title: title,
@@ -790,15 +792,13 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slug = row.col(0)?.toString()?.toSlug(),
-                let audience = row.col(1)?.toString()?.toAudience(),
-                let modified = row.col(2)?.toDate(),
-                let title = row.col(3)?.toString(),
-                let excerpt = row.col(4)?.toString()
+                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let modified = row.col(1)?.toDate(),
+                let title = row.col(2)?.toString(),
+                let excerpt = row.col(3)?.toString()
             else {
                 return nil
             }
-            let address = MemoAddress(slug: slug, audience: audience)
             return EntryStub(
                 address: address,
                 title: title,
@@ -817,7 +817,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT slug, audience, title
+            SELECT id, title
             FROM memo
             ORDER BY RANDOM()
             LIMIT 1
@@ -825,14 +825,13 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let slug = row.col(0)?.toString()?.toSlug(),
-                let audience = row.col(1)?.toString()?.toAudience(),
-                let title = row.col(2)?.toString()
+                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let title = row.col(1)?.toString()
             else {
                 return nil
             }
             return EntryLink(
-                address: MemoAddress(slug: slug, audience: audience),
+                address: address,
                 title: title
             )
         })

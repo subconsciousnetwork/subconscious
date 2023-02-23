@@ -36,7 +36,7 @@ extension OmniboxView {
     init(
         address: MemoAddress?
     ) {
-        let audience = address?.audience ?? .local
+        let audience = address?.toAudience() ?? .local
         let title = address?.slug.description ?? ""
         self.init(
             icon: Image(audience: audience),

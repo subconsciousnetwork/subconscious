@@ -92,10 +92,7 @@ struct StoryComboView_Previews: PreviewProvider {
                 prompt: "How are these similar?",
                 entryA: EntryStub(
                     MemoEntry(
-                        address: MemoAddress(
-                            slug: Slug("meme")!,
-                            audience: .local
-                        ),
+                        address: Slug("meme")!.toLocalMemoAddress(),
                         contents: Memo(
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,
@@ -113,10 +110,7 @@ struct StoryComboView_Previews: PreviewProvider {
                 ),
                 entryB: EntryStub(
                     MemoEntry(
-                        address: MemoAddress(
-                            slug: Slug("meme")!,
-                            audience: .local
-                        ),
+                        address: Slug("meme")!.toLocalMemoAddress(),
                         contents: Memo(
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,

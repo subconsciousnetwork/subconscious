@@ -28,9 +28,9 @@ class Tests_NotebookUpdate: XCTestCase {
     }
 
     func testDeleteEntry() throws {
-        let a = MemoAddress(formatting: "A", audience: .public)!
-        let b = MemoAddress(formatting: "B", audience: .local)!
-        let c = MemoAddress(formatting: "C", audience: .local)!
+        let a = Slug(formatting: "A")!.toPublicMemoAddress()
+        let b = Slug(formatting: "B")!.toLocalMemoAddress()
+        let c = Slug(formatting: "C")!.toLocalMemoAddress()
         let state = NotebookModel(
             recent: [
                 EntryStub(

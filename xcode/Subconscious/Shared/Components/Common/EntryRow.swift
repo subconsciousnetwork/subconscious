@@ -44,7 +44,7 @@ struct EntryRow: View, Equatable {
                 .multilineTextAlignment(.leading)
                 .foregroundColor(Color.secondary)
             HStack(spacing: AppTheme.unit) {
-                Image(audience: entry.address.audience)
+                Image(audience: entry.address.toAudience())
                     .font(.system(size: 12))
                 Text(entry.address.slug.description)
             }
@@ -61,10 +61,8 @@ struct EntryRow_Previews: PreviewProvider {
         VStack {
             EntryRow(
                 entry: EntryStub(
-                    address: MemoAddress(
-                        slug: Slug(formatting: "Anything that can be derived should be derived")!,
-                        audience: .local
-                    ),
+                    address: Slug(formatting: "Anything that can be derived should be derived")!
+                        .toLocalMemoAddress(),
                     title: "Anything that can be derived should be derived",
                     excerpt: "Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
                     modified: Date.now
@@ -72,10 +70,8 @@ struct EntryRow_Previews: PreviewProvider {
             )
             EntryRow(
                 entry: EntryStub(
-                    address: MemoAddress(
-                        slug: Slug(formatting: "Anything that can be derived should be derived")!,
-                        audience: .public
-                    ),
+                    address: Slug(formatting: "Anything that can be derived should be derived")!
+                        .toPublicMemoAddress(),
                     title: "Anything that can be derived should be derived",
                     excerpt: "Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
                     modified: Date.now

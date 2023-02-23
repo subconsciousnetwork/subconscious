@@ -48,11 +48,9 @@ struct LinkSuggestionLabel_Previews: PreviewProvider {
         LinkSuggestionLabelView(
             suggestion: .new(
                 EntryLink(
-                    address: MemoAddress(
-                        slug: Slug("A muse is more interesting than an oracle")!,
-                        audience: .public
-                    )
-                )
+                    title: "A muse is more interesting than an oracle",
+                    audience: .public
+                )!
             )
         )
     }

@@ -57,19 +57,15 @@ struct BacklinksView_Previews: PreviewProvider {
             BacklinksView(
                 backlinks: [
                     EntryStub(
-                        address: MemoAddress(
-                            formatting: "The Lee Shore",
-                            audience: .local
-                        )!,
+                        address: Slug(formatting: "The Lee Shore")!
+                            .toLocalMemoAddress(),
                         title: "The Lee Shore",
                         excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
                         modified: Date.now
                     ),
                     EntryStub(
-                        address: MemoAddress(
-                            formatting: "Loomings",
-                            audience: .public
-                        )!,
+                        address: Slug(formatting: "Loomings")!
+                            .toPublicMemoAddress(),
                         title: "Floop",
                         excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",
                         modified: Date.now

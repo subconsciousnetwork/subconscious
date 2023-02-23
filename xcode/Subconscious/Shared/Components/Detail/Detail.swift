@@ -327,7 +327,7 @@ enum DetailOuterAction: Hashable {
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
     case succeedSaveEntry(address: MemoAddress, modified: Date)
-    case succeedUpdateAudience(_ address: MemoAddress)
+    case succeedUpdateAudience(_ receipt: MoveReceipt)
 }
 
 extension DetailOuterAction {
@@ -344,8 +344,8 @@ extension DetailOuterAction {
                 address: entry.address,
                 modified: entry.contents.modified
             )
-        case .succeedUpdateAudience(let address):
-            return .succeedUpdateAudience(address)
+        case .succeedUpdateAudience(let receipt):
+            return .succeedUpdateAudience(receipt)
         default:
             return nil
         }
@@ -398,7 +398,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     // Change audience
     case updateAudience(_ audience: Audience)
-    case succeedUpdateAudience(_ address: MemoAddress)
+    case succeedUpdateAudience(_ receipt: MoveReceipt)
     case failUpdateAudience(_ message: String)
 
     //  Saving entry
@@ -588,7 +588,7 @@ struct DetailMarkupEditorCursor: CursorProtocol {
 struct DetailModel: ModelProtocol {
     var address: MemoAddress?
     var audience: Audience {
-        address?.audience ?? .local
+        address?.toAudience() ?? .local
     }
     /// Required headers
     /// Initialize date with Unix Epoch
@@ -860,11 +860,11 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 audience: audience
             )
-        case let .succeedUpdateAudience(address):
+        case let .succeedUpdateAudience(receipt):
             return succeedUpdateAudience(
                 state: state,
                 environment: environment,
-                address: address
+                receipt: receipt
             )
         case let .failUpdateAudience(message):
             return log(
@@ -1455,38 +1455,39 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment,
         audience: Audience
     ) -> Update<DetailModel> {
-        guard let address = state.address else {
+        guard let from = state.address else {
             logger.log(
                 "Update audience requested, but no memo is being edited."
             )
             return Update(state: state)
         }
-        let fx: Fx<DetailAction> = environment.data.updateAudienceAsync(
-            address: address,
-            audience: audience
+        let to = from.withAudience(audience)
+        let fx: Fx<DetailAction> = environment.data.moveEntryAsync(
+            from: from.toEntryLink(title: state.headers.title),
+            to: to.toEntryLink(title: state.headers.title)
         )
-        .map({ address in
-            DetailAction.succeedUpdateAudience(address)
+        .map({ receipt in
+            DetailAction.succeedUpdateAudience(receipt)
         })
         .catch({ error in
             Just(DetailAction.failUpdateAudience(error.localizedDescription))
         })
         .eraseToAnyPublisher()
         var model = state
-        model.address = address.withAudience(audience)
+        model.address = to
         return Update(state: model, fx: fx)
     }
 
     static func succeedUpdateAudience(
         state: DetailModel,
         environment: AppEnvironment,
-        address: MemoAddress
+        receipt: MoveReceipt
     ) -> Update<DetailModel> {
-        guard let address = state.address else {
+        guard state.address != nil else {
             return Update(state: state)
         }
         var model = state
-        model.address = address
+        model.address = receipt.to
         return Update(state: model)
     }
 
@@ -2145,10 +2146,8 @@ struct Detail_Previews: PreviewProvider {
     static var previews: some View {
         DetailView(
             state: DetailOuterModel(
-                address: MemoAddress(
-                    formatting: "Nothing is lost in the universe",
-                    audience: .public
-                )!,
+                address: Slug(formatting: "Nothing is lost in the universe")!
+                    .toPublicMemoAddress(),
                 title: "Nothing is lost in the universe",
                 fallback: "Nothing is lost in the universe"
             ),
