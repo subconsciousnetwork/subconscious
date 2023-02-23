@@ -407,9 +407,7 @@ class Tests_Detail: XCTestCase {
             )
         )
 
-        let parentLink = Slug(formatting: "The Lee Tide")!
-            .toPublicMemoAddress()
-            .toEntryLink(title: "The Lee Tide")
+        let parentLink = EntryLink(title: "The Lee Tide", audience: .public)!
 
         let update = DetailModel.update(
             state: state,
