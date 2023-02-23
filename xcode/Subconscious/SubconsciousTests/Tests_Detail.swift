@@ -377,12 +377,8 @@ class Tests_Detail: XCTestCase {
         let update = DetailModel.update(
             state: state,
             action: .succeedRetitleEntry(
-                from: Slug(formatting: "wrong")!
-                    .toPublicMemoAddress()
-                    .toEntryLink(title: "Wrong"),
-                to: Slug(formatting: "wrong")!
-                    .toPublicMemoAddress()
-                    .toEntryLink(title: "WRONG")
+                from: EntryLink(title: "Wrong", audience: .public)!,
+                to: EntryLink(title: "WRONG", audience: .public)!
             ),
             environment: environment
         )
