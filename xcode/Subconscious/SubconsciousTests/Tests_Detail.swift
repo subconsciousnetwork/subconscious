@@ -243,9 +243,10 @@ class Tests_Detail: XCTestCase {
     
     func testRenameField() throws {
         let state = DetailModel(
-            entryToRename: Slug(formatting: "Dawson spoke and there was music")!
-                .toPublicMemoAddress()
-                .toEntryLink()
+            entryToRename: EntryLink(
+                title: "Dawson spoke and there was music",
+                audience: .public
+            )!
         )
         let update = DetailModel.update(
             state: state,
