@@ -1,0 +1,5 @@
+# Always merge Xcode project files with union strategy.
+# This reduces the amount of conflicts we get when
+# merging different branches that touch this file.
+# See https://roadfiresoftware.com/2015/09/automatically-resolving-git-merge-conflicts-in-xcodes-project-pbxproj/
+*.pbxproj merge=union
