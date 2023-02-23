@@ -780,7 +780,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT slug, audience, modified, title, excerpt
+            SELECT id, modified, title, excerpt
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY RANDOM()
