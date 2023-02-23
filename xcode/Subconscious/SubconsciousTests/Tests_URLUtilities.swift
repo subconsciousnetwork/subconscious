@@ -1,5 +1,5 @@
 //
-//  Tests_URLUtiilities.swift
+//  Tests_URLUtilities.swift
 //  SubconsciousTests
 //
 //  Created by Gordon Brander on 2/22/23.
@@ -8,7 +8,7 @@
 import XCTest
 @testable import Subconscious
 
-final class Tests_URLUtiilities: XCTestCase {
+final class Tests_URLUtilities: XCTestCase {
     func testIsHTTP() throws {
         let urlA = URL(string: "http://example.com")!
         XCTAssertTrue(urlA.isHTTP())
