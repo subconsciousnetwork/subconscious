@@ -199,9 +199,7 @@ class Tests_Detail: XCTestCase {
     
     func testShowRenameSheet() throws {
         let state = DetailModel()
-        let link = Slug(formatting: "Loomings")!
-            .toPublicMemoAddress()
-            .toEntryLink()
+        let link = EntryLink(title: "Loomings", audience: .public)!
         let update = DetailModel.update(
             state: state,
             action: .presentRenameSheet(
