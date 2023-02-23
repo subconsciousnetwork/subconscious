@@ -8,6 +8,11 @@
 import Foundation
 
 extension URL {
+    /// Check if URL is HTTP or HTTPs
+    func isHTTP() -> Bool {
+        return self.scheme == "http" || self.scheme == "https"
+    }
+
     /// Add file name component to URL with extension
     /// - Returns: new URL
     func appendingFilename(name: String, ext: String) -> URL {

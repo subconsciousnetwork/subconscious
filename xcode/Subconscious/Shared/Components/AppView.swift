@@ -63,6 +63,8 @@ struct AppView: View {
 
 //  MARK: Action
 enum AppAction: CustomLogStringConvertible {
+    case recoveryPhrase(RecoveryPhraseAction)
+
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
     case scenePhaseChange(ScenePhase)
@@ -134,6 +136,11 @@ enum AppAction: CustomLogStringConvertible {
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
 
+    /// Set recovery phrase on recovery phrase component
+    static func setRecoveryPhrase(_ phrase: String) -> AppAction {
+        .recoveryPhrase(.setPhrase(phrase))
+    }
+
     var logDescription: String {
         switch self {
         case let .succeedMigrateDatabase(version):
@@ -147,6 +154,22 @@ enum AppAction: CustomLogStringConvertible {
 }
 
 //  MARK: Cursors
+
+struct AppRecoveryPhraseCursor: CursorProtocol {
+    static func get(state: AppModel) -> RecoveryPhraseModel {
+        state.recoveryPhrase
+    }
+    
+    static func set(state: AppModel, inner: RecoveryPhraseModel) -> AppModel {
+        var model = state
+        model.recoveryPhrase = inner
+        return model
+    }
+    
+    static func tag(_ action: RecoveryPhraseAction) -> AppAction {
+        .recoveryPhrase(action)
+    }
+}
 
 enum AppDatabaseState {
     case initial
@@ -171,9 +194,9 @@ struct AppModel: ModelProtocol {
     var sphereIdentity = AppDefaults.standard.sphereIdentity
     /// Default sphere version, if any.
     var sphereVersion: String?
-    /// Temporary state for storing mnemonic for rendering.
-    /// not persisted.
-    var sphereMnemonic: String?
+    /// State for rendering mnemonic/recovery phrase UI.
+    /// Not persisted.
+    var recoveryPhrase = RecoveryPhraseModel()
 
     var gatewayURL = AppDefaults.standard.gatewayURL
     var gatewayURLTextField = AppDefaults.standard.gatewayURL
@@ -203,6 +226,12 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         switch action {
+        case .recoveryPhrase(let action):
+            return AppRecoveryPhraseCursor.update(
+                state: state,
+                action: action,
+                environment: environment.recoveryPhrase
+            )
         case .scenePhaseChange(let scenePhase):
             return scenePhaseChange(
                 state: state,
@@ -425,21 +454,17 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
     
-    static func isValidWebURL(_ string: String) -> Bool {
-        guard let url = URL(string: string) else {
-            return false
-        }
-        return url.scheme == "http" || url.scheme == "https"
-    }
-
     static func setGatewayURLTextField(
         state: AppModel,
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
+        let url = URL(string: text)
+        let isGatewayURLTextFieldValid = url?.isHTTP() ?? false
+
         var model = state
         model.gatewayURLTextField = text
-        model.isGatewayURLTextFieldValid = isValidWebURL(text)
+        model.isGatewayURLTextFieldValid = isGatewayURLTextFieldValid
         return Update(state: model)
     }
     
@@ -448,18 +473,30 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         gatewayURL: String
     ) -> Update<AppModel> {
-        // If URL given is not valid, reset back to original value.
-        guard isValidWebURL(gatewayURL) else {
-            var model = state
-            model.gatewayURLTextField = model.gatewayURL
-            model.isGatewayURLTextFieldValid = true
-            return Update(state: model)
+        var fallback = state
+        fallback.gatewayURLTextField = state.gatewayURL
+        fallback.isGatewayURLTextFieldValid = true
+
+        // If URL given is not valid, fall back to original value.
+        guard let url = URL(string: gatewayURL) else {
+            return Update(state: fallback)
         }
+
+        // If URL given is not HTTP, fall back to original value.
+        guard url.isHTTP() else {
+            return Update(state: fallback)
+        }
+
         var model = state
         model.gatewayURL = gatewayURL
         model.gatewayURLTextField = gatewayURL
         model.isGatewayURLTextFieldValid = true
+
+        // Persist to UserDefaults
         AppDefaults.standard.gatewayURL = gatewayURL
+        // Reset gateway on environment
+        environment.data.noosphere.resetGateway(url: url)
+
         /// Only set valid nicknames
         return Update(state: model)
     }
@@ -474,10 +511,14 @@ struct AppModel: ModelProtocol {
             let receipt = try environment.data.createSphere(
                 ownerKeyName: ownerKeyName
             )
-            var model = state
-            model.sphereMnemonic = receipt.mnemonic
-            model.sphereIdentity = receipt.identity
-            return Update(state: model)
+            return update(
+                state: state,
+                actions: [
+                    .setSphereIdentity(receipt.identity),
+                    .setRecoveryPhrase(receipt.mnemonic)
+                ],
+                environment: environment
+            )
         }  catch {
             return update(
                 state: state,
@@ -798,6 +839,8 @@ struct AppEnvironment {
     var data: DataService
     var feed: FeedService
     
+    var recoveryPhrase = RecoveryPhraseEnvironment()
+
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
         Timer.publish(
