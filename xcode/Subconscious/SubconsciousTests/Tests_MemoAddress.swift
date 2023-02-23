@@ -54,4 +54,39 @@ final class Tests_MemoAddress: XCTestCase {
         XCTAssertNil(MemoAddress("local::slug/"))
         XCTAssertNil(MemoAddress("local::/slug/"))
     }
+    
+    func testEntryLinkExtensionTitle() throws {
+        guard let link = EntryLink(
+            title: "RAND Corporation",
+            audience: .public
+        ) else {
+            XCTFail("Expected title to parse to slug successfully")
+            return
+        }
+        XCTAssertEqual(
+            link.title,
+            "RAND Corporation",
+            "Title matches title given"
+        )
+        XCTAssertEqual(
+            String(link.address.slug),
+            "rand-corporation",
+            "Title is slugified correctly"
+        )
+    }
+
+    func testEntryLinkExtensionDeepTitle() throws {
+        guard let link = EntryLink(
+            title: "A deep title/With children",
+            audience: .public
+        ) else {
+            XCTFail("Expected title to parse to slug successfully")
+            return
+        }
+        XCTAssertEqual(
+            String(link.address.slug),
+            "a-deep-title/with-children",
+            "Title with slashes is converted to deep slug"
+        )
+    }
 }
