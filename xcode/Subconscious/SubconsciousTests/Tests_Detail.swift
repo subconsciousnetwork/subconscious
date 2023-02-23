@@ -312,12 +312,8 @@ class Tests_Detail: XCTestCase {
         let update = DetailModel.update(
             state: state,
             action: .succeedMoveEntry(
-                from: Slug(formatting: "The White Whale")!
-                    .toPublicMemoAddress()
-                    .toEntryLink(),
-                to: Slug(formatting: "The Lee Tide")!
-                    .toPublicMemoAddress()
-                    .toEntryLink()
+                from: EntryLink(title: "The White Whale", audience: .public)!,
+                to: EntryLink(title: "The Lee Tide", audience: .public)!
             ),
             environment: environment
         )
