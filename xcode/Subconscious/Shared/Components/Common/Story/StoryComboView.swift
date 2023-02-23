@@ -37,7 +37,7 @@ struct StoryComboView: View {
                         TranscludeView(
                             pfp: Image("pfp-dog"),
                             petname: "@doge",
-                            slug: story.entryA.address.slug.toSlashlink(),
+                            slashlink: story.entryA.address.slug.toSlashlink(),
                             title: story.entryA.title,
                             excerpt: story.entryA.excerpt
                         )
@@ -53,7 +53,7 @@ struct StoryComboView: View {
                         TranscludeView(
                             pfp: Image("pfp-dog"),
                             petname: "@doge",
-                            slug: story.entryB.address.slug.toSlashlink(),
+                            slashlink: story.entryB.address.slug.toSlashlink(),
                             title: story.entryB.title,
                             excerpt: story.entryB.excerpt
                         )

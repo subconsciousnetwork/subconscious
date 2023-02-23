@@ -10,7 +10,7 @@ import SwiftUI
 struct TranscludeView: View {
     var pfp: Image
     var petname: String
-    var slug: String
+    var slashlink: String
     var title: String
     var excerpt: String
 
@@ -19,7 +19,7 @@ struct TranscludeView: View {
             BylineSmView(
                 pfp: pfp,
                 petname: petname,
-                slug: slug
+                slug: slashlink
             )
             HStack {
                 Text(title)
@@ -34,7 +34,7 @@ struct TranscludeView: View {
             RoundedRectangle(
                 cornerRadius: AppTheme.cornerRadiusLg
             )
-            .stroke(Color.separator, lineWidth: 1)
+            .stroke(Color.separator, lineWidth: 0.5)
         )
     }
 }
@@ -44,7 +44,7 @@ struct TranscludeView_Previews: PreviewProvider {
         TranscludeView(
             pfp: Image("dog-pfp"),
             petname: "@doge",
-            slug: "/thoughts",
+            slashlink: "/thoughts",
             title: "Thoughts of Doge",
             excerpt: "Food food park park park run run play run fetch ball run water shlorp shlorp shlorp dog bork bork bork home sleep sleep dream sleep"
         )
