@@ -262,12 +262,8 @@ class Tests_Detail: XCTestCase {
     }
     
     func testSucceedMoveEntry() throws {
-        let from = Slug(formatting: "loomings")!
-            .toPublicMemoAddress()
-            .toEntryLink()
-        let to = Slug(formatting: "The lee tide")!
-            .toPublicMemoAddress()
-            .toEntryLink(title: "The Lee Tide")
+        let from = EntryLink(title: "Loomings", audience: .public)!
+        let to = EntryLink(title: "The Lee Tide", audience: .public)!
         let state = DetailModel(
             address: from.address,
             headers: WellKnownHeaders(
