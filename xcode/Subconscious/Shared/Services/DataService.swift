@@ -515,7 +515,8 @@ struct DataService {
                     additionalHeaders: [],
                     body: fallback
                 )
-            )
+            ),
+            backlinks: backlinks
         )
 
         let slashlink = address.slug.toSlashlink()
