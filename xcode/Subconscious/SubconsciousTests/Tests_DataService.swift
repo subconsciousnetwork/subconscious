@@ -78,7 +78,7 @@ final class Tests_DataService: XCTestCase {
         let tmp = try createTmpDir()
         let data = try createDataService(tmp: tmp)
         
-        let address = MemoAddress(formatting: "Test", audience: .public)!
+        let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         let memoIn = Memo(
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
@@ -104,7 +104,7 @@ final class Tests_DataService: XCTestCase {
         let tmp = try createTmpDir()
         let data = try createDataService(tmp: tmp)
 
-        let address = MemoAddress(formatting: "Test", audience: .public)!
+        let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         
         XCTAssertThrowsError(try data.readMemo(address: address))
     }
@@ -113,7 +113,7 @@ final class Tests_DataService: XCTestCase {
         let tmp = try createTmpDir()
         let data = try createDataService(tmp: tmp)
         
-        let address = MemoAddress(formatting: "Test", audience: .public)!
+        let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         let memoIn = Memo(
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
@@ -142,7 +142,7 @@ final class Tests_DataService: XCTestCase {
         let tmp = try createTmpDir()
         let data = try createDataService(tmp: tmp)
         
-        let address = MemoAddress(formatting: "Test", audience: .public)!
+        let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         let memo = Memo(
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
@@ -179,10 +179,10 @@ final class Tests_DataService: XCTestCase {
         let versionX = try data.noosphere.version()
         print("!!! X", versionX)
 
-        let addressA = MemoAddress(formatting: "a", audience: .public)!
-        let addressB = MemoAddress(formatting: "b", audience: .public)!
-        let addressC = MemoAddress(formatting: "c", audience: .public)!
-        let addressD = MemoAddress(formatting: "d", audience: .public)!
+        let addressA = Slug(formatting: "a")!.toPublicMemoAddress()
+        let addressB = Slug(formatting: "b")!.toPublicMemoAddress()
+        let addressC = Slug(formatting: "c")!.toPublicMemoAddress()
+        let addressD = Slug(formatting: "d")!.toPublicMemoAddress()
         
         let memo = Memo(
             contentType: ContentType.subtext.rawValue,

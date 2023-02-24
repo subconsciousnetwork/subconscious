@@ -36,18 +36,6 @@ struct EntryLink:
         )
     }
     
-    /// Construct an EntryLink from a string.
-    /// Slug is generated for string using lossy approach.
-    init?(title: String, audience: Audience) {
-        let title = Self.sanitizeTitle(title)
-        guard let address = title.toMemoAddress(audience: audience) else {
-            return nil
-        }
-        self.title = title
-        self.linkableTitle = title
-        self.address = address
-    }
-    
     /// Construct an EntryLink from a slug.
     /// Title is generated using `slug.toTitle()`.
     init(address: MemoAddress, title: String? = nil) {

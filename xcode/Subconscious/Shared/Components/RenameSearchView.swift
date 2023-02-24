@@ -84,6 +84,7 @@ struct RenameSearchView_Previews: PreviewProvider {
                         title: "The Street",
                         audience: .public
                     )!
+
                 )
             ],
             text: .constant(""),

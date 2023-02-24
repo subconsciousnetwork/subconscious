@@ -34,20 +34,8 @@ struct SlashlinkBarView_Previews: PreviewProvider {
     static var previews: some View {
         SlashlinkBarView(
             links: [
-                EntryLink(
-                    address: MemoAddress(
-                        formatting: "The Lee Shore",
-                        audience: .public
-                    )!,
-                    title: "The Lee Shore"
-                ),
-                EntryLink(
-                    address: MemoAddress(
-                        formatting: "Loomings",
-                        audience: .public
-                    )!,
-                    title: "loomings"
-                )
+                EntryLink(title: "Loomings", audience: .public)!,
+                EntryLink(title: "The Lee Shore", audience: .public)!
             ],
             onSelectLink: { _ in }
         )

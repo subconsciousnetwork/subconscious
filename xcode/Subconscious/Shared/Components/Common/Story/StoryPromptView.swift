@@ -76,10 +76,7 @@ struct StoryPromptView_Previews: PreviewProvider {
             story: StoryPrompt(
                 entry: EntryStub(
                     MemoEntry(
-                        address: MemoAddress(
-                            slug: Slug("meme")!,
-                            audience: .public
-                        ),
+                        address: Slug("meme")!.toPublicMemoAddress(),
                         contents: Memo(
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,
