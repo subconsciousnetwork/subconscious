@@ -39,7 +39,7 @@ struct StoryPromptView: View {
                         TranscludeView(
                             pfp: Image("pfp-dog"),
                             petname: "@doge",
-                            slashlink: story.entry.address.slug.toSlashlink(),
+                            slashlink: story.entry.address.slug.description,
                             title: story.entry.title,
                             excerpt: story.entry.excerpt
                         )
@@ -76,7 +76,9 @@ struct StoryPromptView_Previews: PreviewProvider {
             story: StoryPrompt(
                 entry: EntryStub(
                     MemoEntry(
-                        address: Slug("meme")!.toPublicMemoAddress(),
+                        address: MemoAddress.public(
+                            Slashlink("@here/meme")!
+                        ),
                         contents: Memo(
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,

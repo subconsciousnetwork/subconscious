@@ -106,15 +106,15 @@ struct DataService {
         let since = try? database.readMetadata(key: .sphereVersion)
         let changes = try noosphere.changes(since)
         for change in changes {
-            guard
-                let address = Slug(formatting: change)?.toPublicMemoAddress()
-            else {
+            guard let address = Slug(change)?.toPublicMemoAddress() else {
                 continue
             }
-            let slashlink = address.slug.toSlashlink()
+            let slashlink = address.toSlashlink()
             // If memo does exist, write it to database
             // Sphere content is always public right now
-            if let memo = try? noosphere.read(slashlink: slashlink).toMemo() {
+            if let memo = try? noosphere.read(
+                slashlink: slashlink.description
+            ).toMemo() {
                 try database.writeMemo(
                     address,
                     memo: memo
@@ -203,8 +203,8 @@ struct DataService {
         address: MemoAddress
     ) throws -> Memo {
         switch address {
-        case .public(let slug):
-            return try noosphere.read(slashlink: slug.toSlashlink())
+        case .public(let slashlink):
+            return try noosphere.read(slashlink: slashlink.description)
                 .toMemo()
                 .unwrap()
         case .local(let slug):
@@ -222,10 +222,10 @@ struct DataService {
         memo.modified = Date.now
 
         switch address {
-        case .public(let slug):
+        case .public(let slashlink):
             let body = try memo.body.toData().unwrap()
             try noosphere.write(
-                slug: slug.description,
+                slug: slashlink.toSlug().description,
                 contentType: memo.contentType,
                 additionalHeaders: memo.headers,
                 body: body
@@ -276,8 +276,8 @@ struct DataService {
             try local.remove(slug)
             try database.removeMemo(address)
             return
-        case .public(let slug):
-            try noosphere.remove(slug: slug.description)
+        case .public(let slashlink):
+            try noosphere.remove(slug: slashlink.toSlug().description)
             let version = try noosphere.save()
             try database.removeMemo(address)
             try database.writeMetadatadata(key: .sphereVersion, value: version)
@@ -439,9 +439,9 @@ struct DataService {
     /// Check if a given address exists
     func exists(_ address: MemoAddress) -> Bool {
         switch address {
-        case .public(let slug):
+        case .public(let slashlink):
             let version = noosphere.getFileVersion(
-                slashlink: slug.toSlashlink()
+                slashlink: slashlink.description
             )
             return version != nil
         case .local(let slug):
@@ -457,7 +457,9 @@ struct DataService {
         slug: Slug
     ) -> MemoAddress? {
         // If slug exists in default sphere, return that.
-        if noosphere.getFileVersion(slashlink: slug.toSlashlink()) != nil {
+        if noosphere.getFileVersion(
+            slashlink: slug.toSlashlink().description
+        ) != nil {
             return slug.toPublicMemoAddress()
         }
         // Otherwise if slug exists on local, return that.
@@ -492,10 +494,9 @@ struct DataService {
         )
 
         switch address {
-        case .public(let slug):
-            let slashlink = slug.toSlashlink()
+        case .public(let slashlink):
             do {
-                let memo = try noosphere.read(slashlink: slashlink)
+                let memo = try noosphere.read(slashlink: slashlink.description)
                     .toMemo()
                     .unwrap()
                 return EntryDetail(
@@ -511,11 +512,10 @@ struct DataService {
                 return draft
             }
         case .local(let slug):
-            let slashlink = slug.toSlashlink()
             // Retreive top entry from file system to ensure it is fresh.
             // If no file exists, return a draft, using fallback for title.
-            guard let memo = local.read(address.slug) else {
-                logger.debug("Local file does not exist: \(slashlink). Returning new draft.")
+            guard let memo = local.read(slug) else {
+                logger.debug("Local file does not exist: \(slug). Returning new draft.")
                 return draft
             }
             // Return entry

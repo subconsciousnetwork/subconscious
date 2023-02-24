@@ -1,5 +1,5 @@
 //
-//  Tests_SubURLs.swift
+//  Tests_SubURL.swift
 //  SubconsciousTests
 //
 //  Created by Gordon Brander on 4/20/22.
@@ -8,7 +8,7 @@
 import XCTest
 @testable import Subconscious
 
-class Tests_SubURLs: XCTestCase {
+class Tests_SubURL: XCTestCase {
     func testEncodeAsSubEntryURL() throws {
         let link = UnqualifiedLink(
             slug: Slug("hidecs")!,
@@ -81,7 +81,7 @@ class Tests_SubURLs: XCTestCase {
         )
         XCTAssertEqual(
             String(link.slug),
-            "bah"
+            "baháʼí"
         )
     }
 
@@ -104,7 +104,7 @@ class Tests_SubURLs: XCTestCase {
         )
         XCTAssertEqual(
             String(link.slug),
-            "fdration-aronautique-internationale"
+            "fédération-aéronautique-internationale"
         )
     }
 }

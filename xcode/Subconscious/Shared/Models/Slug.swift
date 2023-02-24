@@ -2,44 +2,42 @@
 //  Slug.swift
 //  Subconscious (iOS)
 //
-//  Created by Gordon Brander on 1/18/22.
+//  Created by Gordon Brander on 2/27/23.
 //
 
 import Foundation
 
-/// A slug is a normalized identifier (basically "words-and-dashes")
+/// A type representing a valid slug (`/slug`)
 struct Slug:
-    Identifiable,
     Hashable,
     Equatable,
+    Identifiable,
     Comparable,
-    LosslessStringConvertible,
-    Codable
+    Codable,
+    LosslessStringConvertible
 {
-    /// Compare slugs by alpha
+    private static let slugRegex = /([\w\d\-]+)(\/[\w\d\-]+)*/
+
     static func < (lhs: Slug, rhs: Slug) -> Bool {
         lhs.id < rhs.id
     }
     
-    /// Sanitize a string into a "slug string"-a string into a string that can
-    /// be losslessly converted to and from a Slug.
-    ///
-    /// If a valid slug string cannot be produced, returns nil.
-    ///
-    /// If you need a value to truly be a slug, use the Slug constructor.
-    static func format(_ string: String) -> String? {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    /// Attempt to sanitize a string into a "slug string"-a string that
+    /// represents a valid slug.
+    private static func format(_ string: String) -> String {
         // Strip all non-allowed characters
-        let slugString = string.replacingOccurrences(
-            of: #"[^a-zA-Z0-9_\-\/\s]"#,
+        let formatted = string.replacingOccurrences(
+            of: #"[^\w\d\-\s]"#,
             with: "",
             options: .regularExpression,
             range: nil
         )
         // Trim leading/trailing whitespace
         .trimmingCharacters(in: .whitespacesAndNewlines)
-        // Then trim leading/trailing slashes
-        .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        .lowercased()
         // Replace runs of one or more space with a single dash
         .replacingOccurrences(
             of: #"\s+"#,
@@ -47,47 +45,36 @@ struct Slug:
             options: .regularExpression,
             range: nil
         )
-        // Replace all instances of two or more consecutive slashes
-        // with a single slash.
-        .replacingOccurrences(
-            of: #"/+"#,
-            with: "/",
-            options: .regularExpression,
-            range: nil
-        )
         .truncatingSafeFileNameLength()
-        guard !slugString.isEmpty else {
-            return nil
-        }
-        return slugString
+        return formatted
     }
     
-    let id: String
-    var description: String { id }
+    let description: String
+    let verbatim: String
+
+    var id: String { description }
+
+    var markup: String {
+        "/\(verbatim)"
+    }
     
     /// Losslessly create a slug from a string.
     /// This requires that the string already be formatted like a
-    /// sanitized slug, including being lowercased.
-    init?(_ string: String) {
-        guard let id = Self.format(string) else {
+    /// valid slug.
+    init?(_ description: String) {
+        guard description.wholeMatch(of: Self.slugRegex) != nil else {
             return nil
         }
-        // Check that sanitization was lossless.
-        guard id == string else {
-            return nil
-        }
-        self.id = id
+        self.description = description.lowercased()
+        self.verbatim = description
     }
     
     /// Convert a string into a slug.
     /// This will sanitize the string as best it can to create a valid slug.
     init?(formatting string: String) {
-        guard let id = Self.format(string) else {
-            return nil
-        }
-        self.id = id
+        self.init(Self.format(string))
     }
-    
+
     /// Create a slug from a URL.
     ///
     /// Note this is lossless, so it will only support URLs that contain
@@ -121,7 +108,7 @@ struct Slug:
     /// Create a nice title-like string from a slug
     func toTitle() -> String {
         // Remove all non-slug characters
-        self.description
+        self.verbatim
             .replacingOccurrences(
                 of: #"-"#,
                 with: " ",
@@ -142,14 +129,6 @@ extension Slug {
             return nil
         }
         self.init(sluglike)
-    }
-}
-
-extension Slug {
-    /// Create a slashlink (markup string) from slug
-    /// https://github.com/gordonbrander/subtext
-    func toSlashlink() -> String {
-        "/\(self.description)"
     }
 }
 

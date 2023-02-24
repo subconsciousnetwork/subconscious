@@ -9,148 +9,173 @@ import XCTest
 @testable import Subconscious
 
 class Tests_Slug: XCTestCase {
-    func testStrictValidSlugConstruction() throws {
-        let slugString = "valid-strict-slug"
-        XCTAssertNotNil(
-            Slug(slugString),
-            "Slug created from valid slug string"
-        )
+    func testValid() throws {
+        XCTAssertNotNil(Slug("valid-slug"))
+        XCTAssertNotNil(Slug("oysters"))
+        XCTAssertNotNil(Slug("SLUG"))
+        XCTAssertNotNil(Slug("VALID_SLUG"))
+        XCTAssertNotNil(Slug("-_-"))
+    }
+    
+    func testNotValid() throws {
+        XCTAssertNil(Slug("/invalid-slug"))
+        XCTAssertNil(Slug("@invalid-slug"))
+        XCTAssertNil(Slug("invalid slug"))
+        XCTAssertNil(Slug(" invalid-slug"))
+        XCTAssertNil(Slug("//invalid-slug"))
+        XCTAssertNil(Slug("invalid//slug"))
+        XCTAssertNil(Slug("invalid-slug "))
+        XCTAssertNil(Slug("invalid😈slug"))
+    }
+    
+    func testDeep() throws {
+        XCTAssertNotNil(Slug("valid/deep"))
+        XCTAssertNotNil(Slug("valid/deep/slug"))
+        XCTAssertNotNil(Slug("valid/-_-/___"))
     }
 
-    func testStrictInvalidSlugConstruction() throws {
-        let slugString = "Inv@led slug 😆"
-        XCTAssertNil(
-            Slug(slugString),
-            "Invalid slug string is rejected by strict constructor"
-        )
+    func testNotValidDeep() throws {
+        XCTAssertNil(Slug("valid//deep"))
+        XCTAssertNil(Slug("valid/deep//slug"))
     }
 
-    func testStrictValidSlugLosslessStringConvertable() throws {
-        let slugString = "valid-strict-slug"
-        XCTAssertEqual(
-            Slug(slugString)?.description,
-            slugString,
-            "slug is LosslessStringConvertable for valid slug strings"
-        )
+    func testLosslessStringConvertable() throws {
+        let slug = Slug("valid-slug")
+        XCTAssertEqual(slug?.description, "valid-slug")
+    }
+    
+    func testVerbatim() throws {
+        let slug = Slug("VALID-slug")
+        XCTAssertEqual(slug?.verbatim, "VALID-slug", "preserves case")
+    }
+
+    func testMarkup() throws {
+        let slug = Slug("VALID-slug")
+        XCTAssertEqual(slug?.markup, "/VALID-slug")
     }
 
     func testSlugFromPathlike() throws {
         let pathlikeA = "foo.subtext"
-
+        
         XCTAssertEqual(
             Slug(fromPath: pathlikeA, withExtension: "subtext"),
             Slug("foo")!
         )
-
-        let pathlikeB = "foo/bar.subtext"
+        
+        let pathlikeB = "foo-bar.subtext"
         XCTAssertEqual(
             Slug(fromPath: pathlikeB, withExtension: "subtext"),
-            Slug("foo/bar")!
+            Slug("foo-bar")!
         )
-
-        let pathlikeC = "foo/bar.txt"
+        
+        let pathlikeC = "foo-bar.txt"
         XCTAssertNil(
             Slug(fromPath: pathlikeC, withExtension: "subtext"),
             "Returns nil for invalid path extension"
         )
     }
-
+    
     func testFormatStripsInvalidCharacters() throws {
-        let slug = Slug.format(
-            "The quick brown fox jumps over the lazy dog!@#$%^&*()+,>:;'|{}[]<>?"
+        let slug = Slug(
+            formatting: "The quick brown fox jumps over the lazy dog!@#$%^&*()+,>:;'|{}[]<>?"
         )
         XCTAssertEqual(
-            slug,
+            slug?.description,
             "the-quick-brown-fox-jumps-over-the-lazy-dog",
             "Formats the string into a valid slug-string"
         )
     }
-
-    func testFormatUnicodeCharacters0() throws {
-        guard let slug = Slug(
-            formatting: "Baháʼí"
-        ) else {
-            XCTFail("Expected Slug")
-            return
-        }
+    
+    func testFormatUnicodeCharacters() throws {
+        let a = Slug(formatting: "Baháʼí")
         XCTAssertEqual(
-            String(slug),
-            "bah"
+            a?.description,
+            "baháʼí"
+        )
+        let b = Slug(formatting: "Fédération Aéronautique Internationale")
+        XCTAssertEqual(
+            b?.description,
+            "fédération-aéronautique-internationale"
         )
     }
-
-    func testFormatUnicodeCharacters1() throws {
-        guard let slug = Slug(
-            formatting: "Fédération Aéronautique Internationale"
-        ) else {
-            XCTFail("Expected Slug")
-            return
-        }
-        XCTAssertEqual(
-            String(slug),
-            "fdration-aronautique-internationale"
-        )
-    }
-
+    
     func testFormatLeavesUnderscoresIntact() throws {
-        let slug = Slug.format("The_quick_Brown_fOx")
+        let slug = Slug(formatting: "The_quick_Brown_fOx")
         XCTAssertEqual(
-            slug,
+            slug?.description,
             "the_quick_brown_fox",
             "Underscores allowed"
         )
     }
-
-    func testFormatRespectsDeepSlashes() throws {
-        let slug = Slug.format("the/quick brown/fox jumps")
+    
+    func testFormatDropsDeepSlashes() throws {
+        let slug = Slug(formatting: "the/quick brown/fox jumps")
         XCTAssertEqual(
-            slug,
-            "the/quick-brown/fox-jumps",
+            slug?.description,
+            "thequick-brownfox-jumps",
             "Formats deep slug string into a valid slug-string"
         )
     }
-
+    
     func testFormatTrimsEndOfString() throws {
-        let slug = Slug.format("the QuIck brown FOX ")
+        let slug = Slug(formatting: "the QuIck brown FOX ")
         XCTAssertEqual(
-            slug,
+            slug?.description,
             "the-quick-brown-fox",
             "Trims string before sluggifying"
         )
     }
-
+    
     func testFormatTrimsStringAfterRemovingInvalidCharacters() throws {
-        let slug = Slug.format("the QuIck brown FOX !$%")
+        let slug = Slug(formatting: "the QuIck brown FOX !$%")
         XCTAssertEqual(
-            slug,
+            slug?.description,
             "the-quick-brown-fox",
             "Trims string after stripping characters"
         )
     }
-
+    
     func testFormatTrimsNonAllowedAndWhitespaceBeforeSlashes() throws {
-        let slug = Slug.format("  /the QuIck brown FOX/ !$%")
+        let slug = Slug(formatting: "  /the QuIck brown FOX/ !$%")
         XCTAssertEqual(
-            slug,
+            slug?.description,
             "the-quick-brown-fox",
             "Trims non-allowed characters and whitespace before slashes"
         )
     }
-
+    
     func testFormatCollapsesContiguousWhitespace() throws {
-        let slug = Slug.format("  /the QuIck      brown FOX")
+        let slug = Slug(formatting: "  the QuIck      brown FOX")
         XCTAssertEqual(
-            slug,
+            slug?.description,
             "the-quick-brown-fox",
             "Trims non-allowed characters and whitespace before slashes"
         )
     }
-
+    
     func testToTitle() throws {
         let title = Slug("frozen-yogurt")!.toTitle()
         XCTAssertEqual(
             title,
             "Frozen yogurt",
+            "Title-ifies slug and capitalizes first letter"
+        )
+    }
+    
+    func testToTitleCase() throws {
+        let title = Slug("RAND-Corp")!.toTitle()
+        XCTAssertEqual(
+            title,
+            "RAND Corp",
+            "Title-ifies slug and preserves case"
+        )
+    }
+    
+    func testToTitleCase2() throws {
+        let title = Slug("odd-CAPS")!.toTitle()
+        XCTAssertEqual(
+            title,
+            "Odd CAPS",
             "Title-ifies slug and capitalizes first letter"
         )
     }

@@ -28,7 +28,7 @@ struct BacklinksView: View {
                         },
                         label: {
                             Transclude2View(
-                                slashlink: entry.address.slug.toSlashlink(),
+                                address: entry.address,
                                 title: entry.title,
                                 excerpt: entry.excerpt
                             )
@@ -64,7 +64,7 @@ struct BacklinksView_Previews: PreviewProvider {
                         modified: Date.now
                     ),
                     EntryStub(
-                        address: Slug(formatting: "Loomings")!
+                        address: Slashlink("/loomings")!
                             .toPublicMemoAddress(),
                         title: "Floop",
                         excerpt: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi.",

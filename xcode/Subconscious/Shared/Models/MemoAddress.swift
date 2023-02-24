@@ -9,83 +9,81 @@ import Foundation
 
 enum MemoAddress: Hashable, Codable {
     case local(Slug)
-    case `public`(Slug)
+    case `public`(Slashlink)
     
     var slug: Slug {
         switch self {
         case .local(let slug):
             return slug
-        case .public(let slug):
-            return slug
+        case .public(let slashlink):
+            return slashlink.toSlug()
         }
     }
 }
 
-extension MemoAddress: LosslessStringConvertible, Identifiable {
+extension MemoAddress: LosslessStringConvertible, Identifiable, Comparable {
     /// An address is considered to be any two strings separated by `::`
     private static let addressRegex = /(.+)::(.+)/
     
     /// Initialize from a string
     init?(_ description: String) {
-        guard
-            let match = try? Self.addressRegex.wholeMatch(in: description)
-        else {
+        guard let match = try? Self.addressRegex.wholeMatch(
+            in: description
+        ) else {
             return nil
         }
         guard let audience = Audience(rawValue: String(match.1)) else {
             return nil
         }
-        guard let slug = Slug(String(match.2)) else {
-            return nil
-        }
         switch audience {
         case .local:
-            self = .local(slug)
+            guard let slashlink = Slashlink(String(match.2)) else {
+                return nil
+            }
+            // Local addresses must not include petnames
+            guard slashlink.petnamePart == nil else {
+                return nil
+            }
+            self = .local(slashlink.toSlug())
         case .public:
-            self = .public(slug)
+            guard let slashlink = Slashlink(String(match.2)) else {
+                return nil
+            }
+            self = .public(slashlink)
         }
     }
     
     var description: String {
         switch self {
         case .local(let slug):
-            return "local::\(slug)"
-        case .public(let slug):
-            return "public::\(slug)"
+            return "local::\(slug.toSlashlink())"
+        case .public(let slashlink):
+            return "public::\(slashlink)"
         }
     }
     
     var id: String { description }
+    
+    /// Compare addresses by alpha
+    static func < (lhs: Self, rhs: Self) -> Bool {
+        lhs.id < rhs.id
+    }
+}
+
+extension MemoAddress {
+    func toSlashlink() -> Slashlink {
+        switch self {
+        case .local(let slug):
+            return slug.toSlashlink()
+        case .public(let slashlink):
+            return slashlink
+        }
+    }
 }
 
 extension MemoAddress {
     func toEntryLink(title: String? = nil) -> EntryLink {
         EntryLink(address: self, title: title)
-    }
-}
-
-extension MemoAddress {
-    func toLocalMemoAddress() -> Self {
-        .local(slug)
-    }
-}
-
-extension MemoAddress {
-    func toPublicMemoAddress() -> Self {
-        .public(slug)
-    }
-}
-
-extension MemoAddress {
-    // TODO: in future we will need to add an argument for the default petname
-    // when converting from local to public.
-    func withAudience(_ audience: Audience) -> Self {
-        switch audience {
-        case .local:
-            return .local(slug)
-        case .public:
-            return .public(slug)
-        }
     }
 }
 
@@ -117,7 +115,17 @@ extension Slug {
     }
     
     func toPublicMemoAddress() -> MemoAddress {
-        .public(self)
+        .public(Slashlink(slug: self))
+    }
+}
+
+extension Slashlink {
+    func toLocalMemoAddress() -> MemoAddress {
+        MemoAddress.local(self.toSlug())
+    }
+    
+    func toPublicMemoAddress() -> MemoAddress {
+        MemoAddress.public(self)
     }
 }
 
@@ -140,18 +148,13 @@ extension MemoAddress {
     }
 }
 
-extension EntryLink {
-    init?(title: String, audience: Audience) {
-        guard let slug = Slug(formatting: title) else {
-            return nil
-        }
+extension MemoAddress {
+    func withAudience(_ audience: Audience) -> Self {
         switch audience {
         case .local:
-            self.init(address: MemoAddress.local(slug), title: title)
-            return
+            return slug.toLocalMemoAddress()
         case .public:
-            self.init(address: MemoAddress.public(slug), title: title)
-            return
+            return slug.toPublicMemoAddress()
         }
     }
 }

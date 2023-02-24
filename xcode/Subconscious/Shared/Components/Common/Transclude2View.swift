@@ -11,8 +11,7 @@ import SwiftUI
 /// We'll replace uses of Transclude2View with TranscludeView once we integrate
 /// pfps throughout the app.
 struct Transclude2View: View {
-    var petname: String?
-    var slashlink: String
+    var address: MemoAddress
     var title: String
     var excerpt: String
 
@@ -26,11 +25,7 @@ struct Transclude2View: View {
             Text(excerpt)
                 .lineLimit(5)
             HStack(spacing: 0) {
-                if let petname = petname {
-                    Text(verbatim: petname)
-                        .fontWeight(.semibold)
-                }
-                Text(verbatim: slashlink)
+                Text(verbatim: address.toSlashlink().description)
             }
             .foregroundColor(.secondary)
         }
@@ -48,8 +43,7 @@ struct Transclude2View: View {
 struct Transclude2View_Previews: PreviewProvider {
     static var previews: some View {
         Transclude2View(
-            petname: "@gordon",
-            slashlink: "/loomings",
+            address: MemoAddress.public(Slashlink("@gordon/loomings")!),
             title: "Loomings",
             excerpt: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation."
         )

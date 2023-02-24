@@ -199,7 +199,9 @@ class Tests_Detail: XCTestCase {
     
     func testShowRenameSheet() throws {
         let state = DetailModel()
-        let link = EntryLink(title: "Loomings", audience: .public)!
+        let link = EntryLink(
+            address: MemoAddress.public(Slashlink("/loomings")!)
+        )
         let update = DetailModel.update(
             state: state,
             action: .presentRenameSheet(
@@ -244,9 +246,10 @@ class Tests_Detail: XCTestCase {
     func testRenameField() throws {
         let state = DetailModel(
             entryToRename: EntryLink(
-                title: "Dawson spoke and there was music",
-                audience: .public
-            )!
+                address: MemoAddress.public(
+                    Slashlink("/dawson-spoke-and-there-was-music")!
+                )
+            )
         )
         let update = DetailModel.update(
             state: state,
@@ -262,8 +265,13 @@ class Tests_Detail: XCTestCase {
     }
     
     func testSucceedMoveEntry() throws {
-        let from = EntryLink(title: "Loomings", audience: .public)!
-        let to = EntryLink(title: "The Lee Tide", audience: .public)!
+        let from = EntryLink(
+            address: MemoAddress.public(Slashlink("/loomings")!)
+        )
+        let to = EntryLink(
+            address: MemoAddress.public(Slashlink("/the-lee-tide")!),
+            title: "The Lee Tide"
+        )
         let state = DetailModel(
             address: from.address,
             headers: WellKnownHeaders(
@@ -308,8 +316,14 @@ class Tests_Detail: XCTestCase {
         let update = DetailModel.update(
             state: state,
             action: .succeedMoveEntry(
-                from: EntryLink(title: "The White Whale", audience: .public)!,
-                to: EntryLink(title: "The Lee Tide", audience: .public)!
+                from: EntryLink(
+                    address: MemoAddress.public(Slashlink("/the-white-whale")!),
+                    title: "The White Whale"
+                ),
+                to: EntryLink(
+                    address: MemoAddress.public(Slashlink("/the-lee-tide")!),
+                    title: "The Lee Tide"
+                )
             ),
             environment: environment
         )
@@ -373,8 +387,14 @@ class Tests_Detail: XCTestCase {
         let update = DetailModel.update(
             state: state,
             action: .succeedRetitleEntry(
-                from: EntryLink(title: "Wrong", audience: .public)!,
-                to: EntryLink(title: "WRONG", audience: .public)!
+                from: EntryLink(
+                    address: MemoAddress.public(Slashlink("/wrong")!),
+                    title: "wrong"
+                ),
+                to: EntryLink(
+                    address: MemoAddress.public(Slashlink("/wrong")!),
+                    title: "WRONG"
+                )
             ),
             environment: environment
         )
@@ -403,7 +423,10 @@ class Tests_Detail: XCTestCase {
             )
         )
 
-        let parentLink = EntryLink(title: "The Lee Tide", audience: .public)!
+        let parentLink = EntryLink(
+            address: MemoAddress.public(Slashlink("/the-lee-tide")!),
+            title: "The Lee Tide"
+        )
 
         let update = DetailModel.update(
             state: state,

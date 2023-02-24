@@ -89,9 +89,11 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
             suggestions: [
                 .entry(
                     EntryLink(
-                        title: "An organism is a living system",
-                        audience: .local
-                    )!
+                        address: MemoAddress.local(
+                            Slug("an-organism-is-a-living-system")!
+                        ),
+                        title: "An organism is a living system"
+                    )
                 )
             ],
             onSelectLinkCompletion: { _ in },

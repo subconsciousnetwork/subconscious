@@ -21,7 +21,7 @@ struct SlashlinkBarView: View {
                         onSelectLink(link)
                     },
                     label: {
-                        Text(link.address.slug.toSlashlink())
+                        Text(link.address.slug.markup)
                             .lineLimit(1)
                     }
                 )
@@ -34,8 +34,18 @@ struct SlashlinkBarView_Previews: PreviewProvider {
     static var previews: some View {
         SlashlinkBarView(
             links: [
-                EntryLink(title: "Loomings", audience: .public)!,
-                EntryLink(title: "The Lee Shore", audience: .public)!
+                EntryLink(
+                    address: MemoAddress.public(
+                        Slashlink("@here/loomings")!
+                    ),
+                    title: "Loomings"
+                ),
+                EntryLink(
+                    address: MemoAddress.public(
+                        Slashlink("@here/the-lee-shore")!
+                    ),
+                    title: "The Lee Shore"
+                )
             ],
             onSelectLink: { _ in }
         )

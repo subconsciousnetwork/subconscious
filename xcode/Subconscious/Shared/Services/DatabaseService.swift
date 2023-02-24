@@ -508,19 +508,28 @@ final class DatabaseService {
         guard self.state == .ready else {
             return []
         }
+        guard let slug = query.toSlug() else {
+            return []
+        }
         // Create a suggestion for the literal query that has same
         // audience as current.
         guard let queryEntryLink = Func.block({
             switch current.address {
-            case .public:
-                return query
-                    .toSlug()?
-                    .toPublicMemoAddress()
-                    .toEntryLink(title: query)
+            case .public(let slashlink):
+                return EntryLink(
+                    address: MemoAddress.public(
+                        Slashlink(
+                            petname: slashlink.toPetname(),
+                            slug: slug
+                        )
+                    ),
+                    title: query
+                )
             case .local:
-                return query.toSlug()?
-                    .toLocalMemoAddress()
-                    .toEntryLink(title: query)
+                return EntryLink(
+                    address: MemoAddress.local(slug),
+                    title: query
+                )
             }
         }) else {
             return []
@@ -844,7 +853,7 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-02-15T10:23:00")!,
+            version: Int.from(iso8601String: "2023-02-28T13:21:00")!,
             sql: """
             /*
             Key-value metadata related to the database.
