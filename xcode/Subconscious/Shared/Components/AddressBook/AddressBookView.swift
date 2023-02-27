@@ -18,6 +18,10 @@ struct AddressBookView: View {
     @ObservedObject var app: Store<AppModel>
     var unknown = "Unknown"
     
+    // Temp state, will be moved to slice of AppStore later
+    @State var didCopy = false
+    
+    // Temp state, will be moved to slice of AppStore later
     @State var following: [AddressBookEntry] = [
         AddressBookEntry(pfp: Image("pfp-dog"), petname: "ben", did: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"),
         AddressBookEntry(pfp: Image("sub_logo_light"), petname: "bob", did: "did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
@@ -46,9 +50,42 @@ struct AddressBookView: View {
                     }
                 }
                 Section(header: Text("My Details")) {
-                    Text(myDid)
                    DidQrCodeView(did: myDid)
                         .frame(maxWidth: .infinity, maxHeight: 200)
+                    
+                    VStack {
+                        
+                        HStack{
+                        Text(myDid)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Button(action: {
+                                // TODO: actually copy it!
+                                didCopy = true
+                            }, label: {
+                                if !didCopy {
+                                    HStack {
+                                        Image(systemName: "doc.on.doc")
+                                    }
+                                    .transition(
+                                        .asymmetric(
+                                            insertion: .identity,
+                                            removal: .move(
+                                                edge: .top
+                                            ).combined(
+                                                with: .opacity
+                                            )
+                                        )
+                                    )
+                                } else {
+                                    HStack {
+                                        Image(systemName: "checkmark.circle")
+                                    }
+                                    .transition(.opacity)
+                                }
+                            })
+                        }
+                    }
                 }
                 
             }
@@ -60,9 +97,14 @@ struct AddressBookView: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add Friend") {
-                        app.send(.presentSettingsSheet(false))
-                    }
+                    NavigationLink(
+                        destination: {
+                            AddFriendView(app: app)
+                        },
+                        label: {
+                    Text("Add Friend")
+                        }
+                    )
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
