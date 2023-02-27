@@ -18,19 +18,32 @@ struct AddressBookView: View {
     @ObservedObject var app: Store<AppModel>
     var unknown = "Unknown"
     
+    @State var searchText = ""
+    
     // Temp state, will be moved to slice of AppStore later
     @State var didCopy = false
     
     // Temp state, will be moved to slice of AppStore later
     @State var following: [AddressBookEntry] = [
         AddressBookEntry(pfp: Image("pfp-dog"), petname: "ben", did: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"),
-        AddressBookEntry(pfp: Image("sub_logo_light"), petname: "bob", did: "did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
+        AddressBookEntry(pfp: Image("sub_logo_light"), petname: "bob", did: "did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"),
+        AddressBookEntry(pfp: Image("sub_logo_dark"), petname: "alice", did: "did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
     ]
     
     var myDid = "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
     
     func delete(at offsets: IndexSet) {
         following.remove(atOffsets: offsets)
+    }
+    
+    func filteredFollowing() -> [AddressBookEntry] {
+        return following.filter { user in
+            if (searchText.count > 0) {
+                return user.petname.lowercased().range(of: searchText.lowercased()) != nil
+            } else {
+                return true
+            }
+        }
     }
 
     var body: some View {
@@ -41,12 +54,13 @@ struct AddressBookView: View {
                 } else {
                     Section(header: Text("Friends")) {
                         List {
-                            ForEach(following, id: \.did) { user in
+                            ForEach(filteredFollowing(), id: \.did) { user in
                                 AddressBookEntryView(pfp: user.pfp, petname: user.petname,
                                                      did: user.did)
                             }
                             .onDelete(perform: delete)
                         }
+                        .searchable(text: $searchText)
                     }
                 }
                 Section(header: Text("My Details")) {
