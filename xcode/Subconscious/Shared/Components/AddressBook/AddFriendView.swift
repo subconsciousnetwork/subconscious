@@ -12,6 +12,8 @@ struct AddFriendView: View {
     @ObservedObject var app: Store<AppModel>
     var unknown = "Unknown"
     
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    
     @State var did: String = ""
     @State var petname: String = ""
     
@@ -20,28 +22,39 @@ struct AddFriendView: View {
             Form {
                 Section(header: Text("Friend Details")) {
                     // TODO: validation
+                    
+                    HStack {
+                        Image(systemName: "key")
+                            .foregroundColor(.accentColor)
                     TextField("DID", text: $did)
                         .lineLimit(1)
+                    }
+                    
+                    HStack {
+                        Image(systemName: "at")
+                            .foregroundColor(.accentColor)
                     TextField("Petname", text: $petname)
                         .lineLimit(1)
+                    }
+                    
                 }
                 
                 Section(header: Text("Add via QR Code")) {
-                    Button("Scan Code") {
-                        
-                    }
+                    Button(action: {}, label: {
+                        HStack {
+                            Image(systemName: "qrcode")
+                            Text("Scan Code")
+                        }
+                    })
                 }
             }
             .navigationTitle("Add Friend")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
-                        app.send(.presentSettingsSheet(false))
-                    }
-                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
-                        app.send(.presentSettingsSheet(false))
+                        // TODO: actually dispatch an action here
+                        presentationMode.wrappedValue.dismiss()
+                        
                     }
                 }
             }
