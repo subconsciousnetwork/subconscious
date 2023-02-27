@@ -23,6 +23,8 @@ struct AddressBookView: View {
         AddressBookEntry(pfp: Image("sub_logo_light"), petname: "bob", did: "did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
     ]
     
+    var myDid = "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+    
     func delete(at offsets: IndexSet) {
         following.remove(atOffsets: offsets)
     }
@@ -33,13 +35,20 @@ struct AddressBookView: View {
                 if (following.count == 0) {
                     Text("No friends?")
                 } else {
-                    List {
-                        ForEach(following, id: \.did) { user in
-                            AddressBookEntryView(pfp: user.pfp, petname: user.petname,
-                                                 did: user.did)
+                    Section(header: Text("Friends")) {
+                        List {
+                            ForEach(following, id: \.did) { user in
+                                AddressBookEntryView(pfp: user.pfp, petname: user.petname,
+                                                     did: user.did)
+                            }
+                            .onDelete(perform: delete)
                         }
-                        .onDelete(perform: delete)
                     }
+                }
+                Section(header: Text("My Details")) {
+                    Text(myDid)
+                   DidQrCodeView(did: myDid)
+                        .frame(maxWidth: .infinity, maxHeight: 200)
                 }
                 
             }

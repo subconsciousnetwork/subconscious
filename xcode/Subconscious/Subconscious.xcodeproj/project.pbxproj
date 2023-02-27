@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		B54B922828E669D6003ACA1F /* MementoGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54B922728E669D6003ACA1F /* MementoGeist.swift */; };
 		B575834528ED8D9100F6EE88 /* combo.json in Resources */ = {isa = PBXBuildFile; fileRef = B575834428ED8D9100F6EE88 /* combo.json */; };
+		B584813F29AC32410033F434 /* AddressBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584813E29AC32410033F434 /* AddressBookView.swift */; };
+		B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814129AC335B0033F434 /* AddressBookEntryView.swift */; };
+		B584814429AC384F0033F434 /* AddFriendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814329AC384F0033F434 /* AddFriendView.swift */; };
+		B584814629AC3B5E0033F434 /* DidQrCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814529AC3B5E0033F434 /* DidQrCodeView.swift */; };
 		B58FE48A28DED93F00E000CC /* ComboGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48928DED93F00E000CC /* ComboGeist.swift */; };
 		B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48B28DED9B600E000CC /* StoryCombo.swift */; };
 		B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */; };
@@ -341,6 +345,10 @@
 /* Begin PBXFileReference section */
 		B54B922728E669D6003ACA1F /* MementoGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MementoGeist.swift; sourceTree = "<group>"; };
 		B575834428ED8D9100F6EE88 /* combo.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = combo.json; sourceTree = "<group>"; };
+		B584813E29AC32410033F434 /* AddressBookView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookView.swift; sourceTree = "<group>"; };
+		B584814129AC335B0033F434 /* AddressBookEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookEntryView.swift; sourceTree = "<group>"; };
+		B584814329AC384F0033F434 /* AddFriendView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddFriendView.swift; sourceTree = "<group>"; };
+		B584814529AC3B5E0033F434 /* DidQrCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DidQrCodeView.swift; sourceTree = "<group>"; };
 		B58FE48928DED93F00E000CC /* ComboGeist.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComboGeist.swift; sourceTree = "<group>"; };
 		B58FE48B28DED9B600E000CC /* StoryCombo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryCombo.swift; sourceTree = "<group>"; };
 		B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryComboView.swift; sourceTree = "<group>"; };
@@ -591,6 +599,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B584814029AC32550033F434 /* AddressBook */ = {
+			isa = PBXGroup;
+			children = (
+				B584814129AC335B0033F434 /* AddressBookEntryView.swift */,
+				B584813E29AC32410033F434 /* AddressBookView.swift */,
+				B584814329AC384F0033F434 /* AddFriendView.swift */,
+				B584814529AC3B5E0033F434 /* DidQrCodeView.swift */,
+			);
+			path = AddressBook;
+			sourceTree = "<group>";
+		};
 		B80057E927DC355E002C0129 /* SubconsciousTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -906,6 +925,7 @@
 		B8EB2A3826F27CD1006E97C3 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				B584814029AC32550033F434 /* AddressBook */,
 				B82F053628D60EE60025A8B5 /* AppTabView.swift */,
 				B8EB29F526F27794006E97C3 /* AppView.swift */,
 				B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */,
@@ -1285,6 +1305,7 @@
 				B8EF986E29034ADF0029363D /* Pathlike.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
+				B584813F29AC32410033F434 /* AddressBookView.swift in Sources */,
 				B8E00A302992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
 				B85652222975F16B00B7FCA0 /* BylineView.swift in Sources */,
 				B8B3EE732979DEE900779B7F /* FirstRunView.swift in Sources */,
@@ -1309,6 +1330,7 @@
 				B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
 				B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */,
 				B58FE48A28DED93F00E000CC /* ComboGeist.swift in Sources */,
+				B584814629AC3B5E0033F434 /* DidQrCodeView.swift in Sources */,
 				B813749A28BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift in Sources */,
 				B8A59D6628B690B20010DB2F /* FeedService.swift in Sources */,
 				B8545F0A296F8FB700BC4EA1 /* OmniboxView.swift in Sources */,
@@ -1318,6 +1340,7 @@
 				B82F053728D60EE60025A8B5 /* AppTabView.swift in Sources */,
 				B8B4251828FDE8AA0081B8D5 /* MemoData.swift in Sources */,
 				B8E2B02B29AD0E4D004A78B3 /* Slug.swift in Sources */,
+				B584814429AC384F0033F434 /* AddFriendView.swift in Sources */,
 				B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */,
 				B54B922828E669D6003ACA1F /* MementoGeist.swift in Sources */,
 				B824FDD426FAB1BC00B81BBD /* Truncate.swift in Sources */,
@@ -1340,6 +1363,7 @@
 				B82C3A7626F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B85BF47827BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
 				B8CBAFA42994491B0079107E /* MenuButtonView.swift in Sources */,
+				B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */,
 				B85EC460296F099700558761 /* ProfilePic.swift in Sources */,
 				B8EB2A1F26F27797006E97C3 /* SubconsciousApp.swift in Sources */,
 				B866868127AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */,
