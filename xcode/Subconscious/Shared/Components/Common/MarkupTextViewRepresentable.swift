@@ -126,7 +126,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     }
 
     //  MARK: Coordinator
-    class Coordinator: NSObject, UITextViewDelegate, NSTextStorageDelegate {
+    class Coordinator: NSObject, UITextViewDelegate, NSTextStorageDelegate, NSTextContentStorageDelegate, NSTextContentManagerDelegate, NSTextLayoutManagerDelegate {
         /// Is event happening during updateUIView?
         /// Used to avoid setting properties in events during view updates, as
         /// that would cause feedback cycles where an update triggers an event,
@@ -267,11 +267,22 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         NSRange,
         UITextItemInteraction
     ) -> Bool
-
+    
     //  MARK: makeUIView
     func makeUIView(context: Context) -> MarkupTextView {
         Self.logger.debug("makeUIView")
-        let view = MarkupTextView()
+        
+        let textLayoutManager = NSTextLayoutManager()
+        let textContentStorage = NSTextContentStorage()
+        let textContainer = NSTextContainer()
+        textContentStorage.delegate = context.coordinator
+        textLayoutManager.delegate = context.coordinator
+        
+        textContentStorage.addTextLayoutManager(textLayoutManager)
+        
+        textLayoutManager.textContainer = textContainer
+        
+        let view = MarkupTextView(frame: self.frame, textContainer: textContainer)
 
         // Coordinator is both an UITextViewDelegate
         // and an NSTextStorageDelegate.
