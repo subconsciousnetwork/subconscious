@@ -356,6 +356,13 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
                 let span = consumeAddressBody(tape: &tape)
                 let cleaned = span.dropFirst()
                 inline.append(.slashlink(Slashlink(span: cleaned)))
+            } else if tape.isAtBeginning && tape.consumeMatch("@") {
+                let span = consumeAddressBody(tape: &tape)
+                inline.append(.slashlink(Slashlink(span: span)))
+            } else if tape.consumeMatch(" @") {
+                let span = consumeAddressBody(tape: &tape)
+                let cleaned = span.dropFirst()
+                inline.append(.slashlink(Slashlink(span: cleaned)))
             } else if tape.consumeMatch("<") {
                 if let link = consumeBracketLink(tape: &tape) {
                     inline.append(.bracketlink(Bracketlink(span: link)))

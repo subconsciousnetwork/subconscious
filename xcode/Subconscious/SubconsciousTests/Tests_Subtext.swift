@@ -269,6 +269,38 @@ class Tests_Subtext: XCTestCase {
         )
     }
     
+    func testAbsoluteSlashlinkParsing1() throws {
+        let markup = "@petname/slashlink at the beginning."
+        let dom = Subtext.parse(markup: markup)
+        
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+        
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "@petname/slashlink",
+            "Slashlink parses successfully"
+        )
+    }
+
+    func testAbsoluteSlashlinkParsing2() throws {
+        let markup = "@PETNAME/deep/slashlink at the beginning."
+        let dom = Subtext.parse(markup: markup)
+        
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+        
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "@PETNAME/deep/slashlink",
+            "Slashlink parses successfully"
+        )
+    }
+
     func testSlashlinkParsingUnderscore() throws {
         let markup = "A /_slashlink-with-an-underscore."
         let dom = Subtext.parse(markup: markup)
