@@ -143,7 +143,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     }
 
     //  MARK: Coordinator
-    class Coordinator: NSObject, UITextViewDelegate, NSTextStorageDelegate, NSTextContentStorageDelegate, NSTextContentManagerDelegate, NSTextLayoutManagerDelegate {
+    class Coordinator: NSObject, UITextViewDelegate, NSTextContentStorageDelegate, NSTextContentManagerDelegate, NSTextLayoutManagerDelegate {
         /// Is event happening during updateUIView?
         /// Used to avoid setting properties in events during view updates, as
         /// that would cause feedback cycles where an update triggers an event,
@@ -157,34 +157,6 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         ) {
             self.isUIViewUpdating = false
             self.representable = representable
-        }
-
-        /// NSTextStorageDelegate method
-        /// Handle markup rendering, just before processEditing is fired.
-        /// It is important that we render markup in `willProcessEditing`
-        /// because it happens BEFORE font substitution. Rendering before font
-        /// substitution gives the OS a chance to replace fonts for things like
-        /// Emoji or Unicode characters when your font does not support them.
-        /// See:
-        /// https://github.com/gordonbrander/subconscious/wiki/nstextstorage-font-substitution-and-missing-text
-        ///
-        /// 2022-03-17 Gordon Brander
-        func textStorage(
-            _ textStorage: NSTextStorage,
-            willProcessEditing: NSTextStorage.EditActions,
-            range: NSRange,
-            changeInLength: Int
-        ) {
-            MarkupTextViewRepresentable.logger.debug(
-                "textStorage: render markup attributes"
-            )
-            textStorage.setAttributes(
-                [:],
-                range: NSRange(
-                    textStorage.string.startIndex...,
-                    in: textStorage.string
-                )
-            )
         }
 
         /// Handle link taps
@@ -315,7 +287,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         NSRange,
         UITextItemInteraction
     ) -> Bool
-    
+
     //  MARK: makeUIView
     func makeUIView(context: Context) -> MarkupTextView {
         Self.logger.debug("makeUIView")
@@ -336,8 +308,6 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         // and an NSTextStorageDelegate.
         // Set delegate on textview (coordinator)
         view.delegate = context.coordinator
-        // Set delegate on textstorage (coordinator)
-        view.textStorage.delegate = context.coordinator
 
         // Set inner padding
         view.textContainerInset = self.textContainerInset
