@@ -133,6 +133,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         /// which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
         var representable: MarkupTextViewRepresentable
+        var renderTranscludeBlocks: Bool = false
 
         init(
             representable: MarkupTextViewRepresentable
@@ -249,14 +250,14 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         func textLayoutManager(_ textLayoutManager: NSTextLayoutManager,
                                textLayoutFragmentFor location: NSTextLocation,
                                in textElement: NSTextElement) -> NSTextLayoutFragment {
+            
             // TODO: might be better to hold a ref to textContentStorage somewhere
             // textContentStorage is a concrete implementation of textContentManager
             let textContentStorage = textLayoutManager.textContentManager as! NSTextContentStorage
             let content = textContentStorage.attributedString(for: textElement)
             
             // Where we decide which layout/rendering implementation to use per TextLayoutFragment
-            
-            if content?.string.contains("/slashlink") ?? false {
+            if renderTranscludeBlocks && content?.string.contains("/slashlink") ?? false {
                 let layoutFragment = TranscludeBlockLayoutFragment(textElement: textElement, range: textElement.elementRange)
                 layoutFragment.text = content?.string
                 return layoutFragment
