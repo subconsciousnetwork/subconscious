@@ -123,6 +123,23 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                 )
             )
         }
+        
+        // This allows us to intercept touches on embedded transclude blocks
+        override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+            guard let touch = touches.first else { return }
+            let tapPoint = touch.location(in: self)
+            
+            let textContentStorage = self.textLayoutManager?.textContentManager as! NSTextContentStorage
+            
+            if let layoutFragment = textLayoutManager!.textLayoutFragment(for: tapPoint) {
+                let content = textContentStorage.attributedString(for: layoutFragment.textElement!)
+                
+                // TODO: check for whether this tap should navigate to a link
+                MarkupTextViewRepresentable.logger.debug("Tapped: \(String(describing: content?.string))")
+                // Calling super preserves default behaviour
+                super.touchesBegan(touches, with: event)
+            }
+        }
     }
 
     //  MARK: Coordinator
