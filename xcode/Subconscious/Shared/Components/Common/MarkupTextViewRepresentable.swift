@@ -168,9 +168,6 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                     in: textStorage.string
                 )
             )
-            // Render markup on TextStorage (which is an NSMutableString)
-            // using closure set on view (representable)
-            self.representable.renderAttributesOf(textStorage)
         }
 
         /// Handle link taps
@@ -271,22 +268,11 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         
         func textContentStorage(_ textContentStorage: NSTextContentStorage, textParagraphWith range: NSRange) -> NSTextParagraph? {
             // In this method, we'll inject some attributes for display, without modifying the text storage directly.
-            var paragraphWithDisplayAttributes: NSTextParagraph? = nil
-            
             let originalText = textContentStorage.textStorage!.attributedSubstring(from: range)
             let textWithDisplayAttributes = NSMutableAttributedString(attributedString: originalText)
             
-            // Apply basic syntax highlighting
-            let boldRe = /\*(.+)\*/
-            if let match = originalText.string.firstMatch(of: boldRe) {
-                let text = match.1
-                let range = NSMakeRange(originalText.string.distance(from: originalText.string.startIndex, to: text.startIndex) - 1, text.count + 2)
-                
-                textWithDisplayAttributes.addAttribute(.font, value: UIFont.boldSystemFont(ofSize: 24), range: range)
-                paragraphWithDisplayAttributes = NSTextParagraph(attributedString: textWithDisplayAttributes)
-            }
-            
-            return paragraphWithDisplayAttributes
+            self.representable.renderAttributesOf(textWithDisplayAttributes)
+            return NSTextParagraph(attributedString: textWithDisplayAttributes)
         }
     }
 
