@@ -135,6 +135,8 @@ final class Tests_Slashlink: XCTestCase {
         let slashlink = Slashlink(petname: petname, slug: slug)
         XCTAssertEqual(slashlink.description, "@foo/bar-baz")
         XCTAssertEqual(slashlink.verbatim, "@FOO/BAR-baz")
+        XCTAssertEqual(slashlink.petnamePart, "FOO")
+        XCTAssertEqual(slashlink.slugPart, "BAR-baz")
     }
 
     func testsInitFromSlug() throws {

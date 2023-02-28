@@ -40,8 +40,8 @@ struct Slashlink:
         petname: Petname? = nil,
         slug: Slug
     ) {
-        self.petnamePart = petname?.description
-        self.slugPart = slug.description
+        self.petnamePart = petname?.verbatim
+        self.slugPart = slug.verbatim
         let description = "\(petname?.markup ?? "")\(slug.markup)"
         self.description = description.lowercased()
         self.verbatim = description
