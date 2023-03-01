@@ -194,10 +194,7 @@ struct DetailReadyView: View {
     var send: (DetailOuterAction) -> Void
 
     private func onLink(
-        url: URL,
-        attributedString: NSAttributedString,
-        selection: NSRange,
-        interaction: UITextItemInteraction
+        url: URL
     ) -> Bool {
         guard let link = UnqualifiedLink.decodefromSubEntryURL(
             url
@@ -231,14 +228,13 @@ struct DetailReadyView: View {
                         }
                         .padding(.horizontal)
                         .padding(.top)
-                        MarkupTextViewRepresentable(
+                        SubtextTextViewRepresentable(
                             state: store.state.markupEditor,
                             send: Address.forward(
                                 send: store.send,
                                 tag: DetailMarkupEditorCursor.tag
                             ),
                             frame: geometry.frame(in: .local),
-                            renderAttributesOf: Subtext.renderAttributesOf,
                             onLink: self.onLink
                         )
                         .insets(
