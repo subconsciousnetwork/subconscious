@@ -69,8 +69,8 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
     let SLASHLINK_PREVIEW_HEIGHT = 128.0
     var text: String?
     
-    override var leadingPadding: CGFloat { return 10 }
-    override var trailingPadding: CGFloat { return 10 }
+    override var leadingPadding: CGFloat { return 0 }
+    override var trailingPadding: CGFloat { return 0 }
     override var topMargin: CGFloat { return 0 }
     override var bottomMargin: CGFloat { return 0 }
     
