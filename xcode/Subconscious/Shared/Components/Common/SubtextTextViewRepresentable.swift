@@ -326,8 +326,8 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
     }
 
     //  MARK: Properties
-    var state: MarkupTextModel
-    var send: (MarkupTextAction) -> Void
+    var state: SubtextTextModel
+    var send: (SubtextTextAction) -> Void
     /// Frame needed to determine textview height.
     /// Use `GeometryView` to find container width.
     var frame: CGRect

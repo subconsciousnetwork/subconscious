@@ -229,7 +229,7 @@ struct DetailReadyView: View {
                         .padding(.horizontal)
                         .padding(.top)
                         SubtextTextViewRepresentable(
-                            state: store.state.markupEditor,
+                            state: store.state.editor,
                             send: Address.forward(
                                 send: store.send,
                                 tag: DetailMarkupEditorCursor.tag
@@ -265,7 +265,7 @@ struct DetailReadyView: View {
                         )
                     }
                 }
-                if store.state.markupEditor.focus {
+                if store.state.editor.focus {
                     DetailKeyboardToolbarView(
                         isSheetPresented: Binding(
                             get: { store.state.isLinkSheetPresented },
@@ -358,7 +358,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case scenePhaseChange(ScenePhase)
 
     /// Wrapper for editor actions
-    case markupEditor(MarkupTextAction)
+    case markupEditor(SubtextTextAction)
 
     case appear(
         address: MemoAddress?,
@@ -510,7 +510,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         case .setRenameSuggestions(let suggestions):
             return "setRenameSuggestions(\(suggestions.count) items)"
         case .markupEditor(let action):
-            return "markupEditor(\(String.loggable(action)))"
+            return "editor(\(String.loggable(action)))"
         case let .setDetailLastWriteWins(detail):
             return "setDetailLastWriteWins(\(String.loggable(detail)))"
         case let .forceSetDetail(detail):
@@ -547,17 +547,20 @@ extension DetailAction {
 //  MARK: Cursors
 /// Editor cursor
 struct DetailMarkupEditorCursor: CursorProtocol {
-    static func get(state: DetailModel) -> MarkupTextModel {
-        state.markupEditor
+    static func get(state: DetailModel) -> SubtextTextModel {
+        state.editor
     }
 
-    static func set(state: DetailModel, inner: MarkupTextModel) -> DetailModel {
+    static func set(
+        state: DetailModel,
+        inner: SubtextTextModel
+    ) -> DetailModel {
         var model = state
-        model.markupEditor = inner
+        model.editor = inner
         return model
     }
 
-    static func tag(_ action: MarkupTextAction) -> DetailAction {
+    static func tag(_ action: SubtextTextAction) -> DetailAction {
         switch action {
         // Intercept text set action so we can mark all text-sets
         // as dirty.
@@ -611,7 +614,7 @@ struct DetailModel: ModelProtocol {
     var selectedShortlink: Subtext.Shortlink?
 
     /// The text editor
-    var markupEditor = MarkupTextModel()
+    var editor = SubtextTextModel()
 
     /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
@@ -643,7 +646,7 @@ struct DetailModel: ModelProtocol {
     func stateMatches(entry: MemoEntry) -> Bool {
         return (
             self.address == entry.address &&
-            markupEditor.text == entry.contents.body.description
+            editor.text == entry.contents.body.description
         )
     }
 
@@ -948,28 +951,28 @@ struct DetailModel: ModelProtocol {
             return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.markupEditor.selection,
+                range: state.editor.selection,
                 with: { text in Markup.Wikilink(text: text) }
             )
         case .insertEditorBoldAtSelection:
             return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.markupEditor.selection,
+                range: state.editor.selection,
                 with: { text in Markup.Bold(text: text) }
             )
         case .insertEditorItalicAtSelection:
             return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.markupEditor.selection,
+                range: state.editor.selection,
                 with: { text in Markup.Italic(text: text) }
             )
         case .insertEditorCodeAtSelection:
             return insertTaggedMarkup(
                 state: state,
                 environment: environment,
-                range: state.markupEditor.selection,
+                range: state.editor.selection,
                 with: { text in Markup.Code(text: text) }
             )
         case .refreshLists:
@@ -1126,7 +1129,10 @@ struct DetailModel: ModelProtocol {
             actions: [
                 // Immediately send down setSelection
                 DetailAction.markupEditor(
-                    MarkupTextAction.setSelection(range: nsRange, text: text)
+                    SubtextTextAction.setSelection(
+                        range: nsRange,
+                        text: text
+                    )
                 ),
                 DetailAction.setLinkSearch(linkSearchText)
             ],
@@ -1141,7 +1147,7 @@ struct DetailModel: ModelProtocol {
         text: String,
         range nsRange: NSRange
     ) -> Update<DetailModel> {
-        guard let range = Range(nsRange, in: state.markupEditor.text) else {
+        guard let range = Range(nsRange, in: state.editor.text) else {
             logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
@@ -1149,7 +1155,7 @@ struct DetailModel: ModelProtocol {
         }
 
         // Replace selected range with committed link search text.
-        let markup = state.markupEditor.text.replacingCharacters(
+        let markup = state.editor.text.replacingCharacters(
             in: range,
             with: text
         )
@@ -1248,7 +1254,7 @@ struct DetailModel: ModelProtocol {
             .readDetailAsync(
                 address: address,
                 title: model.headers.title,
-                fallback: model.markupEditor.text
+                fallback: model.editor.text
             )
             .map({ detail in
                 DetailAction.setDetailLastWriteWins(detail)
@@ -1439,7 +1445,7 @@ struct DetailModel: ModelProtocol {
             fileExtension: ContentType.subtext.fileExtension
         )
         model.additionalHeaders = []
-        model.markupEditor = MarkupTextModel()
+        model.editor = SubtextTextModel()
         model.backlinks = []
         model.isLoading = true
         model.saveState = .saved
@@ -1658,7 +1664,7 @@ struct DetailModel: ModelProtocol {
                     let replacement = link.address.slug.markup
                     let range = NSRange(
                         slashlink.span.range,
-                        in: state.markupEditor.text
+                        in: state.editor.text
                     )
                     return (range, replacement)
                 case .wikilink(let wikilink):
@@ -1666,13 +1672,13 @@ struct DetailModel: ModelProtocol {
                     let replacement = Markup.Wikilink(text: text).markup
                     let range = NSRange(
                         wikilink.span.range,
-                        in: state.markupEditor.text
+                        in: state.editor.text
                     )
                     return (range, replacement)
                 case .none:
                     let text = link.linkableTitle
                     let replacement = Markup.Wikilink(text: text).markup
-                    return (state.markupEditor.selection, replacement)
+                    return (state.editor.selection, replacement)
                 }
             }
         )
@@ -2009,18 +2015,18 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel>
     where T: TaggedMarkup
     {
-        guard let range = Range(nsRange, in: state.markupEditor.text) else {
+        guard let range = Range(nsRange, in: state.editor.text) else {
             logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
             )
             return Update(state: state)
         }
 
-        let selectedText = String(state.markupEditor.text[range])
+        let selectedText = String(state.editor.text[range])
         let markup = withMarkup(selectedText)
 
         // Replace selected range with committed link search text.
-        let editorText = state.markupEditor.text.replacingCharacters(
+        let editorText = state.editor.text.replacingCharacters(
             in: range,
             with: String(describing: markup)
         )
@@ -2115,7 +2121,7 @@ extension FileFingerprint {
         self.init(
             slug: slug,
             modified: detail.headers.modified,
-            text: detail.markupEditor.text
+            text: detail.editor.text
         )
     }
 }
@@ -2133,7 +2139,7 @@ extension MemoEntry {
             title: detail.headers.title,
             fileExtension: detail.headers.fileExtension,
             additionalHeaders: detail.additionalHeaders,
-            body: detail.markupEditor.text
+            body: detail.editor.text
         )
     }
 }

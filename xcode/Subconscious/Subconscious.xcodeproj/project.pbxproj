@@ -120,8 +120,7 @@
 		B86DFF3527C07438002E57ED /* LinkSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF3427C07438002E57ED /* LinkSuggestion.swift */; };
 		B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF3627C09CA2002E57ED /* DateUtilities.swift */; };
 		B86DFF3927C15B77002E57ED /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF3827C15B77002E57ED /* Config.swift */; };
-		B86E943029AFA8420073929B /* MarkupTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86E942F29AFA8420073929B /* MarkupTextViewRepresentable.swift */; };
-		B86E943129AFA8420073929B /* MarkupTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86E942F29AFA8420073929B /* MarkupTextViewRepresentable.swift */; };
+		B86E943329AFD5680073929B /* SubtextTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86E943229AFD5680073929B /* SubtextTextViewRepresentable.swift */; };
 		B86F1AB728C77E8C00DA264E /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F1AB628C77E8C00DA264E /* Search.swift */; };
 		B87288DC299AB01800EF7E07 /* Noosphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DB299AB01800EF7E07 /* Noosphere.swift */; };
 		B87288DE299AB02400EF7E07 /* SphereFS.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DD299AB02400EF7E07 /* SphereFS.swift */; };
@@ -414,7 +413,7 @@
 		B86DFF3427C07438002E57ED /* LinkSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkSuggestion.swift; sourceTree = "<group>"; };
 		B86DFF3627C09CA2002E57ED /* DateUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateUtilities.swift; sourceTree = "<group>"; };
 		B86DFF3827C15B77002E57ED /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
-		B86E942F29AFA8420073929B /* MarkupTextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkupTextViewRepresentable.swift; sourceTree = "<group>"; };
+		B86E943229AFD5680073929B /* SubtextTextViewRepresentable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SubtextTextViewRepresentable.swift; path = Shared/Components/Common/SubtextTextViewRepresentable.swift; sourceTree = SOURCE_ROOT; };
 		B86F1AB628C77E8C00DA264E /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
 		B87288DB299AB01800EF7E07 /* Noosphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Noosphere.swift; sourceTree = "<group>"; };
 		B87288DD299AB02400EF7E07 /* SphereFS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SphereFS.swift; sourceTree = "<group>"; };
@@ -970,7 +969,6 @@
 		B8EC568426F41A2C00AC64E5 /* Common */ = {
 			isa = PBXGroup;
 			children = (
-				B5D8D2FD29AED1AE0011D820 /* Transclude */,
 				B8CBAFA5299449810079107E /* Audience */,
 				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */,
@@ -985,7 +983,6 @@
 				B8CBAFA029930C5D0079107E /* Forms */,
 				B84AD8E2281073CE006B3153 /* InlineFormattingBarView.swift */,
 				B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */,
-				B86E942F29AFA8420073929B /* MarkupTextViewRepresentable.swift */,
 				B856521F2975BA9000B7FCA0 /* MetaTableView.swift */,
 				B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */,
 				B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */,
@@ -1000,12 +997,14 @@
 				B8CC433C27A07CE10079D2F9 /* ScrimView.swift */,
 				B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */,
 				B85652182975B29800B7FCA0 /* Story */,
+				B86E943229AFD5680073929B /* SubtextTextViewRepresentable.swift */,
 				B8AE34C1276BD77C00777FF0 /* SuggestionLabelStyle.swift */,
 				B8D7F03E27A4AD130042C7CF /* SuggestionLabelView.swift */,
 				B8D7F04127A4AE590042C7CF /* SuggestionViewModifier.swift */,
 				B81EACD727B724A000B3B8DC /* ThickDividerView.swift */,
 				B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */,
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
+				B5D8D2FD29AED1AE0011D820 /* Transclude */,
 				B8D328B629A671DA00850A37 /* Transclude2View.swift */,
 				B8A59D5F28B51D000010DB2F /* TranscludeView.swift */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
@@ -1302,11 +1301,11 @@
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8A59D7228B693100010DB2F /* StoryView.swift in Sources */,
 				B84AD8EA2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
+				B86E943329AFD5680073929B /* SubtextTextViewRepresentable.swift in Sources */,
 				B8CC433D27A07CE10079D2F9 /* ScrimView.swift in Sources */,
 				B86F1AB728C77E8C00DA264E /* Search.swift in Sources */,
 				B8B3EE75297AEE6600779B7F /* FirstRunCreateSphereView.swift in Sources */,
 				B8A59D6C28B692A00010DB2F /* Story.swift in Sources */,
-				B86E943029AFA8420073929B /* MarkupTextViewRepresentable.swift in Sources */,
 				B8249DA327E2753800BCDFBA /* ViewUtilities.swift in Sources */,
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B88B1CDE298DE66E0062CB7F /* SettingsView.swift in Sources */,
@@ -1493,7 +1492,6 @@
 				B8109C2927A8879C00CD2B6D /* AppTheme.swift in Sources */,
 				B8AE34AE276A9CDB00777FF0 /* PrimaryButtonStyle.swift in Sources */,
 				B8EA3EE629159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */,
-				B86E943129AFA8420073929B /* MarkupTextViewRepresentable.swift in Sources */,
 				B8AE34C0276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
 				B85EC46A296F11F000558761 /* BylineSmView.swift in Sources */,
 				B8A59D7628B694C40010DB2F /* Geist.swift in Sources */,
