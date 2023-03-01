@@ -272,11 +272,17 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         // MARK: - NSTextContentStorageDelegate
         
         func textContentStorage(_ textContentStorage: NSTextContentStorage, textParagraphWith range: NSRange) -> NSTextParagraph? {
-            // In this method, we'll inject some attributes for display, without modifying the text storage directly.
-            let originalText = textContentStorage.textStorage!.attributedSubstring(from: range)
-            let textWithDisplayAttributes = NSMutableAttributedString(attributedString: originalText)
+            guard let originalText = textContentStorage.textStorage?.attributedSubstring(from: range) else {
+                MarkupTextViewRepresentable.logger.warning("textContentStorage: could not access attributedSubstring")
+                return nil
+            }
             
+            let textWithDisplayAttributes = NSMutableAttributedString(attributedString: originalText)
+            MarkupTextViewRepresentable.logger.debug(
+                "textContentStorage: render markup attributes"
+            )
             self.representable.renderAttributesOf(textWithDisplayAttributes)
+            
             return NSTextParagraph(attributedString: textWithDisplayAttributes)
         }
     }
