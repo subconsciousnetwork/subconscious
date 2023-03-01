@@ -80,11 +80,14 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
         let v = EmbeddedTranscludePreview(label: text ?? "Testing")
         // Host our SwiftUI view within a UIKit view
         let hosted = UIHostingController(rootView: v)
-        let view = hosted.view!
+        guard let view = hosted.view else {
+            return
+        }
+        
         view.translatesAutoresizingMaskIntoConstraints = false
         
         // We have to mount the view before it will actually do layout calculations
-        UIApplication.shared.windows.first!.rootViewController?.view.addSubview(hosted.view)
+        UIApplication.shared.windows.first?.rootViewController?.view.addSubview(hosted.view)
         
         // Ideally here is where we would dynamically adjust the height of the rendered card
         // However there doesn't seem to be a way to get the "preferred" size of the child content, it always tries to expand to fill the space provided

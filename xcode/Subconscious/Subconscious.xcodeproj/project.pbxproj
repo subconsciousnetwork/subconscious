@@ -593,12 +593,12 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		B584814729AD82120033F434 /* Text */ = {
+		B5D8D2FD29AED1AE0011D820 /* Transclude */ = {
 			isa = PBXGroup;
 			children = (
 				B584814829AD82270033F434 /* TranscludeBlockLayoutFragment.swift */,
 			);
-			path = Text;
+			path = Transclude;
 			sourceTree = "<group>";
 		};
 		B80057E927DC355E002C0129 /* SubconsciousTests */ = {
@@ -970,6 +970,7 @@
 		B8EC568426F41A2C00AC64E5 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				B5D8D2FD29AED1AE0011D820 /* Transclude */,
 				B8CBAFA5299449810079107E /* Audience */,
 				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */,
@@ -984,7 +985,6 @@
 				B8CBAFA029930C5D0079107E /* Forms */,
 				B84AD8E2281073CE006B3153 /* InlineFormattingBarView.swift */,
 				B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */,
-				B584814729AD82120033F434 /* Text */,
 				B813749928BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift */,
 				B856521F2975BA9000B7FCA0 /* MetaTableView.swift */,
 				B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */,
