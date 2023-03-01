@@ -242,9 +242,12 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         
         // MARK: - NSTextLayoutManagerDelegate
                                 
-        func textLayoutManager(_ textLayoutManager: NSTextLayoutManager,
-                               textLayoutFragmentFor location: NSTextLocation,
-                               in textElement: NSTextElement) -> NSTextLayoutFragment {
+        func textLayoutManager(
+            _ textLayoutManager: NSTextLayoutManager,
+            textLayoutFragmentFor location: NSTextLocation,
+            in textElement: NSTextElement
+        ) -> NSTextLayoutFragment {
+            let baseLayoutFragment = NSTextLayoutFragment(textElement: textElement, range: textElement.elementRange)
             
             // TODO: might be better to hold a ref to textContentStorage somewhere
             // textContentStorage is a concrete implementation of textContentManager
