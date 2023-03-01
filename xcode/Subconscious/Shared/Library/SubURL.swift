@@ -49,21 +49,3 @@ extension UnqualifiedLink {
     }
 }
 
-extension Subtext {
-    static func toSubURL(
-        slug: String,
-        title: String
-    ) -> URL? {
-        UnqualifiedLink(sluglike: slug, title: title)?
-            .encodeAsSubEntryURL()
-    }
-
-    static func renderAttributesOf(
-        _ attributedString: NSMutableAttributedString
-    ) {
-        renderAttributesOf(
-            attributedString,
-            url: toSubURL
-        )
-    }
-}
