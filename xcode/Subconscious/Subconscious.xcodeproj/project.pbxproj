@@ -121,6 +121,9 @@
 		B86DFF3527C07438002E57ED /* LinkSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF3427C07438002E57ED /* LinkSuggestion.swift */; };
 		B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF3627C09CA2002E57ED /* DateUtilities.swift */; };
 		B86DFF3927C15B77002E57ED /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF3827C15B77002E57ED /* Config.swift */; };
+		B86E944E29AFE92C0073929B /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86E944D29AFE92C0073929B /* ShareViewController.swift */; };
+		B86E945129AFE92C0073929B /* MainInterface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B86E944F29AFE92C0073929B /* MainInterface.storyboard */; };
+		B86E945529AFE92C0073929B /* SubconsciousShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B86E944B29AFE92C0073929B /* SubconsciousShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B86F1AB728C77E8C00DA264E /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F1AB628C77E8C00DA264E /* Search.swift */; };
 		B87288DC299AB01800EF7E07 /* Noosphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DB299AB01800EF7E07 /* Noosphere.swift */; };
 		B87288DE299AB02400EF7E07 /* SphereFS.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DD299AB02400EF7E07 /* SphereFS.swift */; };
@@ -322,6 +325,13 @@
 			remoteGlobalIDString = B8EB29FA26F27797006E97C3;
 			remoteInfo = "Subconscious (iOS)";
 		};
+		B86E945329AFE92C0073929B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B8EB29EE26F27794006E97C3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B86E944A29AFE92C0073929B;
+			remoteInfo = SubconsciousShareExtension;
+		};
 		B8EB2A0C26F27797006E97C3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B8EB29EE26F27794006E97C3 /* Project object */;
@@ -337,6 +347,20 @@
 			remoteInfo = "Subconscious (macOS)";
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B86E945629AFE92C0073929B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B86E945529AFE92C0073929B /* SubconsciousShareExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		B54B922728E669D6003ACA1F /* MementoGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MementoGeist.swift; sourceTree = "<group>"; };
@@ -413,6 +437,12 @@
 		B86DFF3427C07438002E57ED /* LinkSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkSuggestion.swift; sourceTree = "<group>"; };
 		B86DFF3627C09CA2002E57ED /* DateUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateUtilities.swift; sourceTree = "<group>"; };
 		B86DFF3827C15B77002E57ED /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		B86E944B29AFE92C0073929B /* SubconsciousShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SubconsciousShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B86E944D29AFE92C0073929B /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		B86E945029AFE92C0073929B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainInterface.storyboard; sourceTree = "<group>"; };
+		B86E945229AFE92C0073929B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B86E945A29AFEB230073929B /* Subconscious (iOS).entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Subconscious (iOS).entitlements"; sourceTree = "<group>"; };
+		B86E945B29AFEBB10073929B /* SubconsciousShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SubconsciousShareExtension.entitlements; sourceTree = "<group>"; };
 		B86F1AB628C77E8C00DA264E /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
 		B87288DB299AB01800EF7E07 /* Noosphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Noosphere.swift; sourceTree = "<group>"; };
 		B87288DD299AB02400EF7E07 /* SphereFS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SphereFS.swift; sourceTree = "<group>"; };
@@ -554,6 +584,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B86E944829AFE92C0073929B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B8EB29F826F27797006E97C3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -651,6 +688,17 @@
 				B856521B2975B2CF00B7FCA0 /* StoryAudienceView.swift */,
 			);
 			path = Story;
+			sourceTree = "<group>";
+		};
+		B86E944C29AFE92C0073929B /* SubconsciousShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				B86E945B29AFEBB10073929B /* SubconsciousShareExtension.entitlements */,
+				B86E944D29AFE92C0073929B /* ShareViewController.swift */,
+				B86E944F29AFE92C0073929B /* MainInterface.storyboard */,
+				B86E945229AFE92C0073929B /* Info.plist */,
+			);
+			path = SubconsciousShareExtension;
 			sourceTree = "<group>";
 		};
 		B87288DA299AB00700EF7E07 /* Noosphere */ = {
@@ -828,12 +876,14 @@
 		B8EB29ED26F27794006E97C3 = {
 			isa = PBXGroup;
 			children = (
+				B86E945A29AFEB230073929B /* Subconscious (iOS).entitlements */,
 				B8EB29F226F27794006E97C3 /* Shared */,
 				B8EB29FD26F27797006E97C3 /* iOS */,
 				B8EB2A0426F27797006E97C3 /* macOS */,
 				B8EB2A0E26F27797006E97C3 /* Tests iOS */,
 				B8EB2A1A26F27797006E97C3 /* Tests macOS */,
 				B80057E927DC355E002C0129 /* SubconsciousTests */,
+				B86E944C29AFE92C0073929B /* SubconsciousShareExtension */,
 				B8EB29FC26F27797006E97C3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -864,6 +914,7 @@
 				B8EB2A0B26F27797006E97C3 /* Tests iOS.xctest */,
 				B8EB2A1726F27797006E97C3 /* Tests macOS.xctest */,
 				B80057E827DC355E002C0129 /* SubconsciousTests.xctest */,
+				B86E944B29AFE92C0073929B /* SubconsciousShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1023,6 +1074,23 @@
 			productReference = B80057E827DC355E002C0129 /* SubconsciousTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		B86E944A29AFE92C0073929B /* SubconsciousShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B86E945929AFE92C0073929B /* Build configuration list for PBXNativeTarget "SubconsciousShareExtension" */;
+			buildPhases = (
+				B86E944729AFE92C0073929B /* Sources */,
+				B86E944829AFE92C0073929B /* Frameworks */,
+				B86E944929AFE92C0073929B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SubconsciousShareExtension;
+			productName = SubconsciousShareExtension;
+			productReference = B86E944B29AFE92C0073929B /* SubconsciousShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		B8EB29FA26F27797006E97C3 /* Subconscious (iOS) */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B8EB2A2926F27797006E97C3 /* Build configuration list for PBXNativeTarget "Subconscious (iOS)" */;
@@ -1030,6 +1098,7 @@
 				B8EB29F726F27797006E97C3 /* Sources */,
 				B8EB29F826F27797006E97C3 /* Frameworks */,
 				B8EB29F926F27797006E97C3 /* Resources */,
+				B86E945629AFE92C0073929B /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -1037,6 +1106,7 @@
 				B8579B6727C5620800D8B4BC /* PBXTargetDependency */,
 				B8579B6927C5620800D8B4BC /* PBXTargetDependency */,
 				B8579B6B27C5620800D8B4BC /* PBXTargetDependency */,
+				B86E945429AFE92C0073929B /* PBXTargetDependency */,
 			);
 			name = "Subconscious (iOS)";
 			packageProductDependencies = (
@@ -1111,12 +1181,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1320;
+				LastSwiftUpdateCheck = 1420;
 				LastUpgradeCheck = 1300;
 				TargetAttributes = {
 					B80057E727DC355E002C0129 = {
 						CreatedOnToolsVersion = 13.2.1;
 						TestTargetID = B8EB29FA26F27797006E97C3;
+					};
+					B86E944A29AFE92C0073929B = {
+						CreatedOnToolsVersion = 14.2;
 					};
 					B8EB29FA26F27797006E97C3 = {
 						CreatedOnToolsVersion = 13.0;
@@ -1159,6 +1232,7 @@
 				B8EB2A0A26F27797006E97C3 /* Tests iOS */,
 				B8EB2A1626F27797006E97C3 /* Tests macOS */,
 				B80057E727DC355E002C0129 /* SubconsciousTests */,
+				B86E944A29AFE92C0073929B /* SubconsciousShareExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -1168,6 +1242,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B86E944929AFE92C0073929B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B86E945129AFE92C0073929B /* MainInterface.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1266,6 +1348,14 @@
 				B88CC956284FCF8C00994928 /* Tests_DatabaseService.swift in Sources */,
 				B8D328BA29A69D2D00850A37 /* Tests_URLUtilities.swift in Sources */,
 				B831BDB72824DA9700C4CE92 /* Tests_Tape.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B86E944729AFE92C0073929B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B86E944E29AFE92C0073929B /* ShareViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1556,6 +1646,11 @@
 			isa = PBXTargetDependency;
 			productRef = B8579B6A27C5620800D8B4BC /* SwiftSubsurface */;
 		};
+		B86E945429AFE92C0073929B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B86E944A29AFE92C0073929B /* SubconsciousShareExtension */;
+			targetProxy = B86E945329AFE92C0073929B /* PBXContainerItemProxy */;
+		};
 		B8EB2A0D26F27797006E97C3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B8EB29FA26F27797006E97C3 /* Subconscious (iOS) */;
@@ -1567,6 +1662,17 @@
 			targetProxy = B8EB2A1826F27797006E97C3 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		B86E944F29AFE92C0073929B /* MainInterface.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B86E945029AFE92C0073929B /* Base */,
+			);
+			name = MainInterface.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		B80057EE27DC355E002C0129 /* Debug */ = {
@@ -1606,6 +1712,65 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Subconscious.app/Subconscious";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B86E945729AFE92C0073929B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = SubconsciousShareExtension/SubconsciousShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LA8RNJ2LQP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SubconsciousShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SubconsciousShareExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.subconscious.Subconscious.SubconsciousShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B86E945829AFE92C0073929B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = SubconsciousShareExtension/SubconsciousShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = LA8RNJ2LQP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SubconsciousShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SubconsciousShareExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.subconscious.Subconscious.SubconsciousShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -1726,8 +1891,10 @@
 		B8EB2A2A26F27797006E97C3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Subconscious (iOS).entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LA8RNJ2LQP;
@@ -1765,8 +1932,10 @@
 		B8EB2A2B26F27797006E97C3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Subconscious (iOS).entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LA8RNJ2LQP;
@@ -1971,6 +2140,15 @@
 			buildConfigurations = (
 				B80057EE27DC355E002C0129 /* Debug */,
 				B80057EF27DC355E002C0129 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B86E945929AFE92C0073929B /* Build configuration list for PBXNativeTarget "SubconsciousShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B86E945729AFE92C0073929B /* Debug */,
+				B86E945829AFE92C0073929B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
