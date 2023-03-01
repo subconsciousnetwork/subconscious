@@ -254,15 +254,19 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                 return baseLayoutFragment
             }
             
-            // Where we decide which layout/rendering implementation to use per TextLayoutFragment
-            if renderTranscludeBlocks && content?.string.contains("/slashlink") ?? false {
-                let layoutFragment = TranscludeBlockLayoutFragment(textElement: textElement, range: textElement.elementRange)
-                layoutFragment.text = content?.string
-                return layoutFragment
+            if let text = textContentStorage.attributedString(for: textElement)?.string {
+                let sub = Subtext(markup: text)
                 
-            } else {
-                return NSTextLayoutFragment(textElement: textElement, range: textElement.elementRange)
+                // Only render transcludes for a single slug in a single block
+                if renderTranscludeBlocks && sub.slugs.count == 1 && sub.blocks.count == 1 {
+                    let layoutFragment = TranscludeBlockLayoutFragment(textElement: textElement, range: textElement.elementRange)
+                    layoutFragment.text = text
+                    
+                    return layoutFragment
+                }
             }
+            
+            return baseLayoutFragment
         }
         
         // MARK: - NSTextContentStorageDelegate
