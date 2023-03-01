@@ -56,8 +56,18 @@ struct RenameSuggestionLabel_Previews: PreviewProvider {
     static var previews: some View {
         RenameSuggestionLabelView(
             suggestion: .move(
-                from: EntryLink(title: "Loomings", audience: .public)!,
-                to: EntryLink(title: "The Lee Shore", audience: .public)!
+                from: EntryLink(
+                    address: MemoAddress.public(
+                        Slashlink("@here/loomings")!
+                    ),
+                    title: "Loomings"
+                ),
+                to: EntryLink(
+                    address: MemoAddress.public(
+                        Slashlink("@here/the-lee-shore")!
+                    ),
+                    title: "The Lee Shore"
+                )
             )
         )
     }

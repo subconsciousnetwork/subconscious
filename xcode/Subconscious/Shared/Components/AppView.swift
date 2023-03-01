@@ -432,24 +432,24 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
-        guard let nickname = Nickname.format(text) else {
+        guard let petname = Petname(formatting: text) else {
             var model = state
             model.nicknameTextField = text
             model.isNicknameTextFieldValid = false
             return Update(state: model)
         }
-        guard nickname == text else {
+        guard petname.description == text else {
             var model = state
             model.nicknameTextField = text
             model.isNicknameTextFieldValid = false
             return Update(state: model)
         }
-        logger.log("Nickname saved: \(nickname)")
+        logger.log("Nickname saved: \(petname.description)")
         var model = state
         model.nicknameTextField = text
-        model.nickname = nickname
+        model.nickname = petname.description
         // Persist
-        AppDefaults.standard.nickname = nickname
+        AppDefaults.standard.nickname = petname.description
         model.isNicknameTextFieldValid = true
         return Update(state: model)
     }

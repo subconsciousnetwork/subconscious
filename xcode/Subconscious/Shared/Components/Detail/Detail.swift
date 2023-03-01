@@ -1659,7 +1659,7 @@ struct DetailModel: ModelProtocol {
             through: { markup in
                 switch markup {
                 case .slashlink(let slashlink):
-                    let replacement = link.address.slug.toSlashlink()
+                    let replacement = link.address.slug.markup
                     let range = NSRange(
                         slashlink.span.range,
                         in: state.markupEditor.text

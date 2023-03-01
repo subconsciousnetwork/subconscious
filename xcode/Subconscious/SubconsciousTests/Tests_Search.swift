@@ -85,9 +85,10 @@ class Tests_Search: XCTestCase {
             action: .activateSuggestion(
                 Suggestion.entry(
                     EntryLink(
-                        title: "Red and orange and purple",
-                        audience: .local
-                    )!
+                        address: MemoAddress.local(
+                            Slug("red-and-orange-and-purple")!
+                        )
+                    )
                 )
             ),
             environment: environment

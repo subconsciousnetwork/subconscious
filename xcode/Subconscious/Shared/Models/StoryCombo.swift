@@ -29,19 +29,21 @@ extension MemoEntry {
     init?(_ story: StoryCombo) {
         // Order by slug alpha
         let (x, y) = Func.block({
-            if story.entryA.address.slug < story.entryB.address.slug {
+            if story.entryA.address < story.entryB.address {
                 return (story.entryA, story.entryB)
             } else {
                 return (story.entryB, story.entryA)
             }
         })
 
-        guard let link = EntryLink(
-            title: "\(x.title) x \(y.title)",
-            audience: .local
-        ) else {
+        let title = "\(x.title) x \(y.title)"
+        guard let slug = Slug(formatting: title) else {
             return nil
         }
+        let link = EntryLink(
+            address: MemoAddress.local(slug),
+            title: title
+        )
 
         self.init(
             address: link.address,
@@ -54,8 +56,8 @@ extension MemoEntry {
                 body: """
                 \(story.prompt)
                 
-                \(x.address.slug.toSlashlink())
-                \(y.address.slug.toSlashlink())
+                \(x.address.slug.toSlashlink().verbatim)
+                \(y.address.slug.toSlashlink().verbatim)
                 """
             )
         )

@@ -10,12 +10,10 @@ import Foundation
 extension UnqualifiedLink {
     /// Create a Subconscious app-specific URL encoding entry title and slug
     func encodeAsSubEntryURL() -> URL? {
-        guard var components = URLComponents(
-            string: "sub://entry"
-        ) else {
-            return nil
-        }
-        components.path = self.slug.toSlashlink()
+        var components = URLComponents()
+        components.scheme = "sub"
+        components.host = "entry"
+        components.path = self.slug.markup
         components.queryItems = [
             URLQueryItem(name: "title", value: self.title),
         ]

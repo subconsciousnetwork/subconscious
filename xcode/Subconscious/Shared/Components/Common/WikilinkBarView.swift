@@ -35,12 +35,16 @@ struct EntryLinkSuggestionBarView_Previews: PreviewProvider {
         WikilinkBarView(
             links: [
                 EntryLink(
-                    address: Slug(formatting: "Loomings")!
-                        .toLocalMemoAddress()
+                    address: MemoAddress.public(
+                        Slashlink("@here/loomings")!
+                    ),
+                    title: "Loomings"
                 ),
                 EntryLink(
-                    address: Slug(formatting: "The Lee Shore")!
-                        .toPublicMemoAddress()
+                    address: MemoAddress.public(
+                        Slashlink("@here/the-lee-shore")!
+                    ),
+                    title: "The Lee Shore"
                 )
             ],
             onSelectLink: { _ in }
