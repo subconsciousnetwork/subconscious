@@ -249,10 +249,10 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         ) -> NSTextLayoutFragment {
             let baseLayoutFragment = NSTextLayoutFragment(textElement: textElement, range: textElement.elementRange)
             
-            // TODO: might be better to hold a ref to textContentStorage somewhere
-            // textContentStorage is a concrete implementation of textContentManager
-            let textContentStorage = textLayoutManager.textContentManager as! NSTextContentStorage
-            let content = textContentStorage.attributedString(for: textElement)
+            guard let textContentStorage = textLayoutManager.textContentManager as? NSTextContentStorage else {
+                MarkupTextViewRepresentable.logger.warning("Could not access textContentStorage")
+                return baseLayoutFragment
+            }
             
             // Where we decide which layout/rendering implementation to use per TextLayoutFragment
             if renderTranscludeBlocks && content?.string.contains("/slashlink") ?? false {
