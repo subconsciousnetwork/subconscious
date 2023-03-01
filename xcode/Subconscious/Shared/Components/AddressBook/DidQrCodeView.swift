@@ -10,7 +10,7 @@ import SwiftUI
 import CoreImage.CIFilterBuiltins
 
 struct DidQrCodeView: View {
-    var did: String
+    var did: Did
     
     let context = CIContext()
     let filter = CIFilter.qrCodeGenerator()
@@ -43,7 +43,7 @@ struct DidQrCodeView: View {
 struct DidQrCodeView_Previews: PreviewProvider {
     static var previews: some View {
         DidQrCodeView(
-            did: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+            did: Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
         )
     }
 }

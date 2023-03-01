@@ -11,7 +11,7 @@ import ObservableStore
 struct AddressBookEntry {
     var pfp: Image
     var petname: String
-    var did: String
+    var did: Did
 }
 
 struct AddressBookView: View {
@@ -25,12 +25,12 @@ struct AddressBookView: View {
     
     // Temp state, will be moved to slice of AppStore later
     @State var following: [AddressBookEntry] = [
-        AddressBookEntry(pfp: Image("pfp-dog"), petname: "ben", did: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"),
-        AddressBookEntry(pfp: Image("sub_logo_light"), petname: "bob", did: "did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"),
-        AddressBookEntry(pfp: Image("sub_logo_dark"), petname: "alice", did: "did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
+        AddressBookEntry(pfp: Image("pfp-dog"), petname: "ben", did: Did(  "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
+        AddressBookEntry(pfp: Image("sub_logo_light"), petname: "bob", did: Did("did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
+        AddressBookEntry(pfp: Image("sub_logo_dark"), petname: "alice", did: Did("did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
     ]
     
-    var myDid = "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+    var myDid = Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
     
     func delete(at offsets: IndexSet) {
         following.remove(atOffsets: offsets)
@@ -70,7 +70,7 @@ struct AddressBookView: View {
                     VStack {
                         
                         HStack{
-                        Text(myDid)
+                            Text(myDid.did)
                                 .foregroundColor(.secondary)
                             Spacer()
                             Button(action: {

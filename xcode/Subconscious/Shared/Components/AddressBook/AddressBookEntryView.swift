@@ -11,7 +11,7 @@ import SwiftUI
 struct AddressBookEntryView: View {
     var pfp: Image
     var petname: String
-    var did: String
+    var did: Did
     
     var body: some View {
         HStack(spacing: AppTheme.unit3) {
@@ -20,7 +20,7 @@ struct AddressBookEntryView: View {
                 Text(verbatim: petname)
                     .foregroundColor(.buttonText)
                     .fontWeight(.semibold)
-                Text(verbatim: did)
+                Text(verbatim: did.did)
                     .foregroundColor(.secondary)
                     .font(.caption)
             }
@@ -33,7 +33,7 @@ struct AddressBookEntryView_Previews: PreviewProvider {
         AddressBookEntryView(
             pfp: Image("pfp-dog"),
             petname: "@name",
-            did: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+            did: Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
         )
     }
 }
