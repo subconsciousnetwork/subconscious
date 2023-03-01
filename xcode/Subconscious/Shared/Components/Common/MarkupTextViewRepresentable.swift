@@ -129,10 +129,19 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
             guard let touch = touches.first else { return }
             let tapPoint = touch.location(in: self)
             
-            let textContentStorage = self.textLayoutManager?.textContentManager as! NSTextContentStorage
+            guard let textLayoutManager = self.textLayoutManager else {
+                MarkupTextViewRepresentable.logger.warning("Could not access textLayoutManager")
+                return
+            }
             
-            if let layoutFragment = textLayoutManager!.textLayoutFragment(for: tapPoint) {
-                let content = textContentStorage.attributedString(for: layoutFragment.textElement!)
+            guard let textContentStorage = textLayoutManager.textContentManager as? NSTextContentStorage else {
+                MarkupTextViewRepresentable.logger.warning("Could not access textContentStorage")
+                return
+            }
+            
+            // Did tap a text element?
+            if let textElement = textLayoutManager.textLayoutFragment(for: tapPoint)?.textElement {
+                let content = textContentStorage.attributedString(for: textElement)
                 
                 // TODO: check for whether this tap should navigate to a link
                 MarkupTextViewRepresentable.logger.debug("Tapped: \(String(describing: content?.string))")
