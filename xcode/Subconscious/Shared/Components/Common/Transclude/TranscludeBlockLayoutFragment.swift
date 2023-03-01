@@ -15,6 +15,7 @@
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+import os
 import SwiftUI
 
 #if os(iOS)
@@ -65,6 +66,11 @@ extension UIView {
 }
 
 class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
+    static var logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "editor"
+    )
+
     // Max height constraint
     let SLASHLINK_PREVIEW_HEIGHT = 128.0
     var text: String?
@@ -87,7 +93,17 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
         view.translatesAutoresizingMaskIntoConstraints = false
         
         // We have to mount the view before it will actually do layout calculations
-        UIApplication.shared.windows.first?.rootViewController?.view.addSubview(hosted.view)
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+            TranscludeBlockLayoutFragment.logger.warning("Could not find UIWindowScene")
+            return
+        }
+        
+        guard let rootView = scene.windows.first?.rootViewController?.view else {
+            TranscludeBlockLayoutFragment.logger.warning("Could not find rootViewController")
+            return
+        }
+        
+        rootView.addSubview(hosted.view)
         
         // Ideally here is where we would dynamically adjust the height of the rendered card
         // However there doesn't seem to be a way to get the "preferred" size of the child content, it always tries to expand to fill the space provided
