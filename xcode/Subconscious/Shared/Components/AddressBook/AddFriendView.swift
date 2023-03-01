@@ -26,15 +26,15 @@ struct AddFriendView: View {
                     HStack {
                         Image(systemName: "key")
                             .foregroundColor(.accentColor)
-                    TextField("DID", text: $did)
-                        .lineLimit(1)
+                        TextField("DID", text: $did)
+                            .lineLimit(1)
                     }
                     
                     HStack {
                         Image(systemName: "at")
                             .foregroundColor(.accentColor)
-                    TextField("Petname", text: $petname)
-                        .lineLimit(1)
+                        TextField("Petname", text: $petname)
+                            .lineLimit(1)
                     }
                     
                 }
@@ -54,7 +54,6 @@ struct AddFriendView: View {
                     Button("Done") {
                         // TODO: actually dispatch an action here
                         presentationMode.wrappedValue.dismiss()
-                        
                     }
                 }
             }
