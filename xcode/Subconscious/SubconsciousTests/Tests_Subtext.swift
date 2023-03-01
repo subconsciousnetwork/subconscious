@@ -301,6 +301,22 @@ class Tests_Subtext: XCTestCase {
         )
     }
 
+    func testAbsoluteSlashlinkParsingDoesNotValidateSlashlink() throws {
+        let markup = "@PETNAME/deep//slashlink/that-is-technically-invalid at the beginning."
+        let dom = Subtext.parse(markup: markup)
+        
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+        
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "@PETNAME/deep//slashlink/that-is-technically-invalid",
+            "Slashlinks do not parse for valididty of body"
+        )
+    }
+
     func testSlashlinkParsingUnderscore() throws {
         let markup = "A /_slashlink-with-an-underscore."
         let dom = Subtext.parse(markup: markup)
