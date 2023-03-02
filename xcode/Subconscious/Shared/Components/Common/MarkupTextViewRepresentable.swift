@@ -123,32 +123,6 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                 )
             )
         }
-        
-        // This allows us to intercept touches on embedded transclude blocks
-        override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-            guard let touch = touches.first else { return }
-            let tapPoint = touch.location(in: self)
-            
-            guard let textLayoutManager = self.textLayoutManager else {
-                MarkupTextViewRepresentable.logger.warning("Could not access textLayoutManager")
-                return
-            }
-            
-            guard let textContentStorage = textLayoutManager.textContentManager as? NSTextContentStorage else {
-                MarkupTextViewRepresentable.logger.warning("Could not access textContentStorage")
-                return
-            }
-            
-            // Did tap a text element?
-            if let textElement = textLayoutManager.textLayoutFragment(for: tapPoint)?.textElement {
-                let content = textContentStorage.attributedString(for: textElement)
-                
-                // TODO: check for whether this tap should navigate to a link
-                MarkupTextViewRepresentable.logger.debug("Tapped: \(String(describing: content?.string))")
-                // Calling super preserves default behaviour
-                super.touchesBegan(touches, with: event)
-            }
-        }
     }
 
     //  MARK: Coordinator
@@ -159,7 +133,6 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         /// which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
         var representable: MarkupTextViewRepresentable
-        var renderTranscludeBlocks: Bool = false
 
         init(
             representable: MarkupTextViewRepresentable
@@ -238,35 +211,6 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                     text: textView.text
                 )
             )
-        }
-        
-        // MARK: - NSTextLayoutManagerDelegate
-                                
-        func textLayoutManager(
-            _ textLayoutManager: NSTextLayoutManager,
-            textLayoutFragmentFor location: NSTextLocation,
-            in textElement: NSTextElement
-        ) -> NSTextLayoutFragment {
-            let baseLayoutFragment = NSTextLayoutFragment(textElement: textElement, range: textElement.elementRange)
-            
-            guard let textContentStorage = textLayoutManager.textContentManager as? NSTextContentStorage else {
-                MarkupTextViewRepresentable.logger.warning("Could not access textContentStorage")
-                return baseLayoutFragment
-            }
-            
-            if let text = textContentStorage.attributedString(for: textElement)?.string {
-                let sub = Subtext(markup: text)
-                
-                // Only render transcludes for a single slug in a single block
-                if renderTranscludeBlocks && sub.slugs.count == 1 && sub.blocks.count == 1 {
-                    let layoutFragment = TranscludeBlockLayoutFragment(textElement: textElement, range: textElement.elementRange)
-                    layoutFragment.text = text
-                    
-                    return layoutFragment
-                }
-            }
-            
-            return baseLayoutFragment
         }
         
         // MARK: - NSTextContentStorageDelegate
