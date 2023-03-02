@@ -469,6 +469,21 @@ class Tests_Subtext: XCTestCase {
         )
     }
     
+    func testPetnameOnly() throws {
+        let markup = "A @petname without a slashlink part."
+        let dom = Subtext.parse(markup: markup)
+        
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+        
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "@petname"
+        )
+    }
+    
     func testWikilinkParsing0() throws {
         let markup = """
         Let's test out some [[wikilinks]].
