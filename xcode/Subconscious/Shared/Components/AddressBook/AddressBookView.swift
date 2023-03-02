@@ -63,10 +63,7 @@ struct AddressBookView: View {
                         .searchable(text: $searchText)
                     }
                 }
-                Section(header: Text("My Details")) {
-                   DidQrCodeView(did: myDid)
-                        .frame(maxWidth: .infinity, maxHeight: 200)
-                    
+                Section(header: Text("My DID")) {
                     VStack {
                         
                         HStack{

@@ -38,15 +38,6 @@ struct AddFriendView: View {
                     }
                     
                 }
-                
-                Section(header: Text("Add via QR Code")) {
-                    Button(action: {}, label: {
-                        HStack {
-                            Image(systemName: "qrcode")
-                            Text("Scan Code")
-                        }
-                    })
-                }
             }
             .navigationTitle("Add Friend")
             .toolbar {
