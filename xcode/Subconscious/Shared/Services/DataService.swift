@@ -477,7 +477,7 @@ struct DataService {
         let backlinks = database.readEntryBacklinks(slug: address.slug)
 
         let draft = EntryDetail(
-            saveState: .draft,
+            saveState: .unsaved,
             entry: Entry(
                 address: address,
                 contents: Memo(
