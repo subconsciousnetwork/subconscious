@@ -258,6 +258,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> MarkupTextView {
         Self.logger.debug("makeUIView")
         
+        // Coordinator acts as all the relevant delegates
         let textLayoutManager = NSTextLayoutManager()
         let textContentStorage = NSTextContentStorage()
         let textContainer = NSTextContainer()
@@ -269,10 +270,6 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         textLayoutManager.textContainer = textContainer
         
         let view = MarkupTextView(frame: self.frame, textContainer: textContainer)
-
-        // Coordinator is both an UITextViewDelegate
-        // and an NSTextStorageDelegate.
-        // Set delegate on textview (coordinator)
         view.delegate = context.coordinator
 
         // Set inner padding
