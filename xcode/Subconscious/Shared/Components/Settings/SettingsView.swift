@@ -41,8 +41,6 @@ struct SettingsView: View {
     @ObservedObject var app: Store<AppModel>
     var unknown = "Unknown"
     
-    @State private var spin = false
-
     var body: some View {
         NavigationStack {
             Form {
