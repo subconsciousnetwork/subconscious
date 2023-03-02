@@ -47,7 +47,7 @@ struct DetailView: View {
                 }
             }
         }
-        .navigationTitle(state.title)
+        .navigationTitle(store.state.headers.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             DetailToolbarContent(
@@ -366,9 +366,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     case appear(
         address: MemoAddress?,
-        title: String,
-        fallback: String,
-        autofocus: Bool = false
+        title: String?,
+        fallback: String?
     )
 
     // Detail
@@ -568,7 +567,7 @@ struct DetailMarkupEditorCursor: CursorProtocol {
         case .setText(let text):
             return .setEditor(
                 text: text,
-                saveState: .modified,
+                saveState: .unsaved,
                 modified: .now
             )
         // Intercept focusChange, so we can save on blur.
@@ -680,14 +679,13 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 phase: phase
             )
-        case let .appear(address, title, fallback, autofocus):
+        case let .appear(address, title, fallback):
             return appear(
                 state: state,
                 environment: environment,
                 address: address,
                 title: title,
-                fallback: fallback,
-                autofocus: autofocus
+                fallback: fallback
             )
         case let .setEditor(text, saveState, modified):
             return setEditor(
@@ -1048,19 +1046,19 @@ struct DetailModel: ModelProtocol {
         state: DetailModel,
         environment: AppEnvironment,
         address: MemoAddress?,
-        title: String,
-        fallback: String,
-        autofocus: Bool
+        title: String?,
+        fallback: String?
     ) -> Update<DetailModel> {
-        let link = address.map({ address in
-            EntryLink(address: address, title: title)
-        })
+        guard let address = address else {
+            return Update(state: state)
+        }
+        let link = EntryLink(address: address, title: title)
         return update(
             state: state,
             action: .loadDetail(
                 link: link,
-                fallback: fallback,
-                autofocus: autofocus
+                fallback: fallback ?? "",
+                autofocus: false
             ),
             environment: environment
         )
@@ -1176,7 +1174,7 @@ struct DetailModel: ModelProtocol {
             actions: [
                 .setEditor(
                     text: markup,
-                    saveState: .modified,
+                    saveState: .unsaved,
                     modified: .now
                 ),
                 .setEditorSelection(
@@ -1585,7 +1583,7 @@ struct DetailModel: ModelProtocol {
         )
         // Mark modified, since we failed to save
         var model = state
-        model.saveState = .modified
+        model.saveState = .unsaved
         return Update(state: model)
     }
 
@@ -2046,7 +2044,7 @@ struct DetailModel: ModelProtocol {
             actions: [
                 .setEditor(
                     text: editorText,
-                    saveState: .modified,
+                    saveState: .unsaved,
                     modified: .now
                 ),
                 .setEditorSelection(
@@ -2087,9 +2085,9 @@ struct DetailModel: ModelProtocol {
 //  MARK: Outer Model
 /// A description of a detail suitible for pushing onto a navigation stack
 struct DetailOuterModel: Hashable, ModelProtocol {
-    var address: MemoAddress
-    var title: String
-    var fallback: String
+    var address: MemoAddress?
+    var title: String?
+    var fallback: String?
     
     static func update(
         state: DetailOuterModel,

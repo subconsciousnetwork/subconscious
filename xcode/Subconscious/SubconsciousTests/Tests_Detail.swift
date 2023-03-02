@@ -150,7 +150,7 @@ class Tests_Detail: XCTestCase {
     func testAutosave() throws {
         let state = DetailModel(
             address: Slug(formatting: "example")!.toPublicMemoAddress(),
-            saveState: .modified
+            saveState: .unsaved
         )
         let update = DetailModel.update(
             state: state,
