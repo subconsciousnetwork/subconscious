@@ -320,7 +320,7 @@ final class DatabaseService {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        let suggestions = try database.execute(
+        let suggestions: [Suggestion] = try database.execute(
             sql: """
             SELECT id, title
             FROM memo
@@ -340,28 +340,18 @@ final class DatabaseService {
                 title: title
             )
         })
-        .map({ link in
-            Suggestion.entry(link)
+        .map({ (link: EntryLink) in
+            Suggestion.memo(
+                address: link.address,
+                title: link.title
+            )
         })
         
         var special: [Suggestion] = []
         
         // Insert scratch
         if Config.default.scratchSuggestionEnabled {
-            let now = Date.now
-            let formatter = DateFormatter.scratchDateFormatter()
-            if let address = Slug(
-                formatting: "inbox/\(formatter.string(from: now))"
-            )?.toLocalMemoAddress() {
-                special.append(
-                    .scratch(
-                        EntryLink(
-                            address: address,
-                            title: Config.default.scratchDefaultTitle
-                        )
-                    )
-                )
-            }
+            special.append(.create())
         }
         
         if Config.default.randomSuggestionEnabled {
@@ -390,14 +380,11 @@ final class DatabaseService {
         var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
         
         // Create a suggestion for the literal query
-        suggestions[queryEntrySlug] = .search(
-            EntryLink(
-                address: queryEntrySlug.toLocalMemoAddress(),
-                title: query
-            )
+        suggestions[queryEntrySlug] = .create(
+            title: query
         )
         
-        let entries: [EntryLink] = try database.execute(
+        let links: [EntryLink] = try database.execute(
             sql: """
             SELECT id, title
             FROM memo_search
@@ -408,7 +395,8 @@ final class DatabaseService {
             parameters: [
                 .prefixQueryFTS5(query)
             ]
-        ).compactMap({ row in
+        )
+        .compactMap({ row in
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
                 let title = row.col(1)?.toString()
@@ -424,8 +412,11 @@ final class DatabaseService {
         // Insert entries into suggestions.
         // If literal query and an entry have the same slug,
         // entry will overwrite query.
-        for entry in entries {
-            suggestions.updateValue(.entry(entry), forKey: entry.address.slug)
+        for link in links {
+            suggestions.updateValue(
+                .memo(address: link.address, title: link.title),
+                forKey: link.address.slug
+            )
         }
         
         return Array(suggestions.values)

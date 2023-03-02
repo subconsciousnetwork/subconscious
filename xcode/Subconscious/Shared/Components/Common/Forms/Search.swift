@@ -34,7 +34,7 @@ enum SearchAction: Hashable, CustomLogStringConvertible {
     case activatedSuggestion(Suggestion)
     //  Search history
     /// Write a search history event to the database
-    case createSearchHistoryItem(String)
+    case createSearchHistoryItem(String?)
     case succeedCreateSearchHistoryItem(String)
     case failCreateSearchHistoryItem(String)
 
@@ -59,7 +59,7 @@ struct SearchModel: ModelProtocol {
     var placeholder = ""
     /// Live input text
     var query = ""
-    var suggestions: [Suggestion] = []
+    var suggestions: [Identified<Suggestion>] = []
 
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -110,7 +110,9 @@ struct SearchModel: ModelProtocol {
             )
         case .setSuggestions(let suggestions):
             var model = state
-            model.suggestions = suggestions
+            model.suggestions = suggestions.map({ suggestion in
+                Identified(value: suggestion)
+            })
             return Update(state: model)
         case .failSuggestions(let message):
             logger.log("\(message)")
@@ -204,19 +206,6 @@ struct SearchModel: ModelProtocol {
         environment: AppEnvironment,
         suggestion: Suggestion
     ) -> Update<SearchModel> {
-        let link: EntryLink? = Func.pipe(suggestion) { suggestion  in
-            switch suggestion {
-            case .entry(let entryLink):
-                return entryLink
-            case .search(let entryLink):
-                return entryLink
-            case .scratch(let entryLink):
-                return entryLink
-            case .random:
-                return nil
-            }
-        }
-
         // Duration of keyboard animation
         let duration = Duration.keyboard
         let delay = duration + 0.03
@@ -228,19 +217,10 @@ struct SearchModel: ModelProtocol {
         .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
         .eraseToAnyPublisher()
 
-        guard let link = link else {
-            return SearchModel.update(
-                state: state,
-                action: .hideAndClearQuery,
-                environment: environment
-            )
-            .mergeFx(fx)
-        }
-
         return SearchModel.update(
             state: state,
             actions: [
-                .createSearchHistoryItem(link.title),
+                .createSearchHistoryItem(suggestion.query),
                 .hideAndClearQuery
             ],
             environment: environment
@@ -252,8 +232,11 @@ struct SearchModel: ModelProtocol {
     static func createSearchHistoryItem(
         state: SearchModel,
         environment: AppEnvironment,
-        query: String
+        query: String?
     ) -> Update<SearchModel> {
+        guard let query = query else {
+            return Update(state: state)
+        }
         let fx: Fx<SearchAction> = environment.data
             .createSearchHistoryItem(query: query)
             .map({ query in
@@ -328,13 +311,13 @@ struct SearchView: View {
             }
             .frame(height: AppTheme.unit * 10)
             .padding(AppTheme.tightPadding)
-            List(state.suggestions) { suggestion in
+            List(state.suggestions) { item in
                 Button(
                     action: {
-                        send(.activateSuggestion(suggestion))
+                        send(.activateSuggestion(item.value))
                     },
                     label: {
-                        SuggestionLabelView(suggestion: suggestion)
+                        SuggestionLabelView(suggestion: item.value)
                     }
                 )
                 .modifier(

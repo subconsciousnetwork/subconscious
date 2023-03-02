@@ -154,9 +154,9 @@ enum NotebookAction {
 
     /// Push detail onto navigation stack
     case pushDetail(
-        address: MemoAddress,
-        title: String,
-        fallback: String,
+        address: MemoAddress?,
+        title: String?,
+        fallback: String?,
         autofocus: Bool
     )
     
@@ -179,25 +179,18 @@ extension NotebookAction {
     /// Generate a detail request from a suggestion
     static func fromSuggestion(_ suggestion: Suggestion) -> Self {
         switch suggestion {
-        case .entry(let entryLink):
+        case let .memo(address, title):
             return .pushDetail(
-                address: entryLink.address,
-                title: entryLink.linkableTitle,
-                fallback: entryLink.title,
+                address: address,
+                title: title,
+                fallback: title,
                 autofocus: false
             )
-        case .search(let entryLink):
+        case let .create(address, title):
             return .pushDetail(
-                address: entryLink.address,
-                title: entryLink.linkableTitle,
-                fallback: entryLink.title,
-                autofocus: false
-            )
-        case .scratch(let entryLink):
-            return .pushDetail(
-                address: entryLink.address,
-                title: entryLink.linkableTitle,
-                fallback: generateScratchFallback(date: Date.now),
+                address: address,
+                title: title,
+                fallback: title,
                 autofocus: false
             )
         case .random:
@@ -821,7 +814,10 @@ struct NotebookModel: ModelProtocol {
 
         /// Find all instances of this model in the stack and update them
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.address.slug == receipt.to.slug else {
+            guard let address = detail.address else {
+                return detail
+            }
+            guard address.slug == receipt.to.slug else {
                 return detail
             }
             var model = detail

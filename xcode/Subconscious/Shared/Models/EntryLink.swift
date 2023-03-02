@@ -42,7 +42,7 @@ struct EntryLink:
         let title = title ?? address.slug.toTitle()
         self.init(address: address, title: title)
     }
-    
+
     var id: MemoAddress { address }
     var description: String { linkableTitle }
     

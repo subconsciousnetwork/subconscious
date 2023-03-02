@@ -7,22 +7,30 @@
 
 import Foundation
 
-enum Suggestion: Hashable, Equatable, Identifiable {
-    case entry(EntryLink)
-    case search(EntryLink)
-    case scratch(EntryLink)
+enum Suggestion: Hashable {
+    case memo(address: MemoAddress, title: String)
+    case create(address: MemoAddress? = nil, title: String? = nil)
     case random
-
-    var id: String {
+    
+    var query: String? {
         switch self {
-        case let .entry(link):
-            return "entry/\(link.id)"
-        case let .search(link):
-            return "search/\(link.id)"
-        case let .scratch(link):
-            return "scratch/\(link.id)"
+        case let .memo(_, title):
+            return title
+        case let .create(address, title):
+            return Prose.deriveTitle(address: address, title: title)
         case .random:
-            return "random"
+            return nil
+        }
+    }
+
+    var address: MemoAddress? {
+        switch self {
+        case .memo(let address, _):
+            return address
+        case .create(let address, _):
+            return address
+        case .random:
+            return nil
         }
     }
 }

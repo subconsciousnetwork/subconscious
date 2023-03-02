@@ -9,44 +9,35 @@ import SwiftUI
 
 struct SuggestionLabelView: View, Equatable {
     var suggestion: Suggestion
-    var untitled = "Untitled"
-
-    private func readTitle(_ text: String) -> String {
-        text.isEmpty ? untitled : text
-    }
 
     var body: some View {
         switch suggestion {
-        case .entry(let entryLink):
+        case let .memo(address, title):
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text(readTitle(entryLink.title)),
-                        subtitle: Text(String(entryLink.address.slug))
+                        title: Text(title),
+                        subtitle: Text(
+                            verbatim: address.toSlashlink().description
+                        )
                     )
                 },
                 icon: {
                     Image(systemName: "doc")
                 }
             )
-        case .search(let entryLink):
+        case let .create(address, title):
             Label(
                 title: {
-                    TitleGroupView(
-                        title: Text(readTitle(entryLink.title)),
-                        subtitle: Text(String(entryLink.address.slug))
-                    )
-                },
-                icon: {
-                    Image(systemName: "square.and.pencil")
-                }
-            )
-        case .scratch(let entryLink):
-            Label(
-                title: {
-                    TitleGroupView(
-                        title: Text("Create note"),
-                        subtitle: Text(String(entryLink.address.slug))
+                    Text(
+                        verbatim: Prose.deriveTitle(
+                            address: address,
+                            title: title
+                        )
+                        .mapOr(
+                            { title in "Create note: \(title)" },
+                            default: "Create note"
+                        )
                     )
                 },
                 icon: {
@@ -71,17 +62,31 @@ struct SuggestionLabelView: View, Equatable {
 
 struct SuggestionLabelView_Previews: PreviewProvider {
     static var previews: some View {
-        SuggestionLabelView(
-            suggestion: .search(
-                EntryLink(
+        VStack {
+            SuggestionLabelView(
+                suggestion: .create(
                     address: MemoAddress.public(
                         Slashlink(
                             "@here/a-muse-is-more-interesting-than-an-oracle"
                         )!
-                    ),
-                    title: "A muse is more interesting than an oracle"
+                    )
                 )
             )
-        )
+            SuggestionLabelView(
+                suggestion: .create(
+                    title: "RAND Corp"
+                )
+            )
+            SuggestionLabelView(
+                suggestion: .memo(
+                    address: MemoAddress.public(
+                        Slashlink(
+                            "@here/the-lee-shore"
+                        )!
+                    ),
+                    title: "The Lee Shore"
+                )
+            )
+        }
     }
 }
