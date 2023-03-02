@@ -269,54 +269,6 @@ class Tests_Subtext: XCTestCase {
         )
     }
     
-    func testAbsoluteSlashlinkParsing1() throws {
-        let markup = "@petname/slashlink at the beginning."
-        let dom = Subtext.parse(markup: markup)
-        
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
-            XCTFail("Expected slashlink")
-            return
-        }
-        
-        XCTAssertEqual(
-            String(describing: slashlink),
-            "@petname/slashlink",
-            "Slashlink parses successfully"
-        )
-    }
-
-    func testAbsoluteSlashlinkParsing2() throws {
-        let markup = "@PETNAME/deep/slashlink at the beginning."
-        let dom = Subtext.parse(markup: markup)
-        
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
-            XCTFail("Expected slashlink")
-            return
-        }
-        
-        XCTAssertEqual(
-            String(describing: slashlink),
-            "@PETNAME/deep/slashlink",
-            "Slashlink parses successfully"
-        )
-    }
-
-    func testAbsoluteSlashlinkParsingDoesNotValidateSlashlink() throws {
-        let markup = "@PETNAME/deep//slashlink/that-is-technically-invalid at the beginning."
-        let dom = Subtext.parse(markup: markup)
-        
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
-            XCTFail("Expected slashlink")
-            return
-        }
-        
-        XCTAssertEqual(
-            String(describing: slashlink),
-            "@PETNAME/deep//slashlink/that-is-technically-invalid",
-            "Slashlinks do not parse for valididty of body"
-        )
-    }
-
     func testSlashlinkParsingUnderscore() throws {
         let markup = "A /_slashlink-with-an-underscore."
         let dom = Subtext.parse(markup: markup)
@@ -420,6 +372,100 @@ class Tests_Subtext: XCTestCase {
             String(describing: slashlink),
             "/_slashlink-with-😤-unicode",
             "Slashlink with unicode parses correctly"
+        )
+    }
+    
+    func testAbsoluteSlashlinkParsing() throws {
+        let markup = "@petname/slashlink at the beginning."
+        let dom = Subtext.parse(markup: markup)
+        
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+        
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "@petname/slashlink",
+            "Slashlink parses successfully"
+        )
+    }
+
+    func testAbsoluteSlashlinkParsingDeepCaps() throws {
+        let markup = "@PETNAME/deep/slashlink at the beginning."
+        let dom = Subtext.parse(markup: markup)
+        
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+        
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "@PETNAME/deep/slashlink",
+            "Slashlink parses successfully"
+        )
+    }
+
+    func testAbsoluteSlashlinkParsingDoesNotValidateSlashlink() throws {
+        let markup = "@PETNAME/deep//slashlink/that-is-technically-invalid at the beginning."
+        let dom = Subtext.parse(markup: markup)
+        
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+        
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "@PETNAME/deep//slashlink/that-is-technically-invalid",
+            "Slashlinks do not parse for valididty of body"
+        )
+    }
+    
+    func testAbsoluteSlashlinkParsingAfterSpace() throws {
+        let markup = "A @PETNAME/slashlink after a space."
+        let dom = Subtext.parse(markup: markup)
+        
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+        
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "@PETNAME/slashlink",
+            "Slashlinks do not parse for valididty of body"
+        )
+    }
+    
+    func testAbsoluteSlashlinkParsingAfterToSpaces() throws {
+        let markup = "A  @PETNAME/slashlink after two spaces."
+        let dom = Subtext.parse(markup: markup)
+        
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+        
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "@PETNAME/slashlink"
+        )
+    }
+
+    func testAbsoluteSlashlinkParsingUnicode() throws {
+        let markup = "A  @petnàme/slashlink with unicode."
+        let dom = Subtext.parse(markup: markup)
+        
+        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+            XCTFail("Expected slashlink")
+            return
+        }
+        
+        XCTAssertEqual(
+            String(describing: slashlink),
+            "@petnàme/slashlink"
         )
     }
     
