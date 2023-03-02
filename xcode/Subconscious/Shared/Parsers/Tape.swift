@@ -81,7 +81,7 @@ struct Tape {
         return element
     }
 
-    /// Peek forward, and consume if match
+    /// Peek forward, and consume if substrings match
     mutating func consumeMatch(_ subsequence: Substring) -> Bool {
         if let endIndex = offset(by: subsequence.count) {
             if rest[currentIndex..<endIndex] == subsequence {
@@ -90,6 +90,20 @@ struct Tape {
             }
         }
         return false
+    }
+    
+    /// Prefix-match a regular expression, and consume if match.
+    /// - Returns match object
+    mutating func consumeMatch<Pattern, Output>(
+        _ regex: Pattern
+    ) -> Bool
+    where Pattern: RegexComponent<Output>
+    {
+        guard let match = rest.prefixMatch(of: regex) else {
+            return false
+        }
+        self.currentIndex = match.range.upperBound
+        return true
     }
 
     /// Get an item offset by `offset` from the `currentIndex`.
