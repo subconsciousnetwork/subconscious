@@ -8,6 +8,35 @@
 import SwiftUI
 import ObservableStore
 
+struct GatewaySyncLabel: View {
+    var status: GatewaySyncStatus
+    @State var spin = false
+    
+    var body: some View {
+        HStack {
+            switch (status) {
+            case .initial:
+                Image(systemName: "arrow.triangle.2.circlepath")
+            case .inProgress:
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .rotationEffect(.degrees(spin ? 360 : 0))
+                    .animation(Animation.linear
+                        .repeatForever(autoreverses: false)
+                        .speed(0.4), value: spin)
+                    .onAppear() {
+                        self.spin = true
+                    }
+            case .success:
+                Image(systemName: "checkmark.circle")
+            case .failure:
+                Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
+            }
+            
+            Text("Sync with Gateway")
+        }
+    }
+}
+
 struct SettingsView: View {
     @ObservedObject var app: Store<AppModel>
     var unknown = "Unknown"
@@ -63,27 +92,7 @@ struct SettingsView: View {
                             app.send(.syncSphereWithGateway)
                         },
                         label: {
-                            HStack {
-                                switch (app.state.gatewaySyncStatus) {
-                                case .initial:
-                                    Image(systemName: "arrow.triangle.2.circlepath")
-                                case .inProgress:
-                                    Image(systemName: "arrow.triangle.2.circlepath")
-                                        .rotationEffect(.degrees(spin ? 360 : 0))
-                                        .animation(Animation.linear
-                                            .repeatForever(autoreverses: false)
-                                            .speed(0.4), value: spin)
-                                        .onAppear() {
-                                            self.spin = true
-                                        }
-                                case .success:
-                                    Image(systemName: "checkmark.circle")
-                                case .failure:
-                                    Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
-                                }
-                                
-                                Text("Sync with Gateway")
-                            }
+                            GatewaySyncLabel(status: app.state.gatewaySyncStatus)
                         }
                     )
                 }
