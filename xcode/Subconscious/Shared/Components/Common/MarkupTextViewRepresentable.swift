@@ -126,7 +126,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     }
 
     //  MARK: Coordinator
-    class Coordinator: NSObject, UITextViewDelegate, NSTextStorageDelegate {
+    class Coordinator: NSObject, UITextViewDelegate, NSTextContentStorageDelegate, NSTextContentManagerDelegate, NSTextLayoutManagerDelegate {
         /// Is event happening during updateUIView?
         /// Used to avoid setting properties in events during view updates, as
         /// that would cause feedback cycles where an update triggers an event,
@@ -139,37 +139,6 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         ) {
             self.isUIViewUpdating = false
             self.representable = representable
-        }
-
-        /// NSTextStorageDelegate method
-        /// Handle markup rendering, just before processEditing is fired.
-        /// It is important that we render markup in `willProcessEditing`
-        /// because it happens BEFORE font substitution. Rendering before font
-        /// substitution gives the OS a chance to replace fonts for things like
-        /// Emoji or Unicode characters when your font does not support them.
-        /// See:
-        /// https://github.com/gordonbrander/subconscious/wiki/nstextstorage-font-substitution-and-missing-text
-        ///
-        /// 2022-03-17 Gordon Brander
-        func textStorage(
-            _ textStorage: NSTextStorage,
-            willProcessEditing: NSTextStorage.EditActions,
-            range: NSRange,
-            changeInLength: Int
-        ) {
-            MarkupTextViewRepresentable.logger.debug(
-                "textStorage: render markup attributes"
-            )
-            textStorage.setAttributes(
-                [:],
-                range: NSRange(
-                    textStorage.string.startIndex...,
-                    in: textStorage.string
-                )
-            )
-            // Render markup on TextStorage (which is an NSMutableString)
-            // using closure set on view (representable)
-            self.representable.renderAttributesOf(textStorage)
         }
 
         /// Handle link taps
@@ -243,6 +212,23 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                 )
             )
         }
+        
+        // MARK: - NSTextContentStorageDelegate
+        
+        func textContentStorage(_ textContentStorage: NSTextContentStorage, textParagraphWith range: NSRange) -> NSTextParagraph? {
+            guard let originalText = textContentStorage.textStorage?.attributedSubstring(from: range) else {
+                MarkupTextViewRepresentable.logger.warning("textContentStorage: could not access attributedSubstring")
+                return nil
+            }
+            
+            let textWithDisplayAttributes = NSMutableAttributedString(attributedString: originalText)
+            MarkupTextViewRepresentable.logger.debug(
+                "textContentStorage: render markup attributes"
+            )
+            self.representable.renderAttributesOf(textWithDisplayAttributes)
+            
+            return NSTextParagraph(attributedString: textWithDisplayAttributes)
+        }
     }
 
     static var logger = Logger(
@@ -271,14 +257,20 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     //  MARK: makeUIView
     func makeUIView(context: Context) -> MarkupTextView {
         Self.logger.debug("makeUIView")
-        let view = MarkupTextView()
-
-        // Coordinator is both an UITextViewDelegate
-        // and an NSTextStorageDelegate.
-        // Set delegate on textview (coordinator)
+        
+        // Coordinator acts as all the relevant delegates
+        let textLayoutManager = NSTextLayoutManager()
+        let textContentStorage = NSTextContentStorage()
+        let textContainer = NSTextContainer()
+        textContentStorage.delegate = context.coordinator
+        textLayoutManager.delegate = context.coordinator
+        
+        textContentStorage.addTextLayoutManager(textLayoutManager)
+        
+        textLayoutManager.textContainer = textContainer
+        
+        let view = MarkupTextView(frame: self.frame, textContainer: textContainer)
         view.delegate = context.coordinator
-        // Set delegate on textstorage (coordinator)
-        view.textStorage.delegate = context.coordinator
 
         // Set inner padding
         view.textContainerInset = self.textContainerInset
