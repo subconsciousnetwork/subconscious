@@ -92,7 +92,7 @@ struct SettingsView: View {
                             app.send(.syncSphereWithGateway)
                         },
                         label: {
-                            GatewaySyncLabel(status: app.state.gatewaySyncStatus)
+                            GatewaySyncLabel(status: app.state.lastGatewaySyncStatus)
                         }
                     )
                 }

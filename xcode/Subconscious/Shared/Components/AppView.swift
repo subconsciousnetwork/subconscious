@@ -208,7 +208,7 @@ struct AppModel: ModelProtocol {
     var gatewayURL = AppDefaults.standard.gatewayURL
     var gatewayURLTextField = AppDefaults.standard.gatewayURL
     var isGatewayURLTextFieldValid = true
-    var gatewaySyncStatus = GatewaySyncStatus.initial
+    var lastGatewaySyncStatus = GatewaySyncStatus.initial
     
     /// Show settings sheet?
     var isSettingsSheetPresented = false
@@ -721,7 +721,7 @@ struct AppModel: ModelProtocol {
         }
         
         var model = state
-        model.gatewaySyncStatus = .inProgress
+        model.lastGatewaySyncStatus = .inProgress
         
         logger.log("Syncing with gateway: \(gatewayURL.absoluteString)")
         let fx: Fx<AppAction> = environment.data.syncSphereWithGateway()
@@ -743,7 +743,7 @@ struct AppModel: ModelProtocol {
         logger.log("Sphere synced with gateway @ \(version)")
         
         var model = state
-        model.gatewaySyncStatus = .success
+        model.lastGatewaySyncStatus = .success
         
         return update(
             state: model,
@@ -760,7 +760,7 @@ struct AppModel: ModelProtocol {
         logger.log("Sphere failed to sync with gateway: \(error)")
         
         var model = state
-        model.gatewaySyncStatus = .failure
+        model.lastGatewaySyncStatus = .failure
         
         return update(
             state: model,
