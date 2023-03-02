@@ -81,7 +81,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "Some text with a http://example.com link"
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .link(link) = dom.blocks[0].inline[0] else {
+        guard case let .link(link) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected link")
             return
         }
@@ -97,7 +97,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "Some text with a https://example.com link"
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .link(link) = dom.blocks[0].inline[0] else {
+        guard case let .link(link) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected link")
             return
         }
@@ -109,11 +109,27 @@ class Tests_Subtext: XCTestCase {
         )
     }
     
+    func testLinkParsingBracketlink() throws {
+        let markup = "Some text with a <dat://example.com> link"
+        let dom = Subtext.parse(markup: markup)
+        
+        guard case let .bracketlink(link) = dom.blocks.get(0)?.inline.get(0) else {
+            XCTFail("Expected link")
+            return
+        }
+        
+        XCTAssertEqual(
+            String(describing: link),
+            "<dat://example.com>",
+            "Bracket link parses successfully"
+        )
+    }
+
     func testLinkParsingQueryParams() throws {
         let markup = "Some text with a http://example.com?foo=bar&baz=bing link"
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .link(link) = dom.blocks[0].inline[0] else {
+        guard case let .link(link) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected link")
             return
         }
@@ -129,7 +145,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "Some text with a https://example.com. Yes!"
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .link(link) = dom.blocks[0].inline[0] else {
+        guard case let .link(link) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected link")
             return
         }
@@ -145,7 +161,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "Some text with a https://example.com! Yes!"
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .link(link) = dom.blocks[0].inline[0] else {
+        guard case let .link(link) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected link")
             return
         }
@@ -161,7 +177,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "Some text with a https://example.com? Yes!"
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .link(link) = dom.blocks[0].inline[0] else {
+        guard case let .link(link) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected link")
             return
         }
@@ -177,7 +193,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "Some text with a https://example.com, yes!"
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .link(link) = dom.blocks[0].inline[0] else {
+        guard case let .link(link) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected link")
             return
         }
@@ -193,7 +209,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "Some text with a https://example.com; yes!"
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .link(link) = dom.blocks[0].inline[0] else {
+        guard case let .link(link) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected link")
             return
         }
@@ -209,7 +225,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "Some text with a https://example.com( Yes!"
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .link(link) = dom.blocks[0].inline[0] else {
+        guard case let .link(link) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected link")
             return
         }
@@ -225,7 +241,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "Some text with a https://example.com/ Yes!"
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .link(link) = dom.blocks[0].inline[0] else {
+        guard case let .link(link) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected link")
             return
         }
@@ -241,7 +257,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "Some text with a /slashlink."
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+        guard case let .slashlink(slashlink) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected slashlink")
             return
         }
@@ -257,7 +273,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "/slashlink at the beginning."
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+        guard case let .slashlink(slashlink) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected slashlink")
             return
         }
@@ -273,7 +289,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "A /_slashlink-with-an-underscore."
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+        guard case let .slashlink(slashlink) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected slashlink")
             return
         }
@@ -359,7 +375,7 @@ class Tests_Subtext: XCTestCase {
     }
     
     func testSlashlinkUnicode() throws {
-        let markup = "A /_slashlink-with-😤-unicode."
+        let markup = "A /slashlink-with-unicodè."
         let dom = Subtext.parse(markup: markup)
         let inline = dom.blocks.get(0)?.inline.get(0)
         
@@ -370,7 +386,7 @@ class Tests_Subtext: XCTestCase {
         
         XCTAssertEqual(
             String(describing: slashlink),
-            "/_slashlink-with-😤-unicode",
+            "/slashlink-with-unicodè",
             "Slashlink with unicode parses correctly"
         )
     }
@@ -379,7 +395,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "@petname/slashlink at the beginning."
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+        guard case let .slashlink(slashlink) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected slashlink")
             return
         }
@@ -395,7 +411,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "@PETNAME/deep/slashlink at the beginning."
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+        guard case let .slashlink(slashlink) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected slashlink")
             return
         }
@@ -411,7 +427,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "@PETNAME/deep//slashlink/that-is-technically-invalid at the beginning."
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+        guard case let .slashlink(slashlink) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected slashlink")
             return
         }
@@ -427,7 +443,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "A @PETNAME/slashlink after a space."
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+        guard case let .slashlink(slashlink) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected slashlink")
             return
         }
@@ -443,7 +459,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "A  @PETNAME/slashlink after two spaces."
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+        guard case let .slashlink(slashlink) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected slashlink")
             return
         }
@@ -458,7 +474,7 @@ class Tests_Subtext: XCTestCase {
         let markup = "A  @petnàme/slashlink with unicode."
         let dom = Subtext.parse(markup: markup)
         
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
+        guard case let .slashlink(slashlink) = dom.blocks.get(0)?.inline.get(0) else {
             XCTFail("Expected slashlink")
             return
         }
@@ -469,19 +485,10 @@ class Tests_Subtext: XCTestCase {
         )
     }
     
-    func testPetnameOnly() throws {
+    func testDoesNotParsePetnameWithoutPath() throws {
         let markup = "A @petname without a slashlink part."
         let dom = Subtext.parse(markup: markup)
-        
-        guard case let .slashlink(slashlink) = dom.blocks[0].inline[0] else {
-            XCTFail("Expected slashlink")
-            return
-        }
-        
-        XCTAssertEqual(
-            String(describing: slashlink),
-            "@petname"
-        )
+        XCTAssertNil(dom.blocks.get(0)?.inline.get(0))
     }
     
     func testWikilinkParsing0() throws {
@@ -489,9 +496,9 @@ class Tests_Subtext: XCTestCase {
         Let's test out some [[wikilinks]].
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .wikilink(wikilink) = inline0 else {
-            XCTFail("Expected wikilink but was \(inline0)")
+            XCTFail("Expected wikilink but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -506,9 +513,9 @@ class Tests_Subtext: XCTestCase {
         [[Wikilink]] leading the block.
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .wikilink(wikilink) = inline0 else {
-            XCTFail("Expected wikilink but was \(inline0)")
+            XCTFail("Expected wikilink but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -626,9 +633,9 @@ class Tests_Subtext: XCTestCase {
         Let's test out a [[wikilink]].
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .wikilink(wikilink) = inline0 else {
-            XCTFail("Expected wikilink but was \(inline0)")
+            XCTFail("Expected wikilink but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -641,9 +648,9 @@ class Tests_Subtext: XCTestCase {
     func testWikilinkUnicode() throws {
         let markup = "A [[wikilink with 😤 unicode]]."
         let dom = Subtext.parse(markup: markup)
-        let inline = dom.blocks[0].inline[0]
+        let inline = dom.blocks.get(0)?.inline.get(0)
         guard case let .wikilink(wikilink) = inline else {
-            XCTFail("Expected wikilink but was \(inline)")
+            XCTFail("Expected wikilink but was \(String(describing: inline))")
             return
         }
         XCTAssertEqual(
@@ -658,9 +665,9 @@ class Tests_Subtext: XCTestCase {
         _Italics_ in the front
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .italic(italic) = inline0 else {
-            XCTFail("Expected italic but was \(inline0)")
+            XCTFail("Expected italic but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -675,9 +682,9 @@ class Tests_Subtext: XCTestCase {
         Some _italic_ in the middle
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .italic(italic) = inline0 else {
-            XCTFail("Expected italic but was \(inline0)")
+            XCTFail("Expected italic but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -692,9 +699,9 @@ class Tests_Subtext: XCTestCase {
         Heres some_italic_embedded in the text
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .italic(italic) = inline0 else {
-            XCTFail("Expected italic but was \(inline0)")
+            XCTFail("Expected italic but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -714,9 +721,9 @@ class Tests_Subtext: XCTestCase {
             1,
             "Only one italic block detected"
         )
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .italic(italic) = inline0 else {
-            XCTFail("Expected italic but was \(inline0)")
+            XCTFail("Expected italic but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -731,9 +738,9 @@ class Tests_Subtext: XCTestCase {
         Let's test out _italic_
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .italic(italic) = inline0 else {
-            XCTFail("Expected italic but was \(inline0)")
+            XCTFail("Expected italic but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -748,9 +755,9 @@ class Tests_Subtext: XCTestCase {
         *Bold* in the front
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .bold(bold) = inline0 else {
-            XCTFail("Expected bold but was \(inline0)")
+            XCTFail("Expected bold but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -765,9 +772,9 @@ class Tests_Subtext: XCTestCase {
         Some *bold* in the middle
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .bold(bold) = inline0 else {
-            XCTFail("Expected bold but was \(inline0)")
+            XCTFail("Expected bold but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -782,9 +789,9 @@ class Tests_Subtext: XCTestCase {
         Heres some*bold*embedded in the text
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .bold(bold) = inline0 else {
-            XCTFail("Expected bold but was \(inline0)")
+            XCTFail("Expected bold but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -804,9 +811,9 @@ class Tests_Subtext: XCTestCase {
             1,
             "Only one bold block detected"
         )
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .bold(bold) = inline0 else {
-            XCTFail("Expected bold but was \(inline0)")
+            XCTFail("Expected bold but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -821,9 +828,9 @@ class Tests_Subtext: XCTestCase {
         Let's test out *bold*.
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .bold(bold) = inline0 else {
-            XCTFail("Expected bold but was \(inline0)")
+            XCTFail("Expected bold but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -838,9 +845,9 @@ class Tests_Subtext: XCTestCase {
         `Code` in the front
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .code(code) = inline0 else {
-            XCTFail("Expected code but was \(inline0)")
+            XCTFail("Expected code but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -855,9 +862,9 @@ class Tests_Subtext: XCTestCase {
         Some `code text` in the middle
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .code(code) = inline0 else {
-            XCTFail("Expected code but was \(inline0)")
+            XCTFail("Expected code but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -872,9 +879,9 @@ class Tests_Subtext: XCTestCase {
         Heres some`code`embedded in the text
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .code(code) = inline0 else {
-            XCTFail("Expected code but was \(inline0)")
+            XCTFail("Expected code but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -894,9 +901,9 @@ class Tests_Subtext: XCTestCase {
             1,
             "Only one code block detected"
         )
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .code(code) = inline0 else {
-            XCTFail("Expected code but was \(inline0)")
+            XCTFail("Expected code but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -911,9 +918,9 @@ class Tests_Subtext: XCTestCase {
         Let's test out `code`.
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .code(code) = inline0 else {
-            XCTFail("Expected code but was \(inline0)")
+            XCTFail("Expected code but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -928,9 +935,9 @@ class Tests_Subtext: XCTestCase {
         Let's test out *bo_ld*_.
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .bold(bold) = inline0 else {
-            XCTFail("Expected bold but was \(inline0)")
+            XCTFail("Expected bold but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(
@@ -945,9 +952,9 @@ class Tests_Subtext: XCTestCase {
         Let's test out _it*al*ic_ly*.
         """
         let dom = Subtext.parse(markup: markup)
-        let inline0 = dom.blocks[0].inline[0]
+        let inline0 = dom.blocks.get(0)?.inline.get(0)
         guard case let .italic(italic) = inline0 else {
-            XCTFail("Expected italic but was \(inline0)")
+            XCTFail("Expected italic but was \(String(describing: inline0))")
             return
         }
         XCTAssertEqual(

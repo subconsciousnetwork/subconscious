@@ -10,7 +10,10 @@ import Foundation
 extension Collection {
     /// A safe bounds-checked array index lookup
     func get(_ index: Index) -> Element? {
-        indices.contains(index) ? self[index] : nil
+        guard index >= startIndex && index < endIndex else {
+            return nil
+        }
+        return self[index]
     }
 }
 
