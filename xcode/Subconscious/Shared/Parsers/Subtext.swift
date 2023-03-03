@@ -398,6 +398,57 @@ extension Subtext {
             )
         }
     }
+    
+    /// Read markup in NSMutableAttributedString, and render as attributes.
+    /// Resets all attributes on string, replacing them with style attributes
+    /// corresponding to the semantic meaning of Subtext markup.
+    private static func renderBlockAttributesOf(
+        _ attributedString: NSMutableAttributedString,
+        block: Subtext.Block,
+        url: (String, String) -> URL?
+    ) {
+        switch block {
+        case .empty:
+            break
+        case let .heading(line):
+            let nsRange = NSRange(line.range, in: attributedString.string)
+            attributedString.addAttribute(
+                .font,
+                value: UIFont.appTextMonoBold,
+                range: nsRange
+            )
+        case .list(_, let inline):
+            for inline in inline {
+                renderInlineAttributeOf(
+                    attributedString,
+                    inline: inline,
+                    url: url
+                )
+            }
+        case .quote(let line, let inline):
+            let nsRange = NSRange(line.range, in: attributedString.string)
+            attributedString.addAttribute(
+                .font,
+                value: UIFont.appTextMonoItalic,
+                range: nsRange
+            )
+            for inline in inline {
+                renderInlineAttributeOf(
+                    attributedString,
+                    inline: inline,
+                    url: url
+                )
+            }
+        case .text(_, let inline):
+            for inline in inline {
+                renderInlineAttributeOf(
+                    attributedString,
+                    inline: inline,
+                    url: url
+                )
+            }
+        }
+    }
 
     /// Read markup in NSMutableAttributedString, and render as attributes.
     /// Resets all attributes on string, replacing them with style attributes
@@ -407,7 +458,7 @@ extension Subtext {
         url: (String, String) -> URL?
     ) {
         let dom = Subtext(markup: attributedString.string)
-
+        
         // Get range of all text, using new Swift NSRange constructor
         // that takes a Swift range which knows how to handle Unicode
         // glyphs correctly.
@@ -415,14 +466,14 @@ extension Subtext {
             dom.base.startIndex...,
             in: dom.base
         )
-
+        
         // Set default font for entire string
         attributedString.addAttribute(
             .font,
             value: UIFont.appTextMono,
             range: baseNSRange
         )
-
+        
         // Set line-spacing for entire string
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = AppTheme.lineSpacing
@@ -431,57 +482,69 @@ extension Subtext {
             value: paragraphStyle,
             range: baseNSRange
         )
-
+        
         // Set text color
         attributedString.addAttribute(
             .foregroundColor,
             value: UIColor(Color.primary),
             range: baseNSRange
         )
-
+        
         for block in dom.blocks {
-            switch block {
-            case .empty:
-                break
-            case let .heading(line):
-                let nsRange = NSRange(line.range, in: dom.base)
-                attributedString.addAttribute(
-                    .font,
-                    value: UIFont.appTextMonoBold,
-                    range: nsRange
-                )
-            case .list(_, let inline):
-                for inline in inline {
-                    renderInlineAttributeOf(
-                        attributedString,
-                        inline: inline,
-                        url: url
-                    )
-                }
-            case .quote(let line, let inline):
-                let nsRange = NSRange(line.range, in: dom.base)
-                attributedString.addAttribute(
-                    .font,
-                    value: UIFont.appTextMonoItalic,
-                    range: nsRange
-                )
-                for inline in inline {
-                    renderInlineAttributeOf(
-                        attributedString,
-                        inline: inline,
-                        url: url
-                    )
-                }
-            case .text(_, let inline):
-                for inline in inline {
-                    renderInlineAttributeOf(
-                        attributedString,
-                        inline: inline,
-                        url: url
-                    )
-                }
-            }
+            renderBlockAttributesOf(attributedString, block: block, url: url)
         }
+    }
+    
+    /// Read markup in NSMutableAttributedString, and render as attributes.
+    /// Resets all attributes on string, replacing them with style attributes
+    /// corresponding to the semantic meaning of Subtext markup.
+    func renderAttributedString(
+        url: (String, String) -> URL?
+    ) -> NSAttributedString {
+        // Get range of all text, using new Swift NSRange constructor
+        // that takes a Swift range which knows how to handle Unicode
+        // glyphs correctly.
+        let baseNSRange = NSRange(
+            self.base.startIndex...,
+            in: self.base
+        )
+        
+        let attributedString = NSMutableAttributedString(
+            string: self.description
+        )
+
+        // Set default font for entire string
+        attributedString.addAttribute(
+            .font,
+            value: UIFont.appTextMono,
+            range: baseNSRange
+        )
+        
+        // Set line-spacing for entire string
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = AppTheme.lineSpacing
+        attributedString.addAttribute(
+            .paragraphStyle,
+            value: paragraphStyle,
+            range: baseNSRange
+        )
+        
+        // Set text color
+        attributedString.addAttribute(
+            .foregroundColor,
+            value: UIColor(Color.primary),
+            range: baseNSRange
+        )
+        
+        for block in self.blocks {
+            Self.renderBlockAttributesOf(
+                attributedString,
+                block: block,
+                url: url
+            )
+        }
+
+        return attributedString
     }
 }
 
