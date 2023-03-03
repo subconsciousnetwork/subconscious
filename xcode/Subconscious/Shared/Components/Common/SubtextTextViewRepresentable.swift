@@ -285,7 +285,6 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             }
 
             // Only render transcludes for a single slashlink in a single block
-            // TODO: do something with slashlink
             guard let _ = paragraph.subtext.slashlinks
                 .get(0)?
                 .toSlashlink()
