@@ -197,6 +197,10 @@ struct AppModel: ModelProtocol {
     /// State for rendering mnemonic/recovery phrase UI.
     /// Not persisted.
     var recoveryPhrase = RecoveryPhraseModel()
+    
+    /// Holds the state of the petname directory
+    /// Will be persisted to and read from the underlying sphere
+    var addressBook = AddressBookModel()
 
     var gatewayURL = AppDefaults.standard.gatewayURL
     var gatewayURLTextField = AppDefaults.standard.gatewayURL
