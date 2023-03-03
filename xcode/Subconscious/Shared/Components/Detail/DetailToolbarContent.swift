@@ -21,7 +21,7 @@ struct DetailToolbarContent: ToolbarContent {
     //  2022-02-15 Gordon Brander
     /// A static width property that we calculate for the toolbar title.
     private var primaryWidth: CGFloat {
-        UIScreen.main.bounds.width - 120
+        UIScreen.main.bounds.width - 180
     }
 
     var body: some ToolbarContent {
@@ -30,7 +30,7 @@ struct DetailToolbarContent: ToolbarContent {
                 action: onRename
             ) {
                 OmniboxView(address: address)
-                    .frame(maxWidth: primaryWidth)
+                    .frame(width: primaryWidth)
             }
             .disabled(address == nil)
         }
@@ -57,6 +57,22 @@ struct DetailToolbarContent: ToolbarContent {
                 }
             )
             .disabled(address == nil)
+        }
+    }
+}
+
+struct DetailToolbarContent_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            VStack {
+                Text("Hello world")
+            }
+            .toolbar(content: {
+                DetailToolbarContent(
+                    onRename: {},
+                    onDelete: {}
+                )
+            })
         }
     }
 }

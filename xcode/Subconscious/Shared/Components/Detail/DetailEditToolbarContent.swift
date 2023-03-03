@@ -24,3 +24,18 @@ struct DetailEditToolbarContent: ToolbarContent {
         }
     }
 }
+struct DetailEditToolbarContent_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            VStack {
+                Text("Hello world")
+            }
+            .toolbar(content: {
+                DetailEditToolbarContent(
+                    onDone: {}
+                )
+            })
+        }
+    }
+}
+
