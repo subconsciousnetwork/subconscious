@@ -331,7 +331,6 @@ struct SearchView: View {
                 )
             }
             .listStyle(.plain)
-            .padding(.bottom, AppTheme.tightPadding)
         }
         .background(Color.background)
     }

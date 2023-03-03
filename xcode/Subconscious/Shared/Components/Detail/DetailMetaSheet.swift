@@ -9,59 +9,64 @@ import SwiftUI
 import ObservableStore
 
 struct DetailMetaSheet: View {
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject var store: Store<DetailModel>
     var untitled: String = "Untitled"
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    Picker(
-                        "Audience",
-                        selection: Binding(
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                VStack(alignment: .leading, spacing: AppTheme.unit2) {
+                    SlashlinkBylineView(slashlink: Slashlink("@gordonbrander/foo")!)
+                    AudienceMenuButtonView(
+                        audience: Binding(
                             get: { store.state.audience },
                             send: store.send,
                             tag: DetailAction.updateAudience
                         )
-                    ) {
-                        Text("Everyone").tag(Audience.public)
-                        Text("Local").tag(Audience.local)
-                    }
-                    .pickerStyle(.navigationLink)
+                    )
                 }
-                Section {
-                    Button(
-                        action: {}
-                    ) {
-                        Text("Rename")
-                    }
-                    Button(
-                        role: .destructive,
-                        action: {}
-                    ) {
-                        Text("Delete")
-                    }
+                Spacer()
+                CloseButtonView(action: { dismiss() })
+            }
+            .padding()
+            Divider()
+            Form {
+                Button(
+                    action: {}
+                ) {
+                    Text("Rename")
+                }
+                Button(
+                    role: .destructive,
+                    action: {}
+                ) {
+                    Text("Delete")
                 }
             }
         }
+        .presentationDragIndicator(.hidden)
         .presentationDetents([.medium, .large])
-        .navigationTitle(
-            Prose.chooseTitle(
-                address: store.state.address,
-                title: store.state.headers.title,
-                fallback: untitled
-            )
-        )
     }
 }
 
 struct DetailActionBottomSheetView_Previews: PreviewProvider {
     static var previews: some View {
-        DetailMetaSheet(
-            store: Store(
-                state: DetailModel(),
-                environment: AppEnvironment()
+        VStack {
+            Text("Hello")
+        }
+        .sheet(isPresented: .constant(true)) {
+            DetailMetaSheet(
+                store: Store(
+                    state: DetailModel(
+                        address: MemoAddress.local(Slug("the-whale-the-whale")!),
+                        editor: SubtextTextModel(
+                            text: ""
+                        )
+                    ),
+                    environment: AppEnvironment()
+                )
             )
-        )
+        }
     }
 }

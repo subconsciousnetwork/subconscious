@@ -13,7 +13,7 @@ struct AudienceMenuButtonView: View {
     var body: some View {
         Menu(
             content: {
-                Section(header: Text("Post Visibility")) {
+                Section(header: Text("Post Audience")) {
                     Button(
                         action: {
                             self.audience = .local
@@ -37,22 +37,10 @@ struct AudienceMenuButtonView: View {
                 }
             },
             label: {
-                VStack(alignment: .leading) {
-                    switch audience {
-                    case .local:
-                        MenuButtonView(
-                            icon: Image(audience: .local),
-                            label: "Local"
-                        )
-                    case .public:
-                        MenuButtonView(
-                            icon: Image(audience: .public),
-                            label: Audience.public.description
-                        )
-                    }
-                }
-                // Needed to animate the button transition correctly
-                .frame(maxWidth: .infinity, alignment: .leading)
+                MenuButtonView(
+                    icon: Image(audience: audience),
+                    label: audience.description
+                )
             }
         )
     }

@@ -10,18 +10,19 @@ import SwiftUI
 /// A title/subtitle pair.
 /// Often used in list views.
 /// Each line is at least 1 icon in height.
-struct TitleGroupView: View, Equatable {
-    var title: Text
-    var subtitle: Text
-    var lineHeight: CGFloat = AppTheme.icon
+struct TitleGroupView<Title, Subtitle>: View
+where Title: View, Subtitle: View
+{
+    var title: Title
+    var subtitle: Subtitle
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                title
-                    .foregroundColor(Color.primary)
+                title.foregroundColor(Color.primary)
                 Spacer()
             }
+            .lineLimit(1)
             .frame(minHeight: AppTheme.icon)
             HStack {
                 subtitle

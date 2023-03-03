@@ -591,26 +591,26 @@ struct DetailModel: ModelProtocol {
     
     /// Is editor saved?
     var saveState = SaveState.saved
-
+    
     /// Is editor in loading state?
     var isLoading = true
     /// When was the last time the editor issued a fetch from source of truth?
     var lastLoadStarted = Date.distantPast
-
+    
     /// The entry link within the text
     var selectedShortlink: Subtext.Shortlink?
-
+    
     /// The text editor
     var editor = SubtextTextModel()
-
+    
     /// Meta bottom sheet
     var isMetaSheetPresented = false
-
+    
     /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
     var linkSearchText = ""
     var linkSuggestions: [LinkSuggestion] = []
-
+    
     //  Note renaming
     /// Is rename sheet showing?
     var isRenameSheetPresented = false
@@ -622,14 +622,14 @@ struct DetailModel: ModelProtocol {
     var renameField: String = ""
     /// Suggestions for renaming note.
     var renameSuggestions: [RenameSuggestion] = []
-
+    
     /// Is delete confirmation dialog presented?
     var isDeleteConfirmationDialogPresented = false
-
+    
     /// Time interval after which a load is considered stale, and should be
     /// reloaded to make sure it is fresh.
     static let loadStaleInterval: TimeInterval = 0.2
-
+    
     /// Given a particular entry value, does the editor's state
     /// currently match it, such that we could say the editor is
     /// displaying that entry?
@@ -639,12 +639,12 @@ struct DetailModel: ModelProtocol {
             editor.text == entry.contents.body.description
         )
     }
-
+    
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "detail"
     )
-
+    
     //  MARK: Update
     static func update(
         state: DetailModel,
@@ -982,7 +982,7 @@ struct DetailModel: ModelProtocol {
             )
         }
     }
-
+    
     /// Log debug
     static func log(
         state: DetailModel,
@@ -992,7 +992,7 @@ struct DetailModel: ModelProtocol {
         logger.log("\(message)")
         return Update(state: state)
     }
-
+    
     /// Log debug
     static func logDebug(
         state: DetailModel,
@@ -1002,7 +1002,7 @@ struct DetailModel: ModelProtocol {
         logger.debug("\(message)")
         return Update(state: state)
     }
-
+    
     /// Log debug
     static func logWarning(
         state: DetailModel,
@@ -1012,7 +1012,7 @@ struct DetailModel: ModelProtocol {
         logger.warning("\(message)")
         return Update(state: state)
     }
-
+    
     static func start(
         state: DetailModel,
         environment: AppEnvironment
@@ -1022,7 +1022,7 @@ struct DetailModel: ModelProtocol {
             .eraseToAnyPublisher()
         return Update(state: state, fx: pollFx)
     }
-
+    
     /// Handle scene phase change
     /// We trigger an autosave when scene becomes inactive.
     static func scenePhaseChange(
@@ -1041,7 +1041,7 @@ struct DetailModel: ModelProtocol {
             return Update(state: state)
         }
     }
-
+    
     /// Set the contents of the editor and mark save state and modified time.
     static func appear(
         state: DetailModel,
@@ -1064,7 +1064,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Set the contents of the editor and mark save state and modified time.
     static func setEditor(
         state: DetailModel,
@@ -1082,7 +1082,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Handle editor focus request.
     /// Saves editor state if blurred.
     static func editorFocusChange(
@@ -1108,7 +1108,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Set editor selection.
     static func setEditorSelection(
         state: DetailModel,
@@ -1121,9 +1121,9 @@ struct DetailModel: ModelProtocol {
         let link = dom.shortlinkFor(range: nsRange)
         var model = state
         model.selectedShortlink = link
-
+        
         let linkSearchText = link?.toTitle() ?? ""
-
+        
         return DetailModel.update(
             state: model,
             actions: [
@@ -1139,7 +1139,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Insert text in editor at range
     static func insertEditorText(
         state: DetailModel,
@@ -1153,13 +1153,13 @@ struct DetailModel: ModelProtocol {
             )
             return Update(state: state)
         }
-
+        
         // Replace selected range with committed link search text.
         let markup = state.editor.text.replacingCharacters(
             in: range,
             with: text
         )
-
+        
         // Find new cursor position
         guard let cursor = markup.index(
             range.lowerBound,
@@ -1171,7 +1171,7 @@ struct DetailModel: ModelProtocol {
             )
             return Update(state: state)
         }
-
+        
         // Set editor dom and editor selection immediately in same Update.
         return DetailModel.update(
             state: state,
@@ -1189,7 +1189,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Mark properties on model in preparation for detail load
     static func prepareLoadDetail(_ state: DetailModel) -> DetailModel {
         var model = state
@@ -1199,7 +1199,7 @@ struct DetailModel: ModelProtocol {
         model.lastLoadStarted = Date.now
         return model
     }
-
+    
     /// Load Detail from database and present detail
     static func loadDetail(
         state: DetailModel,
@@ -1214,7 +1214,7 @@ struct DetailModel: ModelProtocol {
             )
             return Update(state: state)
         }
-
+        
         let fx: Fx<DetailAction> = environment.data
             .readDetailAsync(
                 address: link.address,
@@ -1230,12 +1230,12 @@ struct DetailModel: ModelProtocol {
             .catch({ error in
                 Just(DetailAction.failLoadDetail(error.localizedDescription))
             })
-            .eraseToAnyPublisher()
-
-        let model = prepareLoadDetail(state)
-        return Update(state: model, fx: fx)
+                .eraseToAnyPublisher()
+                    
+                    let model = prepareLoadDetail(state)
+                    return Update(state: model, fx: fx)
     }
-
+    
     /// Reload detail
     static func refreshDetail(
         state: DetailModel,
@@ -1247,9 +1247,9 @@ struct DetailModel: ModelProtocol {
             )
             return Update(state: state)
         }
-
+        
         let model = prepareLoadDetail(state)
-
+        
         let fx: Fx<DetailAction> = environment.data
             .readDetailAsync(
                 address: address,
@@ -1262,11 +1262,11 @@ struct DetailModel: ModelProtocol {
             .catch({ error in
                 Just(DetailAction.failLoadDetail(error.localizedDescription))
             })
-            .eraseToAnyPublisher()
-
-        return Update(state: model, fx: fx)
+                .eraseToAnyPublisher()
+                    
+                    return Update(state: model, fx: fx)
     }
-
+    
     static func refreshDetailIfStale(
         state: DetailModel,
         environment: AppEnvironment
@@ -1293,7 +1293,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Handle detail load failure
     static func failLoadDetail(
         state: DetailModel,
@@ -1303,7 +1303,7 @@ struct DetailModel: ModelProtocol {
         logger.log("Detail load failed with message: \(message)")
         return Update(state: state)
     }
-
+    
     /// Set EntryDetail onto DetailModel
     static func forceSetDetail(
         state: DetailModel,
@@ -1317,10 +1317,10 @@ struct DetailModel: ModelProtocol {
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.backlinks = detail.backlinks
         model.saveState = detail.saveState
-
+        
         let subtext = detail.entry.contents.body
         let text = String(describing: subtext)
-
+        
         return DetailModel.update(
             state: model,
             action: .setEditor(
@@ -1331,7 +1331,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Set detail model.
     /// - If details slugs are the same, uses a last-write-wins strategy
     ///   for reconciling conflicts.
@@ -1345,41 +1345,41 @@ struct DetailModel: ModelProtocol {
         var model = state
         // Mark loading finished
         model.isLoading = false
-
+        
         let change = FileFingerprintChange.create(
             left: FileFingerprint(state),
             right: FileFingerprint(detail)
         )
         // Last write wins strategy
         switch change {
-        // Our editor state is newer. Do nothing.
+            // Our editor state is newer. Do nothing.
         case .leftNewer:
             return Update(state: model)
-        // The slugs are same, but loaded detail is newer. Replace.
+            // The slugs are same, but loaded detail is newer. Replace.
         case .rightNewer:
             return update(
                 state: model,
                 action: .forceSetDetail(detail),
                 environment: environment
             )
-        // No loaded detail. Do nothing.
+            // No loaded detail. Do nothing.
         case .leftOnly:
             return Update(state: model)
-        // No entry is currently being edited. Replace.
+            // No entry is currently being edited. Replace.
         case .rightOnly:
             return update(
                 state: state,
                 action: .forceSetDetail(detail),
                 environment: environment
             )
-        // Same slug, same time, different sizes. Conflict. Do nothing.
+            // Same slug, same time, different sizes. Conflict. Do nothing.
         case .conflict:
             return Update(state: model)
-        // No change. Do nothing.
+            // No change. Do nothing.
         case .same:
             return Update(state: model)
-        // Slugs don't match. Different entries.
-        // Save current state and set new detail.
+            // Slugs don't match. Different entries.
+            // Save current state and set new detail.
         case .none:
             let snapshot = MemoEntry(model)
             return update(
@@ -1392,7 +1392,7 @@ struct DetailModel: ModelProtocol {
             )
         }
     }
-
+    
     /// Set and present detail
     /// - state: the current state
     /// - environment: the environment
@@ -1429,7 +1429,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Reset model to "none" condition
     static func resetDetail(
         state: DetailModel,
@@ -1451,7 +1451,7 @@ struct DetailModel: ModelProtocol {
         model.saveState = .saved
         return Update(state: model)
     }
-
+    
     static func updateAudience(
         state: DetailModel,
         environment: AppEnvironment,
@@ -1468,18 +1468,18 @@ struct DetailModel: ModelProtocol {
             from: from.toEntryLink(title: state.headers.title),
             to: to.toEntryLink(title: state.headers.title)
         )
-        .map({ receipt in
-            DetailAction.succeedUpdateAudience(receipt)
-        })
-        .catch({ error in
-            Just(DetailAction.failUpdateAudience(error.localizedDescription))
-        })
-        .eraseToAnyPublisher()
-        var model = state
-        model.address = to
-        return Update(state: model, fx: fx)
+            .map({ receipt in
+                DetailAction.succeedUpdateAudience(receipt)
+            })
+            .catch({ error in
+                Just(DetailAction.failUpdateAudience(error.localizedDescription))
+            })
+                .eraseToAnyPublisher()
+                    var model = state
+                    model.address = to
+                    return Update(state: model, fx: fx)
     }
-
+    
     static func succeedUpdateAudience(
         state: DetailModel,
         environment: AppEnvironment,
@@ -1492,7 +1492,7 @@ struct DetailModel: ModelProtocol {
         model.address = receipt.to
         return Update(state: model)
     }
-
+    
     static func doneEditing(
         state: DetailModel,
         environment: AppEnvironment
@@ -1506,7 +1506,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     static func autosave(
         state: DetailModel,
         environment: AppEnvironment
@@ -1518,7 +1518,7 @@ struct DetailModel: ModelProtocol {
             entry: entry
         )
     }
-
+    
     /// Save snapshot of entry
     static func save(
         state: DetailModel,
@@ -1533,12 +1533,12 @@ struct DetailModel: ModelProtocol {
         guard let entry = entry else {
             return Update(state: state)
         }
-
+        
         var model = state
-
+        
         // Mark saving in-progress
         model.saveState = .saving
-
+        
         let fx: Fx<DetailAction> = environment.data
             .writeEntryAsync(entry)
             .map({ _ in
@@ -1552,10 +1552,10 @@ struct DetailModel: ModelProtocol {
                     )
                 )
             })
-            .eraseToAnyPublisher()
-        return Update(state: model, fx: fx)
+                .eraseToAnyPublisher()
+                    return Update(state: model, fx: fx)
     }
-
+    
     /// Log save success and perform refresh of various lists.
     static func succeedSave(
         state: DetailModel,
@@ -1566,7 +1566,7 @@ struct DetailModel: ModelProtocol {
             "Saved entry: \(entry.address)"
         )
         var model = state
-
+        
         // If editor state is still the state we invoked save with,
         // then mark the current editor state as "saved".
         // We check before setting in case changes happened between the
@@ -1577,14 +1577,14 @@ struct DetailModel: ModelProtocol {
         // 2022-02-09 Gordon Brander
         if
             model.saveState == .saving &&
-            model.stateMatches(entry: entry)
+                model.stateMatches(entry: entry)
         {
             model.saveState = .saved
         }
-
+        
         return Update(state: model)
     }
-
+    
     static func failSave(
         state: DetailModel,
         environment: AppEnvironment,
@@ -1620,7 +1620,7 @@ struct DetailModel: ModelProtocol {
         model.isLinkSheetPresented = isPresented
         return Update(state: model)
     }
-
+    
     static func setLinkSearch(
         state: DetailModel,
         environment: AppEnvironment,
@@ -1628,13 +1628,13 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         var model = state
         model.linkSearchText = text
-
+        
         // Omit current slug from results
         var omitting: Set<MemoAddress> = Set()
         if let address = state.address {
             omitting.insert(address)
         }
-
+        
         // Search link suggestions
         let fx: Fx<DetailAction> = environment.data
             .searchLinkSuggestions(
@@ -1652,11 +1652,11 @@ struct DetailModel: ModelProtocol {
                     )
                 )
             })
-            .eraseToAnyPublisher()
-
-        return Update(state: model, fx: fx)
+                .eraseToAnyPublisher()
+                    
+                    return Update(state: model, fx: fx)
     }
-
+    
     static func selectLinkSuggestion(
         state: DetailModel,
         environment: AppEnvironment,
@@ -1673,7 +1673,7 @@ struct DetailModel: ModelProtocol {
                 }
             }
         )
-
+        
         // If there is a selected link, use that range
         // instead of selection
         let (range, replacement): (NSRange, String) = Func.pipe(
@@ -1702,10 +1702,10 @@ struct DetailModel: ModelProtocol {
                 }
             }
         )
-
+        
         var model = state
         model.linkSearchText = ""
-
+        
         return DetailModel.update(
             state: model,
             actions: [
@@ -1716,7 +1716,7 @@ struct DetailModel: ModelProtocol {
         )
         .animation(.easeOutCubic(duration: Duration.keyboard))
     }
-
+    
     /// Show rename sheet.
     /// Do rename-flow-related setup.
     static func presentRenameSheet(
@@ -1731,15 +1731,15 @@ struct DetailModel: ModelProtocol {
             )
             return Update(state: state)
         }
-
+        
         let link = EntryLink(address: address, title: title)
-
+        
         var model = state
         model.isRenameSheetPresented = true
         model.entryToRename = link
-
+        
         let title = link.linkableTitle
-
+        
         return DetailModel.update(
             state: model,
             actions: [
@@ -1749,7 +1749,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Hide rename sheet.
     /// Do rename-flow-related teardown.
     static func unpresentRenameSheet(
@@ -1759,14 +1759,14 @@ struct DetailModel: ModelProtocol {
         var model = state
         model.isRenameSheetPresented = false
         model.entryToRename = nil
-
+        
         return DetailModel.update(
             state: model,
             action: .setRenameField(""),
             environment: environment
         )
     }
-
+    
     /// Set text of slug field
     static func setRenameField(
         state: DetailModel,
@@ -1793,10 +1793,10 @@ struct DetailModel: ModelProtocol {
                     )
                 )
             })
-            .eraseToAnyPublisher()
-        return Update(state: model, fx: fx)
+                .eraseToAnyPublisher()
+                    return Update(state: model, fx: fx)
     }
-
+    
     /// Set rename suggestions
     static func setRenameSuggestions(
         state: DetailModel,
@@ -1806,7 +1806,7 @@ struct DetailModel: ModelProtocol {
         model.renameSuggestions = suggestions
         return Update(state: model)
     }
-
+    
     /// Handle rename suggestions error.
     /// This case can happen e.g. if the database fails to respond.
     static func renameSuggestionsError(
@@ -1819,7 +1819,7 @@ struct DetailModel: ModelProtocol {
         )
         return Update(state: state)
     }
-
+    
     /// Move entry
     static func moveEntry(
         state: DetailModel,
@@ -1839,14 +1839,14 @@ struct DetailModel: ModelProtocol {
                     )
                 )
             })
-            .eraseToAnyPublisher()
-        return Update(
-            state: state,
-            fx: fx
-        )
-        .animation(.easeOutCubic(duration: Duration.keyboard))
+                .eraseToAnyPublisher()
+                    return Update(
+                        state: state,
+                        fx: fx
+                    )
+                        .animation(.easeOutCubic(duration: Duration.keyboard))
     }
-
+    
     /// Move success lifecycle handler.
     /// Updates UI in response.
     static func succeedMoveEntry(
@@ -1870,14 +1870,14 @@ struct DetailModel: ModelProtocol {
         var model = state
         model.address = to.address
         model.headers.title = to.linkableTitle
-
+        
         return update(
             state: model,
             actions: [.unpresentRenameSheet, .refreshLists],
             environment: environment
         )
     }
-
+    
     /// Move failure lifecycle handler.
     //  TODO: in future consider triggering an alert.
     static func failMoveEntry(
@@ -1890,7 +1890,7 @@ struct DetailModel: ModelProtocol {
         )
         return Update(state: state)
     }
-
+    
     /// Merge entry
     static func mergeEntry(
         state: DetailModel,
@@ -1908,10 +1908,10 @@ struct DetailModel: ModelProtocol {
                     DetailAction.failMergeEntry(error.localizedDescription)
                 )
             })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+                .eraseToAnyPublisher()
+                    return Update(state: state, fx: fx)
     }
-
+    
     /// Merge success lifecycle handler.
     /// Updates UI in response.
     static func succeedMergeEntry(
@@ -1929,7 +1929,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Merge failure lifecycle handler.
     //  TODO: in future consider triggering an alert.
     static func failMergeEntry(
@@ -1942,7 +1942,7 @@ struct DetailModel: ModelProtocol {
         )
         return Update(state: state)
     }
-
+    
     /// Retitle entry
     static func retitleEntry(
         state: DetailModel,
@@ -1964,10 +1964,10 @@ struct DetailModel: ModelProtocol {
                     )
                 )
             })
-            .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+                .eraseToAnyPublisher()
+                    return Update(state: state, fx: fx)
     }
-
+    
     /// Retitle success lifecycle handler.
     /// Updates UI in response.
     static func succeedRetitleEntry(
@@ -1978,7 +1978,7 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         guard
             state.address == from.address &&
-            from.address == to.address
+                from.address == to.address
         else {
             logger.warning(
                 """
@@ -1998,7 +1998,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Retitle failure lifecycle handler.
     //  TODO: in future consider triggering an alert.
     static func failRetitleEntry(
@@ -2011,8 +2011,8 @@ struct DetailModel: ModelProtocol {
         )
         return Update(state: state)
     }
-
-
+    
+    
     /// Show/hide entry delete confirmation dialog.
     static func presentDeleteConfirmationDialog(
         state: DetailModel,
@@ -2024,7 +2024,7 @@ struct DetailModel: ModelProtocol {
         return Update(state: model)
             .animation(.default)
     }
-
+    
     /// Insert wikilink markup into editor, begining at previous range
     /// and wrapping the contents of previous range
     static func insertTaggedMarkup<T>(
@@ -2041,16 +2041,16 @@ struct DetailModel: ModelProtocol {
             )
             return Update(state: state)
         }
-
+        
         let selectedText = String(state.editor.text[range])
         let markup = withMarkup(selectedText)
-
+        
         // Replace selected range with committed link search text.
         let editorText = state.editor.text.replacingCharacters(
             in: range,
             with: String(describing: markup)
         )
-
+        
         // Find new cursor position
         guard let cursor = editorText.index(
             range.lowerBound,
@@ -2062,7 +2062,7 @@ struct DetailModel: ModelProtocol {
             )
             return Update(state: state)
         }
-
+        
         return DetailModel.update(
             state: state,
             actions: [
@@ -2079,7 +2079,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Dispatch refresh actions
     static func refreshLists(
         state: DetailModel,
@@ -2094,7 +2094,7 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-
+    
     /// Snapshot editor state in preparation for saving.
     /// Also mends header files.
     func snapshotEntry() -> MemoEntry? {
@@ -2103,6 +2103,10 @@ struct DetailModel: ModelProtocol {
         }
         entry.contents.modified = Date.now
         return entry
+    }
+    
+    func excerpt(fallback: String = "") -> String {
+        Subtext.excerpt(markup: self.editor.text, fallback: fallback)
     }
 }
 
