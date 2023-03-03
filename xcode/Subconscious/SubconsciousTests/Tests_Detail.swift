@@ -60,12 +60,12 @@ class Tests_Detail: XCTestCase {
             "Sets the slug"
         )
         XCTAssertEqual(
-            update.state.markupEditor.text,
+            update.state.editor.text,
             "Example text",
             "Sets editor text"
         )
         XCTAssertEqual(
-            update.state.markupEditor.focusRequest,
+            update.state.editor.focusRequest,
             true,
             "Focus request is set to true"
         )
@@ -102,7 +102,7 @@ class Tests_Detail: XCTestCase {
         )
         DispatchQueue.main.asyncAfter(deadline: .now()) {
             XCTAssertEqual(
-                store.state.markupEditor.focusRequest,
+                store.state.editor.focusRequest,
                 true,
                 "Autofocus sets editor focus"
             )
@@ -141,7 +141,7 @@ class Tests_Detail: XCTestCase {
             environment: environment
         )
         XCTAssertEqual(
-            update.state.markupEditor.focusRequest,
+            update.state.editor.focusRequest,
             false,
             "Autofocus sets editor focus"
         )

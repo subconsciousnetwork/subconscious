@@ -1,5 +1,5 @@
 //
-//  MarkupTextViewRepresentable.swift
+//  SubtextTextViewRepresentable.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 7/6/21.
@@ -35,7 +35,7 @@ import Combine
 import ObservableStore
 
 //  MARK: Action
-enum MarkupTextAction: Hashable, CustomLogStringConvertible {
+enum SubtextTextAction: Hashable, CustomLogStringConvertible {
     case requestFocus(Bool)
     case scheduleFocusChange
     case focusChange(Bool)
@@ -55,7 +55,7 @@ enum MarkupTextAction: Hashable, CustomLogStringConvertible {
 }
 
 //  MARK: Model
-struct MarkupTextModel: ModelProtocol {
+struct SubtextTextModel: ModelProtocol {
     var isFocusChangeScheduled = false
     var focusRequest = false
     var focus = false
@@ -64,10 +64,10 @@ struct MarkupTextModel: ModelProtocol {
 
     //  MARK: Update
     static func update(
-        state: MarkupTextModel,
-        action: MarkupTextAction,
+        state: Self,
+        action: SubtextTextAction,
         environment: Void
-    ) -> Update<MarkupTextModel> {
+    ) -> Update<Self> {
         switch action {
         case .requestFocus(let focus):
             var model = state
@@ -110,9 +110,9 @@ struct MarkupTextModel: ModelProtocol {
 }
 
 /// A textview that grows to the height of its content
-struct MarkupTextViewRepresentable: UIViewRepresentable {
+struct SubtextTextViewRepresentable: UIViewRepresentable {
     //  MARK: UITextView subclass
-    class MarkupTextView: UITextView {
+    class SubtextTextView: UITextView {
         var fixedWidth: CGFloat = 0
 
         override var intrinsicContentSize: CGSize {
@@ -123,6 +123,61 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                 )
             )
         }
+        
+        // This allows us to intercept touches on embedded transclude blocks
+        override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+            guard let touch = touches.first else {
+                super.touchesBegan(touches, with: event)
+                return
+            }
+
+            let tapPoint = touch.location(in: self)
+            
+            guard let textLayoutManager = self.textLayoutManager else {
+                SubtextTextViewRepresentable.logger.warning("Could not access textLayoutManager")
+                super.touchesBegan(touches, with: event)
+                return
+            }
+            
+            guard let textContentStorage = textLayoutManager
+                .textContentManager as? NSTextContentStorage
+            else {
+                SubtextTextViewRepresentable.logger.warning("Could not access textContentStorage")
+                super.touchesBegan(touches, with: event)
+                return
+            }
+            
+            // Did tap a text element?
+            if let textElement = textLayoutManager
+                .textLayoutFragment(for: tapPoint)?
+                .textElement
+            {
+                let content = textContentStorage.attributedString(
+                    for: textElement
+                )
+                
+                // TODO: check for whether this tap should navigate to a link
+                SubtextTextViewRepresentable.logger.debug("Tapped: \(String(describing: content?.string))")
+                // Calling super preserves default behaviour
+                super.touchesBegan(touches, with: event)
+            }
+        }
+    }
+
+    class SubtextTextParagraph: NSTextParagraph {
+        private(set) var subtext: Subtext
+
+        init(attributedString: NSAttributedString) {
+            SubtextTextViewRepresentable.logger.debug(
+                "SubtextTextParagraph: parse and render markup"
+            )
+            let subtext = Subtext(markup: attributedString.string)
+            let renderedAttributedString = subtext.renderAttributedString(
+                url: SubtextTextViewRepresentable.toSubURL
+            )
+            self.subtext = subtext
+            super.init(attributedString: renderedAttributedString)
+        }
     }
 
     //  MARK: Coordinator
@@ -132,10 +187,11 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         /// that would cause feedback cycles where an update triggers an event,
         /// which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
-        var representable: MarkupTextViewRepresentable
+        var representable: SubtextTextViewRepresentable
+        var renderTranscludeBlocks: Bool = false
 
         init(
-            representable: MarkupTextViewRepresentable
+            representable: SubtextTextViewRepresentable
         ) {
             self.isUIViewUpdating = false
             self.representable = representable
@@ -148,19 +204,14 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
             in characterRange: NSRange,
             interaction: UITextItemInteraction
         ) -> Bool {
-            representable.onLink(
-                url,
-                textView.attributedText,
-                characterRange,
-                interaction
-            )
+            representable.onLink(url)
         }
 
         /// Render user changes to textview
         func textViewDidChange(_ view: UITextView) {
             // Return early if view is updating.
             guard !isUIViewUpdating else {
-                MarkupTextViewRepresentable.logger.debug(
+                SubtextTextViewRepresentable.logger.debug(
                     "textViewDidChange: View updating. Skipping."
                 )
                 return
@@ -172,7 +223,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         func textViewDidBeginEditing(_ textView: UITextView) {
             // Mark focus clean
             guard !isUIViewUpdating else {
-                MarkupTextViewRepresentable.logger.debug(
+                SubtextTextViewRepresentable.logger.debug(
                     "textViewDidBeginEditing: View updating. Skipping."
                 )
                 return
@@ -183,7 +234,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         /// Handle editing end (blur)
         func textViewDidEndEditing(_ textView: UITextView) {
             guard !isUIViewUpdating else {
-                MarkupTextViewRepresentable.logger.debug(
+                SubtextTextViewRepresentable.logger.debug(
                     "textViewDidEndEditing: View updating. Skipping."
                 )
                 return
@@ -200,7 +251,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
             // mutation goes from representable to view during an update.
             // 2021-10-06 Gordon Brander
             guard !isUIViewUpdating else {
-                MarkupTextViewRepresentable.logger.debug(
+                SubtextTextViewRepresentable.logger.debug(
                     "textViewDidChangeSelection: View updating. Skipping."
                 )
                 return
@@ -213,49 +264,77 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
             )
         }
         
+        // MARK: - NSTextLayoutManagerDelegate
+                                
+        func textLayoutManager(
+            _ textLayoutManager: NSTextLayoutManager,
+            textLayoutFragmentFor location: NSTextLocation,
+            in textElement: NSTextElement
+        ) -> NSTextLayoutFragment {
+            let baseLayoutFragment = NSTextLayoutFragment(
+                textElement: textElement,
+                range: textElement.elementRange
+            )
+ 
+            guard renderTranscludeBlocks else {
+                return baseLayoutFragment
+            }
+
+            guard let paragraph = textElement as? SubtextTextParagraph else {
+                return baseLayoutFragment
+            }
+
+            // Only render transcludes for a single slashlink in a single block
+            guard let _ = paragraph.subtext.slashlinks
+                .get(0)?
+                .toSlashlink()
+            else {
+                return baseLayoutFragment
+            }
+
+            let layoutFragment = TranscludeBlockLayoutFragment(
+                textElement: paragraph,
+                range: paragraph.elementRange
+            )
+
+            return layoutFragment
+        }
+        
         // MARK: - NSTextContentStorageDelegate
         
         func textContentStorage(_ textContentStorage: NSTextContentStorage, textParagraphWith range: NSRange) -> NSTextParagraph? {
-            guard let originalText = textContentStorage.textStorage?.attributedSubstring(from: range) else {
-                MarkupTextViewRepresentable.logger.warning("textContentStorage: could not access attributedSubstring")
+            guard let attributedSubstring = textContentStorage.textStorage?
+                .attributedSubstring(from: range)
+            else {
+                SubtextTextViewRepresentable.logger.warning("textContentStorage: could not access attributedSubstring")
                 return nil
             }
-            
-            let textWithDisplayAttributes = NSMutableAttributedString(attributedString: originalText)
-            MarkupTextViewRepresentable.logger.debug(
-                "textContentStorage: render markup attributes"
-            )
-            self.representable.renderAttributesOf(textWithDisplayAttributes)
-            
-            return NSTextParagraph(attributedString: textWithDisplayAttributes)
+            return SubtextTextParagraph(attributedString: attributedSubstring)
         }
     }
 
     static var logger = Logger(
         subsystem: Config.default.rdns,
-        category: "editor"
+        category: "SubtextTextViewRepresentable"
     )
 
+    private static func toSubURL(sluglike: String, title: String) -> URL? {
+        UnqualifiedLink(sluglike: sluglike, title: title)?
+            .encodeAsSubEntryURL()
+    }
+
     //  MARK: Properties
-    var state: MarkupTextModel
-    var send: (MarkupTextAction) -> Void
+    var state: SubtextTextModel
+    var send: (SubtextTextAction) -> Void
     /// Frame needed to determine textview height.
     /// Use `GeometryView` to find container width.
     var frame: CGRect
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
-    /// Function to render NSAttributedString attributes from a markup string.
-    /// The renderer will use these attributes to style the string.
-    var renderAttributesOf: (NSMutableAttributedString) -> Void
-    var onLink: (
-        URL,
-        NSAttributedString,
-        NSRange,
-        UITextItemInteraction
-    ) -> Bool
+    var onLink: (URL) -> Bool
 
     //  MARK: makeUIView
-    func makeUIView(context: Context) -> MarkupTextView {
+    func makeUIView(context: Context) -> SubtextTextView {
         Self.logger.debug("makeUIView")
         
         // Coordinator acts as all the relevant delegates
@@ -269,7 +348,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
         
         textLayoutManager.textContainer = textContainer
         
-        let view = MarkupTextView(frame: self.frame, textContainer: textContainer)
+        let view = SubtextTextView(frame: self.frame, textContainer: textContainer)
         view.delegate = context.coordinator
 
         // Set inner padding
@@ -288,7 +367,7 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
 
     //  MARK: updateUIView
     /// Note that this function gets called every time the parent of
-    /// MarkupTextViewRepresentable has to recalculate its `body` property.
+    /// SubtextViewRepresentable has to recalculate its `body` property.
     ///
     /// You should think of this function as a hot loop.
     ///
@@ -296,8 +375,8 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     /// set a property that has side-effects, check that it is actually
     /// out of sync with the binding before setting, using an if-statement
     /// or guard.
-    func updateUIView(_ view: MarkupTextView, context: Context) {
-        MarkupTextViewRepresentable.logger.debug("updateUIView")
+    func updateUIView(_ view: SubtextTextView, context: Context) {
+        SubtextTextViewRepresentable.logger.debug("updateUIView")
         // Set updating flag on coordinator so that event callbacks
         // can know if they are being called during an update.
         context.coordinator.isUIViewUpdating = true
@@ -308,13 +387,13 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
 
         // Update text
         if view.text != state.text {
-            MarkupTextViewRepresentable.logger.debug("updateUIView: set text")
+            SubtextTextViewRepresentable.logger.debug("updateUIView: set text")
             view.text = state.text
         }
 
         // Update width
         if view.fixedWidth != self.frame.width {
-            MarkupTextViewRepresentable.logger.debug("updateUIView: set width")
+            SubtextTextViewRepresentable.logger.debug("updateUIView: set width")
             view.fixedWidth = self.frame.width
         }
 
@@ -323,12 +402,12 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
 
         // Set selection
         if state.selection != view.selectedRange {
-            MarkupTextViewRepresentable.logger.debug("updateUIView: set selection")
+            SubtextTextViewRepresentable.logger.debug("updateUIView: set selection")
             view.selectedRange = self.state.selection
         }
 
         if self.textContainerInset != view.textContainerInset {
-            MarkupTextViewRepresentable.logger.debug("updateUIView: set inset")
+            SubtextTextViewRepresentable.logger.debug("updateUIView: set inset")
             // Set inner padding
             view.textContainerInset = self.textContainerInset
         }
@@ -340,14 +419,14 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
     /// flag that we are awaiting a focus change.
     /// The flag prevents us from accidentally requesting focus change
     /// more than once.
-    func updateUIViewFocus(_ view: MarkupTextView, context: Context) {
+    func updateUIViewFocus(_ view: SubtextTextView, context: Context) {
         // Focus is clean, do nothing
         guard state.focus != state.focusRequest else {
             return
         }
         /// If focus change is already scheduled, return
         guard !state.isFocusChangeScheduled else {
-            MarkupTextViewRepresentable.logger.debug("updateUIViewFocus: Focus is dirty but focus change already scheduled. Skipping.")
+            SubtextTextViewRepresentable.logger.debug("updateUIViewFocus: Focus is dirty but focus change already scheduled. Skipping.")
             return
         }
         send(.scheduleFocusChange)
@@ -362,10 +441,10 @@ struct MarkupTextViewRepresentable: UIViewRepresentable {
                 return
             }
             if state.focusRequest {
-                MarkupTextViewRepresentable.logger.debug("async: call becomeFirstResponder")
+                SubtextTextViewRepresentable.logger.debug("async: call becomeFirstResponder")
                 view.becomeFirstResponder()
             } else {
-                MarkupTextViewRepresentable.logger.debug("async: call resignFirstResponder")
+                SubtextTextViewRepresentable.logger.debug("async: call resignFirstResponder")
                 view.resignFirstResponder()
             }
         }

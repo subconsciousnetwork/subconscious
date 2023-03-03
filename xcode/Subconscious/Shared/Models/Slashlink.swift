@@ -99,3 +99,9 @@ extension Slashlink {
         return Petname(uncheckedRawString: petnamePart)
     }
 }
+
+extension Subtext.Slashlink {
+    func toSlashlink() -> Slashlink? {
+        Slashlink(description)
+    }
+}

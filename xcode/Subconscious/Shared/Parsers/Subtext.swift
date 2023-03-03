@@ -189,91 +189,17 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
         }
     }
 
-    /// Consume a well-formed bracket link, or else backtrack
-    private static func consumeBracketLink(
-        tape: inout Tape
-    ) -> Substring? {
-        tape.save()
-        while !tape.isExhausted() {
-            if tape.consumeMatch(" ") {
-                tape.backtrack()
-                return nil
-            } else if tape.consumeMatch(">") {
-                return tape.cut()
-            } else {
-                tape.advance()
-            }
+    /// Check if character is space
+    /// Currently this matches only against a minimal set of space characters.
+    /// For convenience, character is an optional type, since peek
+    /// returns an optional type.
+    private static func isSpace(character: Character?) -> Bool {
+        switch character {
+        case " ", "\n":
+            return true
+        default:
+            return false
         }
-        tape.backtrack()
-        return nil
-    }
-
-    /// Consume a well-formed bracket link, or else backtrack
-    private static func consumeWikilink(
-        tape: inout Tape
-    ) -> Substring? {
-        tape.save()
-        while !tape.isExhausted() {
-            // Brackets are not allowed in wikilink bodies
-            if tape.consumeMatch("[") {
-                tape.backtrack()
-                return nil
-            } else if tape.consumeMatch("]]") {
-                return tape.cut()
-            } else {
-                tape.advance()
-            }
-        }
-        tape.backtrack()
-        return nil
-    }
-
-    /// Consume a well-formed italics run, or else backtrack
-    private static func consumeBold(
-        tape: inout Tape
-    ) -> Substring? {
-        tape.save()
-        while !tape.isExhausted() {
-            if tape.consumeMatch("*") {
-                return tape.cut()
-            } else {
-                tape.advance()
-            }
-        }
-        tape.backtrack()
-        return nil
-    }
-
-    /// Consume a well-formed italics run, or else backtrack
-    private static func consumeItalic(
-        tape: inout Tape
-    ) -> Substring? {
-        tape.save()
-        while !tape.isExhausted() {
-            if tape.consumeMatch("_") {
-                return tape.cut()
-            } else {
-                tape.advance()
-            }
-        }
-        tape.backtrack()
-        return nil
-    }
-
-    /// Consume a well-formed code run, or else backtrack
-    private static func consumeCode(
-        tape: inout Tape
-    ) -> Substring? {
-        tape.save()
-        while !tape.isExhausted() {
-            if tape.consumeMatch("`") {
-                return tape.cut()
-            } else {
-                tape.advance()
-            }
-        }
-        tape.backtrack()
-        return nil
     }
 
     /// Is character a valid URL character that is punctuation?
@@ -294,53 +220,6 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
         }
     }
 
-    /// Check if character is space
-    /// Currently this matches only against a minimal set of space characters.
-    /// For convenience, character is an optional type, since peek
-    /// returns an optional type.
-    private static func isSpace(character: Character?) -> Bool {
-        switch character {
-        case " ", "\n":
-            return true
-        default:
-            return false
-        }
-    }
-
-    /// Consume all non-space characters excluding trailing punctuation.
-    private static func consumeAddressBody(
-        tape: inout Tape
-    ) -> Substring {
-        while !tape.isExhausted() {
-            let c0 = tape.peek(offset: 0)
-            let c1 = tape.peek(offset: 1)
-            // If c0 is URL-valid punctuation, but is followed by a space
-            // character, we treat it as terminal punctuation and ignore it.
-            // Cut the tape and return.
-            if
-               isPossibleTrailingPunctuation(character: c0) &&
-               isSpace(character: c1)
-            {
-                return tape.cut()
-            }
-            // If current character is trailing punctionation and the
-            // one after that is end-of-tape, cut and return.
-            else if isPossibleTrailingPunctuation(character: c0) && c1 == nil {
-                return tape.cut()
-            }
-            // If c0 is a space we've reached the end of the address,
-            // cut and return.
-            else if isSpace(character: c0) {
-                return tape.cut()
-            }
-            //
-            else {
-                tape.advance()
-            }
-        }
-        return tape.cut()
-    }
-
     /// Parse all inline forms within the line
     /// - Returns: an array of inline forms
     private static func parseInline(
@@ -349,39 +228,36 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
         var inline: [Inline] = []
         while !tape.isExhausted() {
             tape.start()
-            if tape.isAtBeginning && tape.consumeMatch("/") {
-                let span = consumeAddressBody(tape: &tape)
-                inline.append(.slashlink(Slashlink(span: span)))
-            } else if tape.consumeMatch(" /") {
-                let span = consumeAddressBody(tape: &tape)
-                let cleaned = span.dropFirst()
-                inline.append(.slashlink(Slashlink(span: cleaned)))
-            } else if tape.consumeMatch("<") {
-                if let link = consumeBracketLink(tape: &tape) {
-                    inline.append(.bracketlink(Bracketlink(span: link)))
+            if tape.consumeMatch(/(?:^|\s)((@[\w\d\-]+)?(\/[\w\d\-\/]+))/) {
+                var substring = tape.cut()
+                if isSpace(character: substring.first) {
+                    substring.removeFirst()
                 }
-            } else if tape.consumeMatch("[[") {
-                if let wikilink = consumeWikilink(tape: &tape) {
-                    inline.append(.wikilink(Wikilink(span: wikilink)))
+                if isPossibleTrailingPunctuation(character: substring.last) {
+                    substring.removeLast()
                 }
-            } else if tape.consumeMatch("https://") {
-                let span = consumeAddressBody(tape: &tape)
-                inline.append(.link(Link(span: span)))
-            } else if tape.consumeMatch("http://") {
-                let span = consumeAddressBody(tape: &tape)
-                inline.append(.link(Link(span: span)))
-            } else if tape.consumeMatch("*") {
-                if let bold = consumeBold(tape: &tape) {
-                    inline.append(.bold(Bold(span: bold)))
+                inline.append(.slashlink(Slashlink(span: substring)))
+            } else if tape.consumeMatch(/\<[^>]+>/) {
+                let substring = tape.cut()
+                inline.append(.bracketlink(Bracketlink(span: substring)))
+            } else if tape.consumeMatch(/\[\[[^\[\]]+\]\]/) {
+                let substring = tape.cut()
+                inline.append(.wikilink(Wikilink(span: substring)))
+            } else if tape.consumeMatch(/https?\:\/\/[^\s]+/) {
+                var substring = tape.cut()
+                if isPossibleTrailingPunctuation(character: substring.last) {
+                    substring.removeLast()
                 }
-            } else if tape.consumeMatch("_") {
-                if let italic = consumeItalic(tape: &tape) {
-                    inline.append(.italic(Italic(span: italic)))
-                }
-            } else if tape.consumeMatch("`") {
-                if let code = consumeCode(tape: &tape) {
-                    inline.append(.code(Code(span: code)))
-                }
+                inline.append(.link(Link(span: substring)))
+            } else if tape.consumeMatch(/\*[^\*]+\*/) {
+                let substring = tape.cut()
+                inline.append(.bold(Bold(span: substring)))
+            } else if tape.consumeMatch(/_[^_]+_/) {
+                let substring = tape.cut()
+                inline.append(.italic(Italic(span: substring)))
+            } else if tape.consumeMatch(/`[^`]+`/) {
+                let substring = tape.cut()
+                inline.append(.code(Code(span: substring)))
             } else {
                 tape.advance()
             }
@@ -522,6 +398,57 @@ extension Subtext {
             )
         }
     }
+    
+    /// Read markup in NSMutableAttributedString, and render as attributes.
+    /// Resets all attributes on string, replacing them with style attributes
+    /// corresponding to the semantic meaning of Subtext markup.
+    private static func renderBlockAttributesOf(
+        _ attributedString: NSMutableAttributedString,
+        block: Subtext.Block,
+        url: (String, String) -> URL?
+    ) {
+        switch block {
+        case .empty:
+            break
+        case let .heading(line):
+            let nsRange = NSRange(line.range, in: attributedString.string)
+            attributedString.addAttribute(
+                .font,
+                value: UIFont.appTextMonoBold,
+                range: nsRange
+            )
+        case .list(_, let inline):
+            for inline in inline {
+                renderInlineAttributeOf(
+                    attributedString,
+                    inline: inline,
+                    url: url
+                )
+            }
+        case .quote(let line, let inline):
+            let nsRange = NSRange(line.range, in: attributedString.string)
+            attributedString.addAttribute(
+                .font,
+                value: UIFont.appTextMonoItalic,
+                range: nsRange
+            )
+            for inline in inline {
+                renderInlineAttributeOf(
+                    attributedString,
+                    inline: inline,
+                    url: url
+                )
+            }
+        case .text(_, let inline):
+            for inline in inline {
+                renderInlineAttributeOf(
+                    attributedString,
+                    inline: inline,
+                    url: url
+                )
+            }
+        }
+    }
 
     /// Read markup in NSMutableAttributedString, and render as attributes.
     /// Resets all attributes on string, replacing them with style attributes
@@ -531,7 +458,7 @@ extension Subtext {
         url: (String, String) -> URL?
     ) {
         let dom = Subtext(markup: attributedString.string)
-
+        
         // Get range of all text, using new Swift NSRange constructor
         // that takes a Swift range which knows how to handle Unicode
         // glyphs correctly.
@@ -539,14 +466,14 @@ extension Subtext {
             dom.base.startIndex...,
             in: dom.base
         )
-
+        
         // Set default font for entire string
         attributedString.addAttribute(
             .font,
             value: UIFont.appTextMono,
             range: baseNSRange
         )
-
+        
         // Set line-spacing for entire string
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = AppTheme.lineSpacing
@@ -555,57 +482,69 @@ extension Subtext {
             value: paragraphStyle,
             range: baseNSRange
         )
-
+        
         // Set text color
         attributedString.addAttribute(
             .foregroundColor,
             value: UIColor(Color.primary),
             range: baseNSRange
         )
-
+        
         for block in dom.blocks {
-            switch block {
-            case .empty:
-                break
-            case let .heading(line):
-                let nsRange = NSRange(line.range, in: dom.base)
-                attributedString.addAttribute(
-                    .font,
-                    value: UIFont.appTextMonoBold,
-                    range: nsRange
-                )
-            case .list(_, let inline):
-                for inline in inline {
-                    renderInlineAttributeOf(
-                        attributedString,
-                        inline: inline,
-                        url: url
-                    )
-                }
-            case .quote(let line, let inline):
-                let nsRange = NSRange(line.range, in: dom.base)
-                attributedString.addAttribute(
-                    .font,
-                    value: UIFont.appTextMonoItalic,
-                    range: nsRange
-                )
-                for inline in inline {
-                    renderInlineAttributeOf(
-                        attributedString,
-                        inline: inline,
-                        url: url
-                    )
-                }
-            case .text(_, let inline):
-                for inline in inline {
-                    renderInlineAttributeOf(
-                        attributedString,
-                        inline: inline,
-                        url: url
-                    )
-                }
-            }
+            renderBlockAttributesOf(attributedString, block: block, url: url)
         }
+    }
+    
+    /// Read markup in NSMutableAttributedString, and render as attributes.
+    /// Resets all attributes on string, replacing them with style attributes
+    /// corresponding to the semantic meaning of Subtext markup.
+    func renderAttributedString(
+        url: (String, String) -> URL?
+    ) -> NSAttributedString {
+        // Get range of all text, using new Swift NSRange constructor
+        // that takes a Swift range which knows how to handle Unicode
+        // glyphs correctly.
+        let baseNSRange = NSRange(
+            self.base.startIndex...,
+            in: self.base
+        )
+        
+        let attributedString = NSMutableAttributedString(
+            string: self.description
+        )
+
+        // Set default font for entire string
+        attributedString.addAttribute(
+            .font,
+            value: UIFont.appTextMono,
+            range: baseNSRange
+        )
+        
+        // Set line-spacing for entire string
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = AppTheme.lineSpacing
+        attributedString.addAttribute(
+            .paragraphStyle,
+            value: paragraphStyle,
+            range: baseNSRange
+        )
+        
+        // Set text color
+        attributedString.addAttribute(
+            .foregroundColor,
+            value: UIColor(Color.primary),
+            range: baseNSRange
+        )
+        
+        for block in self.blocks {
+            Self.renderBlockAttributesOf(
+                attributedString,
+                block: block,
+                url: url
+            )
+        }
+
+        return attributedString
     }
 }
 

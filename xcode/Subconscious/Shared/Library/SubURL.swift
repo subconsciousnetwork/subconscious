@@ -8,6 +8,16 @@
 import Foundation
 
 extension UnqualifiedLink {
+    init?(
+        sluglike: String,
+        title: String
+    ) {
+        guard let slug = Slug(sluglike) else {
+            return nil
+        }
+        self.init(slug: slug, title: title)
+    }
+
     /// Create a Subconscious app-specific URL encoding entry title and slug
     func encodeAsSubEntryURL() -> URL? {
         var components = URLComponents()
@@ -39,22 +49,3 @@ extension UnqualifiedLink {
     }
 }
 
-extension Subtext {
-    private static func linkToURLString(
-        slug: String,
-        title: String
-    ) -> URL? {
-        Slug(formatting: slug)?
-            .toUnqualifiedLink(title: title)?
-            .encodeAsSubEntryURL()
-    }
-
-    static func renderAttributesOf(
-        _ attributedString: NSMutableAttributedString
-    ) {
-        renderAttributesOf(
-            attributedString,
-            url: linkToURLString
-        )
-    }
-}
