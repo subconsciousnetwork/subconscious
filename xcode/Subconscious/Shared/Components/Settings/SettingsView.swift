@@ -27,8 +27,23 @@ struct GatewaySyncLabel: View {
     
     var body: some View {
         HStack {
-            Text(label(status: status))
-                .foregroundColor(status == .failure ? .red : .accentColor)
+            VStack(alignment: .leading) {
+                switch (status) {
+                case .failure(_):
+                    Text(label(status: status))
+                        .foregroundColor(.red)
+                default:
+                    Text(label(status: status))
+                        .foregroundColor(.accentColor)
+                }
+                
+                if case .failure(let message) = status {
+                    Text("\(message)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+
             
             Spacer()
             

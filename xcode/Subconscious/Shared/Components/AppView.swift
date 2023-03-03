@@ -178,11 +178,11 @@ enum AppDatabaseState {
     case ready
 }
 
-enum GatewaySyncStatus {
+enum GatewaySyncStatus: Equatable {
     case initial
     case inProgress
     case success
-    case failure
+    case failure(String)
 }
 
 //  MARK: Model
@@ -760,7 +760,7 @@ struct AppModel: ModelProtocol {
         logger.log("Sphere failed to sync with gateway: \(error)")
         
         var model = state
-        model.lastGatewaySyncStatus = .failure
+        model.lastGatewaySyncStatus = .failure(error)
         
         return update(
             state: model,
