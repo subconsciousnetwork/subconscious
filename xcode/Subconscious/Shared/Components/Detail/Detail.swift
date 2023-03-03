@@ -147,7 +147,7 @@ struct DetailView: View {
         .navigationTitle(store.state.headers.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
-            if store.state.markupEditor.focus {
+            if store.state.editor.focus {
                 DetailEditToolbarContent(
                     address: store.state.address,
                     title: store.state.headers.title,
