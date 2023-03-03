@@ -74,7 +74,14 @@ struct AddressBookView: View {
         NavigationStack {
             Form {
                 if (state.friends.count == 0) {
-                    Text("No friends?")
+                    VStack(spacing: AppTheme.unit2) {
+                        Image(systemName: "person.3.fill")
+                            .foregroundColor(.secondary)
+                        Text("No friends yet, try adding one!")
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(AppTheme.unit2)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 } else {
                     Section(header: Text("Friends")) {
                         List {
