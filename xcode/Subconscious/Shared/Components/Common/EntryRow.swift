@@ -11,42 +11,29 @@ import SwiftUI
 /// Provides a preview/excerpt of the entry.
 struct EntryRow: View, Equatable {
     var entry: EntryStub
-    var emptyTitle = "Untitled"
-    var emptyExcerpt = "No additional text"
+    var emptyExcerpt = "Empty"
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
-            HStack {
-                Text(
-                    !entry.title.isEmpty ?
-                    entry.title :
-                    emptyTitle
-                )
-                .lineLimit(1)
-                .foregroundColor(Color.primary)
+            Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
+                .lineLimit(2)
+                .font(.callout)
                 .multilineTextAlignment(.leading)
-                // Aligns this text's vertical center to icon vertical
-                // center in a label.
-                .frame(minHeight: AppTheme.icon)
+            HStack(spacing: AppTheme.unit) {
+                Image(audience: entry.address.toAudience())
+                    .font(.system(size: 12))
+                Text(entry.address.slug.description)
+
                 Spacer()
+
                 Text(
                     NiceDateFormatter.shared.string(
                         from: entry.modified,
                         relativeTo: Date.now
                     )
                 )
-                .font(.callout)
+                .font(.subheadline)
                 .foregroundColor(Color.secondary)
-            }
-            Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
-                .lineLimit(1)
-                .font(.callout)
-                .multilineTextAlignment(.leading)
-                .foregroundColor(Color.secondary)
-            HStack(spacing: AppTheme.unit) {
-                Image(audience: entry.address.toAudience())
-                    .font(.system(size: 12))
-                Text(entry.address.slug.description)
             }
             .font(.callout)
             .lineLimit(1)
