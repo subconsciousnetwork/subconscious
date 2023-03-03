@@ -232,7 +232,7 @@ struct DetailReadyView: View {
                             state: store.state.editor,
                             send: Address.forward(
                                 send: store.send,
-                                tag: DetailMarkupEditorCursor.tag
+                                tag: DetailEditorCursor.tag
                             ),
                             frame: geometry.frame(in: .local),
                             onLink: self.onLink
@@ -358,7 +358,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case scenePhaseChange(ScenePhase)
 
     /// Wrapper for editor actions
-    case markupEditor(SubtextTextAction)
+    case editor(SubtextTextAction)
 
     case appear(
         address: MemoAddress?,
@@ -485,16 +485,16 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     /// Local action for requesting editor focus.
     static func requestEditorFocus(_ focus: Bool) -> Self {
-        .markupEditor(.requestFocus(focus))
+        .editor(.requestFocus(focus))
     }
 
     static var setEditorSelectionAtEnd: Self {
-        .markupEditor(.setSelectionAtEnd)
+        .editor(.setSelectionAtEnd)
     }
 
     /// Synonym for requesting editor blur.
     static var selectDoneEditing: Self {
-        .markupEditor(.requestFocus(false))
+        .editor(.requestFocus(false))
     }
 
     /// Select a link completion
@@ -509,7 +509,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
             return "setLinkSuggestions(\(suggestions.count) items)"
         case .setRenameSuggestions(let suggestions):
             return "setRenameSuggestions(\(suggestions.count) items)"
-        case .markupEditor(let action):
+        case .editor(let action):
             return "editor(\(String.loggable(action)))"
         case let .setDetailLastWriteWins(detail):
             return "setDetailLastWriteWins(\(String.loggable(detail)))"
@@ -546,7 +546,7 @@ extension DetailAction {
 
 //  MARK: Cursors
 /// Editor cursor
-struct DetailMarkupEditorCursor: CursorProtocol {
+struct DetailEditorCursor: CursorProtocol {
     static func get(state: DetailModel) -> SubtextTextModel {
         state.editor
     }
@@ -578,7 +578,7 @@ struct DetailMarkupEditorCursor: CursorProtocol {
         case let .setSelection(nsRange, text):
             return .setEditorSelection(range: nsRange, text: text)
         default:
-            return .markupEditor(action)
+            return .editor(action)
         }
     }
 }
@@ -662,8 +662,8 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         switch action {
-        case .markupEditor(let action):
-            return DetailMarkupEditorCursor.update(
+        case .editor(let action):
+            return DetailEditorCursor.update(
                 state: state,
                 action: action,
                 environment: ()
@@ -1078,7 +1078,7 @@ struct DetailModel: ModelProtocol {
         model.headers.modified = modified
         return update(
             state: model,
-            action: .markupEditor(.setText(text)),
+            action: .editor(.setText(text)),
             environment: environment
         )
     }
@@ -1095,7 +1095,7 @@ struct DetailModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .markupEditor(.focusChange(false)),
+                    .editor(.focusChange(false)),
                     .autosave
                 ],
                 environment: environment
@@ -1104,7 +1104,7 @@ struct DetailModel: ModelProtocol {
         // Otherwise, just send down focus request
         return update(
             state: state,
-            action: .markupEditor(.focusChange(true)),
+            action: .editor(.focusChange(true)),
             environment: environment
         )
     }
@@ -1128,7 +1128,7 @@ struct DetailModel: ModelProtocol {
             state: model,
             actions: [
                 // Immediately send down setSelection
-                DetailAction.markupEditor(
+                DetailAction.editor(
                     SubtextTextAction.setSelection(
                         range: nsRange,
                         text: text
