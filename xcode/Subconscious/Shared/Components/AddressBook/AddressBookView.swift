@@ -37,6 +37,11 @@ struct AddressBookModel: ModelProtocol {
     ) -> Update<AddressBookModel> {
         switch action {
         case .addFriend(did: let did, petname: let petname):
+            // Guard against duplicates
+            guard !state.friends.contains(where: { entry in entry.did == did }) else {
+                return Update(state: state)
+            }
+            
             let entry = AddressBookEntry(pfp: Image("pfp-dog"), petname: petname, did: did)
             
             var model = state
