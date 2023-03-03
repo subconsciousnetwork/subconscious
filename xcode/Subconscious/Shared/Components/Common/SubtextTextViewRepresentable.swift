@@ -297,7 +297,6 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                 textElement: paragraph,
                 range: paragraph.elementRange
             )
-            layoutFragment.text = paragraph.attributedString.string
 
             return layoutFragment
         }
