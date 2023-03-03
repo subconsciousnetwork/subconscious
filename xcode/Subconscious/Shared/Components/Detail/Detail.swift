@@ -53,18 +53,6 @@ struct DetailView: View {
             VStack(spacing: 0) {
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
-                        HStack {
-                            AudienceMenuButtonView(
-                                audience: Binding(
-                                    get: { store.state.audience },
-                                    send: store.send,
-                                    tag: DetailAction.updateAudience
-                                )
-                            )
-                            Spacer()
-                        }
-                        .padding(.horizontal)
-                        .padding(.top)
                         SubtextTextViewRepresentable(
                             state: store.state.editor,
                             send: Address.forward(
@@ -240,9 +228,7 @@ struct DetailView: View {
                 tag: DetailAction.presentMetaSheet
             )
         ) {
-            DetailMetaSheet(
-                address: store.state.address
-            )
+            DetailMetaSheet(store: store)
         }
         .sheet(
             isPresented: Binding(

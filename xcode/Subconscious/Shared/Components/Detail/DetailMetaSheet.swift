@@ -6,18 +6,24 @@
 //
 
 import SwiftUI
+import ObservableStore
 
 struct DetailMetaSheet: View {
-    var address: MemoAddress?
-    var title: String?
+    @ObservedObject var store: Store<DetailModel>
     var untitled: String = "Untitled"
-    @State private var audience: Audience = .public
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("Audience", selection: $audience) {
+                    Picker(
+                        "Audience",
+                        selection: Binding(
+                            get: { store.state.audience },
+                            send: store.send,
+                            tag: DetailAction.updateAudience
+                        )
+                    ) {
                         Text("Everyone").tag(Audience.public)
                         Text("Local").tag(Audience.local)
                     }
@@ -41,8 +47,8 @@ struct DetailMetaSheet: View {
         .presentationDetents([.medium, .large])
         .navigationTitle(
             Prose.chooseTitle(
-                address: address,
-                title: title,
+                address: store.state.address,
+                title: store.state.headers.title,
                 fallback: untitled
             )
         )
@@ -52,7 +58,10 @@ struct DetailMetaSheet: View {
 struct DetailActionBottomSheetView_Previews: PreviewProvider {
     static var previews: some View {
         DetailMetaSheet(
-            address: MemoAddress.local(Slug("the-whale-the-whale")!)
+            store: Store(
+                state: DetailModel(),
+                environment: AppEnvironment()
+            )
         )
     }
 }
