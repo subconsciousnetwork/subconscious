@@ -155,6 +155,9 @@ struct DetailView: View {
                 DetailEditToolbarContent(
                     address: store.state.address,
                     title: store.state.headers.title,
+                    onTapOmnibox: {
+                        store.send(.presentMetaSheet(true))
+                    },
                     onDone: {
                         store.send(.doneEditing)
                     }
@@ -163,18 +166,19 @@ struct DetailView: View {
                 DetailToolbarContent(
                     address: store.state.address,
                     title: store.state.headers.title,
+                    onTapOmnibox: {
+                        store.send(.presentMetaSheet(true))
+                    },
                     onRename: {
                         store.send(
-                            DetailAction.presentRenameSheet(
+                            .presentRenameSheet(
                                 address: store.state.address,
                                 title: store.state.headers.title
                             )
                         )
                     },
                     onDelete: {
-                        store.send(
-                            DetailAction.presentDeleteConfirmationDialog(true)
-                        )
+                        store.send(.presentDeleteConfirmationDialog(true))
                     }
                 )
             }
@@ -232,6 +236,17 @@ struct DetailView: View {
             store.actions.compactMap(DetailOuterAction.from)
         ) { action in
             send(action)
+        }
+        .sheet(
+            isPresented: Binding(
+                get: { store.state.isMetaSheetPresented },
+                send: store.send,
+                tag: DetailAction.presentMetaSheet
+            )
+        ) {
+            DetailMetaSheet(
+                address: store.state.address
+            )
         }
         .sheet(
             isPresented: Binding(
@@ -398,6 +413,10 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         address: MemoAddress,
         message: String
     )
+
+    // Meta bottom sheet
+    // Exposes controls for audience, rename, delete, etc.
+    case presentMetaSheet(Bool)
 
     // Link suggestions
     case setLinkSheetPresented(Bool)
@@ -599,6 +618,9 @@ struct DetailModel: ModelProtocol {
     /// The text editor
     var markupEditor = MarkupTextModel()
 
+    /// Meta bottom sheet
+    var isMetaSheetPresented = false
+
     /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
     var linkSearchText = ""
@@ -774,6 +796,12 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 address: address,
                 message: message
+            )
+        case let .presentMetaSheet(isPresented):
+            return presentMetaSheet(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
             )
         case let .setLinkSheetPresented(isPresented):
             return setLinkSheetPresented(
@@ -1584,7 +1612,17 @@ struct DetailModel: ModelProtocol {
         model.saveState = .unsaved
         return Update(state: model)
     }
-
+    
+    static func presentMetaSheet(
+        state: DetailModel,
+        environment: AppEnvironment,
+        isPresented: Bool
+    ) -> Update<DetailModel> {
+        var model = state
+        model.isMetaSheetPresented = isPresented
+        return Update(state: model)
+    }
+    
     static func setLinkSheetPresented(
         state: DetailModel,
         environment: AppEnvironment,

@@ -17,7 +17,7 @@ enum Suggestion: Hashable {
         case let .memo(_, title):
             return title
         case let .create(address, title):
-            return Prose.deriveTitle(address: address, title: title)
+            return Prose.chooseTitle(address: address, title: title)
         case .random:
             return nil
         }

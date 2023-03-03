@@ -11,11 +11,14 @@ import SwiftUI
 struct DetailEditToolbarContent: ToolbarContent {
     var address: MemoAddress? = nil
     var title: String? = nil
+    var onTapOmnibox: () -> Void
     var onDone: () -> Void
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
-            OmniboxView(address: address)
+            Button(action: onTapOmnibox) {
+                OmniboxView(address: address)
+            }
         }
         ToolbarItem(placement: .navigationBarTrailing) {
             Button(action: onDone) {
@@ -32,6 +35,7 @@ struct DetailEditToolbarContent_Previews: PreviewProvider {
             }
             .toolbar(content: {
                 DetailEditToolbarContent(
+                    onTapOmnibox: {},
                     onDone: {}
                 )
             })

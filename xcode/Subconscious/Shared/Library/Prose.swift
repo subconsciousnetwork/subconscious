@@ -10,7 +10,7 @@ import Foundation
 enum Prose {}
 
 extension Prose {
-    static func deriveTitle(
+    static func chooseTitle(
         address: MemoAddress?,
         title: String?
     ) -> String? {
@@ -21,5 +21,13 @@ extension Prose {
             return address.slug.toTitle()
         }
         return nil
+    }
+    
+    static func chooseTitle(
+        address: MemoAddress?,
+        title: String?,
+        fallback: String
+    ) -> String {
+        chooseTitle(address: address, title: title) ?? fallback
     }
 }

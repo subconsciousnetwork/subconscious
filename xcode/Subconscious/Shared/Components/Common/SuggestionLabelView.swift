@@ -31,7 +31,7 @@ struct SuggestionLabelView: View, Equatable {
                 title: {
                     HStack {
                         Text("Create Note")
-                        if let title = Prose.deriveTitle(
+                        if let title = Prose.chooseTitle(
                             address: address,
                             title: title
                         ) {

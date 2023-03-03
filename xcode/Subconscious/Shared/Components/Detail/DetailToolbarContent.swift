@@ -11,14 +11,13 @@ import SwiftUI
 struct DetailToolbarContent: ToolbarContent {
     var address: MemoAddress?
     var title: String? = nil
+    var onTapOmnibox: () -> Void
     var onRename: () -> Void
     var onDelete: () -> Void
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
-            Button(
-                action: onRename
-            ) {
+            Button(action: onTapOmnibox) {
                 OmniboxView(address: address)
             }
             .disabled(address == nil)
@@ -42,7 +41,7 @@ struct DetailToolbarContent: ToolbarContent {
                     }
                 },
                 label: {
-                    Image(systemName: "ellipsis.circle")
+                    Image(systemName: "ellipsis")
                 }
             )
             .disabled(address == nil)
@@ -58,6 +57,7 @@ struct DetailToolbarContent_Previews: PreviewProvider {
             }
             .toolbar(content: {
                 DetailToolbarContent(
+                    onTapOmnibox: {},
                     onRename: {},
                     onDelete: {}
                 )
