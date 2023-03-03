@@ -12,13 +12,33 @@ struct GatewaySyncLabel: View {
     var status: GatewaySyncStatus
     @State var spin = false
     
+    func label(status: GatewaySyncStatus) -> String {
+        switch (status) {
+        case .initial:
+            return "Sync with Gateway"
+        case .inProgress:
+            return "Syncing..."
+        case .failure:
+            return "Sync Failed"
+        case .success:
+            return "Sync Complete"
+        }
+    }
+    
     var body: some View {
         HStack {
+            Text(label(status: status))
+                .foregroundColor(status == .failure ? .red : .accentColor)
+            
+            Spacer()
+            
             switch (status) {
             case .initial:
                 Image(systemName: "arrow.triangle.2.circlepath")
+                    .foregroundColor(.secondary)
             case .inProgress:
                 Image(systemName: "arrow.triangle.2.circlepath")
+                    .foregroundColor(.accentColor)
                     .rotationEffect(.degrees(spin ? 360 : 0))
                     .animation(Animation.linear
                         .repeatForever(autoreverses: false)
@@ -28,11 +48,12 @@ struct GatewaySyncLabel: View {
                     }
             case .success:
                 Image(systemName: "checkmark.circle")
+                    .foregroundColor(.secondary)
             case .failure:
                 Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
+                    .foregroundColor(.red)
             }
             
-            Text("Sync with Gateway")
         }
     }
 }
