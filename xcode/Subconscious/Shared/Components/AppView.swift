@@ -64,6 +64,7 @@ struct AppView: View {
 //  MARK: Action
 enum AppAction: CustomLogStringConvertible {
     case recoveryPhrase(RecoveryPhraseAction)
+    case addressBook(AddressBookAction)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -171,6 +172,22 @@ struct AppRecoveryPhraseCursor: CursorProtocol {
     }
 }
 
+struct AppAddressBookCursor: CursorProtocol {
+    static func get(state: AppModel) -> AddressBookModel {
+        state.addressBook
+    }
+    
+    static func set(state: AppModel, inner: AddressBookModel) -> AppModel {
+        var model = state
+        model.addressBook = inner
+        return model
+    }
+    
+    static func tag(_ action: AddressBookAction) -> AppAction {
+        .addressBook(action)
+    }
+}
+
 enum AppDatabaseState {
     case initial
     case migrating
@@ -235,6 +252,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: environment.recoveryPhrase
+            )
+        case .addressBook(let action):
+            return AppAddressBookCursor.update(
+                state: state,
+                action: action,
+                environment: environment.addressBook
             )
         case .scenePhaseChange(let scenePhase):
             return scenePhaseChange(
@@ -844,6 +867,7 @@ struct AppEnvironment {
     var feed: FeedService
     
     var recoveryPhrase = RecoveryPhraseEnvironment()
+    var addressBook = AddressBookEnvironment()
 
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
