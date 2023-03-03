@@ -30,20 +30,121 @@ struct DetailView: View {
     var state: DetailOuterModel
     var send: (DetailOuterAction) -> Void
 
+    private func onLink(
+        url: URL,
+        attributedString: NSAttributedString,
+        selection: NSRange,
+        interaction: UITextItemInteraction
+    ) -> Bool {
+        guard let link = UnqualifiedLink.decodefromSubEntryURL(
+            url
+        ) else {
+            return true
+        }
+        send(
+            .requestFindDetail(
+                slug: link.slug,
+                title: link.title,
+                fallback: link.title
+            )
+        )
+        return false
+    }
+
     var body: some View {
-        VStack {
-            if store.state.address != nil {
-                DetailReadyView(
-                    store: store,
-                    state: state,
-                    send: send
-                )
-            } else {
-                VStack {
-                    Spacer()
-                    Text("Nothing here")
-                        .foregroundColor(.secondary)
-                    Spacer()
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                ScrollView(.vertical) {
+                    VStack(spacing: 0) {
+                        HStack {
+                            AudienceMenuButtonView(
+                                audience: Binding(
+                                    get: { store.state.audience },
+                                    send: store.send,
+                                    tag: DetailAction.updateAudience
+                                )
+                            )
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.top)
+                        MarkupTextViewRepresentable(
+                            state: store.state.markupEditor,
+                            send: Address.forward(
+                                send: store.send,
+                                tag: DetailMarkupEditorCursor.tag
+                            ),
+                            frame: geometry.frame(in: .local),
+                            renderAttributesOf: Subtext.renderAttributesOf,
+                            onLink: self.onLink
+                        )
+                        .insets(
+                            EdgeInsets(
+                                top: AppTheme.padding,
+                                leading: AppTheme.padding,
+                                bottom: AppTheme.padding,
+                                trailing: AppTheme.padding
+                            )
+                        )
+                        .frame(
+                            minHeight: UIFont.appTextMono.lineHeight * 8
+
+                        )
+                        ThickDividerView()
+                            .padding(.bottom, AppTheme.unit4)
+                        BacklinksView(
+                            backlinks: store.state.backlinks,
+                            onSelect: { link in
+                                send(
+                                    .requestDetail(
+                                        address: link.address,
+                                        title: link.linkableTitle,
+                                        fallback: link.title
+                                    )
+                                )
+                            }
+                        )
+                    }
+                }
+                if store.state.markupEditor.focus {
+                    DetailKeyboardToolbarView(
+                        isSheetPresented: Binding(
+                            get: { store.state.isLinkSheetPresented },
+                            send: store.send,
+                            tag: DetailAction.setLinkSheetPresented
+                        ),
+                        selectedShortlink: store.state.selectedShortlink,
+                        suggestions: store.state.linkSuggestions,
+                        onSelectLinkCompletion: { link in
+                            store.send(.selectLinkCompletion(link))
+                        },
+                        onInsertWikilink: {
+                            store.send(.insertEditorWikilinkAtSelection)
+                        },
+                        onInsertBold: {
+                            store.send(.insertEditorBoldAtSelection)
+                        },
+                        onInsertItalic: {
+                            store.send(.insertEditorItalicAtSelection)
+                        },
+                        onInsertCode: {
+                            store.send(.insertEditorCodeAtSelection)
+                        },
+                        onDoneEditing: {
+                            store.send(.selectDoneEditing)
+                        }
+                    )
+                    .transition(
+                        .asymmetric(
+                            insertion: .opacity.animation(
+                                .easeOutCubic(duration: Duration.normal)
+                                .delay(Duration.keyboard)
+                            ),
+                            removal: .opacity.animation(
+                                .easeOutCubic(duration: Duration.normal)
+                            )
+                        )
+                    )
                 }
             }
         }
@@ -183,132 +284,6 @@ struct DetailView: View {
                 }
             ) {
                 Text("Delete Immediately")
-            }
-        }
-    }
-}
-
-struct DetailReadyView: View {
-    @ObservedObject var store: Store<DetailModel>
-    var state: DetailOuterModel
-    var send: (DetailOuterAction) -> Void
-
-    private func onLink(
-        url: URL,
-        attributedString: NSAttributedString,
-        selection: NSRange,
-        interaction: UITextItemInteraction
-    ) -> Bool {
-        guard let link = UnqualifiedLink.decodefromSubEntryURL(
-            url
-        ) else {
-            return true
-        }
-        send(
-            .requestFindDetail(
-                slug: link.slug,
-                title: link.title,
-                fallback: link.title
-            )
-        )
-        return false
-    }
-
-    var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                ScrollView(.vertical) {
-                    VStack(spacing: 0) {
-                        HStack {
-                            AudienceMenuButtonView(
-                                audience: Binding(
-                                    get: { store.state.audience },
-                                    send: store.send,
-                                    tag: DetailAction.updateAudience
-                                )
-                            )
-                            Spacer()
-                        }
-                        .padding(.horizontal)
-                        .padding(.top)
-                        MarkupTextViewRepresentable(
-                            state: store.state.markupEditor,
-                            send: Address.forward(
-                                send: store.send,
-                                tag: DetailMarkupEditorCursor.tag
-                            ),
-                            frame: geometry.frame(in: .local),
-                            renderAttributesOf: Subtext.renderAttributesOf,
-                            onLink: self.onLink
-                        )
-                        .insets(
-                            EdgeInsets(
-                                top: AppTheme.padding,
-                                leading: AppTheme.padding,
-                                bottom: AppTheme.padding,
-                                trailing: AppTheme.padding
-                            )
-                        )
-                        .frame(
-                            minHeight: UIFont.appTextMono.lineHeight * 8
-
-                        )
-                        ThickDividerView()
-                            .padding(.bottom, AppTheme.unit4)
-                        BacklinksView(
-                            backlinks: store.state.backlinks,
-                            onSelect: { link in
-                                send(
-                                    .requestDetail(
-                                        address: link.address,
-                                        title: link.linkableTitle,
-                                        fallback: link.title
-                                    )
-                                )
-                            }
-                        )
-                    }
-                }
-                if store.state.markupEditor.focus {
-                    DetailKeyboardToolbarView(
-                        isSheetPresented: Binding(
-                            get: { store.state.isLinkSheetPresented },
-                            send: store.send,
-                            tag: DetailAction.setLinkSheetPresented
-                        ),
-                        selectedShortlink: store.state.selectedShortlink,
-                        suggestions: store.state.linkSuggestions,
-                        onSelectLinkCompletion: { link in
-                            store.send(.selectLinkCompletion(link))
-                        },
-                        onInsertWikilink: {
-                            store.send(.insertEditorWikilinkAtSelection)
-                        },
-                        onInsertBold: {
-                            store.send(.insertEditorBoldAtSelection)
-                        },
-                        onInsertItalic: {
-                            store.send(.insertEditorItalicAtSelection)
-                        },
-                        onInsertCode: {
-                            store.send(.insertEditorCodeAtSelection)
-                        },
-                        onDoneEditing: {
-                            store.send(.selectDoneEditing)
-                        }
-                    )
-                    .transition(
-                        .asymmetric(
-                            insertion: .opacity.animation(
-                                .easeOutCubic(duration: Duration.normal)
-                                .delay(Duration.keyboard)
-                            ),
-                            removal: .opacity.animation(
-                                .easeOutCubic(duration: Duration.normal)
-                            )
-                        )
-                    )
-                }
             }
         }
     }
@@ -1513,10 +1488,6 @@ struct DetailModel: ModelProtocol {
         }
         // If there is no entry, nothing to save
         guard let entry = entry else {
-            let saveState = String(reflecting: state.saveState)
-            logger.warning(
-                "Entry save state is marked \(saveState) but no entry was given. Doing nothing."
-            )
             return Update(state: state)
         }
 
