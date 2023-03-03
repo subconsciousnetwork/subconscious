@@ -29,16 +29,17 @@ struct SuggestionLabelView: View, Equatable {
         case let .create(address, title):
             Label(
                 title: {
-                    Text(
-                        verbatim: Prose.deriveTitle(
+                    HStack {
+                        Text("Create Note")
+                        if let title = Prose.deriveTitle(
                             address: address,
                             title: title
-                        )
-                        .mapOr(
-                            { title in "Create note: \(title)" },
-                            default: "Create note"
-                        )
-                    )
+                        ) {
+                            Text(verbatim: #""\#(title)""#)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .lineLimit(1)
                 },
                 icon: {
                     Image(systemName: "square.and.pencil")
@@ -47,10 +48,7 @@ struct SuggestionLabelView: View, Equatable {
         case .random:
             Label(
                 title: {
-                    TitleGroupView(
-                        title: Text("Random"),
-                        subtitle: Text("Display a random note")
-                    )
+                    Text("Random")
                 },
                 icon: {
                     Image(systemName: "dice")
