@@ -9,11 +9,10 @@ import SwiftUI
 
 /// Toolbar for detail view
 struct DetailToolbarContent: ToolbarContent {
+    var address: MemoAddress?
     var title: String? = nil
-    var slug: String? = nil
     var onRename: () -> Void
     var onDelete: () -> Void
-    var untitled = "Untitled"
 
     //  The Toolbar `.principal` position does not limit its own width.
     //  This results in titles that can overflow and cover up the back button.
@@ -21,7 +20,7 @@ struct DetailToolbarContent: ToolbarContent {
     //  the title bar, here, and set it on the frame.
     //  2022-02-15 Gordon Brander
     /// A static width property that we calculate for the toolbar title.
-    private var titleMaxWidth: CGFloat {
+    private var primaryWidth: CGFloat {
         UIScreen.main.bounds.width - 120
     }
 
@@ -30,12 +29,10 @@ struct DetailToolbarContent: ToolbarContent {
             Button(
                 action: onRename
             ) {
-                ToolbarTitleGroupView(
-                    title: Text(title ?? untitled),
-                    subtitle: Text(slug?.description ?? "none")
-                )
-                .frame(maxWidth: titleMaxWidth)
+                OmniboxView(address: address)
+                    .frame(maxWidth: primaryWidth)
             }
+            .disabled(address == nil)
         }
         ToolbarItem(placement: .navigationBarTrailing) {
             Menu(
@@ -59,6 +56,7 @@ struct DetailToolbarContent: ToolbarContent {
                     Image(systemName: "ellipsis.circle")
                 }
             )
+            .disabled(address == nil)
         }
     }
 }

@@ -131,7 +131,7 @@ struct DetailView: View {
                             store.send(.insertEditorCodeAtSelection)
                         },
                         onDoneEditing: {
-                            store.send(.selectDoneEditing)
+                            store.send(.doneEditing)
                         }
                     )
                     .transition(
@@ -151,23 +151,33 @@ struct DetailView: View {
         .navigationTitle(store.state.headers.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
-            DetailToolbarContent(
-                title: store.state.headers.title,
-                slug: store.state.address?.slug.description,
-                onRename: {
-                    store.send(
-                        DetailAction.presentRenameSheet(
-                            address: store.state.address,
-                            title: store.state.headers.title
+            if store.state.markupEditor.focus {
+                DetailEditToolbarContent(
+                    address: store.state.address,
+                    title: store.state.headers.title,
+                    onDone: {
+                        store.send(.doneEditing)
+                    }
+                )
+            } else {
+                DetailToolbarContent(
+                    address: store.state.address,
+                    title: store.state.headers.title,
+                    onRename: {
+                        store.send(
+                            DetailAction.presentRenameSheet(
+                                address: store.state.address,
+                                title: store.state.headers.title
+                            )
                         )
-                    )
-                },
-                onDelete: {
-                    store.send(
-                        DetailAction.presentDeleteConfirmationDialog(true)
-                    )
-                }
-            )
+                    },
+                    onDelete: {
+                        store.send(
+                            DetailAction.presentDeleteConfirmationDialog(true)
+                        )
+                    }
+                )
+            }
         })
         .onAppear {
             // When an editor is presented, refresh if stale.
@@ -375,6 +385,9 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case succeedUpdateAudience(_ receipt: MoveReceipt)
     case failUpdateAudience(_ message: String)
 
+    // Finish with editing focus
+    case doneEditing
+
     //  Saving entry
     /// Trigger autosave of current state
     case autosave
@@ -468,11 +481,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     static var setEditorSelectionAtEnd: Self {
         .markupEditor(.setSelectionAtEnd)
-    }
-
-    /// Synonym for requesting editor blur.
-    static var selectDoneEditing: Self {
-        .markupEditor(.requestFocus(false))
     }
 
     /// Select a link completion
@@ -735,6 +743,11 @@ struct DetailModel: ModelProtocol {
             )
         case .resetDetail:
             return resetDetail(
+                state: state,
+                environment: environment
+            )
+        case .doneEditing:
+            return doneEditing(
                 state: state,
                 environment: environment
             )
@@ -1462,6 +1475,20 @@ struct DetailModel: ModelProtocol {
         var model = state
         model.address = receipt.to
         return Update(state: model)
+    }
+
+    static func doneEditing(
+        state: DetailModel,
+        environment: AppEnvironment
+    ) -> Update<DetailModel> {
+        update(
+            state: state,
+            actions: [
+                .autosave,
+                .requestEditorFocus(false)
+            ],
+            environment: environment
+        )
     }
 
     static func autosave(
