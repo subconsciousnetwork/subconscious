@@ -10,6 +10,7 @@
 		B54B922828E669D6003ACA1F /* MementoGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54B922728E669D6003ACA1F /* MementoGeist.swift */; };
 		B550E04029AF219100050F19 /* Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D30029AF1F9B0011D820 /* Did.swift */; };
 		B575834528ED8D9100F6EE88 /* combo.json in Resources */ = {isa = PBXBuildFile; fileRef = B575834428ED8D9100F6EE88 /* combo.json */; };
+		B57D63BB29B1CA8B008BBB62 /* MyDidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BA29B1CA8B008BBB62 /* MyDidView.swift */; };
 		B584813F29AC32410033F434 /* AddressBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584813E29AC32410033F434 /* AddressBookView.swift */; };
 		B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814129AC335B0033F434 /* AddressBookEntryView.swift */; };
 		B584814429AC384F0033F434 /* AddFriendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814329AC384F0033F434 /* AddFriendView.swift */; };
@@ -346,6 +347,7 @@
 /* Begin PBXFileReference section */
 		B54B922728E669D6003ACA1F /* MementoGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MementoGeist.swift; sourceTree = "<group>"; };
 		B575834428ED8D9100F6EE88 /* combo.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = combo.json; sourceTree = "<group>"; };
+		B57D63BA29B1CA8B008BBB62 /* MyDidView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDidView.swift; sourceTree = "<group>"; };
 		B584813E29AC32410033F434 /* AddressBookView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookView.swift; sourceTree = "<group>"; };
 		B584814129AC335B0033F434 /* AddressBookEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookEntryView.swift; sourceTree = "<group>"; };
 		B584814329AC384F0033F434 /* AddFriendView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddFriendView.swift; sourceTree = "<group>"; };
@@ -607,6 +609,7 @@
 				B584814129AC335B0033F434 /* AddressBookEntryView.swift */,
 				B584813E29AC32410033F434 /* AddressBookView.swift */,
 				B584814329AC384F0033F434 /* AddFriendView.swift */,
+				B57D63BA29B1CA8B008BBB62 /* MyDidView.swift */,
 			);
 			path = AddressBook;
 			sourceTree = "<group>";
@@ -1435,6 +1438,7 @@
 				B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */,
 				B85EC463296F0CBD00558761 /* ProfilePicSm.swift in Sources */,
 				B86DFF3927C15B77002E57ED /* Config.swift in Sources */,
+				B57D63BB29B1CA8B008BBB62 /* MyDidView.swift in Sources */,
 				B83E91D727692EC600045C6A /* FAB.swift in Sources */,
 				B848FDAA2991837900245115 /* DeveloperSettingsView.swift in Sources */,
 				B8545F0D2970577600BC4EA1 /* BacklinkReacts.swift in Sources */,
