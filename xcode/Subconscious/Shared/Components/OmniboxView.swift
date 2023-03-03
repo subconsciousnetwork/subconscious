@@ -27,8 +27,12 @@ struct OmniboxView: View {
         .padding(.leading, 8)
         .padding(.trailing, 12)
         .frame(height: 36)
-        .background(Color.secondaryBackground)
-        .cornerRadius(12)
+        .clipShape(Capsule())
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                .stroke(Color.separator, lineWidth: 0.5)
+        )
+        .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
     }
 }
 
@@ -55,6 +59,9 @@ struct OmniboxView_Previews: PreviewProvider {
             OmniboxView(
                 icon: Image(systemName: "network"),
                 title: "X"
+            )
+            OmniboxView(
+                address: .local(Slug("red-mars")!)
             )
         }
     }

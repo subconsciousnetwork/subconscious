@@ -15,7 +15,7 @@ struct DetailEditToolbarContent: ToolbarContent {
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
-            EmptyView()
+            OmniboxView(address: address)
         }
         ToolbarItem(placement: .navigationBarTrailing) {
             Button(action: onDone) {
