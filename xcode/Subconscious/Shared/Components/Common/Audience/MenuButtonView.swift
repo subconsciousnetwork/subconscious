@@ -22,17 +22,18 @@ struct MenuButtonView<Icon: View>: View {
             Spacer()
             Image(systemName: "chevron.down")
                 .font(.system(size: 12))
+                .foregroundColor(Color.secondary)
         }
+        .foregroundColor(Color.accentColor)
         .lineLimit(1)
-        .frame(width: 120, height: AppTheme.unit * 6)
-        .foregroundColor(Color.primaryButtonText)
+        .frame(height: 30)
         .padding(
             .horizontal, AppTheme.unit2
         )
         .clipShape(Capsule())
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                .stroke(Color.accentColor, lineWidth: 0.5)
+                .stroke(Color.separator, lineWidth: 0.5)
         )
     }
 }

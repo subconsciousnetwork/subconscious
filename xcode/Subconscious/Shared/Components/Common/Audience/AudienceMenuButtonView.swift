@@ -13,7 +13,7 @@ struct AudienceMenuButtonView: View {
     var body: some View {
         Menu(
             content: {
-                Section(header: Text("Post Audience")) {
+                Section(header: Text("Note Audience")) {
                     Button(
                         action: {
                             self.audience = .local
@@ -41,6 +41,7 @@ struct AudienceMenuButtonView: View {
                     icon: Image(audience: audience),
                     label: audience.description
                 )
+                .frame(width: 140)
             }
         )
     }
