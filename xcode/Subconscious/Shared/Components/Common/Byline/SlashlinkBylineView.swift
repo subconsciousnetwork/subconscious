@@ -11,18 +11,30 @@ import SwiftUI
 struct SlashlinkBylineView: View {
     var petname: String?
     var slug: String
-
+    private var petnameColor = Color.accentColor
+    private var slugColor = Color.secondary
+    
     var body: some View {
         HStack(spacing: 0) {
             if let petname = petname {
                 Text(verbatim: "@\(petname)")
                     .fontWeight(.medium)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(petnameColor)
             }
             Text(verbatim: "/\(slug)")
-                .foregroundColor(.secondary)
+                .foregroundColor(slugColor)
         }
         .lineLimit(1)
+    }
+    
+    func theme(
+        petname petnameColor: Color = Color.accentColor,
+        slug slugColor: Color = Color.secondary
+    ) -> Self {
+        var this = self
+        this.petnameColor = petnameColor
+        this.slugColor = slugColor
+        return this
     }
 }
 
