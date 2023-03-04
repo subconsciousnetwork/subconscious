@@ -20,6 +20,7 @@ struct OmniboxView: View {
             HStack(spacing: 0) {
                 Spacer()
                 Text(verbatim: title)
+                    .font(.callout)
                     .foregroundColor(.accentColor)
                 Spacer()
             }
