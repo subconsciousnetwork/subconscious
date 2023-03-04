@@ -82,6 +82,17 @@ extension MemoAddress {
 }
 
 extension MemoAddress {
+    func toSlug() -> Slug {
+        switch self {
+        case .local(let slug):
+            return slug
+        case .public(let slashlink):
+            return slashlink.toSlug()
+        }
+    }
+}
+
+extension MemoAddress {
     func toEntryLink(title: String? = nil) -> EntryLink {
         EntryLink(address: self, title: title)
     }

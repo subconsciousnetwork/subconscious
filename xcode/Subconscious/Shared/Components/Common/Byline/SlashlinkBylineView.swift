@@ -49,6 +49,22 @@ extension SlashlinkBylineView {
     }
 }
 
+extension SlashlinkBylineView {
+    init(
+        slashlink: Slashlink?,
+        fallback: String
+    ) {
+        guard let slashlink = slashlink else {
+            self.init(slug: fallback)
+            return
+        }
+        self.init(
+            petname: slashlink.petnamePart,
+            slug: slashlink.slugPart
+        )
+    }
+}
+
 struct SlashlinkBylineView_Previews: PreviewProvider {
     static var previews: some View {
         SlashlinkBylineView(

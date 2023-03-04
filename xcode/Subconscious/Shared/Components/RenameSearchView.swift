@@ -6,105 +6,230 @@
 //
 
 import SwiftUI
+import ObservableStore
+import Combine
+import os
 
 struct RenameSearchView: View {
-    var current: EntryLink?
-    var placeholder: String = "Enter name for note"
-    var suggestions: [RenameSuggestion]
-    @Binding var text: String
-    var onCancel: () -> Void
-    var onSelect: (RenameSuggestion) -> Void
+    @Environment(\.dismiss) private var dismiss
+    var state: RenameSearchModel
+    var send: (RenameSearchAction) -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            NavigationToolbar(
-                principal: {
-                    Text("Rename")
-                },
-                leading: {
-                    Button(
-                        action: onCancel
-                    ) {
-                        Text("Cancel")
-                    }
-                    .lineLimit(1)
-                },
-                trailing: {
-                    EmptyView()
-                }
-            )
-            .padding()
-            SearchTextField(
-                placeholder: placeholder,
-                text: $text,
-                autofocus: true,
-                autofocusDelay: 0.5
-            )
-            .submitLabel(.done)
-            .padding(.bottom, AppTheme.padding)
-            .padding(.horizontal, AppTheme.padding)
-            List(suggestions) { suggestion in
-                Button(
-                    action: {
-                        onSelect(suggestion)
-                    },
-                    label: {
-                        RenameSuggestionLabelView(suggestion: suggestion)
-                    }
+        NavigationStack {
+            VStack(spacing: 0) {
+                SearchTextField(
+                    placeholder: String(localized: "Enter name for note"),
+                    text: Binding(
+                        get: { state.query },
+                        send: send,
+                        tag: RenameSearchAction.setQuery
+                    ),
+                    autofocus: true,
+                    autofocusDelay: 0.5
                 )
-                .modifier(SuggestionViewModifier())
+                .submitLabel(.done)
+                .padding(.bottom, AppTheme.padding)
+                .padding(.horizontal, AppTheme.padding)
+                List(state.renameSuggestions) { suggestion in
+                    Button(
+                        action: {
+                            send(.selectRenameSuggestion(suggestion))
+                        },
+                        label: {
+                            RenameSuggestionLabelView(suggestion: suggestion)
+                        }
+                    )
+                    .modifier(SuggestionViewModifier())
+                }
+                .listStyle(.plain)
             }
-            .listStyle(.plain)
+            .navigationTitle("Move")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(content: {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            })
         }
-        .background(Color.background)
+    }
+}
+
+enum RenameSearchAction: Hashable {
+    /// Set the memo for which this rename sheet is being invoked.
+    case setSubject(_ address: MemoAddress?)
+    /// Set the query string for the search input field
+    case setQuery(_ query: String)
+    case refreshRenameSuggestions
+    case setRenameSuggestions([RenameSuggestion])
+    case failRenameSuggestions(String)
+    case selectRenameSuggestion(RenameSuggestion)
+}
+
+struct RenameSearchModel: ModelProtocol {
+    var subject: MemoAddress? = nil
+    var query = ""
+    /// Suggestions for renaming note.
+    var renameSuggestions: [RenameSuggestion] = []
+    
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "RenameSearch"
+    )
+    
+    static func update(
+        state: RenameSearchModel,
+        action: RenameSearchAction,
+        environment: AppEnvironment
+    ) -> ObservableStore.Update<RenameSearchModel> {
+        switch action {
+        case let .setSubject(subject):
+            return setSubject(
+                state: state,
+                environment: environment,
+                subject: subject
+            )
+        case .setQuery(let query):
+            return setQuery(
+                state: state,
+                environment: environment,
+                query: query
+            )
+        case .refreshRenameSuggestions:
+            return update(
+                state: state,
+                action: .setQuery(state.query),
+                environment: environment
+            )
+        case .setRenameSuggestions(let suggestions):
+            return setRenameSuggestions(
+                state: state,
+                suggestions: suggestions
+            )
+        case .failRenameSuggestions(let error):
+            return failRenameSuggestions(
+                state: state,
+                environment: environment,
+                error: error
+            )
+        case .selectRenameSuggestion:
+            return Update(state: state)
+        }
+    }
+    
+    static func setSubject(
+        state: RenameSearchModel,
+        environment: AppEnvironment,
+        subject: MemoAddress?
+    ) -> Update<RenameSearchModel> {
+        var model = state
+        model.query = subject?.toSlug().description ?? ""
+        model.subject = subject
+        return Update(state: model)
+    }
+    
+    /// Set text of slug field
+    static func setQuery(
+        state: RenameSearchModel,
+        environment: AppEnvironment,
+        query: String
+    ) -> Update<RenameSearchModel> {
+        var model = state
+        model.query = query
+        guard let current = state.subject else {
+            logger.log("Rename query updated, but no subject set. Doing nothing.")
+            return Update(state: model)
+        }
+        let fx: Fx<RenameSearchAction> = environment.data
+            .searchRenameSuggestions(
+                query: query,
+                current: current.toEntryLink()
+            )
+            .map({ suggestions in
+                RenameSearchAction.setRenameSuggestions(suggestions)
+            })
+            .catch({ error in
+                Just(
+                    RenameSearchAction.failRenameSuggestions(
+                        error.localizedDescription
+                    )
+                )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: model, fx: fx)
+    }
+    
+    /// Set rename suggestions
+    static func setRenameSuggestions(
+        state: RenameSearchModel,
+        suggestions: [RenameSuggestion]
+    ) -> Update<RenameSearchModel> {
+        var model = state
+        model.renameSuggestions = suggestions
+        return Update(state: model)
+    }
+
+    /// Handle rename suggestions error.
+    /// This case can happen e.g. if the database fails to respond.
+    static func failRenameSuggestions(
+        state: RenameSearchModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<RenameSearchModel> {
+        logger.warning(
+            "Failed to read suggestions from database: \(error)"
+        )
+        return Update(state: state)
     }
 }
 
 struct RenameSearchView_Previews: PreviewProvider {
     static var previews: some View {
-        RenameSearchView(
-            current: EntryLink(
-                address: MemoAddress.local(
-                    Slug("loomings")!
-                ),
-                title: "Loomings"
-            ),
-            suggestions: [
-                .move(
-                    from: EntryLink(
-                        address: MemoAddress.public(
-                            Slashlink("@here/loomings")!
-                        ),
-                        title: "Loomings"
+        VStack {
+            Text("Hello")
+        }
+        .sheet(isPresented: .constant(true)) {
+            RenameSearchView(
+                state: RenameSearchModel(
+                    subject: MemoAddress.local(
+                        Slug("loomings")!
                     ),
-                    to: EntryLink(
-                        address: MemoAddress.public(
-                            Slashlink("@here/the-lee-shore")!
+                    renameSuggestions: [
+                        .move(
+                            from: EntryLink(
+                                address: MemoAddress.public(
+                                    Slashlink("@here/loomings")!
+                                ),
+                                title: "Loomings"
+                            ),
+                            to: EntryLink(
+                                address: MemoAddress.public(
+                                    Slashlink("@here/the-lee-shore")!
+                                ),
+                                title: "The Lee Shore"
+                            )
                         ),
-                        title: "The Lee Shore"
-                    )
-                ),
-                .merge(
-                    parent: EntryLink(
-                        address: MemoAddress.public(
-                            Slashlink("@here/breakfast")!
-                        ),
-                        title: "Breakfast"
-                    ),
-                    child: EntryLink(
-                        address: MemoAddress.public(
-                            Slashlink("@here/the-street")!
-                        ),
-                        title: "The Street"
-                    )
+                        .merge(
+                            parent: EntryLink(
+                                address: MemoAddress.public(
+                                    Slashlink("@here/breakfast")!
+                                ),
+                                title: "Breakfast"
+                            ),
+                            child: EntryLink(
+                                address: MemoAddress.public(
+                                    Slashlink("@here/the-street")!
+                                ),
+                                title: "The Street"
+                            )
 
-                )
-            ],
-            text: .constant(""),
-            onCancel: {},
-            onSelect: { suggestion in
-                
-            }
-        )
+                        )
+                    ]
+                ),
+                send: { action in }
+            )
+        }
     }
 }

@@ -154,12 +154,6 @@ struct DetailView: View {
                         store.send(.presentMetaSheet(true))
                     },
                     onRename: {
-                        store.send(
-                            .presentRenameSheet(
-                                address: store.state.address,
-                                title: store.state.headers.title
-                            )
-                        )
                     },
                     onDelete: {
                         store.send(.presentDeleteConfirmationDialog(true))
@@ -228,7 +222,13 @@ struct DetailView: View {
                 tag: DetailAction.presentMetaSheet
             )
         ) {
-            DetailMetaSheet(store: store)
+            DetailMetaSheet(
+                state: store.state.metaSheet,
+                send: Address.forward(
+                    send: store.send,
+                    tag: DetailMetaSheetCursor.tag
+                )
+            )
         }
         .sheet(
             isPresented: Binding(
@@ -250,29 +250,6 @@ struct DetailView: View {
                 },
                 onSelect: { suggestion in
                     store.send(.selectLinkSuggestion(suggestion))
-                }
-            )
-        }
-        .sheet(
-            isPresented: Binding(
-                get: { store.state.isRenameSheetPresented },
-                send: store.send,
-                tag: { _ in DetailAction.unpresentRenameSheet }
-            )
-        ) {
-            RenameSearchView(
-                current: EntryLink(store.state),
-                suggestions: store.state.renameSuggestions,
-                text: Binding(
-                    get: { store.state.renameField },
-                    send: store.send,
-                    tag: DetailAction.setRenameField
-                ),
-                onCancel: {
-                    store.send(.unpresentRenameSheet)
-                },
-                onSelect: { suggestion in
-                    store.send(DetailAction.from(suggestion))
                 }
             )
         }
@@ -336,6 +313,9 @@ extension DetailOuterAction {
 
 /// Actions handled by detail's private store.
 enum DetailAction: Hashable, CustomLogStringConvertible {
+    /// Tagging action for detail meta bottom sheet
+    case metaSheet(DetailMetaSheetAction)
+
     /// Sent once and only once on Store initialization
     case start
 
@@ -408,17 +388,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case setLinkSuggestions([LinkSuggestion])
     case linkSuggestionsFailure(String)
 
-    // Rename
-    case presentRenameSheet(
-        address: MemoAddress?,
-        title: String?
-    )
-    case unpresentRenameSheet
-    case setRenameField(String)
-    case refreshRenameSuggestions
-    case setRenameSuggestions([RenameSuggestion])
-    case renameSuggestionsFailure(String)
-
     // Rename entry
     /// Move an entry from one location to another
     case moveEntry(from: EntryLink, to: EntryLink)
@@ -489,13 +458,19 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
         .selectLinkSuggestion(.entry(link))
     }
 
+    static var refreshRenameSuggestions: Self {
+        .metaSheet(.refreshRenameSuggestions)
+    }
+
+    static func setMetaSheetAddress(_ address: MemoAddress?) -> Self {
+        .metaSheet(.setAddress(address))
+    }
+
     // MARK: logDescription
     var logDescription: String {
         switch self {
         case .setLinkSuggestions(let suggestions):
             return "setLinkSuggestions(\(suggestions.count) items)"
-        case .setRenameSuggestions(let suggestions):
-            return "setRenameSuggestions(\(suggestions.count) items)"
         case .editor(let action):
             return "editor(\(String.loggable(action)))"
         case let .setDetailLastWriteWins(detail):
@@ -570,6 +545,28 @@ struct DetailEditorCursor: CursorProtocol {
     }
 }
 
+struct DetailMetaSheetCursor: CursorProtocol {
+    typealias Model = DetailModel
+    typealias ViewModel = DetailMetaSheetModel
+
+    static func get(state: Model) -> ViewModel {
+        state.metaSheet
+    }
+
+    static func set(
+        state: Model,
+        inner: ViewModel
+    ) -> Model {
+        var model = state
+        model.metaSheet = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        .metaSheet(action)
+    }
+}
+
 //  MARK: Model
 struct DetailModel: ModelProtocol {
     var address: MemoAddress?
@@ -603,25 +600,15 @@ struct DetailModel: ModelProtocol {
     /// The text editor
     var editor = SubtextTextModel()
     
-    /// Meta bottom sheet
+    /// Meta bottom sheet is presented?
     var isMetaSheetPresented = false
+    /// Meta bottom sheet model
+    var metaSheet = DetailMetaSheetModel()
     
     /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
     var linkSearchText = ""
     var linkSuggestions: [LinkSuggestion] = []
-    
-    //  Note renaming
-    /// Is rename sheet showing?
-    var isRenameSheetPresented = false
-    /// Link to the candidate for renaming
-    var entryToRename: EntryLink?
-    /// Text for slug rename TextField.
-    /// Note this is the contents of the search text field, which
-    /// is different from the actual candidate slug to be renamed.
-    var renameField: String = ""
-    /// Suggestions for renaming note.
-    var renameSuggestions: [RenameSuggestion] = []
     
     /// Is delete confirmation dialog presented?
     var isDeleteConfirmationDialogPresented = false
@@ -652,6 +639,12 @@ struct DetailModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<DetailModel> {
         switch action {
+        case .metaSheet(let action):
+            return DetailMetaSheetCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
         case .editor(let action):
             return DetailEditorCursor.update(
                 state: state,
@@ -821,38 +814,6 @@ struct DetailModel: ModelProtocol {
                 "Link suggest failed: \(message)"
             )
             return Update(state: state)
-        case let .presentRenameSheet(address, title):
-            return presentRenameSheet(
-                state: state,
-                environment: environment,
-                address: address,
-                title: title
-            )
-        case .unpresentRenameSheet:
-            return unpresentRenameSheet(
-                state: state,
-                environment: environment
-            )
-        case let .setRenameField(text):
-            return setRenameField(
-                state: state,
-                environment: environment,
-                text: text
-            )
-        case .refreshRenameSuggestions:
-            return setRenameField(
-                state: state,
-                environment: environment,
-                text: state.renameField
-            )
-        case let .setRenameSuggestions(suggestions):
-            return setRenameSuggestions(state: state, suggestions: suggestions)
-        case let .renameSuggestionsFailure(error):
-            return renameSuggestionsError(
-                state: state,
-                environment: environment,
-                error: error
-            )
         case let .updateAudience(audience):
             return updateAudience(
                 state: state,
@@ -1056,11 +1017,14 @@ struct DetailModel: ModelProtocol {
         let link = EntryLink(address: address, title: title)
         return update(
             state: state,
-            action: .loadDetail(
-                link: link,
-                fallback: fallback ?? "",
-                autofocus: false
-            ),
+            actions: [
+                .setMetaSheetAddress(address),
+                .loadDetail(
+                    link: link,
+                    fallback: fallback ?? "",
+                    autofocus: false
+                )
+            ],
             environment: environment
         )
     }
@@ -1717,109 +1681,6 @@ struct DetailModel: ModelProtocol {
         .animation(.easeOutCubic(duration: Duration.keyboard))
     }
     
-    /// Show rename sheet.
-    /// Do rename-flow-related setup.
-    static func presentRenameSheet(
-        state: DetailModel,
-        environment: AppEnvironment,
-        address: MemoAddress?,
-        title: String?
-    ) -> Update<DetailModel> {
-        guard let address = address else {
-            logger.warning(
-                "Rename sheet invoked on missing entry"
-            )
-            return Update(state: state)
-        }
-        
-        let link = EntryLink(address: address, title: title)
-        
-        var model = state
-        model.isRenameSheetPresented = true
-        model.entryToRename = link
-        
-        let title = link.linkableTitle
-        
-        return DetailModel.update(
-            state: model,
-            actions: [
-                .autosave,
-                .setRenameField(title)
-            ],
-            environment: environment
-        )
-    }
-    
-    /// Hide rename sheet.
-    /// Do rename-flow-related teardown.
-    static func unpresentRenameSheet(
-        state: DetailModel,
-        environment: AppEnvironment
-    ) -> Update<DetailModel> {
-        var model = state
-        model.isRenameSheetPresented = false
-        model.entryToRename = nil
-        
-        return DetailModel.update(
-            state: model,
-            action: .setRenameField(""),
-            environment: environment
-        )
-    }
-    
-    /// Set text of slug field
-    static func setRenameField(
-        state: DetailModel,
-        environment: AppEnvironment,
-        text: String
-    ) -> Update<DetailModel> {
-        var model = state
-        model.renameField = text
-        guard let current = state.entryToRename else {
-            return Update(state: state)
-        }
-        let fx: Fx<DetailAction> = environment.data
-            .searchRenameSuggestions(
-                query: text,
-                current: current
-            )
-            .map({ suggestions in
-                DetailAction.setRenameSuggestions(suggestions)
-            })
-            .catch({ error in
-                Just(
-                    DetailAction.renameSuggestionsFailure(
-                        error.localizedDescription
-                    )
-                )
-            })
-                .eraseToAnyPublisher()
-                    return Update(state: model, fx: fx)
-    }
-    
-    /// Set rename suggestions
-    static func setRenameSuggestions(
-        state: DetailModel,
-        suggestions: [RenameSuggestion]
-    ) -> Update<DetailModel> {
-        var model = state
-        model.renameSuggestions = suggestions
-        return Update(state: model)
-    }
-    
-    /// Handle rename suggestions error.
-    /// This case can happen e.g. if the database fails to respond.
-    static func renameSuggestionsError(
-        state: DetailModel,
-        environment: AppEnvironment,
-        error: String
-    ) -> Update<DetailModel> {
-        logger.warning(
-            "Failed to read suggestions from database: \(error)"
-        )
-        return Update(state: state)
-    }
-    
     /// Move entry
     static func moveEntry(
         state: DetailModel,
@@ -1873,7 +1734,7 @@ struct DetailModel: ModelProtocol {
         
         return update(
             state: model,
-            actions: [.unpresentRenameSheet, .refreshLists],
+            actions: [.refreshLists],
             environment: environment
         )
     }
@@ -1925,7 +1786,7 @@ struct DetailModel: ModelProtocol {
         model.headers.title = parent.linkableTitle
         return update(
             state: model,
-            actions: [.refreshLists, .unpresentRenameSheet, .refreshDetail],
+            actions: [.refreshLists, .refreshDetail],
             environment: environment
         )
     }
@@ -1994,7 +1855,7 @@ struct DetailModel: ModelProtocol {
         model.headers.title = to.linkableTitle
         return update(
             state: model,
-            actions: [.refreshLists, .unpresentRenameSheet],
+            actions: [.refreshLists],
             environment: environment
         )
     }
