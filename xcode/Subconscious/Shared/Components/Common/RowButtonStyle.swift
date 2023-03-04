@@ -12,7 +12,10 @@ struct RowLabelStyle: LabelStyle {
         HStack {
             configuration.title
             Spacer()
-            configuration.icon
+            configuration.icon.frame(
+                width: AppTheme.icon,
+                height: AppTheme.icon
+            )
         }
     }
 }
@@ -56,11 +59,13 @@ struct RowButtonStyle_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             Button(
-                action: {},
-                label: {
-                    Label("Copy", systemImage: "doc.on.doc")
-                }
-            )
+                action: {}
+            ) {
+                Label(
+                    "Move",
+                    systemImage: "rectangle.portrait.and.arrow.right"
+                )
+            }
             .buttonStyle(RowButtonStyle())
 
             Button(
@@ -68,6 +73,14 @@ struct RowButtonStyle_Previews: PreviewProvider {
                 action: {},
                 label: {
                     Label("Delete", systemImage: "trash")
+                }
+            )
+            .buttonStyle(RowButtonStyle())
+
+            Button(
+                action: {},
+                label: {
+                    Label("Copy", systemImage: "doc.on.doc")
                 }
             )
             .buttonStyle(RowButtonStyle())
