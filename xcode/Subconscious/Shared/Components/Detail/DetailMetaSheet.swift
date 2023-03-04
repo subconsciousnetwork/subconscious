@@ -31,18 +31,26 @@ struct DetailMetaSheet: View {
             }
             .padding()
             Divider()
-            Form {
-                Button(
-                    action: {}
-                ) {
-                    Text("Rename")
+            ScrollView {
+                VStack(alignment: .leading) {
+                    MetaTableView {
+                        Button(
+                            action: {}
+                        ) {
+                            Label("Move", systemImage: "rectangle.portrait.and.arrow.right")
+                        }
+                        .buttonStyle(RowButtonStyle())
+                        Divider()
+                        Button(
+                            role: .destructive,
+                            action: {}
+                        ) {
+                            Label("Delete", systemImage: "trash")
+                        }
+                        .buttonStyle(RowButtonStyle())
+                    }
                 }
-                Button(
-                    role: .destructive,
-                    action: {}
-                ) {
-                    Text("Delete")
-                }
+                .padding()
             }
         }
         .presentationDragIndicator(.hidden)
