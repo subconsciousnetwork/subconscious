@@ -12,7 +12,7 @@ struct MetaTableView<Rows: View>: View {
     @ViewBuilder var content: () -> Rows
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             content()
         }
         .cornerRadius(AppTheme.cornerRadiusLg)
@@ -21,6 +21,25 @@ struct MetaTableView<Rows: View>: View {
             RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLg)
                 .stroke(Color.separator, lineWidth: 0.5)
         )
+    }
+}
+
+struct MetaTableRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundColor(.accentColor)
+            .frame(minHeight: 44)
+            .contentShape(
+                Rectangle()
+            )
+            .overlay {
+                Rectangle()
+                    .foregroundColor(
+                        configuration.isPressed ?
+                        Color.backgroundPressed :
+                        Color.clear
+                    )
+            }
     }
 }
 
@@ -33,31 +52,32 @@ struct MetaTableRowView: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 0) {
-                HStack(spacing: AppTheme.unit2) {
-                    icon
-                        .frame(width: AppTheme.icon, height: AppTheme.icon)
-                        .foregroundColor(Color.accentColor)
-                    VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
-                        label
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .textCase(.uppercase)
-                        text
-                            .lineLimit(1)
-                            .foregroundColor(.primary)
+            HStack(spacing: AppTheme.unit2) {
+                icon
+                    .frame(width: AppTheme.icon, height: AppTheme.icon)
+                    .foregroundColor(Color.accentColor)
+                VStack(spacing: 0) {
+                    HStack(spacing: 0) {
+                        VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
+                            label
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .textCase(.uppercase)
+                            text
+                                .lineLimit(1)
+                                .foregroundColor(.primary)
+                        }
+                        Spacer()
                     }
-                    Spacer()
-                }
-                .padding(.horizontal, AppTheme.unit2)
-                .padding(.vertical, AppTheme.unit2)
-                if hasDivider {
-                    Divider()
-                        .padding(.leading, AppTheme.icon + (AppTheme.unit2 * 2))
+                    .padding(.vertical, AppTheme.unit2)
+                    if hasDivider {
+                        Divider()
+                    }
                 }
             }
+            .padding(.leading, AppTheme.unit2)
         }
-        .buttonStyle(RowButtonStyle())
+        .buttonStyle(MetaTableRowButtonStyle())
     }
 }
 
@@ -116,6 +136,23 @@ struct MetaTableView_Previews: PreviewProvider {
             }
             .padding()
             .background(Color.secondaryBackground)
+
+            MetaTableView {
+                Button(
+                    action: {}
+                ) {
+                    Label("Copy", systemImage: "doc.on.doc")
+                }
+                .buttonStyle(RowButtonStyle())
+                Divider()
+                Button(
+                    role: .destructive,
+                    action: {}
+                ) {
+                    Label("Delete", systemImage: "trash")
+                }
+                .buttonStyle(RowButtonStyle())
+            }
         }
     }
 }
