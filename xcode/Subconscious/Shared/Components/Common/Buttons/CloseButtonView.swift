@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-/// Circle-X close button used in some sheets
+/// Circle-X close button used in some sheets.
+/// Sight-matched in Figma to close button from Apple Notes.
 struct CloseButtonView: View {
     var action: () -> Void
 
@@ -16,12 +17,12 @@ struct CloseButtonView: View {
             action: action,
             label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .semibold))
-                    .frame(width: 24, height: 24)
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 30, height: 30)
                     .foregroundColor(.secondary)
                     .background(Color.secondaryBackground)
                     .clipShape(Circle())
-                    .frame(width: 32, height: 32)
+                    .frame(width: 44, height: 44)
                     .accessibility(label: Text("Close"))
                     .accessibility(hint: Text("Tap to close"))
             }
