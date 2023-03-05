@@ -248,23 +248,6 @@ struct DetailView: View {
                 }
             )
         }
-        .confirmationDialog(
-            "Are you sure?",
-            isPresented: Binding(
-                get: { store.state.isDeleteConfirmationDialogPresented },
-                send: store.send,
-                tag: DetailAction.presentDeleteConfirmationDialog
-            )
-        ) {
-            Button(
-                role: .destructive,
-                action: {
-                    send(.requestDelete(state.address))
-                }
-            ) {
-                Text("Delete Immediately")
-            }
-        }
     }
 }
 
@@ -404,10 +387,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case succeedRetitleEntry(from: EntryLink, to: EntryLink)
     /// Retitle entry failed. Lifecycle action.
     case failRetitleEntry(String)
-
-    //  Delete entry requests
-    /// Show/hide delete confirmation dialog
-    case presentDeleteConfirmationDialog(Bool)
 
     case selectBacklink(EntryLink)
 
@@ -611,9 +590,6 @@ struct DetailModel: ModelProtocol {
     var isLinkSheetPresented = false
     var linkSearchText = ""
     var linkSuggestions: [LinkSuggestion] = []
-    
-    /// Is delete confirmation dialog presented?
-    var isDeleteConfirmationDialogPresented = false
     
     /// Time interval after which a load is considered stale, and should be
     /// reloaded to make sure it is fresh.
@@ -899,12 +875,6 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 error: error
-            )
-        case .presentDeleteConfirmationDialog(let isPresented):
-            return presentDeleteConfirmationDialog(
-                state: state,
-                environment: environment,
-                isPresented: isPresented
             )
         case .selectBacklink(let link):
             return update(
@@ -1899,19 +1869,6 @@ struct DetailModel: ModelProtocol {
             "Failed to retitle entry with error: \(error)"
         )
         return Update(state: state)
-    }
-    
-    
-    /// Show/hide entry delete confirmation dialog.
-    static func presentDeleteConfirmationDialog(
-        state: DetailModel,
-        environment: AppEnvironment,
-        isPresented: Bool
-    ) -> Update<DetailModel> {
-        var model = state
-        model.isDeleteConfirmationDialogPresented = isPresented
-        return Update(state: model)
-            .animation(.default)
     }
     
     /// Insert wikilink markup into editor, begining at previous range

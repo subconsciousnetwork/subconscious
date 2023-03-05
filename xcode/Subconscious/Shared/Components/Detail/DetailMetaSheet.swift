@@ -53,6 +53,7 @@ struct DetailMetaSheet: View {
                         Button(
                             role: .destructive,
                             action: {
+                                send(.presentDeleteConfirmationDialog(true))
                             }
                         ) {
                             Label(
@@ -83,6 +84,24 @@ struct DetailMetaSheet: View {
                 )
             )
         }
+        .confirmationDialog(
+            "Are you sure you want to delete?",
+            isPresented: Binding(
+                get: { state.isDeleteConfirmationDialogPresented },
+                send: send,
+                tag: DetailMetaSheetAction.presentDeleteConfirmationDialog
+            ),
+            titleVisibility: .visible
+        ) {
+            Button(
+                role: .destructive,
+                action: {
+                    send(.requestDelete(state.address))
+                }
+            ) {
+                Text("Delete")
+            }
+        }
     }
 }
 
@@ -94,6 +113,11 @@ enum DetailMetaSheetAction: Hashable {
     case selectRenameSuggestion(RenameSuggestion)
     case setAddress(_ address: MemoAddress?)
     
+    //  Delete entry requests
+    /// Show/hide delete confirmation dialog
+    case presentDeleteConfirmationDialog(Bool)
+    case requestDelete(MemoAddress?)
+
     static var refreshRenameSuggestions: Self {
         .renameSearch(.refreshRenameSuggestions)
     }
@@ -111,6 +135,9 @@ struct DetailMetaSheetModel: ModelProtocol {
     var isRenameSheetPresented = false
     var renameSearch = RenameSearchModel()
     
+    /// Is delete confirmation dialog presented?
+    var isDeleteConfirmationDialogPresented = false
+
     static func update(
         state: Self,
         action: Action,
@@ -144,12 +171,20 @@ struct DetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 suggestion: suggestion
             )
+        case .presentDeleteConfirmationDialog(let isPresented):
+            return presentDeleteConfirmationDialog(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
         case let .setAddress(address):
             return setAddress(
                 state: state,
                 environment: environment,
                 address: address
             )
+        case .requestDelete:
+            return Update(state: state)
         }
     }
     
@@ -177,6 +212,17 @@ struct DetailMetaSheetModel: ModelProtocol {
         )
     }
     
+    /// Show/hide entry delete confirmation dialog.
+    static func presentDeleteConfirmationDialog(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isDeleteConfirmationDialogPresented = isPresented
+        return Update(state: model).animation(.default)
+    }
+
     static func setAddress(
         state: Self,
         environment: Environment,
