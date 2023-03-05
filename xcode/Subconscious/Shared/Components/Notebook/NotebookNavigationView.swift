@@ -41,12 +41,13 @@ struct NotebookNavigationView: View {
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
                 .confirmationDialog(
-                    "Are you sure?",
+                    "Are you sure you want to delete?",
                     isPresented: Binding(
                         get: { store.state.isConfirmDeleteShowing },
                         send: store.send,
                         tag: NotebookAction.setConfirmDeleteShowing
                     ),
+                    titleVisibility: .visible,
                     presenting: store.state.entryToDelete
                 ) { slug in
                     Button(
@@ -55,7 +56,7 @@ struct NotebookNavigationView: View {
                             store.send(.stageDeleteEntry(slug))
                         }
                     ) {
-                        Text("Delete Immediately")
+                        Text("Delete")
                     }
                 }
             }
