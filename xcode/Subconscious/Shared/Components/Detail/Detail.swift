@@ -134,6 +134,8 @@ struct DetailView: View {
         }
         .navigationTitle(store.state.headers.title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.visible)
+        .toolbarBackground(Color.background, for: .navigationBar)
         .toolbar(content: {
             if store.state.editor.focus {
                 DetailEditToolbarContent(
