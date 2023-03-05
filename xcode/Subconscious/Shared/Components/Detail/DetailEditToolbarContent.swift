@@ -10,7 +10,6 @@ import SwiftUI
 /// Toolbar for detail view
 struct DetailEditToolbarContent: ToolbarContent {
     var address: MemoAddress? = nil
-    var title: String? = nil
     var onTapOmnibox: () -> Void
     var onDone: () -> Void
 

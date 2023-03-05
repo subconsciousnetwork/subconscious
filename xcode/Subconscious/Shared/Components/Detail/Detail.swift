@@ -140,7 +140,6 @@ struct DetailView: View {
             if store.state.editor.focus {
                 DetailEditToolbarContent(
                     address: store.state.address,
-                    title: store.state.headers.title,
                     onTapOmnibox: {
                         store.send(.presentMetaSheet(true))
                     },
@@ -151,14 +150,8 @@ struct DetailView: View {
             } else {
                 DetailToolbarContent(
                     address: store.state.address,
-                    title: store.state.headers.title,
                     onTapOmnibox: {
                         store.send(.presentMetaSheet(true))
-                    },
-                    onRename: {
-                    },
-                    onDelete: {
-                        store.send(.presentDeleteConfirmationDialog(true))
                     }
                 )
             }
