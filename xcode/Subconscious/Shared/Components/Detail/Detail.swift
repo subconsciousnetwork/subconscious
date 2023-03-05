@@ -531,6 +531,8 @@ struct DetailMetaSheetCursor: CursorProtocol {
         switch action {
         case .selectRenameSuggestion(let suggestion):
             return .selectRenameSuggestion(suggestion)
+        case .requestUpdateAudience(let audience):
+            return .updateAudience(audience)
         default:
             return .metaSheet(action)
         }
@@ -1374,7 +1376,9 @@ struct DetailModel: ModelProtocol {
             )
             return Update(state: state)
         }
+
         let to = from.withAudience(audience)
+
         let fx: Fx<DetailAction> = environment.data.moveEntryAsync(
             from: from,
             to: to
@@ -1383,9 +1387,15 @@ struct DetailModel: ModelProtocol {
         }).catch({ error in
             Just(DetailAction.failUpdateAudience(error.localizedDescription))
         }).eraseToAnyPublisher()
+
         var model = state
         model.address = to
-        return Update(state: model, fx: fx)
+        
+        return update(
+            state: model,
+            action: .metaSheet(.requestUpdateAudience(audience)),
+            environment: environment
+        ).mergeFx(fx)
     }
     
     static func succeedUpdateAudience(
