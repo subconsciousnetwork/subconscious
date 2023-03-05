@@ -91,6 +91,7 @@ enum DetailMetaSheetAction: Hashable {
     case renameSearch(RenameSearchAction)
     case presentRenameSheet(_ isPresented: Bool)
     case presentRenameSheetFor(_ address: MemoAddress?)
+    case selectRenameSuggestion(RenameSuggestion)
     case setAddress(_ address: MemoAddress?)
     
     static var refreshRenameSuggestions: Self {
@@ -137,6 +138,12 @@ struct DetailMetaSheetModel: ModelProtocol {
                 ],
                 environment: environment
             )
+        case .selectRenameSuggestion(let suggestion):
+            return selectRenameSuggestion(
+                state: state,
+                environment: environment,
+                suggestion: suggestion
+            )
         case let .setAddress(address):
             return setAddress(
                 state: state,
@@ -156,6 +163,20 @@ struct DetailMetaSheetModel: ModelProtocol {
         return Update(state: model)
     }
 
+    static func selectRenameSuggestion(
+        state: Self,
+        environment: Environment,
+        suggestion: RenameSuggestion
+    ) -> Update<Self> {
+        var model = state
+        model.isRenameSheetPresented = false
+        return update(
+            state: model,
+            action: .renameSearch(.selectRenameSuggestion(suggestion)),
+            environment: environment
+        )
+    }
+    
     static func setAddress(
         state: Self,
         environment: Environment,
@@ -186,7 +207,12 @@ struct DetailMetaSheetRenameSearchCursor: CursorProtocol {
     }
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .renameSearch(action)
+        switch action {
+        case .selectRenameSuggestion(let suggestion):
+            return .selectRenameSuggestion(suggestion)
+        default:
+            return .renameSearch(action)
+        }
     }
 }
 
