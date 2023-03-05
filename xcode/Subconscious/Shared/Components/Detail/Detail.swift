@@ -1760,7 +1760,11 @@ struct DetailModel: ModelProtocol {
         model.address = parent
         return update(
             state: model,
-            actions: [.refreshLists, .refreshDetail],
+            actions: [
+                .metaSheet(.setAddress(parent)),
+                .refreshLists,
+                .refreshDetail
+            ],
             environment: environment
         )
     }
