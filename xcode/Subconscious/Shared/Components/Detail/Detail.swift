@@ -1707,7 +1707,10 @@ struct DetailModel: ModelProtocol {
         
         return update(
             state: model,
-            actions: [.refreshLists],
+            actions: [
+                .metaSheet(.setAddress(to)),
+                .refreshLists
+            ],
             environment: environment
         )
     }
