@@ -17,14 +17,17 @@ struct DetailMetaSheet: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                    SlashlinkBylineView(
-                        slashlink: state.address?.toSlashlink(),
-                        fallback: String(localized: "Draft")
-                    )
-                    .theme(
-                        petname: Color.primary,
-                        slug: Color.secondary
-                    )
+                    HStack {
+                        if let slaslink = state.address?.toSlashlink() {
+                            SlashlinkBylineView(slashlink: slaslink).theme(
+                                petname: Color.primary,
+                                slug: Color.secondary
+                            )
+                        } else {
+                            Text("Draft")
+                                .foregroundColor(.secondary)
+                        }
+                    }
                     .font(.callout)
                     AudienceMenuButtonView(
                         audience: .constant(Audience.public)
@@ -44,8 +47,8 @@ struct DetailMetaSheet: View {
                             }
                         ) {
                             Label(
-                                "Move",
-                                systemImage: "folder"
+                                "Edit link",
+                                systemImage: "link"
                             )
                         }
                         .buttonStyle(RowButtonStyle())
