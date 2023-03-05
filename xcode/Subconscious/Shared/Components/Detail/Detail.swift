@@ -389,6 +389,8 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case linkSuggestionsFailure(String)
 
     // Rename entry
+    /// Intercepted rename action
+    case selectRenameSuggestion(RenameSuggestion)
     /// Move an entry from one location to another
     case moveEntry(from: EntryLink, to: EntryLink)
     /// Move entry succeeded. Lifecycle action.
@@ -563,7 +565,12 @@ struct DetailMetaSheetCursor: CursorProtocol {
     }
     
     static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .metaSheet(action)
+        switch action {
+        case .selectRenameSuggestion(let suggestion):
+            return .selectRenameSuggestion(suggestion)
+        default:
+            return .metaSheet(action)
+        }
     }
 }
 
@@ -831,6 +838,12 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 message: message
+            )
+        case let .selectRenameSuggestion(suggestion):
+            return selectRenameSuggestion(
+                state: state,
+                environment: environment,
+                suggestion: suggestion
             )
         case .moveEntry(let from, let to):
             return moveEntry(
@@ -1681,6 +1694,24 @@ struct DetailModel: ModelProtocol {
         .animation(.easeOutCubic(duration: Duration.keyboard))
     }
     
+    static func selectRenameSuggestion(
+        state: DetailModel,
+        environment: AppEnvironment,
+        suggestion: RenameSuggestion
+    ) -> Update<DetailModel> {
+        update(
+            state: state,
+            actions: [
+                // Forward intercepted action down to child
+                .metaSheet(.selectRenameSuggestion(suggestion)),
+                // Additionally, act on rename suggestion
+                DetailAction.from(suggestion)
+            ],
+            environment: environment
+        )
+
+    }
+
     /// Move entry
     static func moveEntry(
         state: DetailModel,
@@ -1688,24 +1719,26 @@ struct DetailModel: ModelProtocol {
         from: EntryLink,
         to: EntryLink
     ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.data
-            .moveEntryAsync(from: from, to: to)
-            .map({ _ in
-                DetailAction.succeedMoveEntry(from: from, to: to)
-            })
-            .catch({ error in
-                Just(
-                    DetailAction.failMoveEntry(
-                        error.localizedDescription
-                    )
+        let fx: Fx<DetailAction> = environment.data.moveEntryAsync(
+            from: from,
+            to: to
+        )
+        .map({ _ in
+            DetailAction.succeedMoveEntry(from: from, to: to)
+        })
+        .catch({ error in
+            Just(
+                DetailAction.failMoveEntry(
+                    error.localizedDescription
                 )
-            })
-                .eraseToAnyPublisher()
-                    return Update(
-                        state: state,
-                        fx: fx
-                    )
-                        .animation(.easeOutCubic(duration: Duration.keyboard))
+            )
+        })
+        .eraseToAnyPublisher()
+        return Update(
+            state: state,
+            fx: fx
+        )
+        .animation(.easeOutCubic(duration: Duration.keyboard))
     }
     
     /// Move success lifecycle handler.
