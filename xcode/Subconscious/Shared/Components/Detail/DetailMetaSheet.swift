@@ -122,6 +122,7 @@ enum DetailMetaSheetAction: Hashable {
     /// Requests that audience be updated.
     /// Should be handled by parent component.
     case requestUpdateAudience(_ audience: Audience)
+    case succeedUpdateAudience(_ receipt: MoveReceipt)
     
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
@@ -200,6 +201,12 @@ struct DetailMetaSheetModel: ModelProtocol {
             )
         case .requestUpdateAudience:
             return Update(state: state)
+        case .succeedUpdateAudience(let receipt):
+            return update(
+                state: state,
+                action: .setAddress(receipt.to),
+                environment: environment
+            )
         case .requestDelete:
             return Update(state: state)
         }

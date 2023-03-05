@@ -1408,7 +1408,12 @@ struct DetailModel: ModelProtocol {
         }
         var model = state
         model.address = receipt.to
-        return Update(state: model)
+        return update(
+            state: model,
+            // Forrward success down to meta sheet
+            action: .metaSheet(.succeedUpdateAudience(receipt)),
+            environment: environment
+        )
     }
     
     static func doneEditing(
