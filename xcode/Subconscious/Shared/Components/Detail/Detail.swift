@@ -260,9 +260,8 @@ enum DetailOuterAction: Hashable {
     /// Request detail from any audience scope
     case requestFindDetail(slug: Slug, title: String, fallback: String)
     case requestDelete(MemoAddress?)
-    case succeedMoveEntry(from: EntryLink, to: EntryLink)
-    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
-    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+    case succeedMoveEntry(from: MemoAddress, to: MemoAddress)
+    case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)
     case succeedSaveEntry(address: MemoAddress, modified: Date)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
 }
@@ -274,8 +273,6 @@ extension DetailOuterAction {
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedMergeEntry(parent, child):
             return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedRetitleEntry(from, to):
-            return .succeedRetitleEntry(from: from, to: to)
         case let .succeedSave(entry):
             return .succeedSaveEntry(
                 address: entry.address,
@@ -370,23 +367,17 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Intercepted rename action
     case selectRenameSuggestion(RenameSuggestion)
     /// Move an entry from one location to another
-    case moveEntry(from: EntryLink, to: EntryLink)
+    case moveEntry(from: MemoAddress, to: MemoAddress)
     /// Move entry succeeded. Lifecycle action.
-    case succeedMoveEntry(from: EntryLink, to: EntryLink)
+    case succeedMoveEntry(from: MemoAddress, to: MemoAddress)
     /// Move entry failed. Lifecycle action.
     case failMoveEntry(String)
     /// Merge entries
-    case mergeEntry(parent: EntryLink, child: EntryLink)
+    case mergeEntry(parent: MemoAddress, child: MemoAddress)
     /// Merge entry succeeded. Lifecycle action.
-    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
+    case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)
     /// Merge entry failed. Lifecycle action.
     case failMergeEntry(String)
-    /// Retitle an entry (change its title header)
-    case retitleEntry(from: EntryLink, to: EntryLink)
-    /// Retitle entry succeeded. Lifecycle action.
-    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
-    /// Retitle entry failed. Lifecycle action.
-    case failRetitleEntry(String)
 
     case selectBacklink(EntryLink)
 
@@ -476,8 +467,6 @@ extension DetailAction {
             return .moveEntry(from: from, to: to)
         case let .merge(parent, child):
             return .mergeEntry(parent: parent, child: child)
-        case let .retitle(from, to):
-            return .retitleEntry(from: from, to: to)
         }
     }
 }
@@ -852,26 +841,6 @@ struct DetailModel: ModelProtocol {
             )
         case .failMergeEntry(let error):
             return failMergeEntry(
-                state: state,
-                environment: environment,
-                error: error
-            )
-        case .retitleEntry(let from, let to):
-            return retitleEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
-        case let .succeedRetitleEntry(from, to):
-            return succeedRetitleEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
-        case .failRetitleEntry(let error):
-            return failRetitleEntry(
                 state: state,
                 environment: environment,
                 error: error
@@ -1407,19 +1376,16 @@ struct DetailModel: ModelProtocol {
         }
         let to = from.withAudience(audience)
         let fx: Fx<DetailAction> = environment.data.moveEntryAsync(
-            from: from.toEntryLink(title: state.headers.title),
-            to: to.toEntryLink(title: state.headers.title)
-        )
-            .map({ receipt in
-                DetailAction.succeedUpdateAudience(receipt)
-            })
-            .catch({ error in
-                Just(DetailAction.failUpdateAudience(error.localizedDescription))
-            })
-                .eraseToAnyPublisher()
-                    var model = state
-                    model.address = to
-                    return Update(state: model, fx: fx)
+            from: from,
+            to: to
+        ).map({ receipt in
+            DetailAction.succeedUpdateAudience(receipt)
+        }).catch({ error in
+            Just(DetailAction.failUpdateAudience(error.localizedDescription))
+        }).eraseToAnyPublisher()
+        var model = state
+        model.address = to
+        return Update(state: model, fx: fx)
     }
     
     static func succeedUpdateAudience(
@@ -1681,8 +1647,8 @@ struct DetailModel: ModelProtocol {
     static func moveEntry(
         state: DetailModel,
         environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
+        from: MemoAddress,
+        to: MemoAddress
     ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = environment.data.moveEntryAsync(
             from: from,
@@ -1711,24 +1677,23 @@ struct DetailModel: ModelProtocol {
     static func succeedMoveEntry(
         state: DetailModel,
         environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
+        from: MemoAddress,
+        to: MemoAddress
     ) -> Update<DetailModel> {
-        guard state.address == from.address else {
+        guard state.address == from else {
             logger.warning(
                 """
                 Detail got a succeedMoveEntry action that doesn't match address. Doing nothing.
                 Detail address: \(state.address?.description ?? "None")
-                From address: \(from.address.description)
-                To address: \(to.address.description)
+                From address: \(from.description)
+                To address: \(to.description)
                 """
             )
             return Update(state: state)
         }
         
         var model = state
-        model.address = to.address
-        model.headers.title = to.linkableTitle
+        model.address = to
         
         return update(
             state: model,
@@ -1754,21 +1719,20 @@ struct DetailModel: ModelProtocol {
     static func mergeEntry(
         state: DetailModel,
         environment: AppEnvironment,
-        parent: EntryLink,
-        child: EntryLink
+        parent: MemoAddress,
+        child: MemoAddress
     ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.data
-            .mergeEntryAsync(parent: parent, child: child)
-            .map({ _ in
-                DetailAction.succeedMergeEntry(parent: parent, child: child)
-            })
-            .catch({ error in
-                Just(
-                    DetailAction.failMergeEntry(error.localizedDescription)
-                )
-            })
-                .eraseToAnyPublisher()
-                    return Update(state: state, fx: fx)
+        let fx: Fx<DetailAction> = environment.data.mergeEntryAsync(
+            parent: parent,
+            child: child
+        ).map({ _ in
+            DetailAction.succeedMergeEntry(parent: parent, child: child)
+        }).catch({ error in
+            Just(
+                DetailAction.failMergeEntry(error.localizedDescription)
+            )
+        }).eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
     
     /// Merge success lifecycle handler.
@@ -1776,12 +1740,11 @@ struct DetailModel: ModelProtocol {
     static func succeedMergeEntry(
         state: DetailModel,
         environment: AppEnvironment,
-        parent: EntryLink,
-        child: EntryLink
+        parent: MemoAddress,
+        child: MemoAddress
     ) -> Update<DetailModel> {
         var model = state
-        model.address = parent.address
-        model.headers.title = parent.linkableTitle
+        model.address = parent
         return update(
             state: model,
             actions: [.refreshLists, .refreshDetail],
@@ -1798,75 +1761,6 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         logger.warning(
             "Failed to merge entry with error: \(error)"
-        )
-        return Update(state: state)
-    }
-    
-    /// Retitle entry
-    static func retitleEntry(
-        state: DetailModel,
-        environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
-    ) -> Update<DetailModel> {
-        let address = from.address
-        let title = to.title
-        let fx: Fx<DetailAction> = environment.data
-            .retitleEntryAsync(address: address, title: title)
-            .map({ _ in
-                DetailAction.succeedRetitleEntry(from: from, to: to)
-            })
-            .catch({ error in
-                Just(
-                    DetailAction.failRetitleEntry(
-                        error.localizedDescription
-                    )
-                )
-            })
-                .eraseToAnyPublisher()
-                    return Update(state: state, fx: fx)
-    }
-    
-    /// Retitle success lifecycle handler.
-    /// Updates UI in response.
-    static func succeedRetitleEntry(
-        state: DetailModel,
-        environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
-    ) -> Update<DetailModel> {
-        guard
-            state.address == from.address &&
-                from.address == to.address
-        else {
-            logger.warning(
-                """
-                Detail got a succeedRetitleEntry action that doesn't match detail address. Doing nothing.
-                Detail address: \(state.address?.description ?? "None")
-                From address: \(from.address.description)
-                To address: \(to.address.description)
-                """
-            )
-            return Update(state: state)
-        }
-        var model = state
-        model.headers.title = to.linkableTitle
-        return update(
-            state: model,
-            actions: [.refreshLists],
-            environment: environment
-        )
-    }
-    
-    /// Retitle failure lifecycle handler.
-    //  TODO: in future consider triggering an alert.
-    static func failRetitleEntry(
-        state: DetailModel,
-        environment: AppEnvironment,
-        error: String
-    ) -> Update<DetailModel> {
-        logger.warning(
-            "Failed to retitle entry with error: \(error)"
         )
         return Update(state: state)
     }

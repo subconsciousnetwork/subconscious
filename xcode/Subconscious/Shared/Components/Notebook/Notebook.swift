@@ -127,11 +127,9 @@ enum NotebookAction {
     case succeedSaveEntry(slug: MemoAddress, modified: Date)
 
     /// Move entry succeeded. Lifecycle action.
-    case succeedMoveEntry(from: EntryLink, to: EntryLink)
+    case succeedMoveEntry(from: MemoAddress, to: MemoAddress)
     /// Merge entry succeeded. Lifecycle action.
-    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
-    /// Retitle entry succeeded. Lifecycle action.
-    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+    case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)
 
     /// Audience was changed for address
     case succeedUpdateAudience(MoveReceipt)
@@ -236,8 +234,6 @@ extension NotebookAction {
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedMergeEntry(parent, child):
             return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedRetitleEntry(from, to):
-            return .succeedRetitleEntry(from: from, to: to)
         case let .succeedSaveEntry(slug, modified):
             return .succeedSaveEntry(slug: slug, modified: modified)
         case let .succeedUpdateAudience(receipt):
@@ -457,13 +453,6 @@ struct NotebookModel: ModelProtocol {
                 environment: environment,
                 parent: parent,
                 child: child
-            )
-        case let .succeedRetitleEntry(from, to):
-            return succeedRetitleEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
             )
         case let .succeedUpdateAudience(receipt):
             return succeedUpdateAudience(
@@ -723,20 +712,18 @@ struct NotebookModel: ModelProtocol {
     static func succeedMoveEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
+        from: MemoAddress,
+        to: MemoAddress
     ) -> Update<NotebookModel> {
         var model = state
 
         /// Find all instances of this model in the stack and update them
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.address == from.address else {
+            guard detail.address == from else {
                 return detail
             }
             var model = detail
-            model.address = to.address
-            model.title = to.linkableTitle
-            model.fallback = to.title
+            model.address = to
             return model
         })
         
@@ -752,47 +739,18 @@ struct NotebookModel: ModelProtocol {
     static func succeedMergeEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        parent: EntryLink,
-        child: EntryLink
+        parent: MemoAddress,
+        child: MemoAddress
     ) -> Update<NotebookModel> {
         var model = state
 
         /// Find all instances of child and update them to become parent
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.address == child.address else {
+            guard detail.address == child else {
                 return detail
             }
             var model = detail
-            model.address = parent.address
-            model.title = parent.linkableTitle
-            model.fallback = parent.title
-            return model
-        })
-        
-        return update(
-            state: model,
-            action: .refreshLists,
-            environment: environment
-        )
-    }
-
-    /// Retitle success lifecycle handler.
-    /// Updates UI in response.
-    static func succeedRetitleEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
-    ) -> Update<NotebookModel> {
-        var model = state
-
-        /// Find all instances of this model in the stack and update them
-        model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.address == from.address else {
-                return detail
-            }
-            var model = detail
-            model.title = to.linkableTitle
+            model.address = parent
             return model
         })
         

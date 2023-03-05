@@ -293,30 +293,28 @@ struct DataService {
     }
     
     /// Move entry to a new location, updating file system and database.
-    func moveEntry(from: EntryLink, to: EntryLink) throws -> MoveReceipt {
-        guard from.address.slug != to.address.slug else {
-            throw DataServiceError.fileExists(to.address.slug.description)
+    func moveEntry(from: MemoAddress, to: MemoAddress) throws -> MoveReceipt {
+        guard from.slug != to.slug else {
+            throw DataServiceError.fileExists(to.description)
         }
-        guard !self.exists(to.address) else {
-            throw DataServiceError.fileExists(to.address.slug.description)
+        guard !self.exists(to) else {
+            throw DataServiceError.fileExists(to.description)
         }
-        let fromMemo = try readMemo(address: from.address)
+        let fromMemo = try readMemo(address: from)
         // Make a copy representing new location and set new title and slug
         var toMemo = fromMemo
-        // Update title
-        toMemo.title = to.title
         // Write to new destination
-        try writeMemo(address: to.address, memo: toMemo)
+        try writeMemo(address: to, memo: toMemo)
         // ...Then delete old entry
-        try deleteMemo(from.address)
-        return MoveReceipt(from: from.address, to: to.address)
+        try deleteMemo(from)
+        return MoveReceipt(from: from, to: to)
     }
     
     /// Move entry to a new location, updating file system and database.
     /// - Returns a combine publisher
     func moveEntryAsync(
-        from: EntryLink,
-        to: EntryLink
+        from: MemoAddress,
+        to: MemoAddress
     ) -> AnyPublisher<MoveReceipt, Error> {
         CombineUtilities.async {
             try moveEntry(from: from, to: to)
@@ -328,17 +326,17 @@ struct DataService {
     /// - Writes the combined content to `parent`
     /// - Deletes `child`
     func mergeEntry(
-        parent: EntryLink,
-        child: EntryLink
+        parent: MemoAddress,
+        child: MemoAddress
     ) throws {
-        let childMemo = try readMemo(address: child.address)
-        let parentMemo = try readMemo(address: parent.address)
+        let childMemo = try readMemo(address: child)
+        let parentMemo = try readMemo(address: parent)
         let mergedMemo = parentMemo.merge(childMemo)
         //  First write the merged file to "to" location
-        try writeMemo(address: parent.address, memo: mergedMemo)
+        try writeMemo(address: parent, memo: mergedMemo)
         //  Then delete child entry *afterwards*.
         //  We do this last to avoid data loss in case of write errors.
-        try deleteMemo(child.address)
+        try deleteMemo(child)
     }
     
     /// Merge child entry into parent entry.
@@ -347,8 +345,8 @@ struct DataService {
     /// - Deletes `child`
     /// - Returns combine publisher
     func mergeEntryAsync(
-        parent: EntryLink,
-        child: EntryLink
+        parent: MemoAddress,
+        child: MemoAddress
     ) -> AnyPublisher<Void, Error> {
         CombineUtilities.async {
             try mergeEntry(parent: parent, child: child)
@@ -419,7 +417,7 @@ struct DataService {
     
     func searchRenameSuggestions(
         query: String,
-        current: EntryLink
+        current: MemoAddress
     ) -> AnyPublisher<[RenameSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
             try database.searchRenameSuggestions(

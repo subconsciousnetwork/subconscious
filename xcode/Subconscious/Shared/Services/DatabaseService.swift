@@ -448,42 +448,33 @@ final class DatabaseService {
     ///
     /// - Returns an array of RenameSuggestion
     static func collateRenameSuggestions(
-        current: EntryLink,
-        query: EntryLink,
-        results: [EntryLink]
+        current: MemoAddress,
+        query: MemoAddress,
+        results: [MemoAddress]
     ) -> [RenameSuggestion] {
         var suggestions: OrderedDictionary<Slug, RenameSuggestion> = [:]
         // First append result for literal query
-        if query.address.slug != current.address.slug {
+        if query.slug != current.slug {
             suggestions.updateValue(
                 .move(
                     from: current,
                     to: query
                 ),
-                forKey: query.address.slug
+                forKey: query.slug
             )
         }
-        // If slug is the same but title changed, this is a retitle
-        else if query.linkableTitle != current.linkableTitle {
-            suggestions.updateValue(
-                .retitle(
-                    from: current,
-                    to: query
-                ),
-                forKey: current.address.slug
-            )
-        }
+
         // Then append results from existing entries, potentially overwriting
         // result for literal query if identical.
         for result in results {
             /// If slug changed, this is a move
-            if result.address.slug != current.address.slug {
+            if result.slug != current.slug {
                 suggestions.updateValue(
                     .merge(
                         parent: result,
                         child: current
                     ),
-                    forKey: result.address.slug
+                    forKey: result.slug
                 )
             }
         }
@@ -494,7 +485,7 @@ final class DatabaseService {
     /// for renaming the note.
     func searchRenameSuggestions(
         query: String,
-        current: EntryLink
+        current: MemoAddress
     ) throws -> [RenameSuggestion] {
         guard self.state == .ready else {
             return []
@@ -502,60 +493,44 @@ final class DatabaseService {
         guard let slug = query.toSlug() else {
             return []
         }
+
         // Create a suggestion for the literal query that has same
         // audience as current.
-        guard let queryEntryLink = Func.block({
-            switch current.address {
+        let queryAddress = Func.block({
+            switch current {
             case .public(let slashlink):
-                return EntryLink(
-                    address: MemoAddress.public(
-                        Slashlink(
-                            petname: slashlink.toPetname(),
-                            slug: slug
-                        )
-                    ),
-                    title: query
+                return MemoAddress.public(
+                    Slashlink(
+                        petname: slashlink.toPetname(),
+                        slug: slug
+                    )
                 )
             case .local:
-                return EntryLink(
-                    address: MemoAddress.local(slug),
-                    title: query
-                )
+                return MemoAddress.local(slug)
             }
-        }) else {
-            return []
-        }
-        
-        let results = try database.execute(
-            sql: """
-            SELECT id, title
-            FROM memo_search
-            WHERE memo_search MATCH ?
-            ORDER BY rank
-            LIMIT 25
-            """,
-            parameters: [
-                .prefixQueryFTS5(query)
-            ]
-        )
-
-        let entries: [EntryLink] = results.compactMap({ row in
-            guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
-                let title = row.col(1)?.toString()
-            else {
-                return nil
-            }
-            return EntryLink(
-                address: address,
-                title: title
-            )
         })
+        
+        let results: [MemoAddress] = try database
+            .execute(
+                sql: """
+                SELECT id
+                FROM memo_search
+                WHERE memo_search MATCH ?
+                ORDER BY rank
+                LIMIT 25
+                """,
+                parameters: [
+                    .prefixQueryFTS5(query)
+                ]
+            )
+            .compactMap({ row in
+                row.col(0)?.toString()?.toMemoAddress()
+            })
         
         return Self.collateRenameSuggestions(
             current: current,
-            query: queryEntryLink,
-            results: entries
+            query: queryAddress,
+            results: results
         )
     }
 

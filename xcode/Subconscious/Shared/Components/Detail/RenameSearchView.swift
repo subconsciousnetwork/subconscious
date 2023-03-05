@@ -19,7 +19,7 @@ struct RenameSearchView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 SearchTextField(
-                    placeholder: String(localized: "Enter name for note"),
+                    placeholder: String(localized: "Enter link for note"),
                     text: Binding(
                         get: { state.query },
                         send: send,
@@ -44,7 +44,7 @@ struct RenameSearchView: View {
                 }
                 .listStyle(.plain)
             }
-            .navigationTitle("Move")
+            .navigationTitle("Edit link")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(content: {
                 ToolbarItem(placement: .cancellationAction) {
@@ -151,7 +151,7 @@ struct RenameSearchModel: ModelProtocol {
         let fx: Fx<RenameSearchAction> = environment.data
             .searchRenameSuggestions(
                 query: query,
-                current: current.toEntryLink()
+                current: current
             )
             .map({ suggestions in
                 RenameSearchAction.setRenameSuggestions(suggestions)
@@ -204,33 +204,20 @@ struct RenameSearchView_Previews: PreviewProvider {
                     ),
                     renameSuggestions: [
                         .move(
-                            from: EntryLink(
-                                address: MemoAddress.public(
-                                    Slashlink("@here/loomings")!
-                                ),
-                                title: "Loomings"
+                            from: MemoAddress.public(
+                                Slashlink("@here/loomings")!
                             ),
-                            to: EntryLink(
-                                address: MemoAddress.public(
-                                    Slashlink("@here/the-lee-shore")!
-                                ),
-                                title: "The Lee Shore"
+                            to: MemoAddress.public(
+                                Slashlink("@here/the-lee-shore")!
                             )
                         ),
                         .merge(
-                            parent: EntryLink(
-                                address: MemoAddress.public(
-                                    Slashlink("@here/breakfast")!
-                                ),
-                                title: "Breakfast"
+                            parent: MemoAddress.public(
+                                Slashlink("@here/breakfast")!
                             ),
-                            child: EntryLink(
-                                address: MemoAddress.public(
-                                    Slashlink("@here/the-street")!
-                                ),
-                                title: "The Street"
+                            child: MemoAddress.public(
+                                Slashlink("@here/the-street")!
                             )
-
                         )
                     ]
                 ),

@@ -16,7 +16,7 @@ struct RenameSuggestionLabelView: View, Equatable {
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text(parent.linkableTitle),
+                        title: Text(verbatim: parent.slug.description),
                         subtitle: Text("Merge notes")
                     )
                 },
@@ -28,20 +28,8 @@ struct RenameSuggestionLabelView: View, Equatable {
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text(to.linkableTitle),
-                        subtitle: Text("Rename note")
-                    )
-                },
-                icon: {
-                    Image(systemName: "pencil")
-                }
-            )
-        case let .retitle(_, to):
-            Label(
-                title: {
-                    TitleGroupView(
-                        title: Text(to.linkableTitle),
-                        subtitle: Text("Update title")
+                        title: Text(verbatim: to.slug.description),
+                        subtitle: Text("Edit link")
                     )
                 },
                 icon: {
@@ -56,17 +44,11 @@ struct RenameSuggestionLabel_Previews: PreviewProvider {
     static var previews: some View {
         RenameSuggestionLabelView(
             suggestion: .move(
-                from: EntryLink(
-                    address: MemoAddress.public(
-                        Slashlink("@here/loomings")!
-                    ),
-                    title: "Loomings"
+                from: MemoAddress.public(
+                    Slashlink("@here/loomings")!
                 ),
-                to: EntryLink(
-                    address: MemoAddress.public(
-                        Slashlink("@here/the-lee-shore")!
-                    ),
-                    title: "The Lee Shore"
+                to: MemoAddress.public(
+                    Slashlink("@here/the-lee-shore")!
                 )
             )
         )
