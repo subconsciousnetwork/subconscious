@@ -125,9 +125,15 @@ struct RenameSearchModel: ModelProtocol {
         subject: MemoAddress?
     ) -> Update<RenameSearchModel> {
         var model = state
-        model.query = subject?.toSlug().description ?? ""
         model.subject = subject
-        return Update(state: model)
+
+        let query = subject?.toSlug().description ?? ""
+
+        return update(
+            state: model,
+            action: .setQuery(query),
+            environment: environment
+        )
     }
     
     /// Set text of slug field

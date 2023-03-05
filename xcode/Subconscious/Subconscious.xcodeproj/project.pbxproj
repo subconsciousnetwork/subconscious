@@ -714,10 +714,11 @@
 			isa = PBXGroup;
 			children = (
 				B8879EAB26F944DA00A0B4FF /* Detail.swift */,
-				B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */,
-				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
 				B86BC75729B23530005B5833 /* DetailEditToolbarContent.swift */,
+				B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */,
 				B86BC75929B24BEF005B5833 /* DetailMetaSheet.swift */,
+				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
+				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 			);
 			path = Detail;
 			sourceTree = "<group>";
@@ -959,7 +960,6 @@
 				B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */,
 				B87288E1299C02BA00EF7E07 /* Notebook */,
 				B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */,
-				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 				B88B1CDC298DE65E0062CB7F /* Settings */,
 			);
 			path = Components;
