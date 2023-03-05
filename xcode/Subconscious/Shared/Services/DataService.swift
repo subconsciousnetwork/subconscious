@@ -294,7 +294,7 @@ struct DataService {
     
     /// Move entry to a new location, updating file system and database.
     func moveEntry(from: MemoAddress, to: MemoAddress) throws -> MoveReceipt {
-        guard from.slug != to.slug else {
+        guard from != to else {
             throw DataServiceError.fileExists(to.description)
         }
         guard !self.exists(to) else {
@@ -302,7 +302,7 @@ struct DataService {
         }
         let fromMemo = try readMemo(address: from)
         // Make a copy representing new location and set new title and slug
-        var toMemo = fromMemo
+        let toMemo = fromMemo
         // Write to new destination
         try writeMemo(address: to, memo: toMemo)
         // ...Then delete old entry
