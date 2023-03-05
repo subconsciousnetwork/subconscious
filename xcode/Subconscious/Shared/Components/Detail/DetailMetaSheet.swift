@@ -30,7 +30,11 @@ struct DetailMetaSheet: View {
                     }
                     .font(.callout)
                     AudienceMenuButtonView(
-                        audience: .constant(Audience.public)
+                        audience: Binding(
+                            get: { state.audience },
+                            send: send,
+                            tag: DetailMetaSheetAction.requestUpdateAudience
+                        )
                     )
                 }
                 Spacer()
@@ -115,10 +119,15 @@ enum DetailMetaSheetAction: Hashable {
     case presentRenameSheetFor(_ address: MemoAddress?)
     case selectRenameSuggestion(RenameSuggestion)
     case setAddress(_ address: MemoAddress?)
+    /// Requests that audience be updated.
+    /// Should be handled by parent component.
+    case requestUpdateAudience(_ audience: Audience)
     
     //  Delete entry requests
     /// Show/hide delete confirmation dialog
     case presentDeleteConfirmationDialog(Bool)
+    /// Request this address be deleted.
+    /// Should be handled by parent component.
     case requestDelete(MemoAddress?)
 
     static var refreshRenameSuggestions: Self {
@@ -135,6 +144,9 @@ struct DetailMetaSheetModel: ModelProtocol {
     typealias Environment = AppEnvironment
     
     var address: MemoAddress?
+    var audience: Audience {
+        address?.toAudience() ?? .public
+    }
     var isRenameSheetPresented = false
     var renameSearch = RenameSearchModel()
     
@@ -186,6 +198,8 @@ struct DetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
+        case .requestUpdateAudience:
+            return Update(state: state)
         case .requestDelete:
             return Update(state: state)
         }
