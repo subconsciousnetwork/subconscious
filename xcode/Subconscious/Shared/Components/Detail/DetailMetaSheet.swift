@@ -230,7 +230,11 @@ struct DetailMetaSheetModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.address = address
-        return Update(state: model)
+        return update(
+            state: model,
+            action: .renameSearch(.setSubject(address)),
+            environment: environment
+        )
     }
 }
 
