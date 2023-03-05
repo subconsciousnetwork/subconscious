@@ -27,7 +27,7 @@ struct OmniboxView: View {
         }
         .padding(.leading, 8)
         .padding(.trailing, 12)
-        .frame(height: 36)
+        .frame(height: 34)
         .clipShape(Capsule())
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
