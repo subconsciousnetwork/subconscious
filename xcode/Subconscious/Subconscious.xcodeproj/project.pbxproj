@@ -13,6 +13,7 @@
 		B575834528ED8D9100F6EE88 /* combo.json in Resources */ = {isa = PBXBuildFile; fileRef = B575834428ED8D9100F6EE88 /* combo.json */; };
 		B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BA29B1CA8B008BBB62 /* DidView.swift */; };
 		B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BC29B56699008BBB62 /* AddressBookModel.swift */; };
+		B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = B57D63BF29B574C3008BBB62 /* CodeScanner */; };
 		B584813F29AC32410033F434 /* AddressBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584813E29AC32410033F434 /* AddressBookView.swift */; };
 		B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814129AC335B0033F434 /* AddressBookEntryView.swift */; };
 		B584814429AC384F0033F434 /* FollowUserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814329AC384F0033F434 /* FollowUserView.swift */; };
@@ -609,6 +610,7 @@
 				B822F18B27C9615600943C6B /* ObservableStore in Frameworks */,
 				B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */,
 				B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */,
+				B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */,
 				B8CA8F1A288F038C005F8802 /* Tracery in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -637,6 +639,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B532F8C129B1750F00CE9256 /* Transclude */ = {
+			isa = PBXGroup;
+			children = (
+				B8D328B629A671DA00850A37 /* Transclude2View.swift */,
+				B8A59D5F28B51D000010DB2F /* TranscludeView.swift */,
+				B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */,
+			);
+			path = Transclude;
+			sourceTree = "<group>";
+		};
 		B584814029AC32550033F434 /* AddressBook */ = {
 			isa = PBXGroup;
 			children = (
@@ -1158,6 +1170,7 @@
 				B822F18A27C9615600943C6B /* ObservableStore */,
 				B8CA8F19288F038C005F8802 /* Tracery */,
 				B8E1BB78296DECE700B86E0E /* SwiftNoosphere */,
+				B57D63BF29B574C3008BBB62 /* CodeScanner */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B8EB29FB26F27797006E97C3 /* Subconscious.app */;
@@ -1261,6 +1274,7 @@
 				B822F18927C9615600943C6B /* XCRemoteSwiftPackageReference "ObservableStore" */,
 				B8CA8F18288F038C005F8802 /* XCRemoteSwiftPackageReference "Tracery" */,
 				B8E1BB77296DECE700B86E0E /* XCRemoteSwiftPackageReference "noosphere" */,
+				B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */,
 			);
 			productRefGroup = B8EB29FC26F27797006E97C3 /* Products */;
 			projectDirPath = "";
@@ -2159,6 +2173,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/twostraws/CodeScanner";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 		B822F18927C9615600943C6B /* XCRemoteSwiftPackageReference "ObservableStore" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gordonbrander/ObservableStore";
@@ -2202,6 +2224,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B57D63BF29B574C3008BBB62 /* CodeScanner */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */;
+			productName = CodeScanner;
+		};
 		B822F18A27C9615600943C6B /* ObservableStore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B822F18927C9615600943C6B /* XCRemoteSwiftPackageReference "ObservableStore" */;
