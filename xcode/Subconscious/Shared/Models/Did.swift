@@ -15,7 +15,9 @@ struct Did : Hashable, Identifiable {
     static let regex = /^(did:[a-z0-9]{3}:[a-zA-Z0-9-_\.%:]+)$/
 }
 
-extension Did {
+extension Did: LosslessStringConvertible {
+    var description: String { did }
+    
     init?(_ description: String) {
         guard let did = try? Self.regex.wholeMatch(in: description) else {
             return nil
