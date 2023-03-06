@@ -18,7 +18,12 @@ struct FormField<I, O> {
     
     var isValid: Bool {
         get {
-            validate(value) != nil || !touched
+            validate(value) != nil
+        }
+    }
+    var hasError: Bool {
+        get {
+            validate(value) == nil && touched
         }
     }
 }
