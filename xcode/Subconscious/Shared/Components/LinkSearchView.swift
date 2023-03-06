@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import ObservableStore
 
 struct LinkSearchView: View {
     var placeholder: String
