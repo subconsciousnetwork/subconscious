@@ -50,8 +50,12 @@ struct AddressBookView: View {
                     Section(header: Text("Friends")) {
                         List {
                             ForEach(state.friends, id: \.did) { user in
-                                AddressBookEntryView(pfp: user.pfp, petname: user.petname,
-                                                     did: user.did)
+                                AddressBookEntryView(
+                                    pfp: user.pfp,
+                                    petname: user.petname,
+                                    did: user.did
+                                )
+                                .frame(maxWidth: .infinity)
                             }
                             .onDelete(perform: delete)
                         }
