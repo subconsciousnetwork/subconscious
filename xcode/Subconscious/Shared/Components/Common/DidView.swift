@@ -12,14 +12,18 @@ struct DidView: View {
     var did: Did
     
     var body: some View {
-        HStack{
-            Text(did.did)
-                .font(.callout.monospaced())
-                .foregroundColor(.secondary)
-            Spacer()
-            ShareLink(item: did.did) {
-                Image(systemName: "square.and.arrow.up")
-                    .padding(AppTheme.unit2)
+        VStack {
+            DidQrCodeView(did: did)
+                .frame(maxWidth: 256, alignment: .center)
+            
+            HStack{
+                Text(did.did)
+                    .font(.callout.monospaced())
+                    .foregroundColor(.secondary)
+                Spacer()
+                ShareLink(item: did.did) {
+                    Image(systemName: "square.and.arrow.up")
+                        .padding(AppTheme.unit2)
             }
         }
     }
