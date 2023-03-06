@@ -15,7 +15,16 @@ struct AddressBookEntry: Equatable {
     var did: Did
 }
 
-struct AddressBookEnvironment { }
+struct AddressBookEnvironment {
+    var noosphere: SphereIdentityProtocol
+}
+
+// Used for SwiftUI Previews, also useful for testing
+class FakeSphereIdentityProvider: SphereIdentityProtocol {
+    func identity() throws -> String {
+        "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+    }
+}
 
 enum AddressBookAction: Hashable {
     case addFriend(did: Did, petname: Petname)
@@ -60,10 +69,18 @@ struct AddressBookModel: ModelProtocol {
 
 struct AddressBookView: View {
     var state: AddressBookModel
+    var environment: AddressBookEnvironment
     var send: (AddressBookAction) -> Void
     
-    // TODO: how can I actually get this information?
-    var myDid = Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
+    var myDid: Did? {
+        get {
+            do {
+                return try Did(environment.noosphere.identity())
+            } catch {
+                return nil
+            }
+        }
+    }
     
     func delete(at offsets: IndexSet) {
         guard let idx = offsets.first else {
@@ -98,8 +115,10 @@ struct AddressBookView: View {
                         }
                     }
                 }
-                Section(header: Text("My DID")) {
-                    MyDidView(myDid: myDid)
+                if let myDid = myDid {
+                    Section(header: Text("My DID")) {
+                        MyDidView(myDid: myDid)
+                    }
                 }
                 
             }
@@ -131,17 +150,18 @@ struct AddressBook_Previews: PreviewProvider {
         @StateObject private var store = Store(
             state: AddressBookModel(
                 friends: [
-                    AddressBookEntry(pfp: Image("pfp-dog"), petname: Petname("ben")!, did: Did(  "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
-                    AddressBookEntry(pfp: Image("sub_logo_light"), petname: Petname("bob")!, did: Did("did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
-                    AddressBookEntry(pfp: Image("sub_logo_dark"), petname: Petname("alice")!, did: Did("did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
+//                    AddressBookEntry(pfp: Image("pfp-dog"), petname: Petname("ben")!, did: Did(  "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
+//                    AddressBookEntry(pfp: Image("sub_logo_light"), petname: Petname("bob")!, did: Did("did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
+//                    AddressBookEntry(pfp: Image("sub_logo_dark"), petname: Petname("alice")!, did: Did("did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
                 ]
             ),
-            environment: AddressBookEnvironment()
+            environment: AddressBookEnvironment(noosphere: FakeSphereIdentityProvider())
         )
 
         var body: some View {
             AddressBookView(
                 state: store.state,
+                environment: store.environment,
                 send: store.send
             )
         }

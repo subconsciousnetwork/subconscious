@@ -82,7 +82,7 @@ struct AddFriendView_Previews: PreviewProvider {
     struct TestView: View {
         @StateObject private var store = Store(
             state: AddressBookModel(),
-            environment: AddressBookEnvironment()
+            environment: AddressBookEnvironment(noosphere: FakeSphereIdentityProvider())
         )
 
         var body: some View {

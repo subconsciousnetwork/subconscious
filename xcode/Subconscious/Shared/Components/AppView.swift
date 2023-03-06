@@ -867,7 +867,7 @@ struct AppEnvironment {
     var feed: FeedService
     
     var recoveryPhrase = RecoveryPhraseEnvironment()
-    var addressBook = AddressBookEnvironment()
+    var addressBook: AddressBookEnvironment
 
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
@@ -928,6 +928,8 @@ struct AppEnvironment {
             database: databaseService,
             local: local
         )
+        
+        self.addressBook = AddressBookEnvironment(noosphere: noosphere)
 
         self.feed = FeedService()
     }

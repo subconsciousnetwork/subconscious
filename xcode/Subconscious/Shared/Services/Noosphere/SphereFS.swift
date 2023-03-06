@@ -45,6 +45,10 @@ public protocol SphereProtocol {
     func changes(_ since: String?) throws -> [String]
 }
 
+protocol SphereIdentityProtocol {
+    func identity() throws -> String
+}
+
 enum SphereFSError: Error, LocalizedError {
     case contentTypeMissing(_ slashlink: String)
     case fileDoesNotExist(_ slashlink: String)
