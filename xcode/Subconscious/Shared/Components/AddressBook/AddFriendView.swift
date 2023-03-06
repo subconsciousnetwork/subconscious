@@ -29,15 +29,13 @@ struct AddFriendView: View {
         NavigationStack {
             Form {
                 Section(header: Text("Friend Details")) {
-                    // TODO: validation
-                    
                     HStack(alignment: .top) {
                         Image(systemName: "key")
                             .foregroundColor(.accentColor)
                         ValidatedTextField(
                             placeholder: "DID",
                             text: $did,
-                            caption: "i.e. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                            caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
                             isValid: validateDid(key: did) != nil || did.count  == 0 // Prevent initial error
                         )
                         .lineLimit(1)
@@ -82,7 +80,7 @@ struct AddFriendView_Previews: PreviewProvider {
     struct TestView: View {
         @StateObject private var store = Store(
             state: AddressBookModel(),
-            environment: AddressBookEnvironment(noosphere: FakeSphereIdentityProvider())
+            environment: AddressBookEnvironment(noosphere: PlaceholderSphereIdentityProvider())
         )
 
         var body: some View {

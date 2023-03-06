@@ -21,7 +21,7 @@ struct AddressBookEnvironment {
 }
 
 // Used for SwiftUI Previews, also useful for testing
-class FakeSphereIdentityProvider: SphereIdentityProtocol {
+class PlaceholderSphereIdentityProvider: SphereIdentityProtocol {
     func identity() throws -> String {
         "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
     }
@@ -52,7 +52,7 @@ struct AddressBookModel: ModelProtocol {
                 return Update(state: state)
             }
             
-            let entry = AddressBookEntry(pfp: Image("pfp-dog"), petname: petname, did: did)
+            let entry = AddressBookEntry(pfp: Image("sub_logo_dark"), petname: petname, did: did)
             
             var model = state
             model.friends.append(entry)
