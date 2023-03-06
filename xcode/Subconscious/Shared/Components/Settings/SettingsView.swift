@@ -8,10 +8,75 @@
 import SwiftUI
 import ObservableStore
 
+struct GatewaySyncLabel: View {
+    var status: GatewaySyncStatus
+    @State var spin = false
+    
+    func label(status: GatewaySyncStatus) -> String {
+        switch (status) {
+        case .initial:
+            return "Sync with Gateway"
+        case .inProgress:
+            return "Syncing..."
+        case .failure:
+            return "Sync Failed"
+        case .success:
+            return "Sync Complete"
+        }
+    }
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading) {
+                switch (status) {
+                case .failure(_):
+                    Text(label(status: status))
+                        .foregroundColor(.red)
+                default:
+                    Text(label(status: status))
+                        .foregroundColor(.accentColor)
+                }
+                
+                if case .failure(let message) = status {
+                    Text("\(message)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            
+            Spacer()
+            
+            switch (status) {
+            case .initial:
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .foregroundColor(.secondary)
+            case .inProgress:
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .foregroundColor(.accentColor)
+                    .rotationEffect(.degrees(spin ? 360 : 0))
+                    .animation(Animation.linear
+                        .repeatForever(autoreverses: false)
+                        .speed(0.4), value: spin)
+                    .onAppear() {
+                        self.spin = true
+                    }
+            case .success:
+                Image(systemName: "checkmark.circle")
+                    .foregroundColor(.secondary)
+            case .failure:
+                Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
+                    .foregroundColor(.red)
+            }
+            
+        }
+    }
+}
+
 struct SettingsView: View {
     @ObservedObject var app: Store<AppModel>
     var unknown = "Unknown"
-
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -61,7 +126,7 @@ struct SettingsView: View {
                             app.send(.syncSphereWithGateway)
                         },
                         label: {
-                            Text("Sync with Gateway")
+                            GatewaySyncLabel(status: app.state.lastGatewaySyncStatus)
                         }
                     )
                 }

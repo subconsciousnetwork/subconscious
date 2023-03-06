@@ -195,6 +195,13 @@ enum AppDatabaseState {
     case ready
 }
 
+enum GatewaySyncStatus: Equatable {
+    case initial
+    case inProgress
+    case success
+    case failure(String)
+}
+
 //  MARK: Model
 struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
@@ -222,6 +229,7 @@ struct AppModel: ModelProtocol {
     var gatewayURL = AppDefaults.standard.gatewayURL
     var gatewayURLTextField = AppDefaults.standard.gatewayURL
     var isGatewayURLTextFieldValid = true
+    var lastGatewaySyncStatus = GatewaySyncStatus.initial
     
     /// Show settings sheet?
     var isSettingsSheetPresented = false
@@ -738,6 +746,10 @@ struct AppModel: ModelProtocol {
             logger.log("No gateway configured. Skipping sync.")
             return Update(state: state)
         }
+        
+        var model = state
+        model.lastGatewaySyncStatus = .inProgress
+        
         logger.log("Syncing with gateway: \(gatewayURL.absoluteString)")
         let fx: Fx<AppAction> = environment.data.syncSphereWithGateway()
             .map({ version in
@@ -747,7 +759,7 @@ struct AppModel: ModelProtocol {
                 Just(AppAction.failSyncSphereWithGateway(error.localizedDescription))
             })
             .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+        return Update(state: model, fx: fx)
     }
     
     static func succeedSyncSphereWithGateway(
@@ -756,8 +768,12 @@ struct AppModel: ModelProtocol {
         version: String
     ) -> Update<AppModel> {
         logger.log("Sphere synced with gateway @ \(version)")
+        
+        var model = state
+        model.lastGatewaySyncStatus = .success
+        
         return update(
-            state: state,
+            state: model,
             action: .syncSphereWithDatabase,
             environment: environment
         )
@@ -769,8 +785,12 @@ struct AppModel: ModelProtocol {
         error: String
     ) -> Update<AppModel> {
         logger.log("Sphere failed to sync with gateway: \(error)")
+        
+        var model = state
+        model.lastGatewaySyncStatus = .failure(error)
+        
         return update(
-            state: state,
+            state: model,
             action: .syncSphereWithDatabase,
             environment: environment
         )
