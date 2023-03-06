@@ -1409,17 +1409,31 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         var model = state
         
-        if model.address == nil {
-            model.address = environment.data.findUniqueLocalAddressFor(
+        /// If no address, derive one and update
+        guard state.address != nil else {
+            let address = environment.data.findUniqueLocalAddressFor(
                 model.editor.text
+            )
+            var model = state
+            model.address = address
+
+            let entry = model.snapshotEntry()
+
+            return update(
+                state: model,
+                actions: [
+                    .save(entry),
+                    .setMetaSheetAddress(address)
+                ],
+                environment: environment
             )
         }
         
         let entry = model.snapshotEntry()
-        return save(
-            state: model,
-            environment: environment,
-            entry: entry
+        return update(
+            state: state,
+            action: .save(entry),
+            environment: environment
         )
     }
     
