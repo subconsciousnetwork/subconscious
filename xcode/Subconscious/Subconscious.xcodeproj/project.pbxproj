@@ -14,6 +14,7 @@
 		B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BA29B1CA8B008BBB62 /* DidView.swift */; };
 		B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BC29B56699008BBB62 /* AddressBookModel.swift */; };
 		B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = B57D63BF29B574C3008BBB62 /* CodeScanner */; };
+		B57D63C229B575C8008BBB62 /* AddFriendViaQRCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63C129B575C8008BBB62 /* AddFriendViaQRCodeView.swift */; };
 		B584813F29AC32410033F434 /* AddressBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584813E29AC32410033F434 /* AddressBookView.swift */; };
 		B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814129AC335B0033F434 /* AddressBookEntryView.swift */; };
 		B584814429AC384F0033F434 /* FollowUserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814329AC384F0033F434 /* FollowUserView.swift */; };
@@ -368,6 +369,7 @@
 		B575834428ED8D9100F6EE88 /* combo.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = combo.json; sourceTree = "<group>"; };
 		B57D63BA29B1CA8B008BBB62 /* DidView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DidView.swift; sourceTree = "<group>"; };
 		B57D63BC29B56699008BBB62 /* AddressBookModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookModel.swift; sourceTree = "<group>"; };
+		B57D63C129B575C8008BBB62 /* AddFriendViaQRCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFriendViaQRCodeView.swift; sourceTree = "<group>"; };
 		B584813E29AC32410033F434 /* AddressBookView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookView.swift; sourceTree = "<group>"; };
 		B584814129AC335B0033F434 /* AddressBookEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookEntryView.swift; sourceTree = "<group>"; };
 		B584814329AC384F0033F434 /* FollowUserView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserView.swift; sourceTree = "<group>"; };
@@ -658,6 +660,7 @@
 				B584814329AC384F0033F434 /* AddFriendView.swift */,
 				B57D63BA29B1CA8B008BBB62 /* MyDidView.swift */,
 				B584814529AC3B5E0033F434 /* DidQrCodeView.swift */,
+				B57D63C129B575C8008BBB62 /* AddFriendViaQRCodeView.swift */,
 			);
 			path = AddressBook;
       sourceTree = "<group>";
@@ -1414,6 +1417,7 @@
 				B8EA3EE82915C23200B92C2E /* HeaderSubtext.swift in Sources */,
 				B8EF986E29034ADF0029363D /* Pathlike.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
+				B57D63C229B575C8008BBB62 /* AddFriendViaQRCodeView.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
 				B584813F29AC32410033F434 /* AddressBookView.swift in Sources */,
 				B8E00A302992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
@@ -1443,7 +1447,6 @@
 				B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */,
 				B58FE48A28DED93F00E000CC /* ComboGeist.swift in Sources */,
 				B584814629AC3B5E0033F434 /* DidQrCodeView.swift in Sources */,
-				B813749A28BFCCCA00CCC6FB /* MarkupTextViewRepresentable.swift in Sources */,
 				B8A59D6628B690B20010DB2F /* FeedService.swift in Sources */,
 				B8545F0A296F8FB700BC4EA1 /* OmniboxView.swift in Sources */,
 				B85BF47527BB3D6E00F55730 /* ToolbarTitleGroupView.swift in Sources */,

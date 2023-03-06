@@ -7,6 +7,7 @@
 
 import SwiftUI
 import ObservableStore
+import CodeScanner
 
 struct FollowUserView: View {
     var state: AddressBookModel
@@ -14,6 +15,23 @@ struct FollowUserView: View {
         get { state.followUserForm }
     }
     var send: (AddressBookAction) -> Void
+    
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    
+    @State var did: String = ""
+    @State var petname: String = ""
+    
+    func validateDid(key: String) -> Did? {
+        Did(key)
+    }
+    
+    func validatePetname(petname: String) -> Petname? {
+        Petname(petname)
+    }
+    
+    func populateDidFromQRCodeResult(encodedText: String) {
+        did = encodedText
+    }
     
     var body: some View {
         NavigationStack {
@@ -67,12 +85,18 @@ struct FollowUserView: View {
                 }
                 
                 Section(header: Text("Add via QR Code")) {
-                    Button(action: {}, label: {
-                        HStack {
-                            Image(systemName: "qrcode")
-                            Text("Scan Code")
+                    NavigationLink(
+                        destination: {
+                            AddFriendViaQRCodeView(onScannedDid: populateDidFromQRCodeResult)
+                        },
+                        label: {
+                            HStack {
+                                Image(systemName: "qrcode")
+                                Text("Scan Code")
+                            }
+                            .foregroundColor(.accentColor)
                         }
-                    })
+                    )
                 }
             }
             .navigationTitle("Follow User")
