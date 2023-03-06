@@ -16,14 +16,19 @@ struct FormField<I, O> {
     var validate: Validator<I, O>
     var touched: Bool = false
     
+    var validated: O? {
+        get {
+            validate(value)
+        }
+    }
     var isValid: Bool {
         get {
-            validate(value) != nil
+            validated != nil
         }
     }
     var hasError: Bool {
         get {
-            validate(value) == nil && touched
+            validated == nil && touched
         }
     }
 }
