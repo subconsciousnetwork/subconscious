@@ -9,6 +9,11 @@ import SwiftUI
 import ObservableStore
 import CodeScanner
 
+struct FormField<T> {
+    var value: T
+    var touched: Bool = false
+}
+
 struct FollowUserView: View {
     var state: AddressBookModel
     var form: FollowUserFormModel {
@@ -18,19 +23,19 @@ struct FollowUserView: View {
     
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     
-    @State var did: String = ""
-    @State var petname: String = ""
+    @State var did: FormField<String> = FormField(value: "")
+    @State var petname: FormField<String> = FormField(value: "")
     
-    func validateDid(key: String) -> Did? {
-        Did(key)
+    func validateDid(key: FormField<String>) -> Did? {
+        Did(key.value)
     }
     
-    func validatePetname(petname: String) -> Petname? {
-        Petname(petname)
+    func validatePetname(petname: FormField<String>) -> Petname? {
+        Petname(petname.value)
     }
     
     func populateDidFromQRCodeResult(encodedText: String) {
-        did = encodedText
+        did.value = encodedText
     }
     
     var body: some View {
