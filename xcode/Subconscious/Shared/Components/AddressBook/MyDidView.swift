@@ -17,31 +17,9 @@ struct MyDidView: View {
             Text(myDid.did)
                 .foregroundColor(.secondary)
             Spacer()
-            Button(action: {
-                // TODO: actually copy it!
-                didCopy = true
-            }, label: {
-                if !didCopy {
-                    HStack {
-                        Image(systemName: "doc.on.doc")
-                    }
-                    .transition(
-                        .asymmetric(
-                            insertion: .identity,
-                            removal: .move(
-                                edge: .top
-                            ).combined(
-                                with: .opacity
-                            )
-                        )
-                    )
-                } else {
-                    HStack {
-                        Image(systemName: "checkmark.circle")
-                    }
-                    .transition(.opacity)
-                }
-            })
+            ShareLink(item: myDid.did) {
+                Image(systemName: "square.and.arrow.up")
+            }
         }
     }
 }
