@@ -62,12 +62,16 @@ struct AddFriendView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
-                        if let did = validateDid(key: did) {
-                            if let petname = validatePetname(petname: petname) {
-                                send(.addFriend(did: did, petname: petname))
-                                presentationMode.wrappedValue.dismiss()
-                            }
+                        guard let did = validateDid(key: did) else {
+                            return
                         }
+                        
+                        guard let petname = validatePetname(petname: petname) else {
+                            return
+                        }
+                        
+                        send(.addFriend(did: did, petname: petname))
+                        presentationMode.wrappedValue.dismiss()
                     }
                 }
             }
