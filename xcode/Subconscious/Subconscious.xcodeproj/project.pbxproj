@@ -11,7 +11,7 @@
 		B54B922828E669D6003ACA1F /* MementoGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54B922728E669D6003ACA1F /* MementoGeist.swift */; };
 		B550E04029AF219100050F19 /* Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D30029AF1F9B0011D820 /* Did.swift */; };
 		B575834528ED8D9100F6EE88 /* combo.json in Resources */ = {isa = PBXBuildFile; fileRef = B575834428ED8D9100F6EE88 /* combo.json */; };
-		B57D63BB29B1CA8B008BBB62 /* MyDidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BA29B1CA8B008BBB62 /* MyDidView.swift */; };
+		B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BA29B1CA8B008BBB62 /* DidView.swift */; };
 		B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BC29B56699008BBB62 /* AddressBookModel.swift */; };
 		B584813F29AC32410033F434 /* AddressBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584813E29AC32410033F434 /* AddressBookView.swift */; };
 		B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814129AC335B0033F434 /* AddressBookEntryView.swift */; };
@@ -349,7 +349,7 @@
 		B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeBlockLayoutFragment.swift; sourceTree = "<group>"; };
 		B54B922728E669D6003ACA1F /* MementoGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MementoGeist.swift; sourceTree = "<group>"; };
 		B575834428ED8D9100F6EE88 /* combo.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = combo.json; sourceTree = "<group>"; };
-		B57D63BA29B1CA8B008BBB62 /* MyDidView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDidView.swift; sourceTree = "<group>"; };
+		B57D63BA29B1CA8B008BBB62 /* DidView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DidView.swift; sourceTree = "<group>"; };
 		B57D63BC29B56699008BBB62 /* AddressBookModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookModel.swift; sourceTree = "<group>"; };
 		B584813E29AC32410033F434 /* AddressBookView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookView.swift; sourceTree = "<group>"; };
 		B584814129AC335B0033F434 /* AddressBookEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookEntryView.swift; sourceTree = "<group>"; };
@@ -606,18 +606,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		B584814029AC32550033F434 /* AddressBook */ = {
-			isa = PBXGroup;
-			children = (
-				B57D63BC29B56699008BBB62 /* AddressBookModel.swift */,
-				B584814129AC335B0033F434 /* AddressBookEntryView.swift */,
-				B584813E29AC32410033F434 /* AddressBookView.swift */,
-				B584814329AC384F0033F434 /* AddFriendView.swift */,
-				B57D63BA29B1CA8B008BBB62 /* MyDidView.swift */,
-			);
-			path = AddressBook;
-      sourceTree = "<group>";
-    };
 		B532F8C129B1750F00CE9256 /* Transclude */ = {
 			isa = PBXGroup;
 			children = (
@@ -626,6 +614,17 @@
 				B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */,
 			);
 			path = Transclude;
+			sourceTree = "<group>";
+		};
+		B584814029AC32550033F434 /* AddressBook */ = {
+			isa = PBXGroup;
+			children = (
+				B57D63BC29B56699008BBB62 /* AddressBookModel.swift */,
+				B584814129AC335B0033F434 /* AddressBookEntryView.swift */,
+				B584813E29AC32410033F434 /* AddressBookView.swift */,
+				B584814329AC384F0033F434 /* AddFriendView.swift */,
+			);
+			path = AddressBook;
 			sourceTree = "<group>";
 		};
 		B80057E927DC355E002C0129 /* SubconsciousTests */ = {
@@ -1007,6 +1006,7 @@
 				B85EC468296F11F000558761 /* BylineSmView.swift */,
 				B85652212975F16B00B7FCA0 /* BylineView.swift */,
 				B822F18C27C9C0AB00943C6B /* CountChip.swift */,
+				B57D63BA29B1CA8B008BBB62 /* DidView.swift */,
 				B8B4D7ED27EA8AA000633B5F /* DragHandleView.swift */,
 				B86DFF2C27C0280B002E57ED /* EntryListView.swift */,
 				B82FD4552730A62C002CB641 /* EntryRow.swift */,
@@ -1453,7 +1453,7 @@
 				B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */,
 				B85EC463296F0CBD00558761 /* ProfilePicSm.swift in Sources */,
 				B86DFF3927C15B77002E57ED /* Config.swift in Sources */,
-				B57D63BB29B1CA8B008BBB62 /* MyDidView.swift in Sources */,
+				B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */,
 				B83E91D727692EC600045C6A /* FAB.swift in Sources */,
 				B848FDAA2991837900245115 /* DeveloperSettingsView.swift in Sources */,
 				B8545F0D2970577600BC4EA1 /* BacklinkReacts.swift in Sources */,

@@ -63,7 +63,7 @@ struct AddressBookView: View {
                 }
                 if let myDid = myDid {
                     Section(header: Text("My DID")) {
-                        MyDidView(myDid: myDid)
+                        DidView(did: myDid)
                     }
                 }
                 
@@ -81,7 +81,7 @@ struct AddressBookView: View {
                             AddFriendView(state: state, send: send)
                         },
                         label: {
-                    Text("Add Friend")
+                            Text("Add Friend")
                         }
                     )
                 }
