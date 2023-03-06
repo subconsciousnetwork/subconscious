@@ -33,7 +33,7 @@ enum AddressBookAction: Hashable {
 }
 
 struct AddressBookModel: ModelProtocol {
-    var friends: [AddressBookEntry] = []
+    var follows: [AddressBookEntry] = []
 
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -48,19 +48,19 @@ struct AddressBookModel: ModelProtocol {
         switch action {
         case .addFriend(did: let did, petname: let petname):
             // Guard against duplicates
-            guard !state.friends.contains(where: { entry in entry.did == did }) else {
+            guard !state.follows.contains(where: { entry in entry.did == did }) else {
                 return Update(state: state)
             }
             
             let entry = AddressBookEntry(pfp: Image("sub_logo_dark"), petname: petname, did: did)
             
             var model = state
-            model.friends.append(entry)
+            model.follows.append(entry)
             return Update(state: model)
         case .removeFriend(did: let did):
             var model = state
             
-            model.friends.removeAll { entry in
+            model.follows.removeAll { entry in
                 entry.did == did
             }
             return Update(state: model)

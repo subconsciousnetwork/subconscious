@@ -29,7 +29,7 @@ struct AddressBookView: View {
             return
         }
         
-        if let f = state.friends.get(idx) {
+        if let f = state.follows.get(idx) {
             send(.removeFriend(did: f.did))
         }
     }
@@ -37,7 +37,7 @@ struct AddressBookView: View {
     var body: some View {
         NavigationStack {
             Form {
-                if (state.friends.count == 0) {
+                if (state.follows.count == 0) {
                     VStack(spacing: AppTheme.unit2) {
                         Image(systemName: "person.3.fill")
                             .foregroundColor(.secondary)
@@ -49,7 +49,7 @@ struct AddressBookView: View {
                 } else {
                     Section(header: Text("Friends")) {
                         List {
-                            ForEach(state.friends, id: \.did) { user in
+                            ForEach(state.follows, id: \.did) { user in
                                 AddressBookEntryView(
                                     pfp: user.pfp,
                                     petname: user.petname,
@@ -95,7 +95,7 @@ struct AddressBook_Previews: PreviewProvider {
     struct TestView: View {
         @StateObject private var store = Store(
             state: AddressBookModel(
-                friends: [
+                follows: [
                     AddressBookEntry(pfp: Image("pfp-dog"), petname: Petname("ben")!, did: Did(  "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
                     AddressBookEntry(pfp: Image("sub_logo_light"), petname: Petname("bob")!, did: Did("did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
                     AddressBookEntry(pfp: Image("sub_logo_dark"), petname: Petname("alice")!, did: Did("did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
