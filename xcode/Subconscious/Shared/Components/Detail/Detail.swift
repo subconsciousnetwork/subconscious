@@ -1419,9 +1419,17 @@ struct DetailModel: ModelProtocol {
         state: DetailModel,
         environment: AppEnvironment
     ) -> Update<DetailModel> {
-        let entry = state.snapshotEntry()
+        var model = state
+        
+        if model.address == nil {
+            model.address = environment.data.findUniqueLocalAddressFor(
+                model.editor.text
+            )
+        }
+        
+        let entry = model.snapshotEntry()
         return save(
-            state: state,
+            state: model,
             environment: environment,
             entry: entry
         )
