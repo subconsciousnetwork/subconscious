@@ -9,9 +9,18 @@ import SwiftUI
 import ObservableStore
 import CodeScanner
 
-struct FormField<T> {
-    var value: T
+typealias Validator<I, O> = (I) -> O?
+
+struct FormField<I, O> {
+    var value: I
+    var validate: Validator<I, O>
     var touched: Bool = false
+    
+    var isValid: Bool {
+        get {
+            validate(value) != nil || !touched
+        }
+    }
 }
 
 struct FollowUserView: View {
@@ -23,15 +32,15 @@ struct FollowUserView: View {
     
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     
-    @State var did: FormField<String> = FormField(value: "")
-    @State var petname: FormField<String> = FormField(value: "")
+    @State var did: FormField<String, Did> = FormField(value: "", validate: Self.validateDid)
+    @State var petname: FormField<String, Petname> = FormField(value: "", validate: Self.validatePetname)
     
-    func validateDid(key: FormField<String>) -> Did? {
-        Did(key.value)
+    static func validateDid(key: String) -> Did? {
+        Did(key)
     }
     
-    func validatePetname(petname: FormField<String>) -> Petname? {
-        Petname(petname.value)
+    static func validatePetname(petname: String) -> Petname? {
+        Petname(petname)
     }
     
     func populateDidFromQRCodeResult(encodedText: String) {
