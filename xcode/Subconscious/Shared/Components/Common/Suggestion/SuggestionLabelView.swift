@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SuggestionLabelView: View, Equatable {
     var suggestion: Suggestion
+    var empty = String(localized: "Empty note")
 
     var body: some View {
         switch suggestion {
@@ -16,7 +17,9 @@ struct SuggestionLabelView: View, Equatable {
             Label(
                 title: {
                     TitleGroupView(
-                        title: Text(title),
+                        title: Text(
+                            verbatim: !title.isEmpty ? title : empty
+                        ),
                         subtitle: Text(
                             verbatim: address.toSlashlink().description
                         )
