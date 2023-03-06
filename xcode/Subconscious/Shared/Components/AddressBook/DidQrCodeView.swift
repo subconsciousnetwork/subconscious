@@ -15,9 +15,6 @@ struct DidQrCodeView: View {
     let context = CIContext()
     let filter = CIFilter.qrCodeGenerator()
     let colorInvertFilter = CIFilter.colorInvert()
-    let maskToAlphaFilter = CIFilter.maskToAlpha()
-    let colorReplaceFilter = CIFilter.spotColor()
-    
     let maskFilter = CIFilter.blendWithMask()
     
     func generateQRCode(from string: String) -> UIImage? {
