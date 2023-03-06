@@ -26,16 +26,13 @@ struct SuggestionLabelView: View, Equatable {
                     Image(systemName: "doc")
                 }
             )
-        case let .create(address, title):
+        case let .create(_, fallback):
             Label(
                 title: {
                     HStack {
                         Text("Create Note")
-                        if let title = Prose.chooseTitle(
-                            address: address,
-                            title: title
-                        ) {
-                            Text(verbatim: #""\#(title)""#)
+                        if !fallback.isEmpty {
+                            Text(verbatim: #""\#(fallback)""#)
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -72,7 +69,7 @@ struct SuggestionLabelView_Previews: PreviewProvider {
             )
             SuggestionLabelView(
                 suggestion: .create(
-                    title: "RAND Corp"
+                    fallback: "RAND Corp"
                 )
             )
             SuggestionLabelView(
@@ -82,7 +79,7 @@ struct SuggestionLabelView_Previews: PreviewProvider {
                             "@here/the-lee-shore"
                         )!
                     ),
-                    title: "The Lee Shore"
+                    fallback: "The Lee Shore"
                 )
             )
         }

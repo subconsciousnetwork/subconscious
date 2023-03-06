@@ -163,7 +163,6 @@ struct DetailView: View {
             store.send(
                 DetailAction.appear(
                     address: state.address,
-                    title: state.title,
                     fallback: state.fallback
                 )
             )
@@ -303,15 +302,14 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     case appear(
         address: MemoAddress?,
-        title: String?,
-        fallback: String?
+        fallback: String
     )
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
     /// if detail is already loaded.
     case loadDetail(
-        link: EntryLink?,
+        address: MemoAddress,
         fallback: String,
         autofocus: Bool
     )
@@ -378,8 +376,6 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)
     /// Merge entry failed. Lifecycle action.
     case failMergeEntry(String)
-
-    case selectBacklink(EntryLink)
 
     // Editor
     /// Update editor dom and mark if this state is saved or not
@@ -631,12 +627,11 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 phase: phase
             )
-        case let .appear(address, title, fallback):
+        case let .appear(address, fallback):
             return appear(
                 state: state,
                 environment: environment,
                 address: address,
-                title: title,
                 fallback: fallback
             )
         case let .setEditor(text, saveState, modified):
@@ -667,11 +662,11 @@ struct DetailModel: ModelProtocol {
                 text: text,
                 range: range
             )
-        case let .loadDetail(link, fallback, autofocus):
+        case let .loadDetail(address, fallback, autofocus):
             return loadDetail(
                 state: state,
                 environment: environment,
-                link: link,
+                address: address,
                 fallback: fallback,
                 autofocus: autofocus
             )
@@ -847,16 +842,6 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 error: error
             )
-        case .selectBacklink(let link):
-            return update(
-                state: state,
-                action: .loadDetail(
-                    link: link,
-                    fallback: link.linkableTitle,
-                    autofocus: false
-                ),
-                environment: environment
-            )
         case .insertEditorWikilinkAtSelection:
             return insertTaggedMarkup(
                 state: state,
@@ -957,20 +942,31 @@ struct DetailModel: ModelProtocol {
         state: DetailModel,
         environment: AppEnvironment,
         address: MemoAddress?,
-        title: String?,
-        fallback: String?
+        fallback: String
     ) -> Update<DetailModel> {
+        // No address? This is a draft.
         guard let address = address else {
-            return Update(state: state)
+            return update(
+                state: state,
+                actions: [
+                    .setMetaSheetAddress(address),
+                    .setEditor(
+                        text: fallback,
+                        saveState: .unsaved,
+                        modified: Date.now
+                    )
+                ],
+                environment: environment
+            )
         }
-        let link = EntryLink(address: address, title: title)
+        // Address? Attempt to load detail.
         return update(
             state: state,
             actions: [
                 .setMetaSheetAddress(address),
                 .loadDetail(
-                    link: link,
-                    fallback: fallback ?? "",
+                    address: address,
+                    fallback: fallback,
                     autofocus: false
                 )
             ],
@@ -1117,36 +1113,25 @@ struct DetailModel: ModelProtocol {
     static func loadDetail(
         state: DetailModel,
         environment: AppEnvironment,
-        link: EntryLink?,
+        address: MemoAddress,
         fallback: String,
         autofocus: Bool
     ) -> Update<DetailModel> {
-        guard let link = link else {
-            logger.log(
-                "Load and present detail requested, but nothing was being edited. Skipping."
+        let fx: Fx<DetailAction> = environment.data.readDetailAsync(
+            address: address,
+            title: fallback,
+            fallback: fallback
+        ).map({ detail in
+            DetailAction.setDetail(
+                detail: detail,
+                autofocus: autofocus
             )
-            return Update(state: state)
-        }
+        }).catch({ error in
+            Just(DetailAction.failLoadDetail(error.localizedDescription))
+        }).eraseToAnyPublisher()
         
-        let fx: Fx<DetailAction> = environment.data
-            .readDetailAsync(
-                address: link.address,
-                title: link.title,
-                fallback: fallback
-            )
-            .map({ detail in
-                DetailAction.setDetail(
-                    detail: detail,
-                    autofocus: autofocus
-                )
-            })
-            .catch({ error in
-                Just(DetailAction.failLoadDetail(error.localizedDescription))
-            })
-                .eraseToAnyPublisher()
-                    
-                    let model = prepareLoadDetail(state)
-                    return Update(state: model, fx: fx)
+        let model = prepareLoadDetail(state)
+        return Update(state: model, fx: fx)
     }
     
     /// Reload detail
@@ -1876,8 +1861,7 @@ struct DetailModel: ModelProtocol {
 /// A description of a detail suitible for pushing onto a navigation stack
 struct DetailOuterModel: Hashable, ModelProtocol {
     var address: MemoAddress?
-    var title: String?
-    var fallback: String?
+    var fallback: String = ""
     
     static func update(
         state: DetailOuterModel,
@@ -1936,7 +1920,6 @@ struct Detail_Previews: PreviewProvider {
             state: DetailOuterModel(
                 address: Slug(formatting: "Nothing is lost in the universe")!
                     .toPublicMemoAddress(),
-                title: "Nothing is lost in the universe",
                 fallback: "Nothing is lost in the universe"
             ),
             send: { action in }

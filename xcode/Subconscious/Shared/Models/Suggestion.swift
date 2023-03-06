@@ -8,16 +8,16 @@
 import Foundation
 
 enum Suggestion: Hashable {
-    case memo(address: MemoAddress, title: String)
-    case create(address: MemoAddress? = nil, title: String? = nil)
+    case memo(address: MemoAddress, fallback: String = "")
+    case create(address: MemoAddress? = nil, fallback: String = "")
     case random
     
-    var query: String? {
+    var fallback: String? {
         switch self {
-        case let .memo(_, title):
-            return title
-        case let .create(address, title):
-            return Prose.chooseTitle(address: address, title: title)
+        case let .memo(_, fallback):
+            return fallback
+        case let .create(_, fallback):
+            return fallback
         case .random:
             return nil
         }

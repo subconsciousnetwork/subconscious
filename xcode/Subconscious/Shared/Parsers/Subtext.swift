@@ -549,13 +549,6 @@ extension Subtext {
 }
 
 extension Subtext {
-    static func excerpt(markup: String, fallback: String = "") -> String {
-        let prefix = markup.prefix(512)
-        return Subtext(markup: String(prefix)).excerpt(fallback: fallback)
-    }
-}
-
-extension Subtext {
     /// Derive an excerpt
     func excerpt(fallback: String = "") -> String {
         for block in blocks {
@@ -568,6 +561,11 @@ extension Subtext {
             }
         }
         return fallback
+    }
+    
+    static func excerpt(markup: String, fallback: String = "") -> String {
+        let prefix = markup.prefix(512)
+        return Subtext(markup: String(prefix)).excerpt(fallback: fallback)
     }
 }
 

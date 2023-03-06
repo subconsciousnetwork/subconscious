@@ -220,7 +220,7 @@ struct SearchModel: ModelProtocol {
         return SearchModel.update(
             state: state,
             actions: [
-                .createSearchHistoryItem(suggestion.query),
+                .createSearchHistoryItem(suggestion.fallback),
                 .hideAndClearQuery
             ],
             environment: environment

@@ -25,10 +25,10 @@ struct NotebookNavigationView: View {
                     onEntryPress: { entry in
                         store.send(
                             .pushDetail(
-                                address: entry.address,
-                                title: entry.title,
-                                fallback: entry.title,
-                                autofocus: false
+                                DetailOuterModel(
+                                    address: entry.address,
+                                    fallback: entry.title
+                                )
                             )
                         )
                     },

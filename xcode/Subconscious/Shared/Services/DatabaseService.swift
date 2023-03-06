@@ -343,16 +343,14 @@ final class DatabaseService {
         .map({ (link: EntryLink) in
             Suggestion.memo(
                 address: link.address,
-                title: link.title
+                fallback: link.title
             )
         })
         
         var special: [Suggestion] = []
         
-        // Insert scratch
-        if Config.default.scratchSuggestionEnabled {
-            special.append(.create())
-        }
+        // Insert quick-create suggestion
+        special.append(.create(fallback: ""))
         
         if Config.default.randomSuggestionEnabled {
             // Insert an option to load a random note if there are any notes.
@@ -381,7 +379,7 @@ final class DatabaseService {
         
         // Create a suggestion for the literal query
         suggestions[queryEntrySlug] = .create(
-            title: query
+            fallback: query
         )
         
         let links: [EntryLink] = try database.execute(
@@ -414,7 +412,7 @@ final class DatabaseService {
         // entry will overwrite query.
         for link in links {
             suggestions.updateValue(
-                .memo(address: link.address, title: link.title),
+                .memo(address: link.address, fallback: link.title),
                 forKey: link.address.slug
             )
         }

@@ -151,12 +151,7 @@ enum NotebookAction {
     case findAndPushDetail(slug: Slug, title: String, fallback: String)
 
     /// Push detail onto navigation stack
-    case pushDetail(
-        address: MemoAddress?,
-        title: String?,
-        fallback: String?,
-        autofocus: Bool
-    )
+    case pushDetail(DetailOuterModel)
     
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
@@ -177,19 +172,19 @@ extension NotebookAction {
     /// Generate a detail request from a suggestion
     static func fromSuggestion(_ suggestion: Suggestion) -> Self {
         switch suggestion {
-        case let .memo(address, title):
+        case let .memo(address, fallback):
             return .pushDetail(
-                address: address,
-                title: title,
-                fallback: title,
-                autofocus: false
+                DetailOuterModel(
+                    address: address,
+                    fallback: fallback
+                )
             )
-        case let .create(address, title):
+        case let .create(address, fallback):
             return .pushDetail(
-                address: address,
-                title: title,
-                fallback: title,
-                autofocus: false
+                DetailOuterModel(
+                    address: address,
+                    fallback: fallback
+                )
             )
         case .random:
             return .pushRandomDetail(autofocus: false)
@@ -219,10 +214,10 @@ extension NotebookAction {
             return .deleteEntry(address)
         case let .requestDetail(address, title, fallback):
             return .pushDetail(
-                address: address,
-                title: title,
-                fallback: fallback,
-                autofocus: false
+                DetailOuterModel(
+                    address: address,
+                    fallback: fallback
+                )
             )
         case let .requestFindDetail(slug, title, fallback):
             return .findAndPushDetail(
@@ -484,15 +479,9 @@ struct NotebookModel: ModelProtocol {
                 title: title,
                 fallback: fallback
             )
-        case let .pushDetail(address, title, fallback, _):
+        case let .pushDetail(detail):
             var model = state
-            model.details.append(
-                DetailOuterModel(
-                    address: address,
-                    title: title,
-                    fallback: fallback
-                )
-            )
+            model.details.append(detail)
             return Update(state: model)
         case .pushRandomDetail(let autofocus):
             return pushRandomDetail(
@@ -810,9 +799,7 @@ struct NotebookModel: ModelProtocol {
         // Derive slug. If we can't (e.g. invalid query such as empty string),
         // just hide the search HUD and do nothing.
         guard
-            let link = Slug(formatting: query)?
-                .toLocalMemoAddress()
-                .toEntryLink(title: query)
+            let address = Slug(formatting: query)?.toLocalMemoAddress()
         else {
             logger.log(
                 "Query could not be converted to link: \(query)"
@@ -823,10 +810,10 @@ struct NotebookModel: ModelProtocol {
         // Request detail AFTER animaiton completes
         let fx: Fx<NotebookAction> = Just(
             NotebookAction.pushDetail(
-                address: link.address,
-                title: link.linkableTitle,
-                fallback: link.title,
-                autofocus: false
+                DetailOuterModel(
+                    address: address,
+                    fallback: query
+                )
             )
         )
         .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
@@ -849,10 +836,10 @@ struct NotebookModel: ModelProtocol {
         return update(
             state: state,
             action: .pushDetail(
-                address: address,
-                title: title,
-                fallback: fallback,
-                autofocus: false
+                DetailOuterModel(
+                    address: address,
+                    fallback: fallback
+                )
             ),
             environment: environment
         )
@@ -867,10 +854,10 @@ struct NotebookModel: ModelProtocol {
         let fx: Fx<NotebookAction> = environment.data.readRandomEntryLinkAsync()
             .map({ link in
                 NotebookAction.pushDetail(
-                    address: link.address,
-                    title: link.linkableTitle,
-                    fallback: link.title,
-                    autofocus: autofocus
+                    DetailOuterModel(
+                        address: link.address,
+                        fallback: link.title
+                    )
                 )
             })
             .catch({ error in
