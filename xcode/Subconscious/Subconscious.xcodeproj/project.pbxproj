@@ -11,6 +11,7 @@
 		B550E04029AF219100050F19 /* Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D30029AF1F9B0011D820 /* Did.swift */; };
 		B575834528ED8D9100F6EE88 /* combo.json in Resources */ = {isa = PBXBuildFile; fileRef = B575834428ED8D9100F6EE88 /* combo.json */; };
 		B57D63BB29B1CA8B008BBB62 /* MyDidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BA29B1CA8B008BBB62 /* MyDidView.swift */; };
+		B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BC29B56699008BBB62 /* AddressBookModel.swift */; };
 		B584813F29AC32410033F434 /* AddressBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584813E29AC32410033F434 /* AddressBookView.swift */; };
 		B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814129AC335B0033F434 /* AddressBookEntryView.swift */; };
 		B584814429AC384F0033F434 /* AddFriendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814329AC384F0033F434 /* AddFriendView.swift */; };
@@ -348,6 +349,7 @@
 		B54B922728E669D6003ACA1F /* MementoGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MementoGeist.swift; sourceTree = "<group>"; };
 		B575834428ED8D9100F6EE88 /* combo.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = combo.json; sourceTree = "<group>"; };
 		B57D63BA29B1CA8B008BBB62 /* MyDidView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDidView.swift; sourceTree = "<group>"; };
+		B57D63BC29B56699008BBB62 /* AddressBookModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookModel.swift; sourceTree = "<group>"; };
 		B584813E29AC32410033F434 /* AddressBookView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookView.swift; sourceTree = "<group>"; };
 		B584814129AC335B0033F434 /* AddressBookEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookEntryView.swift; sourceTree = "<group>"; };
 		B584814329AC384F0033F434 /* AddFriendView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddFriendView.swift; sourceTree = "<group>"; };
@@ -606,6 +608,7 @@
 		B584814029AC32550033F434 /* AddressBook */ = {
 			isa = PBXGroup;
 			children = (
+				B57D63BC29B56699008BBB62 /* AddressBookModel.swift */,
 				B584814129AC335B0033F434 /* AddressBookEntryView.swift */,
 				B584813E29AC32410033F434 /* AddressBookView.swift */,
 				B584814329AC384F0033F434 /* AddFriendView.swift */,
@@ -1377,6 +1380,7 @@
 				B8AE34AA276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
 				B8CBAFA9299580E50079107E /* StoreProtocol.swift in Sources */,
 				B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */,
+				B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */,
 				B8B3EE7D297B1A1000779B7F /* ViewDebugUtilities.swift in Sources */,
 				B826B27527B5D95F003D3C03 /* SaveState.swift in Sources */,
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,
