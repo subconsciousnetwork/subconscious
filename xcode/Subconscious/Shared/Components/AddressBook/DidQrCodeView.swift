@@ -18,22 +18,15 @@ struct DidQrCodeView: View {
     let maskToAlphaFilter = CIFilter.maskToAlpha()
     let colorReplaceFilter = CIFilter.spotColor()
     
+    let maskFilter = CIFilter.blendWithMask()
+    
     func generateQRCode(from string: String) -> UIImage? {
         filter.message = Data(string.utf8)
         
-        guard let img = filter.outputImage else { return nil }
-        colorInvertFilter.inputImage = img
+        colorInvertFilter.inputImage = filter.outputImage
+        guard let inverted = colorInvertFilter.outputImage else { return nil }
         
-        // Black on White -> White on Black
-        guard let img = colorInvertFilter.outputImage else { return nil}
-        maskToAlphaFilter.inputImage = img
-        
-        // Mask Black to transparent
-        guard let img = maskToAlphaFilter.outputImage else { return nil }
-        colorReplaceFilter.inputImage = img
-        colorReplaceFilter.centerColor1 = .white
-        colorReplaceFilter.closeness1 = 1
-        
+        maskFilter.maskImage = inverted
         // This is the only way I managed to produce a CIColor from .accentColor
         // https://developer.apple.com/forums/thread/687764
         // https://stackoverflow.com/questions/56586055/how-to-get-rgb-components-from-color-in-swiftui
@@ -42,10 +35,10 @@ struct DidQrCodeView: View {
         var b: CGFloat = 0.0
         var a: CGFloat = 0.0
         UIColor(Color.accentColor).getRed(&r, green: &g, blue: &b, alpha: &a)
-        colorReplaceFilter.replacementColor1 = CIColor(red: r, green: g, blue: b, alpha: a)
+        let col = CIColor(red: r, green: g, blue: b, alpha: a)
+        maskFilter.inputImage = CIImage(color: col)
         
-        // Replace White with accent color
-        guard let img = colorReplaceFilter.outputImage else { return nil }
+        guard let img = maskFilter.outputImage else { return nil }
         guard let cgImg = context.createCGImage(img, from: img.extent) else { return nil }
         
         return UIImage(cgImage: cgImg)
@@ -53,7 +46,7 @@ struct DidQrCodeView: View {
     
     
     var body: some View {
-        let img = generateQRCode(from: "\(did)") ?? UIImage(systemName: "xmark.circle") ?? UIImage()
+        let img = generateQRCode(from: "\(did.did)") ?? UIImage(systemName: "xmark.circle") ?? UIImage()
         
         Image(uiImage: img)
             .resizable()
