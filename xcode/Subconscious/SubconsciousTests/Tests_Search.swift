@@ -83,11 +83,9 @@ class Tests_Search: XCTestCase {
         let update = SearchModel.update(
             state: state,
             action: .activateSuggestion(
-                Suggestion.entry(
-                    EntryLink(
-                        address: MemoAddress.local(
-                            Slug("red-and-orange-and-purple")!
-                        )
+                Suggestion.memo(
+                    address: MemoAddress.local(
+                        Slug("red-and-orange-and-purple")!
                     )
                 )
             ),
