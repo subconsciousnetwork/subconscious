@@ -137,24 +137,12 @@ struct DetailView: View {
         .toolbarBackground(.visible)
         .toolbarBackground(Color.background, for: .navigationBar)
         .toolbar(content: {
-            if store.state.editor.focus {
-                DetailEditToolbarContent(
-                    address: store.state.address,
-                    onTapOmnibox: {
-                        store.send(.presentMetaSheet(true))
-                    },
-                    onDone: {
-                        store.send(.doneEditing)
-                    }
-                )
-            } else {
-                DetailToolbarContent(
-                    address: store.state.address,
-                    onTapOmnibox: {
-                        store.send(.presentMetaSheet(true))
-                    }
-                )
-            }
+            DetailToolbarContent(
+                address: store.state.address,
+                onTapOmnibox: {
+                    store.send(.presentMetaSheet(true))
+                }
+            )
         })
         .onAppear {
             // When an editor is presented, refresh if stale.
