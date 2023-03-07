@@ -456,7 +456,7 @@ extension Subtext {
     static func renderAttributesOf(
         _ attributedString: NSMutableAttributedString,
         url: (String, String) -> URL?
-    ) {
+    ) -> Subtext {
         let dom = Subtext(markup: attributedString.string)
         
         // Get range of all text, using new Swift NSRange constructor
@@ -493,6 +493,8 @@ extension Subtext {
         for block in dom.blocks {
             renderBlockAttributesOf(attributedString, block: block, url: url)
         }
+        
+        return dom
     }
     
     /// Read markup in NSMutableAttributedString, and render as attributes.

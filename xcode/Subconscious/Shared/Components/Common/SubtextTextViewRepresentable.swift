@@ -164,22 +164,6 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         }
     }
 
-    class SubtextTextParagraph: NSTextParagraph {
-        private(set) var subtext: Subtext
-
-        init(attributedString: NSAttributedString) {
-            SubtextTextViewRepresentable.logger.debug(
-                "SubtextTextParagraph: parse and render markup"
-            )
-            let subtext = Subtext(markup: attributedString.string)
-            let renderedAttributedString = subtext.renderAttributedString(
-                url: SubtextTextViewRepresentable.toSubURL
-            )
-            self.subtext = subtext
-            super.init(attributedString: renderedAttributedString)
-        }
-    }
-
     //  MARK: Coordinator
     class Coordinator: NSObject, UITextViewDelegate, NSTextContentStorageDelegate, NSTextStorageDelegate, NSTextContentManagerDelegate, NSTextLayoutManagerDelegate {
         /// Is event happening during updateUIView?
@@ -189,6 +173,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         var isUIViewUpdating: Bool
         var representable: SubtextTextViewRepresentable
         var renderTranscludeBlocks: Bool = false
+        var subtext: Subtext? = nil
 
         init(
             representable: SubtextTextViewRepresentable
@@ -213,20 +198,19 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
           range: NSRange,
           changeInLength: Int
         ) {
-          SubtextTextViewRepresentable.logger.debug(
+            SubtextTextViewRepresentable.logger.debug(
               "textStorage: render markup attributes"
-          )
-          textStorage.setAttributes(
-              [:],
-              range: NSRange(
-                  textStorage.string.startIndex...,
-                  in: textStorage.string
-              )
-          )
-            
-          // Render markup on TextStorage (which is an NSMutableString)
-          // using closure set on view (representable)
-          Subtext.renderAttributesOf(textStorage, url: SubtextTextViewRepresentable.toSubURL)
+            )
+            textStorage.setAttributes(
+                [:],
+                range: NSRange(
+                    textStorage.string.startIndex...,
+                    in: textStorage.string
+                )
+            )
+
+            // Render markup on TextStorage (which is an NSMutableString)
+            self.subtext = Subtext.renderAttributesOf(textStorage, url: SubtextTextViewRepresentable.toSubURL)
         }
 
 
@@ -313,12 +297,14 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                 return baseLayoutFragment
             }
 
-            guard let paragraph = textElement as? SubtextTextParagraph else {
+            guard let paragraph = textElement as? NSTextParagraph else {
                 return baseLayoutFragment
             }
 
             // Only render transcludes for a single slashlink in a single block
-            guard let _ = paragraph.subtext.slashlinks
+            guard let _ = subtext?
+                .block(forParagraph: paragraph)?
+                .slashlinks
                 .get(0)?
                 .toSlashlink()
             else {
@@ -331,18 +317,6 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             )
 
             return layoutFragment
-        }
-        
-        // MARK: - NSTextContentStorageDelegate
-        
-        func textContentStorage(_ textContentStorage: NSTextContentStorage, textParagraphWith range: NSRange) -> NSTextParagraph? {
-            guard let attributedSubstring = textContentStorage.textStorage?
-                .attributedSubstring(from: range)
-            else {
-                SubtextTextViewRepresentable.logger.warning("textContentStorage: could not access attributedSubstring")
-                return nil
-            }
-            return SubtextTextParagraph(attributedString: attributedSubstring)
         }
     }
 
