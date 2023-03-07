@@ -734,10 +734,10 @@ extension Subtext {
             guard let tcm = forParagraph.textContentManager else {
                 return false
             }
-            
             guard let range: Range<String.Index> = Range(NSRange(contentRange, in: tcm), in: base) else {
                 return false
             }
+            
             return b.body().range.overlaps(range)
         }
     }
