@@ -14,7 +14,6 @@ struct Memo: Hashable, CustomStringConvertible {
     var contentType: String
     var created: Date
     var modified: Date
-    var title: String
     var fileExtension: String
     var additionalHeaders: Headers
     var body: String
@@ -27,7 +26,6 @@ struct Memo: Hashable, CustomStringConvertible {
             contentType: contentType,
             created: created,
             modified: modified,
-            title: title,
             fileExtension: fileExtension
         )
         .getAdditionalHeaders()
@@ -48,6 +46,17 @@ struct Memo: Hashable, CustomStringConvertible {
         }
     }
     
+    func title() -> String {
+        switch ContentType(rawValue: contentType) {
+        case .subtext:
+            return Subtext.excerpt(markup: body).title()
+        case .text:
+            return body.title()
+        default:
+            return ""
+        }
+    }
+
     /// Derive an excerpt from this memo.
     /// Uses content type to try to make a best guess.
     func excerpt() -> String {
@@ -78,7 +87,6 @@ struct Memo: Hashable, CustomStringConvertible {
             contentType: contentType,
             created: created,
             modified: modified,
-            title: title,
             fileExtension: fileExtension
         )
     }
@@ -112,7 +120,6 @@ extension MemoData {
             contentType: self.contentType,
             created: created,
             modified: modified,
-            title: title,
             fileExtension: fileExtension
         )
         .updating(self.additionalHeaders)
@@ -121,7 +128,6 @@ extension MemoData {
             contentType: headers.contentType,
             created: headers.created,
             modified: headers.modified,
-            title: headers.title,
             fileExtension: headers.fileExtension,
             additionalHeaders: [],
             body: body

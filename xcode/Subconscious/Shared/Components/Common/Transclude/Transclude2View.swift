@@ -12,22 +12,14 @@ import SwiftUI
 /// pfps throughout the app.
 struct Transclude2View: View {
     var address: MemoAddress
-    var title: String
     var excerpt: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
-            HStack {
-                Text(title)
-                    .bold()
-                Spacer()
-            }
             Text(excerpt)
                 .lineLimit(5)
-            HStack(spacing: 0) {
-                Text(verbatim: address.toSlashlink().description)
-            }
-            .foregroundColor(.secondary)
+            SlashlinkBylineView(slashlink: address.toSlashlink())
+                .theme(petname: Color.secondary)
         }
         .padding(.vertical, AppTheme.unit3)
         .padding(.horizontal, AppTheme.unit4)
@@ -42,10 +34,15 @@ struct Transclude2View: View {
 
 struct Transclude2View_Previews: PreviewProvider {
     static var previews: some View {
-        Transclude2View(
-            address: MemoAddress.public(Slashlink("@gordon/loomings")!),
-            title: "Loomings",
-            excerpt: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation."
-        )
+        VStack {
+            Transclude2View(
+                address: MemoAddress.public(Slashlink("@gordon/loomings")!),
+                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation."
+            )
+            Transclude2View(
+                address: MemoAddress.public(Slashlink("/loomings")!),
+                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation."
+            )
+        }
     }
 }

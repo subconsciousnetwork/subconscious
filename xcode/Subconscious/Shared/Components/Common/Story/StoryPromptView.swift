@@ -32,7 +32,7 @@ struct StoryPromptView: View {
                     action: {
                         action(
                             story.entry.address,
-                            story.entry.title
+                            story.entry.excerpt
                         )
                     },
                     label: {
@@ -40,7 +40,6 @@ struct StoryPromptView: View {
                             pfp: Image("pfp-dog"),
                             petname: "@doge",
                             slashlink: story.entry.address.slug.description,
-                            title: story.entry.title,
                             excerpt: story.entry.excerpt
                         )
                     }
@@ -54,7 +53,7 @@ struct StoryPromptView: View {
                     action: {
                         action(
                             story.entry.address,
-                            story.entry.title
+                            story.entry.excerpt
                         )
                     },
                     label: {
@@ -83,7 +82,6 @@ struct StoryPromptView_Previews: PreviewProvider {
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,
                             modified: Date.now,
-                            title: "Meme",
                             fileExtension: ContentType.subtext.fileExtension,
                             additionalHeaders: [],
                             body: """

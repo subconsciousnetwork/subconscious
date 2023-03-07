@@ -11,7 +11,6 @@ struct TranscludeView: View {
     var pfp: Image
     var petname: String
     var slashlink: String
-    var title: String
     var excerpt: String
 
     var body: some View {
@@ -21,11 +20,6 @@ struct TranscludeView: View {
                 petname: petname,
                 slug: slashlink
             )
-            HStack {
-                Text(title)
-                    .bold()
-                Spacer()
-            }
             Text(excerpt)
         }
         .padding(.vertical, AppTheme.unit3)
@@ -45,8 +39,7 @@ struct TranscludeView_Previews: PreviewProvider {
             pfp: Image("dog-pfp"),
             petname: "@doge",
             slashlink: "/thoughts",
-            title: "Thoughts of Doge",
-            excerpt: "Food food park park park run run play run fetch ball run water shlorp shlorp shlorp dog bork bork bork home sleep sleep dream sleep"
+            excerpt: "Thoughts of Doge. Food food park park park run run play run fetch ball run water shlorp shlorp shlorp dog bork bork bork home sleep sleep dream sleep"
         )
     }
 }

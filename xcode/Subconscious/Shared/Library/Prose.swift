@@ -7,31 +7,6 @@
 
 import Foundation
 
-enum Prose {}
-
-extension Prose {
-    static func chooseTitle(
-        address: MemoAddress?,
-        title: String?
-    ) -> String? {
-        if let title = title {
-            return title
-        }
-        if let address = address {
-            return address.slug.toTitle()
-        }
-        return nil
-    }
-    
-    static func chooseTitle(
-        address: MemoAddress?,
-        title: String?,
-        fallback: String
-    ) -> String {
-        chooseTitle(address: address, title: title) ?? fallback
-    }
-}
-
 extension Character {
     private static let sentenceEndingPunctuation: Set<Character> = Set(
         [
@@ -79,11 +54,12 @@ extension String {
     /// - Returns:
     func title(
         maxLength: Int = 140,
+        ellipsis: String = "…",
         fallback: String = String(localized: "Untitled")
     ) -> String {
         String(self.firstSentence).truncate(
             maxLength: maxLength,
-            ellipsis: "",
+            ellipsis: ellipsis,
             fallback: fallback
         )
     }

@@ -23,7 +23,6 @@ class Tests_Detail: XCTestCase {
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
                 modified: modified,
-                title: "Example",
                 fileExtension: ContentType.subtext.fileExtension,
                 additionalHeaders: [],
                 body: "Example text"
@@ -83,7 +82,6 @@ class Tests_Detail: XCTestCase {
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
                 modified: Date.now,
-                title: "Example",
                 fileExtension: ContentType.subtext.fileExtension,
                 additionalHeaders: [],
                 body: "Example"
@@ -120,7 +118,6 @@ class Tests_Detail: XCTestCase {
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
                 modified: Date.now,
-                title: "Example",
                 fileExtension: ContentType.subtext.fileExtension,
                 additionalHeaders: [],
                 body: "Example"
@@ -207,7 +204,6 @@ class Tests_Detail: XCTestCase {
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
                 modified: Date.now,
-                title: "Loomings",
                 fileExtension: ContentType.subtext.fileExtension
             )
         )
@@ -233,7 +229,6 @@ class Tests_Detail: XCTestCase {
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
                 modified: Date.now,
-                title: "Loomings",
                 fileExtension: ContentType.subtext.fileExtension
             )
         )
@@ -250,11 +245,6 @@ class Tests_Detail: XCTestCase {
             Slug(formatting: "loomings")!.toPublicMemoAddress(),
             "Does not change address, because addresses don't match"
         )
-        XCTAssertEqual(
-            update.state.headers.title,
-            "Loomings",
-            "Does not change title, because addresses don't match"
-        )
     }
     
     func testSucceedMergeEntry() throws {
@@ -265,7 +255,6 @@ class Tests_Detail: XCTestCase {
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
                 modified: Date.now,
-                title: "Loomings",
                 fileExtension: ContentType.subtext.fileExtension
             )
         )

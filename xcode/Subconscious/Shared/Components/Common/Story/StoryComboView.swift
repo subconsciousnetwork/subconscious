@@ -31,12 +31,11 @@ struct StoryComboView: View {
                 
                 Button(
                     action: {
-                        action(story.entryA.address, story.entryA.title)
+                        action(story.entryA.address, story.entryA.excerpt)
                     },
                     label: {
                         Transclude2View(
                             address: story.entryA.address,
-                            title: story.entryA.title,
                             excerpt: story.entryA.excerpt
                         )
                     }
@@ -45,12 +44,11 @@ struct StoryComboView: View {
                 
                 Button(
                     action: {
-                        action(story.entryB.address, story.entryB.title)
+                        action(story.entryB.address, story.entryB.excerpt)
                     },
                     label: {
                         Transclude2View(
                             address: story.entryB.address,
-                            title: story.entryB.title,
                             excerpt: story.entryB.excerpt
                         )
                     }
@@ -66,7 +64,7 @@ struct StoryComboView: View {
                             return
                         }
                         let link = EntryLink(entry)
-                        self.action(entry.address, entry.contents.title)
+                        self.action(entry.address, link.title)
                     },
                     label: {
                         Text("Create")
@@ -93,7 +91,6 @@ struct StoryComboView_Previews: PreviewProvider {
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,
                             modified: Date.now,
-                            title: "Meme",
                             fileExtension: ContentType.subtext.fileExtension,
                             additionalHeaders: [],
                             body: """
@@ -111,7 +108,6 @@ struct StoryComboView_Previews: PreviewProvider {
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,
                             modified: Date.now,
-                            title: "Meme",
                             fileExtension: ContentType.subtext.fileExtension,
                             additionalHeaders: [],
                             body: """

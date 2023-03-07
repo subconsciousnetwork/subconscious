@@ -132,7 +132,7 @@ struct DetailView: View {
                 }
             }
         }
-        .navigationTitle(store.state.headers.title)
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible)
         .toolbarBackground(Color.background, for: .navigationBar)
@@ -537,7 +537,6 @@ struct DetailModel: ModelProtocol {
         contentType: ContentType.subtext.rawValue,
         created: Date.distantPast,
         modified: Date.distantPast,
-        title: "",
         fileExtension: ContentType.subtext.fileExtension
     )
     /// Additional headers that are not well-known headers.
@@ -1107,7 +1106,6 @@ struct DetailModel: ModelProtocol {
     ) -> Update<DetailModel> {
         let fx: Fx<DetailAction> = environment.data.readDetailAsync(
             address: address,
-            title: fallback,
             fallback: fallback
         ).map({ detail in
             DetailAction.setDetail(
@@ -1138,7 +1136,6 @@ struct DetailModel: ModelProtocol {
         
         let fx: Fx<DetailAction> = environment.data.readDetailAsync(
             address: address,
-            title: model.headers.title,
             fallback: model.editor.text
         ).map({ detail in
             DetailAction.setDetailLastWriteWins(detail)
@@ -1351,7 +1348,6 @@ struct DetailModel: ModelProtocol {
             contentType: ContentType.subtext.rawValue,
             created: Date.distantPast,
             modified: Date.distantPast,
-            title: "",
             fileExtension: ContentType.subtext.fileExtension
         )
         model.additionalHeaders = []
@@ -1907,15 +1903,6 @@ struct DetailOuterModel: Hashable, ModelProtocol {
     }
 }
 
-extension EntryLink {
-    init?(_ detail: DetailModel) {
-        guard let address = detail.address else {
-            return nil
-        }
-        self.init(address: address, title: detail.headers.title)
-    }
-}
-
 extension FileFingerprint {
     /// Initialize FileFingerprint from DetailModel.
     /// We use this to do last-write-wins.
@@ -1941,7 +1928,6 @@ extension MemoEntry {
             contentType: detail.headers.contentType,
             created: detail.headers.created,
             modified: detail.headers.modified,
-            title: detail.headers.title,
             fileExtension: detail.headers.fileExtension,
             additionalHeaders: detail.additionalHeaders,
             body: detail.editor.text

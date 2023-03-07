@@ -213,7 +213,7 @@ final class DatabaseService {
                 .text(memo.contentType),
                 .date(memo.created),
                 .date(memo.modified),
-                .text(memo.title),
+                .text(memo.title()),
                 .text(memo.fileExtension),
                 .json(memo.headers, or: "[]"),
                 .text(memo.body),
@@ -266,7 +266,7 @@ final class DatabaseService {
         }
         let results = try database.execute(
             sql: """
-            SELECT id, modified, title, excerpt
+            SELECT id, modified, excerpt
             FROM memo
             ORDER BY modified DESC
             LIMIT 1000
@@ -276,14 +276,12 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
                 let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString()
+                let excerpt = row.col(2)?.toString()
             else {
                 return nil
             }
             return EntryStub(
                 address: address,
-                title: title,
                 excerpt: excerpt,
                 modified: modified
             )
@@ -621,7 +619,7 @@ final class DatabaseService {
         // Use content indexed in database, even though it might be stale.
         guard let results = try? database.execute(
             sql: """
-            SELECT id, modified, title, excerpt
+            SELECT id, modified, excerpt
             FROM memo_search
             WHERE slug != ? AND memo_search.description MATCH ?
             ORDER BY rank
@@ -639,14 +637,12 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
                 let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
                 let excerpt = row.col(3)?.toString()
             else {
                 return nil
             }
             return EntryStub(
                 address: address,
-                title: title,
                 excerpt: excerpt,
                 modified: modified
             )
@@ -663,7 +659,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT id, modified, title, excerpt
+            SELECT id, modified, excerpt
             FROM memo
             WHERE memo.modified BETWEEN ? AND ?
             ORDER BY RANDOM()
@@ -678,14 +674,12 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
                 let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString()
+                let excerpt = row.col(2)?.toString()
             else {
                 return nil
             }
             return EntryStub(
                 address: address,
-                title: title,
                 excerpt: excerpt,
                 modified: modified
             )
@@ -701,7 +695,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT id, modified, title, excerpt
+            SELECT id, modified, excerpt
             FROM memo
             ORDER BY RANDOM()
             LIMIT 1
@@ -711,14 +705,12 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
                 let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString()
+                let excerpt = row.col(2)?.toString()
             else {
                 return nil
             }
             return EntryStub(
                 address: address,
-                title: title,
                 excerpt: excerpt,
                 modified: modified
             )
@@ -736,7 +728,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT id, modified, title, excerpt
+            SELECT id, modified, excerpt
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY RANDOM()
@@ -750,14 +742,12 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
                 let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString()
+                let excerpt = row.col(2)?.toString()
             else {
                 return nil
             }
             return EntryStub(
                 address: address,
-                title: title,
                 excerpt: excerpt,
                 modified: modified
             )

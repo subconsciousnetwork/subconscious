@@ -14,7 +14,6 @@ final class Tests_Memo: XCTestCase {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: "Example A",
             fileExtension: ContentType.subtext.fileExtension,
             additionalHeaders: [
                 Header(name: "Foo", value: "Foo")
@@ -26,7 +25,6 @@ final class Tests_Memo: XCTestCase {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: "Example B",
             fileExtension: ContentType.text.fileExtension,
             additionalHeaders: [
                 Header(name: "Bar", value: "Bar"),
@@ -38,7 +36,6 @@ final class Tests_Memo: XCTestCase {
         let c = a.merge(b)
 
         // Test that A's headers win
-        XCTAssertEqual(c.title, a.title, "Keeps subject title")
         XCTAssertEqual(c.fileExtension, a.fileExtension, "Keeps subject file extension")
 
         // Test that additional headers are merged

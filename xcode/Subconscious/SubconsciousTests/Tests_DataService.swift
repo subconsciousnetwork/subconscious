@@ -83,7 +83,6 @@ final class Tests_DataService: XCTestCase {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: "Test",
             fileExtension: ContentType.subtext.fileExtension,
             additionalHeaders: [],
             body: "Test content"
@@ -96,7 +95,6 @@ final class Tests_DataService: XCTestCase {
         
         let memoOut = try data.readMemo(address: address)
         
-        XCTAssertEqual(memoOut.title, memoIn.title)
         XCTAssertEqual(memoOut.body, memoIn.body)
     }
     
@@ -118,7 +116,6 @@ final class Tests_DataService: XCTestCase {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: "Test",
             fileExtension: ContentType.subtext.fileExtension,
             additionalHeaders: [],
             body: "Test content"
@@ -134,7 +131,6 @@ final class Tests_DataService: XCTestCase {
         
         let memoOut = try data.readMemo(address: address)
         
-        XCTAssertEqual(memoOut.title, memoIn.title)
         XCTAssertEqual(memoOut.body, memoIn.body)
     }
     
@@ -147,7 +143,6 @@ final class Tests_DataService: XCTestCase {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: "Test",
             fileExtension: ContentType.subtext.fileExtension,
             additionalHeaders: [],
             body: "Test content"
@@ -163,13 +158,11 @@ final class Tests_DataService: XCTestCase {
         
         let detail = try data.readDetail(
             address: address,
-            title: "Test fallback",
             fallback: "Fallback content"
         )
         
         XCTAssertEqual(detail.entry.address, address)
         XCTAssertEqual(detail.entry.contents.body, memo.body)
-        XCTAssertEqual(detail.entry.contents.title, memo.title)
     }
     
     func testManyWritesThenCloseThenReopen() throws {
@@ -188,7 +181,6 @@ final class Tests_DataService: XCTestCase {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: "Test",
             fileExtension: ContentType.subtext.fileExtension,
             additionalHeaders: [],
             body: "Test content"
@@ -234,7 +226,6 @@ final class Tests_DataService: XCTestCase {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: "Test",
             fileExtension: ContentType.subtext.fileExtension,
             additionalHeaders: [],
             body: "Test content"

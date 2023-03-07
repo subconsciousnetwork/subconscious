@@ -27,7 +27,7 @@ struct NotebookNavigationView: View {
                             .pushDetail(
                                 DetailOuterModel(
                                     address: entry.address,
-                                    fallback: entry.title
+                                    fallback: entry.excerpt
                                 )
                             )
                         )

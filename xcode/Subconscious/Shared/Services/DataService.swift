@@ -353,27 +353,6 @@ struct DataService {
         }
     }
     
-    /// Update the title of an entry, without changing its slug
-    func retitleEntry(
-        address: MemoAddress,
-        title: String
-    ) throws {
-        var memo = try readMemo(address: address)
-        memo.title = title
-        try writeMemo(address: address, memo: memo)
-    }
-    
-    /// Change title header of entry, without moving it.
-    /// - Returns combine publisher
-    func retitleEntryAsync(
-        address: MemoAddress,
-        title: String
-    ) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async {
-            try retitleEntry(address: address, title: title)
-        }
-    }
-    
     func listRecentMemos() -> AnyPublisher<[EntryStub], Error> {
         CombineUtilities.async(qos: .default) {
             try database.listRecentMemos()
@@ -492,7 +471,6 @@ struct DataService {
 
     func readDetail(
         address: MemoAddress,
-        title: String,
         fallback: String
     ) throws -> EntryDetail {
         let backlinks = database.readEntryBacklinks(slug: address.slug)
@@ -505,7 +483,6 @@ struct DataService {
                     contentType: ContentType.subtext.rawValue,
                     created: Date.now,
                     modified: Date.now,
-                    title: title,
                     fileExtension: ContentType.subtext.fileExtension,
                     additionalHeaders: [],
                     body: fallback
@@ -557,11 +534,10 @@ struct DataService {
     /// clean slug.
     func readDetailAsync(
         address: MemoAddress,
-        title: String,
         fallback: String
     ) -> AnyPublisher<EntryDetail, Error> {
         CombineUtilities.async(qos: .utility) {
-            try readDetail(address: address, title: title, fallback: fallback)
+            try readDetail(address: address, fallback: fallback)
         }
     }
     

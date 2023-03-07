@@ -17,7 +17,6 @@ struct EntryStub:
     Codable
 {
     let address: MemoAddress
-    let title: String
     let excerpt: String
     let modified: Date
 
@@ -29,6 +28,6 @@ struct EntryStub:
 
 extension EntryLink {
     init(_ stub: EntryStub) {
-        self.init(address: stub.address, title: stub.title)
+        self.init(address: stub.address, title: stub.excerpt.title())
     }
 }
