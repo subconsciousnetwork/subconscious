@@ -1255,34 +1255,34 @@ struct DetailModel: ModelProtocol {
         )
         // Last write wins strategy
         switch change {
-            // Our editor state is newer. Do nothing.
+        // Our editor state is newer. Do nothing.
         case .leftNewer:
             return Update(state: model)
-            // The slugs are same, but loaded detail is newer. Replace.
+        // The slugs are same, but loaded detail is newer. Replace.
         case .rightNewer:
             return update(
                 state: model,
                 action: .forceSetDetail(detail),
                 environment: environment
             )
-            // No loaded detail. Do nothing.
+        // No loaded detail. Do nothing.
         case .leftOnly:
             return Update(state: model)
-            // No entry is currently being edited. Replace.
+        // No entry is currently being edited. Replace.
         case .rightOnly:
             return update(
                 state: state,
                 action: .forceSetDetail(detail),
                 environment: environment
             )
-            // Same slug, same time, different sizes. Conflict. Do nothing.
+        // Same slug, same time, different sizes. Conflict. Do nothing.
         case .conflict:
             return Update(state: model)
-            // No change. Do nothing.
+        // No change. Do nothing.
         case .same:
             return Update(state: model)
-            // Slugs don't match. Different entries.
-            // Save current state and set new detail.
+        // Slugs don't match. Different entries.
+        // Save current state and set new detail.
         case .none:
             let snapshot = MemoEntry(model)
             return update(
