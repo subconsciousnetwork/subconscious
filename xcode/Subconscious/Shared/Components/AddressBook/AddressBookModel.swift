@@ -29,8 +29,8 @@ class PlaceholderSphereIdentityProvider: SphereIdentityProtocol {
 
 enum AddressBookAction: Hashable {
     case present(_ isPresented: Bool)
-    case addFriend(did: Did, petname: Petname)
-    case removeFriend(did: Did)
+    case follow(did: Did, petname: Petname)
+    case unfollow(did: Did)
 }
 
 struct AddressBookModel: ModelProtocol {
@@ -63,7 +63,7 @@ struct AddressBookModel: ModelProtocol {
             
             return Update(state: model)
             
-        case .addFriend(did: let did, petname: let petname):
+        case .follow(did: let did, petname: let petname):
             // Guard against duplicates
             guard !state.follows.contains(where: { entry in entry.did == did }) else {
                 return Update(state: state)
@@ -74,11 +74,10 @@ struct AddressBookModel: ModelProtocol {
             var model = state
             model.follows.append(entry)
             return Update(state: model)
-        case .removeFriend(did: let did):
+        case .unfollow(let did):
             var model = state
-            
-            model.follows.removeAll { entry in
-                entry.did == did
+            model.follows.removeAll { f in
+                f.did == did
             }
             return Update(state: model)
         }

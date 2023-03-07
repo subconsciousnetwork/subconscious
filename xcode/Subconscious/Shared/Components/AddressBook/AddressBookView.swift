@@ -13,16 +13,6 @@ struct AddressBookView: View {
     var state: AddressBookModel
     var send: (AddressBookAction) -> Void
     
-    func delete(at offsets: IndexSet) {
-        guard let idx = offsets.first else {
-            return
-        }
-        
-        if let f = state.follows.get(idx) {
-            send(.removeFriend(did: f.did))
-        }
-    }
-    
     var body: some View {
         NavigationStack {
             Form {
@@ -45,8 +35,12 @@ struct AddressBookView: View {
                                     did: user.did
                                 )
                                 .frame(maxWidth: .infinity)
+                                .swipeActions {
+                                    Button("Unfollow", role: .destructive) {
+                                        send(.unfollow(did: user.did))
+                                    }
+                                }
                             }
-                            .onDelete(perform: delete)
                         }
                     }
                 }

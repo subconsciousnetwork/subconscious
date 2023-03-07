@@ -70,7 +70,7 @@ struct AddFriendView: View {
                             return
                         }
                         
-                        send(.addFriend(did: did, petname: petname))
+                        send(.follow(did: did, petname: petname))
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
