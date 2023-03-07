@@ -7,6 +7,24 @@
 
 import SwiftUI
 
+struct SuggestionCreateHeading: View {
+    var fallback: String
+
+    var body: some View {
+        if !fallback.isEmpty {
+            HStack {
+                Text("New note")
+                Text(verbatim: #""\#(fallback)""#)
+                    .foregroundColor(.secondary)
+            }
+        } else {
+            HStack {
+                Text("New note")
+            }
+        }
+    }
+}
+
 struct SuggestionLabelView: View, Equatable {
     var suggestion: Suggestion
     var empty = String(localized: "Empty note")
@@ -26,23 +44,31 @@ struct SuggestionLabelView: View, Equatable {
                     )
                 },
                 icon: {
-                    Image(systemName: "doc")
+                    Image(address)
                 }
             )
-        case let .create(_, fallback):
+        case let .createLocalMemo(_, fallback):
             Label(
                 title: {
-                    HStack {
-                        Text("Create Note")
-                        if !fallback.isEmpty {
-                            Text(verbatim: #""\#(fallback)""#)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .lineLimit(1)
+                    TitleGroupView(
+                        title: SuggestionCreateHeading(fallback: fallback),
+                        subtitle: Text("Local note")
+                    )
                 },
                 icon: {
-                    Image(systemName: "square.and.pencil")
+                    Image(systemName: "circle.dashed")
+                }
+            )
+        case let .createPublicMemo(_, fallback):
+            Label(
+                title: {
+                    TitleGroupView(
+                        title: SuggestionCreateHeading(fallback: fallback),
+                        subtitle: Text("Public note")
+                    )
+                },
+                icon: {
+                    Image(systemName: "network")
                 }
             )
         case .random:
@@ -62,17 +88,30 @@ struct SuggestionLabelView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             SuggestionLabelView(
-                suggestion: .create(
-                    address: MemoAddress.public(
-                        Slashlink(
-                            "@here/a-muse-is-more-interesting-than-an-oracle"
-                        )!
+                suggestion: .createPublicMemo(
+                    slug: Slug(
+                        "a-muse-is-more-interesting-than-an-oracle"
                     )
                 )
             )
             SuggestionLabelView(
-                suggestion: .create(
+                suggestion: .createLocalMemo(
+                    slug: Slug(
+                        "a-muse-is-more-interesting-than-an-oracle"
+                    )
+                )
+            )
+            SuggestionLabelView(
+                suggestion: .createLocalMemo(
                     fallback: "RAND Corp"
+                )
+            )
+            SuggestionLabelView(
+                suggestion: .memo(
+                    address: MemoAddress.local(
+                        Slug("the-lee-shore")!
+                    ),
+                    fallback: "The Lee Shore"
                 )
             )
             SuggestionLabelView(

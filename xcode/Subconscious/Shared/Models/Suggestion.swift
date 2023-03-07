@@ -9,14 +9,17 @@ import Foundation
 
 enum Suggestion: Hashable {
     case memo(address: MemoAddress, fallback: String = "")
-    case create(address: MemoAddress? = nil, fallback: String = "")
+    case createLocalMemo(slug: Slug? = nil, fallback: String = "")
+    case createPublicMemo(slug: Slug? = nil, fallback: String = "")
     case random
     
     var fallback: String? {
         switch self {
         case let .memo(_, fallback):
             return fallback
-        case let .create(_, fallback):
+        case let .createLocalMemo(_, fallback):
+            return fallback
+        case let .createPublicMemo(_, fallback):
             return fallback
         case .random:
             return nil
@@ -27,8 +30,10 @@ enum Suggestion: Hashable {
         switch self {
         case .memo(let address, _):
             return address
-        case .create(let address, _):
-            return address
+        case let .createLocalMemo(slug, _):
+            return slug?.toLocalMemoAddress()
+        case let .createPublicMemo(slug, _):
+            return slug?.toPublicMemoAddress()
         case .random:
             return nil
         }

@@ -4,7 +4,6 @@
 //
 //  Created by Gordon Brander on 1/16/23.
 //
-
 import Foundation
 
 /// Model enumerating the possible audience/scopes for a piece of content.

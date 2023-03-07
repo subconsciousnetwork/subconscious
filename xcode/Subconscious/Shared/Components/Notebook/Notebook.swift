@@ -179,11 +179,20 @@ extension NotebookAction {
                     fallback: fallback
                 )
             )
-        case let .create(address, fallback):
+        case let .createLocalMemo(slug, fallback):
             return .pushDetail(
                 DetailOuterModel(
-                    address: address,
-                    fallback: fallback
+                    address: slug?.toLocalMemoAddress(),
+                    fallback: fallback,
+                    defaultAudience: .local
+                )
+            )
+        case let .createPublicMemo(slug, fallback):
+            return .pushDetail(
+                DetailOuterModel(
+                    address: slug?.toPublicMemoAddress(),
+                    fallback: fallback,
+                    defaultAudience: .public
                 )
             )
         case .random:

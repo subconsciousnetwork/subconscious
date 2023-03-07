@@ -1872,6 +1872,8 @@ struct DetailModel: ModelProtocol {
 struct DetailOuterModel: Hashable, ModelProtocol {
     var address: MemoAddress?
     var fallback: String = ""
+    /// Default audience to use when deriving a memo address
+    var defaultAudience = Audience.local
     
     static func update(
         state: DetailOuterModel,

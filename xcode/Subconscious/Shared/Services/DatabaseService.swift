@@ -325,7 +325,7 @@ final class DatabaseService {
             SELECT id, title
             FROM memo
             ORDER BY modified DESC
-            LIMIT 25
+            LIMIT 5
             """
         )
         .compactMap({ row in
@@ -350,16 +350,17 @@ final class DatabaseService {
         var special: [Suggestion] = []
         
         // Insert quick-create suggestion
-        special.append(.create(fallback: ""))
-        
+        special.append(.createPublicMemo(fallback: ""))
+        special.append(.createLocalMemo(fallback: ""))
+
+        special.append(contentsOf: suggestions)
+
         if Config.default.randomSuggestionEnabled {
             // Insert an option to load a random note if there are any notes.
             if suggestions.count > 2 {
                 special.append(.random)
             }
         }
-        
-        special.append(contentsOf: suggestions)
         
         return special
     }
@@ -370,21 +371,16 @@ final class DatabaseService {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        // If slug is invalid, return empty suggestions
-        guard let queryEntrySlug = Slug(formatting: query) else {
-            return []
-        }
         
-        var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
+        var suggestions: [Suggestion] = []
         
-        // Create a suggestion for the literal query
-        suggestions[queryEntrySlug] = .create(
-            fallback: query
-        )
-        
-        let links: [EntryLink] = try database.execute(
+        // Create suggestions for the literal query
+        suggestions.append(.createPublicMemo(fallback: query))
+        suggestions.append(.createLocalMemo(fallback: query))
+
+        let memos: [Suggestion] = try database.execute(
             sql: """
-            SELECT id, title
+            SELECT id, excerpt
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY rank
@@ -397,27 +393,14 @@ final class DatabaseService {
         .compactMap({ row in
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
-                let title = row.col(1)?.toString()
+                let excerpt = row.col(1)?.toString()
             else {
                 return  nil
             }
-            return EntryLink(
-                address: address,
-                title: title
-            )
+            return Suggestion.memo(address: address, fallback: excerpt)
         })
-        
-        // Insert entries into suggestions.
-        // If literal query and an entry have the same slug,
-        // entry will overwrite query.
-        for link in links {
-            suggestions.updateValue(
-                .memo(address: link.address, fallback: link.title),
-                forKey: link.address.slug
-            )
-        }
-        
-        return Array(suggestions.values)
+        suggestions.append(contentsOf: memos)
+        return suggestions
     }
     
     /// Fetch search suggestions
