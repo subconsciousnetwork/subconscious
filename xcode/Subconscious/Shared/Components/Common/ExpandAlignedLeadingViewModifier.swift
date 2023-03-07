@@ -27,7 +27,7 @@ extension View {
 }
 
 
-struct CellViewModifier_Previews: PreviewProvider {
+struct ExpandAlignLeadingViewModifier_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             Text("Hello")
