@@ -49,7 +49,11 @@ extension Character {
 
 extension String {
     /// Truncate string to max length, appending ellipsis if truncated.
-    func truncate(maxLength: Int = 140, ellipsis: String = "…") -> String {
+    func truncate(
+        maxLength: Int = 256,
+        ellipsis: String = "…",
+        fallback: String = ""
+    ) -> String {
         guard self.count > maxLength else {
             return self
         }
@@ -58,7 +62,7 @@ extension String {
         ).trimmingCharacters(
             in: .whitespacesAndNewlines
         )
-        return "\(truncated)\(ellipsis)"
+        return !truncated.isEmpty ? "\(truncated)\(ellipsis)" : ""
     }
 
     /// Get first sentence of substring
@@ -69,15 +73,18 @@ extension String {
     }
 
     /// Derive title from string.
-    /// Returns the first sentence-like structure.
+    /// Returns the first sentence-like structure, truncated to `maxLength`.
     /// - Parameter fallback: The fallback string to use if derived title is empty.
     /// - Parameter maxLength: The max length of derived title. 140 characters by default.
     /// - Returns:
     func title(
-        fallback: String = "",
-        maxLength: Int = 140
+        maxLength: Int = 140,
+        fallback: String = String(localized: "Untitled")
     ) -> String {
-        let title = String(self.firstSentence).truncate()
-        return title.isEmpty ? fallback : title
+        String(self.firstSentence).truncate(
+            maxLength: maxLength,
+            ellipsis: "",
+            fallback: fallback
+        )
     }
 }
