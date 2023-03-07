@@ -24,7 +24,7 @@ extension Duration {
     
     //  NOTE: this could change in future, but for now, a hard-coded value
     //  is good enough.
-    //  2022-01-27 Gordon Brander
+    //  2023-03-07 Gordon Brander
     /// Approximate sheet animation duration.
     static let sheet: Double = 0.25
 }
