@@ -226,7 +226,7 @@ final class Tests_DataService: XCTestCase {
         XCTAssertEqual(memoD.body, "Test content")
     }
     
-    func findUniqueLocalAddressFor() throws {
+    func testFindUniqueAddressFor() throws {
         let tmp = try createTmpDir()
         let data = try createDataService(tmp: tmp)
         
@@ -244,7 +244,7 @@ final class Tests_DataService: XCTestCase {
         let addressA = Slug(formatting: title)!.toPublicMemoAddress()
         try data.writeMemo(address: addressA, memo: memo)
 
-        let addressA2 = data.findUniqueLocalAddressFor(title)
+        let addressA2 = data.findUniqueAddressFor(title, audience: .local)
         XCTAssertEqual(addressA2?.description, "local::/a-2")
     }
 }

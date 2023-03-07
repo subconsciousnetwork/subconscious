@@ -467,14 +467,16 @@ struct DataService {
         return nil
     }
 
-    func findUniqueLocalAddressFor(_ text: String) -> MemoAddress? {
+    func findUniqueAddressFor(
+        _ text: String, audience: Audience
+    ) -> MemoAddress? {
         // If we can't derive slug from text, exit early.
         guard let slug = Slug(formatting: text) else {
             return nil
         }
         // If slug does not exist in any address space, return it.
         if findAddress(slug: slug) == nil {
-            return slug.toLocalMemoAddress()
+            return slug.toMemoAddress(audience)
         }
         for n in 2..<500 {
             // If we can't derive slug from text, give up.
@@ -482,7 +484,7 @@ struct DataService {
                 return nil
             }
             if findAddress(slug: slugN) == nil {
-                return slugN.toLocalMemoAddress()
+                return slugN.toMemoAddress(audience)
             }
         }
         return nil
