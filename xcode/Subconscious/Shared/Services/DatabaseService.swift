@@ -637,7 +637,7 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
                 let modified = row.col(1)?.toDate(),
-                let excerpt = row.col(3)?.toString()
+                let excerpt = row.col(2)?.toString()
             else {
                 return nil
             }
