@@ -263,6 +263,8 @@ extension DetailOuterAction {
             )
         case .succeedUpdateAudience(let receipt):
             return .succeedUpdateAudience(receipt)
+        case .forwardRequestDelete(let address):
+            return .requestDelete(address)
         default:
             return nil
         }
@@ -320,7 +322,15 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case succeedUpdateAudience(_ receipt: MoveReceipt)
     case failUpdateAudience(_ message: String)
 
-    // Finish with editing focus
+    /// Request delete.
+    /// Forwards down meta sheet requestDelete, which hides sheet.
+    /// Then, after a delay for the bottom sheet animation, sends a
+    /// forwardRequestDelete, which is relayed to DetailOuterAction.
+    case requestDelete(_ address: MemoAddress?)
+    /// Action relayed as RequestDelete to DetailOuterAction.
+    case forwardRequestDelete(_ address: MemoAddress?)
+
+    /// Finish with editing focus
     case doneEditing
 
     //  Saving entry
@@ -518,6 +528,8 @@ struct DetailMetaSheetCursor: CursorProtocol {
             return .selectRenameSuggestion(suggestion)
         case .requestUpdateAudience(let audience):
             return .updateAudience(audience)
+        case .requestDelete(let address):
+            return .requestDelete(address)
         default:
             return .metaSheet(action)
         }
@@ -705,6 +717,14 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .requestDelete(let address):
+            return requestDelete(
+                state: state,
+                environment: environment,
+                address: address
+            )
+        case .forwardRequestDelete:
+            return Update(state: state)
         case .doneEditing:
             return doneEditing(
                 state: state,
@@ -1408,7 +1428,31 @@ struct DetailModel: ModelProtocol {
             environment: environment
         )
     }
-    
+
+    static func requestDelete(
+        state: DetailModel,
+        environment: AppEnvironment,
+        address: MemoAddress?
+    ) -> Update<DetailModel> {
+        let delay = Duration.sheet
+        
+        let fx: Fx<DetailAction> = Just(
+            DetailAction.forwardRequestDelete(address)
+        ).delay(
+            for: .seconds(delay),
+            scheduler: DispatchQueue.main
+        ).eraseToAnyPublisher()
+
+        return update(
+            state: state,
+            actions: [
+                .metaSheet(.requestDelete(address)),
+                .presentMetaSheet(false)
+            ],
+            environment: environment
+        ).mergeFx(fx)
+    }
+
     static func doneEditing(
         state: DetailModel,
         environment: AppEnvironment
