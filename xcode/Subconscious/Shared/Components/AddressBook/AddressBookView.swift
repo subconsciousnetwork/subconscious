@@ -62,6 +62,7 @@ struct AddressBookView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
                         AddressBookModel.logger.debug("Close Address Book")
+                        send(.present(false))
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -90,6 +91,7 @@ struct AddressBook_Previews: PreviewProvider {
                     AddressBookEntry(pfp: Image("sub_logo_dark"), petname: Petname("alice")!, did: Did("did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
                 ]
             ),
+            action: .present(true),
             environment: AddressBookEnvironment(noosphere: PlaceholderSphereIdentityProvider())
         )
 

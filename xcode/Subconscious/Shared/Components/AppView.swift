@@ -44,6 +44,21 @@ struct AppView: View {
         ) {
             SettingsView(app: store)
         }
+        .sheet(
+            isPresented: Binding(
+                get: { store.state.addressBook.isPresented },
+                send: store.send,
+                tag: AppAction.presentAddressBook
+            )
+        ) {
+            AddressBookView(
+                state: store.state.addressBook,
+                send: Address.forward(
+                    send: store.send,
+                    tag: AppAddressBookCursor.tag
+                )
+            )
+        }
         .onAppear {
             store.send(.appear)
         }
@@ -136,7 +151,11 @@ enum AppAction: CustomLogStringConvertible {
 
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
-
+    
+    static func presentAddressBook(_ isPresented: Bool) -> AppAction {
+        .addressBook(.present(isPresented))
+    }
+    
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
         .recoveryPhrase(.setPhrase(phrase))

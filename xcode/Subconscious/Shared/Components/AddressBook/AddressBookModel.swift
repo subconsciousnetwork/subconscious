@@ -28,11 +28,13 @@ class PlaceholderSphereIdentityProvider: SphereIdentityProtocol {
 }
 
 enum AddressBookAction: Hashable {
+    case present(_ isPresented: Bool)
     case addFriend(did: Did, petname: Petname)
     case removeFriend(did: Did)
 }
 
 struct AddressBookModel: ModelProtocol {
+    var isPresented = false
     var did: Did? = nil
     var follows: [AddressBookEntry] = []
 
@@ -47,6 +49,20 @@ struct AddressBookModel: ModelProtocol {
         environment: AddressBookEnvironment
     ) -> Update<AddressBookModel> {
         switch action {
+        case .present(let isPresented):
+            var model = state
+            model.isPresented = isPresented
+            
+            if isPresented {
+                do {
+                    model.did = try Did(environment.noosphere.identity())
+                } catch {
+                    model.did = nil
+                }
+            }
+            
+            return Update(state: model)
+            
         case .addFriend(did: let did, petname: let petname):
             // Guard against duplicates
             guard !state.follows.contains(where: { entry in entry.did == did }) else {

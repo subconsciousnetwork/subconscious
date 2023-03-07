@@ -86,6 +86,15 @@ struct NotebookNavigationView: View {
                         Image(systemName: "gearshape")
                     }
                 }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(
+                        action: {
+                            app.send(.presentAddressBook(true))
+                        }
+                    ) {
+                        Image(systemName: "person.2")
+                    }
+                }
             }
         }
     }
