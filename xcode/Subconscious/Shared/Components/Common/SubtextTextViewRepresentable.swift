@@ -165,7 +165,14 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
     }
 
     //  MARK: Coordinator
-    class Coordinator: NSObject, UITextViewDelegate, NSTextContentStorageDelegate, NSTextStorageDelegate, NSTextContentManagerDelegate, NSTextLayoutManagerDelegate {
+    class Coordinator:
+        NSObject,
+        UITextViewDelegate,
+        NSTextContentStorageDelegate,
+        NSTextStorageDelegate,
+        NSTextContentManagerDelegate,
+        NSTextLayoutManagerDelegate
+    {
         /// Is event happening during updateUIView?
         /// Used to avoid setting properties in events during view updates, as
         /// that would cause feedback cycles where an update triggers an event,
