@@ -39,9 +39,10 @@ struct OmniboxView: View {
 
 extension OmniboxView {
     init(
-        address: MemoAddress?
+        address: MemoAddress?,
+        defaultAudience: Audience
     ) {
-        let audience = address?.toAudience() ?? .local
+        let audience = address?.toAudience() ?? defaultAudience
         let title = address?.slug.description ?? ""
         self.init(
             icon: Image(audience: audience),
@@ -62,7 +63,8 @@ struct OmniboxView_Previews: PreviewProvider {
                 title: "X"
             )
             OmniboxView(
-                address: .local(Slug("red-mars")!)
+                address: .local(Slug("red-mars")!),
+                defaultAudience: .local
             )
         }
     }

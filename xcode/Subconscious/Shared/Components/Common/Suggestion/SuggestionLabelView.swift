@@ -10,11 +10,15 @@ import SwiftUI
 struct SuggestionCreateHeading: View {
     var fallback: String
 
+    private var preview: String {
+        fallback.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     var body: some View {
-        if !fallback.isEmpty {
+        if !preview.isEmpty {
             HStack {
                 Text("New note")
-                Text(verbatim: #""\#(fallback)""#)
+                Text(verbatim: #""\#(preview)""#)
                     .foregroundColor(.secondary)
             }
         } else {

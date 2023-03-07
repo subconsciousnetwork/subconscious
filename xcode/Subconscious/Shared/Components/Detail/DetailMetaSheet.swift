@@ -119,6 +119,7 @@ enum DetailMetaSheetAction: Hashable {
     case presentRenameSheetFor(_ address: MemoAddress?)
     case selectRenameSuggestion(RenameSuggestion)
     case setAddress(_ address: MemoAddress?)
+    case setDefaultAudience(_ audience: Audience)
     /// Requests that audience be updated.
     /// Should be handled by parent component.
     case requestUpdateAudience(_ audience: Audience)
@@ -145,15 +146,16 @@ struct DetailMetaSheetModel: ModelProtocol {
     typealias Environment = AppEnvironment
     
     var address: MemoAddress?
+    var defaultAudience = Audience.local
     var audience: Audience {
-        address?.toAudience() ?? .public
+        address?.toAudience() ?? defaultAudience
     }
     var isRenameSheetPresented = false
     var renameSearch = RenameSearchModel()
     
     /// Is delete confirmation dialog presented?
     var isDeleteConfirmationDialogPresented = false
-
+    
     static func update(
         state: Self,
         action: Action,
@@ -199,6 +201,12 @@ struct DetailMetaSheetModel: ModelProtocol {
                 environment: environment,
                 address: address
             )
+        case .setDefaultAudience(let audience):
+            return setDefaultAudience(
+                state: state,
+                environment: environment,
+                audience: audience
+            )
         case .requestUpdateAudience:
             return Update(state: state)
         case .succeedUpdateAudience(let receipt):
@@ -221,7 +229,7 @@ struct DetailMetaSheetModel: ModelProtocol {
         model.isRenameSheetPresented = isPresented
         return Update(state: model)
     }
-
+    
     static func selectRenameSuggestion(
         state: Self,
         environment: Environment,
@@ -246,7 +254,7 @@ struct DetailMetaSheetModel: ModelProtocol {
         model.isDeleteConfirmationDialogPresented = isPresented
         return Update(state: model).animation(.default)
     }
-
+    
     static func setAddress(
         state: Self,
         environment: Environment,
@@ -254,11 +262,24 @@ struct DetailMetaSheetModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.address = address
+        if let address = address {
+            model.defaultAudience = address.toAudience()
+        }
         return update(
             state: model,
             action: .renameSearch(.setSubject(address)),
             environment: environment
         )
+    }
+    
+    static func setDefaultAudience(
+        state: Self,
+        environment: Environment,
+        audience: Audience
+    ) -> Update<Self> {
+        var model = state
+        model.defaultAudience = audience
+        return Update(state: model)
     }
 }
 

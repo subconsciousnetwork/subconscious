@@ -139,6 +139,7 @@ struct DetailView: View {
         .toolbar(content: {
             DetailToolbarContent(
                 address: store.state.address,
+                defaultAudience: store.state.defaultAudience,
                 onTapOmnibox: {
                     store.send(.presentMetaSheet(true))
                 }
@@ -148,12 +149,7 @@ struct DetailView: View {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
-            store.send(
-                DetailAction.appear(
-                    address: state.address,
-                    fallback: state.fallback
-                )
-            )
+            store.send(DetailAction.appear(state))
         }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
@@ -288,10 +284,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Wrapper for editor actions
     case editor(SubtextTextAction)
 
-    case appear(
-        address: MemoAddress?,
-        fallback: String
-    )
+    case appear(DetailOuterModel)
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
@@ -315,6 +308,10 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     case setDetailLastWriteWins(EntryDetail)
     /// Set detail
     case setDetail(detail: EntryDetail, autofocus: Bool)
+    case setDraftDetail(
+        defaultAudience: Audience,
+        fallback: String
+    )
     /// Set detail to initial conditions
     case resetDetail
 
@@ -415,6 +412,10 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
 
     static func setMetaSheetAddress(_ address: MemoAddress?) -> Self {
         .metaSheet(.setAddress(address))
+    }
+
+    static func setMetaSheetDefaultAudience(_ audience: Audience) -> Self {
+        .metaSheet(.setDefaultAudience(audience))
     }
 
     // MARK: logDescription
@@ -526,8 +527,9 @@ struct DetailMetaSheetCursor: CursorProtocol {
 //  MARK: Model
 struct DetailModel: ModelProtocol {
     var address: MemoAddress?
+    var defaultAudience = Audience.local
     var audience: Audience {
-        address?.toAudience() ?? .local
+        address?.toAudience() ?? defaultAudience
     }
     /// Required headers
     /// Initialize date with Unix Epoch
@@ -615,12 +617,11 @@ struct DetailModel: ModelProtocol {
                 environment: environment,
                 phase: phase
             )
-        case let .appear(address, fallback):
+        case let .appear(info):
             return appear(
                 state: state,
                 environment: environment,
-                address: address,
-                fallback: fallback
+                info: info
             )
         case let .setEditor(text, saveState, modified):
             return setEditor(
@@ -692,6 +693,13 @@ struct DetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 detail: detail
+            )
+        case let .setDraftDetail(defaultAudience, fallback):
+            return setDraftDetail(
+                state: state,
+                environment: environment,
+                defaultAudience: defaultAudience,
+                fallback: fallback
             )
         case .resetDetail:
             return resetDetail(
@@ -929,35 +937,27 @@ struct DetailModel: ModelProtocol {
     static func appear(
         state: DetailModel,
         environment: AppEnvironment,
-        address: MemoAddress?,
-        fallback: String
+        info: DetailOuterModel
     ) -> Update<DetailModel> {
         // No address? This is a draft.
-        guard let address = address else {
+        guard let address = info.address else {
             return update(
                 state: state,
-                actions: [
-                    .setMetaSheetAddress(address),
-                    .setEditor(
-                        text: fallback,
-                        saveState: .unsaved,
-                        modified: Date.now
-                    )
-                ],
+                action: .setDraftDetail(
+                    defaultAudience: info.defaultAudience,
+                    fallback: info.fallback
+                ),
                 environment: environment
             )
         }
         // Address? Attempt to load detail.
         return update(
             state: state,
-            actions: [
-                .setMetaSheetAddress(address),
-                .loadDetail(
-                    address: address,
-                    fallback: fallback,
-                    autofocus: false
-                )
-            ],
+            action: .loadDetail(
+                address: address,
+                fallback: info.fallback,
+                autofocus: false
+            ),
             environment: environment
         )
     }
@@ -1136,21 +1136,17 @@ struct DetailModel: ModelProtocol {
         
         let model = prepareLoadDetail(state)
         
-        let fx: Fx<DetailAction> = environment.data
-            .readDetailAsync(
-                address: address,
-                title: model.headers.title,
-                fallback: model.editor.text
-            )
-            .map({ detail in
-                DetailAction.setDetailLastWriteWins(detail)
-            })
-            .catch({ error in
-                Just(DetailAction.failLoadDetail(error.localizedDescription))
-            })
-                .eraseToAnyPublisher()
-                    
-                    return Update(state: model, fx: fx)
+        let fx: Fx<DetailAction> = environment.data.readDetailAsync(
+            address: address,
+            title: model.headers.title,
+            fallback: model.editor.text
+        ).map({ detail in
+            DetailAction.setDetailLastWriteWins(detail)
+        }).catch({ error in
+            Just(DetailAction.failLoadDetail(error.localizedDescription))
+        }).eraseToAnyPublisher()
+        
+        return Update(state: model, fx: fx)
     }
     
     static func refreshDetailIfStale(
@@ -1199,6 +1195,7 @@ struct DetailModel: ModelProtocol {
         var model = state
         model.isLoading = false
         model.address = detail.entry.address
+        model.defaultAudience = detail.entry.address.toAudience()
         model.headers = detail.entry.contents.wellKnownHeaders()
         model.additionalHeaders = detail.entry.contents.additionalHeaders
         model.backlinks = detail.backlinks
@@ -1209,11 +1206,14 @@ struct DetailModel: ModelProtocol {
         
         return DetailModel.update(
             state: model,
-            action: .setEditor(
-                text: text,
-                saveState: detail.saveState,
-                modified: model.headers.modified
-            ),
+            actions: [
+                .setMetaSheetAddress(model.address),
+                .setEditor(
+                    text: text,
+                    saveState: detail.saveState,
+                    modified: model.headers.modified
+                )
+            ],
             environment: environment
         )
     }
@@ -1316,6 +1316,30 @@ struct DetailModel: ModelProtocol {
         )
     }
     
+    static func setDraftDetail(
+        state: DetailModel,
+        environment: AppEnvironment,
+        defaultAudience: Audience,
+        fallback: String
+    ) -> Update<DetailModel> {
+        var model = state
+
+        model.defaultAudience = defaultAudience
+
+        return update(
+            state: model,
+            actions: [
+                .setMetaSheetDefaultAudience(defaultAudience),
+                .setEditor(
+                    text: fallback,
+                    saveState: .unsaved,
+                    modified: Date.now
+                )
+            ],
+            environment: environment
+        )
+    }
+
     /// Reset model to "none" condition
     static func resetDetail(
         state: DetailModel,

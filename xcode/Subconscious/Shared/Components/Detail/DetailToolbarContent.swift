@@ -10,12 +10,16 @@ import SwiftUI
 /// Toolbar for detail view
 struct DetailToolbarContent: ToolbarContent {
     var address: MemoAddress?
+    var defaultAudience: Audience
     var onTapOmnibox: () -> Void
 
     var body: some ToolbarContent {
         ToolbarItem(placement: .principal) {
             Button(action: onTapOmnibox) {
-                OmniboxView(address: address)
+                OmniboxView(
+                    address: address,
+                    defaultAudience: defaultAudience
+                )
             }
         }
     }
@@ -29,6 +33,7 @@ struct DetailToolbarContent_Previews: PreviewProvider {
             }
             .toolbar(content: {
                 DetailToolbarContent(
+                    defaultAudience: .local,
                     onTapOmnibox: {}
                 )
             })
