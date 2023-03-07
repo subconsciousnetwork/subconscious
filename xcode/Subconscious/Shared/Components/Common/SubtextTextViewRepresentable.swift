@@ -482,3 +482,21 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         return view
     }
 }
+
+extension Subtext {
+    func block(forParagraph: NSTextParagraph) -> Block? {
+        return blocks.last { b in
+            guard let contentRange = forParagraph.paragraphContentRange else {
+                return false
+            }
+            guard let tcm = forParagraph.textContentManager else {
+                return false
+            }
+            guard let range: Range<String.Index> = Range(NSRange(contentRange, in: tcm), in: base) else {
+                return false
+            }
+            
+            return b.body().range.overlaps(range)
+        }
+    }
+}
