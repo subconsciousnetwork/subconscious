@@ -8,7 +8,6 @@
 import Foundation
 import SwiftUI
 
-
 struct Subtext: Hashable, Equatable, LosslessStringConvertible {
     let base: Substring
     let blocks: [Block]
@@ -466,6 +465,9 @@ extension Subtext {
             dom.base.startIndex...,
             in: dom.base
         )
+        
+        // Clear all attributes before rendering
+        attributedString.setAttributes([:], range: baseNSRange)
         
         // Set default font for entire string
         attributedString.addAttribute(

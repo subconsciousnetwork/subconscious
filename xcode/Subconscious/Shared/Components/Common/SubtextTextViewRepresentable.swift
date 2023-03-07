@@ -208,13 +208,6 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             SubtextTextViewRepresentable.logger.debug(
               "textStorage: render markup attributes"
             )
-            textStorage.setAttributes(
-                [:],
-                range: NSRange(
-                    textStorage.string.startIndex...,
-                    in: textStorage.string
-                )
-            )
 
             // Render markup on TextStorage (which is an NSMutableString)
             self.subtext = Subtext.renderAttributesOf(textStorage, url: SubtextTextViewRepresentable.toSubURL)
