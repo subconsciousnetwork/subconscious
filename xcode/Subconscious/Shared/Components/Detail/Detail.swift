@@ -1520,21 +1520,20 @@ struct DetailModel: ModelProtocol {
         // Mark saving in-progress
         model.saveState = .saving
         
-        let fx: Fx<DetailAction> = environment.data
-            .writeEntryAsync(entry)
-            .map({ _ in
-                DetailAction.succeedSave(entry)
-            })
-            .catch({ error in
-                Just(
-                    DetailAction.failSave(
-                        address: entry.address,
-                        message: error.localizedDescription
-                    )
+        let fx: Fx<DetailAction> = environment.data.writeEntryAsync(
+            entry
+        ).map({ _ in
+            DetailAction.succeedSave(entry)
+        }).catch({ error in
+            Just(
+                DetailAction.failSave(
+                    address: entry.address,
+                    message: error.localizedDescription
                 )
-            })
-                .eraseToAnyPublisher()
-                    return Update(state: model, fx: fx)
+            )
+        }).eraseToAnyPublisher()
+        
+        return Update(state: model, fx: fx)
     }
     
     /// Log save success and perform refresh of various lists.
@@ -1617,25 +1616,21 @@ struct DetailModel: ModelProtocol {
         }
         
         // Search link suggestions
-        let fx: Fx<DetailAction> = environment.data
-            .searchLinkSuggestions(
-                query: text,
-                omitting: omitting,
-                fallback: []
-            )
-            .map({ suggestions in
-                DetailAction.setLinkSuggestions(suggestions)
-            })
-            .catch({ error in
-                Just(
-                    DetailAction.linkSuggestionsFailure(
-                        error.localizedDescription
-                    )
+        let fx: Fx<DetailAction> = environment.data.searchLinkSuggestions(
+            query: text,
+            omitting: omitting,
+            fallback: []
+        ).map({ suggestions in
+            DetailAction.setLinkSuggestions(suggestions)
+        }).catch({ error in
+            Just(
+                DetailAction.linkSuggestionsFailure(
+                    error.localizedDescription
                 )
-            })
-                .eraseToAnyPublisher()
+            )
+        }).eraseToAnyPublisher()
                     
-                    return Update(state: model, fx: fx)
+        return Update(state: model, fx: fx)
     }
     
     static func selectLinkSuggestion(
@@ -1713,7 +1708,6 @@ struct DetailModel: ModelProtocol {
             ],
             environment: environment
         )
-
     }
 
     /// Move entry
