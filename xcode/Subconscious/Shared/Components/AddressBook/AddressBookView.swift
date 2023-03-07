@@ -11,18 +11,7 @@ import ObservableStore
 
 struct AddressBookView: View {
     var state: AddressBookModel
-    var environment: AddressBookEnvironment
     var send: (AddressBookAction) -> Void
-    
-    var myDid: Did? {
-        get {
-            do {
-                return try Did(environment.noosphere.identity())
-            } catch {
-                return nil
-            }
-        }
-    }
     
     func delete(at offsets: IndexSet) {
         guard let idx = offsets.first else {
@@ -61,9 +50,9 @@ struct AddressBookView: View {
                         }
                     }
                 }
-                if let myDid = myDid {
+                if let did = state.did {
                     Section(header: Text("My DID")) {
-                        DidView(did: myDid)
+                        DidView(did: did)
                     }
                 }
                 
@@ -107,7 +96,6 @@ struct AddressBook_Previews: PreviewProvider {
         var body: some View {
             AddressBookView(
                 state: store.state,
-                environment: store.environment,
                 send: store.send
             )
         }

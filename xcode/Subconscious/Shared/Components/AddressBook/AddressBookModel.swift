@@ -33,6 +33,7 @@ enum AddressBookAction: Hashable {
 }
 
 struct AddressBookModel: ModelProtocol {
+    var did: Did? = nil
     var follows: [AddressBookEntry] = []
 
     static let logger = Logger(
