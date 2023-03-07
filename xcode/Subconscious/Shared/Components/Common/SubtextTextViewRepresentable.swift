@@ -198,19 +198,8 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
           range: NSRange,
           changeInLength: Int
         ) {
-            SubtextTextViewRepresentable.logger.debug(
-              "textStorage: render markup attributes"
-            )
-            textStorage.setAttributes(
-                [:],
-                range: NSRange(
-                    textStorage.string.startIndex...,
-                    in: textStorage.string
-                )
-            )
-
-            // Render markup on TextStorage (which is an NSMutableString)
-            self.subtext = Subtext.renderAttributesOf(textStorage, url: SubtextTextViewRepresentable.toSubURL)
+            SubtextTextViewRepresentable.logger.debug("textStorage: render markup attributes")
+            self.subtext = Subtext.renderAttributesOf(textStorage, inRange: range, url: SubtextTextViewRepresentable.toSubURL)
         }
 
 
@@ -300,7 +289,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             guard let paragraph = textElement as? NSTextParagraph else {
                 return baseLayoutFragment
             }
-
+            
             // Only render transcludes for a single slashlink in a single block
             guard let _ = subtext?
                 .block(forParagraph: paragraph)?

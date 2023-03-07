@@ -455,17 +455,39 @@ extension Subtext {
     /// corresponding to the semantic meaning of Subtext markup.
     static func renderAttributesOf(
         _ attributedString: NSMutableAttributedString,
+        inRange: NSRange,
         url: (String, String) -> URL?
-    ) -> Subtext {
+    ) -> Subtext? {
         let dom = Subtext(markup: attributedString.string)
+        
+        // Find the blocks that intersect the affected range
+        // Even a single character will re-render the entire block
+        // Large operations like cut & paste can change many blocks
+        let blocks = dom.blocks.filter { b in
+            guard let range: Range<String.Index> = Range(inRange, in: attributedString.string) else {
+                return false
+            }
+            return b.body().range.overlaps(range)
+        }
+        
+        // Get the total bounding range for all affected blocks
+        let range = blocks.reduce(NSRange()) { accumulator, block in
+            accumulator.union(NSRange(block.body().range, in: attributedString.string))
+        }
+        
+        // Clear attributes
+        attributedString.setAttributes([:], range: range)
+        SubtextTextViewRepresentable.logger.debug("Rendering in range \(range)")
         
         // Get range of all text, using new Swift NSRange constructor
         // that takes a Swift range which knows how to handle Unicode
         // glyphs correctly.
-        let baseNSRange = NSRange(
+        guard let baseNSRange = NSRange(
             dom.base.startIndex...,
             in: dom.base
-        )
+        ).intersection(range) else {
+            return nil
+        }
         
         // Set default font for entire string
         attributedString.addAttribute(
@@ -490,8 +512,9 @@ extension Subtext {
             range: baseNSRange
         )
         
-        for block in dom.blocks {
-            renderBlockAttributesOf(attributedString, block: block, url: url)
+        // Render only the affected blocks
+        for b in blocks {
+            renderBlockAttributesOf(attributedString, block: b, url: url)
         }
         
         return dom
