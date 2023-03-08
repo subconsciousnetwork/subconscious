@@ -8,7 +8,6 @@
 import Foundation
 import SwiftUI
 
-
 struct Subtext: Hashable, Equatable, LosslessStringConvertible {
     let base: Substring
     let blocks: [Block]
@@ -456,7 +455,7 @@ extension Subtext {
     static func renderAttributesOf(
         _ attributedString: NSMutableAttributedString,
         url: (String, String) -> URL?
-    ) {
+    ) -> Subtext {
         let dom = Subtext(markup: attributedString.string)
         
         // Get range of all text, using new Swift NSRange constructor
@@ -466,6 +465,9 @@ extension Subtext {
             dom.base.startIndex...,
             in: dom.base
         )
+        
+        // Clear all attributes before rendering
+        attributedString.setAttributes([:], range: baseNSRange)
         
         // Set default font for entire string
         attributedString.addAttribute(
@@ -493,6 +495,8 @@ extension Subtext {
         for block in dom.blocks {
             renderBlockAttributesOf(attributedString, block: block, url: url)
         }
+        
+        return dom
     }
     
     /// Read markup in NSMutableAttributedString, and render as attributes.

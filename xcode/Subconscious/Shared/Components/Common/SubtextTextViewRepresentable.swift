@@ -164,24 +164,15 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         }
     }
 
-    class SubtextTextParagraph: NSTextParagraph {
-        private(set) var subtext: Subtext
-
-        init(attributedString: NSAttributedString) {
-            SubtextTextViewRepresentable.logger.debug(
-                "SubtextTextParagraph: parse and render markup"
-            )
-            let subtext = Subtext(markup: attributedString.string)
-            let renderedAttributedString = subtext.renderAttributedString(
-                url: SubtextTextViewRepresentable.toSubURL
-            )
-            self.subtext = subtext
-            super.init(attributedString: renderedAttributedString)
-        }
-    }
-
     //  MARK: Coordinator
-    class Coordinator: NSObject, UITextViewDelegate, NSTextContentStorageDelegate, NSTextContentManagerDelegate, NSTextLayoutManagerDelegate {
+    class Coordinator:
+        NSObject,
+        UITextViewDelegate,
+        NSTextContentStorageDelegate,
+        NSTextStorageDelegate,
+        NSTextContentManagerDelegate,
+        NSTextLayoutManagerDelegate
+    {
         /// Is event happening during updateUIView?
         /// Used to avoid setting properties in events during view updates, as
         /// that would cause feedback cycles where an update triggers an event,
@@ -189,6 +180,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         var isUIViewUpdating: Bool
         var representable: SubtextTextViewRepresentable
         var renderTranscludeBlocks: Bool = false
+        var subtext: Subtext? = nil
 
         init(
             representable: SubtextTextViewRepresentable
@@ -196,6 +188,31 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             self.isUIViewUpdating = false
             self.representable = representable
         }
+        
+        /// NSTextStorageDelegate method
+        /// Handle markup rendering, just before processEditing is fired.
+        /// It is important that we render markup in `willProcessEditing`
+        /// because it happens BEFORE font substitution. Rendering before font
+        /// substitution gives the OS a chance to replace fonts for things like
+        /// Emoji or Unicode characters when your font does not support them.
+        /// See:
+        /// https://github.com/gordonbrander/subconscious/wiki/nstextstorage-font-substitution-and-missing-text
+        ///
+        /// 2022-03-17 Gordon Brander
+        func textStorage(
+          _ textStorage: NSTextStorage,
+          willProcessEditing: NSTextStorage.EditActions,
+          range: NSRange,
+          changeInLength: Int
+        ) {
+            SubtextTextViewRepresentable.logger.debug(
+              "textStorage: render markup attributes"
+            )
+
+            // Render markup on TextStorage (which is an NSMutableString)
+            self.subtext = Subtext.renderAttributesOf(textStorage, url: SubtextTextViewRepresentable.toSubURL)
+        }
+
 
         /// Handle link taps
         func textView(
@@ -280,12 +297,14 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                 return baseLayoutFragment
             }
 
-            guard let paragraph = textElement as? SubtextTextParagraph else {
+            guard let paragraph = textElement as? NSTextParagraph else {
                 return baseLayoutFragment
             }
 
             // Only render transcludes for a single slashlink in a single block
-            guard let _ = paragraph.subtext.slashlinks
+            guard let _ = subtext?
+                .block(forParagraph: paragraph)?
+                .slashlinks
                 .get(0)?
                 .toSlashlink()
             else {
@@ -298,18 +317,6 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             )
 
             return layoutFragment
-        }
-        
-        // MARK: - NSTextContentStorageDelegate
-        
-        func textContentStorage(_ textContentStorage: NSTextContentStorage, textParagraphWith range: NSRange) -> NSTextParagraph? {
-            guard let attributedSubstring = textContentStorage.textStorage?
-                .attributedSubstring(from: range)
-            else {
-                SubtextTextViewRepresentable.logger.warning("textContentStorage: could not access attributedSubstring")
-                return nil
-            }
-            return SubtextTextParagraph(attributedString: attributedSubstring)
         }
     }
 
@@ -350,6 +357,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         
         let view = SubtextTextView(frame: self.frame, textContainer: textContainer)
         view.delegate = context.coordinator
+        view.textStorage.delegate = context.coordinator
 
         // Set inner padding
         view.textContainerInset = self.textContainerInset
@@ -465,5 +473,32 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             right: inset.trailing
         )
         return view
+    }
+}
+
+extension Subtext {
+    func block(forParagraph: NSTextParagraph) -> Block? {
+        return blocks.last { b in
+            guard let contentRange = forParagraph.paragraphContentRange else {
+                return false
+            }
+            guard let textContentStorage = forParagraph.textContentManager as? NSTextContentStorage else {
+                return false
+            }
+            
+            // Is this instance of Subtext actually working on the same text that the paragraph belongs to?
+            guard let underlyingString = textContentStorage.attributedString?.string else {
+                return false
+            }
+            guard underlyingString == base else {
+                return false
+            }
+            
+            guard let range: Range<String.Index> = Range(NSRange(contentRange, in: textContentStorage), in: base) else {
+                return false
+            }
+            
+            return b.body().range.overlaps(range)
+        }
     }
 }
