@@ -89,10 +89,13 @@ enum AddressBookAction {
     case presentFollowUserForm(_ isPresented: Bool)
     case didField(FormFieldAction<String>)
     case petnameField(FormFieldAction<String>)
+
+    case presentQRCodeScanner(_ isPresented: Bool)
 }
 
 struct AddressBookModel: ModelProtocol {
     var isPresented = false
+    var qrCodeScannerIsPresented = false
     var did: Did? = nil
     var follows: [AddressBookEntry] = []
     
@@ -191,12 +194,21 @@ struct AddressBookModel: ModelProtocol {
                 ],
                 environment: environment
             )
+
+        case .presentQRCodeScanner(let isPresented):
+            var model = state
+            model.qrCodeScannerIsPresented = isPresented
+            return Update(state: model)
             
         case .attemptFollow:
             guard let did = state.followUserForm.did.validated else {
                 return Update(state: state)
             }
             guard let petname = state.followUserForm.petname.validated else {
+                return Update(state: state)
+            }
+            // Guard against duplicates
+            guard !state.follows.contains(where: { entry in entry.did == did }) else {
                 return Update(state: state)
             }
             

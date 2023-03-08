@@ -109,9 +109,9 @@ struct FollowUserView: View {
                 }
                 
                 Section(header: Text("Add via QR Code")) {
-                    NavigationLink(
-                        destination: {
-                            AddFriendViaQRCodeView(onScannedDid: populateDidFromQRCodeResult)
+                    Button(
+                        action: {
+                            send(.presentQRCodeScanner(true))
                         },
                         label: {
                             HStack {
@@ -147,6 +147,15 @@ struct FollowUserView: View {
                     title: Text("Failed to Follow User"),
                     message: Text(state.failFollowErrorMessage ?? "An unknown error ocurred")
                 )
+            }
+            .sheet(
+                isPresented: Binding(
+                    get: { state.qrCodeScannerIsPresented },
+                    send: send,
+                    tag: AddressBookAction.presentQRCodeScanner
+                )
+            ) {
+                AddFriendViaQRCodeView(onScannedDid: populateDidFromQRCodeResult)
             }
         }
     }
