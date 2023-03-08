@@ -8,23 +8,24 @@
 import SwiftUI
 
 struct OmniboxView: View {
-    var icon: Image
-    var title: String
+    var address: MemoAddress?
+    var defaultAudience: Audience
 
     var body: some View {
         HStack(spacing: 8) {
-            icon
+            Image(audience: address?.toAudience() ?? defaultAudience)
                 .resizable()
                 .frame(width: 17, height: 17)
-                .foregroundColor(.accentColor)
-            HStack(spacing: 0) {
-                Spacer()
-                Text(verbatim: title)
-                    .font(.callout)
-                    .foregroundColor(.accentColor)
-                Spacer()
+            Spacer(minLength: AppTheme.unit)
+            if let slashlink = address?.toSlashlink() {
+                OmniboxSlashlinkView(
+                    petname: slashlink.petnamePart,
+                    slug: slashlink.slugPart
+                )
             }
+            Spacer(minLength: AppTheme.unit)
         }
+        .foregroundColor(.accentColor)
         .padding(.leading, 8)
         .padding(.trailing, 12)
         .frame(height: 34)
@@ -37,17 +38,22 @@ struct OmniboxView: View {
     }
 }
 
-extension OmniboxView {
-    init(
-        address: MemoAddress?,
-        defaultAudience: Audience
-    ) {
-        let audience = address?.toAudience() ?? defaultAudience
-        let title = address?.slug.description ?? ""
-        self.init(
-            icon: Image(audience: audience),
-            title: title
-        )
+/// Helper view that knows how to format slashlinks with or without petname.
+struct OmniboxSlashlinkView: View {
+    var petname: String?
+    var slug: String
+    var empty = ""
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            if let petname = petname {
+                Text(verbatim: "@\(petname)").fontWeight(.medium)
+                Text(verbatim: "/\(slug)")
+            } else {
+                Text(verbatim: slug)
+            }
+        }
+        .lineLimit(1)
     }
 }
 
@@ -55,16 +61,30 @@ struct OmniboxView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             OmniboxView(
-                icon: Image(systemName: "network"),
-                title: "Permissionless creation is where value comes from"
+                address: .public(Slashlink("@here/red-mars")!),
+                defaultAudience: .local
             )
             OmniboxView(
-                icon: Image(systemName: "network"),
-                title: "X"
+                address: .public(Slashlink("@here/red-mars-very-long-slug")!),
+                defaultAudience: .local
+            )
+            OmniboxView(
+                address: .public(Slashlink("/red-mars")!),
+                defaultAudience: .local
             )
             OmniboxView(
                 address: .local(Slug("red-mars")!),
                 defaultAudience: .local
+            )
+            OmniboxView(
+                address: .local(Slug("red-mars")!),
+                defaultAudience: .local
+            )
+            OmniboxView(
+                defaultAudience: .local
+            )
+            OmniboxView(
+                defaultAudience: .public
             )
         }
     }
