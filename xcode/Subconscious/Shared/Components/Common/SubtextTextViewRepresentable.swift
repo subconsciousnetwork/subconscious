@@ -482,10 +482,19 @@ extension Subtext {
             guard let contentRange = forParagraph.paragraphContentRange else {
                 return false
             }
-            guard let tcm = forParagraph.textContentManager else {
+            guard let textContentStorage = forParagraph.textContentManager as? NSTextContentStorage else {
                 return false
             }
-            guard let range: Range<String.Index> = Range(NSRange(contentRange, in: tcm), in: base) else {
+            
+            // Is this instance of Subtext actually working on the same text that the paragraph belongs to?
+            guard let underlyingString = textContentStorage.attributedString?.string else {
+                return false
+            }
+            guard underlyingString == base else {
+                return false
+            }
+            
+            guard let range: Range<String.Index> = Range(NSRange(contentRange, in: textContentStorage), in: base) else {
                 return false
             }
             
