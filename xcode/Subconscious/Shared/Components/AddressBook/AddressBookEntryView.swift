@@ -16,13 +16,13 @@ struct AddressBookEntryView: View {
     var body: some View {
         HStack(spacing: AppTheme.unit3) {
             ProfilePic(image: pfp)
-            VStack(alignment: .leading) {
-                Text(verbatim: petname.verbatim)
+            VStack(alignment: .leading, spacing: AppTheme.unit) {
+                Text(verbatim: "@\(petname.verbatim)")
                     .foregroundColor(.buttonText)
                     .fontWeight(.semibold)
                 Text(verbatim: did.did)
                     .foregroundColor(.secondary)
-                    .font(.caption)
+                    .font(.caption.monospaced())
             }
         }
     }
@@ -32,7 +32,7 @@ struct AddressBookEntryView_Previews: PreviewProvider {
     static var previews: some View {
         AddressBookEntryView(
             pfp: Image("pfp-dog"),
-            petname: Petname("@name")!,
+            petname: Petname("name")!,
             did: Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
         )
     }
