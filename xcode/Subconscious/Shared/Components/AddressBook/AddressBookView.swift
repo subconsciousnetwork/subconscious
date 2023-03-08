@@ -20,13 +20,13 @@ struct AddressBookView: View {
                     VStack(spacing: AppTheme.unit2) {
                         Image(systemName: "person.3.fill")
                             .foregroundColor(.secondary)
-                        Text("No friends yet, try adding one!")
+                        Text("You're not following anyone... yet!")
                             .foregroundColor(.secondary)
                     }
                     .padding(AppTheme.unit2)
                     .frame(maxWidth: .infinity, alignment: .center)
                 } else {
-                    Section(header: Text("Friends")) {
+                    Section(header: Text("Following")) {
                         List {
                             ForEach(state.follows, id: \.did) { user in
                                 AddressBookEntryView(
@@ -62,10 +62,10 @@ struct AddressBookView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     NavigationLink(
                         destination: {
-                            AddFriendView(state: state, send: send)
+                            FollowUserView(state: state, send: send)
                         },
                         label: {
-                            Text("Add Friend")
+                            Image(systemName: "person.badge.plus")
                         }
                     )
                 }

@@ -1,5 +1,5 @@
 //
-//  AddFriendView.swift
+//  FollowUserView.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 2/27/23.
@@ -8,7 +8,7 @@
 import SwiftUI
 import ObservableStore
 
-struct AddFriendView: View {
+struct FollowUserView: View {
     var state: AddressBookModel
     var send: (AddressBookAction) -> Void
     
@@ -28,7 +28,7 @@ struct AddFriendView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Friend Details")) {
+                Section(header: Text("User To Follow")) {
                     HStack(alignment: .top) {
                         Image(systemName: "key")
                             .foregroundColor(.accentColor)
@@ -58,7 +58,7 @@ struct AddFriendView: View {
                     }
                 }
             }
-            .navigationTitle("Add Friend")
+            .navigationTitle("Follow User")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
@@ -80,7 +80,7 @@ struct AddFriendView: View {
     }
 }
 
-struct AddFriendView_Previews: PreviewProvider {
+struct FollowUserView_Previews: PreviewProvider {
     struct TestView: View {
         @StateObject private var store = Store(
             state: AddressBookModel(),
@@ -88,7 +88,7 @@ struct AddFriendView_Previews: PreviewProvider {
         )
 
         var body: some View {
-            AddFriendView(
+            FollowUserView(
                 state: store.state,
                 send: store.send
             )
