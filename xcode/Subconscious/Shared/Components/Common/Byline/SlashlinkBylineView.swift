@@ -23,6 +23,7 @@ struct SlashlinkBylineView: View {
             }
             Text(verbatim: "/\(slug)")
                 .foregroundColor(slugColor)
+            Spacer()
         }
         .lineLimit(1)
     }
