@@ -16,7 +16,7 @@ struct DidView: View {
             DidQrCodeView(did: did)
                 .frame(maxWidth: 256, alignment: .center)
             
-            HStack{
+            HStack {
                 Text(did.did)
                     .font(.callout.monospaced())
                     .foregroundColor(.secondary)
@@ -24,6 +24,7 @@ struct DidView: View {
                 ShareLink(item: did.did) {
                     Image(systemName: "square.and.arrow.up")
                         .padding(AppTheme.unit2)
+                }
             }
         }
     }
