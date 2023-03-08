@@ -100,14 +100,14 @@ struct DetailView: View {
         }
         /// Catch link taps and handle them here
         .environment(\.openURL, OpenURLAction { url in
-            guard let link = UnqualifiedLink.decodefromSubEntryURL(url) else {
+            guard let sub = url.toSubSlashlinkURL() else {
                 return .systemAction
             }
             send(
                 .requestFindDetail(
-                    slug: link.slug,
-                    title: link.title,
-                    fallback: link.title
+                    slug: sub.slashlink.toSlug(),
+                    title: sub.title,
+                    fallback: sub.title
                 )
             )
             return .handled
@@ -196,16 +196,14 @@ struct DetailReadyView: View {
     private func onLink(
         url: URL
     ) -> Bool {
-        guard let link = UnqualifiedLink.decodefromSubEntryURL(
-            url
-        ) else {
+        guard let sub = url.toSubSlashlinkURL() else {
             return true
         }
         send(
             .requestFindDetail(
-                slug: link.slug,
-                title: link.title,
-                fallback: link.title
+                slug: sub.slashlink.toSlug(),
+                title: sub.title,
+                fallback: sub.title
             )
         )
         return false

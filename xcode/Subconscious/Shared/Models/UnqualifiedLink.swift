@@ -12,15 +12,6 @@ import Foundation
 /// sphere content or a local draft, and it is not known which from the
 /// text.
 struct UnqualifiedLink: Hashable {
-    var slug: Slug
+    var slashlink: Slashlink
     var title: String
-}
-
-extension Slug {
-    func toUnqualifiedLink(title: String?) -> UnqualifiedLink? {
-        UnqualifiedLink(
-            slug: self,
-            title: title ?? self.toTitle()
-        )
-    }
 }
