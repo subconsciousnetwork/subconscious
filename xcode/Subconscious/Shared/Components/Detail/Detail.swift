@@ -105,7 +105,7 @@ struct DetailView: View {
             }
             send(
                 .requestFindDetail(
-                    slug: sub.slashlink.toSlug(),
+                    slashlink: sub.slashlink,
                     title: sub.title,
                     fallback: sub.title
                 )
@@ -201,7 +201,7 @@ struct DetailReadyView: View {
         }
         send(
             .requestFindDetail(
-                slug: sub.slashlink.toSlug(),
+                slashlink: sub.slashlink,
                 title: sub.title,
                 fallback: sub.title
             )
@@ -315,7 +315,11 @@ enum DetailOuterAction: Hashable {
     /// Request specific detail
     case requestDetail(address: MemoAddress, title: String, fallback: String)
     /// Request detail from any audience scope
-    case requestFindDetail(slug: Slug, title: String, fallback: String)
+    case requestFindDetail(
+        slashlink: Slashlink,
+        title: String,
+        fallback: String
+    )
     case requestDelete(MemoAddress?)
     case succeedMoveEntry(from: EntryLink, to: EntryLink)
     case succeedMergeEntry(parent: EntryLink, child: EntryLink)

@@ -454,14 +454,15 @@ struct DataService {
     /// If there is public content, that will be returned.
     /// Otherwise, if there is local content, that will be returned.
     func findAddress(
-        slug: Slug
+        slashlink: Slashlink
     ) -> MemoAddress? {
         // If slug exists in default sphere, return that.
         if noosphere.getFileVersion(
-            slashlink: slug.toSlashlink().description
+            slashlink: slashlink.description
         ) != nil {
-            return slug.toPublicMemoAddress()
+            return slashlink.toPublicMemoAddress()
         }
+        let slug = slashlink.toSlug()
         // Otherwise if slug exists on local, return that.
         if local.info(slug) != nil {
             return slug.toLocalMemoAddress()
