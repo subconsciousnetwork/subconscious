@@ -12,7 +12,7 @@ import ObservableStore
 final class Tests_MarkupText: XCTestCase {
     func testRequestFocus() {
         let store = Store(
-            state: MarkupTextModel(),
+            state: SubtextTextModel(),
             environment: ()
         )
 

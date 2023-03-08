@@ -27,6 +27,7 @@ struct SubSlashlinkURL {
 }
 
 extension URL {
+    /// Convert to internal `sub://slashlink` URL.
     func toSubSlashlinkURL() -> SubSlashlinkURL? {
         guard self.scheme == "sub" && self.host == "slashlink" else {
             return nil
@@ -38,9 +39,9 @@ extension URL {
             return nil
         }
 
-        guard let slashlinkQuery = components.firstQueryItemWhere(
+        guard let slashlinkQuery = components.firstQueryValueWhere(
             name: "slashlink"
-        )?.value else {
+        ) else {
             return nil
         }
 
@@ -48,7 +49,7 @@ extension URL {
             return nil
         }
 
-        let titleQuery = components.firstQueryItemWhere(name: "title")?.value
+        let titleQuery = components.firstQueryValueWhere(name: "title")
         let title = titleQuery ?? slashlink.toSlug().toTitle()
 
         return SubSlashlinkURL(
