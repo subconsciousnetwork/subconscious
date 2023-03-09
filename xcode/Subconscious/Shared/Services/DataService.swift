@@ -430,19 +430,18 @@ struct DataService {
         }
     }
 
-    /// Given a slug, get back a resolved MemoAddress
+    /// Given a slug, get back a resolved MemoAddress for own sphere.
     /// If there is public content, that will be returned.
     /// Otherwise, if there is local content, that will be returned.
     func findAddress(
-        slashlink: Slashlink
+        slug: Slug
     ) -> MemoAddress? {
         // If slug exists in default sphere, return that.
         if noosphere.getFileVersion(
-            slashlink: slashlink.description
+            slashlink: slug.markup
         ) != nil {
-            return slashlink.toPublicMemoAddress()
+            return slug.toPublicMemoAddress()
         }
-        let slug = slashlink.toSlug()
         // Otherwise if slug exists on local, return that.
         if local.info(slug) != nil {
             return slug.toLocalMemoAddress()
@@ -451,7 +450,8 @@ struct DataService {
     }
 
     func findUniqueAddressFor(
-        _ text: String, audience: Audience
+        _ text: String,
+        audience: Audience
     ) -> MemoAddress? {
         // If we can't derive slug from text, exit early.
         guard let slug = Slug(formatting: text) else {

@@ -150,7 +150,6 @@ enum NotebookAction {
     /// Otherwise, will push local content.
     case findAndPushDetail(
         slashlink: Slashlink,
-        title: String,
         fallback: String
     )
 
@@ -225,17 +224,16 @@ extension NotebookAction {
         switch action {
         case .requestDelete(let address):
             return .deleteEntry(address)
-        case let .requestDetail(address, title, fallback):
+        case let .requestDetail(address, fallback):
             return .pushDetail(
                 DetailOuterModel(
                     address: address,
                     fallback: fallback
                 )
             )
-        case let .requestFindDetail(slashlink, title, fallback):
+        case let .requestFindDetail(slashlink, fallback):
             return .findAndPushDetail(
                 slashlink: slashlink,
-                title: title,
                 fallback: fallback
             )
         case let .succeedMoveEntry(from, to):
@@ -484,12 +482,11 @@ struct NotebookModel: ModelProtocol {
             var model = state
             model.details = details
             return Update(state: model)
-        case let .findAndPushDetail(slashlink, title, fallback):
+        case let .findAndPushDetail(slashlink, fallback):
             return findAndPushDetail(
                 state: state,
                 environment: environment,
                 slashlink: slashlink,
-                title: title,
                 fallback: fallback
             )
         case let .pushDetail(detail):
@@ -840,12 +837,11 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment,
         slashlink: Slashlink,
-        title: String,
         fallback: String
     ) -> Update<NotebookModel> {
         let fallbackAddress = slashlink.toLocalMemoAddress()
         let address = environment.data
-            .findAddress(slashlink: slashlink) ?? fallbackAddress
+            .findAddress(slug: slashlink.toSlug()) ?? fallbackAddress
         return update(
             state: state,
             action: .pushDetail(

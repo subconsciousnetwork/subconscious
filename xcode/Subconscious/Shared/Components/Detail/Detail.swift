@@ -39,7 +39,6 @@ struct DetailView: View {
         send(
             .requestFindDetail(
                 slashlink: sub.slashlink,
-                title: sub.title,
                 fallback: sub.title
             )
         )
@@ -80,7 +79,6 @@ struct DetailView: View {
                                 send(
                                     .requestDetail(
                                         address: link.address,
-                                        title: link.linkableTitle,
                                         fallback: link.title
                                     )
                                 )
@@ -175,7 +173,6 @@ struct DetailView: View {
             send(
                 .requestFindDetail(
                     slashlink: link.slashlink,
-                    title: link.title,
                     fallback: link.title
                 )
             )
@@ -237,11 +234,10 @@ struct DetailView: View {
 /// Actions that are forwarded up to the parent component
 enum DetailOuterAction: Hashable {
     /// Request specific detail
-    case requestDetail(address: MemoAddress, title: String, fallback: String)
+    case requestDetail(address: MemoAddress, fallback: String)
     /// Request detail from any audience scope
     case requestFindDetail(
         slashlink: Slashlink,
-        title: String,
         fallback: String
     )
     case requestDelete(MemoAddress?)
