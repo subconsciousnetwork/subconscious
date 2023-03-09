@@ -40,7 +40,7 @@ struct RowButtonStyle: ButtonStyle {
                 )
         }
         .padding(insets)
-        .frame(minHeight: 44)
+        .frame(minHeight: AppTheme.minTouchSize)
         .contentShape(
             Rectangle()
         )
