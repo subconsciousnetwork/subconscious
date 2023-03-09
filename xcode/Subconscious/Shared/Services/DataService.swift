@@ -555,4 +555,44 @@ struct DataService {
             try readRandomEntryLink()
         }
     }
+  
+    func getPetname(petname: Petname) throws {
+        try noosphere.getPetname(petname: petname.verbatim)
+    }
+    
+    func getPetnameAsync(petname: Petname) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async(qos: .utility) {
+            try getPetname(petname: petname)
+        }
+    }
+    
+    func setPetname(did: Did, petname: Petname) throws {
+        try noosphere.setPetname(did: did.did, petname: petname.verbatim)
+    }
+    
+    func setPetnameAsync(did: Did, petname: Petname) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async(qos: .utility) {
+            try setPetname(did: did, petname: petname)
+        }
+    }
+    
+    func unsetPetname(petname: Petname) throws {
+        try noosphere.unsetPetname(petname: petname.verbatim)
+    }
+    
+    func unsetPetnameAsync(petname: Petname) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async(qos: .utility) {
+            try unsetPetname(petname: petname)
+        }
+    }
+    
+    func resolvePetname(petname: Petname) throws {
+        try noosphere.resolvePetname(petname: petname.verbatim)
+    }
+    
+    func resolvePetnameAsync(petname: Petname) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async(qos: .utility) {
+            try unsetPetname(petname: petname)
+        }
+    }
 }

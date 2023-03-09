@@ -264,6 +264,39 @@ public final class SphereFS: SphereProtocol {
         })
     }
     
+    // TODO: Do these belong on SphereFS?
+    public func getPetname(petname: String) throws {
+        throw NoosphereError.foreignError("Not Implemented")
+        
+//        try Noosphere.callWithError { error in
+//            ns_sphere_petname_get(noosphere.noosphere, identity, petname)
+//        }
+    }
+    
+    public func setPetname(did: String, petname: String) throws {
+        throw NoosphereError.foreignError("Not Implemented")
+        
+//        try Noosphere.callWithError { error in
+//            ns_sphere_petname_set(noosphere.noosphere, identity, petname, did)
+//        }
+    }
+    
+    public func unsetPetname(petname: String) throws {
+        throw NoosphereError.foreignError("Not Implemented")
+        
+//        try Noosphere.callWithError { error in
+//            ns_sphere_petname_set(noosphere.noosphere, identity, petname, nil)
+//        }
+    }
+    
+    public func resolvePetname(petname: String) throws {
+        throw NoosphereError.foreignError("Not Implemented")
+        
+//        try Noosphere.callWithError { error in
+//            ns_sphere_petname_resolve(noosphere.noosphere, identity, petname)
+//        }
+    }
+    
     /// Save outstanding writes and return new Sphere version
     @discardableResult public func save() throws -> String {
         try Noosphere.callWithError(
