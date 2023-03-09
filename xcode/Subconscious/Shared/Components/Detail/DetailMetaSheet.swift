@@ -92,7 +92,7 @@ struct DetailMetaSheet: View {
             )
         }
         .confirmationDialog(
-            "Are you sure you want to delete?",
+            "Are you sure you want to delete this note?",
             isPresented: Binding(
                 get: { state.isDeleteConfirmationDialogPresented },
                 send: send,
