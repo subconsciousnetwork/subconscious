@@ -1490,6 +1490,7 @@ struct DetailModel: ModelProtocol {
                 ],
                 environment: environment
             )
+            .animation(.default)
         }
         
         let entry = state.snapshotEntry()
