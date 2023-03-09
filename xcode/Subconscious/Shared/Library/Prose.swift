@@ -26,8 +26,7 @@ extension String {
     /// Truncate string to max length, appending ellipsis if truncated.
     func truncate(
         maxLength: Int = 256,
-        ellipsis: String = "…",
-        fallback: String = ""
+        ellipsis: String = "…"
     ) -> String {
         guard self.count > maxLength else {
             return self
@@ -61,10 +60,13 @@ extension String {
         ellipsis: String = "…",
         fallback: String = String(localized: "Untitled")
     ) -> String {
-        String(self.firstSentence).truncate(
+        let firstSentence = self.firstSentence
+        guard !firstSentence.isEmpty else {
+            return fallback
+        }
+        return String(firstSentence).truncate(
             maxLength: maxLength,
-            ellipsis: ellipsis,
-            fallback: fallback
+            ellipsis: ellipsis
         )
     }
 }

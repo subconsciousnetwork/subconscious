@@ -19,6 +19,16 @@ final class Tests_Prose: XCTestCase {
         XCTAssertEqual(text.title(), "I stuffed a shirt or two into my old carpet-bag, tucked it under my arm, and started for Cape Horn and the Pacific, quitting the good city…")
     }
     
+    func testTitleFallback() throws {
+        let text = ""
+        XCTAssertEqual(text.title(), "Untitled")
+    }
+
+    func testTitleFallback2() throws {
+        let text = ""
+        XCTAssertEqual(text.title(fallback: "Floop"), "Floop")
+    }
+
     func testBangEndsSentence() throws {
         let text = "Lo! The sun is breaking through."
         XCTAssertEqual(text.title(), "Lo")
@@ -43,6 +53,15 @@ final class Tests_Prose: XCTestCase {
         let text = "abcdefg"
         XCTAssertEqual(text.truncate(maxLength: 0), "")
         XCTAssertEqual(text.truncate(maxLength: 1), "")
+        XCTAssertEqual(text.truncate(maxLength: 2), "a…")
+        XCTAssertEqual(text.truncate(maxLength: 3), "ab…")
+    }
+    
+    func testTruncateFallback() throws {
+        let text = "abcdefg"
+        XCTAssertEqual(text.truncate(
+            maxLength: 1
+        ), "")
         XCTAssertEqual(text.truncate(maxLength: 2), "a…")
         XCTAssertEqual(text.truncate(maxLength: 3), "ab…")
     }
