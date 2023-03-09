@@ -70,7 +70,7 @@ struct FollowUserView: View {
                             return
                         }
                         
-                        send(.follow(did: did, petname: petname))
+                        send(.requestFollow(did: did, petname: petname))
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
@@ -81,21 +81,10 @@ struct FollowUserView: View {
 }
 
 struct FollowUserView_Previews: PreviewProvider {
-    struct TestView: View {
-        @StateObject private var store = Store(
-            state: AddressBookModel(),
-            environment: AddressBookEnvironment(noosphere: PlaceholderSphereIdentityProvider())
-        )
-
-        var body: some View {
-            FollowUserView(
-                state: store.state,
-                send: store.send
-            )
-        }
-    }
-
     static var previews: some View {
-        TestView()
+        FollowUserView(
+            state: AddressBookModel(),
+            send: { action in }
+        )
     }
 }

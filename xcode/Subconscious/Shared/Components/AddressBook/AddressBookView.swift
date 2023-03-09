@@ -37,7 +37,7 @@ struct AddressBookView: View {
                                 .frame(maxWidth: .infinity)
                                 .swipeActions {
                                     Button("Unfollow", role: .destructive) {
-                                        send(.unfollow(did: user.did))
+                                        send(.requestUnfollow(petname: user.petname))
                                     }
                                 }
                             }
@@ -76,8 +76,8 @@ struct AddressBookView: View {
 }
 
 struct AddressBook_Previews: PreviewProvider {
-    struct TestView: View {
-        @StateObject private var store = Store(
+    static var previews: some View {
+        AddressBookView(
             state: AddressBookModel(
                 follows: [
                     AddressBookEntry(pfp: Image("pfp-dog"), petname: Petname("ben")!, did: Did(  "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
@@ -85,19 +85,7 @@ struct AddressBook_Previews: PreviewProvider {
                     AddressBookEntry(pfp: Image("sub_logo_dark"), petname: Petname("alice")!, did: Did("did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
                 ]
             ),
-            action: .present(true),
-            environment: AddressBookEnvironment(noosphere: PlaceholderSphereIdentityProvider())
+            send: { action in }
         )
-
-        var body: some View {
-            AddressBookView(
-                state: store.state,
-                send: store.send
-            )
-        }
-    }
-
-    static var previews: some View {
-        TestView()
     }
 }
