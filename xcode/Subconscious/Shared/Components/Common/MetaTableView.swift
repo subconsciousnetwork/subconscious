@@ -28,7 +28,7 @@ struct MetaTableRowButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundColor(.accentColor)
-            .frame(minHeight: 44)
+            .frame(minHeight: AppTheme.minTouchSize)
             .contentShape(
                 Rectangle()
             )
