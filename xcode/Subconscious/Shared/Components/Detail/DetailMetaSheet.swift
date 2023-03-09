@@ -18,8 +18,8 @@ struct DetailMetaSheet: View {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     HStack {
-                        if let slaslink = state.address?.toSlashlink() {
-                            SlashlinkBylineView(slashlink: slaslink).theme(
+                        if let slashlink = state.address?.toSlashlink() {
+                            SlashlinkBylineView(slashlink: slashlink).theme(
                                 petname: Color.primary,
                                 slug: Color.secondary
                             )
