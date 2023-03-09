@@ -25,10 +25,6 @@ struct Config: Equatable, Codable {
 
     var untitled = "Untitled"
 
-    /// Toggle scratch note suggestion feature
-    var scratchSuggestionEnabled = true
-    var scratchDefaultTitle = "Untitled"
-
     /// Toggle random suggestion feature
     var randomSuggestionEnabled = true
 

@@ -23,7 +23,7 @@ extension EntryLink {
     init(_ entry: MemoEntry) {
         self.init(
             address: entry.address,
-            title: entry.contents.title
+            title: entry.contents.title()
         )
     }
 }
@@ -31,7 +31,6 @@ extension EntryLink {
 extension EntryStub {
     init(_ entry: MemoEntry) {
         self.address = entry.address
-        self.title = entry.contents.title
         self.excerpt = entry.contents.excerpt()
         self.modified = entry.contents.modified
     }

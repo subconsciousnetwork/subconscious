@@ -35,7 +35,6 @@ final class Tests_AppMigrations: XCTestCase {
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
                 modified: Date.now,
-                title: "Loomings",
                 fileExtension: ContentType.subtext.fileExtension,
                 additionalHeaders: [],
                 body: "Call me Ishmael."
@@ -69,11 +68,9 @@ final class Tests_AppMigrations: XCTestCase {
             "Migrated to latest version"
         )
         let loomings = memos.read(Slug("loomings")!)!
-        XCTAssertEqual(loomings.title, "Loomings")
         XCTAssertEqual(loomings.body, "Call me Ishmael.")
 
         let oysters = memos.read(Slug("oysters")!)!
-        XCTAssertEqual(oysters.title, "Too much like oysters")
         XCTAssertEqual(oysters.body, "We are too much like oysters observing the sun through the water, and thinking that thick water the thinnest of air.")
         XCTAssertEqual(
             oysters.created,

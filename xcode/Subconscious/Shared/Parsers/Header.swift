@@ -13,7 +13,6 @@ enum HeaderName: String {
     case contentType = "Content-Type"
     case created = "Created"
     case modified = "Modified"
-    case title = "Title"
     case fileExtension = "File-Extension"
 }
 
@@ -22,7 +21,6 @@ struct WellKnownHeaders: Hashable {
     var contentType: String
     var created: Date
     var modified: Date
-    var title: String
     var fileExtension: String
 }
 
@@ -32,12 +30,6 @@ extension WellKnownHeaders {
     /// we generally do not include it in the "additional" headers.
     func updating(_ additionalHeaders: [Header]) -> Self {
         var this = self
-        
-        if let title = additionalHeaders.get(
-            first: HeaderName.title.rawValue
-        ) {
-            this.title = title
-        }
         
         if let fileExtension = additionalHeaders.get(
             first: HeaderName.fileExtension.rawValue
@@ -70,7 +62,6 @@ extension WellKnownHeaders {
     /// Does not include `Content-Type`.
     func getAdditionalHeaders() -> [Header] {
         [
-            Header(name: HeaderName.title.rawValue, value: title),
             Header(
                 name: HeaderName.fileExtension.rawValue,
                 value: fileExtension
@@ -312,7 +303,6 @@ extension Headers {
         contentType: String,
         created: Date,
         modified: Date,
-        title: String,
         fileExtension: String
     ) {
         self.init()
@@ -327,10 +317,6 @@ extension Headers {
         self.replace(
             name: HeaderName.modified.rawValue,
             value: String.from(modified)
-        )
-        self.replace(
-            name: HeaderName.title.rawValue,
-            value: title
         )
         self.replace(
             name: HeaderName.fileExtension.rawValue,

@@ -20,23 +20,29 @@ struct OmniboxView: View {
             HStack(spacing: 0) {
                 Spacer()
                 Text(verbatim: title)
+                    .font(.callout)
                     .foregroundColor(.accentColor)
                 Spacer()
             }
         }
         .padding(.leading, 8)
         .padding(.trailing, 12)
-        .frame(height: 36)
-        .background(Color.secondaryBackground)
-        .cornerRadius(12)
+        .frame(height: 34)
+        .clipShape(Capsule())
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                .stroke(Color.separator, lineWidth: 0.5)
+        )
+        .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)
     }
 }
 
 extension OmniboxView {
     init(
-        address: MemoAddress?
+        address: MemoAddress?,
+        defaultAudience: Audience
     ) {
-        let audience = address?.toAudience() ?? .local
+        let audience = address?.toAudience() ?? defaultAudience
         let title = address?.slug.description ?? ""
         self.init(
             icon: Image(audience: audience),
@@ -55,6 +61,10 @@ struct OmniboxView_Previews: PreviewProvider {
             OmniboxView(
                 icon: Image(systemName: "network"),
                 title: "X"
+            )
+            OmniboxView(
+                address: .local(Slug("red-mars")!),
+                defaultAudience: .local
             )
         }
     }

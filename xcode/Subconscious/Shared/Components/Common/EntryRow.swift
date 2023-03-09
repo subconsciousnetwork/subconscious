@@ -11,42 +11,29 @@ import SwiftUI
 /// Provides a preview/excerpt of the entry.
 struct EntryRow: View, Equatable {
     var entry: EntryStub
-    var emptyTitle = "Untitled"
-    var emptyExcerpt = "No additional text"
+    var emptyExcerpt = "Empty"
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
-            HStack {
-                Text(
-                    !entry.title.isEmpty ?
-                    entry.title :
-                    emptyTitle
-                )
-                .lineLimit(1)
-                .foregroundColor(Color.primary)
+            Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
+                .lineLimit(2)
+                .font(.callout)
                 .multilineTextAlignment(.leading)
-                // Aligns this text's vertical center to icon vertical
-                // center in a label.
-                .frame(minHeight: AppTheme.icon)
+            HStack(spacing: AppTheme.unit) {
+                Image(audience: entry.address.toAudience())
+                    .font(.system(size: 12))
+                Text(entry.address.slug.description)
+
                 Spacer()
+
                 Text(
                     NiceDateFormatter.shared.string(
                         from: entry.modified,
                         relativeTo: Date.now
                     )
                 )
-                .font(.callout)
+                .font(.subheadline)
                 .foregroundColor(Color.secondary)
-            }
-            Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
-                .lineLimit(1)
-                .font(.callout)
-                .multilineTextAlignment(.leading)
-                .foregroundColor(Color.secondary)
-            HStack(spacing: AppTheme.unit) {
-                Image(audience: entry.address.toAudience())
-                    .font(.system(size: 12))
-                Text(entry.address.slug.description)
             }
             .font(.callout)
             .lineLimit(1)
@@ -63,8 +50,7 @@ struct EntryRow_Previews: PreviewProvider {
                 entry: EntryStub(
                     address: Slug(formatting: "Anything that can be derived should be derived")!
                         .toLocalMemoAddress(),
-                    title: "Anything that can be derived should be derived",
-                    excerpt: "Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
+                    excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
                     modified: Date.now
                 )
             )
@@ -75,8 +61,7 @@ struct EntryRow_Previews: PreviewProvider {
                             "@here/anything-that-can-be-derived-should-be-derived"
                         )!
                     ),
-                    title: "Anything that can be derived should be derived",
-                    excerpt: "Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
+                    excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
                     modified: Date.now
                 )
             )

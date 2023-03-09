@@ -127,11 +127,9 @@ enum NotebookAction {
     case succeedSaveEntry(slug: MemoAddress, modified: Date)
 
     /// Move entry succeeded. Lifecycle action.
-    case succeedMoveEntry(from: EntryLink, to: EntryLink)
+    case succeedMoveEntry(from: MemoAddress, to: MemoAddress)
     /// Merge entry succeeded. Lifecycle action.
-    case succeedMergeEntry(parent: EntryLink, child: EntryLink)
-    /// Retitle entry succeeded. Lifecycle action.
-    case succeedRetitleEntry(from: EntryLink, to: EntryLink)
+    case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)
 
     /// Audience was changed for address
     case succeedUpdateAudience(MoveReceipt)
@@ -153,12 +151,7 @@ enum NotebookAction {
     case findAndPushDetail(slug: Slug, title: String, fallback: String)
 
     /// Push detail onto navigation stack
-    case pushDetail(
-        address: MemoAddress,
-        title: String,
-        fallback: String,
-        autofocus: Bool
-    )
+    case pushDetail(DetailOuterModel)
     
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
@@ -179,26 +172,28 @@ extension NotebookAction {
     /// Generate a detail request from a suggestion
     static func fromSuggestion(_ suggestion: Suggestion) -> Self {
         switch suggestion {
-        case .entry(let entryLink):
+        case let .memo(address, fallback):
             return .pushDetail(
-                address: entryLink.address,
-                title: entryLink.linkableTitle,
-                fallback: entryLink.title,
-                autofocus: false
+                DetailOuterModel(
+                    address: address,
+                    fallback: fallback
+                )
             )
-        case .search(let entryLink):
+        case let .createLocalMemo(slug, fallback):
             return .pushDetail(
-                address: entryLink.address,
-                title: entryLink.linkableTitle,
-                fallback: entryLink.title,
-                autofocus: false
+                DetailOuterModel(
+                    address: slug?.toLocalMemoAddress(),
+                    fallback: fallback,
+                    defaultAudience: .local
+                )
             )
-        case .scratch(let entryLink):
+        case let .createPublicMemo(slug, fallback):
             return .pushDetail(
-                address: entryLink.address,
-                title: entryLink.linkableTitle,
-                fallback: generateScratchFallback(date: Date.now),
-                autofocus: false
+                DetailOuterModel(
+                    address: slug?.toPublicMemoAddress(),
+                    fallback: fallback,
+                    defaultAudience: .public
+                )
             )
         case .random:
             return .pushRandomDetail(autofocus: false)
@@ -228,10 +223,10 @@ extension NotebookAction {
             return .deleteEntry(address)
         case let .requestDetail(address, title, fallback):
             return .pushDetail(
-                address: address,
-                title: title,
-                fallback: fallback,
-                autofocus: false
+                DetailOuterModel(
+                    address: address,
+                    fallback: fallback
+                )
             )
         case let .requestFindDetail(slug, title, fallback):
             return .findAndPushDetail(
@@ -243,8 +238,6 @@ extension NotebookAction {
             return .succeedMoveEntry(from: from, to: to)
         case let .succeedMergeEntry(parent, child):
             return .succeedMergeEntry(parent: parent, child: child)
-        case let .succeedRetitleEntry(from, to):
-            return .succeedRetitleEntry(from: from, to: to)
         case let .succeedSaveEntry(slug, modified):
             return .succeedSaveEntry(slug: slug, modified: modified)
         case let .succeedUpdateAudience(receipt):
@@ -465,13 +458,6 @@ struct NotebookModel: ModelProtocol {
                 parent: parent,
                 child: child
             )
-        case let .succeedRetitleEntry(from, to):
-            return succeedRetitleEntry(
-                state: state,
-                environment: environment,
-                from: from,
-                to: to
-            )
         case let .succeedUpdateAudience(receipt):
             return succeedUpdateAudience(
                 state: state,
@@ -502,15 +488,9 @@ struct NotebookModel: ModelProtocol {
                 title: title,
                 fallback: fallback
             )
-        case let .pushDetail(address, title, fallback, _):
+        case let .pushDetail(detail):
             var model = state
-            model.details.append(
-                DetailOuterModel(
-                    address: address,
-                    title: title,
-                    fallback: fallback
-                )
-            )
+            model.details.append(detail)
             return Update(state: model)
         case .pushRandomDetail(let autofocus):
             return pushRandomDetail(
@@ -730,20 +710,18 @@ struct NotebookModel: ModelProtocol {
     static func succeedMoveEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
+        from: MemoAddress,
+        to: MemoAddress
     ) -> Update<NotebookModel> {
         var model = state
 
         /// Find all instances of this model in the stack and update them
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.address == from.address else {
+            guard detail.address == from else {
                 return detail
             }
             var model = detail
-            model.address = to.address
-            model.title = to.linkableTitle
-            model.fallback = to.title
+            model.address = to
             return model
         })
         
@@ -759,47 +737,18 @@ struct NotebookModel: ModelProtocol {
     static func succeedMergeEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        parent: EntryLink,
-        child: EntryLink
+        parent: MemoAddress,
+        child: MemoAddress
     ) -> Update<NotebookModel> {
         var model = state
 
         /// Find all instances of child and update them to become parent
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.address == child.address else {
+            guard detail.address == child else {
                 return detail
             }
             var model = detail
-            model.address = parent.address
-            model.title = parent.linkableTitle
-            model.fallback = parent.title
-            return model
-        })
-        
-        return update(
-            state: model,
-            action: .refreshLists,
-            environment: environment
-        )
-    }
-
-    /// Retitle success lifecycle handler.
-    /// Updates UI in response.
-    static func succeedRetitleEntry(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        from: EntryLink,
-        to: EntryLink
-    ) -> Update<NotebookModel> {
-        var model = state
-
-        /// Find all instances of this model in the stack and update them
-        model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.address == from.address else {
-                return detail
-            }
-            var model = detail
-            model.title = to.linkableTitle
+            model.address = parent
             return model
         })
         
@@ -821,7 +770,10 @@ struct NotebookModel: ModelProtocol {
 
         /// Find all instances of this model in the stack and update them
         model.details = state.details.map({ (detail: DetailOuterModel) in
-            guard detail.address.slug == receipt.to.slug else {
+            guard let address = detail.address else {
+                return detail
+            }
+            guard address.slug == receipt.to.slug else {
                 return detail
             }
             var model = detail
@@ -856,9 +808,7 @@ struct NotebookModel: ModelProtocol {
         // Derive slug. If we can't (e.g. invalid query such as empty string),
         // just hide the search HUD and do nothing.
         guard
-            let link = Slug(formatting: query)?
-                .toLocalMemoAddress()
-                .toEntryLink(title: query)
+            let address = Slug(formatting: query)?.toLocalMemoAddress()
         else {
             logger.log(
                 "Query could not be converted to link: \(query)"
@@ -869,10 +819,10 @@ struct NotebookModel: ModelProtocol {
         // Request detail AFTER animaiton completes
         let fx: Fx<NotebookAction> = Just(
             NotebookAction.pushDetail(
-                address: link.address,
-                title: link.linkableTitle,
-                fallback: link.title,
-                autofocus: false
+                DetailOuterModel(
+                    address: address,
+                    fallback: query
+                )
             )
         )
         .delay(for: .seconds(delay), scheduler: DispatchQueue.main)
@@ -895,10 +845,10 @@ struct NotebookModel: ModelProtocol {
         return update(
             state: state,
             action: .pushDetail(
-                address: address,
-                title: title,
-                fallback: fallback,
-                autofocus: false
+                DetailOuterModel(
+                    address: address,
+                    fallback: fallback
+                )
             ),
             environment: environment
         )
@@ -913,10 +863,10 @@ struct NotebookModel: ModelProtocol {
         let fx: Fx<NotebookAction> = environment.data.readRandomEntryLinkAsync()
             .map({ link in
                 NotebookAction.pushDetail(
-                    address: link.address,
-                    title: link.linkableTitle,
-                    fallback: link.title,
-                    autofocus: autofocus
+                    DetailOuterModel(
+                        address: link.address,
+                        fallback: link.title
+                    )
                 )
             })
             .catch({ error in

@@ -25,10 +25,10 @@ struct NotebookNavigationView: View {
                     onEntryPress: { entry in
                         store.send(
                             .pushDetail(
-                                address: entry.address,
-                                title: entry.title,
-                                fallback: entry.title,
-                                autofocus: false
+                                DetailOuterModel(
+                                    address: entry.address,
+                                    fallback: entry.excerpt
+                                )
                             )
                         )
                     },
@@ -41,12 +41,13 @@ struct NotebookNavigationView: View {
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
                 .confirmationDialog(
-                    "Are you sure?",
+                    "Are you sure you want to delete this note?",
                     isPresented: Binding(
                         get: { store.state.isConfirmDeleteShowing },
                         send: store.send,
                         tag: NotebookAction.setConfirmDeleteShowing
                     ),
+                    titleVisibility: .visible,
                     presenting: store.state.entryToDelete
                 ) { slug in
                     Button(
@@ -55,7 +56,7 @@ struct NotebookNavigationView: View {
                             store.send(.stageDeleteEntry(slug))
                         }
                     ) {
-                        Text("Delete Immediately")
+                        Text("Delete")
                     }
                 }
             }

@@ -68,7 +68,7 @@ final class Tests_DataService: XCTestCase {
             local: local
         )
     }
-
+    
     /// A place to put cancellables from publishers
     var cancellables: Set<AnyCancellable> = Set()
     
@@ -83,7 +83,6 @@ final class Tests_DataService: XCTestCase {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: "Test",
             fileExtension: ContentType.subtext.fileExtension,
             additionalHeaders: [],
             body: "Test content"
@@ -96,14 +95,13 @@ final class Tests_DataService: XCTestCase {
         
         let memoOut = try data.readMemo(address: address)
         
-        XCTAssertEqual(memoOut.title, memoIn.title)
         XCTAssertEqual(memoOut.body, memoIn.body)
     }
     
     func testReadMemoBeforeWrite() throws {
         let tmp = try createTmpDir()
         let data = try createDataService(tmp: tmp)
-
+        
         let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         
         XCTAssertThrowsError(try data.readMemo(address: address))
@@ -118,7 +116,6 @@ final class Tests_DataService: XCTestCase {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: "Test",
             fileExtension: ContentType.subtext.fileExtension,
             additionalHeaders: [],
             body: "Test content"
@@ -134,7 +131,6 @@ final class Tests_DataService: XCTestCase {
         
         let memoOut = try data.readMemo(address: address)
         
-        XCTAssertEqual(memoOut.title, memoIn.title)
         XCTAssertEqual(memoOut.body, memoIn.body)
     }
     
@@ -147,7 +143,6 @@ final class Tests_DataService: XCTestCase {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: "Test",
             fileExtension: ContentType.subtext.fileExtension,
             additionalHeaders: [],
             body: "Test content"
@@ -163,13 +158,11 @@ final class Tests_DataService: XCTestCase {
         
         let detail = try data.readDetail(
             address: address,
-            title: "Test fallback",
             fallback: "Fallback content"
         )
         
         XCTAssertEqual(detail.entry.address, address)
         XCTAssertEqual(detail.entry.contents.body, memo.body)
-        XCTAssertEqual(detail.entry.contents.title, memo.title)
     }
     
     func testManyWritesThenCloseThenReopen() throws {
@@ -178,7 +171,7 @@ final class Tests_DataService: XCTestCase {
         
         let versionX = try data.noosphere.version()
         print("!!! X", versionX)
-
+        
         let addressA = Slug(formatting: "a")!.toPublicMemoAddress()
         let addressB = Slug(formatting: "b")!.toPublicMemoAddress()
         let addressC = Slug(formatting: "c")!.toPublicMemoAddress()
@@ -188,7 +181,6 @@ final class Tests_DataService: XCTestCase {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: "Test",
             fileExtension: ContentType.subtext.fileExtension,
             additionalHeaders: [],
             body: "Test content"
@@ -206,23 +198,44 @@ final class Tests_DataService: XCTestCase {
         try data.writeMemo(address: addressD, memo: memo)
         let versionD = try data.noosphere.version()
         print("!!! D", versionD)
-
+        
         // Create a new instance
         data = try createDataService(tmp: tmp)
-
+        
         let versionY = try data.noosphere.version()
         print("!!! Y", versionY)
-
+        
         XCTAssertNotEqual(versionY, versionX)
         XCTAssertNotEqual(versionY, versionA)
         XCTAssertNotEqual(versionY, versionB)
         XCTAssertNotEqual(versionY, versionC)
         XCTAssertEqual(versionY, versionD)
-
+        
         let memoB = try data.readMemo(address: addressB)
         XCTAssertEqual(memoB.body, "Test content")
-
+        
         let memoD = try data.readMemo(address: addressD)
         XCTAssertEqual(memoD.body, "Test content")
+    }
+    
+    func testFindUniqueAddressFor() throws {
+        let tmp = try createTmpDir()
+        let data = try createDataService(tmp: tmp)
+        
+        let memo = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "Test content"
+        )
+        
+        let title = "A"
+        let addressA = Slug(formatting: title)!.toPublicMemoAddress()
+        try data.writeMemo(address: addressA, memo: memo)
+
+        let addressA2 = data.findUniqueAddressFor(title, audience: .local)
+        XCTAssertEqual(addressA2?.description, "local::/a-2")
     }
 }

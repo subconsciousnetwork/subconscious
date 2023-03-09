@@ -22,7 +22,6 @@ struct HeaderSubtextMemoStore {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: slug.toTitle(),
             fileExtension: ContentType.subtext.rawValue
         )
         return store

@@ -19,19 +19,20 @@ struct MenuButtonView<Icon: View>: View {
             Text(label)
                 .bold()
                 .font(.caption)
+            Spacer()
             Image(systemName: "chevron.down")
                 .font(.system(size: 12))
+                .foregroundColor(Color.secondary)
         }
+        .foregroundColor(Color.accentColor)
         .lineLimit(1)
-        .frame(height: AppTheme.unit * 6)
-        .foregroundColor(Color.primaryButtonText)
+        .frame(height: 30)
         .padding(
-            .horizontal, AppTheme.unit * 3
+            .horizontal, AppTheme.unit2
         )
-        .clipShape(Capsule())
         .overlay(
-            Capsule()
-                .stroke(Color.accentColor, lineWidth: 1)
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                .stroke(Color.separator, lineWidth: 0.5)
         )
     }
 }
@@ -40,7 +41,7 @@ struct MenuButtonView_Previews: PreviewProvider {
     static var previews: some View {
         MenuButtonView(
             icon: Image(systemName: "network"),
-            label: "Public"
+            label: "Everyone"
         )
     }
 }

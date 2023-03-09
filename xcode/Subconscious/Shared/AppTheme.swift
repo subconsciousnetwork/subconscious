@@ -31,6 +31,7 @@ extension AppTheme {
     static let lineSpacing: CGFloat = 4
     static let lineHeight: CGFloat = 24
     static let fabSize: CGFloat = 56
+    static let minTouchSize: CGFloat = 44
     static let cornerRadius: Double = 8
     static let cornerRadiusLg: Double = 16
 }

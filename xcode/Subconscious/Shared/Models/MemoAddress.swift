@@ -4,8 +4,7 @@
 //
 //  Created by Gordon Brander on 2/9/23.
 //
-
-import Foundation
+import SwiftUI
 
 enum MemoAddress: Hashable, Codable {
     case local(Slug)
@@ -82,6 +81,17 @@ extension MemoAddress {
 }
 
 extension MemoAddress {
+    func toSlug() -> Slug {
+        switch self {
+        case .local(let slug):
+            return slug
+        case .public(let slashlink):
+            return slashlink.toSlug()
+        }
+    }
+}
+
+extension MemoAddress {
     func toEntryLink(title: String? = nil) -> EntryLink {
         EntryLink(address: self, title: title)
     }
@@ -116,6 +126,15 @@ extension Slug {
     
     func toPublicMemoAddress() -> MemoAddress {
         .public(Slashlink(slug: self))
+    }
+    
+    func toMemoAddress(_ audience: Audience) -> MemoAddress {
+        switch audience {
+        case .local:
+            return .local(self)
+        case .public:
+            return .public(self.toSlashlink())
+        }
     }
 }
 
@@ -155,6 +174,17 @@ extension MemoAddress {
             return slug.toLocalMemoAddress()
         case .public:
             return slug.toPublicMemoAddress()
+        }
+    }
+}
+
+extension Image {
+    init(_ address: MemoAddress) {
+        switch address {
+        case .local:
+            self.init(systemName: "circle.dashed")
+        case .public:
+            self.init(systemName: "network")
         }
     }
 }

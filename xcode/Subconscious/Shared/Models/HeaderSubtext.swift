@@ -42,7 +42,6 @@ extension HeaderSubtext {
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
             modified: Date.now,
-            title: Config.default.untitled,
             fileExtension: ContentType.subtext.fileExtension
         )
     ) -> Memo? {
@@ -51,7 +50,6 @@ extension HeaderSubtext {
             contentType: wellKnownHeaders.contentType,
             created: wellKnownHeaders.created,
             modified: wellKnownHeaders.modified,
-            title: wellKnownHeaders.title,
             fileExtension: wellKnownHeaders.fileExtension,
             additionalHeaders: headers,
             body: body

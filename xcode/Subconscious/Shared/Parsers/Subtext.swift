@@ -554,16 +554,22 @@ extension Subtext {
 
 extension Subtext {
     /// Derive an excerpt
-    func excerpt() -> String {
+    func excerpt(fallback: String = "") -> String {
         for block in blocks {
             switch block {
             case .empty:
                 continue
             default:
-                return String(block.body())
+                let block = String(block.body())
+                return block.isEmpty ? fallback : block
             }
         }
-        return ""
+        return fallback
+    }
+    
+    static func excerpt(markup: String, fallback: String = "") -> String {
+        let prefix = markup.prefix(512)
+        return Subtext(markup: String(prefix)).excerpt(fallback: fallback)
     }
 }
 

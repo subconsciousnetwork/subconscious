@@ -36,7 +36,7 @@ extension MemoEntry {
             }
         })
 
-        let title = "\(x.title) x \(y.title)"
+        let title = "\(x.address.slug) x \(y.address.slug)"
         guard let slug = Slug(formatting: title) else {
             return nil
         }
@@ -50,7 +50,6 @@ extension MemoEntry {
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now, modified: Date.now,
-                title: link.linkableTitle,
                 fileExtension: ContentType.subtext.fileExtension,
                 additionalHeaders: [],
                 body: """

@@ -35,19 +35,16 @@ class Tests_NotebookUpdate: XCTestCase {
             recent: [
                 EntryStub(
                     address: a,
-                    title: "A",
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
                     modified: Date.now
                 ),
                 EntryStub(
                     address: b,
-                    title: "B",
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
                     modified: Date.now
                 ),
                 EntryStub(
                     address: c,
-                    title: "C",
                     excerpt: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris fermentum orci quis lorem semper porta. Integer sem eros, ultricies et risus id, congue tristique libero.",
                     modified: Date.now
                 )

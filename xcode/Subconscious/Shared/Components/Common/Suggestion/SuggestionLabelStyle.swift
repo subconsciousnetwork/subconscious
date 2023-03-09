@@ -14,7 +14,7 @@ struct SuggestionLabelStyle: LabelStyle {
     var iconColor = Color.icon
 
     func makeBody(configuration: Configuration) -> some View {
-        HStack(alignment: .top, spacing: spacing) {
+        HStack(alignment: .center, spacing: spacing) {
             configuration.icon
                 .frame(
                     width: AppTheme.icon,

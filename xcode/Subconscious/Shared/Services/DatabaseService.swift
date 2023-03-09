@@ -213,7 +213,7 @@ final class DatabaseService {
                 .text(memo.contentType),
                 .date(memo.created),
                 .date(memo.modified),
-                .text(memo.title),
+                .text(memo.title()),
                 .text(memo.fileExtension),
                 .json(memo.headers, or: "[]"),
                 .text(memo.body),
@@ -266,7 +266,7 @@ final class DatabaseService {
         }
         let results = try database.execute(
             sql: """
-            SELECT id, modified, title, excerpt
+            SELECT id, modified, excerpt
             FROM memo
             ORDER BY modified DESC
             LIMIT 1000
@@ -276,14 +276,12 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
                 let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString()
+                let excerpt = row.col(2)?.toString()
             else {
                 return nil
             }
             return EntryStub(
                 address: address,
-                title: title,
                 excerpt: excerpt,
                 modified: modified
             )
@@ -320,12 +318,12 @@ final class DatabaseService {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        let suggestions = try database.execute(
+        let suggestions: [Suggestion] = try database.execute(
             sql: """
             SELECT id, title
             FROM memo
             ORDER BY modified DESC
-            LIMIT 25
+            LIMIT 5
             """
         )
         .compactMap({ row in
@@ -340,38 +338,27 @@ final class DatabaseService {
                 title: title
             )
         })
-        .map({ link in
-            Suggestion.entry(link)
+        .map({ (link: EntryLink) in
+            Suggestion.memo(
+                address: link.address,
+                fallback: link.title
+            )
         })
         
         var special: [Suggestion] = []
         
-        // Insert scratch
-        if Config.default.scratchSuggestionEnabled {
-            let now = Date.now
-            let formatter = DateFormatter.scratchDateFormatter()
-            if let address = Slug(
-                formatting: "inbox/\(formatter.string(from: now))"
-            )?.toLocalMemoAddress() {
-                special.append(
-                    .scratch(
-                        EntryLink(
-                            address: address,
-                            title: Config.default.scratchDefaultTitle
-                        )
-                    )
-                )
-            }
-        }
-        
+        // Insert quick-create suggestion
+        special.append(.createPublicMemo(fallback: ""))
+        special.append(.createLocalMemo(fallback: ""))
+
+        special.append(contentsOf: suggestions)
+
         if Config.default.randomSuggestionEnabled {
             // Insert an option to load a random note if there are any notes.
             if suggestions.count > 2 {
                 special.append(.random)
             }
         }
-        
-        special.append(contentsOf: suggestions)
         
         return special
     }
@@ -382,24 +369,16 @@ final class DatabaseService {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        // If slug is invalid, return empty suggestions
-        guard let queryEntrySlug = Slug(formatting: query) else {
-            return []
-        }
         
-        var suggestions: OrderedDictionary<Slug, Suggestion> = [:]
+        var suggestions: [Suggestion] = []
         
-        // Create a suggestion for the literal query
-        suggestions[queryEntrySlug] = .search(
-            EntryLink(
-                address: queryEntrySlug.toLocalMemoAddress(),
-                title: query
-            )
-        )
-        
-        let entries: [EntryLink] = try database.execute(
+        // Create suggestions for the literal query
+        suggestions.append(.createPublicMemo(fallback: query))
+        suggestions.append(.createLocalMemo(fallback: query))
+
+        let memos: [Suggestion] = try database.execute(
             sql: """
-            SELECT id, title
+            SELECT id, excerpt
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY rank
@@ -408,27 +387,18 @@ final class DatabaseService {
             parameters: [
                 .prefixQueryFTS5(query)
             ]
-        ).compactMap({ row in
+        )
+        .compactMap({ row in
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
-                let title = row.col(1)?.toString()
+                let excerpt = row.col(1)?.toString()
             else {
                 return  nil
             }
-            return EntryLink(
-                address: address,
-                title: title
-            )
+            return Suggestion.memo(address: address, fallback: excerpt)
         })
-        
-        // Insert entries into suggestions.
-        // If literal query and an entry have the same slug,
-        // entry will overwrite query.
-        for entry in entries {
-            suggestions.updateValue(.entry(entry), forKey: entry.address.slug)
-        }
-        
-        return Array(suggestions.values)
+        suggestions.append(contentsOf: memos)
+        return suggestions
     }
     
     /// Fetch search suggestions
@@ -457,42 +427,33 @@ final class DatabaseService {
     ///
     /// - Returns an array of RenameSuggestion
     static func collateRenameSuggestions(
-        current: EntryLink,
-        query: EntryLink,
-        results: [EntryLink]
+        current: MemoAddress,
+        query: MemoAddress,
+        results: [MemoAddress]
     ) -> [RenameSuggestion] {
         var suggestions: OrderedDictionary<Slug, RenameSuggestion> = [:]
         // First append result for literal query
-        if query.address.slug != current.address.slug {
+        if query.slug != current.slug {
             suggestions.updateValue(
                 .move(
                     from: current,
                     to: query
                 ),
-                forKey: query.address.slug
+                forKey: query.slug
             )
         }
-        // If slug is the same but title changed, this is a retitle
-        else if query.linkableTitle != current.linkableTitle {
-            suggestions.updateValue(
-                .retitle(
-                    from: current,
-                    to: query
-                ),
-                forKey: current.address.slug
-            )
-        }
+
         // Then append results from existing entries, potentially overwriting
         // result for literal query if identical.
         for result in results {
             /// If slug changed, this is a move
-            if result.address.slug != current.address.slug {
+            if result.slug != current.slug {
                 suggestions.updateValue(
                     .merge(
                         parent: result,
                         child: current
                     ),
-                    forKey: result.address.slug
+                    forKey: result.slug
                 )
             }
         }
@@ -503,7 +464,7 @@ final class DatabaseService {
     /// for renaming the note.
     func searchRenameSuggestions(
         query: String,
-        current: EntryLink
+        current: MemoAddress
     ) throws -> [RenameSuggestion] {
         guard self.state == .ready else {
             return []
@@ -511,60 +472,44 @@ final class DatabaseService {
         guard let slug = query.toSlug() else {
             return []
         }
+
         // Create a suggestion for the literal query that has same
         // audience as current.
-        guard let queryEntryLink = Func.block({
-            switch current.address {
+        let queryAddress = Func.block({
+            switch current {
             case .public(let slashlink):
-                return EntryLink(
-                    address: MemoAddress.public(
-                        Slashlink(
-                            petname: slashlink.toPetname(),
-                            slug: slug
-                        )
-                    ),
-                    title: query
+                return MemoAddress.public(
+                    Slashlink(
+                        petname: slashlink.toPetname(),
+                        slug: slug
+                    )
                 )
             case .local:
-                return EntryLink(
-                    address: MemoAddress.local(slug),
-                    title: query
-                )
+                return MemoAddress.local(slug)
             }
-        }) else {
-            return []
-        }
-        
-        let results = try database.execute(
-            sql: """
-            SELECT id, title
-            FROM memo_search
-            WHERE memo_search MATCH ?
-            ORDER BY rank
-            LIMIT 25
-            """,
-            parameters: [
-                .prefixQueryFTS5(query)
-            ]
-        )
-
-        let entries: [EntryLink] = results.compactMap({ row in
-            guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
-                let title = row.col(1)?.toString()
-            else {
-                return nil
-            }
-            return EntryLink(
-                address: address,
-                title: title
-            )
         })
+        
+        let results: [MemoAddress] = try database
+            .execute(
+                sql: """
+                SELECT id
+                FROM memo_search
+                WHERE memo_search MATCH ?
+                ORDER BY rank
+                LIMIT 25
+                """,
+                parameters: [
+                    .prefixQueryFTS5(query)
+                ]
+            )
+            .compactMap({ row in
+                row.col(0)?.toString()?.toMemoAddress()
+            })
         
         return Self.collateRenameSuggestions(
             current: current,
-            query: queryEntryLink,
-            results: entries
+            query: queryAddress,
+            results: results
         )
     }
 
@@ -674,7 +619,7 @@ final class DatabaseService {
         // Use content indexed in database, even though it might be stale.
         guard let results = try? database.execute(
             sql: """
-            SELECT id, modified, title, excerpt
+            SELECT id, modified, excerpt
             FROM memo_search
             WHERE slug != ? AND memo_search.description MATCH ?
             ORDER BY rank
@@ -692,14 +637,12 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
                 let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString()
+                let excerpt = row.col(2)?.toString()
             else {
                 return nil
             }
             return EntryStub(
                 address: address,
-                title: title,
                 excerpt: excerpt,
                 modified: modified
             )
@@ -716,7 +659,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT id, modified, title, excerpt
+            SELECT id, modified, excerpt
             FROM memo
             WHERE memo.modified BETWEEN ? AND ?
             ORDER BY RANDOM()
@@ -731,14 +674,12 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
                 let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString()
+                let excerpt = row.col(2)?.toString()
             else {
                 return nil
             }
             return EntryStub(
                 address: address,
-                title: title,
                 excerpt: excerpt,
                 modified: modified
             )
@@ -754,7 +695,7 @@ final class DatabaseService {
 
         return try? database.execute(
             sql: """
-            SELECT id, modified, title, excerpt
+            SELECT id, modified, excerpt
             FROM memo
             ORDER BY RANDOM()
             LIMIT 1
@@ -764,14 +705,12 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
                 let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString()
+                let excerpt = row.col(2)?.toString()
             else {
                 return nil
             }
             return EntryStub(
                 address: address,
-                title: title,
                 excerpt: excerpt,
                 modified: modified
             )
@@ -789,7 +728,7 @@ final class DatabaseService {
         
         return try? database.execute(
             sql: """
-            SELECT id, modified, title, excerpt
+            SELECT id, modified, excerpt
             FROM memo_search
             WHERE memo_search MATCH ?
             ORDER BY RANDOM()
@@ -803,14 +742,12 @@ final class DatabaseService {
             guard
                 let address = row.col(0)?.toString()?.toMemoAddress(),
                 let modified = row.col(1)?.toDate(),
-                let title = row.col(2)?.toString(),
-                let excerpt = row.col(3)?.toString()
+                let excerpt = row.col(2)?.toString()
             else {
                 return nil
             }
             return EntryStub(
                 address: address,
-                title: title,
                 excerpt: excerpt,
                 modified: modified
             )
