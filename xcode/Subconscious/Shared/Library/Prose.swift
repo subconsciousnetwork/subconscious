@@ -32,8 +32,12 @@ extension String {
         guard self.count > maxLength else {
             return self
         }
+        let adjustedMaxLength = max(0, maxLength - ellipsis.count)
+        guard adjustedMaxLength > 0 else {
+            return ""
+        }
         let truncated = self.prefix(
-            maxLength
+            adjustedMaxLength
         ).trimmingCharacters(
             in: .whitespacesAndNewlines
         )
