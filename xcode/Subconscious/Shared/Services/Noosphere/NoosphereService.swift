@@ -28,7 +28,7 @@ enum NoosphereServiceError: Error, LocalizedError {
 }
 
 /// Creates and manages Noosphere and default sphere singletons.
-final class NoosphereService: SphereProtocol {
+final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
     /// Default logger for NoosphereService instances.
     private static let logger = Logger(
         subsystem: Config.default.rdns,

@@ -86,6 +86,10 @@ struct OmniboxView_Previews: PreviewProvider {
             OmniboxView(
                 defaultAudience: .public
             )
+            OmniboxView(
+                address: .local(Slug("red-mars")!),
+                defaultAudience: .local
+            )
         }
     }
 }

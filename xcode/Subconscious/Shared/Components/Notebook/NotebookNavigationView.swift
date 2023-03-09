@@ -41,7 +41,7 @@ struct NotebookNavigationView: View {
                 )
                 .ignoresSafeArea(.keyboard, edges: .bottom)
                 .confirmationDialog(
-                    "Are you sure you want to delete?",
+                    "Are you sure you want to delete this note?",
                     isPresented: Binding(
                         get: { store.state.isConfirmDeleteShowing },
                         send: store.send,
@@ -85,6 +85,17 @@ struct NotebookNavigationView: View {
                         }
                     ) {
                         Image(systemName: "gearshape")
+                    }
+                }
+                if Config.default.addressBook {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(
+                            action: {
+                                app.send(.presentAddressBook(true))
+                            }
+                        ) {
+                            Image(systemName: "person.2")
+                        }
                     }
                 }
             }

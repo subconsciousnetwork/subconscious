@@ -18,8 +18,8 @@ struct DetailMetaSheet: View {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     HStack {
-                        if let slaslink = state.address?.toSlashlink() {
-                            SlashlinkBylineView(slashlink: slaslink).theme(
+                        if let slashlink = state.address?.toSlashlink() {
+                            SlashlinkBylineView(slashlink: slashlink).theme(
                                 petname: Color.primary,
                                 slug: Color.secondary
                             )
@@ -92,7 +92,7 @@ struct DetailMetaSheet: View {
             )
         }
         .confirmationDialog(
-            "Are you sure you want to delete?",
+            "Are you sure you want to delete this note?",
             isPresented: Binding(
                 get: { state.isDeleteConfirmationDialogPresented },
                 send: send,

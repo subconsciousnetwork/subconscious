@@ -22,7 +22,10 @@ struct CloseButtonView: View {
                     .foregroundColor(.secondary)
                     .background(Color.secondaryBackground)
                     .clipShape(Circle())
-                    .frame(width: 44, height: 44)
+                    .frame(
+                        width: AppTheme.minTouchSize,
+                        height: AppTheme.minTouchSize
+                    )
                     .accessibility(label: Text("Close"))
                     .accessibility(hint: Text("Tap to close"))
             }

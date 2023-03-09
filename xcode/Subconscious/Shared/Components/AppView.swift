@@ -44,6 +44,21 @@ struct AppView: View {
         ) {
             SettingsView(app: store)
         }
+        .sheet(
+            isPresented: Binding(
+                get: { store.state.addressBook.isPresented },
+                send: store.send,
+                tag: AppAction.presentAddressBook
+            )
+        ) {
+            AddressBookView(
+                state: store.state.addressBook,
+                send: Address.forward(
+                    send: store.send,
+                    tag: AppAddressBookCursor.tag
+                )
+            )
+        }
         .onAppear {
             store.send(.appear)
         }
@@ -64,6 +79,7 @@ struct AppView: View {
 //  MARK: Action
 enum AppAction: CustomLogStringConvertible {
     case recoveryPhrase(RecoveryPhraseAction)
+    case addressBook(AddressBookAction)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -135,7 +151,11 @@ enum AppAction: CustomLogStringConvertible {
 
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
-
+    
+    static func presentAddressBook(_ isPresented: Bool) -> AppAction {
+        .addressBook(.present(isPresented))
+    }
+    
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
         .recoveryPhrase(.setPhrase(phrase))
@@ -168,6 +188,22 @@ struct AppRecoveryPhraseCursor: CursorProtocol {
     
     static func tag(_ action: RecoveryPhraseAction) -> AppAction {
         .recoveryPhrase(action)
+    }
+}
+
+struct AppAddressBookCursor: CursorProtocol {
+    static func get(state: AppModel) -> AddressBookModel {
+        state.addressBook
+    }
+    
+    static func set(state: AppModel, inner: AddressBookModel) -> AppModel {
+        var model = state
+        model.addressBook = inner
+        return model
+    }
+    
+    static func tag(_ action: AddressBookAction) -> AppAction {
+        .addressBook(action)
     }
 }
 
@@ -204,6 +240,10 @@ struct AppModel: ModelProtocol {
     /// State for rendering mnemonic/recovery phrase UI.
     /// Not persisted.
     var recoveryPhrase = RecoveryPhraseModel()
+    
+    /// Holds the state of the petname directory
+    /// Will be persisted to and read from the underlying sphere
+    var addressBook = AddressBookModel()
 
     var gatewayURL = AppDefaults.standard.gatewayURL
     var gatewayURLTextField = AppDefaults.standard.gatewayURL
@@ -239,6 +279,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: environment.recoveryPhrase
+            )
+        case .addressBook(let action):
+            return AppAddressBookCursor.update(
+                state: state,
+                action: action,
+                environment: environment.addressBook
             )
         case .scenePhaseChange(let scenePhase):
             return scenePhaseChange(
@@ -860,6 +906,7 @@ struct AppEnvironment {
     var feed: FeedService
     
     var recoveryPhrase = RecoveryPhraseEnvironment()
+    var addressBook: AddressBookEnvironment
 
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
@@ -920,6 +967,8 @@ struct AppEnvironment {
             database: databaseService,
             local: local
         )
+        
+        self.addressBook = AddressBookEnvironment(noosphere: noosphere)
 
         self.feed = FeedService()
     }
