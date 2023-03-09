@@ -30,7 +30,6 @@ struct MenuButtonView<Icon: View>: View {
         .padding(
             .horizontal, AppTheme.unit2
         )
-        .clipShape(Capsule())
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
                 .stroke(Color.separator, lineWidth: 0.5)
