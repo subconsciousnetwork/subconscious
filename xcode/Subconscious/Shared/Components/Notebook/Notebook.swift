@@ -148,7 +148,11 @@ enum NotebookAction {
     /// Find the first existing detail for a given slug.
     /// If public content exists for this slug, that will be pushed.
     /// Otherwise, will push local content.
-    case findAndPushDetail(slug: Slug, title: String, fallback: String)
+    case findAndPushDetail(
+        slashlink: Slashlink,
+        title: String,
+        fallback: String
+    )
 
     /// Push detail onto navigation stack
     case pushDetail(DetailOuterModel)
@@ -228,9 +232,9 @@ extension NotebookAction {
                     fallback: fallback
                 )
             )
-        case let .requestFindDetail(slug, title, fallback):
+        case let .requestFindDetail(slashlink, title, fallback):
             return .findAndPushDetail(
-                slug: slug,
+                slashlink: slashlink,
                 title: title,
                 fallback: fallback
             )
@@ -480,11 +484,11 @@ struct NotebookModel: ModelProtocol {
             var model = state
             model.details = details
             return Update(state: model)
-        case let .findAndPushDetail(slug, title, fallback):
+        case let .findAndPushDetail(slashlink, title, fallback):
             return findAndPushDetail(
                 state: state,
                 environment: environment,
-                slug: slug,
+                slashlink: slashlink,
                 title: title,
                 fallback: fallback
             )
@@ -835,13 +839,13 @@ struct NotebookModel: ModelProtocol {
     static func findAndPushDetail(
         state: NotebookModel,
         environment: AppEnvironment,
-        slug: Slug,
+        slashlink: Slashlink,
         title: String,
         fallback: String
     ) -> Update<NotebookModel> {
-        let fallbackAddress = slug.toLocalMemoAddress()
+        let fallbackAddress = slashlink.toLocalMemoAddress()
         let address = environment.data
-            .findAddress(slug: slug) ?? fallbackAddress
+            .findAddress(slashlink: slashlink) ?? fallbackAddress
         return update(
             state: state,
             action: .pushDetail(

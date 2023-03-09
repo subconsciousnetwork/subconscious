@@ -33,16 +33,14 @@ struct DetailView: View {
     private func onLink(
         url: URL
     ) -> Bool {
-        guard let link = UnqualifiedLink.decodefromSubEntryURL(
-            url
-        ) else {
+        guard let sub = url.toSubSlashlinkURL() else {
             return true
         }
         send(
             .requestFindDetail(
-                slug: link.slug,
-                title: link.title,
-                fallback: link.title
+                slashlink: sub.slashlink,
+                title: sub.title,
+                fallback: sub.title
             )
         )
         return false
@@ -171,12 +169,12 @@ struct DetailView: View {
         }
         /// Catch link taps and handle them here
         .environment(\.openURL, OpenURLAction { url in
-            guard let link = UnqualifiedLink.decodefromSubEntryURL(url) else {
+            guard let link = url.toSubSlashlinkURL() else {
                 return .systemAction
             }
             send(
                 .requestFindDetail(
-                    slug: link.slug,
+                    slashlink: link.slashlink,
                     title: link.title,
                     fallback: link.title
                 )
@@ -241,7 +239,11 @@ enum DetailOuterAction: Hashable {
     /// Request specific detail
     case requestDetail(address: MemoAddress, title: String, fallback: String)
     /// Request detail from any audience scope
-    case requestFindDetail(slug: Slug, title: String, fallback: String)
+    case requestFindDetail(
+        slashlink: Slashlink,
+        title: String,
+        fallback: String
+    )
     case requestDelete(MemoAddress?)
     case succeedMoveEntry(from: MemoAddress, to: MemoAddress)
     case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)

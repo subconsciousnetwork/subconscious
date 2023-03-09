@@ -9,7 +9,7 @@ import XCTest
 @testable import Subconscious
 
 class Tests_URLComponentsUtilities: XCTestCase {
-    func testfirstQueryItemWhere() throws {
+    func testfirstQueryValueWhere() throws {
         guard let components = URLComponents(
             string: "http://example.com?foo=bar&baz=bing"
         ) else {
@@ -17,15 +17,15 @@ class Tests_URLComponentsUtilities: XCTestCase {
             return
         }
 
-        let item = components.firstQueryItemWhere(name: "foo")
+        let item = components.firstQueryValueWhere(name: "foo")
         XCTAssertEqual(
-            item?.value,
+            item,
             "bar",
             "Gets query item matching name"
         )
     }
 
-    func testfirstQueryItemWhereDupe() throws {
+    func testfirstQueryValueWhereDupe() throws {
         guard let components = URLComponents(
             string: "http://example.com?foo=bar&baz=bing&foo=nope"
         ) else {
@@ -33,9 +33,9 @@ class Tests_URLComponentsUtilities: XCTestCase {
             return
         }
 
-        let item = components.firstQueryItemWhere(name: "foo")
+        let item = components.firstQueryValueWhere(name: "foo")
         XCTAssertEqual(
-            item?.value,
+            item,
             "bar",
             "Gets first query item matching name"
         )
@@ -49,9 +49,9 @@ class Tests_URLComponentsUtilities: XCTestCase {
             return
         }
 
-        let foo = components.firstQueryItemWhere(name: "boing")
+        let foo = components.firstQueryValueWhere(name: "boing")
         XCTAssertEqual(
-            foo?.value,
+            foo,
             nil,
             "Returns nil for missing query item"
         )
