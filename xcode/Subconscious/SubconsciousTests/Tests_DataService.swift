@@ -167,55 +167,117 @@ final class Tests_DataService: XCTestCase {
     
     func testManyWritesThenCloseThenReopen() throws {
         let tmp = try createTmpDir()
-        var data = try createDataService(tmp: tmp)
+
+        let globalStorageURL = tmp.appending(path: "noosphere")
+        let sphereStorageURL = tmp.appending(path: "sphere")
         
-        let versionX = try data.noosphere.version()
-        print("!!! X", versionX)
+        let sphereIdentity: String
+        // Create sphere and initialize sphereIdentity.
+        // We run this in a block to ensure destructor is called at end
+        // of block scope. Swift does not guarantee destructors will be
+        // called until end of scope.
+        do {
+            let noosphere = NoosphereService(
+                globalStorageURL: globalStorageURL,
+                sphereStorageURL: sphereStorageURL,
+                gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite")
+            )
+            
+            let receipt = try noosphere.createSphere(ownerKeyName: "bob")
+            sphereIdentity = receipt.identity
+        }
         
-        let addressA = Slug(formatting: "a")!.toPublicMemoAddress()
-        let addressB = Slug(formatting: "b")!.toPublicMemoAddress()
-        let addressC = Slug(formatting: "c")!.toPublicMemoAddress()
-        let addressD = Slug(formatting: "d")!.toPublicMemoAddress()
-        
-        let memo = Memo(
-            contentType: ContentType.subtext.rawValue,
-            created: Date.now,
-            modified: Date.now,
-            fileExtension: ContentType.subtext.fileExtension,
-            additionalHeaders: [],
-            body: "Test content"
+        // Create and set up other sub-services
+        let databaseURL = tmp.appending(
+            path: "database.sqlite",
+            directoryHint: .notDirectory
         )
+        let db = SQLite3Database(
+            path: databaseURL.path(percentEncoded: false),
+            mode: .readwrite
+        )
+        let database = DatabaseService(
+            database: db,
+            migrations: Config.migrations
+        )
+        _ = try database.migrate()
+        let files = FileStore(
+            documentURL: tmp.appending(path: "docs")
+        )
+        let local = HeaderSubtextMemoStore(store: files)
+
         
-        try data.writeMemo(address: addressA, memo: memo)
-        let versionA = try data.noosphere.version()
-        print("!!! A", versionA)
-        try data.writeMemo(address: addressB, memo: memo)
-        let versionB = try data.noosphere.version()
-        print("!!! B", versionB)
-        try data.writeMemo(address: addressC, memo: memo)
-        let versionC = try data.noosphere.version()
-        print("!!! C", versionC)
-        try data.writeMemo(address: addressD, memo: memo)
-        let versionD = try data.noosphere.version()
-        print("!!! D", versionD)
+        let versionX: String
+        let versionA: String
+        let versionB: String
+        let versionC: String
+
+        // Run data service in block to ensure destructor is called at end
+        // of block scope.
+        do {
+            let noosphere = NoosphereService(
+                globalStorageURL: globalStorageURL,
+                sphereStorageURL: sphereStorageURL,
+                gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite"),
+                sphereIdentity: sphereIdentity
+            )
+
+            let data = DataService(
+                noosphere: noosphere,
+                database: database,
+                local: local
+            )
+            
+            versionX = try data.noosphere.version()
+            
+            let addressA = Slug(formatting: "a")!.toPublicMemoAddress()
+            let addressB = Slug(formatting: "b")!.toPublicMemoAddress()
+            let addressC = Slug(formatting: "c")!.toPublicMemoAddress()
+            
+            let memo = Memo(
+                contentType: ContentType.subtext.rawValue,
+                created: Date.now,
+                modified: Date.now,
+                fileExtension: ContentType.subtext.fileExtension,
+                additionalHeaders: [],
+                body: "Test content"
+            )
+            
+            try data.writeMemo(address: addressA, memo: memo)
+            versionA = try data.noosphere.version()
+            try data.writeMemo(address: addressB, memo: memo)
+            versionB = try data.noosphere.version()
+            try data.writeMemo(address: addressC, memo: memo)
+            versionC = try data.noosphere.version()
+        }
         
-        // Create a new instance
-        data = try createDataService(tmp: tmp)
-        
+        let noosphere = NoosphereService(
+            globalStorageURL: globalStorageURL,
+            sphereStorageURL: sphereStorageURL,
+            gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite"),
+            sphereIdentity: sphereIdentity
+        )
+
+        let data = DataService(
+            noosphere: noosphere,
+            database: database,
+            local: local
+        )
         let versionY = try data.noosphere.version()
-        print("!!! Y", versionY)
         
         XCTAssertNotEqual(versionY, versionX)
         XCTAssertNotEqual(versionY, versionA)
         XCTAssertNotEqual(versionY, versionB)
-        XCTAssertNotEqual(versionY, versionC)
-        XCTAssertEqual(versionY, versionD)
+        // HEAD is at last version
+        XCTAssertEqual(versionY, versionC)
         
+        let addressB = Slug(formatting: "b")!.toPublicMemoAddress()
         let memoB = try data.readMemo(address: addressB)
         XCTAssertEqual(memoB.body, "Test content")
         
-        let memoD = try data.readMemo(address: addressD)
-        XCTAssertEqual(memoD.body, "Test content")
+        let addressC = Slug(formatting: "c")!.toPublicMemoAddress()
+        let memoC = try data.readMemo(address: addressC)
+        XCTAssertEqual(memoC.body, "Test content")
     }
     
     func testFindUniqueAddressFor() throws {
