@@ -30,7 +30,24 @@ struct FABView: View {
 
 struct FABButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.colorScheme) var colorScheme
     var orbShaderEnabled: Bool
+    
+    private func brandGradient() -> [Gradient.Stop] {
+        return colorScheme == .dark ? Color.brandDarkMarkGradient : Color.brandLightMarkGradient
+    }
+    
+    private func brandInnerShadow() -> Color {
+        return colorScheme == .dark ? Color.brandMarkPurple : Color.brandMarkPink
+    }
+    
+    private func brandText() -> Color {
+        return colorScheme == .dark ? Color.white : Color.brandBgSlate
+    }
+    
+    private func brandDropShadow() -> Color {
+        return colorScheme == .dark ? Color.brandMarkPink : Color.brandMarkPurple
+    }
 
     func makeBody(configuration: Configuration) -> some View {
         ZStack {
@@ -50,13 +67,22 @@ struct FABButtonStyle: ButtonStyle {
                     )
             } else {
                 Circle()
-                    .foregroundColor(Color.fabBackground)
+                    .foregroundStyle(
+                        .radialGradient(
+                            stops: brandGradient(),
+                            center: .init(x: 0.5, y: 0.25),
+                            startRadius: 0,
+                            endRadius: AppTheme.fabSize * 0.75
+                        )
+                        .shadow(.inner(color: brandInnerShadow().opacity(0.5), radius: 5, x: 0, y: 0))
+                    )
                     .frame(
                         width: AppTheme.fabSize,
                         height: AppTheme.fabSize,
                         alignment: .center
                     )
                     .shadow(
+                        color: brandDropShadow().opacity(0.5),
                         radius: 8,
                         x: 0,
                         y: 4
@@ -64,7 +90,7 @@ struct FABButtonStyle: ButtonStyle {
             }
             configuration.label
                 .foregroundColor(
-                    isEnabled ? Color.fabText : Color.fabTextDisabled
+                    isEnabled ? brandText() : Color.fabTextDisabled
                 )
                 .contentShape(
                     Circle()
