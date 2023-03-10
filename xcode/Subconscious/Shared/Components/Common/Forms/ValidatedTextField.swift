@@ -11,6 +11,7 @@ import SwiftUI
 struct ValidatedTextField: View {
     var placeholder: String
     @Binding var text: String
+    var onFocusChanged: ((Bool) -> Void)?
     var caption: String
     var hasError: Bool = false
     
@@ -19,7 +20,10 @@ struct ValidatedTextField: View {
             HStack {
                 TextField(
                     placeholder,
-                    text: $text
+                    text: $text,
+                    onEditingChanged: { focused in
+                        onFocusChanged?(focused)
+                    }
                 )
                 .overlay(alignment: .trailing) {
                     VStack {
