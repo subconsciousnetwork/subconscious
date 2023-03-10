@@ -12,8 +12,8 @@ struct ValidatedTextField: View {
     var placeholder: String
     @Binding var text: String
     var caption: String
-    var isValid: Bool = true
-
+    var hasError: Bool = false
+    
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
             HStack {
@@ -30,15 +30,15 @@ struct ValidatedTextField: View {
                             .background(Color.clear)
                     }
                     .padding(.trailing, 1)
-                    .opacity(isValid ? 0 : 1)
-                    .animation(.default, value: isValid)
+                    .opacity(hasError ? 1 : 0)
+                    .animation(.default, value: hasError)
                 }
             }
             Text(caption)
                 .foregroundColor(
-                    isValid ? Color.secondary : Color.red
+                    hasError ? Color.red : Color.secondary
                 )
-                .animation(.default, value: isValid)
+                .animation(.default, value: hasError)
                 .font(.caption)
         }
     }
@@ -56,7 +56,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 placeholder: "nickname",
                 text: .constant(""),
                 caption: "Lowercase letters and numbers only.",
-                isValid: false
+                hasError: true
             )
             ValidatedTextField(
                 placeholder: "nickname",
@@ -68,7 +68,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 placeholder: "nickname",
                 text: .constant("A very long run of text to test how this interacts with the icon"),
                 caption: "Lowercase letters and numbers only.",
-                isValid: false
+                hasError: true
             )
             .textFieldStyle(.roundedBorder)
         }

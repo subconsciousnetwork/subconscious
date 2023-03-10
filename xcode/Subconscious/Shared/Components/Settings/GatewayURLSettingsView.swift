@@ -21,7 +21,7 @@ struct GatewayURLSettingsView: View {
                     tag: AppAction.setGatewayURLTextField
                 ),
                 caption: "The URL of your preferred Noosphere gateway",
-                isValid: app.state.isGatewayURLTextFieldValid
+                hasError: !app.state.isGatewayURLTextFieldValid
             )
             .autocapitalization(.none)
             .autocorrectionDisabled(true)

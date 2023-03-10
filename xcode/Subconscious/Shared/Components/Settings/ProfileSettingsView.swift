@@ -22,7 +22,7 @@ struct ProfileSettingsView: View {
                         tag: AppAction.setNicknameTextField
                     ),
                     caption: "Lowercase letters, numbers, and dashes only",
-                    isValid: app.state.isNicknameTextFieldValid
+                    hasError: !app.state.isNicknameTextFieldValid
                 )
                 .disableAutocorrection(true)
                 .autocapitalization(.none)
