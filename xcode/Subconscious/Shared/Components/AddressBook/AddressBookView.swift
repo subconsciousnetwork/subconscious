@@ -60,9 +60,9 @@ struct AddressBookView: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    NavigationLink(
-                        destination: {
-                            FollowUserView(state: state, send: send)
+                    Button(
+                        action: {
+                            send(.presentFollowUserForm(true))
                         },
                         label: {
                             Image(systemName: "person.badge.plus")
@@ -71,12 +71,28 @@ struct AddressBookView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(
+                isPresented: Binding(
+                    get: { state.followUserFormIsPresented },
+                    send: send,
+                    tag: AddressBookAction.presentFollowUserForm
+                )
+            ) {
+                FollowUserView(state: state, send: send)
+            }
         }
     }
 }
 
 struct AddressBook_Previews: PreviewProvider {
     static var previews: some View {
+        AddressBookView(
+            state: AddressBookModel(
+                follows: [],
+                followUserFormIsPresented: true
+            ),
+            send: { action in }
+        )
         AddressBookView(
             state: AddressBookModel(
                 follows: [

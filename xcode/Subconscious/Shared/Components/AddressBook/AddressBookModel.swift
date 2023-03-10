@@ -49,6 +49,7 @@ struct FollowUserForm: Equatable {
         Petname(petname)
     }
 }
+
 struct AddressBookEntry: Equatable {
     var pfp: Image
     var petname: Petname
@@ -77,6 +78,8 @@ enum AddressBookAction: Hashable {
     case requestUnfollow(petname: Petname)
     case failUnfollow(error: String)
     case succeedUnfollow(petname: Petname)
+    
+    case presentFollowUserForm(_ isPresented: Bool)
     case setDidField(input: String)
     case setPetnameField(input: String)
 }
@@ -86,6 +89,7 @@ struct AddressBookModel: ModelProtocol {
     var did: Did? = nil
     var follows: [AddressBookEntry] = []
     
+    var followUserFormIsPresented = false
     var followUserForm: FollowUserForm = FollowUserForm()
     
     var failFollowErrorMessage: String? = nil
@@ -102,6 +106,11 @@ struct AddressBookModel: ModelProtocol {
         environment: AddressBookEnvironment
     ) -> Update<AddressBookModel> {
         switch action {
+            
+        case .presentFollowUserForm(let isPresented):
+            var model = state
+            model.followUserFormIsPresented = isPresented
+            return Update(state: model)
             
         case .setDidField(input: let input):
             var model = state
@@ -160,6 +169,7 @@ struct AddressBookModel: ModelProtocol {
             let entry = AddressBookEntry(pfp: Image("sub_logo_dark"), petname: petname, did: did)
             
             var model = state
+            model.followUserFormIsPresented = false
             model.follows.append(entry)
             return Update(state: model)
             
