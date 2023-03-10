@@ -21,7 +21,7 @@ struct Config: Equatable, Codable {
     var pollingInterval: Double = 15
 
     /// Subsurface "orb" shader on main FAB
-    var orbShaderEnabled = true
+    var orbShaderEnabled = false
 
     var untitled = "Untitled"
 
