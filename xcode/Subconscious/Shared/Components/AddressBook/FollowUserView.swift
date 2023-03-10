@@ -27,7 +27,9 @@ struct FollowUserView: View {
                                     send: send,
                                     tag: AddressBookAction.setDidField
                                 ),
-                                onFocusChanged: { focused in send(.touchDidField(focused: focused)) },
+                                onFocusChanged: { focused in
+                                    send(.touchDidField(focused: focused))
+                                },
                                 caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
                                 hasError: state.followUserForm.did.hasError
                             )
@@ -46,7 +48,9 @@ struct FollowUserView: View {
                                     send: send,
                                     tag: AddressBookAction.setPetnameField
                                 ),
-                                onFocusChanged: { focused in send(.touchPetnameField(focused: focused))},
+                                onFocusChanged: { focused in
+                                    send(.touchPetnameField(focused: focused))
+                                },
                                 caption: "Lowercase letters, numbers and dashes only.",
                                 hasError: state.followUserForm.petname.hasError
                             )
