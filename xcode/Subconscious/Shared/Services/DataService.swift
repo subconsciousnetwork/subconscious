@@ -433,7 +433,7 @@ struct DataService {
     /// Given a slug, get back a resolved MemoAddress for own sphere.
     /// If there is public content, that will be returned.
     /// Otherwise, if there is local content, that will be returned.
-    func findAddress(
+    func findAddressInOurs(
         slug: Slug
     ) -> MemoAddress? {
         // If slug exists in default sphere, return that.
@@ -458,7 +458,7 @@ struct DataService {
             return nil
         }
         // If slug does not exist in any address space, return it.
-        if findAddress(slug: slug) == nil {
+        if findAddressInOurs(slug: slug) == nil {
             return slug.toMemoAddress(audience)
         }
         for n in 2..<500 {
@@ -466,7 +466,7 @@ struct DataService {
             guard let slugN = Slug("\(slug.description)-\(n)") else {
                 return nil
             }
-            if findAddress(slug: slugN) == nil {
+            if findAddressInOurs(slug: slugN) == nil {
                 return slugN.toMemoAddress(audience)
             }
         }

@@ -899,7 +899,7 @@ struct NotebookModel: ModelProtocol {
     ) -> Update<NotebookModel> {
         let fallbackAddress = slug.toLocalMemoAddress()
         let address = environment.data
-            .findAddress(slug: slug) ?? fallbackAddress
+            .findAddressInOurs(slug: slug) ?? fallbackAddress
         return update(
             state: state,
             action: .pushDetail(
