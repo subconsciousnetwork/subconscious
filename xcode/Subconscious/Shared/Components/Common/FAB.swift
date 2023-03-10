@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwiftSubsurface
 
 /// Wraps
 struct FABView: View {
@@ -21,9 +20,7 @@ struct FABView: View {
             }
         )
         .buttonStyle(
-            FABButtonStyle(
-                orbShaderEnabled: Config.default.orbShaderEnabled
-            )
+            FABButtonStyle()
         )
     }
 }
@@ -31,56 +28,38 @@ struct FABView: View {
 struct FABButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.colorScheme) var colorScheme
-    var orbShaderEnabled: Bool
-    
 
     func makeBody(configuration: Configuration) -> some View {
         ZStack {
-            if orbShaderEnabled {
-                SubsurfaceView(speed: 0.05, density: 0.75, corner_radius: 64)
-                    .clipped()
-                    .clipShape(Circle())
-                    .frame(
-                        width: AppTheme.fabSize,
-                        height: AppTheme.fabSize,
-                        alignment: .center
+            Circle()
+                .foregroundStyle(
+                    .radialGradient(
+                        stops: Color.brandGradient(colorScheme),
+                        center: .init(x: 0.5, y: 0.25), // Calculated from brandmark
+                        startRadius: 0,
+                        endRadius: AppTheme.fabSize * 0.75 // Calculated from brandmark
                     )
                     .shadow(
-                        radius: 8,
-                        x: 0,
-                        y: 4
-                    )
-            } else {
-                Circle()
-                    .foregroundStyle(
-                        .radialGradient(
-                            stops: Color.brandGradient(colorScheme),
-                            center: .init(x: 0.5, y: 0.25), // Calculated from brandmark
-                            startRadius: 0,
-                            endRadius: AppTheme.fabSize * 0.75 // Calculated from brandmark
-                        )
-                        .shadow(
-                            // Eyeballed from brandmark
-                            .inner(
-                                color: Color.brandInnerShadow(colorScheme).opacity(0.5),
-                                radius: 5,
-                                x: 0,
-                                y: 0
-                            )
+                        // Eyeballed from brandmark
+                        .inner(
+                            color: Color.brandInnerShadow(colorScheme).opacity(0.5),
+                            radius: 5,
+                            x: 0,
+                            y: 0
                         )
                     )
-                    .frame(
-                        width: AppTheme.fabSize,
-                        height: AppTheme.fabSize,
-                        alignment: .center
-                    )
-                    .shadow(
-                        color: Color.brandDropShadow(colorScheme).opacity(0.5),
-                        radius: 8,
-                        x: 0,
-                        y: 4
-                    )
-            }
+                )
+                .frame(
+                    width: AppTheme.fabSize,
+                    height: AppTheme.fabSize,
+                    alignment: .center
+                )
+                .shadow(
+                    color: Color.brandDropShadow(colorScheme).opacity(0.5),
+                    radius: 8,
+                    x: 0,
+                    y: 4
+                )
             configuration.label
                 .foregroundColor(
                     isEnabled ? Color.brandText(colorScheme) : Color.fabTextDisabled
