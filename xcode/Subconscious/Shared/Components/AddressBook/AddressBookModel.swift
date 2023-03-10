@@ -15,16 +15,21 @@ typealias Validator<I, O> = (I) -> O?
 
 struct FormField<I : Equatable, O>: Equatable {
     static func == (lhs: FormField<I, O>, rhs: FormField<I, O>) -> Bool {
-        return lhs.value == rhs.value
+        return lhs.value == rhs.value && lhs.touched == rhs.touched && lhs.isValid == rhs.isValid
     }
     
     var value: I
     var validate: Validator<I, O>
+    var touched: Bool = false
     
     func update(input: I) -> Self {
-        Self(value: input, validate: validate)
+        Self(value: input, validate: validate, touched: touched)
     }
-
+    
+    func touch() -> Self {
+        Self(value: value, validate: validate, touched: true)
+    }
+    
     var validated: O? {
         get {
             validate(value)
@@ -33,6 +38,11 @@ struct FormField<I : Equatable, O>: Equatable {
     var isValid: Bool {
         get {
             validated != nil
+        }
+    }
+    var hasError: Bool {
+        get {
+            !isValid && touched
         }
     }
 }
@@ -79,9 +89,12 @@ enum AddressBookAction: Hashable {
     case failUnfollow(error: String)
     case succeedUnfollow(petname: Petname)
     
+    // Form actions, could be a sub-enum
     case presentFollowUserForm(_ isPresented: Bool)
     case setDidField(input: String)
+    case touchDidField(focused: Bool)
     case setPetnameField(input: String)
+    case touchPetnameField(focused: Bool)
 }
 
 struct AddressBookModel: ModelProtocol {
@@ -90,7 +103,7 @@ struct AddressBookModel: ModelProtocol {
     var follows: [AddressBookEntry] = []
     
     var followUserFormIsPresented = false
-    var followUserForm: FollowUserForm = FollowUserForm()
+    var followUserForm = FollowUserForm()
     
     var failFollowErrorMessage: String? = nil
     var failUnfollowErrorMessage: String? = nil
@@ -109,12 +122,36 @@ struct AddressBookModel: ModelProtocol {
             
         case .presentFollowUserForm(let isPresented):
             var model = state
+            
             model.followUserFormIsPresented = isPresented
+            if isPresented {
+                // Reset form when opened
+                model.followUserForm = FollowUserForm()
+            }
+            
+            return Update(state: model)
+            
+        case .touchDidField(let focused):
+            guard !focused else {
+                return Update(state: state)
+            }
+            
+            var model = state
+            model.followUserForm.did = state.followUserForm.did.touch()
             return Update(state: model)
             
         case .setDidField(input: let input):
             var model = state
             model.followUserForm.did = model.followUserForm.did.update(input: input)
+            return Update(state: model)
+            
+        case .touchPetnameField(let focused):
+            guard !focused else {
+                return Update(state: state)
+            }
+            
+            var model = state
+            model.followUserForm.petname = state.followUserForm.petname.touch()
             return Update(state: model)
             
         case .setPetnameField(input: let input):
@@ -139,16 +176,20 @@ struct AddressBookModel: ModelProtocol {
             return Update(state: model)
             
         case .requestFollow:
-            let noOp = Update(state: state)
+            var model = state
+            // Show errors on any untouched fields, hints at why you cannot submit
+            model.followUserForm.did = model.followUserForm.did.touch()
+            model.followUserForm.petname = model.followUserForm.petname.touch()
+            
             guard let did = state.followUserForm.did.validated else {
-                return noOp
+                return Update(state: model)
             }
             guard let petname = state.followUserForm.petname.validated else {
-                return noOp
+                return Update(state: model)
             }
             // Guard against duplicates
             guard !state.follows.contains(where: { entry in entry.did == did }) else {
-                return noOp
+                return Update(state: model)
             }
             
             let fx: Fx<AddressBookAction> = environment.data
@@ -163,7 +204,7 @@ struct AddressBookModel: ModelProtocol {
                 })
                 .eraseToAnyPublisher()
             
-            return Update(state: state, fx: fx)
+            return Update(state: model, fx: fx)
             
         case .succeedFollow(did: let did, petname: let petname):
             let entry = AddressBookEntry(pfp: Image("sub_logo_dark"), petname: petname, did: did)

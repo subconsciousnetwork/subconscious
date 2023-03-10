@@ -12,46 +12,60 @@ struct FollowUserView: View {
     var state: AddressBookModel
     var send: (AddressBookAction) -> Void
     
-    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-    
     var body: some View {
         NavigationStack {
-            Form {
-                Section(header: Text("User To Follow")) {
-                    HStack(alignment: .top) {
-                        Image(systemName: "key")
-                            .foregroundColor(.accentColor)
-                        ValidatedTextField(
-                            placeholder: "DID",
-                            text: Binding(
-                                get: { state.followUserForm.did.value },
-                                send: send,
-                                tag: AddressBookAction.setDidField
-                            ),
-                            caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
-                            isValid: state.followUserForm.did.isValid
-                        )
-                        .lineLimit(1)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
+            VStack {
+                Form {
+                    Section(header: Text("User To Follow")) {
+                        HStack(alignment: .top) {
+                            Image(systemName: "key")
+                                .foregroundColor(.accentColor)
+                            ValidatedTextField(
+                                placeholder: "DID",
+                                text: Binding(
+                                    get: { state.followUserForm.did.value },
+                                    send: send,
+                                    tag: AddressBookAction.setDidField
+                                ),
+                                onFocusChanged: { focused in send(.touchDidField(focused: focused)) },
+                                caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                                hasError: state.followUserForm.did.hasError
+                            )
+                            .lineLimit(1)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                        }
+                        
+                        HStack(alignment: .top) {
+                            Image(systemName: "at")
+                                .foregroundColor(.accentColor)
+                            ValidatedTextField(
+                                placeholder: "Petname",
+                                text: Binding(
+                                    get: { state.followUserForm.petname.value },
+                                    send: send,
+                                    tag: AddressBookAction.setPetnameField
+                                ),
+                                onFocusChanged: { focused in send(.touchPetnameField(focused: focused))},
+                                caption: "Lowercase letters, numbers and dashes only.",
+                                hasError: state.followUserForm.petname.hasError
+                            )
+                            .lineLimit(1)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                        }
                     }
                     
-                    HStack(alignment: .top) {
-                        Image(systemName: "at")
-                            .foregroundColor(.accentColor)
-                        ValidatedTextField(
-                            placeholder: "Petname",
-                            text: Binding(
-                                get: { state.followUserForm.petname.value },
-                                send: send,
-                                tag: AddressBookAction.setPetnameField
-                            ),
-                            caption: "Lowercase letters, numbers and dashes only.",
-                            isValid: state.followUserForm.petname.isValid
-                        )
-                        .lineLimit(1)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
+                    if let msg = state.failFollowErrorMessage {
+                        HStack {
+                            Image(systemName: "exclamationmark.circle")
+                                .frame(width: 24, height: 22)
+                                .padding(.horizontal, 8)
+                                .foregroundColor(.red)
+                                .background(Color.clear)
+                            Text(msg)
+                                .foregroundColor(.red)
+                        }
                     }
                 }
             }
@@ -60,6 +74,11 @@ struct FollowUserView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         send(.requestFollow)
+                    }
+                }
+                ToolbarItem(placement: .navigation) {
+                    Button("Cancel") {
+                        send(.presentFollowUserForm(false))
                     }
                 }
             }
