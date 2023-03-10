@@ -87,3 +87,9 @@ struct FABButtonStyle: ButtonStyle {
         )
     }
 }
+
+struct FAB_Previews: PreviewProvider {
+    static var previews: some View {
+        FABView() { }
+    }
+}
