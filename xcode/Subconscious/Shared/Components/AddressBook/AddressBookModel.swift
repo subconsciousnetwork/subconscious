@@ -26,8 +26,9 @@ struct FormField<I : Equatable, O>: Equatable {
         Self(value: input, validate: validate, touched: touched)
     }
     
-    func touch() -> Self {
-        Self(value: value, validate: validate, touched: true)
+    /// Only marked as touched when field _loses_ focus
+    func touch(focused: Bool = false) -> Self {
+        Self(value: value, validate: validate, touched: focused ? touched : true)
     }
     
     var validated: O? {
@@ -132,12 +133,8 @@ struct AddressBookModel: ModelProtocol {
             return Update(state: model)
             
         case .touchDidField(let focused):
-            guard !focused else {
-                return Update(state: state)
-            }
-            
             var model = state
-            model.followUserForm.did = state.followUserForm.did.touch()
+            model.followUserForm.did = state.followUserForm.did.touch(focused: focused)
             return Update(state: model)
             
         case .setDidField(input: let input):
@@ -146,12 +143,8 @@ struct AddressBookModel: ModelProtocol {
             return Update(state: model)
             
         case .touchPetnameField(let focused):
-            guard !focused else {
-                return Update(state: state)
-            }
-            
             var model = state
-            model.followUserForm.petname = state.followUserForm.petname.touch()
+            model.followUserForm.petname = state.followUserForm.petname.touch(focused: focused)
             return Update(state: model)
             
         case .setPetnameField(input: let input):
