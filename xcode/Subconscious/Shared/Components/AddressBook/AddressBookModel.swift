@@ -11,6 +11,44 @@ import SwiftUI
 import ObservableStore
 import Combine
 
+typealias Validator<I, O> = (I) -> O?
+
+struct FormField<I : Equatable, O>: Equatable {
+    static func == (lhs: FormField<I, O>, rhs: FormField<I, O>) -> Bool {
+        return lhs.value == rhs.value
+    }
+    
+    var value: I
+    var validate: Validator<I, O>
+    
+    func update(input: I) -> Self {
+        Self(value: input, validate: validate)
+    }
+
+    var validated: O? {
+        get {
+            validate(value)
+        }
+    }
+    var isValid: Bool {
+        get {
+            validated != nil
+        }
+    }
+}
+
+struct FollowUserForm: Equatable {
+    var did: FormField<String, Did> = FormField(value: "", validate: Self.validateDid)
+    var petname: FormField<String, Petname> = FormField(value: "", validate: Self.validatePetname)
+    
+    static func validateDid(key: String) -> Did? {
+        Did(key)
+    }
+
+    static func validatePetname(petname: String) -> Petname? {
+        Petname(petname)
+    }
+}
 struct AddressBookEntry: Equatable {
     var pfp: Image
     var petname: Petname
@@ -32,19 +70,23 @@ class PlaceholderSphereIdentityProvider: SphereIdentityProtocol {
 enum AddressBookAction: Hashable {
     case present(_ isPresented: Bool)
     
-    case requestFollow(did: Did, petname: Petname)
+    case requestFollow
     case failFollow(error: String)
     case succeedFollow(did: Did, petname: Petname)
     
     case requestUnfollow(petname: Petname)
     case failUnfollow(error: String)
     case succeedUnfollow(petname: Petname)
+    case setDidField(input: String)
+    case setPetnameField(input: String)
 }
 
 struct AddressBookModel: ModelProtocol {
     var isPresented = false
     var did: Did? = nil
     var follows: [AddressBookEntry] = []
+    
+    var followUserForm: FollowUserForm = FollowUserForm()
     
     var failFollowErrorMessage: String? = nil
     var failUnfollowErrorMessage: String? = nil
@@ -60,6 +102,17 @@ struct AddressBookModel: ModelProtocol {
         environment: AddressBookEnvironment
     ) -> Update<AddressBookModel> {
         switch action {
+            
+        case .setDidField(input: let input):
+            var model = state
+            model.followUserForm.did = model.followUserForm.did.update(input: input)
+            return Update(state: model)
+            
+        case .setPetnameField(input: let input):
+            var model = state
+            model.followUserForm.petname = model.followUserForm.petname.update(input: input)
+            return Update(state: model)
+            
         case .present(let isPresented):
             var model = state
             model.isPresented = isPresented
@@ -76,7 +129,19 @@ struct AddressBookModel: ModelProtocol {
             
             return Update(state: model)
             
-        case .requestFollow(did: let did, petname: let petname):
+        case .requestFollow:
+            let noOp = Update(state: state)
+            guard let did = state.followUserForm.did.validated else {
+                return noOp
+            }
+            guard let petname = state.followUserForm.petname.validated else {
+                return noOp
+            }
+            // Guard against duplicates
+            guard !state.follows.contains(where: { entry in entry.did == did }) else {
+                return noOp
+            }
+            
             let fx: Fx<AddressBookAction> = environment.data
                 .setPetnameAsync(did: did, petname: petname)
                 .map({ _ in
@@ -92,11 +157,6 @@ struct AddressBookModel: ModelProtocol {
             return Update(state: state, fx: fx)
             
         case .succeedFollow(did: let did, petname: let petname):
-            // Guard against duplicates
-            guard !state.follows.contains(where: { entry in entry.did == did }) else {
-                return Update(state: state)
-            }
-            
             let entry = AddressBookEntry(pfp: Image("sub_logo_dark"), petname: petname, did: did)
             
             var model = state
