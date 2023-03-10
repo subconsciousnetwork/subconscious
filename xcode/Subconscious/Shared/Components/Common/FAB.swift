@@ -33,21 +33,6 @@ struct FABButtonStyle: ButtonStyle {
     @Environment(\.colorScheme) var colorScheme
     var orbShaderEnabled: Bool
     
-    private func brandGradient() -> [Gradient.Stop] {
-        return colorScheme == .dark ? Color.brandDarkMarkGradient : Color.brandLightMarkGradient
-    }
-    
-    private func brandInnerShadow() -> Color {
-        return colorScheme == .dark ? Color.brandMarkPurple : Color.brandMarkPink
-    }
-    
-    private func brandText() -> Color {
-        return colorScheme == .dark ? Color.white : Color.brandBgSlate
-    }
-    
-    private func brandDropShadow() -> Color {
-        return colorScheme == .dark ? Color.brandMarkPink : Color.brandMarkPurple
-    }
 
     func makeBody(configuration: Configuration) -> some View {
         ZStack {
@@ -69,12 +54,20 @@ struct FABButtonStyle: ButtonStyle {
                 Circle()
                     .foregroundStyle(
                         .radialGradient(
-                            stops: brandGradient(),
-                            center: .init(x: 0.5, y: 0.25),
+                            stops: Color.brandGradient(colorScheme),
+                            center: .init(x: 0.5, y: 0.25), // Calculated from brandmark
                             startRadius: 0,
-                            endRadius: AppTheme.fabSize * 0.75
+                            endRadius: AppTheme.fabSize * 0.75 // Calculated from brandmark
                         )
-                        .shadow(.inner(color: brandInnerShadow().opacity(0.5), radius: 5, x: 0, y: 0))
+                        .shadow(
+                            // Eyeballed from brandmark
+                            .inner(
+                                color: Color.brandInnerShadow(colorScheme).opacity(0.5),
+                                radius: 5,
+                                x: 0,
+                                y: 0
+                            )
+                        )
                     )
                     .frame(
                         width: AppTheme.fabSize,
@@ -82,7 +75,7 @@ struct FABButtonStyle: ButtonStyle {
                         alignment: .center
                     )
                     .shadow(
-                        color: brandDropShadow().opacity(0.5),
+                        color: Color.brandDropShadow(colorScheme).opacity(0.5),
                         radius: 8,
                         x: 0,
                         y: 4
@@ -90,7 +83,7 @@ struct FABButtonStyle: ButtonStyle {
             }
             configuration.label
                 .foregroundColor(
-                    isEnabled ? brandText() : Color.fabTextDisabled
+                    isEnabled ? Color.brandText(colorScheme) : Color.fabTextDisabled
                 )
                 .contentShape(
                     Circle()

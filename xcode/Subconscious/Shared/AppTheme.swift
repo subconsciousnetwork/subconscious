@@ -93,7 +93,8 @@ extension Color {
     static let fabTextDisabled = fabText.opacity(0.3)
     static let scrim = SwiftUI.Color(UIColor.tertiarySystemFill)
     
-    // Mark
+    // MARK: Brand colours
+    // Brand Mark
     static let brandMarkPink = Color(uiColor: UIColor(red: 255/255, green: 163/255, blue: 186/255, alpha: 1)) // #FFA3BA
     static let brandMarkViolet = Color(uiColor: UIColor(red: 197/255, green: 112/255, blue: 219/255, alpha: 1)) // #C570DB
     static let brandMarkCyan = Color(uiColor: UIColor(red: 48/255, green: 255/255, blue: 233/255, alpha: 1)) // #30FFE9
@@ -108,16 +109,35 @@ extension Color {
     static let brandBgBlack = Color(uiColor: UIColor(red: 35/255, green: 31/255, blue: 32/255, alpha: 1)) // #231F20
     static let brandBgSlate = Color(uiColor: UIColor(red: 57/255, green: 50/255, blue: 84/255, alpha: 1)) // #393254
     
+    // Eyeballed to match brandmark
     static let brandLightMarkGradient = [
         Gradient.Stop(color: Color.brandMarkPink, location: 0),
         Gradient.Stop(color: Color.brandMarkViolet, location: 0.50),
         Gradient.Stop(color: Color.brandMarkViolet, location: 0.60),
         Gradient.Stop(color: Color.brandMarkCyan, location: 0.95)
     ]
+    
+    // Eyeballed to match brandmark
     static let brandDarkMarkGradient = [
         Gradient.Stop(color: Color.brandMarkRed, location: 0),
         Gradient.Stop(color: Color.brandMarkPurple, location: 0.50),
         Gradient.Stop(color: Color.brandMarkPurple, location: 0.60),
         Gradient.Stop(color: Color.brandMarkCyan, location: 0.95)
     ]
+    
+    static func brandGradient(_ colorScheme: ColorScheme) -> [Gradient.Stop] {
+        colorScheme == .dark ? Color.brandDarkMarkGradient : Color.brandLightMarkGradient
+    }
+    
+    static func brandInnerShadow(_ colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color.brandMarkPurple : Color.brandMarkPink
+    }
+    
+    static func brandText(_ colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color.white : Color.brandBgSlate
+    }
+    
+    static func brandDropShadow(_ colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color.brandMarkPink : Color.brandMarkPurple
+    }
 }
