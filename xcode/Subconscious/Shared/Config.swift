@@ -20,9 +20,6 @@ struct Config: Equatable, Codable {
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
 
-    /// Subsurface "orb" shader on main FAB
-    var orbShaderEnabled = true
-
     var untitled = "Untitled"
 
     /// Toggle random suggestion feature
