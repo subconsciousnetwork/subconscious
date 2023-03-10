@@ -95,19 +95,19 @@ extension Color {
     
     // MARK: Brand colours
     // Brand Mark
-    static let brandMarkPink = Color(uiColor: UIColor(red: 255/255, green: 163/255, blue: 186/255, alpha: 1)) // #FFA3BA
-    static let brandMarkViolet = Color(uiColor: UIColor(red: 197/255, green: 112/255, blue: 219/255, alpha: 1)) // #C570DB
-    static let brandMarkCyan = Color(uiColor: UIColor(red: 48/255, green: 255/255, blue: 233/255, alpha: 1)) // #30FFE9
-    static let brandMarkRed = Color(uiColor: UIColor(red: 255/255, green: 94/255, blue: 135/255, alpha: 1)) // #FF5E87
-    static let brandMarkPurple = Color(uiColor: UIColor(red: 132/255, green: 42/255, blue: 156/255, alpha: 1)) // #842A9C
+    static let brandMarkPink = Color(red: 255/255, green: 163/255, blue: 186/255, opacity: 1) // #FFA3BA
+    static let brandMarkViolet = Color(red: 197/255, green: 112/255, blue: 219/255, opacity: 1) // #C570DB
+    static let brandMarkCyan = Color(red: 48/255, green: 255/255, blue: 233/255, opacity: 1) // #30FFE9
+    static let brandMarkRed = Color(red: 255/255, green: 94/255, blue: 135/255, opacity: 1) // #FF5E87
+    static let brandMarkPurple = Color(red: 132/255, green: 42/255, blue: 156/255, opacity: 1) // #842A9C
     
     // BG
-    static let brandBgBlush = Color(uiColor: UIColor(red: 237/255, green: 207/255, blue: 234/255, alpha: 1)) // #EDCFEA
-    static let brandBgGrey = Color(uiColor: UIColor(red: 223/255, green: 219/255, blue: 235/255, alpha: 1)) // #DFDBEB
-    static let brandBgTan = Color(uiColor: UIColor(red: 235/255, green: 235/255, blue: 218/255, alpha: 1)) // #EBEBDA
-    static let brandBgPurple = Color(uiColor: UIColor(red: 71/255, green: 30/255, blue: 68/255, alpha: 1)) // #471E44
-    static let brandBgBlack = Color(uiColor: UIColor(red: 35/255, green: 31/255, blue: 32/255, alpha: 1)) // #231F20
-    static let brandBgSlate = Color(uiColor: UIColor(red: 57/255, green: 50/255, blue: 84/255, alpha: 1)) // #393254
+    static let brandBgBlush = Color(red: 237/255, green: 207/255, blue: 234/255, opacity: 1) // #EDCFEA
+    static let brandBgGrey = Color(red: 223/255, green: 219/255, blue: 235/255, opacity: 1) // #DFDBEB
+    static let brandBgTan = Color(red: 235/255, green: 235/255, blue: 218/255, opacity: 1) // #EBEBDA
+    static let brandBgPurple = Color(red: 71/255, green: 30/255, blue: 68/255, opacity: 1) // #471E44
+    static let brandBgBlack = Color(red: 35/255, green: 31/255, blue: 32/255, opacity: 1) // #231F20
+    static let brandBgSlate = Color(red: 57/255, green: 50/255, blue: 84/255, opacity: 1) // #393254
     
     // Eyeballed to match brandmark
     static let brandLightMarkGradient = [
