@@ -10,6 +10,9 @@ import ObservableStore
 
 struct FollowUserView: View {
     var state: AddressBookModel
+    var form: FollowUserFormModel {
+        get { state.followUserForm }
+    }
     var send: (AddressBookAction) -> Void
     
     var body: some View {
@@ -23,7 +26,7 @@ struct FollowUserView: View {
                             ValidatedTextField(
                                 placeholder: "DID",
                                 text: Binding(
-                                    get: { state.didField.value },
+                                    get: { form.did.value },
                                     send: send,
                                     tag: { v in .didField(.setValue(input: v))}
                                 ),
@@ -31,7 +34,7 @@ struct FollowUserView: View {
                                     send(.didField(.touch(focused: focused)))
                                 },
                                 caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
-                                hasError: state.didField.hasError
+                                hasError: form.did.hasError
                             )
                             .lineLimit(1)
                             .textInputAutocapitalization(.never)
@@ -44,7 +47,7 @@ struct FollowUserView: View {
                             ValidatedTextField(
                                 placeholder: "Petname",
                                 text: Binding(
-                                    get: { state.petnameField.value },
+                                    get: { form.petname.value },
                                     send: send,
                                     tag: { v in .petnameField(.setValue(input: v))}
                                 ),
@@ -52,7 +55,7 @@ struct FollowUserView: View {
                                     send(.petnameField(.touch(focused: focused)))
                                 },
                                 caption: "Lowercase letters, numbers and dashes only.",
-                                hasError: state.petnameField.hasError
+                                hasError: form.petname.hasError
                             )
                             .lineLimit(1)
                             .textInputAutocapitalization(.never)

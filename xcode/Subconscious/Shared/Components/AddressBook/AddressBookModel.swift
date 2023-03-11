@@ -29,14 +29,27 @@ class PlaceholderSphereIdentityProvider: SphereIdentityProtocol {
     }
 }
 
+struct FollowUserFormModel: Equatable {
+    var did: FormField<String, Did> = FormField(value: "", validate: Self.validateDid)
+    var petname: FormField<String, Petname> = FormField(value: "", validate: Self.validatePetname)
+    
+    static func validateDid(key: String) -> Did? {
+        Did(key)
+    }
+
+    static func validatePetname(petname: String) -> Petname? {
+        Petname(petname)
+    }
+}
+
 struct PetnameFieldCursor: CursorProtocol {
     static func get(state: AddressBookModel) -> FormField<String, Petname> {
-        state.petnameField
+        state.followUserForm.petname
     }
     
     static func set(state: AddressBookModel, inner: FormField<String, Petname>) -> AddressBookModel {
         var model = state
-        model.petnameField = inner
+        model.followUserForm.petname = inner
         return model
     }
     
@@ -47,12 +60,12 @@ struct PetnameFieldCursor: CursorProtocol {
 
 struct DidFieldCursor: CursorProtocol {
     static func get(state: AddressBookModel) -> FormField<String, Did> {
-        state.didField
+        state.followUserForm.did
     }
     
     static func set(state: AddressBookModel, inner: FormField<String, Did>) -> AddressBookModel {
         var model = state
-        model.didField = inner
+        model.followUserForm.did = inner
         return model
     }
     
@@ -83,16 +96,7 @@ struct AddressBookModel: ModelProtocol {
     var follows: [AddressBookEntry] = []
     
     var followUserFormIsPresented = false
-    var didField: FormField<String, Did> = FormField(value: "", validate: Self.validateDid)
-    var petnameField: FormField<String, Petname> = FormField(value: "", validate: Self.validatePetname)
-    
-    static func validateDid(key: String) -> Did? {
-        Did(key)
-    }
-
-    static func validatePetname(petname: String) -> Petname? {
-        Petname(petname)
-    }
+    var followUserForm = FollowUserFormModel()
     
     var failFollowErrorMessage: String? = nil
     var failUnfollowErrorMessage: String? = nil
@@ -115,13 +119,13 @@ struct AddressBookModel: ModelProtocol {
             model.followUserFormIsPresented = isPresented
             if isPresented {
                 // Reset form when opened
-                model.didField = FormField.update(
-                    state: model.didField,
+                model.followUserForm.did = FormField.update(
+                    state: model.followUserForm.did,
                     action: .reset,
                     environment: FormFieldEnvironment()
                 ).state
-                model.petnameField = FormField.update(
-                    state: model.petnameField,
+                model.followUserForm.petname = FormField.update(
+                    state: model.followUserForm.petname,
                     action: .reset,
                     environment: FormFieldEnvironment()
                 ).state
@@ -162,21 +166,21 @@ struct AddressBookModel: ModelProtocol {
         case .requestFollow:
             var model = state
             // Show errors on any untouched fields, hints at why you cannot submit
-            model.didField = FormField.update(
-                state: model.didField,
+            model.followUserForm.did = FormField.update(
+                state: model.followUserForm.did,
                 action: .touch(focused: false),
                 environment: FormFieldEnvironment()
             ).state
-            model.petnameField = FormField.update(
-                state: model.petnameField,
+            model.followUserForm.petname = FormField.update(
+                state: model.followUserForm.petname,
                 action: .touch(focused: false),
                 environment: FormFieldEnvironment()
             ).state
             
-            guard let did = state.didField.validated else {
+            guard let did = state.followUserForm.did.validated else {
                 return Update(state: model)
             }
-            guard let petname = state.petnameField.validated else {
+            guard let petname = state.followUserForm.petname.validated else {
                 return Update(state: model)
             }
             // Guard against duplicates
