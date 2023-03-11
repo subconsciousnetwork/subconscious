@@ -23,15 +23,15 @@ struct FollowUserView: View {
                             ValidatedTextField(
                                 placeholder: "DID",
                                 text: Binding(
-                                    get: { state.followUserForm.did.value },
+                                    get: { state.didField.value },
                                     send: send,
-                                    tag: AddressBookAction.setDidField
+                                    tag: { v in .didField(.setValue(input: v))}
                                 ),
                                 onFocusChanged: { focused in
-                                    send(.touchDidField(focused: focused))
+                                    send(.didField(.touch(focused: focused)))
                                 },
                                 caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
-                                hasError: state.followUserForm.did.hasError
+                                hasError: state.didField.hasError
                             )
                             .lineLimit(1)
                             .textInputAutocapitalization(.never)
@@ -44,15 +44,15 @@ struct FollowUserView: View {
                             ValidatedTextField(
                                 placeholder: "Petname",
                                 text: Binding(
-                                    get: { state.followUserForm.petname.value },
+                                    get: { state.petnameField.value },
                                     send: send,
-                                    tag: AddressBookAction.setPetnameField
+                                    tag: { v in .petnameField(.setValue(input: v))}
                                 ),
                                 onFocusChanged: { focused in
-                                    send(.touchPetnameField(focused: focused))
+                                    send(.petnameField(.touch(focused: focused)))
                                 },
                                 caption: "Lowercase letters, numbers and dashes only.",
-                                hasError: state.followUserForm.petname.hasError
+                                hasError: state.petnameField.hasError
                             )
                             .lineLimit(1)
                             .textInputAutocapitalization(.never)

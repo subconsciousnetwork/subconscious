@@ -19,6 +19,7 @@
 		B58FE48A28DED93F00E000CC /* ComboGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48928DED93F00E000CC /* ComboGeist.swift */; };
 		B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48B28DED9B600E000CC /* StoryCombo.swift */; };
 		B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */; };
+		B59D556329BBFF56007915E2 /* FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59D556229BBFF56007915E2 /* FormField.swift */; };
 		B5D8D2FF29AF1DBB0011D820 /* Test_Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D2FE29AF1DBB0011D820 /* Test_Did.swift */; };
 		B80057EB27DC355E002C0129 /* SubconsciousTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80057EA27DC355E002C0129 /* SubconsciousTests.swift */; };
 		B80057F427DC35BE002C0129 /* Tests_Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80057F327DC35BE002C0129 /* Tests_Slug.swift */; };
@@ -364,6 +365,7 @@
 		B58FE48928DED93F00E000CC /* ComboGeist.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComboGeist.swift; sourceTree = "<group>"; };
 		B58FE48B28DED9B600E000CC /* StoryCombo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryCombo.swift; sourceTree = "<group>"; };
 		B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryComboView.swift; sourceTree = "<group>"; };
+		B59D556229BBFF56007915E2 /* FormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormField.swift; sourceTree = "<group>"; };
 		B5D8D2FE29AF1DBB0011D820 /* Test_Did.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Test_Did.swift; sourceTree = "<group>"; };
 		B5D8D30029AF1F9B0011D820 /* Did.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Did.swift; sourceTree = "<group>"; };
 		B80057E827DC355E002C0129 /* SubconsciousTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SubconsciousTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -856,6 +858,7 @@
 				B8A59D6828B692900010DB2F /* StoryPrompt.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
 				B8CBAFAF2996A7D50079107E /* UnqualifiedLink.swift */,
+				B59D556229BBFF56007915E2 /* FormField.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1443,6 +1446,7 @@
 				B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
 				B85EC466296F0D0A00558761 /* ProfilePicMd.swift in Sources */,
+				B59D556329BBFF56007915E2 /* FormField.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,
 				B8B3EE7B297AFB9100779B7F /* TextFieldLabel.swift in Sources */,
 				B8B3194D2909E81D00A1E62A /* FileInfo.swift in Sources */,

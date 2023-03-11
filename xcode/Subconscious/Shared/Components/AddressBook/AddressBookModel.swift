@@ -11,56 +11,6 @@ import SwiftUI
 import ObservableStore
 import Combine
 
-typealias Validator<I, O> = (I) -> O?
-
-struct FormField<I : Equatable, O>: Equatable {
-    static func == (lhs: FormField<I, O>, rhs: FormField<I, O>) -> Bool {
-        return lhs.value == rhs.value && lhs.touched == rhs.touched && lhs.isValid == rhs.isValid
-    }
-    
-    var value: I
-    var validate: Validator<I, O>
-    var touched: Bool = false
-    
-    func update(input: I) -> Self {
-        Self(value: input, validate: validate, touched: touched)
-    }
-    
-    /// Only marked as touched when field _loses_ focus
-    func touch(focused: Bool = false) -> Self {
-        Self(value: value, validate: validate, touched: focused ? touched : true)
-    }
-    
-    var validated: O? {
-        get {
-            validate(value)
-        }
-    }
-    var isValid: Bool {
-        get {
-            validated != nil
-        }
-    }
-    var hasError: Bool {
-        get {
-            !isValid && touched
-        }
-    }
-}
-
-struct FollowUserForm: Equatable {
-    var did: FormField<String, Did> = FormField(value: "", validate: Self.validateDid)
-    var petname: FormField<String, Petname> = FormField(value: "", validate: Self.validatePetname)
-    
-    static func validateDid(key: String) -> Did? {
-        Did(key)
-    }
-
-    static func validatePetname(petname: String) -> Petname? {
-        Petname(petname)
-    }
-}
-
 struct AddressBookEntry: Equatable {
     var pfp: Image
     var petname: Petname
@@ -79,7 +29,39 @@ class PlaceholderSphereIdentityProvider: SphereIdentityProtocol {
     }
 }
 
-enum AddressBookAction: Hashable {
+struct PetnameFieldCursor: CursorProtocol {
+    static func get(state: AddressBookModel) -> FormField<String, Petname> {
+        state.petnameField
+    }
+    
+    static func set(state: AddressBookModel, inner: FormField<String, Petname>) -> AddressBookModel {
+        var model = state
+        model.petnameField = inner
+        return model
+    }
+    
+    static func tag(_ action: FormFieldAction<String>) -> AddressBookAction {
+        AddressBookAction.petnameField(action)
+    }
+}
+
+struct DidFieldCursor: CursorProtocol {
+    static func get(state: AddressBookModel) -> FormField<String, Did> {
+        state.didField
+    }
+    
+    static func set(state: AddressBookModel, inner: FormField<String, Did>) -> AddressBookModel {
+        var model = state
+        model.didField = inner
+        return model
+    }
+    
+    static func tag(_ action: FormFieldAction<String>) -> AddressBookAction {
+        AddressBookAction.didField(action)
+    }
+}
+
+enum AddressBookAction {
     case present(_ isPresented: Bool)
     
     case requestFollow
@@ -90,12 +72,9 @@ enum AddressBookAction: Hashable {
     case failUnfollow(error: String)
     case succeedUnfollow(petname: Petname)
     
-    // Form actions, could be a sub-enum
     case presentFollowUserForm(_ isPresented: Bool)
-    case setDidField(input: String)
-    case touchDidField(focused: Bool)
-    case setPetnameField(input: String)
-    case touchPetnameField(focused: Bool)
+    case didField(FormFieldAction<String>)
+    case petnameField(FormFieldAction<String>)
 }
 
 struct AddressBookModel: ModelProtocol {
@@ -104,7 +83,16 @@ struct AddressBookModel: ModelProtocol {
     var follows: [AddressBookEntry] = []
     
     var followUserFormIsPresented = false
-    var followUserForm = FollowUserForm()
+    var didField: FormField<String, Did> = FormField(value: "", validate: Self.validateDid)
+    var petnameField: FormField<String, Petname> = FormField(value: "", validate: Self.validatePetname)
+    
+    static func validateDid(key: String) -> Did? {
+        Did(key)
+    }
+
+    static func validatePetname(petname: String) -> Petname? {
+        Petname(petname)
+    }
     
     var failFollowErrorMessage: String? = nil
     var failUnfollowErrorMessage: String? = nil
@@ -127,30 +115,33 @@ struct AddressBookModel: ModelProtocol {
             model.followUserFormIsPresented = isPresented
             if isPresented {
                 // Reset form when opened
-                model.followUserForm = FollowUserForm()
+                model.didField = FormField.update(
+                    state: model.didField,
+                    action: .reset,
+                    environment: FormFieldEnvironment()
+                ).state
+                model.petnameField = FormField.update(
+                    state: model.petnameField,
+                    action: .reset,
+                    environment: FormFieldEnvironment()
+                ).state
             }
             
             return Update(state: model)
             
-        case .touchDidField(let focused):
-            var model = state
-            model.followUserForm.did = state.followUserForm.did.touch(focused: focused)
-            return Update(state: model)
+        case .didField(let action):
+            return DidFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
             
-        case .setDidField(input: let input):
-            var model = state
-            model.followUserForm.did = model.followUserForm.did.update(input: input)
-            return Update(state: model)
-            
-        case .touchPetnameField(let focused):
-            var model = state
-            model.followUserForm.petname = state.followUserForm.petname.touch(focused: focused)
-            return Update(state: model)
-            
-        case .setPetnameField(input: let input):
-            var model = state
-            model.followUserForm.petname = model.followUserForm.petname.update(input: input)
-            return Update(state: model)
+        case .petnameField(let action):
+            return PetnameFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
             
         case .present(let isPresented):
             var model = state
@@ -171,13 +162,21 @@ struct AddressBookModel: ModelProtocol {
         case .requestFollow:
             var model = state
             // Show errors on any untouched fields, hints at why you cannot submit
-            model.followUserForm.did = model.followUserForm.did.touch()
-            model.followUserForm.petname = model.followUserForm.petname.touch()
+            model.didField = FormField.update(
+                state: model.didField,
+                action: .touch(focused: false),
+                environment: FormFieldEnvironment()
+            ).state
+            model.petnameField = FormField.update(
+                state: model.petnameField,
+                action: .touch(focused: false),
+                environment: FormFieldEnvironment()
+            ).state
             
-            guard let did = state.followUserForm.did.validated else {
+            guard let did = state.didField.validated else {
                 return Update(state: model)
             }
-            guard let petname = state.followUserForm.petname.validated else {
+            guard let petname = state.petnameField.validated else {
                 return Update(state: model)
             }
             // Guard against duplicates
