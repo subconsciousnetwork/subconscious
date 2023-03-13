@@ -265,36 +265,71 @@ public final class SphereFS: SphereProtocol {
     }
     
     // TODO: Do these belong on SphereFS?
-    public func getPetname(petname: String) throws {
-        throw NoosphereError.foreignError("Not Implemented")
+    public func getPetname(petname: String) throws -> String {
+        throw NoosphereError.foreignError("Not Implemented: getPetname")
         
-//        try Noosphere.callWithError { error in
-//            ns_sphere_petname_get(noosphere.noosphere, identity, petname)
-//        }
+//        return try Noosphere.callWithError(
+//            ns_sphere_petname_get,
+//            noosphere.noosphere,
+//            sphere,
+//            petname
+//        )
     }
     
     public func setPetname(did: String, petname: String) throws {
-        throw NoosphereError.foreignError("Not Implemented")
+        throw NoosphereError.foreignError("Not Implemented: setPetname")
         
-//        try Noosphere.callWithError { error in
-//            ns_sphere_petname_set(noosphere.noosphere, identity, petname, did)
-//        }
+//        return try Noosphere.callWithError(
+//            ns_sphere_petname_set,
+//            noosphere.noosphere,
+//            sphere,
+//            petname,
+//            did
+//        )
     }
     
     public func unsetPetname(petname: String) throws {
-        throw NoosphereError.foreignError("Not Implemented")
+        throw NoosphereError.foreignError("Not Implemented: unsetPetname")
         
-//        try Noosphere.callWithError { error in
-//            ns_sphere_petname_set(noosphere.noosphere, identity, petname, nil)
-//        }
+//        return try Noosphere.callWithError(
+//            ns_sphere_petname_set,
+//            noosphere.noosphere,
+//            sphere,
+//            petname,
+//            nil
+//        )
     }
     
-    public func resolvePetname(petname: String) throws {
-        throw NoosphereError.foreignError("Not Implemented")
+    public func resolvePetname(petname: String) throws -> String {
+        throw NoosphereError.foreignError("Not Implemented: resolvePetname")
         
-//        try Noosphere.callWithError { error in
-//            ns_sphere_petname_resolve(noosphere.noosphere, identity, petname)
-//        }
+//        return try Noosphere.callWithError(
+//            ns_sphere_petname_resolve,
+//            noosphere.noosphere,
+//            sphere,
+//            petname
+//        )
+    }
+    
+    public func listPetnames() throws -> [String] {
+        throw NoosphereError.foreignError("Not Implemented: listPetnames")
+        
+//        return try Noosphere.callWithError(
+//            ns_sphere_petname_list,
+//            noosphere.noosphere,
+//            sphere
+//        )
+    }
+    
+    public func getPetnameChanges(sinceCid: String) throws -> [String] {
+        throw NoosphereError.foreignError("Not Implemented: getPetnameChanges")
+        
+//        return try Noosphere.callWithError(
+//            ns_sphere_petname_list,
+//            noosphere.noosphere,
+//            sphere,
+//            sinceCid
+//        )
     }
     
     /// Save outstanding writes and return new Sphere version
