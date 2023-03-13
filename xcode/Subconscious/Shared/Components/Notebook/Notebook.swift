@@ -143,7 +143,7 @@ enum NotebookAction {
     case activatedSuggestion(Suggestion)
     
     /// Set entire navigation stack
-    case setDetails([DetailOuterModel])
+    case setDetails([MemoEditorDetailOuterModel])
 
     /// Find a detail a given slashlink.
     /// If slashlink has a peer part, this will request
@@ -169,7 +169,7 @@ enum NotebookAction {
     )
 
     /// Push detail onto navigation stack
-    case pushDetail(DetailOuterModel)
+    case pushDetail(MemoEditorDetailOuterModel)
     
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
@@ -192,14 +192,14 @@ extension NotebookAction {
         switch suggestion {
         case let .memo(address, fallback):
             return .pushDetail(
-                DetailOuterModel(
+                MemoEditorDetailOuterModel(
                     address: address,
                     fallback: fallback
                 )
             )
         case let .createLocalMemo(slug, fallback):
             return .pushDetail(
-                DetailOuterModel(
+                MemoEditorDetailOuterModel(
                     address: slug?.toLocalMemoAddress(),
                     fallback: fallback,
                     defaultAudience: .local
@@ -207,7 +207,7 @@ extension NotebookAction {
             )
         case let .createPublicMemo(slug, fallback):
             return .pushDetail(
-                DetailOuterModel(
+                MemoEditorDetailOuterModel(
                     address: slug?.toPublicMemoAddress(),
                     fallback: fallback,
                     defaultAudience: .public
@@ -235,13 +235,13 @@ extension NotebookAction: CustomLogStringConvertible {
 //  MARK: Cursors and tagging functions
 
 extension NotebookAction {
-    static func tag(_ action: DetailOuterAction) -> Self {
+    static func tag(_ action: MemoEditorDetailOuterAction) -> Self {
         switch action {
         case .requestDelete(let address):
             return .deleteEntry(address)
         case let .requestDetail(address, fallback):
             return .pushDetail(
-                DetailOuterModel(
+                MemoEditorDetailOuterModel(
                     address: address,
                     fallback: fallback
                 )
@@ -314,7 +314,7 @@ struct NotebookModel: ModelProtocol {
     )
     
     /// Contains notebook detail panels
-    var details: [DetailOuterModel] = []
+    var details: [MemoEditorDetailOuterModel] = []
     
     /// Count of entries
     var entryCount: Int? = nil
@@ -745,7 +745,7 @@ struct NotebookModel: ModelProtocol {
         var model = state
 
         /// Find all instances of this model in the stack and update them
-        model.details = state.details.map({ (detail: DetailOuterModel) in
+        model.details = state.details.map({ (detail: MemoEditorDetailOuterModel) in
             guard detail.address == from else {
                 return detail
             }
@@ -772,7 +772,7 @@ struct NotebookModel: ModelProtocol {
         var model = state
 
         /// Find all instances of child and update them to become parent
-        model.details = state.details.map({ (detail: DetailOuterModel) in
+        model.details = state.details.map({ (detail: MemoEditorDetailOuterModel) in
             guard detail.address == child else {
                 return detail
             }
@@ -798,7 +798,7 @@ struct NotebookModel: ModelProtocol {
         var model = state
 
         /// Find all instances of this model in the stack and update them
-        model.details = state.details.map({ (detail: DetailOuterModel) in
+        model.details = state.details.map({ (detail: MemoEditorDetailOuterModel) in
             guard let address = detail.address else {
                 return detail
             }
@@ -848,7 +848,7 @@ struct NotebookModel: ModelProtocol {
         // Request detail AFTER animaiton completes
         let fx: Fx<NotebookAction> = Just(
             NotebookAction.pushDetail(
-                DetailOuterModel(
+                MemoEditorDetailOuterModel(
                     address: address,
                     fallback: query
                 )
@@ -903,7 +903,7 @@ struct NotebookModel: ModelProtocol {
         return update(
             state: state,
             action: .pushDetail(
-                DetailOuterModel(
+                MemoEditorDetailOuterModel(
                     address: address,
                     fallback: fallback
                 )
@@ -931,7 +931,7 @@ struct NotebookModel: ModelProtocol {
         let fx: Fx<NotebookAction> = environment.data.readRandomEntryLinkAsync()
             .map({ link in
                 NotebookAction.pushDetail(
-                    DetailOuterModel(
+                    MemoEditorDetailOuterModel(
                         address: link.address,
                         fallback: link.title
                     )

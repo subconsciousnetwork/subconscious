@@ -13,7 +13,7 @@ class Tests_Detail: XCTestCase {
     let environment = AppEnvironment()
     
     func testSetAndPresentDetail() throws {
-        let state = DetailModel()
+        let state = MemoEditorDetailModel()
         
         let modified = Date.now
         
@@ -34,7 +34,7 @@ class Tests_Detail: XCTestCase {
             entry: entry
         )
         
-        let update = DetailModel.update(
+        let update = MemoEditorDetailModel.update(
             state: state,
             action: .setDetail(
                 detail: detail,
@@ -72,7 +72,7 @@ class Tests_Detail: XCTestCase {
     
     func testUpdateDetailFocus() throws {
         let store = Store(
-            state: DetailModel(),
+            state: MemoEditorDetailModel(),
             environment: environment
         )
         
@@ -110,7 +110,7 @@ class Tests_Detail: XCTestCase {
     }
     
     func testUpdateDetailBlur() throws {
-        let state = DetailModel()
+        let state = MemoEditorDetailModel()
         
         let entry = MemoEntry(
             address: Slug(formatting: "example")!.toPublicMemoAddress(),
@@ -129,7 +129,7 @@ class Tests_Detail: XCTestCase {
             entry: entry
         )
         
-        let update = DetailModel.update(
+        let update = MemoEditorDetailModel.update(
             state: state,
             action: .setDetail(
                 detail: detail,
@@ -145,11 +145,11 @@ class Tests_Detail: XCTestCase {
     }
     
     func testAutosave() throws {
-        let state = DetailModel(
+        let state = MemoEditorDetailModel(
             address: Slug(formatting: "example")!.toPublicMemoAddress(),
             saveState: .unsaved
         )
-        let update = DetailModel.update(
+        let update = MemoEditorDetailModel.update(
             state: state,
             action: .autosave,
             environment: environment
@@ -162,11 +162,11 @@ class Tests_Detail: XCTestCase {
     }
     
     func testSaveAlreadySaved() throws {
-        let state = DetailModel(
+        let state = MemoEditorDetailModel(
             address: Slug(formatting: "example")!.toPublicMemoAddress(),
             saveState: .saved
         )
-        let update = DetailModel.update(
+        let update = MemoEditorDetailModel.update(
             state: state,
             action: .autosave,
             environment: environment
@@ -179,7 +179,7 @@ class Tests_Detail: XCTestCase {
     }
     
     func testEditorSnapshotModified() throws {
-        let state = DetailModel(
+        let state = MemoEditorDetailModel(
             address: Slug(formatting: "example")!.toPublicMemoAddress(),
             saveState: .saved
         )
@@ -198,7 +198,7 @@ class Tests_Detail: XCTestCase {
         let from = MemoAddress.public(Slashlink("/loomings")!)
         let to = MemoAddress.public(Slashlink("/the-lee-tide")!)
 
-        let state = DetailModel(
+        let state = MemoEditorDetailModel(
             address: from,
             headers: WellKnownHeaders(
                 contentType: ContentType.subtext.rawValue,
@@ -207,7 +207,7 @@ class Tests_Detail: XCTestCase {
                 fileExtension: ContentType.subtext.fileExtension
             )
         )
-        let update = DetailModel.update(
+        let update = MemoEditorDetailModel.update(
             state: state,
             action: .succeedMoveEntry(
                 from: from,
@@ -223,7 +223,7 @@ class Tests_Detail: XCTestCase {
     }
     
     func testSucceedMoveEntryMismatch() throws {
-        let state = DetailModel(
+        let state = MemoEditorDetailModel(
             address: Slug(formatting: "loomings")!.toPublicMemoAddress(),
             headers: WellKnownHeaders(
                 contentType: ContentType.subtext.rawValue,
@@ -232,7 +232,7 @@ class Tests_Detail: XCTestCase {
                 fileExtension: ContentType.subtext.fileExtension
             )
         )
-        let update = DetailModel.update(
+        let update = MemoEditorDetailModel.update(
             state: state,
             action: .succeedMoveEntry(
                 from: MemoAddress.public(Slashlink("/the-white-whale")!),
@@ -249,7 +249,7 @@ class Tests_Detail: XCTestCase {
     
     func testSucceedMergeEntry() throws {
         let address = Slug(formatting: "loomings")!.toPublicMemoAddress()
-        let state = DetailModel(
+        let state = MemoEditorDetailModel(
             address: address,
             headers: WellKnownHeaders(
                 contentType: ContentType.subtext.rawValue,
@@ -261,7 +261,7 @@ class Tests_Detail: XCTestCase {
 
         let parent = MemoAddress.public(Slashlink("/the-lee-tide")!)
 
-        let update = DetailModel.update(
+        let update = MemoEditorDetailModel.update(
             state: state,
             action: .succeedMergeEntry(
                 parent: parent,
