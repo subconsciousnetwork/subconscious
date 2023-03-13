@@ -556,13 +556,13 @@ struct DataService {
         }
     }
   
-    func getPetname(petname: Petname) throws {
-        try noosphere.getPetname(petname: petname.verbatim)
+    func getPetname(petname: Petname) throws -> Did? {
+        return try Did(noosphere.getPetname(petname: petname.verbatim))
     }
     
-    func getPetnameAsync(petname: Petname) -> AnyPublisher<Void, Error> {
+    func getPetnameAsync(petname: Petname) -> AnyPublisher<Did?, Error> {
         CombineUtilities.async(qos: .utility) {
-            try getPetname(petname: petname)
+            return try getPetname(petname: petname)
         }
     }
     
@@ -586,13 +586,35 @@ struct DataService {
         }
     }
     
-    func resolvePetname(petname: Petname) throws {
-        try noosphere.resolvePetname(petname: petname.verbatim)
+    func resolvePetname(petname: Petname) throws -> String {
+        return try noosphere.resolvePetname(petname: petname.verbatim)
     }
     
-    func resolvePetnameAsync(petname: Petname) -> AnyPublisher<Void, Error> {
+    func resolvePetnameAsync(petname: Petname) -> AnyPublisher<String, Error> {
         CombineUtilities.async(qos: .utility) {
-            try unsetPetname(petname: petname)
+            return try resolvePetname(petname: petname)
+        }
+    }
+    
+    func listPetnames() throws -> [Petname] {
+        return try noosphere.listPetnames()
+            .map { name in Petname(name) }
+            .compactMap { $0 }
+    }
+    
+    func listPetnamesAsync() -> AnyPublisher<[Petname], Error> {
+        CombineUtilities.async(qos: .utility) {
+            return try listPetnames()
+        }
+    }
+    
+    func getPetnameChanges(sinceCid: String) throws -> [String] {
+        return try noosphere.getPetnameChanges(sinceCid: sinceCid)
+    }
+    
+    func getPetnameChangesAsync(sinceCid: String) -> AnyPublisher<[String], Error> {
+        CombineUtilities.async(qos: .utility) {
+            return try getPetnameChanges(sinceCid: sinceCid)
         }
     }
 }

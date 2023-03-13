@@ -77,6 +77,8 @@ struct DidFieldCursor: CursorProtocol {
 enum AddressBookAction {
     case present(_ isPresented: Bool)
     
+    case populate([AddressBookEntry])
+    
     case requestFollow
     case failFollow(error: String)
     case succeedFollow(did: Did, petname: Petname)
@@ -112,6 +114,11 @@ struct AddressBookModel: ModelProtocol {
         environment: AddressBookEnvironment
     ) -> Update<AddressBookModel> {
         switch action {
+            
+        case .populate(let follows):
+            var model = state
+            model.follows = follows
+            return Update(state: model)
             
         case .presentFollowUserForm(let isPresented):
             var model = state
@@ -159,9 +166,32 @@ struct AddressBookModel: ModelProtocol {
                 }
             }
             
-            // TODO: we need to ls the address book contents and hydrate the model
+            // TODO: this doesn't capture errors, it just returns an empty list
+            // also, it's scary
+            let fx: Fx<AddressBookAction> =
+                environment.data.listPetnamesAsync()
+                // get the DID for each petname
+                .flatMap { follows in
+                    return Publishers.MergeMany(follows.map { f in
+                        return environment.data.getPetnameAsync(petname: f)
+                            .map { did -> AddressBookEntry? in
+                                guard let did = did else { return nil }
+                                return AddressBookEntry(pfp: Image("dog-pfp"), petname: f, did: did)
+                            }
+                            .compactMap { $0 }
+                    })
+                    .collect()
+                    .eraseToAnyPublisher()
+                }
+                .catch({ error in
+                    Just([])
+                })
+                .map({ follows in
+                    AddressBookAction.populate(follows)
+                })
+                .eraseToAnyPublisher()
             
-            return Update(state: model)
+            return Update(state: model, fx: fx)
             
         case .requestFollow:
             var model = state
