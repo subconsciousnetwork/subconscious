@@ -38,8 +38,7 @@ struct ValidatedTextField: View {
                     .opacity(hasError ? 1 : 0)
                     .animation(.default, value: hasError)
                 }
-                // This works but it's incredibly chatty on every keystroke
-                .onReceive(Just(focused)) { focused in
+                .onChange(of: focused) { focused in
                     onFocusChanged?(focused)
                 }
             }
