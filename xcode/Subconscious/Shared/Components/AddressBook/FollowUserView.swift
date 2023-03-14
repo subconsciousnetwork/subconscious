@@ -31,7 +31,7 @@ struct FollowUserView: View {
                                     tag: { v in .didField(.setValue(input: v))}
                                 ),
                                 onFocusChanged: { focused in
-                                    send(.didField(.touch(focused: focused)))
+                                    send(.didField(.focusChange(focused: focused)))
                                 },
                                 caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
                                 hasError: form.did.hasError
@@ -52,7 +52,7 @@ struct FollowUserView: View {
                                     tag: { v in .petnameField(.setValue(input: v))}
                                 ),
                                 onFocusChanged: { focused in
-                                    send(.petnameField(.touch(focused: focused)))
+                                    send(.petnameField(.focusChange(focused: focused)))
                                 },
                                 caption: "Lowercase letters, numbers and dashes only.",
                                 hasError: form.petname.hasError

@@ -15,7 +15,9 @@ typealias FormFieldValidator<Input, Output> = (Input) -> Output?
 
 enum FormFieldAction<Input: Equatable> {
     case reset
-    case touch(focused: Bool)
+    /// Intended for triggering validation errors when a user submits a form containing this field
+    case markAsTouched
+    case focusChange(focused: Bool)
     case setValue(input: Input)
 }
 
@@ -26,7 +28,8 @@ struct FormField<Input: Equatable, Output>: Equatable, ModelProtocol {
         return (
             lhs.value == rhs.value &&
             lhs.touched == rhs.touched &&
-            lhs.isValid == rhs.isValid
+            lhs.isValid == rhs.isValid &&
+            lhs.hasBeenFocusedAtLeastOnce == rhs.hasBeenFocusedAtLeastOnce
         )
     }
     
@@ -35,12 +38,14 @@ struct FormField<Input: Equatable, Output>: Equatable, ModelProtocol {
     /// Should be a pure, static function
     var validate: FormFieldValidator<Input, Output>
     var touched: Bool
+    var hasBeenFocusedAtLeastOnce: Bool
     
     init(value: Input, defaultValue: Input, escaping validate: @escaping FormFieldValidator<Input, Output>) {
         self.value = value
         self.defaultValue = defaultValue
         self.validate = validate
         self.touched = false
+        self.hasBeenFocusedAtLeastOnce = false
     }
     
     init(value: Input, validate: @escaping FormFieldValidator<Input, Output>) {
@@ -48,6 +53,7 @@ struct FormField<Input: Equatable, Output>: Equatable, ModelProtocol {
         self.defaultValue = value
         self.validate = validate
         self.touched = false
+        self.hasBeenFocusedAtLeastOnce = false
     }
     
     /// Attempt to validate the input and produce the backing type
@@ -79,21 +85,31 @@ struct FormField<Input: Equatable, Output>: Equatable, ModelProtocol {
             var model = state
             model.touched = false
             model.value = state.defaultValue
+            model.hasBeenFocusedAtLeastOnce = false
             return Update(state: model)
             
-        case .touch(let focused):
+        case .focusChange(let focused):
             var model = state
-            // Only mark as touched when the field loses focus
-            // This avoids telling the user that a field is invalid
-            // before they've even type in it.
-            model.touched = focused ? state.touched : true
+            // Only mark as touched when the field loses focus after an initial input.
+            // This avoids telling the user that a field is invalid before they've even typed in it.
+            if state.hasBeenFocusedAtLeastOnce && !focused {
+                model.touched = true
+            }
+            
+            if focused {
+                model.hasBeenFocusedAtLeastOnce = true
+            }
+            return Update(state: model)
+            
+        case .markAsTouched:
+            var model = state
+            model.hasBeenFocusedAtLeastOnce = true
+            model.touched = true
             return Update(state: model)
             
         case .setValue(input: let input):
             var model = state
             model.value = input
-            // Only mark as touched if the value changed
-            model.touched = state.touched || input != state.value
             return Update(state: model)
         }
     }

@@ -198,12 +198,12 @@ struct AddressBookModel: ModelProtocol {
             // Show errors on any untouched fields, hints at why you cannot submit
             model.followUserForm.did = FormField.update(
                 state: model.followUserForm.did,
-                action: .touch(focused: false),
+                action: .markAsTouched,
                 environment: FormFieldEnvironment()
             ).state
             model.followUserForm.petname = FormField.update(
                 state: model.followUserForm.petname,
-                action: .touch(focused: false),
+                action: .markAsTouched,
                 environment: FormFieldEnvironment()
             ).state
             

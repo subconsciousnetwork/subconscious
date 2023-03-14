@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 /// A text field that comes with help text and a validation flag
 struct ValidatedTextField: View {
@@ -14,17 +15,17 @@ struct ValidatedTextField: View {
     var onFocusChanged: ((Bool) -> Void)?
     var caption: String
     var hasError: Bool = false
+    @FocusState var focused: Bool
+    
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
             HStack {
                 TextField(
                     placeholder,
-                    text: $text,
-                    onEditingChanged: { focused in
-                        onFocusChanged?(focused)
-                    }
+                    text: $text
                 )
+                .focused($focused)
                 .overlay(alignment: .trailing) {
                     VStack {
                         Image(systemName: "exclamationmark.circle")
@@ -36,6 +37,10 @@ struct ValidatedTextField: View {
                     .padding(.trailing, 1)
                     .opacity(hasError ? 1 : 0)
                     .animation(.default, value: hasError)
+                }
+                // This works but it's incredibly chatty on every keystroke
+                .onReceive(Just(focused)) { focused in
+                    onFocusChanged?(focused)
                 }
             }
             Text(caption)
