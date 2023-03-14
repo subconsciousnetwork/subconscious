@@ -29,7 +29,7 @@ class Tests_Detail: XCTestCase {
             )
         )
         
-        let detail = EntryDetail(
+        let detail = MemoEditorDetailResponse(
             saveState: .saved,
             entry: entry
         )
@@ -88,7 +88,7 @@ class Tests_Detail: XCTestCase {
             )
         )
         
-        let detail = EntryDetail(
+        let detail = MemoEditorDetailResponse(
             saveState: .saved,
             entry: entry
         )
@@ -124,7 +124,7 @@ class Tests_Detail: XCTestCase {
             )
         )
         
-        let detail = EntryDetail(
+        let detail = MemoEditorDetailResponse(
             saveState: .saved,
             entry: entry
         )

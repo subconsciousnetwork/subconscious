@@ -476,10 +476,10 @@ struct DataService {
     func readDetail(
         address: MemoAddress,
         fallback: String
-    ) throws -> EntryDetail {
+    ) throws -> MemoEditorDetailResponse {
         let backlinks = database.readEntryBacklinks(slug: address.slug)
 
-        let draft = EntryDetail(
+        let draft = MemoEditorDetailResponse(
             saveState: .unsaved,
             entry: Entry(
                 address: address,
@@ -501,7 +501,7 @@ struct DataService {
                 let memo = try noosphere.read(slashlink: slashlink.description)
                     .toMemo()
                     .unwrap()
-                return EntryDetail(
+                return MemoEditorDetailResponse(
                     saveState: .saved,
                     entry: Entry(
                         address: address,
@@ -521,7 +521,7 @@ struct DataService {
                 return draft
             }
             // Return entry
-            return EntryDetail(
+            return MemoEditorDetailResponse(
                 saveState: .saved,
                 entry: Entry(
                     address: address,
@@ -539,7 +539,7 @@ struct DataService {
     func readDetailAsync(
         address: MemoAddress,
         fallback: String
-    ) -> AnyPublisher<EntryDetail, Error> {
+    ) -> AnyPublisher<MemoEditorDetailResponse, Error> {
         CombineUtilities.async(qos: .utility) {
             try readDetail(address: address, fallback: fallback)
         }

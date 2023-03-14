@@ -302,12 +302,12 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     /// Set entry detail.
     /// This actions will blow away any existing entry detail.
     /// In most cases you want to use `setDetailLastWriteWins` instead.
-    case forceSetDetail(EntryDetail)
+    case forceSetDetail(MemoEditorDetailResponse)
     /// Set EntryDetail on DetailModel, but only if last modification happened
     /// more recently than DetailModel.
-    case setDetailLastWriteWins(EntryDetail)
+    case setDetailLastWriteWins(MemoEditorDetailResponse)
     /// Set detail
-    case setDetail(detail: EntryDetail, autofocus: Bool)
+    case setDetail(detail: MemoEditorDetailResponse, autofocus: Bool)
     case setDraftDetail(
         defaultAudience: Audience,
         fallback: String
@@ -1201,11 +1201,11 @@ struct MemoEditorDetailModel: ModelProtocol {
         return Update(state: state)
     }
     
-    /// Set EntryDetail onto DetailModel
+    /// Set MemoEditorResponse onto DetailModel
     static func forceSetDetail(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        detail: EntryDetail
+        detail: MemoEditorDetailResponse
     ) -> Update<MemoEditorDetailModel> {
         var model = state
         model.isLoading = false
@@ -1241,7 +1241,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func setDetailLastWriteWins(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        detail: EntryDetail
+        detail: MemoEditorDetailResponse
     ) -> Update<MemoEditorDetailModel> {
         var model = state
         // Mark loading finished
@@ -1304,7 +1304,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func setDetail(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        detail: EntryDetail,
+        detail: MemoEditorDetailResponse,
         autofocus: Bool
     ) -> Update<MemoEditorDetailModel> {
         guard autofocus else {

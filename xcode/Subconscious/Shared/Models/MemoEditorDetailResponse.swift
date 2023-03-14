@@ -1,5 +1,5 @@
 //
-//  EntryDetail.swift
+//  MemoEditorDetailResponse.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 9/21/21.
@@ -7,20 +7,21 @@
 
 import Foundation
 
-struct EntryDetail: Hashable {
+/// Response when reading info for memo editor detail from data source.
+struct MemoEditorDetailResponse: Hashable {
     var saveState: SaveState
     var entry: MemoEntry
     var backlinks: [EntryStub] = []
 }
 
-extension EntryDetail: CustomLogStringConvertible {
+extension MemoEditorDetailResponse: CustomLogStringConvertible {
     var logDescription: String {
-        "EntryDetail(\(entry.address))"
+        "MemoEditorDetailResponse(\(entry.address))"
     }
 }
 
 extension FileFingerprint {
-    init(_ detail: EntryDetail) {
+    init(_ detail: MemoEditorDetailResponse) {
         let text = String(describing: detail.entry.contents.body)
         self.init(
             slug: detail.entry.address.slug,
