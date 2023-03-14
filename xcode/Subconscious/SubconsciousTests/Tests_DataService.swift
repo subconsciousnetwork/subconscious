@@ -158,7 +158,7 @@ final class Tests_DataService: XCTestCase {
         // Supposed to fail
         XCTAssertThrowsError(try data.noosphere.sync())
         
-        let detail = try data.readDetail(
+        let detail = try data.readMemoEditorDetail(
             address: address,
             fallback: "Fallback content"
         )

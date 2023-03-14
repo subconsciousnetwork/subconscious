@@ -1122,7 +1122,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         fallback: String,
         autofocus: Bool
     ) -> Update<MemoEditorDetailModel> {
-        let fx: Fx<MemoEditorDetailAction> = environment.data.readDetailAsync(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.readMemoEditorDetailAsync(
             address: address,
             fallback: fallback
         ).map({ detail in
@@ -1152,7 +1152,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         
         let model = prepareLoadDetail(state)
         
-        let fx: Fx<MemoEditorDetailAction> = environment.data.readDetailAsync(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.readMemoEditorDetailAsync(
             address: address,
             fallback: model.editor.text
         ).map({ detail in

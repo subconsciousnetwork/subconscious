@@ -472,8 +472,8 @@ struct DataService {
         }
         return nil
     }
-
-    func readDetail(
+    
+    func readMemoEditorDetail(
         address: MemoAddress,
         fallback: String
     ) throws -> MemoEditorDetailResponse {
@@ -536,12 +536,12 @@ struct DataService {
     /// We trust caller to slugify the string, if necessary.
     /// Allowing any string allows us to retreive files that don't have a
     /// clean slug.
-    func readDetailAsync(
+    func readMemoEditorDetailAsync(
         address: MemoAddress,
         fallback: String
     ) -> AnyPublisher<MemoEditorDetailResponse, Error> {
         CombineUtilities.async(qos: .utility) {
-            try readDetail(address: address, fallback: fallback)
+            try readMemoEditorDetail(address: address, fallback: fallback)
         }
     }
     
