@@ -28,7 +28,7 @@ struct StoryCombo: Hashable, Identifiable, Codable, CustomStringConvertible {
 extension MemoEntry {
     init?(_ story: StoryCombo) {
         // Order by slug alpha
-        let (x, y) = Func.block({
+        let (x, y) = Func.run({
             if story.entryA.address < story.entryB.address {
                 return (story.entryA, story.entryB)
             } else {

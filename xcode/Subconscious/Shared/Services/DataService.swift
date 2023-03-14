@@ -13,6 +13,7 @@ enum DataServiceError: Error, LocalizedError {
     case memoNotFound(String)
     case defaultSphereNotFound
     case sphereExists(_ sphereIdentity: String)
+    case permissionsError(String)
     
     var errorDescription: String? {
         switch self {
@@ -24,6 +25,8 @@ enum DataServiceError: Error, LocalizedError {
             return "Default sphere not found"
         case let .sphereExists(sphereIdentity):
             return "Sphere exists: \(sphereIdentity)"
+        case let .permissionsError(message):
+            return "Permissions error: \(message)"
         }
     }
 }
@@ -473,63 +476,67 @@ struct DataService {
         return nil
     }
     
+    private func readSphereMemo(
+        slashlink: Slashlink
+    ) throws -> Memo? {
+        try noosphere.read(slashlink: slashlink.description)
+            .toMemo()
+            .unwrap()
+    }
+
+    private func readLocalMemo(
+        slug: Slug
+    ) throws -> Memo? {
+        local.read(slug)
+    }
+
+    /// Read editor detail for address.
+    /// Addresses with petnames will throw an exception, since we don't
+    /// have write access to others' spheres.
+    /// - Returns a MemoEditorDetailResponse for the editor state.
     func readMemoEditorDetail(
         address: MemoAddress,
         fallback: String
     ) throws -> MemoEditorDetailResponse {
+        // Read memo from local or sphere.
+        let memo = try Func.run {
+            switch address {
+            case .local(let slug):
+                return try readLocalMemo(slug: slug)
+            case .public(let slashlink) where slashlink.petnamePart != nil:
+                // Throw. We do not allow editing 3p memos.
+                throw DataServiceError.permissionsError(
+                    "Cannot edit memo `\(slashlink)"
+                )
+            case .public(let slashlink):
+                return try readSphereMemo(slashlink: slashlink)
+            }
+        }
+
         let backlinks = database.readEntryBacklinks(slug: address.slug)
 
-        let draft = MemoEditorDetailResponse(
-            saveState: .unsaved,
-            entry: Entry(
-                address: address,
-                contents: Memo(
-                    contentType: ContentType.subtext.rawValue,
-                    created: Date.now,
-                    modified: Date.now,
-                    fileExtension: ContentType.subtext.fileExtension,
-                    additionalHeaders: [],
-                    body: fallback
-                )
-            ),
-            backlinks: backlinks
-        )
-
-        switch address {
-        case .public(let slashlink):
-            do {
-                let memo = try noosphere.read(slashlink: slashlink.description)
-                    .toMemo()
-                    .unwrap()
-                return MemoEditorDetailResponse(
-                    saveState: .saved,
-                    entry: Entry(
-                        address: address,
-                        contents: memo
-                    ),
-                    backlinks: backlinks
-                )
-            } catch SphereFSError.fileDoesNotExist(let slashlink) {
-                logger.debug("Sphere file does not exist: \(slashlink). Returning new draft.")
-                return draft
-            }
-        case .local(let slug):
-            // Retreive top entry from file system to ensure it is fresh.
-            // If no file exists, return a draft, using fallback for title.
-            guard let memo = local.read(slug) else {
-                logger.debug("Local file does not exist: \(slug). Returning new draft.")
-                return draft
-            }
-            // Return entry
+        guard let memo = memo else {
+            logger.log(
+                "Memo does not exist at \(address). Returning new draft."
+            )
             return MemoEditorDetailResponse(
-                saveState: .saved,
+                saveState: .unsaved,
                 entry: Entry(
                     address: address,
-                    contents: memo
+                    contents: Memo.draft(body: fallback)
                 ),
                 backlinks: backlinks
             )
         }
+
+        return MemoEditorDetailResponse(
+            saveState: .saved,
+            entry: Entry(
+                address: address,
+                contents: memo
+            ),
+            backlinks: backlinks
+        )
     }
 
     /// Get memo and backlinks from slug, using string as a fallback.
