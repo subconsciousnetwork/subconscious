@@ -40,7 +40,7 @@ struct FormField<Input: Equatable, Output>: Equatable, ModelProtocol {
     var touched: Bool
     var hasBeenFocusedAtLeastOnce: Bool
     
-    init(value: Input, defaultValue: Input, escaping validate: @escaping FormFieldValidator<Input, Output>) {
+    init(value: Input, defaultValue: Input, validate: @escaping FormFieldValidator<Input, Output>) {
         self.value = value
         self.defaultValue = defaultValue
         self.validate = validate
