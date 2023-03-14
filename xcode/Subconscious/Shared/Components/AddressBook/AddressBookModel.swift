@@ -166,26 +166,8 @@ struct AddressBookModel: ModelProtocol {
                 }
             }
             
-            // TODO: this doesn't capture errors, it just returns an empty list
-            // also, it's scary
             let fx: Fx<AddressBookAction> =
-                environment.data.listPetnamesAsync()
-                // get the DID for each petname
-                .flatMap { follows in
-                    return Publishers.MergeMany(follows.map { f in
-                        return environment.data.getPetnameAsync(petname: f)
-                            .map { did -> AddressBookEntry? in
-                                guard let did = did else { return nil }
-                                return AddressBookEntry(pfp: Image("dog-pfp"), petname: f, did: did)
-                            }
-                            .compactMap { $0 }
-                    })
-                    .collect()
-                    .eraseToAnyPublisher()
-                }
-                .catch({ error in
-                    Just([])
-                })
+                environment.data.addressBook.listEntries()
                 .map({ follows in
                     AddressBookAction.populate(follows)
                 })
@@ -218,7 +200,7 @@ struct AddressBookModel: ModelProtocol {
                 return Update(state: model)
             }
             
-            let fx: Fx<AddressBookAction> = environment.data
+            let fx: Fx<AddressBookAction> = environment.data.addressBook
                 .setPetnameAsync(did: did, petname: petname)
                 .map({ _ in
                     AddressBookAction.succeedFollow(did: did, petname: petname)
@@ -246,7 +228,7 @@ struct AddressBookModel: ModelProtocol {
             return Update(state: model)
             
         case .requestUnfollow(petname: let petname):
-            let fx: Fx<AddressBookAction> = environment.data
+            let fx: Fx<AddressBookAction> = environment.data.addressBook
                 .unsetPetnameAsync(petname: petname)
                 .map({ _ in
                     AddressBookAction.succeedUnfollow(petname: petname)

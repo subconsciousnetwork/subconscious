@@ -38,6 +38,7 @@ struct MoveReceipt: Hashable {
 /// Wraps both database and source-of-truth store, providing data
 /// access methods for the app.
 struct DataService {
+    var addressBook: AddressBookService
     var noosphere: NoosphereService
     var database: DatabaseService
     var local: HeaderSubtextMemoStore
@@ -46,11 +47,13 @@ struct DataService {
     init(
         noosphere: NoosphereService,
         database: DatabaseService,
-        local: HeaderSubtextMemoStore
+        local: HeaderSubtextMemoStore,
+        addressBook: AddressBookService
     ) {
         self.database = database
         self.noosphere = noosphere
         self.local = local
+        self.addressBook = addressBook
         self.logger = Logger(
             subsystem: Config.default.rdns,
             category: "DataService"
@@ -553,68 +556,6 @@ struct DataService {
     func readRandomEntryLinkAsync() -> AnyPublisher<EntryLink, Error> {
         CombineUtilities.async(qos: .default) {
             try readRandomEntryLink()
-        }
-    }
-  
-    func getPetname(petname: Petname) throws -> Did? {
-        return try Did(noosphere.getPetname(petname: petname.verbatim))
-    }
-    
-    func getPetnameAsync(petname: Petname) -> AnyPublisher<Did?, Error> {
-        CombineUtilities.async(qos: .utility) {
-            return try getPetname(petname: petname)
-        }
-    }
-    
-    func setPetname(did: Did, petname: Petname) throws {
-        try noosphere.setPetname(did: did.did, petname: petname.verbatim)
-    }
-    
-    func setPetnameAsync(did: Did, petname: Petname) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .utility) {
-            try setPetname(did: did, petname: petname)
-        }
-    }
-    
-    func unsetPetname(petname: Petname) throws {
-        try noosphere.unsetPetname(petname: petname.verbatim)
-    }
-    
-    func unsetPetnameAsync(petname: Petname) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .utility) {
-            try unsetPetname(petname: petname)
-        }
-    }
-    
-    func resolvePetname(petname: Petname) throws -> String {
-        return try noosphere.resolvePetname(petname: petname.verbatim)
-    }
-    
-    func resolvePetnameAsync(petname: Petname) -> AnyPublisher<String, Error> {
-        CombineUtilities.async(qos: .utility) {
-            return try resolvePetname(petname: petname)
-        }
-    }
-    
-    func listPetnames() throws -> [Petname] {
-        return try noosphere.listPetnames()
-            .map { name in Petname(name) }
-            .compactMap { $0 }
-    }
-    
-    func listPetnamesAsync() -> AnyPublisher<[Petname], Error> {
-        CombineUtilities.async(qos: .utility) {
-            return try listPetnames()
-        }
-    }
-    
-    func getPetnameChanges(sinceCid: String) throws -> [String] {
-        return try noosphere.getPetnameChanges(sinceCid: sinceCid)
-    }
-    
-    func getPetnameChangesAsync(sinceCid: String) -> AnyPublisher<[String], Error> {
-        CombineUtilities.async(qos: .utility) {
-            return try getPetnameChanges(sinceCid: sinceCid)
         }
     }
 }

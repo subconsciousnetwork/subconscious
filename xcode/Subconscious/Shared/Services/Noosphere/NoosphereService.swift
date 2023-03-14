@@ -240,7 +240,6 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         }
     }
     
-    // TODO: Do these belong on NoosphereService?
     func getPetname(petname: String) throws -> String {
         try queue.sync {
             try self.sphere().getPetname(petname: petname)
