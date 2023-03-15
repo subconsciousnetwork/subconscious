@@ -85,7 +85,7 @@ struct FollowUserView: View {
                     }
                 }
                 ToolbarItem(placement: .navigation) {
-                    Button("Cancel") {
+                    Button("Cancel", role: .cancel) {
                         send(.presentFollowUserForm(false))
                     }
                 }

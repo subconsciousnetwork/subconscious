@@ -66,7 +66,7 @@ struct AddressBookView: View {
             .navigationTitle("Address Book")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
+                    Button("Close", role: .cancel) {
                         AddressBookModel.logger.debug("Close Address Book")
                         send(.present(false))
                     }
