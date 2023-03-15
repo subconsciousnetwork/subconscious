@@ -27,7 +27,7 @@ struct MemoViewerDetailView: View {
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
 enum MemoViewerDetailNotification: Hashable {
-    case requestDetail(address: MemoAddress, fallback: String)
+    case requestDetail(MemoDetailDescription)
 }
 
 /// A description of a memo detail that can be used to set up the memo

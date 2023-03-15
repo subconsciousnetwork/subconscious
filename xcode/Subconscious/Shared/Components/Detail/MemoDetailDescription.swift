@@ -24,3 +24,43 @@ enum MemoDetailDescription: Hashable {
         }
     }
 }
+
+extension MemoDetailDescription {
+    static func from(
+        address: MemoAddress?,
+        fallback: String,
+        defaultAudience: Audience = .local
+    ) -> Self {
+        switch address {
+        case .local(let slug):
+            return .editor(
+                MemoEditorDetailDescription(
+                    address: slug.toLocalMemoAddress(),
+                    fallback: fallback,
+                    defaultAudience: .local
+                )
+            )
+        case .public(let slashlink) where slashlink.petnamePart == nil:
+            return .editor(
+                MemoEditorDetailDescription(
+                    address: slashlink.toPublicMemoAddress(),
+                    fallback: fallback,
+                    defaultAudience: .public
+                )
+            )
+        case .public(let slashlink):
+            return .viewer(
+                MemoViewerDetailDescription(
+                    address: slashlink.toPublicMemoAddress()
+                )
+            )
+        case .none:
+            return .editor(
+                MemoEditorDetailDescription(
+                    fallback: fallback,
+                    defaultAudience: defaultAudience
+                )
+            )
+        }
+    }
+}

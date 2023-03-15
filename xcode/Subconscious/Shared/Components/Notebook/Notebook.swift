@@ -247,13 +247,8 @@ extension NotebookAction {
         switch action {
         case .requestDelete(let address):
             return .deleteEntry(address)
-        case let .requestDetail(address, fallback):
-            return .pushDetail(
-                MemoEditorDetailDescription(
-                    address: address,
-                    fallback: fallback
-                )
-            )
+        case let .requestDetail(detail):
+            return .pushDetail(detail)
         case let .requestFindDetail(slashlink, fallback):
             return .findAndPushDetail(
                 slashlink: slashlink,
@@ -272,13 +267,8 @@ extension NotebookAction {
     
     static func tag(_ action: MemoViewerDetailNotification) -> Self {
         switch action {
-        case let .requestDetail(address, fallback):
-            return .pushDetail(
-                MemoEditorDetailDescription(
-                    address: address,
-                    fallback: fallback
-                )
-            )
+        case let .requestDetail(detail):
+            return .pushDetail(detail)
         }
     }
 }

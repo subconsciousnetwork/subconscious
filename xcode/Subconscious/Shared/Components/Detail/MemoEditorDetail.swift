@@ -79,8 +79,10 @@ struct MemoEditorDetailView: View {
                             onSelect: { link in
                                 notify(
                                     .requestDetail(
-                                        address: link.address,
-                                        fallback: link.title
+                                        MemoDetailDescription.from(
+                                            address: link.address,
+                                            fallback: link.title
+                                        )
                                     )
                                 )
                             }
@@ -129,7 +131,7 @@ struct MemoEditorDetailView: View {
                 }
             }
         }
-        .navigationTitle("")
+        .navigationTitle(store.state.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible)
         .toolbarBackground(Color.background, for: .navigationBar)
@@ -236,7 +238,7 @@ struct MemoEditorDetailView: View {
 /// lifecycle events that happened within our component.
 enum MemoEditorDetailNotification: Hashable {
     /// Request specific detail
-    case requestDetail(address: MemoAddress, fallback: String)
+    case requestDetail(MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindDetail(
         slashlink: Slashlink,
@@ -543,6 +545,12 @@ struct MemoEditorDetailModel: ModelProtocol {
     var audience: Audience {
         address?.toAudience() ?? defaultAudience
     }
+
+    // Derive title from editor state
+    var title: String {
+        editor.text.title()
+    }
+
     /// Required headers
     /// Initialize date with Unix Epoch
     var headers = WellKnownHeaders(
