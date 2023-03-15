@@ -25,7 +25,7 @@ struct NotebookNavigationView: View {
                     onEntryPress: { entry in
                         store.send(
                             .pushDetail(
-                                MemoEditorDetailOuterModel(
+                                MemoEditorDetailDescription(
                                     address: entry.address,
                                     fallback: entry.excerpt
                                 )
@@ -60,10 +60,10 @@ struct NotebookNavigationView: View {
                     }
                 }
             }
-            .navigationDestination(for: MemoEditorDetailOuterModel.self) { state in
+            .navigationDestination(for: MemoEditorDetailDescription.self) { state in
                 MemoEditorDetailView(
-                    state: state,
-                    send: Address.forward(
+                    description: state,
+                    notify: Address.forward(
                         send: store.send,
                         tag: NotebookAction.tag
                     )

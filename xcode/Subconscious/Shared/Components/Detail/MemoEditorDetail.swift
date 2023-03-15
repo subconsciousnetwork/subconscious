@@ -26,9 +26,10 @@ struct MemoEditorDetailView: View {
     /// We trigger an autosave when isPresented is false below.
     @Environment(\.isPresented) var isPresented
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
-    /// State passed down from parent
-    var state: MemoEditorDetailOuterModel
-    var send: (MemoEditorDetailOuterAction) -> Void
+    /// Initialization state passed down from parent
+    var description: MemoEditorDetailDescription
+    /// An address to forward notifications (informational actions)
+    var notify: (MemoEditorDetailNotification) -> Void
 
     private func onLink(
         url: URL
@@ -36,7 +37,7 @@ struct MemoEditorDetailView: View {
         guard let sub = url.toSubSlashlinkURL() else {
             return true
         }
-        send(
+        notify(
             .requestFindDetail(
                 slashlink: sub.slashlink,
                 fallback: sub.title
@@ -76,7 +77,7 @@ struct MemoEditorDetailView: View {
                         BacklinksView(
                             backlinks: store.state.backlinks,
                             onSelect: { link in
-                                send(
+                                notify(
                                     .requestDetail(
                                         address: link.address,
                                         fallback: link.title
@@ -145,7 +146,7 @@ struct MemoEditorDetailView: View {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
-            store.send(MemoEditorDetailAction.appear(state))
+            store.send(MemoEditorDetailAction.appear(description))
         }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
@@ -170,7 +171,7 @@ struct MemoEditorDetailView: View {
             guard let link = url.toSubSlashlinkURL() else {
                 return .systemAction
             }
-            send(
+            notify(
                 .requestFindDetail(
                     slashlink: link.slashlink,
                     fallback: link.title
@@ -184,9 +185,9 @@ struct MemoEditorDetailView: View {
         }
         // Filtermap actions to outer actions, and forward them to parent
         .onReceive(
-            store.actions.compactMap(MemoEditorDetailOuterAction.from)
+            store.actions.compactMap(MemoEditorDetailNotification.from)
         ) { action in
-            send(action)
+            notify(action)
         }
         .sheet(
             isPresented: Binding(
@@ -231,8 +232,9 @@ struct MemoEditorDetailView: View {
 
 //  MARK: Action
 
-/// Actions that are forwarded up to the parent component
-enum MemoEditorDetailOuterAction: Hashable {
+/// Actions forwarded up to the parent context to notify it of specific
+/// lifecycle events that happened within our component.
+enum MemoEditorDetailNotification: Hashable {
     /// Request specific detail
     case requestDetail(address: MemoAddress, fallback: String)
     /// Request detail from any audience scope
@@ -247,7 +249,7 @@ enum MemoEditorDetailOuterAction: Hashable {
     case succeedUpdateAudience(_ receipt: MoveReceipt)
 }
 
-extension MemoEditorDetailOuterAction {
+extension MemoEditorDetailNotification {
     static func from(_ action: MemoEditorDetailAction) -> Self? {
         switch action {
         case let .succeedMoveEntry(from, to):
@@ -284,7 +286,7 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     /// Wrapper for editor actions
     case editor(SubtextTextAction)
 
-    case appear(MemoEditorDetailOuterModel)
+    case appear(MemoEditorDetailDescription)
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
@@ -954,7 +956,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func appear(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        info: MemoEditorDetailOuterModel
+        info: MemoEditorDetailDescription
     ) -> Update<MemoEditorDetailModel> {
         // No address? This is a draft.
         guard let address = info.address else {
@@ -1925,19 +1927,11 @@ struct MemoEditorDetailModel: ModelProtocol {
 
 //  MARK: Outer Model
 /// A description of a detail suitible for pushing onto a navigation stack
-struct MemoEditorDetailOuterModel: Hashable, ModelProtocol {
+struct MemoEditorDetailDescription: Hashable {
     var address: MemoAddress?
     var fallback: String = ""
     /// Default audience to use when deriving a memo address
     var defaultAudience = Audience.local
-    
-    static func update(
-        state: MemoEditorDetailOuterModel,
-        action: MemoEditorDetailOuterAction,
-        environment: AppEnvironment
-    ) -> ObservableStore.Update<MemoEditorDetailOuterModel> {
-        Update(state: state)
-    }
 }
 
 extension FileFingerprint {
@@ -1975,12 +1969,12 @@ extension MemoEntry {
 struct Detail_Previews: PreviewProvider {
     static var previews: some View {
         MemoEditorDetailView(
-            state: MemoEditorDetailOuterModel(
+            description: MemoEditorDetailDescription(
                 address: Slug(formatting: "Nothing is lost in the universe")!
                     .toPublicMemoAddress(),
                 fallback: "Nothing is lost in the universe"
             ),
-            send: { action in }
+            notify: { action in }
         )
     }
 }

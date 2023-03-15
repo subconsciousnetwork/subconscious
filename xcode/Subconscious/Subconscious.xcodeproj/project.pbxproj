@@ -179,6 +179,8 @@
 		B88CC95B284FF64300994928 /* Tests_OrderedCollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88CC95A284FF64300994928 /* Tests_OrderedCollectionUtilities.swift */; };
 		B8925B2B29C0FA43001F9503 /* Tests_Func.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8925B2A29C0FA43001F9503 /* Tests_Func.swift */; };
 		B8925B2D29C0FD91001F9503 /* MemoDetailResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8925B2C29C0FD91001F9503 /* MemoDetailResponse.swift */; };
+		B8925B2F29C23017001F9503 /* MemoViewerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8925B2E29C23017001F9503 /* MemoViewerDetailView.swift */; };
+		B8925B3129C2320D001F9503 /* MemoDetailDescription.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8925B3029C2320D001F9503 /* MemoDetailDescription.swift */; };
 		B89966C728B6EE2300DF1F8C /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89966C628B6EE2300DF1F8C /* Notebook.swift */; };
 		B89966C828B6EE2300DF1F8C /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89966C628B6EE2300DF1F8C /* Notebook.swift */; };
 		B89E30772911B51A00A4721F /* Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E30762911B51A00A4721F /* Migration.swift */; };
@@ -473,6 +475,8 @@
 		B88CC95A284FF64300994928 /* Tests_OrderedCollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_OrderedCollectionUtilities.swift; sourceTree = "<group>"; };
 		B8925B2A29C0FA43001F9503 /* Tests_Func.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Func.swift; sourceTree = "<group>"; };
 		B8925B2C29C0FD91001F9503 /* MemoDetailResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoDetailResponse.swift; sourceTree = "<group>"; };
+		B8925B2E29C23017001F9503 /* MemoViewerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoViewerDetailView.swift; sourceTree = "<group>"; };
+		B8925B3029C2320D001F9503 /* MemoDetailDescription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoDetailDescription.swift; sourceTree = "<group>"; };
 		B89966C628B6EE2300DF1F8C /* Notebook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notebook.swift; sourceTree = "<group>"; };
 		B89E30762911B51A00A4721F /* Migration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Migration.swift; sourceTree = "<group>"; };
 		B89E307C2911D7F900A4721F /* IntUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntUtilities.swift; sourceTree = "<group>"; };
@@ -756,10 +760,12 @@
 		B87288E2299C02E200EF7E07 /* Detail */ = {
 			isa = PBXGroup;
 			children = (
-				B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */,
+				B8925B3029C2320D001F9503 /* MemoDetailDescription.swift */,
 				B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */,
 				B86BC75929B24BEF005B5833 /* DetailMetaSheet.swift */,
 				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
+				B8925B2E29C23017001F9503 /* MemoViewerDetailView.swift */,
+				B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */,
 				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 			);
 			path = Detail;
@@ -1430,6 +1436,7 @@
 				B8879EAC26F944DA00A0B4FF /* Detail.swift in Sources */,
 				B5F6ADC929C02F4A00690DE4 /* AddressBookService.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */,
+				B8925B2F29C23017001F9503 /* MemoViewerDetailView.swift in Sources */,
 				B8A1621429B2AB3A008322EB /* CloseButtonView.swift in Sources */,
 				B82C3A7626F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B85BF47827BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
@@ -1441,6 +1448,7 @@
 				B866868127AC4EF100A03A55 /* NSRangeUtilities.swift in Sources */,
 				B824FDD126FA98F300B81BBD /* MemoEditorDetailResponse.swift in Sources */,
 				B8AE34AA276A986000777FF0 /* PlaceholderTextView.swift in Sources */,
+				B8925B3129C2320D001F9503 /* MemoDetailDescription.swift in Sources */,
 				B8CBAFA9299580E50079107E /* StoreProtocol.swift in Sources */,
 				B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */,
 				B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */,
