@@ -36,7 +36,7 @@ struct AddressBookView: View {
                                 )
                                 .frame(maxWidth: .infinity)
                                 .swipeActions {
-                                    Button("Unfollow", role: .destructive) {
+                                    Button("Unfollow") {
                                         send(.requestUnfollow(petname: user.petname))
                                     }
                                 }
