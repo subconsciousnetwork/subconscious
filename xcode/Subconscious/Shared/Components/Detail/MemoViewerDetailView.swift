@@ -8,6 +8,8 @@
 import SwiftUI
 import ObservableStore
 
+/// Display a read-only memo detail view.
+/// Used for content from other spheres that we don't have write access to.
 struct MemoViewerDetailView: View {
     @StateObject private var store = Store(
         state: MemoViewerDetailModel(),
