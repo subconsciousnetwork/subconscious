@@ -971,7 +971,7 @@ struct AppEnvironment {
             addressBook: addresBook
         )
         
-        self.addressBook = AddressBookEnvironment(noosphere: noosphere, data: data)
+        self.addressBook = AddressBookEnvironment(data: data)
 
         self.feed = FeedService()
     }

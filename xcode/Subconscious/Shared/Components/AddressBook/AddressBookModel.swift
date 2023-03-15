@@ -18,16 +18,9 @@ struct AddressBookEntry: Equatable {
 }
 
 struct AddressBookEnvironment {
-    var noosphere: SphereIdentityProtocol
     var data: DataService
 }
 
-// Used for SwiftUI Previews, also useful for testing
-class PlaceholderSphereIdentityProvider: SphereIdentityProtocol {
-    func identity() throws -> String {
-        "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
-    }
-}
 
 struct FollowUserFormModel: Equatable {
     var did: FormField<String, Did> = FormField(value: "", validate: Self.validateDid)
@@ -160,7 +153,7 @@ struct AddressBookModel: ModelProtocol {
             
             if isPresented {
                 do {
-                    model.did = try Did(environment.noosphere.identity())
+                    model.did = try Did(environment.data.noosphere.identity())
                 } catch {
                     model.did = nil
                 }
