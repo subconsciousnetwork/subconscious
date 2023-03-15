@@ -24,6 +24,7 @@ struct AddressBookEntryView: View {
                     .foregroundColor(.secondary)
                     .font(.caption.monospaced())
             }
+            Spacer()
         }
     }
 }
@@ -33,7 +34,7 @@ struct AddressBookEntryView_Previews: PreviewProvider {
         AddressBookEntryView(
             pfp: Image("pfp-dog"),
             petname: Petname("name")!,
-            did: Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
+            did: Did("did:key:z6x")!
         )
     }
 }
