@@ -885,17 +885,24 @@ struct NotebookModel: ModelProtocol {
         // to find in local or sphere content and then push editor detail.
         switch slashlink.petnamePart {
         case .some:
-            return update(
-                state: state,
-                action: .pushDetail(
-                    .viewer(
-                        MemoViewerDetailDescription(
-                            address: slashlink.toPublicMemoAddress()
+            if Config.default.memoViewerDetailEnabled {
+                return update(
+                    state: state,
+                    action: .pushDetail(
+                        .viewer(
+                            MemoViewerDetailDescription(
+                                address: slashlink.toPublicMemoAddress()
+                            )
                         )
-                    )
-                ),
-                environment: environment
-            )
+                    ),
+                    environment: environment
+                )
+            } else {
+                logger.debug(
+                    "Slashlink to other sphere requested, but viewing other sphere content is disabled. Doing nothing."
+                )
+                return Update(state: state)
+            }
         case .none:
             return update(
                 state: state,

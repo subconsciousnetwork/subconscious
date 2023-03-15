@@ -25,9 +25,8 @@ struct Config: Equatable, Codable {
     /// Toggle random suggestion feature
     var randomSuggestionEnabled = true
 
-    /// Default links feature enabled?
-    var linksEnabled = true
-
+    var memoViewerDetailEnabled = false
+    
     /// Toggle on/off simple Tracery-based Geists
     var traceryZettelkasten = "zettelkasten"
     var traceryCombo = "combo"
