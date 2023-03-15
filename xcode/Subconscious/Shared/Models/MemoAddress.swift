@@ -70,6 +70,21 @@ extension MemoAddress: LosslessStringConvertible, Identifiable, Comparable {
 }
 
 extension MemoAddress {
+    /// Does this address point to content in one of our address spaces?
+    /// - Returns true if local or sphere content in our own sphere, false otherwise.
+    var isOurs: Bool {
+        switch self {
+        case .local:
+            return true
+        case .public(let slashlink) where slashlink.petnamePart == nil:
+            return true
+        case .public:
+            return false
+        }
+    }
+}
+
+extension MemoAddress {
     func toSlashlink() -> Slashlink {
         switch self {
         case .local(let slug):
