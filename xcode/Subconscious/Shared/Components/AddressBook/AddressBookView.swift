@@ -88,18 +88,12 @@ struct AddressBook_Previews: PreviewProvider {
     static var previews: some View {
         AddressBookView(
             state: AddressBookModel(
-                follows: [],
-                followUserFormIsPresented: true
-            ),
-            send: { action in }
-        )
-        AddressBookView(
-            state: AddressBookModel(
                 follows: [
                     AddressBookEntry(pfp: Image("pfp-dog"), petname: Petname("ben")!, did: Did(  "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
                     AddressBookEntry(pfp: Image("sub_logo_light"), petname: Petname("bob")!, did: Did("did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
                     AddressBookEntry(pfp: Image("sub_logo_dark"), petname: Petname("alice")!, did: Did("did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
-                ]
+                ],
+                followUserFormIsPresented: false // Toggle to test sheet
             ),
             send: { action in }
         )
