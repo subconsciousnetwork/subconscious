@@ -169,7 +169,7 @@ final class Tests_DataService: XCTestCase {
     
     func testManyWritesThenCloseThenReopen() throws {
         let tmp = try createTmpDir()
-
+        
         let globalStorageURL = tmp.appending(path: "noosphere")
         let sphereStorageURL = tmp.appending(path: "sphere")
         
@@ -207,13 +207,13 @@ final class Tests_DataService: XCTestCase {
             documentURL: tmp.appending(path: "docs")
         )
         let local = HeaderSubtextMemoStore(store: files)
-
+        
         
         let versionX: String
         let versionA: String
         let versionB: String
         let versionC: String
-
+        
         // Run data service in block to ensure destructor is called at end
         // of block scope.
         do {
@@ -302,8 +302,39 @@ final class Tests_DataService: XCTestCase {
         let title = "A"
         let addressA = Slug(formatting: title)!.toPublicMemoAddress()
         try data.writeMemo(address: addressA, memo: memo)
-
+        
         let addressA2 = data.findUniqueAddressFor(title, audience: .local)
         XCTAssertEqual(addressA2?.description, "local::/a-2")
+    }
+    
+    func testReadMemoDetail() throws {
+        let tmp = try createTmpDir()
+        let data = try createDataService(tmp: tmp)
+        
+        let memo = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "Test content"
+        )
+        
+        let addressA = MemoAddress.public(Slashlink("/a")!)
+        try data.writeMemo(address: addressA, memo: memo)
+        
+        let detail = data.readMemoDetail(address: addressA)
+        
+        XCTAssertEqual(detail?.entry.address, addressA)
+        XCTAssertEqual(detail?.entry.contents.body, memo.body)
+    }
+    
+    func testReadMemoDetailDoesNotExist() throws {
+        let tmp = try createTmpDir()
+        let data = try createDataService(tmp: tmp)
+        
+        let addressA = MemoAddress.public(Slashlink("/a")!)
+
+        XCTAssertNil(data.readMemoDetail(address: addressA))
     }
 }

@@ -10,7 +10,6 @@ import os
 
 enum DataServiceError: Error, LocalizedError {
     case fileExists(String)
-    case memoNotFound(String)
     case defaultSphereNotFound
     case sphereExists(_ sphereIdentity: String)
     case permissionsError(String)
@@ -19,8 +18,6 @@ enum DataServiceError: Error, LocalizedError {
         switch self {
         case .fileExists(let message):
             return "File exists: \(message)"
-        case .memoNotFound(let message):
-            return "Memo not found: \(message)"
         case .defaultSphereNotFound:
             return "Default sphere not found"
         case let .sphereExists(sphereIdentity):
@@ -441,7 +438,7 @@ struct DataService {
     ) -> MemoAddress? {
         // If slug exists in default sphere, return that.
         if noosphere.getFileVersion(
-            slashlink: slug.markup
+            slashlink: slug.toSlashlink().description
         ) != nil {
             return slug.toPublicMemoAddress()
         }
@@ -478,15 +475,14 @@ struct DataService {
     
     private func readSphereMemo(
         slashlink: Slashlink
-    ) throws -> Memo? {
-        try noosphere.read(slashlink: slashlink.description)
-            .toMemo()
-            .unwrap()
+    ) -> Memo? {
+        try? noosphere.read(slashlink: slashlink.description).toMemo()
     }
 
+    /// Read memo from local store
     private func readLocalMemo(
         slug: Slug
-    ) throws -> Memo? {
+    ) -> Memo? {
         local.read(slug)
     }
 
@@ -498,18 +494,20 @@ struct DataService {
         address: MemoAddress,
         fallback: String
     ) throws -> MemoEditorDetailResponse {
+        // We do not allow editing 3p memos. Throw.
+        if !address.isOurs {
+            throw DataServiceError.permissionsError(
+                "Cannot edit memo `\(address)"
+            )
+        }
         // Read memo from local or sphere.
-        let memo = try Func.run {
+        let memo = Func.run {
             switch address {
             case .local(let slug):
-                return try readLocalMemo(slug: slug)
-            case .public(let slashlink) where slashlink.petnamePart != nil:
-                // Throw. We do not allow editing 3p memos.
-                throw DataServiceError.permissionsError(
-                    "Cannot edit memo `\(slashlink)"
-                )
+                return readLocalMemo(slug: slug)
+            
             case .public(let slashlink):
-                return try readSphereMemo(slashlink: slashlink)
+                return readSphereMemo(slashlink: slashlink)
             }
         }
 
@@ -547,11 +545,51 @@ struct DataService {
         address: MemoAddress,
         fallback: String
     ) -> AnyPublisher<MemoEditorDetailResponse, Error> {
-        CombineUtilities.async(qos: .utility) {
+        CombineUtilities.async {
             try readMemoEditorDetail(address: address, fallback: fallback)
         }
     }
     
+    /// Read view-only memo detail for address.
+    /// - Returns `MemoDetailResponse`
+    func readMemoDetail(
+        address: MemoAddress
+    ) -> MemoDetailResponse? {
+        // Read memo from local or sphere.
+        let memo = Func.run {
+            switch address {
+            case .local(let slug):
+                return readLocalMemo(slug: slug)
+            case .public(let slashlink):
+                return readSphereMemo(slashlink: slashlink)
+            }
+        }
+
+        guard let memo = memo else {
+            return nil
+        }
+
+        let backlinks = database.readEntryBacklinks(slug: address.slug)
+
+        return MemoDetailResponse(
+            entry: MemoEntry(
+                address: address,
+                contents: memo
+            ),
+            backlinks: backlinks
+        )
+    }
+
+    /// Read view-only memo detail for address.
+    /// - Returns publisher for `MemoDetailResponse` or error
+    func readMemoDetailAsync(
+        address: MemoAddress
+    ) -> AnyPublisher<MemoDetailResponse?, Never> {
+        CombineUtilities.async {
+            readMemoDetail(address: address)
+        }
+    }
+
     /// Choose a random entry and publish slug
     func readRandomEntryLink() throws -> EntryLink {
         guard let link = database.readRandomEntryLink() else {
