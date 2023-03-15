@@ -85,7 +85,7 @@ struct AddressBookView: View {
             .navigationBarTitleDisplayMode(.inline)
             .sheet(
                 isPresented: Binding(
-                    get: { state.followUserFormIsPresented },
+                    get: { state.isFollowUserFormPresented },
                     send: send,
                     tag: AddressBookAction.presentFollowUserForm
                 )
@@ -105,7 +105,7 @@ struct AddressBook_Previews: PreviewProvider {
                     AddressBookEntry(pfp: Image("sub_logo_light"), petname: Petname("bob")!, did: Did("did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
                     AddressBookEntry(pfp: Image("sub_logo_dark"), petname: Petname("alice")!, did: Did("did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
                 ],
-                followUserFormIsPresented: false // Toggle to test sheet
+                isFollowUserFormPresented: false // Toggle to test sheet
             ),
             send: { action in }
         )

@@ -90,7 +90,7 @@ struct AddressBookModel: ModelProtocol {
     var did: Did? = nil
     var follows: [AddressBookEntry] = []
     
-    var followUserFormIsPresented = false
+    var isFollowUserFormPresented = false
     var followUserForm = FollowUserFormModel()
     
     var failFollowErrorMessage: String? = nil
@@ -116,7 +116,7 @@ struct AddressBookModel: ModelProtocol {
         case .presentFollowUserForm(let isPresented):
             var model = state
             
-            model.followUserFormIsPresented = isPresented
+            model.isFollowUserFormPresented = isPresented
             if isPresented {
                 // Reset form when opened
                 model.followUserForm.did = FormField.update(
@@ -211,7 +211,7 @@ struct AddressBookModel: ModelProtocol {
             let entry = AddressBookEntry(pfp: Image("sub_logo_dark"), petname: petname, did: did)
             
             var model = state
-            model.followUserFormIsPresented = false
+            model.isFollowUserFormPresented = false
             model.follows.append(entry)
             return Update(state: model)
             
