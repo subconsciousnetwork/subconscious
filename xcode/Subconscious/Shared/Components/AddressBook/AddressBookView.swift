@@ -44,12 +44,24 @@ struct AddressBookView: View {
                         }
                     }
                 }
+                // Basic error visibility
+                if let msg = state.failUnfollowErrorMessage {
+                    HStack {
+                        Image(systemName: "exclamationmark.circle")
+                            .frame(width: 24, height: 22)
+                            .padding(.horizontal, 8)
+                            .foregroundColor(.red)
+                            .background(Color.clear)
+                        Text(msg)
+                            .foregroundColor(.red)
+                    }
+                }
+                
                 if let did = state.did {
                     Section(header: Text("My DID")) {
                         DidView(did: did)
                     }
                 }
-                
             }
             .navigationTitle("Address Book")
             .toolbar {

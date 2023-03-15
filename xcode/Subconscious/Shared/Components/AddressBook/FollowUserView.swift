@@ -63,6 +63,7 @@ struct FollowUserView: View {
                         }
                     }
                     
+                    // Basic error visibility
                     if let msg = state.failFollowErrorMessage {
                         HStack {
                             Image(systemName: "exclamationmark.circle")
