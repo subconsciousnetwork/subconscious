@@ -157,15 +157,9 @@ enum NotebookAction {
     
     /// Find a detail for content that belongs to us.
     /// Detail could exist in either local or sphere content.
-    case findAndPushEditDetail(
+    case findAndPushMemoEditorDetail(
         slug: Slug,
         fallback: String
-    )
-    
-    /// Find a detail for content that belongs to us.
-    /// Detail could exist in either local or sphere content.
-    case findAndPushViewDetail(
-        slashlink: Slashlink
     )
     
     /// Push detail onto navigation stack
@@ -514,18 +508,12 @@ struct NotebookModel: ModelProtocol {
                 slashlink: slashlink,
                 fallback: fallback
             )
-        case let .findAndPushEditDetail(slug, fallback):
-            return findAndPushEditDetail(
+        case let .findAndPushMemoEditorDetail(slug, fallback):
+            return findAndPushMemoEditorDetail(
                 state: state,
                 environment: environment,
                 slug: slug,
                 fallback: fallback
-            )
-        case let .findAndPushViewDetail(slashlink):
-            return findAndPushViewDetail(
-                state: state,
-                environment: environment,
-                slashlink: slashlink
             )
         case let .pushDetail(detail):
             var model = state
@@ -893,20 +881,25 @@ struct NotebookModel: ModelProtocol {
         fallback: String
     ) -> Update<NotebookModel> {
         // If slashlink pointing to other sphere, dispatch action for viewer.
-        // If slashlink pointing to our sphere, dispatch action for editor.
+        // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
+        // to find in local or sphere content and then push editor detail.
         switch slashlink.petnamePart {
         case .some:
             return update(
                 state: state,
-                action: .findAndPushViewDetail(
-                    slashlink: slashlink
+                action: .pushDetail(
+                    .viewer(
+                        MemoViewerDetailDescription(
+                            address: slashlink.toPublicMemoAddress()
+                        )
+                    )
                 ),
                 environment: environment
             )
         case .none:
             return update(
                 state: state,
-                action: .findAndPushEditDetail(
+                action: .findAndPushMemoEditorDetail(
                     slug: slashlink.toSlug(),
                     fallback: fallback
                 ),
@@ -916,7 +909,7 @@ struct NotebookModel: ModelProtocol {
     }
     
     /// Find and push a specific detail for slug
-    static func findAndPushEditDetail(
+    static func findAndPushMemoEditorDetail(
         state: NotebookModel,
         environment: AppEnvironment,
         slug: Slug,
@@ -935,16 +928,6 @@ struct NotebookModel: ModelProtocol {
             ),
             environment: environment
         )
-    }
-    
-    /// Find and push a specific detail for slug
-    static func findAndPushViewDetail(
-        state: NotebookModel,
-        environment: AppEnvironment,
-        slashlink: Slashlink
-    ) -> Update<NotebookModel> {
-        logger.debug("NOT YET IMPLEMENTED")
-        return Update(state: state)
     }
 
     /// Request detail for a random entry

@@ -26,6 +26,8 @@ enum MemoDetailDescription: Hashable {
 }
 
 extension MemoDetailDescription {
+    /// Create a detail description from an address and additional data.
+    /// Returns the best Memo Detail type for data provided.
     static func from(
         address: MemoAddress?,
         fallback: String,
