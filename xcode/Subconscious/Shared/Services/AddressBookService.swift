@@ -35,8 +35,8 @@ class AddressBookService {
                     return self.getPetnameAsync(petname: f)
                         .map { did -> AddressBookEntry? in
                             guard let did = did else { return nil }
-                            // TODO: hardcoded dog-pfp
-                            return AddressBookEntry(pfp: Image("dog-pfp"), petname: f, did: did)
+                            // TODO: hardcoded pfp
+                            return AddressBookEntry(pfp: Image("pfp-dog"), petname: f, did: did)
                         }
                         .compactMap { $0 }
                 })
