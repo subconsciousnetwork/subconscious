@@ -264,7 +264,6 @@ public final class SphereFS: SphereProtocol {
         })
     }
     
-    // TODO: Do these belong on SphereFS?
     public func getPetname(petname: String) throws -> String {
         throw NoosphereError.foreignError("Not Implemented: getPetname")
         
