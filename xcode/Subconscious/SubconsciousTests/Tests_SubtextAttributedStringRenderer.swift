@@ -10,9 +10,9 @@ import XCTest
 
 final class Tests_SubtextAttributedStringRendererToURL: XCTestCase {
     func testSubSlashlinkToURL() throws {
-        let link = SubSlashlinkURL(
+        let link = SubSlashlinkLink(
             slashlink: Slashlink("@here/lo-and-behold")!,
-            title: "Lo! And Behold"
+            text: "Lo! And Behold"
         )
         
         guard let url = link.toURL() else {
@@ -35,13 +35,13 @@ final class Tests_SubtextAttributedStringRendererToURL: XCTestCase {
             "@here/lo-and-behold"
         )
         XCTAssertEqual(
-            components.firstQueryValueWhere(name: "title"),
+            components.firstQueryValueWhere(name: "text"),
             "Lo! And Behold"
         )
     }
     
     func testSubSlashlinkFromURL() throws {
-        let url = URL(string: "sub://slashlink?slashlink=@foo/bar&title=Bar")!
+        let url = URL(string: "sub://slashlink?slashlink=@foo/bar&text=Bar")!
         
         guard let link = url.toSubSlashlinkURL() else {
             XCTFail("Failed to construct SubSlashlinkURL from URL")
@@ -49,8 +49,24 @@ final class Tests_SubtextAttributedStringRendererToURL: XCTestCase {
         }
         
         XCTAssertEqual(link.slashlink.description, "@foo/bar")
-        XCTAssertEqual(link.title, "Bar")
+        XCTAssertEqual(link.text, "Bar")
     }
     
+    func testSubSlashlinkFallbackWithText() throws {
+        let link = SubSlashlinkLink(
+            slashlink: Slashlink("@here/lo-and-behold")!,
+            text: "Lo! And Behold"
+        )
+        
+        XCTAssertEqual(link.fallback, "Lo! And Behold")
+    }
     
+    func testSubSlashlinkFallbackWithoutText() throws {
+        let link = SubSlashlinkLink(
+            slashlink: Slashlink("@here/lo-and-behold")!,
+            text: nil
+        )
+        
+        XCTAssertEqual(link.fallback, "Lo and behold")
+    }
 }

@@ -40,7 +40,7 @@ struct MemoEditorDetailView: View {
         notify(
             .requestFindDetail(
                 slashlink: sub.slashlink,
-                fallback: sub.title
+                fallback: sub.fallback
             )
         )
         return false
@@ -176,7 +176,7 @@ struct MemoEditorDetailView: View {
             notify(
                 .requestFindDetail(
                     slashlink: link.slashlink,
-                    fallback: link.title
+                    fallback: link.fallback
                 )
             )
             return .handled

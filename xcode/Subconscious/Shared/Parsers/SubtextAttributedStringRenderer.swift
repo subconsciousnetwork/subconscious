@@ -9,26 +9,46 @@ import SwiftUI
 
 /// A type that can be encoded and decoded to `sub://slashlink` URLs.
 /// Used by `SubtextAttributedStringRenderer`.
-struct SubSlashlinkURL {
+struct SubSlashlinkLink {
+    /// Link address
     var slashlink: Slashlink
-    var title: String
-    
+    /// Link text
+    var text: String?
+
+    /// Get fallback content from SlashlinkURL
+    /// Uses text if present, otherwise derives from slashlink.
+    var fallback: String {
+        text ?? slashlink.toSlug().toTitle()
+    }
+
     /// Create a Subconscious app-specific URL encoding entry title and slug
     func toURL() -> URL? {
         var components = URLComponents()
         components.scheme = "sub"
         components.host = "slashlink"
-        components.queryItems = [
-            URLQueryItem(name: "slashlink", value: slashlink.description),
-            URLQueryItem(name: "title", value: title),
-        ]
+        var query: [URLQueryItem] = []
+        query.append(
+            URLQueryItem(
+                name: "slashlink",
+                value: slashlink.description
+            )
+        )
+        if let text = text {
+            query.append(
+                URLQueryItem(
+                    name: "text",
+                    value: text
+                )
+            )
+        }
+        components.queryItems = query
         return components.url
     }
 }
 
 extension URL {
     /// Convert to internal `sub://slashlink` URL.
-    func toSubSlashlinkURL() -> SubSlashlinkURL? {
+    func toSubSlashlinkURL() -> SubSlashlinkLink? {
         guard self.scheme == "sub" && self.host == "slashlink" else {
             return nil
         }
@@ -49,12 +69,11 @@ extension URL {
             return nil
         }
 
-        let titleQuery = components.firstQueryValueWhere(name: "title")
-        let title = titleQuery ?? slashlink.toSlug().toTitle()
+        let text = components.firstQueryValueWhere(name: "text")
 
-        return SubSlashlinkURL(
+        return SubSlashlinkLink(
             slashlink: slashlink,
-            title: title
+            text: text
         )
     }
 }
@@ -63,13 +82,13 @@ extension URL {
 /// Instances of this struct can customize rendering logic by
 /// overriding delegate methods.
 struct SubtextAttributedStringRenderer {
-    static func wikilinkToURL(_ string: String) -> URL? {
-        guard let slug = Slug(formatting: string) else {
+    static func wikilinkToURL(_ text: String) -> URL? {
+        guard let slug = Slug(formatting: text) else {
             return nil
         }
-        let sub = SubSlashlinkURL(
+        let sub = SubSlashlinkLink(
             slashlink: slug.toSlashlink(),
-            title: string
+            text: text
         )
         return sub.toURL()
     }
@@ -78,7 +97,7 @@ struct SubtextAttributedStringRenderer {
         guard let slashlink = Slashlink(string) else {
             return nil
         }
-        let sub = SubSlashlinkURL(slashlink: slashlink, title: "")
+        let sub = SubSlashlinkLink(slashlink: slashlink)
         return sub.toURL()
     }
     
