@@ -60,14 +60,27 @@ struct NotebookNavigationView: View {
                     }
                 }
             }
-            .navigationDestination(for: MemoEditorDetailDescription.self) { state in
-                MemoEditorDetailView(
-                    description: state,
-                    notify: Address.forward(
-                        send: store.send,
-                        tag: NotebookAction.tag
+            .navigationDestination(
+                for: MemoDetailDescription.self
+            ) { detail in
+                switch detail {
+                case .editor(let description):
+                    MemoEditorDetailView(
+                        description: description,
+                        notify: Address.forward(
+                            send: store.send,
+                            tag: NotebookAction.tag
+                        )
                     )
-                )
+                case .viewer(let description):
+                    MemoViewerDetailView(
+                        description: description,
+                        notify: Address.forward(
+                            send: store.send,
+                            tag: NotebookAction.tag
+                        )
+                    )
+                }
             }
             .navigationTitle("Notes")
             .navigationBarTitleDisplayMode(.inline)

@@ -94,7 +94,7 @@ enum NotebookAction {
     
     /// Set search view presented
     case setSearchPresented(Bool)
-
+    
     /// Refresh the state of all lists and child components by reloading
     /// from database. This also sets searches to their zero-query state.
     case refreshLists
@@ -122,18 +122,18 @@ enum NotebookAction {
     case deleteEntry(MemoAddress?)
     case failDeleteEntry(String)
     case succeedDeleteEntry(MemoAddress)
-
+    
     /// Entry was saved
     case succeedSaveEntry(slug: MemoAddress, modified: Date)
-
+    
     /// Move entry succeeded. Lifecycle action.
     case succeedMoveEntry(from: MemoAddress, to: MemoAddress)
     /// Merge entry succeeded. Lifecycle action.
     case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)
-
+    
     /// Audience was changed for address
     case succeedUpdateAudience(MoveReceipt)
-
+    
     //  Search
     /// Hit submit ("go") while focused on search field
     case submitSearch(String)
@@ -143,8 +143,8 @@ enum NotebookAction {
     case activatedSuggestion(Suggestion)
     
     /// Set entire navigation stack
-    case setDetails([MemoEditorDetailDescription])
-
+    case setDetails([MemoDetailDescription])
+    
     /// Find a detail a given slashlink.
     /// If slashlink has a peer part, this will request
     /// a detail for 3p content.
@@ -154,22 +154,22 @@ enum NotebookAction {
         slashlink: Slashlink,
         fallback: String
     )
-
+    
     /// Find a detail for content that belongs to us.
     /// Detail could exist in either local or sphere content.
     case findAndPushEditDetail(
         slug: Slug,
         fallback: String
     )
-
+    
     /// Find a detail for content that belongs to us.
     /// Detail could exist in either local or sphere content.
     case findAndPushViewDetail(
         slashlink: Slashlink
     )
-
+    
     /// Push detail onto navigation stack
-    case pushDetail(MemoEditorDetailDescription)
+    case pushDetail(MemoDetailDescription)
     
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
@@ -179,10 +179,18 @@ enum NotebookAction {
         .search(.setQuery(query))
     }
     
-    private static func generateScratchFallback(date: Date) -> String {
-        let formatter = DateFormatter.yyyymmdd()
-        let yyyymmdd = formatter.string(from: date)
-        return "[[\(yyyymmdd)]]"
+    /// Synonym for `.pushDetail` that wraps editor detail in `.editor()`
+    static func pushDetail(
+        _ detail: MemoEditorDetailDescription
+    ) -> Self {
+        .pushDetail(.editor(detail))
+    }
+    
+    /// Synonym for `.pushDetail` that wraps viewer detail in `.viewer()`
+    static func pushDetail(
+        _ detail: MemoViewerDetailDescription
+    ) -> Self {
+        .pushDetail(.viewer(detail))
     }
 }
 
@@ -261,6 +269,18 @@ extension NotebookAction {
             return .succeedUpdateAudience(receipt)
         }
     }
+    
+    static func tag(_ action: MemoViewerDetailNotification) -> Self {
+        switch action {
+        case let .requestDetail(address, fallback):
+            return .pushDetail(
+                MemoEditorDetailDescription(
+                    address: address,
+                    fallback: fallback
+                )
+            )
+        }
+    }
 }
 
 extension NotebookAction {
@@ -314,7 +334,7 @@ struct NotebookModel: ModelProtocol {
     )
     
     /// Contains notebook detail panels
-    var details: [MemoEditorDetailDescription] = []
+    var details: [MemoDetailDescription] = []
     
     /// Count of entries
     var entryCount: Int? = nil
@@ -745,13 +765,18 @@ struct NotebookModel: ModelProtocol {
         var model = state
 
         /// Find all instances of this model in the stack and update them
-        model.details = state.details.map({ (detail: MemoEditorDetailDescription) in
+        model.details = state.details.map({ (detail: MemoDetailDescription) in
             guard detail.address == from else {
                 return detail
             }
-            var model = detail
-            model.address = to
-            return model
+            switch detail {
+            case .editor(var description):
+                description.address = to
+                return .editor(description)
+            case .viewer(var description):
+                description.address = to
+                return .viewer(description)
+            }
         })
         
         return update(
@@ -772,13 +797,18 @@ struct NotebookModel: ModelProtocol {
         var model = state
 
         /// Find all instances of child and update them to become parent
-        model.details = state.details.map({ (detail: MemoEditorDetailDescription) in
+        model.details = state.details.map({ (detail: MemoDetailDescription) in
             guard detail.address == child else {
                 return detail
             }
-            var model = detail
-            model.address = parent
-            return model
+            switch detail {
+            case .editor(var description):
+                description.address = parent
+                return .editor(description)
+            case .viewer(var description):
+                description.address = parent
+                return .viewer(description)
+            }
         })
         
         return update(
@@ -798,16 +828,21 @@ struct NotebookModel: ModelProtocol {
         var model = state
 
         /// Find all instances of this model in the stack and update them
-        model.details = state.details.map({ (detail: MemoEditorDetailDescription) in
+        model.details = state.details.map({ (detail: MemoDetailDescription) in
             guard let address = detail.address else {
                 return detail
             }
             guard address.slug == receipt.to.slug else {
                 return detail
             }
-            var model = detail
-            model.address = receipt.to
-            return model
+            switch detail {
+            case .editor(var description):
+                description.address = receipt.to
+                return .editor(description)
+            case .viewer(var description):
+                description.address = receipt.to
+                return .viewer(description)
+            }
         })
         
         return update(

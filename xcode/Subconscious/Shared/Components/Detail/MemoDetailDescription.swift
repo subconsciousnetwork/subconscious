@@ -12,4 +12,15 @@ import Foundation
 enum MemoDetailDescription: Hashable {
     case editor(MemoEditorDetailDescription)
     case viewer(MemoViewerDetailDescription)
+    
+    /// Get address for description, if any.
+    /// - Returns MemoAddress or nil
+    var address: MemoAddress? {
+        switch self {
+        case .editor(let description):
+            return description.address
+        case .viewer(let description):
+            return description.address
+        }
+    }
 }

@@ -15,7 +15,7 @@ struct MemoViewerDetailView: View {
     )
 
     var description: MemoViewerDetailDescription
-    var notify: (MemoViewerNotification) -> Void
+    var notify: (MemoViewerDetailNotification) -> Void
 
     var body: some View {
         VStack {
@@ -26,8 +26,8 @@ struct MemoViewerDetailView: View {
 
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
-enum MemoViewerNotification: Hashable {
-    
+enum MemoViewerDetailNotification: Hashable {
+    case requestDetail(address: MemoAddress, fallback: String)
 }
 
 /// A description of a memo detail that can be used to set up the memo
