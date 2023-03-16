@@ -61,7 +61,10 @@ final class Tests_DataService: XCTestCase {
         )
         
         let local = HeaderSubtextMemoStore(store: files)
-        let addressBook = AddressBookService(noosphere: noosphere)
+        let addressBook = AddressBookService(
+            noosphere: noosphere,
+            database: database
+        )
         
         return DataService(
             noosphere: noosphere,
@@ -223,7 +226,10 @@ final class Tests_DataService: XCTestCase {
                 gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite"),
                 sphereIdentity: sphereIdentity
             )
-            let addressBook = AddressBookService(noosphere: noosphere)
+            let addressBook = AddressBookService(
+                noosphere: noosphere,
+                database: database
+            )
 
             let data = DataService(
                 noosphere: noosphere,
@@ -261,7 +267,10 @@ final class Tests_DataService: XCTestCase {
             gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite"),
             sphereIdentity: sphereIdentity
         )
-        let addressBook = AddressBookService(noosphere: noosphere)
+        let addressBook = AddressBookService(
+            noosphere: noosphere,
+            database: database
+        )
 
         let data = DataService(
             noosphere: noosphere,
