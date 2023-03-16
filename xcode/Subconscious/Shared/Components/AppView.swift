@@ -962,7 +962,7 @@ struct AppEnvironment {
             migrations: Config.migrations
         )
         
-        let addresBook = AddressBookService(noosphere: noosphere)
+        let addresBook = AddressBookService(noosphere: noosphere, database: databaseService)
         
         self.data = DataService(
             noosphere: noosphere,

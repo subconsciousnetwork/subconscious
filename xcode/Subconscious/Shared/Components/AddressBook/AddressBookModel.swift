@@ -70,6 +70,7 @@ struct DidFieldCursor: CursorProtocol {
 enum AddressBookAction {
     case present(_ isPresented: Bool)
     
+    case refetch
     case populate([AddressBookEntry])
     
     case requestFollow
@@ -123,14 +124,17 @@ struct AddressBookModel: ModelProtocol {
                 }
             }
             
+            return update(state: model, action: .refetch, environment: environment)
+            
+        case .refetch:
             let fx: Fx<AddressBookAction> =
-                environment.data.addressBook.listEntries()
+                environment.data.addressBook.listEntries(refetch: true)
                 .map({ follows in
                     AddressBookAction.populate(follows)
                 })
                 .eraseToAnyPublisher()
             
-            return Update(state: model, fx: fx)
+            return Update(state: state, fx: fx)
             
         case .populate(let follows):
             var model = state
@@ -140,6 +144,7 @@ struct AddressBookModel: ModelProtocol {
         case .presentFollowUserForm(let isPresented):
             var model = state
             
+            model.failFollowErrorMessage = nil
             model.isFollowUserFormPresented = isPresented
             
             return update(
@@ -165,8 +170,6 @@ struct AddressBookModel: ModelProtocol {
                 environment: FormFieldEnvironment()
             )
             
-       
-            
         case .requestFollow:
             return update(
                 state: state,
@@ -189,7 +192,7 @@ struct AddressBookModel: ModelProtocol {
             
             let fx: Fx<AddressBookAction> =
                 environment.data.addressBook
-                .setPetnameAsync(did: did, petname: petname)
+                .followUserAsync(did: did, petname: petname)
                 .map({ _ in
                     AddressBookAction.succeedFollow(did: did, petname: petname)
                 })
@@ -209,7 +212,7 @@ struct AddressBookModel: ModelProtocol {
             model.isFollowUserFormPresented = false
             model.follows.append(entry)
             
-            return Update(state: model)
+            return update(state: model, action: .refetch, environment: environment)
             
         case .failFollow(error: let error):
             var model = state
@@ -219,7 +222,7 @@ struct AddressBookModel: ModelProtocol {
         case .requestUnfollow(petname: let petname):
             let fx: Fx<AddressBookAction> =
                 environment.data.addressBook
-                .unsetPetnameAsync(petname: petname)
+                .unfollowUserAsync(petname: petname)
                 .map({ _ in
                     AddressBookAction.succeedUnfollow(petname: petname)
                 })
@@ -237,7 +240,7 @@ struct AddressBookModel: ModelProtocol {
             model.follows.removeAll { f in
                 f.petname == petname
             }
-            return Update(state: model)
+            return update(state: model, action: .refetch, environment: environment)
             
         case .failUnfollow(error: let error):
             var model = state
