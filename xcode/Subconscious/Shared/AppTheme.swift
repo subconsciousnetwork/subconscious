@@ -113,7 +113,7 @@ extension Color {
     static let brandBgSlate = Color(red: 57/255, green: 50/255, blue: 84/255, opacity: 1) // #393254
     
     // Eyeballed to match brandmark
-    static let brandLightMarkGradient = [
+    static let brandDarkMarkGradient = [
         Gradient.Stop(color: Color.brandMarkPink, location: 0),
         Gradient.Stop(color: Color.brandMarkViolet, location: 0.50),
         Gradient.Stop(color: Color.brandMarkViolet, location: 0.60),
@@ -121,7 +121,7 @@ extension Color {
     ]
     
     // Eyeballed to match brandmark
-    static let brandDarkMarkGradient = [
+    static let brandLightMarkGradient = [
         Gradient.Stop(color: Color.brandMarkRed, location: 0),
         Gradient.Stop(color: Color.brandMarkPurple, location: 0.50),
         Gradient.Stop(color: Color.brandMarkPurple, location: 0.60),
@@ -137,7 +137,7 @@ extension Color {
     }
     
     static func brandText(_ colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? Color.white : Color.brandBgSlate
+        colorScheme == .dark ? Color.brandBgBlack : Color.white
     }
     
     static func brandDropShadow(_ colorScheme: ColorScheme) -> Color {
