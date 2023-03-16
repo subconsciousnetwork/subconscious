@@ -873,7 +873,6 @@
 				B58FE48B28DED9B600E000CC /* StoryCombo.swift */,
 				B8A59D6828B692900010DB2F /* StoryPrompt.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
-				B8CBAFAF2996A7D50079107E /* UnqualifiedLink.swift */,
 				B59D556229BBFF56007915E2 /* FormField.swift */,
 			);
 			path = Models;
@@ -1433,7 +1432,7 @@
 				B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B822F18D27C9C0AB00943C6B /* CountChip.swift in Sources */,
 				B87288DE299AB02400EF7E07 /* SphereFS.swift in Sources */,
-				B8879EAC26F944DA00A0B4FF /* Detail.swift in Sources */,
+				B8879EAC26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */,
 				B5F6ADC929C02F4A00690DE4 /* AddressBookService.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */,
 				B8925B2F29C23017001F9503 /* MemoViewerDetailView.swift in Sources */,
