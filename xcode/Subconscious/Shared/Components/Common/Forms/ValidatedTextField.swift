@@ -12,7 +12,7 @@ import Combine
 struct ValidatedTextField: View {
     var placeholder: String
     @Binding var text: String
-    var onFocusChanged: ((Bool) -> Void)?
+    var onFocusChanged: (Bool) -> Void = { _ in}
     var caption: String
     var hasError: Bool = false
     @FocusState var focused: Bool
@@ -39,7 +39,7 @@ struct ValidatedTextField: View {
                     .animation(.default, value: hasError)
                 }
                 .onChange(of: focused) { focused in
-                    onFocusChanged?(focused)
+                    onFocusChanged(focused)
                 }
             }
             Text(caption)
