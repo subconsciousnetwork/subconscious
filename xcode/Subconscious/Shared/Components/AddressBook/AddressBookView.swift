@@ -36,33 +36,45 @@ struct AddressBookView: View {
                                 )
                                 .frame(maxWidth: .infinity)
                                 .swipeActions {
-                                    Button("Unfollow", role: .destructive) {
-                                        send(.unfollow(did: user.did))
+                                    Button("Unfollow") {
+                                        send(.requestUnfollow(petname: user.petname))
                                     }
                                 }
                             }
                         }
                     }
                 }
+                // Basic error visibility
+                if let msg = state.failUnfollowErrorMessage {
+                    HStack {
+                        Image(systemName: "exclamationmark.circle")
+                            .frame(width: 24, height: 22)
+                            .padding(.horizontal, 8)
+                            .foregroundColor(.red)
+                            .background(Color.clear)
+                        Text(msg)
+                            .foregroundColor(.red)
+                    }
+                }
+                
                 if let did = state.did {
                     Section(header: Text("My DID")) {
                         DidView(did: did)
                     }
                 }
-                
             }
             .navigationTitle("Address Book")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
+                    Button("Close", role: .cancel) {
                         AddressBookModel.logger.debug("Close Address Book")
                         send(.present(false))
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    NavigationLink(
-                        destination: {
-                            FollowUserView(state: state, send: send)
+                    Button(
+                        action: {
+                            send(.presentFollowUserForm(true))
                         },
                         label: {
                             Image(systemName: "person.badge.plus")
@@ -71,33 +83,31 @@ struct AddressBookView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(
+                isPresented: Binding(
+                    get: { state.isFollowUserFormPresented },
+                    send: send,
+                    tag: AddressBookAction.presentFollowUserForm
+                )
+            ) {
+                FollowUserView(state: state, send: send)
+            }
         }
     }
 }
 
 struct AddressBook_Previews: PreviewProvider {
-    struct TestView: View {
-        @StateObject private var store = Store(
+    static var previews: some View {
+        AddressBookView(
             state: AddressBookModel(
                 follows: [
                     AddressBookEntry(pfp: Image("pfp-dog"), petname: Petname("ben")!, did: Did(  "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
                     AddressBookEntry(pfp: Image("sub_logo_light"), petname: Petname("bob")!, did: Did("did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
                     AddressBookEntry(pfp: Image("sub_logo_dark"), petname: Petname("alice")!, did: Did("did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
-                ]
+                ],
+                isFollowUserFormPresented: false // Toggle to test sheet
             ),
-            action: .present(true),
-            environment: AddressBookEnvironment(noosphere: PlaceholderSphereIdentityProvider())
+            send: { action in }
         )
-
-        var body: some View {
-            AddressBookView(
-                state: store.state,
-                send: store.send
-            )
-        }
-    }
-
-    static var previews: some View {
-        TestView()
     }
 }

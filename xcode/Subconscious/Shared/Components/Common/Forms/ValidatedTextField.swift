@@ -6,14 +6,26 @@
 //
 
 import SwiftUI
+import Combine
 
 /// A text field that comes with help text and a validation flag
 struct ValidatedTextField: View {
     var placeholder: String
     @Binding var text: String
+    var onFocusChanged: (Bool) -> Void = { _ in}
     var caption: String
-    var isValid: Bool = true
-
+    var hasError: Bool = false
+    @FocusState var focused: Bool
+    
+    var backgroundColor = Color.background
+    
+    /// When appearing in a form the background colour of a should change
+    func formField() -> Self {
+        var this = self
+        this.backgroundColor = Color.formFieldBackground
+        return this
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
             HStack {
@@ -21,24 +33,28 @@ struct ValidatedTextField: View {
                     placeholder,
                     text: $text
                 )
+                .focused($focused)
                 .overlay(alignment: .trailing) {
                     VStack {
                         Image(systemName: "exclamationmark.circle")
                             .frame(width: 24, height: 22)
                             .padding(.horizontal, 8)
                             .foregroundColor(.red)
-                            .background(Color.background)
+                            .background(backgroundColor)
                     }
                     .padding(.trailing, 1)
-                    .opacity(isValid ? 0 : 1)
-                    .animation(.default, value: isValid)
+                    .opacity(hasError ? 1 : 0)
+                    .animation(.default, value: hasError)
+                }
+                .onChange(of: focused) { focused in
+                    onFocusChanged(focused)
                 }
             }
             Text(caption)
                 .foregroundColor(
-                    isValid ? Color.secondary : Color.red
+                    hasError ? Color.red : Color.secondary
                 )
-                .animation(.default, value: isValid)
+                .animation(.default, value: hasError)
                 .font(.caption)
         }
     }
@@ -56,7 +72,7 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 placeholder: "nickname",
                 text: .constant(""),
                 caption: "Lowercase letters and numbers only.",
-                isValid: false
+                hasError: true
             )
             ValidatedTextField(
                 placeholder: "nickname",
@@ -68,9 +84,28 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 placeholder: "nickname",
                 text: .constant("A very long run of text to test how this interacts with the icon"),
                 caption: "Lowercase letters and numbers only.",
-                isValid: false
+                hasError: true
             )
             .textFieldStyle(.roundedBorder)
+            
+            
+            Spacer()
+            
+            Form {
+                ValidatedTextField(
+                    placeholder: "nickname",
+                    text: .constant(""),
+                    caption: "Lowercase letters and numbers only."
+                )
+                .formField()
+                ValidatedTextField(
+                    placeholder: "nickname",
+                    text: .constant(""),
+                    caption: "Lowercase letters and numbers only.",
+                    hasError: true
+                )
+                .formField()
+            }
         }
         .padding()
     }

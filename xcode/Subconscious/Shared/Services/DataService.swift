@@ -38,6 +38,7 @@ struct MoveReceipt: Hashable {
 /// Wraps both database and source-of-truth store, providing data
 /// access methods for the app.
 struct DataService {
+    var addressBook: AddressBookService
     var noosphere: NoosphereService
     var database: DatabaseService
     var local: HeaderSubtextMemoStore
@@ -46,11 +47,13 @@ struct DataService {
     init(
         noosphere: NoosphereService,
         database: DatabaseService,
-        local: HeaderSubtextMemoStore
+        local: HeaderSubtextMemoStore,
+        addressBook: AddressBookService
     ) {
         self.database = database
         self.noosphere = noosphere
         self.local = local
+        self.addressBook = addressBook
         self.logger = Logger(
             subsystem: Config.default.rdns,
             category: "DataService"

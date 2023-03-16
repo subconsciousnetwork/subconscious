@@ -239,4 +239,40 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
             try self.sphere().changes(since)
         }
     }
+    
+    func getPetname(petname: String) throws -> String {
+        try queue.sync {
+            try self.sphere().getPetname(petname: petname)
+        }
+    }
+    
+    func setPetname(did: String, petname: String) throws {
+        try queue.sync {
+            try self.sphere().setPetname(did: did, petname: petname)
+        }
+    }
+    
+    func unsetPetname(petname: String) throws {
+        try queue.sync {
+            try self.sphere().unsetPetname(petname: petname)
+        }
+    }
+    
+    func resolvePetname(petname: String) throws -> String {
+        try queue.sync {
+            try self.sphere().resolvePetname(petname: petname)
+        }
+    }
+    
+    func listPetnames() throws -> [String] {
+        try queue.sync {
+            try self.sphere().listPetnames()
+        }
+    }
+    
+    func getPetnameChanges(sinceCid: String) throws -> [String] {
+        try queue.sync {
+            try self.sphere().getPetnameChanges(sinceCid: sinceCid)
+        }
+    }
 }

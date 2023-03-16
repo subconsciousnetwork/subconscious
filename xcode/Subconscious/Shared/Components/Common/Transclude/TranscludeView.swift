@@ -36,7 +36,7 @@ struct TranscludeView: View {
 struct TranscludeView_Previews: PreviewProvider {
     static var previews: some View {
         TranscludeView(
-            pfp: Image("dog-pfp"),
+            pfp: Image("pfp-dog"),
             petname: "@doge",
             slashlink: "/thoughts",
             excerpt: "Thoughts of Doge. Food food park park park run run play run fetch ball run water shlorp shlorp shlorp dog bork bork bork home sleep sleep dream sleep"

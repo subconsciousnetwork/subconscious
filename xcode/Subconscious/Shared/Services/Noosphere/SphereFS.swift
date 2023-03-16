@@ -264,6 +264,73 @@ public final class SphereFS: SphereProtocol {
         })
     }
     
+    public func getPetname(petname: String) throws -> String {
+        throw NoosphereError.foreignError("Not Implemented: getPetname")
+        
+//        return try Noosphere.callWithError(
+//            ns_sphere_petname_get,
+//            noosphere.noosphere,
+//            sphere,
+//            petname
+//        )
+    }
+    
+    public func setPetname(did: String, petname: String) throws {
+        throw NoosphereError.foreignError("Not Implemented: setPetname")
+        
+//        return try Noosphere.callWithError(
+//            ns_sphere_petname_set,
+//            noosphere.noosphere,
+//            sphere,
+//            petname,
+//            did
+//        )
+    }
+    
+    public func unsetPetname(petname: String) throws {
+        throw NoosphereError.foreignError("Not Implemented: unsetPetname")
+        
+//        return try Noosphere.callWithError(
+//            ns_sphere_petname_set,
+//            noosphere.noosphere,
+//            sphere,
+//            petname,
+//            nil
+//        )
+    }
+    
+    public func resolvePetname(petname: String) throws -> String {
+        throw NoosphereError.foreignError("Not Implemented: resolvePetname")
+        
+//        return try Noosphere.callWithError(
+//            ns_sphere_petname_resolve,
+//            noosphere.noosphere,
+//            sphere,
+//            petname
+//        )
+    }
+    
+    public func listPetnames() throws -> [String] {
+        throw NoosphereError.foreignError("Not Implemented: listPetnames")
+        
+//        return try Noosphere.callWithError(
+//            ns_sphere_petname_list,
+//            noosphere.noosphere,
+//            sphere
+//        )
+    }
+    
+    public func getPetnameChanges(sinceCid: String) throws -> [String] {
+        throw NoosphereError.foreignError("Not Implemented: getPetnameChanges")
+        
+//        return try Noosphere.callWithError(
+//            ns_sphere_petname_list,
+//            noosphere.noosphere,
+//            sphere,
+//            sinceCid
+//        )
+    }
+    
     /// Save outstanding writes and return new Sphere version
     @discardableResult public func save() throws -> String {
         try Noosphere.callWithError(

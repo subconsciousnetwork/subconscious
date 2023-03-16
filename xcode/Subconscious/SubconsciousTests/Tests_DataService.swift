@@ -61,11 +61,13 @@ final class Tests_DataService: XCTestCase {
         )
         
         let local = HeaderSubtextMemoStore(store: files)
+        let addressBook = AddressBookService(noosphere: noosphere)
         
         return DataService(
             noosphere: noosphere,
             database: database,
-            local: local
+            local: local,
+            addressBook: addressBook
         )
     }
     
@@ -221,11 +223,13 @@ final class Tests_DataService: XCTestCase {
                 gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite"),
                 sphereIdentity: sphereIdentity
             )
+            let addressBook = AddressBookService(noosphere: noosphere)
 
             let data = DataService(
                 noosphere: noosphere,
                 database: database,
-                local: local
+                local: local,
+                addressBook: addressBook
             )
             
             versionX = try data.noosphere.version()
@@ -257,11 +261,13 @@ final class Tests_DataService: XCTestCase {
             gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite"),
             sphereIdentity: sphereIdentity
         )
+        let addressBook = AddressBookService(noosphere: noosphere)
 
         let data = DataService(
             noosphere: noosphere,
             database: database,
-            local: local
+            local: local,
+            addressBook: addressBook
         )
         let versionY = try data.noosphere.version()
         

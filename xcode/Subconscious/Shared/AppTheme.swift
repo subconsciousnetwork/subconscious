@@ -76,6 +76,9 @@ extension Color {
     static let secondaryBackground = SwiftUI.Color(
         uiColor: UIColor.secondarySystemBackground
     )
+    static let formFieldBackground = SwiftUI.Color(
+        uiColor: UIColor.secondarySystemGroupedBackground
+    )
     static let backgroundPressed = SwiftUI.Color(UIColor.systemFill)
     static let inputBackground = SwiftUI.Color(uiColor: .secondarySystemFill)
     static let primaryButtonBackground = Color.accentColor.opacity(0.2)
