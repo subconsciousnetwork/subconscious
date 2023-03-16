@@ -320,21 +320,6 @@ public final class SphereFS: SphereProtocol {
         return String(cString: did)
     }
     
-    private static func makeStringArray(cArray: slice_boxed_char_ptr_t) -> [String] {
-        let name_count = cArray.len
-        guard var pointer = cArray.ptr else {
-            return []
-        }
-
-        var result: [String] = []
-        for _ in 0..<name_count {
-            let item = String(cString: pointer.pointee!)
-            result.append(item)
-            pointer += 1;
-        }
-        return result
-    }
-    
     public func listPetnames() throws -> [String] {
         let petnames = try Noosphere.callWithError(
             ns_sphere_petname_list,
