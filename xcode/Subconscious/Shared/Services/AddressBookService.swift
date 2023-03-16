@@ -38,7 +38,7 @@ class AddressBookService {
                             // TODO: hardcoded pfp
                             return AddressBookEntry(pfp: Image("pfp-dog"), petname: f, did: did)
                         }
-                        .compactMap { $0 }
+                        .compactMap { value in value }
                 })
                 .collect()
                 .eraseToAnyPublisher()
