@@ -430,7 +430,7 @@ struct DataService {
         }
     }
 
-    /// Given a slug, get back a resolved MemoAddress for own sphere.
+    /// Given a slug, get back a resolved MemoAddress for our own sphere.
     /// If there is public content, that will be returned.
     /// Otherwise, if there is local content, that will be returned.
     func findAddressInOurs(
