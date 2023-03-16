@@ -187,7 +187,8 @@ struct AddressBookModel: ModelProtocol {
                 return Update(state: state)
             }
             
-            let fx: Fx<AddressBookAction> = environment.data.addressBook
+            let fx: Fx<AddressBookAction> =
+                environment.data.addressBook
                 .setPetnameAsync(did: did, petname: petname)
                 .map({ _ in
                     AddressBookAction.succeedFollow(did: did, petname: petname)
@@ -216,7 +217,8 @@ struct AddressBookModel: ModelProtocol {
             return Update(state: model)
             
         case .requestUnfollow(petname: let petname):
-            let fx: Fx<AddressBookAction> = environment.data.addressBook
+            let fx: Fx<AddressBookAction> =
+                environment.data.addressBook
                 .unsetPetnameAsync(petname: petname)
                 .map({ _ in
                     AddressBookAction.succeedUnfollow(petname: petname)
