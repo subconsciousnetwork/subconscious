@@ -13,10 +13,10 @@ struct RoundedTextFieldViewModifier: ViewModifier {
         content
             .textInputAutocapitalization(.sentences)
             .textFieldStyle(.plain)
-            .padding(.horizontal, AppTheme.unit * 3)
-            .padding(.vertical, AppTheme.unit * 2)
+            .padding(.horizontal, Unit.three)
+            .padding(.vertical, Unit.two)
             .background(Color.inputBackground)
-            .cornerRadius(AppTheme.cornerRadius)
-            .frame(height: AppTheme.unit * 9)
+            .cornerRadius(Unit.cornerRadius)
+            .frame(height: Unit.unit * 9)
     }
 }

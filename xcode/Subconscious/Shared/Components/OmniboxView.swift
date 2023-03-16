@@ -16,7 +16,7 @@ struct OmniboxView: View {
             Image(audience: address?.toAudience() ?? defaultAudience)
                 .resizable()
                 .frame(width: 17, height: 17)
-            Spacer(minLength: AppTheme.unit)
+            Spacer(minLength: Unit.unit)
             if let slashlink = address?.toSlashlink() {
                 OmniboxSlashlinkView(
                     petname: slashlink.petnamePart,
@@ -26,7 +26,7 @@ struct OmniboxView: View {
                 Text("Untitled")
                     .foregroundColor(Color.secondary)
             }
-            Spacer(minLength: AppTheme.unit)
+            Spacer(minLength: Unit.unit)
         }
         .transition(.opacity)
         .foregroundColor(.accentColor)
@@ -35,7 +35,7 @@ struct OmniboxView: View {
         .padding(.trailing, 12)
         .frame(height: 34)
         .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+            RoundedRectangle(cornerRadius: Unit.cornerRadius)
                 .stroke(Color.separator, lineWidth: 0.5)
         )
         .frame(minWidth: 100, idealWidth: 240, maxWidth: 240)

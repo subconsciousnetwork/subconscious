@@ -19,7 +19,7 @@ struct DidView: View {
             Spacer()
             ShareLink(item: did.did) {
                 Image(systemName: "square.and.arrow.up")
-                    .padding(AppTheme.unit2)
+                    .padding(Unit.two)
             }
         }
     }

@@ -14,7 +14,7 @@ struct StoryComboView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: AppTheme.unit) {
+            HStack(spacing: Unit.unit) {
                 Text("@bfollington")
                 Text("at")
                     .foregroundColor(Color.secondary)
@@ -24,9 +24,9 @@ struct StoryComboView: View {
             }
             .font(.caption)
             .padding()
-            .frame(height: AppTheme.unit * 11)
+            .frame(height: Unit.unit * 11)
             Divider()
-            VStack(alignment: .leading, spacing: AppTheme.unit4) {
+            VStack(alignment: .leading, spacing: Unit.four) {
                 Text(story.prompt)
                 
                 Button(
@@ -73,7 +73,7 @@ struct StoryComboView: View {
                 Spacer()
             }
             .padding()
-            .frame(height: AppTheme.unit * 15)
+            .frame(height: Unit.unit * 15)
             ThickDividerView()
         }
     }

@@ -17,13 +17,13 @@ struct AddressBookView: View {
         NavigationStack {
             Form {
                 if (state.follows.count == 0) {
-                    VStack(spacing: AppTheme.unit2) {
+                    VStack(spacing: Unit.two) {
                         Image(systemName: "person.3.fill")
                             .foregroundColor(.secondary)
                         Text("You're not following anyone... yet!")
                             .foregroundColor(.secondary)
                     }
-                    .padding(AppTheme.unit2)
+                    .padding(Unit.two)
                     .frame(maxWidth: .infinity, alignment: .center)
                 } else {
                     Section(header: Text("Following")) {

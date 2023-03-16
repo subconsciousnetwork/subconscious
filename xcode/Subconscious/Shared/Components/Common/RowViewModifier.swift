@@ -8,10 +8,10 @@ import SwiftUI
 
 struct RowViewModifier: ViewModifier {
     var insets = EdgeInsets(
-        top: AppTheme.unit3,
-        leading: AppTheme.padding,
-        bottom: AppTheme.unit3,
-        trailing: AppTheme.padding
+        top: Unit.three,
+        leading: Unit.padding,
+        bottom: Unit.three,
+        trailing: Unit.padding
     )
     func body(content: Content) -> some View {
         VStack(spacing: 0) {

@@ -13,7 +13,7 @@ struct MenuButtonView<Icon: View>: View {
     var label: String
 
     var body: some View {
-        HStack(spacing: AppTheme.unit) {
+        HStack(spacing: Unit.unit) {
             icon
                 .font(.system(size: 12))
             Text(label)
@@ -28,10 +28,10 @@ struct MenuButtonView<Icon: View>: View {
         .lineLimit(1)
         .frame(height: 30)
         .padding(
-            .horizontal, AppTheme.unit2
+            .horizontal, Unit.two
         )
         .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+            RoundedRectangle(cornerRadius: Unit.cornerRadius)
                 .stroke(Color.separator, lineWidth: 0.5)
         )
     }

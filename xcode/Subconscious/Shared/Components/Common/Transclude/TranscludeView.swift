@@ -14,7 +14,7 @@ struct TranscludeView: View {
     var excerpt: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit) {
+        VStack(alignment: .leading, spacing: Unit.unit) {
             BylineSmView(
                 pfp: pfp,
                 petname: petname,
@@ -22,11 +22,11 @@ struct TranscludeView: View {
             )
             Text(excerpt)
         }
-        .padding(.vertical, AppTheme.unit3)
-        .padding(.horizontal, AppTheme.unit4)
+        .padding(.vertical, Unit.three)
+        .padding(.horizontal, Unit.four)
         .overlay(
             RoundedRectangle(
-                cornerRadius: AppTheme.cornerRadiusLg
+                cornerRadius: Unit.cornerRadiusLg
             )
             .stroke(Color.separator, lineWidth: 0.5)
         )

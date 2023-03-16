@@ -18,7 +18,7 @@ struct BarButtonStyle: ButtonStyle {
             Spacer()
         }
         .frame(
-            height: AppTheme.unit * 12
+            height: Unit.unit * 12
         )
         .foregroundColor(
             Color.chooseForState(

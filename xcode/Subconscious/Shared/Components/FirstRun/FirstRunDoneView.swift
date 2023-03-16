@@ -14,7 +14,7 @@ struct FirstRunDoneView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                VStack(spacing: AppTheme.unit3) {
+                VStack(spacing: Unit.three) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 96))
                         .foregroundColor(.accentColor)

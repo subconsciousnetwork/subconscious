@@ -15,10 +15,10 @@ struct MetaTableView<Rows: View>: View {
         VStack(alignment: .leading, spacing: 0) {
             content()
         }
-        .cornerRadius(AppTheme.cornerRadiusLg)
+        .cornerRadius(Unit.cornerRadiusLg)
         .clipped()
         .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLg)
+            RoundedRectangle(cornerRadius: Unit.cornerRadiusLg)
                 .stroke(Color.separator, lineWidth: 0.5)
         )
     }
@@ -28,7 +28,7 @@ struct MetaTableRowButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundColor(.accentColor)
-            .frame(minHeight: AppTheme.minTouchSize)
+            .frame(minHeight: Unit.minTouchSize)
             .contentShape(
                 Rectangle()
             )
@@ -52,13 +52,13 @@ struct MetaTableRowView: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: AppTheme.unit2) {
+            HStack(spacing: Unit.two) {
                 icon
-                    .frame(width: AppTheme.icon, height: AppTheme.icon)
+                    .frame(width: Unit.icon, height: Unit.icon)
                     .foregroundColor(Color.accentColor)
                 VStack(spacing: 0) {
                     HStack(spacing: 0) {
-                        VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
+                        VStack(alignment: .leading, spacing: Unit.half) {
                             label
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
@@ -69,13 +69,13 @@ struct MetaTableRowView: View {
                         }
                         Spacer()
                     }
-                    .padding(.vertical, AppTheme.unit2)
+                    .padding(.vertical, Unit.two)
                     if hasDivider {
                         Divider()
                     }
                 }
             }
-            .padding(.leading, AppTheme.unit2)
+            .padding(.leading, Unit.two)
         }
         .buttonStyle(MetaTableRowButtonStyle())
     }

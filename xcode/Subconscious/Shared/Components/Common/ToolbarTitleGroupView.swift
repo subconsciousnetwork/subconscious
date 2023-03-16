@@ -14,14 +14,14 @@ struct ToolbarTitleGroupView: View, Equatable {
     var body: some View {
         HStack {
             Spacer()
-            VStack(spacing: AppTheme.unit) {
+            VStack(spacing: Unit.unit) {
                 title
                     .foregroundColor(Color.primary)
-                    .frame(height: AppTheme.textSize)
+                    .frame(height: Unit.textSize)
                     .lineLimit(1)
                 subtitle
                     .font(.caption)
-                    .frame(height: AppTheme.captionSize)
+                    .frame(height: Unit.captionSize)
                     .foregroundColor(Color.secondary)
                     .lineLimit(1)
             }

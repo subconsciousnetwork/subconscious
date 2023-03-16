@@ -48,8 +48,8 @@ struct EntryListView: View {
                     Color.clear
                         .frame(
                             height: (
-                                AppTheme.fabSize +
-                                (AppTheme.unit * 6)
+                                Unit.fabSize +
+                                (Unit.unit * 6)
                             )
                         )
                         .listRowSeparator(.hidden)
@@ -61,12 +61,12 @@ struct EntryListView: View {
                 }
                 .listStyle(.plain)
             } else {
-                VStack(spacing: AppTheme.unit * 6) {
+                VStack(spacing: Unit.unit * 6) {
                     Spacer()
                     Image(systemName: "sparkles")
                         .font(.system(size: 64))
                     Text("Your Subconscious is empty")
-                    VStack(spacing: AppTheme.unit) {
+                    VStack(spacing: Unit.unit) {
                         Text(
                             "If your mind is empty, it is always ready for anything, it is open to everything. In the beginner's mind there are many possibilities, but in the expert's mind there are few."
                         )
@@ -79,7 +79,7 @@ struct EntryListView: View {
                     // Some extra padding to visually center the group.
                     // The icon is large and rather heavy. This offset
                     // helps prevent the illusion of being off-center.
-                    .padding(.bottom, AppTheme.unit * 24)
+                    .padding(.bottom, Unit.unit * 24)
                     .font(.caption)
                     Spacer()
                 }

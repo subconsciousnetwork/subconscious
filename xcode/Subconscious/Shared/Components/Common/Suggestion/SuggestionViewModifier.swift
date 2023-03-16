@@ -14,9 +14,9 @@ struct SuggestionViewModifier: ViewModifier {
     var height: CGFloat = 56
     var insets: EdgeInsets = EdgeInsets(
         top: 0,
-        leading: AppTheme.tightPadding,
+        leading: Unit.tightPadding,
         bottom: 0,
-        trailing: AppTheme.tightPadding
+        trailing: Unit.tightPadding
     )
 
     func body(content: Content) -> some View {

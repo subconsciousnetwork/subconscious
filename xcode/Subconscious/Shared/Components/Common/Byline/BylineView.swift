@@ -15,7 +15,7 @@ struct BylineView: View {
     var slug: String
     
     var body: some View {
-        HStack(spacing: AppTheme.unit3) {
+        HStack(spacing: Unit.three) {
             ProfilePic(image: pfp)
             VStack(alignment: .leading) {
                 Text(verbatim: name)

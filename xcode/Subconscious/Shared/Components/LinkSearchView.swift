@@ -17,7 +17,7 @@ struct LinkSearchView: View {
     var body: some View {
         VStack(spacing: 0) {
             DragHandleView()
-                .padding(.top, AppTheme.tightPadding)
+                .padding(.top, Unit.tightPadding)
             HStack {
                 SearchTextField(
                     placeholder: "Search links",
@@ -32,9 +32,9 @@ struct LinkSearchView: View {
                     }
                 )
             }
-            .frame(height: AppTheme.unit * 10)
-            .padding(.vertical, AppTheme.tightPadding)
-            .padding(.horizontal, AppTheme.padding)
+            .frame(height: Unit.unit * 10)
+            .padding(.vertical, Unit.tightPadding)
+            .padding(.horizontal, Unit.padding)
             List(suggestions) { suggestion in
                 Button(
                     action: {

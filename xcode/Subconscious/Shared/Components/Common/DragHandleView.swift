@@ -12,8 +12,8 @@ struct DragHandleView: View, Equatable {
         Capsule()
             .foregroundColor(.tertiaryIcon)
             .frame(
-                width: AppTheme.unit * 12,
-                height: AppTheme.unit
+                width: Unit.unit * 12,
+                height: Unit.unit
             )
     }
 }

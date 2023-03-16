@@ -27,7 +27,7 @@ struct ValidatedTextField: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit2) {
+        VStack(alignment: .leading, spacing: Unit.two) {
             HStack {
                 TextField(
                     placeholder,

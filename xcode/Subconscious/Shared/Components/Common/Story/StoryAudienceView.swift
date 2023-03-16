@@ -27,8 +27,8 @@ struct StoryAudienceView: View {
                 }
                 Spacer()
             }
-            .padding(.horizontal, AppTheme.padding)
-            .padding(.vertical, AppTheme.unit)
+            .padding(.horizontal, Unit.padding)
+            .padding(.vertical, Unit.unit)
             Divider()
         }
     }

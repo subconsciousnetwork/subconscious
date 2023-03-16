@@ -15,7 +15,7 @@ struct FirstRunProfileView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                VStack(alignment: .leading, spacing: AppTheme.unit4) {
+                VStack(alignment: .leading, spacing: Unit.four) {
                     ValidatedTextField(
                         placeholder: "nickname",
                         text: Binding(

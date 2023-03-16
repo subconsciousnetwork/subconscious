@@ -14,14 +14,14 @@ struct InlineFormattingBarView: View {
     var onInsertCode: () -> Void
 
     var body: some View {
-        HStack(alignment: .center, spacing: AppTheme.unit4) {
+        HStack(alignment: .center, spacing: Unit.four) {
             Button(
                 action: onInsertWikilink,
                 label: {
                     Image(systemName: "link")
                         .frame(
-                            width: AppTheme.icon,
-                            height: AppTheme.icon
+                            width: Unit.icon,
+                            height: Unit.icon
                         )
                 }
             )
@@ -31,8 +31,8 @@ struct InlineFormattingBarView: View {
                 label: {
                     Image(systemName: "bold")
                         .frame(
-                            width: AppTheme.icon,
-                            height: AppTheme.icon
+                            width: Unit.icon,
+                            height: Unit.icon
                         )
                 }
             )
@@ -42,8 +42,8 @@ struct InlineFormattingBarView: View {
                 label: {
                     Image(systemName: "italic")
                         .frame(
-                            width: AppTheme.icon,
-                            height: AppTheme.icon
+                            width: Unit.icon,
+                            height: Unit.icon
                         )
                 }
             )
@@ -53,8 +53,8 @@ struct InlineFormattingBarView: View {
                 label: {
                     Image(systemName: "chevron.left.forwardslash.chevron.right")
                         .frame(
-                            width: AppTheme.icon,
-                            height: AppTheme.icon
+                            width: Unit.icon,
+                            height: Unit.icon
                         )
                 }
             )

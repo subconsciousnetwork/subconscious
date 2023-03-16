@@ -14,7 +14,7 @@ struct WikilinkBarView: View {
     var max = 1
 
     var body: some View {
-        HStack(alignment: .center, spacing: AppTheme.unit4) {
+        HStack(alignment: .center, spacing: Unit.four) {
             ForEach(links.prefix(max)) { link in
                 Button(
                     action: {

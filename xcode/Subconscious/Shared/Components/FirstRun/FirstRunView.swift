@@ -18,7 +18,7 @@ struct FirstRunView: View {
                     .resizable()
                     .frame(width: 128, height: 128)
                 Spacer()
-                VStack(alignment: .leading, spacing: AppTheme.unit3) {
+                VStack(alignment: .leading, spacing: Unit.three) {
                     Text("Subconscious is a place to garden thoughts and share with others.")
                     
                     Text("It's powered by a decentralized note graph, so your data belongs to you.")

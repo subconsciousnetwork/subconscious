@@ -54,10 +54,10 @@ struct RecoveryPhraseView: View {
             .buttonStyle(BarButtonStyle())
         }
         .clipShape(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLg)
+            RoundedRectangle(cornerRadius: Unit.cornerRadiusLg)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.cornerRadiusLg)
+            RoundedRectangle(cornerRadius: Unit.cornerRadiusLg)
                 .stroke(Color.separator, lineWidth: 0.5)
         )
     }

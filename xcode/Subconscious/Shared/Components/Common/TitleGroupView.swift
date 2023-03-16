@@ -23,14 +23,14 @@ where Title: View, Subtitle: View
                 Spacer()
             }
             .lineLimit(1)
-            .frame(minHeight: AppTheme.icon)
+            .frame(minHeight: Unit.icon)
             HStack {
                 subtitle
                     .font(.caption)
                     .foregroundColor(Color.secondary)
                 Spacer()
             }
-            .frame(minHeight: AppTheme.captionSize)
+            .frame(minHeight: Unit.captionSize)
         }
     }
 }

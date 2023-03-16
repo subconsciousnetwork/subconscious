@@ -29,8 +29,8 @@ struct RenameSearchView: View {
                     autofocusDelay: 0.5
                 )
                 .submitLabel(.done)
-                .padding(.bottom, AppTheme.padding)
-                .padding(.horizontal, AppTheme.padding)
+                .padding(.bottom, Unit.padding)
+                .padding(.horizontal, Unit.padding)
                 List(state.renameSuggestions) { suggestion in
                     Button(
                         action: {

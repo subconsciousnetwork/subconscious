@@ -14,7 +14,7 @@ struct PrimaryButtonStyle: ButtonStyle {
         configuration.label
             .bold()
             .frame(
-                height: AppTheme.unit * 8
+                height: Unit.unit * 8
             )
             .foregroundColor(
                 Color.chooseForState(
@@ -26,7 +26,7 @@ struct PrimaryButtonStyle: ButtonStyle {
                 )
             )
             .padding(
-                .horizontal, AppTheme.unit * 4
+                .horizontal, Unit.unit * 4
             )
             .background(
                 Color.chooseForState(

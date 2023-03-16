@@ -309,8 +309,8 @@ struct SearchView: View {
                     }
                 )
             }
-            .frame(height: AppTheme.unit * 10)
-            .padding(AppTheme.tightPadding)
+            .frame(height: Unit.unit * 10)
+            .padding(Unit.tightPadding)
             List(state.suggestions) { item in
                 Button(
                     action: {

@@ -17,8 +17,8 @@ struct SuggestionLabelStyle: LabelStyle {
         HStack(alignment: .center, spacing: spacing) {
             configuration.icon
                 .frame(
-                    width: AppTheme.icon,
-                    height: AppTheme.icon
+                    width: Unit.icon,
+                    height: Unit.icon
                 )
                 .foregroundColor(iconColor)
             configuration.title

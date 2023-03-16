@@ -14,12 +14,12 @@ struct EntryRow: View, Equatable {
     var emptyExcerpt = "Empty"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unitHalf) {
+        VStack(alignment: .leading, spacing: Unit.half) {
             Text(entry.excerpt.isEmpty ? emptyExcerpt : entry.excerpt)
                 .lineLimit(2)
                 .font(.callout)
                 .multilineTextAlignment(.leading)
-            HStack(spacing: AppTheme.unit) {
+            HStack(spacing: Unit.unit) {
                 Image(audience: entry.address.toAudience())
                     .font(.system(size: 12))
                 Text(entry.address.slug.description)

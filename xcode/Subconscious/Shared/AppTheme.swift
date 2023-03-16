@@ -7,15 +7,13 @@
 
 import SwiftUI
 
-enum AppTheme {}
-
 //  MARK: Theme units
-extension AppTheme {
+enum Unit {
     static let unit: CGFloat = 4
-    static let unitHalf: CGFloat = unit / 2
-    static let unit2 = unit * 2
-    static let unit3 = unit * 3
-    static let unit4 = unit * 4
+    static let half: CGFloat = unit / 2
+    static let two = unit * 2
+    static let three = unit * 3
+    static let four = unit * 4
     static let padding = unit * 4
     static let tightPadding = unit * 3
     static let icon: CGFloat = unit * 6
@@ -36,6 +34,31 @@ extension AppTheme {
     static let cornerRadiusLg: Double = 16
 }
 
+// MARK: Theme scalable units
+/// Scaled Unit
+/// A dynamic alternative to `Unit` that scales with body size.
+enum ScaledUnit {
+    @ScaledMetric(relativeTo: .body)
+    static var unit: CGFloat = Unit.unit
+    
+    // Semantic sizes
+    // Unlike in CSS, line-spacing is not described as the total height of a
+    // line. Instead, it is is measured as leading,
+    // from bottom of one line to top of the next.
+    // 4 + 4 = 8
+    // 8 + 16 = 24
+    // 8 * 1.5 = 24
+    // 2021-12-10 Gordon Brander
+    @ScaledMetric(relativeTo: .body)
+    static var lineSpacing: CGFloat = 4
+
+    @ScaledMetric(relativeTo: .body)
+    static var lineHeight: CGFloat = 24
+
+    @ScaledMetric(relativeTo: .body)
+    static var fabSize: CGFloat = 56
+}
+
 //  MARK: UIFonts
 //  Note you can convert from UIFont to Font easily, but you can't yet convert
 //  from Font to UIFont. So, we define our fonts as UIFonts.
@@ -43,17 +66,17 @@ extension AppTheme {
 extension UIFont {
     static let appTextMono = UIFont(
         name: "IBMPlexMono",
-        size: AppTheme.textSize
+        size: Unit.textSize
     )!
 
     static let appTextMonoBold = UIFont(
         name: "IBMPlexMono-Bold",
-        size: AppTheme.textSize
+        size: Unit.textSize
     )!
 
     static let appTextMonoItalic = UIFont(
         name: "IBMPlexMono-Italic",
-        size: AppTheme.textSize
+        size: Unit.textSize
     )!
 }
 

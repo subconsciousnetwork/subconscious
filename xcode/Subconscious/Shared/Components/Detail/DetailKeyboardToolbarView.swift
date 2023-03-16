@@ -33,7 +33,7 @@ struct DetailKeyboardToolbarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Divider()
-            HStack(alignment: .center, spacing: AppTheme.unit4) {
+            HStack(alignment: .center, spacing: Unit.four) {
                 Button(
                     action: {
                         isSheetPresented = true
@@ -41,8 +41,8 @@ struct DetailKeyboardToolbarView: View {
                     label: {
                         Image(systemName: "magnifyingglass")
                             .frame(
-                                width: AppTheme.icon,
-                                height: AppTheme.icon
+                                width: Unit.icon,
+                                height: Unit.icon
                             )
                     }
                 )
@@ -74,9 +74,9 @@ struct DetailKeyboardToolbarView: View {
                     }
                 )
             }
-            .frame(height: AppTheme.icon, alignment: .center)
-            .padding(.horizontal, AppTheme.padding)
-            .padding(.vertical, AppTheme.tightPadding)
+            .frame(height: Unit.icon, alignment: .center)
+            .padding(.horizontal, Unit.padding)
+            .padding(.vertical, Unit.tightPadding)
             .background(Color.background)
         }
     }

@@ -62,10 +62,10 @@ struct MemoEditorDetailView: View {
                         )
                         .insets(
                             EdgeInsets(
-                                top: AppTheme.padding,
-                                leading: AppTheme.padding,
-                                bottom: AppTheme.padding,
-                                trailing: AppTheme.padding
+                                top: Unit.padding,
+                                leading: Unit.padding,
+                                bottom: Unit.padding,
+                                trailing: Unit.padding
                             )
                         )
                         .frame(
@@ -73,7 +73,7 @@ struct MemoEditorDetailView: View {
 
                         )
                         ThickDividerView()
-                            .padding(.bottom, AppTheme.unit4)
+                            .padding(.bottom, Unit.four)
                         BacklinksView(
                             backlinks: store.state.backlinks,
                             onSelect: { link in

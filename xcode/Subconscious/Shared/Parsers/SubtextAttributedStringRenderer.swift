@@ -149,7 +149,7 @@ struct SubtextAttributedStringRenderer {
         
         // Set line-spacing for entire string
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = AppTheme.lineSpacing
+        paragraphStyle.lineSpacing = Unit.lineSpacing
         attributedString.addAttribute(
             .paragraphStyle,
             value: paragraphStyle,

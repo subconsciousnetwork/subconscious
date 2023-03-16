@@ -13,8 +13,8 @@ struct RowLabelStyle: LabelStyle {
             configuration.title
             Spacer()
             configuration.icon.frame(
-                width: AppTheme.icon,
-                height: AppTheme.icon
+                width: Unit.icon,
+                height: Unit.icon
             )
         }
     }
@@ -23,10 +23,10 @@ struct RowLabelStyle: LabelStyle {
 /// Underlays a fill on tap when active, much like a UITableView row.
 struct RowButtonStyle: ButtonStyle {
     var insets: EdgeInsets = EdgeInsets(
-        top: AppTheme.unit2,
-        leading: AppTheme.unit4,
-        bottom: AppTheme.unit2,
-        trailing: AppTheme.unit4
+        top: Unit.two,
+        leading: Unit.four,
+        bottom: Unit.two,
+        trailing: Unit.four
     )
 
     func makeBody(configuration: Configuration) -> some View {
@@ -40,7 +40,7 @@ struct RowButtonStyle: ButtonStyle {
                 )
         }
         .padding(insets)
-        .frame(minHeight: AppTheme.minTouchSize)
+        .frame(minHeight: Unit.minTouchSize)
         .contentShape(
             Rectangle()
         )

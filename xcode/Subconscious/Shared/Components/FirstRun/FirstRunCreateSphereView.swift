@@ -14,7 +14,7 @@ struct FirstRunCreateSphereView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                VStack(alignment: .center, spacing: AppTheme.unit4) {
+                VStack(alignment: .center, spacing: Unit.four) {
                     Text("Recovery Phrase")
                         .font(.headline)
                     RecoveryPhraseView(
@@ -24,7 +24,7 @@ struct FirstRunCreateSphereView: View {
                             tag: AppRecoveryPhraseCursor.tag
                         )
                     )
-                    VStack(alignment: .leading, spacing: AppTheme.unit2) {
+                    VStack(alignment: .leading, spacing: Unit.two) {
                         Text("This is your secret recovery phrase. You can use it to recover your data if you lose access.")
                             .foregroundColor(.secondary)
                         Text("This is for your eyes only. We don't store it. Write it down or add it to your password manager. Keep it secret, keep it safe.")

@@ -12,7 +12,7 @@ struct BacklinksView: View {
     var onSelect: (EntryLink) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit2) {
+        VStack(alignment: .leading, spacing: Unit.two) {
             HStack {
                 Text("Backlinks")
                     .font(.caption)
@@ -45,8 +45,8 @@ struct BacklinksView: View {
                 )
             }
         }
-        .padding(.horizontal, AppTheme.unit4)
-        .padding(.vertical, AppTheme.unit2)
+        .padding(.horizontal, Unit.four)
+        .padding(.vertical, Unit.two)
     }
 }
 

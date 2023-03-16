@@ -18,7 +18,7 @@ where Principal: View, Leading: View, Trailing: View {
             HStack {
                 leading()
             }
-            .frame(minWidth: AppTheme.unit * 20, alignment: .leading)
+            .frame(minWidth: Unit.unit * 20, alignment: .leading)
             Spacer()
             HStack {
                 principal()
@@ -28,7 +28,7 @@ where Principal: View, Leading: View, Trailing: View {
             HStack {
                 trailing()
             }
-            .frame(minWidth: AppTheme.unit * 20, alignment: .trailing)
+            .frame(minWidth: Unit.unit * 20, alignment: .trailing)
         }
     }
 }

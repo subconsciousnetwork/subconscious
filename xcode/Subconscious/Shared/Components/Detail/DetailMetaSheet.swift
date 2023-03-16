@@ -16,7 +16,7 @@ struct DetailMetaSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                VStack(alignment: .leading, spacing: AppTheme.unit2) {
+                VStack(alignment: .leading, spacing: Unit.two) {
                     HStack {
                         if let slashlink = state.address?.toSlashlink() {
                             SlashlinkBylineView(slashlink: slashlink).theme(

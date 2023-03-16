@@ -37,7 +37,7 @@ struct FABButtonStyle: ButtonStyle {
                         stops: Color.brandGradient(colorScheme),
                         center: .init(x: 0.5, y: 0.25), // Calculated from brandmark
                         startRadius: 0,
-                        endRadius: AppTheme.fabSize * 0.75 // Calculated from brandmark
+                        endRadius: Unit.fabSize * 0.75 // Calculated from brandmark
                     )
                     .shadow(
                         // Eyeballed from brandmark
@@ -50,8 +50,8 @@ struct FABButtonStyle: ButtonStyle {
                     )
                 )
                 .frame(
-                    width: AppTheme.fabSize,
-                    height: AppTheme.fabSize,
+                    width: Unit.fabSize,
+                    height: Unit.fabSize,
                     alignment: .center
                 )
                 .shadow(

@@ -13,7 +13,7 @@ struct TextFieldLabel<Field: View>: View {
     var caption: Text?
     var field: Field
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit) {
+        VStack(alignment: .leading, spacing: Unit.unit) {
             label
                 .font(.headline)
             field

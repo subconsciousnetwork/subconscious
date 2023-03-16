@@ -10,7 +10,7 @@ import SwiftUI
 struct ThickDividerView: View, Equatable {
     var body: some View {
         Color.secondaryBackground
-            .frame(height: AppTheme.unit2)
+            .frame(height: Unit.two)
     }
 }
 

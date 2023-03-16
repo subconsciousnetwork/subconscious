@@ -14,7 +14,7 @@ struct StoryPromptView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: AppTheme.unit) {
+            HStack(spacing: Unit.unit) {
                 Text("@cdata")
                 Text("at")
                     .foregroundColor(Color.secondary)
@@ -24,9 +24,9 @@ struct StoryPromptView: View {
             }
             .font(.caption)
             .padding()
-            .frame(height: AppTheme.unit * 11)
+            .frame(height: Unit.unit * 11)
             Divider()
-            VStack(alignment: .leading, spacing: AppTheme.unit4) {
+            VStack(alignment: .leading, spacing: Unit.four) {
                 Text(story.prompt)
                 Button(
                     action: {
@@ -63,7 +63,7 @@ struct StoryPromptView: View {
                 Spacer()
             }
             .padding()
-            .frame(height: AppTheme.unit * 15)
+            .frame(height: Unit.unit * 15)
             ThickDividerView()
         }
     }
