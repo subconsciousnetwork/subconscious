@@ -1,5 +1,5 @@
 //
-//  DetailView.swift
+//  MemoEditorDetailView.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 9/20/21.
@@ -11,14 +11,14 @@ import ObservableStore
 import Combine
 
 //  MARK: View
-struct DetailView: View {
+struct MemoEditorDetailView: View {
     /// Detail keeps a separate internal store for editor state that does not
     /// need to be surfaced in higher level views.
     ///
     /// This gives us a pretty big efficiency win, since keystrokes will only
     /// rerender this view, and not whole app view tree.
     @StateObject private var store = Store(
-        state: DetailModel(),
+        state: MemoEditorDetailModel(),
         action: .start,
         environment: AppEnvironment.default
     )
@@ -26,23 +26,21 @@ struct DetailView: View {
     /// We trigger an autosave when isPresented is false below.
     @Environment(\.isPresented) var isPresented
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
-    /// State passed down from parent
-    var state: DetailOuterModel
-    var send: (DetailOuterAction) -> Void
+    /// Initialization state passed down from parent
+    var description: MemoEditorDetailDescription
+    /// An address to forward notifications (informational actions)
+    var notify: (MemoEditorDetailNotification) -> Void
 
     private func onLink(
         url: URL
     ) -> Bool {
-        guard let link = UnqualifiedLink.decodefromSubEntryURL(
-            url
-        ) else {
+        guard let sub = url.toSubSlashlinkURL() else {
             return true
         }
-        send(
+        notify(
             .requestFindDetail(
-                slug: link.slug,
-                title: link.title,
-                fallback: link.title
+                slashlink: sub.slashlink,
+                fallback: sub.fallback
             )
         )
         return false
@@ -57,7 +55,7 @@ struct DetailView: View {
                             state: store.state.editor,
                             send: Address.forward(
                                 send: store.send,
-                                tag: DetailEditorCursor.tag
+                                tag: MemoEditorDetailSubtextTextCursor.tag
                             ),
                             frame: geometry.frame(in: .local),
                             onLink: self.onLink
@@ -79,11 +77,12 @@ struct DetailView: View {
                         BacklinksView(
                             backlinks: store.state.backlinks,
                             onSelect: { link in
-                                send(
+                                notify(
                                     .requestDetail(
-                                        address: link.address,
-                                        title: link.linkableTitle,
-                                        fallback: link.title
+                                        MemoDetailDescription.from(
+                                            address: link.address,
+                                            fallback: link.title
+                                        )
                                     )
                                 )
                             }
@@ -95,7 +94,7 @@ struct DetailView: View {
                         isSheetPresented: Binding(
                             get: { store.state.isLinkSheetPresented },
                             send: store.send,
-                            tag: DetailAction.setLinkSheetPresented
+                            tag: MemoEditorDetailAction.setLinkSheetPresented
                         ),
                         selectedShortlink: store.state.selectedShortlink,
                         suggestions: store.state.linkSuggestions,
@@ -132,7 +131,7 @@ struct DetailView: View {
                 }
             }
         }
-        .navigationTitle("")
+        .navigationTitle(store.state.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible)
         .toolbarBackground(Color.background, for: .navigationBar)
@@ -149,14 +148,14 @@ struct DetailView: View {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
-            store.send(DetailAction.appear(state))
+            store.send(MemoEditorDetailAction.appear(description))
         }
         // Track changes to scene phase so we know when app gets
         // foregrounded/backgrounded.
         // See https://developer.apple.com/documentation/swiftui/scenephase
         // 2022-02-08 Gordon Brander
         .onChange(of: self.scenePhase) { phase in
-            store.send(DetailAction.scenePhaseChange(phase))
+            store.send(MemoEditorDetailAction.scenePhaseChange(phase))
         }
         // Save when back button pressed.
         // Note that .onDisappear is too late, because by the time the save
@@ -171,33 +170,32 @@ struct DetailView: View {
         }
         /// Catch link taps and handle them here
         .environment(\.openURL, OpenURLAction { url in
-            guard let link = UnqualifiedLink.decodefromSubEntryURL(url) else {
+            guard let link = url.toSubSlashlinkURL() else {
                 return .systemAction
             }
-            send(
+            notify(
                 .requestFindDetail(
-                    slug: link.slug,
-                    title: link.title,
-                    fallback: link.title
+                    slashlink: link.slashlink,
+                    fallback: link.fallback
                 )
             )
             return .handled
         })
         .onReceive(store.actions) { action in
             let message = String.loggable(action)
-            DetailModel.logger.debug("[action] \(message)")
+            MemoEditorDetailModel.logger.debug("[action] \(message)")
         }
         // Filtermap actions to outer actions, and forward them to parent
         .onReceive(
-            store.actions.compactMap(DetailOuterAction.from)
+            store.actions.compactMap(MemoEditorDetailNotification.from)
         ) { action in
-            send(action)
+            notify(action)
         }
         .sheet(
             isPresented: Binding(
                 get: { store.state.isMetaSheetPresented },
                 send: store.send,
-                tag: DetailAction.presentMetaSheet
+                tag: MemoEditorDetailAction.presentMetaSheet
             )
         ) {
             DetailMetaSheet(
@@ -212,7 +210,7 @@ struct DetailView: View {
             isPresented: Binding(
                 get: { store.state.isLinkSheetPresented },
                 send: store.send,
-                tag: DetailAction.setLinkSheetPresented
+                tag: MemoEditorDetailAction.setLinkSheetPresented
             )
         ) {
             LinkSearchView(
@@ -221,7 +219,7 @@ struct DetailView: View {
                 text: Binding(
                     get: { store.state.linkSearchText },
                     send: store.send,
-                    tag: DetailAction.setLinkSearch
+                    tag: MemoEditorDetailAction.setLinkSearch
                 ),
                 onCancel: {
                     store.send(.setLinkSheetPresented(false))
@@ -236,12 +234,16 @@ struct DetailView: View {
 
 //  MARK: Action
 
-/// Actions that are forwarded up to the parent component
-enum DetailOuterAction: Hashable {
+/// Actions forwarded up to the parent context to notify it of specific
+/// lifecycle events that happened within our component.
+enum MemoEditorDetailNotification: Hashable {
     /// Request specific detail
-    case requestDetail(address: MemoAddress, title: String, fallback: String)
+    case requestDetail(MemoDetailDescription)
     /// Request detail from any audience scope
-    case requestFindDetail(slug: Slug, title: String, fallback: String)
+    case requestFindDetail(
+        slashlink: Slashlink,
+        fallback: String
+    )
     case requestDelete(MemoAddress?)
     case succeedMoveEntry(from: MemoAddress, to: MemoAddress)
     case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)
@@ -249,8 +251,8 @@ enum DetailOuterAction: Hashable {
     case succeedUpdateAudience(_ receipt: MoveReceipt)
 }
 
-extension DetailOuterAction {
-    static func from(_ action: DetailAction) -> Self? {
+extension MemoEditorDetailNotification {
+    static func from(_ action: MemoEditorDetailAction) -> Self? {
         switch action {
         case let .succeedMoveEntry(from, to):
             return .succeedMoveEntry(from: from, to: to)
@@ -272,7 +274,7 @@ extension DetailOuterAction {
 }
 
 /// Actions handled by detail's private store.
-enum DetailAction: Hashable, CustomLogStringConvertible {
+enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     /// Tagging action for detail meta bottom sheet
     case metaSheet(DetailMetaSheetAction)
 
@@ -286,7 +288,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Wrapper for editor actions
     case editor(SubtextTextAction)
 
-    case appear(DetailOuterModel)
+    case appear(MemoEditorDetailDescription)
 
     // Detail
     /// Load detail, using a last-write-wins strategy for replacement
@@ -304,12 +306,12 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     /// Set entry detail.
     /// This actions will blow away any existing entry detail.
     /// In most cases you want to use `setDetailLastWriteWins` instead.
-    case forceSetDetail(EntryDetail)
+    case forceSetDetail(MemoEditorDetailResponse)
     /// Set EntryDetail on DetailModel, but only if last modification happened
     /// more recently than DetailModel.
-    case setDetailLastWriteWins(EntryDetail)
+    case setDetailLastWriteWins(MemoEditorDetailResponse)
     /// Set detail
-    case setDetail(detail: EntryDetail, autofocus: Bool)
+    case setDetail(detail: MemoEditorDetailResponse, autofocus: Bool)
     case setDraftDetail(
         defaultAudience: Audience,
         fallback: String
@@ -455,7 +457,7 @@ enum DetailAction: Hashable, CustomLogStringConvertible {
     }
 }
 
-extension DetailAction {
+extension MemoEditorDetailAction {
     static func from(_ suggestion: RenameSuggestion) -> Self {
         switch suggestion {
         case let .move(from, to):
@@ -468,21 +470,21 @@ extension DetailAction {
 
 //  MARK: Cursors
 /// Editor cursor
-struct DetailEditorCursor: CursorProtocol {
-    static func get(state: DetailModel) -> SubtextTextModel {
+struct MemoEditorDetailSubtextTextCursor: CursorProtocol {
+    static func get(state: MemoEditorDetailModel) -> SubtextTextModel {
         state.editor
     }
 
     static func set(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         inner: SubtextTextModel
-    ) -> DetailModel {
+    ) -> MemoEditorDetailModel {
         var model = state
         model.editor = inner
         return model
     }
 
-    static func tag(_ action: SubtextTextAction) -> DetailAction {
+    static func tag(_ action: SubtextTextAction) -> MemoEditorDetailAction {
         switch action {
         // Intercept text set action so we can mark all text-sets
         // as dirty.
@@ -506,7 +508,7 @@ struct DetailEditorCursor: CursorProtocol {
 }
 
 struct DetailMetaSheetCursor: CursorProtocol {
-    typealias Model = DetailModel
+    typealias Model = MemoEditorDetailModel
     typealias ViewModel = DetailMetaSheetModel
 
     static func get(state: Model) -> ViewModel {
@@ -537,12 +539,18 @@ struct DetailMetaSheetCursor: CursorProtocol {
 }
 
 //  MARK: Model
-struct DetailModel: ModelProtocol {
+struct MemoEditorDetailModel: ModelProtocol {
     var address: MemoAddress?
     var defaultAudience = Audience.local
     var audience: Audience {
         address?.toAudience() ?? defaultAudience
     }
+
+    // Derive title from editor state
+    var title: String {
+        editor.text.title()
+    }
+
     /// Required headers
     /// Initialize date with Unix Epoch
     var headers = WellKnownHeaders(
@@ -600,10 +608,10 @@ struct DetailModel: ModelProtocol {
     
     //  MARK: Update
     static func update(
-        state: DetailModel,
-        action: DetailAction,
+        state: MemoEditorDetailModel,
+        action: MemoEditorDetailAction,
         environment: AppEnvironment
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         switch action {
         case .metaSheet(let action):
             return DetailMetaSheetCursor.update(
@@ -612,7 +620,7 @@ struct DetailModel: ModelProtocol {
                 environment: environment
             )
         case .editor(let action):
-            return DetailEditorCursor.update(
+            return MemoEditorDetailSubtextTextCursor.update(
                 state: state,
                 action: action,
                 environment: ()
@@ -895,40 +903,40 @@ struct DetailModel: ModelProtocol {
     
     /// Log debug
     static func log(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         message: String
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         logger.log("\(message)")
         return Update(state: state)
     }
     
     /// Log debug
     static func logDebug(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         message: String
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         logger.debug("\(message)")
         return Update(state: state)
     }
     
     /// Log debug
     static func logWarning(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         message: String
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         logger.warning("\(message)")
         return Update(state: state)
     }
     
     static func start(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         let pollFx = AppEnvironment.poll(every: Config.default.pollingInterval)
-            .map({ _ in DetailAction.autosave })
+            .map({ _ in MemoEditorDetailAction.autosave })
             .eraseToAnyPublisher()
         return Update(state: state, fx: pollFx)
     }
@@ -936,10 +944,10 @@ struct DetailModel: ModelProtocol {
     /// Handle scene phase change
     /// We trigger an autosave when scene becomes inactive.
     static func scenePhaseChange(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         phase: ScenePhase
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         switch phase {
         case .inactive:
             return update(
@@ -954,10 +962,10 @@ struct DetailModel: ModelProtocol {
     
     /// Set the contents of the editor and mark save state and modified time.
     static func appear(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        info: DetailOuterModel
-    ) -> Update<DetailModel> {
+        info: MemoEditorDetailDescription
+    ) -> Update<MemoEditorDetailModel> {
         // No address? This is a draft.
         guard let address = info.address else {
             return update(
@@ -983,12 +991,12 @@ struct DetailModel: ModelProtocol {
     
     /// Set the contents of the editor and mark save state and modified time.
     static func setEditor(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         text: String,
         saveState: SaveState,
         modified: Date
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         var model = state
         model.saveState = saveState
         model.headers.modified = modified
@@ -1002,10 +1010,10 @@ struct DetailModel: ModelProtocol {
     /// Handle editor focus request.
     /// Saves editor state if blurred.
     static func editorFocusChange(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         isFocused: Bool
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         // If blur, then send focus request down and save
         guard isFocused else {
             return update(
@@ -1027,11 +1035,11 @@ struct DetailModel: ModelProtocol {
     
     /// Set editor selection.
     static func setEditorSelection(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         range nsRange: NSRange,
         text: String
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         // Set entry link based on selection
         let dom = Subtext.parse(markup: text)
         let link = dom.shortlinkFor(range: nsRange)
@@ -1040,17 +1048,17 @@ struct DetailModel: ModelProtocol {
         
         let linkSearchText = link?.toTitle() ?? ""
         
-        return DetailModel.update(
+        return MemoEditorDetailModel.update(
             state: model,
             actions: [
                 // Immediately send down setSelection
-                DetailAction.editor(
+                MemoEditorDetailAction.editor(
                     SubtextTextAction.setSelection(
                         range: nsRange,
                         text: text
                     )
                 ),
-                DetailAction.setLinkSearch(linkSearchText)
+                MemoEditorDetailAction.setLinkSearch(linkSearchText)
             ],
             environment: environment
         )
@@ -1058,11 +1066,11 @@ struct DetailModel: ModelProtocol {
     
     /// Insert text in editor at range
     static func insertEditorText(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         text: String,
         range nsRange: NSRange
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         guard let range = Range(nsRange, in: state.editor.text) else {
             logger.log(
                 "Cannot replace text. Invalid range: \(nsRange))"
@@ -1089,7 +1097,7 @@ struct DetailModel: ModelProtocol {
         }
         
         // Set editor dom and editor selection immediately in same Update.
-        return DetailModel.update(
+        return MemoEditorDetailModel.update(
             state: state,
             actions: [
                 .setEditor(
@@ -1107,7 +1115,7 @@ struct DetailModel: ModelProtocol {
     }
     
     /// Mark properties on model in preparation for detail load
-    static func prepareLoadDetail(_ state: DetailModel) -> DetailModel {
+    static func prepareLoadDetail(_ state: MemoEditorDetailModel) -> MemoEditorDetailModel {
         var model = state
         // Mark loading state
         model.isLoading = true
@@ -1118,22 +1126,22 @@ struct DetailModel: ModelProtocol {
     
     /// Load Detail from database and present detail
     static func loadDetail(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         address: MemoAddress,
         fallback: String,
         autofocus: Bool
-    ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.data.readDetailAsync(
+    ) -> Update<MemoEditorDetailModel> {
+        let fx: Fx<MemoEditorDetailAction> = environment.data.readMemoEditorDetailAsync(
             address: address,
             fallback: fallback
         ).map({ detail in
-            DetailAction.setDetail(
+            MemoEditorDetailAction.setDetail(
                 detail: detail,
                 autofocus: autofocus
             )
         }).catch({ error in
-            Just(DetailAction.failLoadDetail(error.localizedDescription))
+            Just(MemoEditorDetailAction.failLoadDetail(error.localizedDescription))
         }).eraseToAnyPublisher()
         
         let model = prepareLoadDetail(state)
@@ -1142,9 +1150,9 @@ struct DetailModel: ModelProtocol {
     
     /// Reload detail
     static func refreshDetail(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         guard let address = state.address else {
             logger.log(
                 "Refresh detail requested when nothing was being edited. Skipping."
@@ -1154,22 +1162,22 @@ struct DetailModel: ModelProtocol {
         
         let model = prepareLoadDetail(state)
         
-        let fx: Fx<DetailAction> = environment.data.readDetailAsync(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.readMemoEditorDetailAsync(
             address: address,
             fallback: model.editor.text
         ).map({ detail in
-            DetailAction.setDetailLastWriteWins(detail)
+            MemoEditorDetailAction.setDetailLastWriteWins(detail)
         }).catch({ error in
-            Just(DetailAction.failLoadDetail(error.localizedDescription))
+            Just(MemoEditorDetailAction.failLoadDetail(error.localizedDescription))
         }).eraseToAnyPublisher()
         
         return Update(state: model, fx: fx)
     }
     
     static func refreshDetailIfStale(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         guard let address = state.address else {
             logger.debug(
                 "Refresh-detail-if-stale requested, but nothing was being edited. Skipping."
@@ -1195,20 +1203,20 @@ struct DetailModel: ModelProtocol {
     
     /// Handle detail load failure
     static func failLoadDetail(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         message: String
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         logger.log("Detail load failed with message: \(message)")
         return Update(state: state)
     }
     
-    /// Set EntryDetail onto DetailModel
+    /// Set MemoEditorResponse onto DetailModel
     static func forceSetDetail(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        detail: EntryDetail
-    ) -> Update<DetailModel> {
+        detail: MemoEditorDetailResponse
+    ) -> Update<MemoEditorDetailModel> {
         var model = state
         model.isLoading = false
         model.address = detail.entry.address
@@ -1221,7 +1229,7 @@ struct DetailModel: ModelProtocol {
         let subtext = detail.entry.contents.body
         let text = String(describing: subtext)
         
-        return DetailModel.update(
+        return MemoEditorDetailModel.update(
             state: model,
             actions: [
                 .setMetaSheetAddress(model.address),
@@ -1241,10 +1249,10 @@ struct DetailModel: ModelProtocol {
     /// - If details are different, saves the previous detail and
     ///   replaces it.
     static func setDetailLastWriteWins(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        detail: EntryDetail
-    ) -> Update<DetailModel> {
+        detail: MemoEditorDetailResponse
+    ) -> Update<MemoEditorDetailModel> {
         var model = state
         // Mark loading finished
         model.isLoading = false
@@ -1304,11 +1312,11 @@ struct DetailModel: ModelProtocol {
     ///   and set cursor at end of document?
     /// - Returns: an update
     static func setDetail(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        detail: EntryDetail,
+        detail: MemoEditorDetailResponse,
         autofocus: Bool
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         guard autofocus else {
             // If autofocus is false, request blur if needed
             return update(
@@ -1334,11 +1342,11 @@ struct DetailModel: ModelProtocol {
     }
     
     static func setDraftDetail(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         defaultAudience: Audience,
         fallback: String
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         var model = state
 
         model.defaultAudience = defaultAudience
@@ -1359,9 +1367,9 @@ struct DetailModel: ModelProtocol {
 
     /// Reset model to "none" condition
     static func resetDetail(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         var model = state
         model.address = nil
         model.headers = WellKnownHeaders(
@@ -1379,10 +1387,10 @@ struct DetailModel: ModelProtocol {
     }
     
     static func updateAudience(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         audience: Audience
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         guard let from = state.address else {
             logger.log(
                 "Update audience requested, but no memo is being edited."
@@ -1392,13 +1400,13 @@ struct DetailModel: ModelProtocol {
 
         let to = from.withAudience(audience)
 
-        let fx: Fx<DetailAction> = environment.data.moveEntryAsync(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.moveEntryAsync(
             from: from,
             to: to
         ).map({ receipt in
-            DetailAction.succeedUpdateAudience(receipt)
+            MemoEditorDetailAction.succeedUpdateAudience(receipt)
         }).catch({ error in
-            Just(DetailAction.failUpdateAudience(error.localizedDescription))
+            Just(MemoEditorDetailAction.failUpdateAudience(error.localizedDescription))
         }).eraseToAnyPublisher()
 
         var model = state
@@ -1412,10 +1420,10 @@ struct DetailModel: ModelProtocol {
     }
     
     static func succeedUpdateAudience(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         receipt: MoveReceipt
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         guard state.address != nil else {
             return Update(state: state)
         }
@@ -1430,14 +1438,14 @@ struct DetailModel: ModelProtocol {
     }
 
     static func requestDelete(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         address: MemoAddress?
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         let delay = Duration.sheet
         
-        let fx: Fx<DetailAction> = Just(
-            DetailAction.forwardRequestDelete(address)
+        let fx: Fx<MemoEditorDetailAction> = Just(
+            MemoEditorDetailAction.forwardRequestDelete(address)
         ).delay(
             for: .seconds(delay),
             scheduler: DispatchQueue.main
@@ -1454,9 +1462,9 @@ struct DetailModel: ModelProtocol {
     }
 
     static func doneEditing(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         update(
             state: state,
             actions: [
@@ -1468,9 +1476,9 @@ struct DetailModel: ModelProtocol {
     }
     
     static func autosave(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         /// If no address, derive one and update
         guard state.address != nil else {
             let address = environment.data.findUniqueAddressFor(
@@ -1503,10 +1511,10 @@ struct DetailModel: ModelProtocol {
     
     /// Save snapshot of entry
     static func save(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         entry: MemoEntry?
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         // If editor dom is already saved, noop
         guard state.saveState != .saved else {
             return Update(state: state)
@@ -1521,13 +1529,13 @@ struct DetailModel: ModelProtocol {
         // Mark saving in-progress
         model.saveState = .saving
         
-        let fx: Fx<DetailAction> = environment.data.writeEntryAsync(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.writeEntryAsync(
             entry
         ).map({ _ in
-            DetailAction.succeedSave(entry)
+            MemoEditorDetailAction.succeedSave(entry)
         }).catch({ error in
             Just(
-                DetailAction.failSave(
+                MemoEditorDetailAction.failSave(
                     address: entry.address,
                     message: error.localizedDescription
                 )
@@ -1539,10 +1547,10 @@ struct DetailModel: ModelProtocol {
     
     /// Log save success and perform refresh of various lists.
     static func succeedSave(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         entry: MemoEntry
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         logger.debug(
             "Saved entry: \(entry.address)"
         )
@@ -1567,11 +1575,11 @@ struct DetailModel: ModelProtocol {
     }
     
     static func failSave(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         address: MemoAddress,
         message: String
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         //  TODO: show user a "try again" banner
         logger.warning(
             "Save failed for entry (\(address)) with error: \(message)"
@@ -1583,30 +1591,30 @@ struct DetailModel: ModelProtocol {
     }
     
     static func presentMetaSheet(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         isPresented: Bool
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         var model = state
         model.isMetaSheetPresented = isPresented
         return Update(state: model)
     }
     
     static func setLinkSheetPresented(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         isPresented: Bool
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         var model = state
         model.isLinkSheetPresented = isPresented
         return Update(state: model)
     }
     
     static func setLinkSearch(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         text: String
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         var model = state
         model.linkSearchText = text
         
@@ -1617,15 +1625,15 @@ struct DetailModel: ModelProtocol {
         }
         
         // Search link suggestions
-        let fx: Fx<DetailAction> = environment.data.searchLinkSuggestions(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.searchLinkSuggestions(
             query: text,
             omitting: omitting,
             fallback: []
         ).map({ suggestions in
-            DetailAction.setLinkSuggestions(suggestions)
+            MemoEditorDetailAction.setLinkSuggestions(suggestions)
         }).catch({ error in
             Just(
-                DetailAction.linkSuggestionsFailure(
+                MemoEditorDetailAction.linkSuggestionsFailure(
                     error.localizedDescription
                 )
             )
@@ -1635,10 +1643,10 @@ struct DetailModel: ModelProtocol {
     }
     
     static func selectLinkSuggestion(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         suggestion: LinkSuggestion
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         let link: EntryLink = Func.pipe(
             suggestion,
             through: { suggestion in
@@ -1683,7 +1691,7 @@ struct DetailModel: ModelProtocol {
         var model = state
         model.linkSearchText = ""
         
-        return DetailModel.update(
+        return MemoEditorDetailModel.update(
             state: model,
             actions: [
                 .setLinkSheetPresented(false),
@@ -1695,17 +1703,17 @@ struct DetailModel: ModelProtocol {
     }
     
     static func selectRenameSuggestion(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         suggestion: RenameSuggestion
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         update(
             state: state,
             actions: [
                 // Forward intercepted action down to child
                 .metaSheet(.selectRenameSuggestion(suggestion)),
                 // Additionally, act on rename suggestion
-                DetailAction.from(suggestion)
+                MemoEditorDetailAction.from(suggestion)
             ],
             environment: environment
         )
@@ -1713,21 +1721,21 @@ struct DetailModel: ModelProtocol {
 
     /// Move entry
     static func moveEntry(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         from: MemoAddress,
         to: MemoAddress
-    ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.data.moveEntryAsync(
+    ) -> Update<MemoEditorDetailModel> {
+        let fx: Fx<MemoEditorDetailAction> = environment.data.moveEntryAsync(
             from: from,
             to: to
         )
         .map({ _ in
-            DetailAction.succeedMoveEntry(from: from, to: to)
+            MemoEditorDetailAction.succeedMoveEntry(from: from, to: to)
         })
         .catch({ error in
             Just(
-                DetailAction.failMoveEntry(
+                MemoEditorDetailAction.failMoveEntry(
                     error.localizedDescription
                 )
             )
@@ -1743,11 +1751,11 @@ struct DetailModel: ModelProtocol {
     /// Move success lifecycle handler.
     /// Updates UI in response.
     static func succeedMoveEntry(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         from: MemoAddress,
         to: MemoAddress
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         guard state.address == from else {
             logger.warning(
                 """
@@ -1776,10 +1784,10 @@ struct DetailModel: ModelProtocol {
     /// Move failure lifecycle handler.
     //  TODO: in future consider triggering an alert.
     static func failMoveEntry(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         error: String
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         logger.warning(
             "Failed to move entry with error: \(error)"
         )
@@ -1788,19 +1796,19 @@ struct DetailModel: ModelProtocol {
     
     /// Merge entry
     static func mergeEntry(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         parent: MemoAddress,
         child: MemoAddress
-    ) -> Update<DetailModel> {
-        let fx: Fx<DetailAction> = environment.data.mergeEntryAsync(
+    ) -> Update<MemoEditorDetailModel> {
+        let fx: Fx<MemoEditorDetailAction> = environment.data.mergeEntryAsync(
             parent: parent,
             child: child
         ).map({ _ in
-            DetailAction.succeedMergeEntry(parent: parent, child: child)
+            MemoEditorDetailAction.succeedMergeEntry(parent: parent, child: child)
         }).catch({ error in
             Just(
-                DetailAction.failMergeEntry(error.localizedDescription)
+                MemoEditorDetailAction.failMergeEntry(error.localizedDescription)
             )
         }).eraseToAnyPublisher()
         return Update(state: state, fx: fx)
@@ -1809,11 +1817,11 @@ struct DetailModel: ModelProtocol {
     /// Merge success lifecycle handler.
     /// Updates UI in response.
     static func succeedMergeEntry(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         parent: MemoAddress,
         child: MemoAddress
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         var model = state
         model.address = parent
         return update(
@@ -1830,10 +1838,10 @@ struct DetailModel: ModelProtocol {
     /// Merge failure lifecycle handler.
     //  TODO: in future consider triggering an alert.
     static func failMergeEntry(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         error: String
-    ) -> Update<DetailModel> {
+    ) -> Update<MemoEditorDetailModel> {
         logger.warning(
             "Failed to merge entry with error: \(error)"
         )
@@ -1843,11 +1851,11 @@ struct DetailModel: ModelProtocol {
     /// Insert wikilink markup into editor, begining at previous range
     /// and wrapping the contents of previous range
     static func insertTaggedMarkup<T>(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment,
         range nsRange: NSRange,
         with withMarkup: (String) -> T
-    ) -> Update<DetailModel>
+    ) -> Update<MemoEditorDetailModel>
     where T: TaggedMarkup
     {
         guard let range = Range(nsRange, in: state.editor.text) else {
@@ -1878,7 +1886,7 @@ struct DetailModel: ModelProtocol {
             return Update(state: state)
         }
         
-        return DetailModel.update(
+        return MemoEditorDetailModel.update(
             state: state,
             actions: [
                 .setEditor(
@@ -1897,10 +1905,10 @@ struct DetailModel: ModelProtocol {
     
     /// Dispatch refresh actions
     static func refreshLists(
-        state: DetailModel,
+        state: MemoEditorDetailModel,
         environment: AppEnvironment
-    ) -> Update<DetailModel> {
-        return DetailModel.update(
+    ) -> Update<MemoEditorDetailModel> {
+        return MemoEditorDetailModel.update(
             state: state,
             actions: [
                 .refreshRenameSuggestions,
@@ -1927,25 +1935,17 @@ struct DetailModel: ModelProtocol {
 
 //  MARK: Outer Model
 /// A description of a detail suitible for pushing onto a navigation stack
-struct DetailOuterModel: Hashable, ModelProtocol {
+struct MemoEditorDetailDescription: Hashable {
     var address: MemoAddress?
     var fallback: String = ""
     /// Default audience to use when deriving a memo address
     var defaultAudience = Audience.local
-    
-    static func update(
-        state: DetailOuterModel,
-        action: DetailOuterAction,
-        environment: AppEnvironment
-    ) -> ObservableStore.Update<DetailOuterModel> {
-        Update(state: state)
-    }
 }
 
 extension FileFingerprint {
     /// Initialize FileFingerprint from DetailModel.
     /// We use this to do last-write-wins.
-    init?(_ detail: DetailModel) {
+    init?(_ detail: MemoEditorDetailModel) {
         guard let slug = detail.address?.slug else {
             return nil
         }
@@ -1958,7 +1958,7 @@ extension FileFingerprint {
 }
 
 extension MemoEntry {
-    init?(_ detail: DetailModel) {
+    init?(_ detail: MemoEditorDetailModel) {
         guard let address = detail.address else {
             return nil
         }
@@ -1976,13 +1976,13 @@ extension MemoEntry {
 
 struct Detail_Previews: PreviewProvider {
     static var previews: some View {
-        DetailView(
-            state: DetailOuterModel(
+        MemoEditorDetailView(
+            description: MemoEditorDetailDescription(
                 address: Slug(formatting: "Nothing is lost in the universe")!
                     .toPublicMemoAddress(),
                 fallback: "Nothing is lost in the universe"
             ),
-            send: { action in }
+            notify: { action in }
         )
     }
 }

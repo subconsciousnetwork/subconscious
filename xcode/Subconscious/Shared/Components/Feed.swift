@@ -131,7 +131,7 @@ struct FeedModel: ModelProtocol {
         placeholder: "Search or create..."
     )
     /// Entry detail
-    var detail = DetailModel()
+    var detail = MemoEditorDetailModel()
     var stories: [Story] = []
 
     static let logger = Logger(

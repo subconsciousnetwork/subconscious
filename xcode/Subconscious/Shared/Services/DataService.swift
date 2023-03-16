@@ -10,20 +10,20 @@ import os
 
 enum DataServiceError: Error, LocalizedError {
     case fileExists(String)
-    case memoNotFound(String)
     case defaultSphereNotFound
     case sphereExists(_ sphereIdentity: String)
+    case permissionsError(String)
     
     var errorDescription: String? {
         switch self {
         case .fileExists(let message):
             return "File exists: \(message)"
-        case .memoNotFound(let message):
-            return "Memo not found: \(message)"
         case .defaultSphereNotFound:
             return "Default sphere not found"
         case let .sphereExists(sphereIdentity):
             return "Sphere exists: \(sphereIdentity)"
+        case let .permissionsError(message):
+            return "Permissions error: \(message)"
         }
     }
 }
@@ -430,10 +430,10 @@ struct DataService {
         }
     }
 
-    /// Given a slug, get back a resolved MemoAddress
+    /// Given a slug, get back a resolved MemoAddress for our own sphere.
     /// If there is public content, that will be returned.
     /// Otherwise, if there is local content, that will be returned.
-    func findAddress(
+    func findAddressInOurs(
         slug: Slug
     ) -> MemoAddress? {
         // If slug exists in default sphere, return that.
@@ -450,14 +450,15 @@ struct DataService {
     }
 
     func findUniqueAddressFor(
-        _ text: String, audience: Audience
+        _ text: String,
+        audience: Audience
     ) -> MemoAddress? {
         // If we can't derive slug from text, exit early.
         guard let slug = Slug(formatting: text) else {
             return nil
         }
         // If slug does not exist in any address space, return it.
-        if findAddress(slug: slug) == nil {
+        if findAddressInOurs(slug: slug) == nil {
             return slug.toMemoAddress(audience)
         }
         for n in 2..<500 {
@@ -465,85 +466,130 @@ struct DataService {
             guard let slugN = Slug("\(slug.description)-\(n)") else {
                 return nil
             }
-            if findAddress(slug: slugN) == nil {
+            if findAddressInOurs(slug: slugN) == nil {
                 return slugN.toMemoAddress(audience)
             }
         }
         return nil
     }
+    
+    private func readSphereMemo(
+        slashlink: Slashlink
+    ) -> Memo? {
+        try? noosphere.read(slashlink: slashlink.description).toMemo()
+    }
 
-    func readDetail(
+    /// Read memo from local store
+    private func readLocalMemo(
+        slug: Slug
+    ) -> Memo? {
+        local.read(slug)
+    }
+
+    /// Read editor detail for address.
+    /// Addresses with petnames will throw an exception, since we don't
+    /// have write access to others' spheres.
+    /// - Returns a MemoEditorDetailResponse for the editor state.
+    func readMemoEditorDetail(
         address: MemoAddress,
         fallback: String
-    ) throws -> EntryDetail {
+    ) throws -> MemoEditorDetailResponse {
+        // We do not allow editing 3p memos. Throw.
+        if !address.isOurs {
+            throw DataServiceError.permissionsError(
+                "Cannot edit memo `\(address)"
+            )
+        }
+        // Read memo from local or sphere.
+        let memo = Func.run {
+            switch address {
+            case .local(let slug):
+                return readLocalMemo(slug: slug)
+            
+            case .public(let slashlink):
+                return readSphereMemo(slashlink: slashlink)
+            }
+        }
+
         let backlinks = database.readEntryBacklinks(slug: address.slug)
 
-        let draft = EntryDetail(
-            saveState: .unsaved,
-            entry: Entry(
-                address: address,
-                contents: Memo(
-                    contentType: ContentType.subtext.rawValue,
-                    created: Date.now,
-                    modified: Date.now,
-                    fileExtension: ContentType.subtext.fileExtension,
-                    additionalHeaders: [],
-                    body: fallback
-                )
-            ),
-            backlinks: backlinks
-        )
-
-        switch address {
-        case .public(let slashlink):
-            do {
-                let memo = try noosphere.read(slashlink: slashlink.description)
-                    .toMemo()
-                    .unwrap()
-                return EntryDetail(
-                    saveState: .saved,
-                    entry: Entry(
-                        address: address,
-                        contents: memo
-                    ),
-                    backlinks: backlinks
-                )
-            } catch SphereFSError.fileDoesNotExist(let slashlink) {
-                logger.debug("Sphere file does not exist: \(slashlink). Returning new draft.")
-                return draft
-            }
-        case .local(let slug):
-            // Retreive top entry from file system to ensure it is fresh.
-            // If no file exists, return a draft, using fallback for title.
-            guard let memo = local.read(slug) else {
-                logger.debug("Local file does not exist: \(slug). Returning new draft.")
-                return draft
-            }
-            // Return entry
-            return EntryDetail(
-                saveState: .saved,
+        guard let memo = memo else {
+            logger.log(
+                "Memo does not exist at \(address). Returning new draft."
+            )
+            return MemoEditorDetailResponse(
+                saveState: .unsaved,
                 entry: Entry(
                     address: address,
-                    contents: memo
+                    contents: Memo.draft(body: fallback)
                 ),
                 backlinks: backlinks
             )
         }
+
+        return MemoEditorDetailResponse(
+            saveState: .saved,
+            entry: Entry(
+                address: address,
+                contents: memo
+            ),
+            backlinks: backlinks
+        )
     }
 
     /// Get memo and backlinks from slug, using string as a fallback.
     /// We trust caller to slugify the string, if necessary.
     /// Allowing any string allows us to retreive files that don't have a
     /// clean slug.
-    func readDetailAsync(
+    func readMemoEditorDetailAsync(
         address: MemoAddress,
         fallback: String
-    ) -> AnyPublisher<EntryDetail, Error> {
-        CombineUtilities.async(qos: .utility) {
-            try readDetail(address: address, fallback: fallback)
+    ) -> AnyPublisher<MemoEditorDetailResponse, Error> {
+        CombineUtilities.async {
+            try readMemoEditorDetail(address: address, fallback: fallback)
         }
     }
     
+    /// Read view-only memo detail for address.
+    /// - Returns `MemoDetailResponse`
+    func readMemoDetail(
+        address: MemoAddress
+    ) -> MemoDetailResponse? {
+        // Read memo from local or sphere.
+        let memo = Func.run {
+            switch address {
+            case .local(let slug):
+                return readLocalMemo(slug: slug)
+            case .public(let slashlink):
+                return readSphereMemo(slashlink: slashlink)
+            }
+        }
+
+        guard let memo = memo else {
+            return nil
+        }
+
+        let backlinks = database.readEntryBacklinks(slug: address.slug)
+
+        return MemoDetailResponse(
+            entry: MemoEntry(
+                address: address,
+                contents: memo
+            ),
+            backlinks: backlinks
+        )
+    }
+
+    /// Read view-only memo detail for address.
+    /// - Returns publisher for `MemoDetailResponse` or error
+    func readMemoDetailAsync(
+        address: MemoAddress
+    ) -> AnyPublisher<MemoDetailResponse?, Never> {
+        CombineUtilities.async {
+            readMemoDetail(address: address)
+        }
+    }
+
     /// Choose a random entry and publish slug
     func readRandomEntryLink() throws -> EntryLink {
         guard let link = database.readRandomEntryLink() else {

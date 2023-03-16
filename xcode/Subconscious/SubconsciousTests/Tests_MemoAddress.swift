@@ -55,4 +55,10 @@ final class Tests_MemoAddress: XCTestCase {
         XCTAssertNil(MemoAddress("local::slug/"))
         XCTAssertNil(MemoAddress("local::/slug/"))
     }
+    
+    func testMemoAddressIsOurs() throws {
+        XCTAssertTrue(MemoAddress("public::/slug")!.isOurs)
+        XCTAssertTrue(MemoAddress("local::/slug")!.isOurs)
+        XCTAssertFalse(MemoAddress("public::@theirs/slug")!.isOurs)
+    }
 }

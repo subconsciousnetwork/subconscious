@@ -10,10 +10,10 @@ import Foundation
 extension URLComponents {
     /// Get the first query string item with the given name.
     /// - Returns: first query item where name matches name given, or nil
-    func firstQueryItemWhere(name: String) -> URLQueryItem? {
+    func firstQueryValueWhere(name: String) -> String? {
         guard let items = queryItems else {
             return nil
         }
-        return items.first(where: { item in item.name == name })
+        return items.first(where: { item in item.name == name })?.value
     }
 }

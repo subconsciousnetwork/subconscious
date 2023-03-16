@@ -475,7 +475,7 @@ final class DatabaseService {
 
         // Create a suggestion for the literal query that has same
         // audience as current.
-        let queryAddress = Func.block({
+        let queryAddress = Func.run({
             switch current {
             case .public(let slashlink):
                 return MemoAddress.public(

@@ -173,6 +173,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         NSTextContentManagerDelegate,
         NSTextLayoutManagerDelegate
     {
+        static let renderer = SubtextAttributedStringRenderer()
         /// Is event happening during updateUIView?
         /// Used to avoid setting properties in events during view updates, as
         /// that would cause feedback cycles where an update triggers an event,
@@ -210,7 +211,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             )
 
             // Render markup on TextStorage (which is an NSMutableString)
-            self.subtext = Subtext.renderAttributesOf(textStorage, url: SubtextTextViewRepresentable.toSubURL)
+            self.subtext = Self.renderer.renderAttributesOf(textStorage)
         }
 
 
@@ -324,11 +325,6 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         subsystem: Config.default.rdns,
         category: "SubtextTextViewRepresentable"
     )
-
-    private static func toSubURL(sluglike: String, title: String) -> URL? {
-        UnqualifiedLink(sluglike: sluglike, title: title)?
-            .encodeAsSubEntryURL()
-    }
 
     //  MARK: Properties
     var state: SubtextTextModel

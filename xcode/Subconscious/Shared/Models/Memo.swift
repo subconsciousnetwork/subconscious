@@ -104,6 +104,25 @@ struct Memo: Hashable, CustomStringConvertible {
     }
 }
 
+extension Memo {
+    /// Create a draft memo with sensible default values
+    static func draft(
+        contentType: ContentType = .subtext,
+        created: Date = Date.now,
+        modified: Date = Date.now,
+        body: String
+    ) -> Self {
+        Memo(
+            contentType: contentType.rawValue,
+            created: created,
+            modified: modified,
+            fileExtension: contentType.fileExtension,
+            additionalHeaders: [],
+            body: body
+        )
+    }
+}
+
 extension MemoData {
     /// Create a memo from MemoData, with defaults for missing headers
     func toMemo(

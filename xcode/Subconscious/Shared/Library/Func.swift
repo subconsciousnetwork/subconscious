@@ -19,7 +19,15 @@ struct Func {
     /// This is useful for working around some of Swift's syntactical
     /// shortcomings. In particular, this lets us treat switch as an
     /// expression that returns a value.
-    static func block<T>(_ closure: () -> T) -> T {
+    static func run<T>(_ closure: () -> T) -> T {
         closure()
+    }
+    
+    /// Immediately run the passed throwing closure, returning the result.
+    /// Useful for wrapping switch statements so they can be treated as expressions.
+    static func run<T>(
+        _ execute: () throws -> T
+    ) throws -> T {
+        try execute()
     }
 }

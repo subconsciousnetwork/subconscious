@@ -25,7 +25,7 @@ struct NotebookNavigationView: View {
                     onEntryPress: { entry in
                         store.send(
                             .pushDetail(
-                                DetailOuterModel(
+                                MemoEditorDetailDescription(
                                     address: entry.address,
                                     fallback: entry.excerpt
                                 )
@@ -60,14 +60,27 @@ struct NotebookNavigationView: View {
                     }
                 }
             }
-            .navigationDestination(for: DetailOuterModel.self) { state in
-                DetailView(
-                    state: state,
-                    send: Address.forward(
-                        send: store.send,
-                        tag: NotebookAction.tag
+            .navigationDestination(
+                for: MemoDetailDescription.self
+            ) { detail in
+                switch detail {
+                case .editor(let description):
+                    MemoEditorDetailView(
+                        description: description,
+                        notify: Address.forward(
+                            send: store.send,
+                            tag: NotebookAction.tag
+                        )
                     )
-                )
+                case .viewer(let description):
+                    MemoViewerDetailView(
+                        description: description,
+                        notify: Address.forward(
+                            send: store.send,
+                            tag: NotebookAction.tag
+                        )
+                    )
+                }
             }
             .navigationTitle("Notes")
             .navigationBarTitleDisplayMode(.inline)
