@@ -73,6 +73,7 @@ enum AddressBookAction {
     case populate([AddressBookEntry])
     
     case requestFollow
+    case attemptFollow
     case failFollow(error: String)
     case succeedFollow(did: Did, petname: Petname)
     
@@ -108,48 +109,11 @@ struct AddressBookModel: ModelProtocol {
     ) -> Update<AddressBookModel> {
         switch action {
             
-        case .populate(let follows):
-            var model = state
-            model.follows = follows
-            return Update(state: model)
-            
-        case .presentFollowUserForm(let isPresented):
-            var model = state
-            
-            model.isFollowUserFormPresented = isPresented
-            if isPresented {
-                // Reset form when opened
-                model.followUserForm.did = FormField.update(
-                    state: model.followUserForm.did,
-                    action: .reset,
-                    environment: FormFieldEnvironment()
-                ).state
-                model.followUserForm.petname = FormField.update(
-                    state: model.followUserForm.petname,
-                    action: .reset,
-                    environment: FormFieldEnvironment()
-                ).state
-            }
-            
-            return Update(state: model)
-            
-        case .didField(let action):
-            return DidFieldCursor.update(
-                state: state,
-                action: action,
-                environment: FormFieldEnvironment()
-            )
-            
-        case .petnameField(let action):
-            return PetnameFieldCursor.update(
-                state: state,
-                action: action,
-                environment: FormFieldEnvironment()
-            )
-            
         case .present(let isPresented):
             var model = state
             model.isPresented = isPresented
+            model.failUnfollowErrorMessage = nil
+            model.failFollowErrorMessage = nil
             
             if isPresented {
                 do {
@@ -168,29 +132,59 @@ struct AddressBookModel: ModelProtocol {
             
             return Update(state: model, fx: fx)
             
-        case .requestFollow:
+        case .populate(let follows):
             var model = state
-            // Show errors on any untouched fields, hints at why you cannot submit
-            model.followUserForm.did = FormField.update(
-                state: model.followUserForm.did,
-                action: .markAsTouched,
-                environment: FormFieldEnvironment()
-            ).state
-            model.followUserForm.petname = FormField.update(
-                state: model.followUserForm.petname,
-                action: .markAsTouched,
-                environment: FormFieldEnvironment()
-            ).state
+            model.follows = follows
+            return Update(state: model)
             
+        case .presentFollowUserForm(let isPresented):
+            var model = state
+            
+            model.isFollowUserFormPresented = isPresented
+            
+            return update(
+                state: model,
+                actions: [
+                    .didField(.reset),
+                    .petnameField(.reset)
+                ],
+                environment: environment
+            )
+            
+        case .didField(let action):
+            return DidFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
+            
+        case .petnameField(let action):
+            return PetnameFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
+            
+       
+            
+        case .requestFollow:
+            return update(
+                state: state,
+                actions: [
+                    // Show errors on any untouched fields, hints at why you cannot submit
+                    .didField(.markAsTouched),
+                    .petnameField(.markAsTouched),
+                    .attemptFollow
+                ],
+                environment: environment
+            )
+            
+        case .attemptFollow:
             guard let did = state.followUserForm.did.validated else {
-                return Update(state: model)
+                return Update(state: state)
             }
             guard let petname = state.followUserForm.petname.validated else {
-                return Update(state: model)
-            }
-            // Guard against duplicates
-            guard !state.follows.contains(where: { entry in entry.did == did }) else {
-                return Update(state: model)
+                return Update(state: state)
             }
             
             let fx: Fx<AddressBookAction> = environment.data.addressBook
@@ -205,7 +199,7 @@ struct AddressBookModel: ModelProtocol {
                 })
                 .eraseToAnyPublisher()
             
-            return Update(state: model, fx: fx)
+            return Update(state: state, fx: fx)
             
         case .succeedFollow(did: let did, petname: let petname):
             let entry = AddressBookEntry(pfp: Image("sub_logo_dark"), petname: petname, did: did)
@@ -213,6 +207,7 @@ struct AddressBookModel: ModelProtocol {
             var model = state
             model.isFollowUserFormPresented = false
             model.follows.append(entry)
+            
             return Update(state: model)
             
         case .failFollow(error: let error):
