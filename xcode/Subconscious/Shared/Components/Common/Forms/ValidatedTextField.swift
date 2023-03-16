@@ -17,6 +17,14 @@ struct ValidatedTextField: View {
     var hasError: Bool = false
     @FocusState var focused: Bool
     
+    var backgroundColor = Color.background
+    
+    /// When appearing in a form the background colour of a should change
+    func formField() -> Self {
+        var this = self
+        this.backgroundColor = Color.formFieldBackground
+        return this
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit2) {
@@ -32,7 +40,7 @@ struct ValidatedTextField: View {
                             .frame(width: 24, height: 22)
                             .padding(.horizontal, 8)
                             .foregroundColor(.red)
-                            .background(Color.clear)
+                            .background(backgroundColor)
                     }
                     .padding(.trailing, 1)
                     .opacity(hasError ? 1 : 0)
@@ -79,6 +87,25 @@ struct ValidatedTextField_Previews: PreviewProvider {
                 hasError: true
             )
             .textFieldStyle(.roundedBorder)
+            
+            
+            Spacer()
+            
+            Form {
+                ValidatedTextField(
+                    placeholder: "nickname",
+                    text: .constant(""),
+                    caption: "Lowercase letters and numbers only."
+                )
+                .formField()
+                ValidatedTextField(
+                    placeholder: "nickname",
+                    text: .constant(""),
+                    caption: "Lowercase letters and numbers only.",
+                    hasError: true
+                )
+                .formField()
+            }
         }
         .padding()
     }

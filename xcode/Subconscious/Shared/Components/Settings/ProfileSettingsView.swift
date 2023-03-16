@@ -24,6 +24,7 @@ struct ProfileSettingsView: View {
                     caption: "Lowercase letters, numbers, and dashes only",
                     hasError: !app.state.isNicknameTextFieldValid
                 )
+                .formField()
                 .disableAutocorrection(true)
                 .autocapitalization(.none)
             }

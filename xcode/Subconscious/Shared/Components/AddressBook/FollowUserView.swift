@@ -36,6 +36,7 @@ struct FollowUserView: View {
                                 caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
                                 hasError: form.did.hasError
                             )
+                            .formField()
                             .lineLimit(1)
                             .textInputAutocapitalization(.never)
                             .disableAutocorrection(true)
@@ -57,6 +58,7 @@ struct FollowUserView: View {
                                 caption: "Lowercase letters, numbers and dashes only.",
                                 hasError: form.petname.hasError
                             )
+                            .formField()
                             .lineLimit(1)
                             .textInputAutocapitalization(.never)
                             .disableAutocorrection(true)
