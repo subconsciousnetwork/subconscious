@@ -103,7 +103,7 @@ struct SubtextAttributedStringRenderer {
     
     /// Body font size. Should be passed down from view using
     /// `@ScaledMetric(relativeTo: .body)`.
-    var bodySize: CGFloat
+    var bodySize: CGFloat = AppTheme.textSize
     /// Delegate allowing slashlink-to-url override
     var slashlinkToURL: (String) -> URL? = Self.slashlinkToURL
     /// Delegate allowing wikilink-to-url override
