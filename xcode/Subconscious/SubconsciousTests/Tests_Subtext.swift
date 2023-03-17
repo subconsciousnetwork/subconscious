@@ -485,10 +485,10 @@ class Tests_Subtext: XCTestCase {
         )
     }
     
-    func testDoesNotParsePetnameWithoutPath() throws {
+    func testParsesPetnameWithoutPath() throws {
         let markup = "A @petname without a slashlink part."
         let dom = Subtext.parse(markup: markup)
-        XCTAssertNil(dom.blocks.get(0)?.inline.get(0))
+        XCTAssertNotNil(dom.blocks.get(0)?.inline.get(0))
     }
     
     func testWikilinkParsing0() throws {
