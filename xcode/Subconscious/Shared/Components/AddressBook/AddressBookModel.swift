@@ -76,10 +76,14 @@ enum AddressBookAction {
     case requestFollow
     case attemptFollow
     case failFollow(error: String)
+    case dismissFailFollowError
     case succeedFollow(did: Did, petname: Petname)
     
     case requestUnfollow(petname: Petname)
+    case confirmUnfollow
+    case cancelUnfollow
     case failUnfollow(error: String)
+    case dismissFailUnfollowError
     case succeedUnfollow(petname: Petname)
     
     case presentFollowUserForm(_ isPresented: Bool)
@@ -97,6 +101,8 @@ struct AddressBookModel: ModelProtocol {
     
     var failFollowErrorMessage: String? = nil
     var failUnfollowErrorMessage: String? = nil
+    
+    var unfollowCandidate: Petname? = nil
 
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -219,7 +225,26 @@ struct AddressBookModel: ModelProtocol {
             model.failFollowErrorMessage = error
             return Update(state: model)
             
+        case .dismissFailFollowError:
+            var model = state
+            model.failFollowErrorMessage = nil
+            return Update(state: model)
+            
         case .requestUnfollow(petname: let petname):
+            var model = state
+            model.unfollowCandidate = petname
+            return Update(state: model)
+            
+        case .cancelUnfollow:
+            var model = state
+            model.unfollowCandidate = nil
+            return Update(state: model)
+            
+        case .confirmUnfollow:
+            guard let petname = state.unfollowCandidate else {
+                return Update(state: state)
+            }
+            
             let fx: Fx<AddressBookAction> =
                 environment.data.addressBook
                 .unfollowUserAsync(petname: petname)
@@ -245,6 +270,11 @@ struct AddressBookModel: ModelProtocol {
         case .failUnfollow(error: let error):
             var model = state
             model.failUnfollowErrorMessage = error
+            return Update(state: model)
+            
+        case .dismissFailUnfollowError:
+            var model = state
+            model.failUnfollowErrorMessage = nil
             return Update(state: model)
         }
     }

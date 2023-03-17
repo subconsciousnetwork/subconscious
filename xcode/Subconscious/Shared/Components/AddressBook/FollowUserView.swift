@@ -64,19 +64,6 @@ struct FollowUserView: View {
                             .disableAutocorrection(true)
                         }
                     }
-                    
-                    // Basic error visibility
-                    if let msg = state.failFollowErrorMessage {
-                        HStack {
-                            Image(systemName: "exclamationmark.circle")
-                                .frame(width: 24, height: 22)
-                                .padding(.horizontal, 8)
-                                .foregroundColor(.red)
-                                .background(Color.clear)
-                            Text(msg)
-                                .foregroundColor(.red)
-                        }
-                    }
                 }
             }
             .navigationTitle("Follow User")
@@ -93,6 +80,13 @@ struct FollowUserView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .alert(
+                state.failFollowErrorMessage ?? "",
+                isPresented: Binding(
+                    get: { state.failFollowErrorMessage != nil },
+                    set: { _ in send(.dismissFailFollowError) }
+                )
+            ) { }
         }
     }
 }
