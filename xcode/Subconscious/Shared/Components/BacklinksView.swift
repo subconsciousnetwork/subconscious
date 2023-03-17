@@ -20,20 +20,13 @@ struct BacklinksView: View {
             }
             if backlinks.count > 0 {
                 ForEach(backlinks) { entry in
-                    Button(
+                    Transclude2View(
+                        address: entry.address,
+                        excerpt: entry.excerpt,
                         action: {
-                            onSelect(
-                                EntryLink(entry)
-                            )
-                        },
-                        label: {
-                            Transclude2View(
-                                address: entry.address,
-                                excerpt: entry.excerpt
-                            )
+                            onSelect(EntryLink(entry))
                         }
                     )
-                    .buttonStyle(.plain)
                 }
             } else {
                 TitleGroupView(

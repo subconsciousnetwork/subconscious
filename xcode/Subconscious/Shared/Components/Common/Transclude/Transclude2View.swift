@@ -13,22 +13,21 @@ import SwiftUI
 struct Transclude2View: View {
     var address: MemoAddress
     var excerpt: String
+    var action: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.unit) {
-            Text(excerpt)
-                .lineLimit(5)
-            SlashlinkBylineView(slashlink: address.toSlashlink())
-                .theme(petname: Color.secondary)
-        }
-        .padding(.vertical, AppTheme.unit3)
-        .padding(.horizontal, AppTheme.unit4)
-        .overlay(
-            RoundedRectangle(
-                cornerRadius: AppTheme.cornerRadiusLg
-            )
-            .stroke(Color.separator, lineWidth: 0.5)
+        Button(
+            action: action,
+            label: {
+                VStack(alignment: .leading, spacing: AppTheme.unit) {
+                    Text(excerpt)
+                        .lineLimit(5)
+                    SlashlinkBylineView(slashlink: address.toSlashlink())
+                        .theme(petname: Color.secondary)
+                }
+            }
         )
+        .buttonStyle(TranscludeButtonStyle())
     }
 }
 
@@ -37,15 +36,18 @@ struct Transclude2View_Previews: PreviewProvider {
         VStack {
             Transclude2View(
                 address: MemoAddress.public(Slashlink("/short")!),
-                excerpt: "Short."
+                excerpt: "Short.",
+                action: { }
             )
             Transclude2View(
                 address: MemoAddress.public(Slashlink("@gordon/loomings")!),
-                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation."
+                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation.",
+                action: { }
             )
             Transclude2View(
                 address: MemoAddress.public(Slashlink("/loomings")!),
-                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation."
+                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation.",
+                action: { }
             )
         }
     }
