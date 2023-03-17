@@ -101,6 +101,9 @@ struct SubtextAttributedStringRenderer {
         return sub.toURL()
     }
     
+    /// Body font size. Should be passed down from view using
+    /// `@ScaledMetric(relativeTo: .body)`.
+    var bodySize: CGFloat
     /// Delegate allowing slashlink-to-url override
     var slashlinkToURL: (String) -> URL? = Self.slashlinkToURL
     /// Delegate allowing wikilink-to-url override
@@ -143,7 +146,7 @@ struct SubtextAttributedStringRenderer {
         // Set default font for entire string
         attributedString.addAttribute(
             .font,
-            value: UIFont.appTextMono,
+            value: UIFont.appTextMono.withSize(bodySize),
             range: baseNSRange
         )
         

@@ -71,7 +71,7 @@ final class Tests_SubtextAttributedStringRendererToURL: XCTestCase {
     }
     
     func testPerformance() throws {
-        let renderer = SubtextAttributedStringRenderer()
+        let renderer = SubtextAttributedStringRenderer(bodySize: 17)
         let attributedString = NSMutableAttributedString(
             string: """
             Recombinant processes expand the [[adjacent possible]].
