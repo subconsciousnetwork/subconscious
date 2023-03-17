@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct AudienceMenuButtonView: View {
+    @ScaledMetric(relativeTo: .caption)
+    private var width: CGFloat = 140
+    
     @Binding var audience: Audience
 
     var body: some View {
@@ -41,7 +44,7 @@ struct AudienceMenuButtonView: View {
                     icon: Image(audience: audience),
                     label: audience.description
                 )
-                .frame(width: 140)
+                .frame(width: width)
             }
         )
     }
