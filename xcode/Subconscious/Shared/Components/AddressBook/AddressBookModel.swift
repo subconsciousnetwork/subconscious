@@ -70,7 +70,7 @@ struct DidFieldCursor: CursorProtocol {
 enum AddressBookAction {
     case present(_ isPresented: Bool)
     
-    case refetch
+    case refreshEntries(forceRefetchFromNoosphere: Bool = false)
     case populate([AddressBookEntry])
     
     case requestFollow
@@ -130,11 +130,15 @@ struct AddressBookModel: ModelProtocol {
                 }
             }
             
-            return update(state: model, action: .refetch, environment: environment)
+            return update(
+                state: model,
+                action: .refreshEntries(forceRefetchFromNoosphere: false),
+                environment: environment
+            )
             
-        case .refetch:
+        case .refreshEntries(let forceRefreshFromNoosphere):
             let fx: Fx<AddressBookAction> =
-                environment.data.addressBook.listEntries(refetch: true)
+                environment.data.addressBook.listEntries(refetch: forceRefreshFromNoosphere)
                 .map({ follows in
                     AddressBookAction.populate(follows)
                 })
@@ -218,7 +222,11 @@ struct AddressBookModel: ModelProtocol {
             model.isFollowUserFormPresented = false
             model.follows.append(entry)
             
-            return update(state: model, action: .refetch, environment: environment)
+            return update(
+                state: model,
+                action: .refreshEntries(forceRefetchFromNoosphere: true),
+                environment: environment
+            )
             
         case .failFollow(error: let error):
             var model = state
@@ -265,7 +273,11 @@ struct AddressBookModel: ModelProtocol {
             model.follows.removeAll { f in
                 f.petname == petname
             }
-            return update(state: model, action: .refetch, environment: environment)
+            return update(
+                state: model,
+                action: .refreshEntries(forceRefetchFromNoosphere: true),
+                environment: environment
+            )
             
         case .failUnfollow(error: let error):
             var model = state
