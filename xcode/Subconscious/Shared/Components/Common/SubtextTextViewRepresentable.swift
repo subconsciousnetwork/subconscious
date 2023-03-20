@@ -173,7 +173,6 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         NSTextContentManagerDelegate,
         NSTextLayoutManagerDelegate
     {
-        static let renderer = SubtextAttributedStringRenderer()
         /// Is event happening during updateUIView?
         /// Used to avoid setting properties in events during view updates, as
         /// that would cause feedback cycles where an update triggers an event,
@@ -181,6 +180,8 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         var isUIViewUpdating: Bool
         var representable: SubtextTextViewRepresentable
         var renderTranscludeBlocks: Bool = false
+        /// Subtext renderer instance
+        var renderer: SubtextAttributedStringRenderer
         var subtext: Subtext? = nil
 
         init(
@@ -188,6 +189,9 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         ) {
             self.isUIViewUpdating = false
             self.representable = representable
+            self.renderer = SubtextAttributedStringRenderer(
+                bodySize: representable.bodySize
+            )
         }
         
         /// NSTextStorageDelegate method
@@ -211,9 +215,8 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             )
 
             // Render markup on TextStorage (which is an NSMutableString)
-            self.subtext = Self.renderer.renderAttributesOf(textStorage)
+            self.subtext = renderer.renderAttributesOf(textStorage)
         }
-
 
         /// Handle link taps
         func textView(
@@ -327,6 +330,9 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
     )
 
     //  MARK: Properties
+    @ScaledMetric(relativeTo: .body)
+    private var bodySize: CGFloat = AppTheme.textSize
+    
     var state: SubtextTextModel
     var send: (SubtextTextAction) -> Void
     /// Frame needed to determine textview height.
@@ -335,7 +341,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
     var onLink: (URL) -> Bool
-
+    
     //  MARK: makeUIView
     func makeUIView(context: Context) -> SubtextTextView {
         Self.logger.debug("makeUIView")
@@ -389,9 +395,17 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             context.coordinator.isUIViewUpdating = false
         }
 
-        // Update text
-        if view.text != state.text {
+        // Update/re-render text if text changed or font size
+        // preferences changed.
+        if (
+            view.text != state.text ||
+            self.bodySize != context.coordinator.renderer.bodySize
+        ) {
             SubtextTextViewRepresentable.logger.debug("updateUIView: set text")
+            // Set body size on renderer. This costs nothing, and makes sure
+            // that the next text render will have the new body size if the
+            // body size preferenced changed.
+            context.coordinator.renderer.bodySize = bodySize
             view.text = state.text
         }
 

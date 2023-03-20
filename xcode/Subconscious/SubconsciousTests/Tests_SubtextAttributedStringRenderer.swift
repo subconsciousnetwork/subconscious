@@ -8,7 +8,7 @@
 import XCTest
 @testable import Subconscious
 
-final class Tests_SubtextAttributedStringRendererToURL: XCTestCase {
+final class Tests_SubtextAttributedStringRenderer: XCTestCase {
     func testSubSlashlinkToURL() throws {
         let link = SubSlashlinkLink(
             slashlink: Slashlink("@here/lo-and-behold")!,
