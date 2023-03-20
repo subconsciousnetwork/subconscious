@@ -46,9 +46,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-xcode-
 
-      - run:
-        name: Set IgnoreFileSystemDeviceInodeChanges flag
-        command: defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
+      - name: Set IgnoreFileSystemDeviceInodeChanges flag
+        run: defaults write com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges -bool YES
 
       - name: Run unit tests
         run: ./scripts/run_tests.sh "iOS Simulator" "iPhone 14 Pro" "${{ matrix.ios }}" "${{ matrix.xcode }}" | xcpretty && exit ${PIPESTATUS[0]}
