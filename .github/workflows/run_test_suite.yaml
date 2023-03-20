@@ -41,7 +41,7 @@ jobs:
         env:
           cache-name: cache-build
         with:
-          path: ~/Library/Developer/Xcode/DerivedData
+          path: ~/Library/Developer/Xcode/DerivedData/**/*
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-xcode-
