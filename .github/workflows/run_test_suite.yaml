@@ -35,5 +35,16 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
 
+      - name: Cache Xcode build artifacts
+        id: cache-build
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-build
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-
+
       - name: Run unit tests
         run: ./scripts/run_tests.sh "iOS Simulator" "iPhone 14 Pro" "${{ matrix.ios }}" "${{ matrix.xcode }}" | xcpretty && exit ${PIPESTATUS[0]}
