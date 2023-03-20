@@ -200,6 +200,14 @@ struct AddressBookModel: ModelProtocol {
                 return Update(state: state)
             }
             
+            guard !state.follows.contains(where: { f in f.did == did }) else {
+                return update(
+                    state: state,
+                    action: .failFollow(error: "Already following user"),
+                    environment: environment
+                )
+            }
+            
             let fx: Fx<AddressBookAction> =
                 environment.data.addressBook
                 .followUserAsync(did: did, petname: petname)
