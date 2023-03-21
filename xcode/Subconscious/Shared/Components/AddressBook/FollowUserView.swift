@@ -81,12 +81,16 @@ struct FollowUserView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .alert(
-                state.failFollowErrorMessage ?? "",
                 isPresented: Binding(
                     get: { state.failFollowErrorMessage != nil },
                     set: { _ in send(.dismissFailFollowError) }
                 )
-            ) { }
+            ) {
+                Alert(
+                    title: Text("Failed to Follow User"),
+                    message: Text(state.failFollowErrorMessage ?? "An unknown error ocurred")
+                )
+            }
         }
     }
 }

@@ -81,12 +81,16 @@ struct AddressBookView: View {
                 FollowUserView(state: state, send: send)
             }
             .alert(
-                state.failUnfollowErrorMessage ?? "",
                 isPresented: Binding(
                     get: { state.failUnfollowErrorMessage != nil },
                     set: { _ in send(.dismissFailUnfollowError) }
                 )
-            ) {}
+            ) {
+                Alert(
+                    title: Text("Failed to Unfollow User"),
+                    message: Text(state.failUnfollowErrorMessage ?? "An unknown error occurred")
+                )
+            }
             .confirmationDialog(
                 "Are you sure?",
                 isPresented:
@@ -101,6 +105,8 @@ struct AddressBookView: View {
                 ) {
                     send(.confirmUnfollow)
                 }
+            } message: {
+                Text("You cannot undo this action")
             }
         }
     }
