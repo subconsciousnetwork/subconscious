@@ -205,10 +205,6 @@ struct AddressBookModel: ModelProtocol {
             guard let petname = state.followUserForm.petname.validated else {
                 return Update(state: state)
             }
-            // Guard against duplicates
-            guard !state.follows.contains(where: { entry in entry.did == did }) else {
-                return Update(state: state)
-            }
             
             guard !state.follows.contains(where: { f in f.did == did }) else {
                 return update(
