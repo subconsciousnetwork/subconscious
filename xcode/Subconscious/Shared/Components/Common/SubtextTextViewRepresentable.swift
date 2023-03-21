@@ -179,7 +179,6 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         /// which triggers an update, which triggers an event, etc.
         var isUIViewUpdating: Bool
         var representable: SubtextTextViewRepresentable
-        var renderTranscludeBlocks: Bool = false
         /// Subtext renderer instance
         var renderer: SubtextAttributedStringRenderer
         var subtext: Subtext? = nil
@@ -297,7 +296,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                 range: textElement.elementRange
             )
  
-            guard renderTranscludeBlocks else {
+            guard Config.default.renderTranscludeBlocks else {
                 return baseLayoutFragment
             }
 
