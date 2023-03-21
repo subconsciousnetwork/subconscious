@@ -189,4 +189,14 @@ public final class Noosphere {
     ) throws -> Z {
         try Self.callWithError { error in perform(a, b, c, error) }
     }
+    
+    static func callWithError<A, B, C, D, Z>(
+        _ perform: (A, B, C, D, UnsafeMutablePointer<OpaquePointer?>) -> Z,
+        _ a: A,
+        _ b: B,
+        _ c: C,
+        _ d: D
+    ) throws -> Z {
+        try Self.callWithError { error in perform(a, b, c, d, error) }
+    }
 }

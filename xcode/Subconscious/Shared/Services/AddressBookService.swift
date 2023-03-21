@@ -12,10 +12,12 @@ import SwiftUI
 
 class AddressBookService {
     private(set) var noosphere: NoosphereService
+    private(set) var database: DatabaseService
     private var addressBook: [AddressBookEntry]?
     
-    init(noosphere: NoosphereService) {
+    init(noosphere: NoosphereService, database: DatabaseService) {
         self.noosphere = noosphere
+        self.database = database
         self.addressBook = nil
     }
     
@@ -36,7 +38,7 @@ class AddressBookService {
                         .map { did -> AddressBookEntry? in
                             guard let did = did else { return nil }
                             // TODO: hardcoded pfp
-                            return AddressBookEntry(pfp: Image("pfp-dog"), petname: f, did: did)
+                            return AddressBookEntry(pfp: AppTheme.brandMarkDark, petname: f, did: did)
                         }
                         .compactMap { value in value }
                 })
@@ -52,6 +54,32 @@ class AddressBookService {
                 return entries
             }
             .eraseToAnyPublisher()
+    }
+    
+    func followUser(did: Did, petname: Petname) throws {
+        try setPetname(did: did, petname: petname)
+        let version = try self.noosphere.save()
+        try database.writeMetadatadata(key: .sphereVersion, value: version)
+    }
+    
+    /// Associates the passed DID with the passed petname within the sphere, saves the changes and updates the database.
+    func followUserAsync(did: Did, petname: Petname) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async(qos: .default) {
+            return try self.followUser(did: did, petname: petname)
+        }
+    }
+    
+    func unfollowUser(petname: Petname) throws {
+        try unsetPetname(petname: petname)
+        let version = try self.noosphere.save()
+        try database.writeMetadatadata(key: .sphereVersion, value: version)
+    }
+    
+    /// Unassociates the passed DID with the passed petname within the sphere, saves the changes and updates the database.
+    func unfollowUserAsync(petname: Petname) -> AnyPublisher<Void, Error> {
+        CombineUtilities.async(qos: .default) {
+            return try self.unfollowUser(petname: petname)
+        }
     }
     
     func getPetname(petname: Petname) throws -> Did? {

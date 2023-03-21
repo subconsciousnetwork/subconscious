@@ -265,70 +265,87 @@ public final class SphereFS: SphereProtocol {
     }
     
     public func getPetname(petname: String) throws -> String {
-        throw NoosphereError.foreignError("Not Implemented: getPetname")
+        let name = try Noosphere.callWithError(
+            ns_sphere_petname_get,
+            noosphere.noosphere,
+            fs,
+            petname
+        )
         
-//        return try Noosphere.callWithError(
-//            ns_sphere_petname_get,
-//            noosphere.noosphere,
-//            sphere,
-//            petname
-//        )
+        guard let name = name else {
+            throw NoosphereError.nullPointer
+        }
+        defer {
+            ns_string_free(name)
+        }
+        
+        return String(cString: name)
     }
     
     public func setPetname(did: String, petname: String) throws {
-        throw NoosphereError.foreignError("Not Implemented: setPetname")
-        
-//        return try Noosphere.callWithError(
-//            ns_sphere_petname_set,
-//            noosphere.noosphere,
-//            sphere,
-//            petname,
-//            did
-//        )
+        try Noosphere.callWithError(
+            ns_sphere_petname_set,
+            noosphere.noosphere,
+            fs,
+            petname,
+            did
+        )
     }
     
     public func unsetPetname(petname: String) throws {
-        throw NoosphereError.foreignError("Not Implemented: unsetPetname")
-        
-//        return try Noosphere.callWithError(
-//            ns_sphere_petname_set,
-//            noosphere.noosphere,
-//            sphere,
-//            petname,
-//            nil
-//        )
+        try Noosphere.callWithError(
+            ns_sphere_petname_set,
+            noosphere.noosphere,
+            fs,
+            petname,
+            nil
+        )
     }
     
     public func resolvePetname(petname: String) throws -> String {
-        throw NoosphereError.foreignError("Not Implemented: resolvePetname")
+        let did = try Noosphere.callWithError(
+            ns_sphere_petname_resolve,
+            noosphere.noosphere,
+            fs,
+            petname
+        )
         
-//        return try Noosphere.callWithError(
-//            ns_sphere_petname_resolve,
-//            noosphere.noosphere,
-//            sphere,
-//            petname
-//        )
+        guard let did = did else {
+            throw NoosphereError.nullPointer
+        }
+        defer {
+            ns_string_free(did)
+        }
+        
+        return String(cString: did)
     }
     
     public func listPetnames() throws -> [String] {
-        throw NoosphereError.foreignError("Not Implemented: listPetnames")
+        let petnames = try Noosphere.callWithError(
+            ns_sphere_petname_list,
+            noosphere.noosphere,
+            fs
+        )
         
-//        return try Noosphere.callWithError(
-//            ns_sphere_petname_list,
-//            noosphere.noosphere,
-//            sphere
-//        )
+        defer {
+            ns_string_array_free(petnames)
+        }
+        
+        return petnames.toStringArray()
     }
     
     public func getPetnameChanges(sinceCid: String) throws -> [String] {
-        throw NoosphereError.foreignError("Not Implemented: getPetnameChanges")
+        let changes = try Noosphere.callWithError(
+            ns_sphere_petname_changes,
+            noosphere.noosphere,
+            fs,
+            sinceCid
+        )
+        defer {
+            ns_string_array_free(changes)
+        }
         
-//        return try Noosphere.callWithError(
-//            ns_sphere_petname_list,
-//            noosphere.noosphere,
-//            sphere,
-//            sinceCid
-//        )
+        return changes.toStringArray()
     }
     
     /// Save outstanding writes and return new Sphere version
@@ -363,16 +380,7 @@ public final class SphereFS: SphereProtocol {
             ns_string_array_free(slugs)
         }
         
-        let slugCount = slugs.len
-        var pointer = slugs.ptr!
-        
-        var output: [String] = []
-        for _ in 0..<slugCount {
-            let slug = String.init(cString: pointer.pointee!)
-            output.append(slug)
-            pointer += 1;
-        }
-        return output
+        return slugs.toStringArray()
     }
     
     /// Sync sphere with gateway.
@@ -406,16 +414,7 @@ public final class SphereFS: SphereProtocol {
             ns_string_array_free(changes)
         }
         
-        let changesCount = changes.len
-        var pointer = changes.ptr!
-        
-        var slugs: [String] = []
-        for _ in 0..<changesCount {
-            let slug = String.init(cString: pointer.pointee!)
-            slugs.append(slug)
-            pointer += 1;
-        }
-        return slugs
+        return changes.toStringArray()
     }
     
     deinit {
@@ -449,17 +448,23 @@ public final class SphereFS: SphereProtocol {
             ns_string_array_free(file_header_names)
         }
 
-        let name_count = file_header_names.len
-        guard var pointer = file_header_names.ptr else {
+        return file_header_names.toStringArray()
+    }
+}
+
+extension slice_boxed_char_ptr_t {
+    func toStringArray() -> [String] {
+        let count = self.len
+        guard var pointer = self.ptr else {
             return []
         }
 
-        var names: [String] = []
-        for _ in 0..<name_count {
-            let name = String(cString: pointer.pointee!)
-            names.append(name)
+        var result: [String] = []
+        for _ in 0..<count {
+            let item = String(cString: pointer.pointee!)
+            result.append(item)
             pointer += 1;
         }
-        return names
+        return result
     }
 }

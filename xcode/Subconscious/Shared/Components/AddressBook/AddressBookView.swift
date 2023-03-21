@@ -44,18 +44,6 @@ struct AddressBookView: View {
                         }
                     }
                 }
-                // Basic error visibility
-                if let msg = state.failUnfollowErrorMessage {
-                    HStack {
-                        Image(systemName: "exclamationmark.circle")
-                            .frame(width: 24, height: 22)
-                            .padding(.horizontal, 8)
-                            .foregroundColor(.red)
-                            .background(Color.clear)
-                        Text(msg)
-                            .foregroundColor(.red)
-                    }
-                }
                 
                 if let did = state.did {
                     Section(header: Text("My DID")) {
@@ -91,6 +79,34 @@ struct AddressBookView: View {
                 )
             ) {
                 FollowUserView(state: state, send: send)
+            }
+            .alert(
+                isPresented: Binding(
+                    get: { state.failUnfollowErrorMessage != nil },
+                    set: { _ in send(.dismissFailUnfollowError) }
+                )
+            ) {
+                Alert(
+                    title: Text("Failed to Unfollow User"),
+                    message: Text(state.failUnfollowErrorMessage ?? "An unknown error occurred")
+                )
+            }
+            .confirmationDialog(
+                "Are you sure?",
+                isPresented:
+                    Binding(
+                        get: { state.unfollowCandidate != nil },
+                        set: { _ in send(.cancelUnfollow) }
+                    )
+            ) {
+                Button(
+                    "Unfollow \(state.unfollowCandidate?.verbatim ?? "user")?",
+                    role: .destructive
+                ) {
+                    send(.confirmUnfollow)
+                }
+            } message: {
+                Text("You cannot undo this action")
             }
         }
     }
