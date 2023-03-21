@@ -331,7 +331,7 @@ public final class SphereFS: SphereProtocol {
             ns_string_array_free(petnames)
         }
         
-        return petnames.toSwift()
+        return petnames.toStringArray()
     }
     
     public func getPetnameChanges(sinceCid: String) throws -> [String] {
@@ -345,7 +345,7 @@ public final class SphereFS: SphereProtocol {
             ns_string_array_free(changes)
         }
         
-        return changes.toSwift()
+        return changes.toStringArray()
     }
     
     /// Save outstanding writes and return new Sphere version
@@ -380,7 +380,7 @@ public final class SphereFS: SphereProtocol {
             ns_string_array_free(slugs)
         }
         
-        return slugs.toSwift()
+        return slugs.toStringArray()
     }
     
     /// Sync sphere with gateway.
@@ -414,7 +414,7 @@ public final class SphereFS: SphereProtocol {
             ns_string_array_free(changes)
         }
         
-        return changes.toSwift()
+        return changes.toStringArray()
     }
     
     deinit {
@@ -448,12 +448,12 @@ public final class SphereFS: SphereProtocol {
             ns_string_array_free(file_header_names)
         }
 
-        return file_header_names.toSwift()
+        return file_header_names.toStringArray()
     }
 }
 
 extension slice_boxed_char_ptr_t {
-    func toSwift() -> [String] {
+    func toStringArray() -> [String] {
         let count = self.len
         guard var pointer = self.ptr else {
             return []
