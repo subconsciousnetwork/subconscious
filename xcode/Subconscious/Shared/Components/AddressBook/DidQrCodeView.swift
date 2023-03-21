@@ -11,6 +11,7 @@ import CoreImage.CIFilterBuiltins
 
 struct DidQrCodeView: View {
     var did: Did
+    var color: Color
     
     let context = CIContext()
     let filter = CIFilter.qrCodeGenerator()
@@ -31,7 +32,7 @@ struct DidQrCodeView: View {
         var g: CGFloat = 0.0
         var b: CGFloat = 0.0
         var a: CGFloat = 0.0
-        UIColor(Color.accentColor).getRed(&r, green: &g, blue: &b, alpha: &a)
+        UIColor(color).getRed(&r, green: &g, blue: &b, alpha: &a)
         let col = CIColor(red: r, green: g, blue: b, alpha: a)
         maskFilter.inputImage = CIImage(color: col)
         
@@ -57,7 +58,8 @@ struct DidQrCodeView: View {
 struct DidQrCodeView_Previews: PreviewProvider {
     static var previews: some View {
         DidQrCodeView(
-            did: Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
+            did: Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!,
+            color: .accentColor
         )
     }
 }

@@ -13,7 +13,7 @@ struct DidView: View {
     
     var body: some View {
         VStack {
-            DidQrCodeView(did: did)
+            DidQrCodeView(did: did, color: .accentColor)
                 .frame(maxWidth: 256, alignment: .center)
             
             HStack {
