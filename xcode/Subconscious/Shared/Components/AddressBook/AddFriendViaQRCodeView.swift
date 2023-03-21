@@ -8,12 +8,18 @@
 import Foundation
 import SwiftUI
 import CodeScanner
+import os
 
 struct AddFriendViaQRCodeView: View {
     @Environment(\.dismiss) var dismiss
     
     var onScannedDid: (String) -> Void
     var onCancel: () -> Void
+    
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "AddFriendViaQRCodeView"
+    )
     
     var body: some View {
         VStack {
@@ -37,10 +43,10 @@ struct AddFriendViaQRCodeView: View {
             ) { res in
                 switch res {
                 case .success(let result):
-                    print("Found code: \(result.string)")
+                    AddFriendViaQRCodeView.logger.debug("Found code: \(result.string)")
                     onScannedDid(result.string)
                 case .failure(let error):
-                    print(error.localizedDescription)
+                    AddFriendViaQRCodeView.logger.debug("\(error.localizedDescription)")
                 }
                 
                 dismiss()
