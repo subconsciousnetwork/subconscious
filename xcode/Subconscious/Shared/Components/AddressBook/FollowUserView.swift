@@ -7,7 +7,6 @@
 
 import SwiftUI
 import ObservableStore
-import CodeScanner
 
 struct FollowUserView: View {
     var state: AddressBookModel
@@ -15,8 +14,6 @@ struct FollowUserView: View {
         get { state.followUserForm }
     }
     var send: (AddressBookAction) -> Void
-    
-    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     
     func populateDidFromQRCodeResult(encodedText: String) {
         send(.qrCodeScanned(scannedContent: encodedText))
