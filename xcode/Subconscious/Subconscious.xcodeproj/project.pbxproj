@@ -645,30 +645,6 @@
 				B8D328B629A671DA00850A37 /* Transclude2View.swift */,
 				B8A59D5F28B51D000010DB2F /* TranscludeView.swift */,
 				B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */,
-			);
-			path = Transclude;
-			sourceTree = "<group>";
-		};
-		B584814029AC32550033F434 /* AddressBook */ = {
-			isa = PBXGroup;
-			children = (
-				B57D63BC29B56699008BBB62 /* AddressBookModel.swift */,
-				B584814129AC335B0033F434 /* AddressBookEntryView.swift */,
-				B584813E29AC32410033F434 /* AddressBookView.swift */,
-				B584814329AC384F0033F434 /* AddFriendView.swift */,
-				B57D63BA29B1CA8B008BBB62 /* MyDidView.swift */,
-				B584814529AC3B5E0033F434 /* DidQrCodeView.swift */,
-				B57D63C129B575C8008BBB62 /* AddFriendViaQRCodeView.swift */,
-			);
-			path = AddressBook;
-      sourceTree = "<group>";
-    };
-		B532F8C129B1750F00CE9256 /* Transclude */ = {
-			isa = PBXGroup;
-			children = (
-				B8D328B629A671DA00850A37 /* Transclude2View.swift */,
-				B8A59D5F28B51D000010DB2F /* TranscludeView.swift */,
-				B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */,
 				B8616DF729C38775001C666A /* TranscludeButtonStyle.swift */,
 			);
 			path = Transclude;
@@ -680,7 +656,6 @@
 				B57D63BC29B56699008BBB62 /* AddressBookModel.swift */,
 				B584814129AC335B0033F434 /* AddressBookEntryView.swift */,
 				B584813E29AC32410033F434 /* AddressBookView.swift */,
-				B584814329AC384F0033F434 /* FollowUserView.swift */,
 				B51A895A29B80F6E00BF5C8A /* FollowUserView.swift */,
 				B569971429B6A0DF003204FC /* AddFriendViaQRCodeView.swift */,
 				B569971529B6A0DF003204FC /* DidQrCodeView.swift */,
@@ -1931,6 +1906,7 @@
 				INFOPLIST_FILE = iOS/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Subconscious;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Optionally adding friends via scanning a QR Code";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

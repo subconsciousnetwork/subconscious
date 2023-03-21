@@ -19,7 +19,7 @@ struct FollowUserView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     
     func populateDidFromQRCodeResult(encodedText: String) {
-        send(.didField(.setValue(input: encodedText)))
+        send(.qrCodeScanned(scannedContent: encodedText))
     }
     
     var body: some View {
@@ -71,22 +71,22 @@ struct FollowUserView: View {
                             .disableAutocorrection(true)
                         }
                     }
-                }
-                
-                if Config.default.addByQrCode {
-                    Section(header: Text("Add via QR Code")) {
-                        Button(
-                            action: {
-                                send(.presentQRCodeScanner(true))
-                            },
-                            label: {
-                                HStack {
-                                    Image(systemName: "qrcode")
-                                    Text("Scan Code")
+                    
+                    if Config.default.addByQrCode {
+                        Section(header: Text("Add via QR Code")) {
+                            Button(
+                                action: {
+                                    send(.presentQRCodeScanner(true))
+                                },
+                                label: {
+                                    HStack {
+                                        Image(systemName: "qrcode")
+                                        Text("Scan Code")
+                                    }
+                                    .foregroundColor(.accentColor)
                                 }
-                                .foregroundColor(.accentColor)
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }
@@ -115,14 +115,17 @@ struct FollowUserView: View {
                     message: Text(state.failFollowErrorMessage ?? "An unknown error ocurred")
                 )
             }
-            .sheet(
+            .fullScreenCover(
                 isPresented: Binding(
                     get: { state.qrCodeScannerIsPresented && Config.default.addByQrCode },
                     send: send,
                     tag: AddressBookAction.presentQRCodeScanner
                 )
             ) {
-                AddFriendViaQRCodeView(onScannedDid: populateDidFromQRCodeResult)
+                AddFriendViaQRCodeView(
+                    onScannedDid: populateDidFromQRCodeResult,
+                    onCancel: { send(.presentQRCodeScanner(false)) }
+                )
             }
         }
     }

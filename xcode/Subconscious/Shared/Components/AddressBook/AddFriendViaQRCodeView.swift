@@ -10,23 +10,41 @@ import SwiftUI
 import CodeScanner
 
 struct AddFriendViaQRCodeView: View {
+    @Environment(\.dismiss) var dismiss
+    
     var onScannedDid: (String) -> Void
-    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    var onCancel: () -> Void
     
     var body: some View {
-        CodeScannerView(
-            codeTypes: [.qr],
-            simulatedData: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
-        ) { res in
-            switch res {
-            case .success(let result):
-                print("Found code: \(result.string)")
-                onScannedDid(result.string)
-            case .failure(let error):
-                print(error.localizedDescription)
+        VStack {
+            // Toolbar is unavailable here, create a minimal one that blends with notch/bezel.
+            HStack {
+                Button("Cancel", role: .cancel) {
+                    dismiss()
+                }
+                .buttonStyle(.borderless)
+
+                Spacer()
             }
+            .padding(AppTheme.unit2)
+            .background(Color.black)
             
-            presentationMode.wrappedValue.dismiss()
+            CodeScannerView(
+                codeTypes: [.qr],
+                showViewfinder: true,
+                simulatedData: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                shouldVibrateOnSuccess: true
+            ) { res in
+                switch res {
+                case .success(let result):
+                    print("Found code: \(result.string)")
+                    onScannedDid(result.string)
+                case .failure(let error):
+                    print(error.localizedDescription)
+                }
+                
+                dismiss()
+            }
         }
     }
 }

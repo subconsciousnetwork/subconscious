@@ -91,6 +91,7 @@ enum AddressBookAction {
     case petnameField(FormFieldAction<String>)
 
     case presentQRCodeScanner(_ isPresented: Bool)
+    case qrCodeScanned(scannedContent: String)
 }
 
 struct AddressBookModel: ModelProtocol {
@@ -195,10 +196,6 @@ struct AddressBookModel: ModelProtocol {
                 environment: environment
             )
 
-        case .presentQRCodeScanner(let isPresented):
-            var model = state
-            model.qrCodeScannerIsPresented = isPresented
-            return Update(state: model)
             
         case .attemptFollow:
             guard let did = state.followUserForm.did.validated else {
@@ -308,6 +305,21 @@ struct AddressBookModel: ModelProtocol {
             var model = state
             model.failUnfollowErrorMessage = nil
             return Update(state: model)
+        
+        case .presentQRCodeScanner(let isPresented):
+            var model = state
+            model.qrCodeScannerIsPresented = isPresented
+            return Update(state: model)
+        
+        case .qrCodeScanned(scannedContent: let content):
+            return update(
+                state: state,
+                actions: [
+                    .didField(.markAsTouched),
+                    .didField(.setValue(input: content))
+                ],
+                environment: environment
+            )
         }
     }
 }
