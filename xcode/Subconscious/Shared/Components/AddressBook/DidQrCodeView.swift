@@ -25,7 +25,7 @@ struct DidQrCodeView: View {
         guard let inverted = colorInvertFilter.outputImage else { return nil }
         
         maskFilter.maskImage = inverted
-        // This is the only way I managed to produce a CIColor from .accentColor
+        // This is the only way I managed to produce a CIColor from a SwiftUI.Color
         // https://developer.apple.com/forums/thread/687764
         // https://stackoverflow.com/questions/56586055/how-to-get-rgb-components-from-color-in-swiftui
         var r: CGFloat = 0.0
