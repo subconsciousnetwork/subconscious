@@ -64,7 +64,7 @@ class AddressBookService {
     
     /// Associates the passed DID with the passed petname within the sphere, saves the changes and updates the database.
     func followUserAsync(did: Did, petname: Petname) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .utility) {
+        CombineUtilities.async(qos: .default) {
             return try self.followUser(did: did, petname: petname)
         }
     }
@@ -77,7 +77,7 @@ class AddressBookService {
     
     /// Unassociates the passed DID with the passed petname within the sphere, saves the changes and updates the database.
     func unfollowUserAsync(petname: Petname) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .utility) {
+        CombineUtilities.async(qos: .default) {
             return try self.unfollowUser(petname: petname)
         }
     }
