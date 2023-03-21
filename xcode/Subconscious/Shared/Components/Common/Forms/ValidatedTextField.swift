@@ -31,10 +31,7 @@ struct ValidatedTextField: View {
             HStack {
                 TextField(
                     placeholder,
-                    text: $text,
-                    onEditingChanged: { focused in
-                        focused ? onFocus?() : onBlur?()
-                    }
+                    text: $text
                 )
                 .focused($focused)
                 .overlay(alignment: .trailing) {

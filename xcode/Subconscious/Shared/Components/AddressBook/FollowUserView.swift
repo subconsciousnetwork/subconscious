@@ -9,30 +9,6 @@ import SwiftUI
 import ObservableStore
 import CodeScanner
 
-typealias Validator<I, O> = (I) -> O?
-
-struct FormField<I, O> {
-    var value: I
-    var validate: Validator<I, O>
-    var touched: Bool = false
-    
-    var validated: O? {
-        get {
-            validate(value)
-        }
-    }
-    var isValid: Bool {
-        get {
-            validated != nil
-        }
-    }
-    var hasError: Bool {
-        get {
-            validated == nil && touched
-        }
-    }
-}
-
 struct FollowUserView: View {
     var state: AddressBookModel
     var form: FollowUserFormModel {
@@ -42,19 +18,8 @@ struct FollowUserView: View {
     
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     
-    @State var did: FormField<String, Did> = FormField(value: "", validate: Self.validateDid)
-    @State var petname: FormField<String, Petname> = FormField(value: "", validate: Self.validatePetname)
-    
-    static func validateDid(key: String) -> Did? {
-        Did(key)
-    }
-    
-    static func validatePetname(petname: String) -> Petname? {
-        Petname(petname)
-    }
-    
     func populateDidFromQRCodeResult(encodedText: String) {
-        did.value = encodedText
+        send(.didField(.setValue(input: encodedText)))
     }
     
     var body: some View {
@@ -108,19 +73,21 @@ struct FollowUserView: View {
                     }
                 }
                 
-                Section(header: Text("Add via QR Code")) {
-                    Button(
-                        action: {
-                            send(.presentQRCodeScanner(true))
-                        },
-                        label: {
-                            HStack {
-                                Image(systemName: "qrcode")
-                                Text("Scan Code")
+                if Config.default.addByQrCode {
+                    Section(header: Text("Add via QR Code")) {
+                        Button(
+                            action: {
+                                send(.presentQRCodeScanner(true))
+                            },
+                            label: {
+                                HStack {
+                                    Image(systemName: "qrcode")
+                                    Text("Scan Code")
+                                }
+                                .foregroundColor(.accentColor)
                             }
-                            .foregroundColor(.accentColor)
-                        }
-                    )
+                        )
+                    }
                 }
             }
             .navigationTitle("Follow User")
@@ -150,7 +117,7 @@ struct FollowUserView: View {
             }
             .sheet(
                 isPresented: Binding(
-                    get: { state.qrCodeScannerIsPresented },
+                    get: { state.qrCodeScannerIsPresented && Config.default.addByQrCode },
                     send: send,
                     tag: AddressBookAction.presentQRCodeScanner
                 )
