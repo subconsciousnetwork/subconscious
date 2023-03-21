@@ -96,7 +96,6 @@ enum AddressBookAction {
 
 struct AddressBookModel: ModelProtocol {
     var isPresented = false
-    var qrCodeScannerIsPresented = false
     var did: Did? = nil
     var follows: [AddressBookEntry] = []
     
@@ -107,6 +106,8 @@ struct AddressBookModel: ModelProtocol {
     var failUnfollowErrorMessage: String? = nil
     
     var unfollowCandidate: Petname? = nil
+    
+    var isQrCodeScannerPresented = false
 
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -308,7 +309,7 @@ struct AddressBookModel: ModelProtocol {
         
         case .presentQRCodeScanner(let isPresented):
             var model = state
-            model.qrCodeScannerIsPresented = isPresented
+            model.isQrCodeScannerPresented = isPresented
             return Update(state: model)
         
         case .qrCodeScanned(scannedContent: let content):

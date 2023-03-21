@@ -72,7 +72,7 @@ struct FollowUserView: View {
                         }
                     }
                     
-                    if Config.default.addByQrCode {
+                    if Config.default.addByQRCode {
                         Section(header: Text("Add via QR Code")) {
                             Button(
                                 action: {
@@ -117,7 +117,7 @@ struct FollowUserView: View {
             }
             .fullScreenCover(
                 isPresented: Binding(
-                    get: { state.qrCodeScannerIsPresented && Config.default.addByQrCode },
+                    get: { state.isQrCodeScannerPresented && Config.default.addByQRCode },
                     send: send,
                     tag: AddressBookAction.presentQRCodeScanner
                 )

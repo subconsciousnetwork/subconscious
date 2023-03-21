@@ -16,7 +16,7 @@ struct Config: Equatable, Codable {
 
     var appTabs = false
     var addressBook = false
-    var addByQrCode = false
+    var addByQRCode = false
 
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
