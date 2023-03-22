@@ -92,6 +92,7 @@ enum AddressBookAction {
 
     case presentQRCodeScanner(_ isPresented: Bool)
     case qrCodeScanned(scannedContent: String)
+    case qrCodeScanError(error: String)
 }
 
 struct AddressBookModel: ModelProtocol {
@@ -104,6 +105,7 @@ struct AddressBookModel: ModelProtocol {
     
     var failFollowErrorMessage: String? = nil
     var failUnfollowErrorMessage: String? = nil
+    var failQRCodeScanErrorMessage: String? = nil
     
     var unfollowCandidate: Petname? = nil
     
@@ -305,6 +307,7 @@ struct AddressBookModel: ModelProtocol {
         
         case .presentQRCodeScanner(let isPresented):
             var model = state
+            model.failQRCodeScanErrorMessage = nil
             model.isQrCodeScannerPresented = isPresented
             return Update(state: model)
         
@@ -317,6 +320,13 @@ struct AddressBookModel: ModelProtocol {
                 ],
                 environment: environment
             )
+            
+        case .qrCodeScanError(error: let error):
+            var model = state
+            model.failQRCodeScanErrorMessage = error
+            return Update(state: model)
+            
         }
+        
     }
 }

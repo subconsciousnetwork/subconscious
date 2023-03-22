@@ -13,8 +13,9 @@ import os
 struct AddFriendViaQRCodeView: View {
     @Environment(\.dismiss) var dismiss
     
-    var onScannedDid: (String) -> Void
+    var onScanResult: (Result<ScanResult, ScanError>) -> Void
     var onCancel: () -> Void
+    var errorMessage: String?
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -41,16 +42,22 @@ struct AddFriendViaQRCodeView: View {
                 simulatedData: Config.default.fallbackSimulatorQrCodeScanResult,
                 shouldVibrateOnSuccess: true
             ) { res in
-                switch res {
-                case .success(let result):
-                    AddFriendViaQRCodeView.logger.debug("Found code: \(result.string)")
-                    onScannedDid(result.string)
-                case .failure(let error):
-                    AddFriendViaQRCodeView.logger.debug("\(error.localizedDescription)")
-                }
-                
+                onScanResult(res)
                 dismiss()
             }
+        }
+        .alert(
+            isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { _ in }
+            )
+        ) {
+            let errorMessage = errorMessage ?? "Failed to scan"
+            
+            return Alert(
+                title: Text("QR Code Error"),
+                message: Text(errorMessage)
+            )
         }
     }
 }

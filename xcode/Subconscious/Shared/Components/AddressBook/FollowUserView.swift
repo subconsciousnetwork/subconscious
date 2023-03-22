@@ -7,6 +7,7 @@
 
 import SwiftUI
 import ObservableStore
+import CodeScanner
 
 struct FollowUserView: View {
     var state: AddressBookModel
@@ -15,8 +16,13 @@ struct FollowUserView: View {
     }
     var send: (AddressBookAction) -> Void
     
-    func populateDidFromQRCodeResult(encodedText: String) {
-        send(.qrCodeScanned(scannedContent: encodedText))
+    func onQRCodeScanResult(res: Result<ScanResult, ScanError>) {
+        switch res {
+        case .success(let result):
+            send(.qrCodeScanned(scannedContent: result.string))
+        case .failure(let error):
+            send(.qrCodeScanError(error: error.localizedDescription))
+        }
     }
     
     var body: some View {
@@ -120,8 +126,9 @@ struct FollowUserView: View {
                 )
             ) {
                 AddFriendViaQRCodeView(
-                    onScannedDid: populateDidFromQRCodeResult,
-                    onCancel: { send(.presentQRCodeScanner(false)) }
+                    onScanResult: onQRCodeScanResult,
+                    onCancel: { send(.presentQRCodeScanner(false)) },
+                    errorMessage: state.failQRCodeScanErrorMessage
                 )
             }
         }
