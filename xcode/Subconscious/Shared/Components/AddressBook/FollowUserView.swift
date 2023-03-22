@@ -125,7 +125,7 @@ struct FollowUserView: View {
                     tag: AddressBookAction.presentQRCodeScanner
                 )
             ) {
-                AddFriendViaQRCodeView(
+                FollowUserViaQRCodeView(
                     onScanResult: onQRCodeScanResult,
                     onCancel: { send(.presentQRCodeScanner(false)) },
                     errorMessage: state.failQRCodeScanErrorMessage

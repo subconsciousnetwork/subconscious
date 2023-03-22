@@ -1,5 +1,5 @@
 //
-//  AddFriendViaQRCodeView.swift
+//  FollowUserViaQRCodeView.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 6/3/2023.
@@ -10,7 +10,7 @@ import SwiftUI
 import CodeScanner
 import os
 
-struct AddFriendViaQRCodeView: View {
+struct FollowUserViaQRCodeView: View {
     @Environment(\.dismiss) var dismiss
     
     var onScanResult: (Result<ScanResult, ScanError>) -> Void
@@ -19,7 +19,7 @@ struct AddFriendViaQRCodeView: View {
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
-        category: "AddFriendViaQRCodeView"
+        category: "FollowUserViaQRCodeView"
     )
     
     var body: some View {
