@@ -114,6 +114,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
     //  MARK: UITextView subclass
     class SubtextTextView: UITextView {
         var fixedWidth: CGFloat = 0
+        var onSlashlink: (Slashlink) -> Bool = { _ in true }
 
         override var intrinsicContentSize: CGSize {
             sizeThatFits(
@@ -156,8 +157,14 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                     for: textElement
                 )
                 
-                // TODO: check for whether this tap should navigate to a link
-                SubtextTextViewRepresentable.logger.debug("Tapped: \(String(describing: content?.string))")
+                guard let slashlink = Slashlink(content?.string.trimmingCharacters(in: .whitespacesAndNewlines) ?? "") else {
+                    super.touchesBegan(touches, with: event)
+                    return
+                }
+                
+                SubtextTextViewRepresentable.logger.debug("Tapped: \(slashlink)")
+                let x = onSlashlink(slashlink)
+                
                 // Calling super preserves default behaviour
                 super.touchesBegan(touches, with: event)
             }
@@ -340,6 +347,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
     var textColor: UIColor = UIColor(.primary)
     var textContainerInset: UIEdgeInsets = .zero
     var onLink: (URL) -> Bool
+    var onSlashlink: (Slashlink) -> Bool
     
     //  MARK: makeUIView
     func makeUIView(context: Context) -> SubtextTextView {
@@ -359,6 +367,8 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         let view = SubtextTextView(frame: self.frame, textContainer: textContainer)
         view.delegate = context.coordinator
         view.textStorage.delegate = context.coordinator
+        
+        view.onSlashlink = self.onSlashlink
 
         // Set inner padding
         view.textContainerInset = self.textContainerInset

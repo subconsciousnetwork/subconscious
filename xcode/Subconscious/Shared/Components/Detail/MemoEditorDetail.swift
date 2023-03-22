@@ -45,6 +45,18 @@ struct MemoEditorDetailView: View {
         )
         return false
     }
+    
+    private func onSlashlink(
+        slashlink: Slashlink
+    ) -> Bool {
+        notify(
+            .requestFindDetail(
+                slashlink: slashlink,
+                fallback: slashlink.toSlug().toTitle()
+            )
+        )
+        return false
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -58,7 +70,8 @@ struct MemoEditorDetailView: View {
                                 tag: MemoEditorDetailSubtextTextCursor.tag
                             ),
                             frame: geometry.frame(in: .local),
-                            onLink: self.onLink
+                            onLink: self.onLink,
+                            onSlashlink: self.onSlashlink
                         )
                         .insets(
                             EdgeInsets(
