@@ -38,7 +38,7 @@ struct AddFriendViaQRCodeView: View {
             CodeScannerView(
                 codeTypes: [.qr],
                 showViewfinder: true,
-                simulatedData: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                simulatedData: Config.default.fallbackSimulatorQrCodeScanResult,
                 shouldVibrateOnSuccess: true
             ) { res in
                 switch res {
