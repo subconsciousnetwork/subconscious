@@ -74,6 +74,7 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
     // Max height constraint
     let SLASHLINK_PREVIEW_HEIGHT = 128.0
     var text: String?
+    var height: CGFloat? = 128.0
     
     override var leadingPadding: CGFloat { return 0 }
     override var trailingPadding: CGFloat { return 0 }
@@ -83,7 +84,25 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
     private var img: UIImage?
     
     private func render() {
-        let v = EmbeddedTranscludePreview(label: text ?? "Testing")
+        guard let textContentStorage = self.textLayoutManager?.textContentManager as? NSTextContentStorage else {
+            return
+        }
+        guard let textElement = textElement else {
+            return
+        }
+        
+        let content = textContentStorage.attributedString(for: textElement)
+        let rawContent = content?.string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let slashlink = Slashlink(rawContent ?? "/fallback") else {
+            return
+        }
+        
+        let v = Transclude2View(
+            address: MemoAddress.public(slashlink),
+            excerpt: "Call me Ishmael.",
+            action: { }
+        )
+        
         // Host our SwiftUI view within a UIKit view
         let hosted = UIHostingController(rootView: v)
         guard let view = hosted.view else {
@@ -103,15 +122,33 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
             return
         }
         
+        hosted.view.backgroundColor = .clear
         rootView.addSubview(hosted.view)
         
-        // Ideally here is where we would dynamically adjust the height of the rendered card
-        // However there doesn't seem to be a way to get the "preferred" size of the child content, it always tries to expand to fill the space provided
-        // This might be due to the underlying UIKit constraint system
-        let size = hosted.sizeThatFits(in: CGSize(width: containerWidth(), height: SLASHLINK_PREVIEW_HEIGHT))
-        hosted.view.frame = CGRect(origin: CGPoint(x: 0, y: SLASHLINK_PREVIEW_HEIGHT), size: CGSize(width: containerWidth(), height: size.height))
-        hosted.view.bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: containerWidth(), height: size.height ))
-        hosted.view.backgroundColor = .clear
+        // We walk through a bunch of template sizes and check how the view is responding when measured
+        // within those bounds. When the view stops growing we know it's at the natural size to
+        // fit the text.
+        let sizes = [0.0, 16.0, 32.0, 48.0, 64.0, 80.0, 96.0, 100.0, 128.0]
+        let width = containerWidth()
+        var maxSize = 0.0
+        for size in sizes {
+            let fit = hosted.sizeThatFits(in: CGSize(width: width, height: size))
+            hosted.view.frame = CGRect(origin: CGPoint(x: 0, y: fit.height), size: CGSize(width: 0, height: fit.height))
+            hosted.view.bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: width, height: fit.height))
+            let height = hosted.view.intrinsicContentSize.height
+            
+            TranscludeBlockLayoutFragment.logger.debug("\(size): Height: \(height), Fit: \(fit.height)")
+            
+            // Skip the first iteration of s == 0 because .sizeThatFits reports the wrong size on the first call
+            if fit.height > maxSize && size > 1 {
+                maxSize = fit.height
+            }
+        }
+        
+        TranscludeBlockLayoutFragment.logger.debug("Max height: \(maxSize)")
+        self.height = maxSize
+        hosted.view.frame = CGRect(origin: CGPoint(x: 0, y: maxSize), size: CGSize(width: 0, height: maxSize))
+        hosted.view.bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: width, height: maxSize))
         
         let img = view.asImage()
         hosted.view.removeFromSuperview()
@@ -130,7 +167,7 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
     // Determines how this flows around text
     override var layoutFragmentFrame: CGRect {
         let parent = super.layoutFragmentFrame
-        let r = CGRect(origin: parent.origin, size: CGSize(width: parent.width, height: parent.height + (self.img?.size.height ?? 0)))
+        let r = CGRect(origin: parent.origin, size: CGSize(width: parent.width, height: parent.height + (self.height ?? 0) + 3))
         return r
     }
     
@@ -138,7 +175,7 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
     override var renderingSurfaceBounds: CGRect {
         let w = containerWidth()
         
-        let size = super.renderingSurfaceBounds.union(CGRect(x: 0, y: 0, width: w, height: SLASHLINK_PREVIEW_HEIGHT))
+        let size = super.renderingSurfaceBounds.union(CGRect(x: 0, y: 0, width: w, height: (self.height ?? 128.0)))
         return size
     }
     
