@@ -94,9 +94,6 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
             return
         }
         
-        let content = textContentStorage.attributedString(for: textElement)
-        let rawContent = content?.string.trimmingCharacters(in: .whitespacesAndNewlines)
-        
         guard let slashlink = slashlink else {
             TranscludeBlockLayoutFragment.logger.warning("nil slashlink provided to transclude block")
             return

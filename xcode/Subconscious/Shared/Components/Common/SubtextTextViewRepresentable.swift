@@ -172,7 +172,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                 }
                 
                 SubtextTextViewRepresentable.logger.debug("Tapped: \(slashlink)")
-                let x = onSlashlink(slashlink)
+                let _ = onSlashlink(slashlink)
                 
                 // Calling super preserves default behaviour
                 super.touchesBegan(touches, with: event)
