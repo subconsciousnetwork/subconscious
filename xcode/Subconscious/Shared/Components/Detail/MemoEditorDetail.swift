@@ -57,6 +57,12 @@ struct MemoEditorDetailView: View {
         )
         return false
     }
+    
+    private func onFetchSlashlinkPreviews(
+        slashlinks: [Slashlink]
+    ) -> Void {
+        notify(.fetchSlashlinkPreviews(slashlinks))
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -69,6 +75,7 @@ struct MemoEditorDetailView: View {
                                 send: store.send,
                                 tag: MemoEditorDetailSubtextTextCursor.tag
                             ),
+                            onFetchSlashlinkPreviews: self.onFetchSlashlinkPreviews,
                             frame: geometry.frame(in: .local),
                             onLink: self.onLink,
                             onSlashlink: self.onSlashlink
@@ -262,6 +269,9 @@ enum MemoEditorDetailNotification: Hashable {
     case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)
     case succeedSaveEntry(address: MemoAddress, modified: Date)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
+    case fetchSlashlinkPreviews([Slashlink])
+    
+
 }
 
 extension MemoEditorDetailNotification {

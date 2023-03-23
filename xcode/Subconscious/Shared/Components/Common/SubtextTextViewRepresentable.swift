@@ -69,6 +69,7 @@ struct SubtextTextModel: ModelProtocol {
         environment: Void
     ) -> Update<Self> {
         switch action {
+       
         case .requestFocus(let focus):
             var model = state
             model.isFocusChangeScheduled = false
@@ -222,6 +223,12 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
 
             // Render markup on TextStorage (which is an NSMutableString)
             self.subtext = renderer.renderAttributesOf(textStorage)
+            let links = self.subtext?.slashlinks.map { value in value.toSlashlink() }.compactMap { value in value }
+            guard let slashlinks = links else {
+                return
+            }
+            
+            self.representable.onFetchSlashlinkPreviews(slashlinks)
         }
 
         /// Handle link taps
@@ -341,6 +348,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
     
     var state: SubtextTextModel
     var send: (SubtextTextAction) -> Void
+    var onFetchSlashlinkPreviews: ([Slashlink]) -> Void
     /// Frame needed to determine textview height.
     /// Use `GeometryView` to find container width.
     var frame: CGRect

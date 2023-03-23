@@ -168,6 +168,9 @@ enum NotebookAction {
     case pushRandomDetail(autofocus: Bool)
     case failPushRandomDetail(String)
     
+    case fetchSlashlinkPreviews([Slashlink])
+    case populateSlashlinkPreviews(Dictionary<Slashlink, EntryStub>)
+    
     /// Set search query
     static func setSearch(_ query: String) -> NotebookAction {
         .search(.setQuery(query))
@@ -239,6 +242,8 @@ extension NotebookAction: CustomLogStringConvertible {
 extension NotebookAction {
     static func tag(_ action: MemoEditorDetailNotification) -> Self {
         switch action {
+        case .fetchSlashlinkPreviews(let slashlinks):
+            return .fetchSlashlinkPreviews(slashlinks)
         case .requestDelete(let address):
             return .deleteEntry(address)
         case let .requestDetail(detail):
@@ -528,6 +533,22 @@ struct NotebookModel: ModelProtocol {
         case .failPushRandomDetail(let error):
             logger.log("Failed to get random note: \(error)")
             return Update(state: state)
+            
+        case .fetchSlashlinkPreviews(let slashlinks):
+           let fx: Fx<NotebookAction> =
+               environment.slashlinks.listEntriesForSlashlinksAsync(slashlinks: slashlinks)
+               .catch({ err in
+                   Just([:])
+               })
+               .map { v in
+                   NotebookAction.populateSlashlinkPreviews(v)
+               }
+               .eraseToAnyPublisher()
+           
+           return Update(state: state, fx: fx)
+            
+        case .populateSlashlinkPreviews(let slashlinks):
+           return Update(state: state)
         }
     }
     
