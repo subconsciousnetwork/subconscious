@@ -263,49 +263,43 @@ final class DatabaseService {
             throw DatabaseServiceError.notReady
         }
         
-        let slashlinks = [
-            Slashlink("/hello-world")!,
-            Slashlink("@ben/hello-world")!,
-            Slashlink("/same-ish-different-day")!
-        ]
-        
         let parameters =
             slashlinks
-            .map { s in
-                SQLite3Database.Value.text(s.toPublicMemoAddress().description) // TODO: need to check if this is local or public
+            .flatMap { s in
+                // TODO: this is almost certainly the wrong way to do this
+                [
+                    SQLite3Database.Value.text(s.toPublicMemoAddress().description),
+                    SQLite3Database.Value.text(s.toLocalMemoAddress().description)
+                ]
             }
-
-        do {
-            let results = try database.execute(
-                sql: """
-            SELECT id, modified, excerpt
-            FROM memo
-            WHERE id IN (?, ?, ?)
-            ORDER BY modified DESC
-            LIMIT 1000
-            """,
-                parameters: parameters
-            )
-            
-            return results.compactMap({ row in
-                guard
-                    let address = row.col(0)?.toString()?.toMemoAddress(),
-                    let modified = row.col(1)?.toDate(),
-                    let excerpt = row.col(2)?.toString()
-                else {
-                    return nil
-                }
-                return EntryStub(
-                    address: address,
-                    excerpt: excerpt,
-                    modified: modified
-                )
-            })
-        } catch {
-            let x = error
-        }
         
-        return []
+        let parameterPlaceholders = (parameters.map { _ in "?" }).joined(separator: ", ")
+
+        let results = try database.execute(
+            sql: """
+        SELECT id, modified, excerpt
+        FROM memo
+        WHERE id IN (\(parameterPlaceholders))
+        ORDER BY modified DESC
+        LIMIT 1000
+        """,
+            parameters: parameters
+        )
+        
+        return results.compactMap({ row in
+            guard
+                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let modified = row.col(1)?.toDate(),
+                let excerpt = row.col(2)?.toString()
+            else {
+                return nil
+            }
+            return EntryStub(
+                address: address,
+                excerpt: excerpt,
+                modified: modified
+            )
+        })
     }
     
     /// List recent entries
