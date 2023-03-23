@@ -336,13 +336,17 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             else {
                 return baseLayoutFragment
             }
+            
+            guard let entry = slashlinkPreviews[slashlink] else {
+                return baseLayoutFragment
+            }
 
             let layoutFragment = TranscludeBlockLayoutFragment(
                 textElement: paragraph,
                 range: paragraph.elementRange
             )
             layoutFragment.slashlink = slashlink
-            layoutFragment.entry = slashlinkPreviews[slashlink]
+            layoutFragment.entry = entry
             
             return layoutFragment
         }
