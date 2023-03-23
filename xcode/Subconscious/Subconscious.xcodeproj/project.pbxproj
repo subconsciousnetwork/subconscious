@@ -7,15 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B51A895B29B80F6E00BF5C8A /* FollowUserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51A895A29B80F6E00BF5C8A /* FollowUserView.swift */; };
 		B532F8C329B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */; };
 		B54B922828E669D6003ACA1F /* MementoGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54B922728E669D6003ACA1F /* MementoGeist.swift */; };
 		B550E04029AF219100050F19 /* Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D30029AF1F9B0011D820 /* Did.swift */; };
+		B569971629B6A0DF003204FC /* FollowUserViaQRCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */; };
+		B569971729B6A0DF003204FC /* DidQrCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971529B6A0DF003204FC /* DidQrCodeView.swift */; };
 		B575834528ED8D9100F6EE88 /* combo.json in Resources */ = {isa = PBXBuildFile; fileRef = B575834428ED8D9100F6EE88 /* combo.json */; };
 		B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BA29B1CA8B008BBB62 /* DidView.swift */; };
 		B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BC29B56699008BBB62 /* AddressBookModel.swift */; };
+		B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = B57D63BF29B574C3008BBB62 /* CodeScanner */; };
 		B584813F29AC32410033F434 /* AddressBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584813E29AC32410033F434 /* AddressBookView.swift */; };
 		B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814129AC335B0033F434 /* AddressBookEntryView.swift */; };
-		B584814429AC384F0033F434 /* FollowUserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814329AC384F0033F434 /* FollowUserView.swift */; };
 		B58FE48A28DED93F00E000CC /* ComboGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48928DED93F00E000CC /* ComboGeist.swift */; };
 		B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48B28DED9B600E000CC /* StoryCombo.swift */; };
 		B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */; };
@@ -360,14 +363,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B51A895A29B80F6E00BF5C8A /* FollowUserView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserView.swift; sourceTree = "<group>"; };
 		B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeBlockLayoutFragment.swift; sourceTree = "<group>"; };
 		B54B922728E669D6003ACA1F /* MementoGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MementoGeist.swift; sourceTree = "<group>"; };
+		B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserViaQRCodeView.swift; sourceTree = "<group>"; };
+		B569971529B6A0DF003204FC /* DidQrCodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DidQrCodeView.swift; sourceTree = "<group>"; };
 		B575834428ED8D9100F6EE88 /* combo.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = combo.json; sourceTree = "<group>"; };
 		B57D63BA29B1CA8B008BBB62 /* DidView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DidView.swift; sourceTree = "<group>"; };
 		B57D63BC29B56699008BBB62 /* AddressBookModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookModel.swift; sourceTree = "<group>"; };
 		B584813E29AC32410033F434 /* AddressBookView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookView.swift; sourceTree = "<group>"; };
 		B584814129AC335B0033F434 /* AddressBookEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookEntryView.swift; sourceTree = "<group>"; };
-		B584814329AC384F0033F434 /* FollowUserView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserView.swift; sourceTree = "<group>"; };
 		B58FE48928DED93F00E000CC /* ComboGeist.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComboGeist.swift; sourceTree = "<group>"; };
 		B58FE48B28DED9B600E000CC /* StoryCombo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryCombo.swift; sourceTree = "<group>"; };
 		B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryComboView.swift; sourceTree = "<group>"; };
@@ -605,6 +610,7 @@
 				B822F18B27C9615600943C6B /* ObservableStore in Frameworks */,
 				B8579B6527C561E900D8B4BC /* SwiftSubsurface in Frameworks */,
 				B82C3A6F26F6B1C000833CC8 /* Collections in Frameworks */,
+				B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */,
 				B8CA8F1A288F038C005F8802 /* Tracery in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -650,7 +656,9 @@
 				B57D63BC29B56699008BBB62 /* AddressBookModel.swift */,
 				B584814129AC335B0033F434 /* AddressBookEntryView.swift */,
 				B584813E29AC32410033F434 /* AddressBookView.swift */,
-				B584814329AC384F0033F434 /* FollowUserView.swift */,
+				B51A895A29B80F6E00BF5C8A /* FollowUserView.swift */,
+				B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */,
+				B569971529B6A0DF003204FC /* DidQrCodeView.swift */,
 			);
 			path = AddressBook;
 			sourceTree = "<group>";
@@ -1141,6 +1149,7 @@
 				B822F18A27C9615600943C6B /* ObservableStore */,
 				B8CA8F19288F038C005F8802 /* Tracery */,
 				B8E1BB78296DECE700B86E0E /* SwiftNoosphere */,
+				B57D63BF29B574C3008BBB62 /* CodeScanner */,
 			);
 			productName = "Subconscious (iOS)";
 			productReference = B8EB29FB26F27797006E97C3 /* Subconscious.app */;
@@ -1244,6 +1253,7 @@
 				B822F18927C9615600943C6B /* XCRemoteSwiftPackageReference "ObservableStore" */,
 				B8CA8F18288F038C005F8802 /* XCRemoteSwiftPackageReference "Tracery" */,
 				B8E1BB77296DECE700B86E0E /* XCRemoteSwiftPackageReference "noosphere" */,
+				B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */,
 			);
 			productRefGroup = B8EB29FC26F27797006E97C3 /* Products */;
 			projectDirPath = "";
@@ -1380,6 +1390,7 @@
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B856521C2975B2CF00B7FCA0 /* StoryAudienceView.swift in Sources */,
 				B88CC958284FF59900994928 /* OrderedCollectionUtilities.swift in Sources */,
+				B569971729B6A0DF003204FC /* DidQrCodeView.swift in Sources */,
 				B8EA3EE82915C23200B92C2E /* HeaderSubtext.swift in Sources */,
 				B8EF986E29034ADF0029363D /* Pathlike.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
@@ -1420,7 +1431,6 @@
 				B82F053728D60EE60025A8B5 /* AppTabView.swift in Sources */,
 				B8B4251828FDE8AA0081B8D5 /* MemoData.swift in Sources */,
 				B8E2B02B29AD0E4D004A78B3 /* Slug.swift in Sources */,
-				B584814429AC384F0033F434 /* FollowUserView.swift in Sources */,
 				B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */,
 				B54B922828E669D6003ACA1F /* MementoGeist.swift in Sources */,
 				B86DFF3327C072CD002E57ED /* Func.swift in Sources */,
@@ -1529,12 +1539,14 @@
 				B8E2B02929AD0E23004A78B3 /* Petname.swift in Sources */,
 				B550E04029AF219100050F19 /* Did.swift in Sources */,
 				B8A59D6028B51D000010DB2F /* TranscludeView.swift in Sources */,
+				B569971629B6A0DF003204FC /* FollowUserViaQRCodeView.swift in Sources */,
 				B856521E2975B7F100B7FCA0 /* Audience.swift in Sources */,
 				B8AE34B6276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift in Sources */,
 				B839029F28CA246A007A3A3F /* CustomLogStringConvertible.swift in Sources */,
 				B8EC568926F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 				B8CA8F2428908D65005F8802 /* BundleUtilities.swift in Sources */,
 				B8A1620E29B27D80008322EB /* SlashlinkBylineView.swift in Sources */,
+				B51A895B29B80F6E00BF5C8A /* FollowUserView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1854,6 +1866,7 @@
 				INFOPLIST_FILE = iOS/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Subconscious;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Optionally adding friends via scanning a QR Code";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -1893,6 +1906,7 @@
 				INFOPLIST_FILE = iOS/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Subconscious;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Optionally adding friends via scanning a QR Code";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -2140,6 +2154,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/twostraws/CodeScanner";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 		B822F18927C9615600943C6B /* XCRemoteSwiftPackageReference "ObservableStore" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gordonbrander/ObservableStore";
@@ -2183,6 +2205,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B57D63BF29B574C3008BBB62 /* CodeScanner */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B57D63BE29B574C3008BBB62 /* XCRemoteSwiftPackageReference "CodeScanner" */;
+			productName = CodeScanner;
+		};
 		B822F18A27C9615600943C6B /* ObservableStore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B822F18927C9615600943C6B /* XCRemoteSwiftPackageReference "ObservableStore" */;

@@ -16,6 +16,15 @@ struct Config: Equatable, Codable {
 
     var appTabs = false
     var addressBook = false
+    var addByQRCode = true
+    
+    /// What value should the DID QR code scanner return in the simulator?
+    /// Only returns test data when Config.debug is enabled
+    var fallbackSimulatorQrCodeScanResult: String {
+        get {
+            debug ? "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7" : ""
+        }
+    }
 
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
