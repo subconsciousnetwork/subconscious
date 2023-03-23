@@ -9,23 +9,23 @@ import SwiftUI
 import ObservableStore
 
 struct GatewaySyncLabel: View {
-    var status: SyncStatus
+    var status: ResourceStatus
     @State var spin = false
     
-    func label(status: SyncStatus) -> String {
+    func label(status: ResourceStatus) -> String {
         switch status {
         case .initial:
             return "Sync with Gateway"
-        case .syncing:
+        case .pending:
             return "Syncing..."
         case .failed:
             return "Sync Failed"
-        case .synced:
+        case .succeeded:
             return "Sync Complete"
         }
     }
     
-    private func labelColor(status: SyncStatus) -> Color {
+    private func labelColor(status: ResourceStatus) -> Color {
         switch status {
         case .failed:
             return .red
@@ -53,7 +53,7 @@ struct GatewaySyncLabel: View {
             case .initial:
                 Image(systemName: "arrow.triangle.2.circlepath")
                     .foregroundColor(.secondary)
-            case .syncing:
+            case .pending:
                 Image(systemName: "arrow.triangle.2.circlepath")
                     .foregroundColor(.accentColor)
                     .rotationEffect(.degrees(spin ? 360 : 0))
@@ -63,7 +63,7 @@ struct GatewaySyncLabel: View {
                     .onAppear() {
                         self.spin = true
                     }
-            case .synced:
+            case .succeeded:
                 Image(systemName: "checkmark.circle")
                     .foregroundColor(.secondary)
             case .failed:

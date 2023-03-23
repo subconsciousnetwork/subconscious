@@ -30,9 +30,13 @@ struct AppView: View {
             }
             .zIndex(0)
             if (!store.state.isUpgraded) {
-                AppUpgradeView()
-                    .animation(.default, value: store.state.isUpgraded)
-                    .zIndex(1)
+                AppUpgradeView(
+                    database: store.state.databaseMigrationStatus,
+                    local: store.state.localSyncStatus,
+                    sphere: store.state.sphereSyncStatus
+                )
+                .animation(.default, value: store.state.isUpgraded)
+                .zIndex(1)
             }
             if (store.state.shouldPresentFirstRun) {
                 FirstRunView(app: store)
@@ -220,18 +224,8 @@ struct AppAddressBookCursor: CursorProtocol {
     }
 }
 
-enum AppDatabaseState {
-    case initial
-    case migrating
-    case broken
-    case ready
-}
-
 //  MARK: Model
 struct AppModel: ModelProtocol {
-    /// Is database connected and migrated?
-    var databaseState = AppDatabaseState.initial
-    
     /// Should first run show?
     /// Distinct from whether first run has actually run.
     var shouldPresentFirstRun = !AppDefaults.standard.firstRunComplete
@@ -240,8 +234,11 @@ struct AppModel: ModelProtocol {
     /// Toggled to true when database is rebuilt from scratch.
     /// Remains true until first file sync completes.
     var isUpgraded = true
-    var localSyncStatus = SyncStatus.initial
-    var sphereSyncStatus = SyncStatus.initial
+
+    /// Is database connected and migrated?
+    var databaseMigrationStatus = ResourceStatus.initial
+    var localSyncStatus = ResourceStatus.initial
+    var sphereSyncStatus = ResourceStatus.initial
 
     var nickname = AppDefaults.standard.nickname
     var nicknameTextField = AppDefaults.standard.nickname ?? ""
@@ -262,7 +259,7 @@ struct AppModel: ModelProtocol {
     var gatewayURL = AppDefaults.standard.gatewayURL
     var gatewayURLTextField = AppDefaults.standard.gatewayURL
     var isGatewayURLTextFieldValid = true
-    var lastGatewaySyncStatus = SyncStatus.initial
+    var lastGatewaySyncStatus = ResourceStatus.initial
     
     /// Show settings sheet?
     var isSettingsSheetPresented = false
@@ -271,7 +268,7 @@ struct AppModel: ModelProtocol {
     /// even if all of the data isn't refreshed yet.
     /// This is the point at which the main interface is ready to be shown.
     var isReadyForInteraction: Bool {
-        self.databaseState == .ready
+        self.databaseMigrationStatus == .succeeded
     }
     
     // Logger for actions
@@ -668,7 +665,7 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        switch state.databaseState {
+        switch state.databaseMigrationStatus {
         case .initial:
             logger.log("Readying database")
             let fx: Fx<AppAction> = environment.data
@@ -681,19 +678,19 @@ struct AppModel: ModelProtocol {
                 })
                 .eraseToAnyPublisher()
             var model = state
-            model.databaseState = .migrating
+            model.databaseMigrationStatus = .pending
             return Update(state: model, fx: fx)
-        case .migrating:
+        case .pending:
             logger.log(
                 "Database already migrating. Doing nothing."
             )
             return Update(state: state)
-        case .broken:
+        case let .failed(message):
             logger.warning(
-                "Database broken. Doing nothing."
+                "Database broken (doing nothing). Message: \(message)"
             )
             return Update(state: state)
-        case .ready:
+        case .succeeded:
             logger.log("Database ready.")
             let fx: Fx<AppAction> = Just(AppAction.ready)
                 .eraseToAnyPublisher()
@@ -711,7 +708,7 @@ struct AppModel: ModelProtocol {
         )
         var model = state
         // Mark database state ready
-        model.databaseState = .ready
+        model.databaseMigrationStatus = .succeeded
         return update(state: model, action: .ready, environment: environment)
     }
     
@@ -766,7 +763,7 @@ struct AppModel: ModelProtocol {
             "Could not rebuild database: \(error)"
         )
         var model = state
-        model.databaseState = .broken
+        model.databaseMigrationStatus = .failed(error)
         return Update(state: model)
     }
     
@@ -801,8 +798,8 @@ struct AppModel: ModelProtocol {
         }
         var model = state
         model.isUpgraded = (
-            state.localSyncStatus.isComplete &&
-            state.sphereSyncStatus.isComplete
+            state.localSyncStatus.isResolved &&
+            state.sphereSyncStatus.isResolved
         )
         return Update(state: model)
     }
@@ -831,7 +828,7 @@ struct AppModel: ModelProtocol {
         }
         
         var model = state
-        model.lastGatewaySyncStatus = .syncing
+        model.lastGatewaySyncStatus = .pending
         
         logger.log("Syncing with gateway: \(gatewayURL.absoluteString)")
         let fx: Fx<AppAction> = environment.data.syncSphereWithGateway()
@@ -853,7 +850,7 @@ struct AppModel: ModelProtocol {
         logger.log("Sphere synced with gateway @ \(version)")
         
         var model = state
-        model.lastGatewaySyncStatus = .synced
+        model.lastGatewaySyncStatus = .succeeded
         
         return update(
             state: model,
@@ -893,7 +890,7 @@ struct AppModel: ModelProtocol {
         }).eraseToAnyPublisher()
         
         var model = state
-        model.sphereSyncStatus = .syncing
+        model.sphereSyncStatus = .pending
         
         return Update(state: model, fx: fx)
     }
@@ -907,7 +904,7 @@ struct AppModel: ModelProtocol {
         logger.log("Database synced to sphere \(identity) @ \(version)")
         
         var model = state
-        model.sphereSyncStatus = .synced
+        model.sphereSyncStatus = .succeeded
         
         return update(
             state: model,
@@ -947,7 +944,7 @@ struct AppModel: ModelProtocol {
         }).eraseToAnyPublisher()
         
         var model = state
-        model.localSyncStatus = .syncing
+        model.localSyncStatus = .pending
         
         return Update(state: model, fx: fx)
     }
@@ -963,7 +960,7 @@ struct AppModel: ModelProtocol {
         )
         
         var model = state
-        model.localSyncStatus = .synced
+        model.localSyncStatus = .succeeded
         
         return update(
             state: model,
