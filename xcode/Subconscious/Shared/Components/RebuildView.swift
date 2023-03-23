@@ -14,13 +14,20 @@ struct RebuildView: View {
             Text("What? Subconscious is evolving!")
                 .font(.title2)
             Spacer()
-            ProgressView()
-            Spacer()
-            Text("Upgrading database and migrating data. This could take a minute.")
+            ProgressView() {
+                VStack(spacing: AppTheme.unit) {
+                    Text("Upgrading database.")
+                    Text("This could take a minute.")
+                }
                 .multilineTextAlignment(.center)
                 .font(.body)
                 .foregroundColor(.secondary)
+            }
+            Spacer()
         }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(.white)
     }
 }
 
