@@ -26,23 +26,12 @@ import Cocoa
 import CoreGraphics
 
 struct EmbeddedTranscludePreview: View {
-    var label: String = "Subconscious"
+    var address: MemoAddress
+    var excerpt: String
     
     var body: some View {
-        VStack(alignment: .leading) {
-            Text("title")
-            Text(label)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        }
-        .padding(4)
-        .frame(maxWidth: .infinity, maxHeight: 128) // TODO: share constant for all instances of 128
-        .background(.white)
-        .overlay(
-            RoundedRectangle(cornerRadius: 4)
-                .stroke(.purple, lineWidth: 2)
-            )
-        .padding(2)
+        Transclude2View(address: address, excerpt: excerpt, action: {})
+            .padding(1)
     }
 }
 
@@ -87,22 +76,19 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
     private var img: UIImage?
     
     private func render() {
-        guard let textContentStorage = self.textLayoutManager?.textContentManager as? NSTextContentStorage else {
-            return
-        }
-        guard let textElement = textElement else {
-            return
-        }
-        
         guard let slashlink = slashlink else {
             TranscludeBlockLayoutFragment.logger.warning("nil slashlink provided to transclude block")
             return
         }
         
-        let v = Transclude2View(
+        guard let entry = entry else {
+            TranscludeBlockLayoutFragment.logger.warning("nil entry provided to transclude block")
+            return
+        }
+        
+        let v = EmbeddedTranscludePreview(
             address: MemoAddress.public(slashlink),
-            excerpt: entry?.excerpt ?? "MISSING ENTRY",
-            action: { }
+            excerpt: entry.excerpt
         )
         
         // Host our SwiftUI view within a UIKit view
