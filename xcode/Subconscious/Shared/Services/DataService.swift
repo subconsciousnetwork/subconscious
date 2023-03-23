@@ -34,6 +34,13 @@ struct MoveReceipt: Hashable {
     var to: MemoAddress
 }
 
+/// Record of a successful database rebuild
+struct DatabaseRebuildReceipt: Hashable {
+    var databaseVersion: Int
+    var sphereVersion: String
+    var localChanges: [FileFingerprintChange]
+}
+
 // MARK: SERVICE
 /// Wraps both database and source-of-truth store, providing data
 /// access methods for the app.
@@ -97,9 +104,17 @@ struct DataService {
         }
     }
 
-    func rebuildAsync() -> AnyPublisher<Int, Error> {
+    /// Rebuild database and re-sync everything.
+    func rebuildAsync() -> AnyPublisher<DatabaseRebuildReceipt, Error> {
         CombineUtilities.async(qos: .utility) {
-            try database.rebuild()
+            let databaseVersion = try database.rebuild()
+            let localChanges = try syncLocalWithDatabase()
+            let sphereVersion = try syncSphereWithDatabase()
+            return DatabaseRebuildReceipt(
+                databaseVersion: databaseVersion,
+                sphereVersion: sphereVersion,
+                localChanges: localChanges
+            )
         }
     }
 
@@ -142,62 +157,66 @@ struct DataService {
     /// Sync file system with database.
     /// Note file system is source-of-truth (leader).
     /// Syncing will never delete files on the file system.
-    func syncLocalWithDatabase() -> AnyPublisher<[FileFingerprintChange], Error> {
-        CombineUtilities.async(qos: .utility) {
-            // Left = Leader (files)
-            let left: [FileFingerprint] = try local.list()
-                .compactMap({ slug in
-                    guard let info = local.info(slug) else {
-                        return nil
-                    }
-                    return FileFingerprint(
-                        slug: slug,
-                        info: info
-                    )
-                })
-            // Right = Follower (search index)
-            let right = try database.listLocalMemoFingerprints()
-            
-            let changes = FileSync.calcChanges(
-                left: left,
-                right: right
-            )
-            .filter({ change in
-                switch change {
-                case .same:
-                    return false
-                default:
-                    return true
+    func syncLocalWithDatabase() throws -> [FileFingerprintChange] {
+        // Left = Leader (files)
+        let left: [FileFingerprint] = try local.list()
+            .compactMap({ slug in
+                guard let info = local.info(slug) else {
+                    return nil
                 }
+                return FileFingerprint(
+                    slug: slug,
+                    info: info
+                )
             })
-            for change in changes {
-                switch change {
-                // .leftOnly = create.
-                // .leftNewer = update.
-                // .rightNewer = Follower shouldn't be ahead.
-                //               Leader wins.
-                // .conflict. Leader wins.
-                case .leftOnly(let left), .leftNewer(let left, _), .rightNewer(let left, _), .conflict(let left, _):
-                    var memo = try local.read(left.slug).unwrap()
-                    // Read info from file system and set modified time
-                    let info = try local.info(left.slug).unwrap()
-                    memo.modified = info.modified
-                    try database.writeMemo(
-                        left.slug.toLocalMemoAddress(),
-                        memo: memo,
-                        size: info.size
-                    )
-                // .rightOnly = delete. Remove from search index
-                case .rightOnly(let right):
-                    try database.removeMemo(
-                        right.slug.toLocalMemoAddress()
-                    )
-                // .same = no change. Do nothing.
-                case .same:
-                    break
-                }
+        // Right = Follower (search index)
+        let right = try database.listLocalMemoFingerprints()
+        
+        let changes = FileSync.calcChanges(
+            left: left,
+            right: right
+        )
+        .filter({ change in
+            switch change {
+            case .same:
+                return false
+            default:
+                return true
             }
-            return changes
+        })
+        for change in changes {
+            switch change {
+            // .leftOnly = create.
+            // .leftNewer = update.
+            // .rightNewer = Follower shouldn't be ahead.
+            //               Leader wins.
+            // .conflict. Leader wins.
+            case .leftOnly(let left), .leftNewer(let left, _), .rightNewer(let left, _), .conflict(let left, _):
+                var memo = try local.read(left.slug).unwrap()
+                // Read info from file system and set modified time
+                let info = try local.info(left.slug).unwrap()
+                memo.modified = info.modified
+                try database.writeMemo(
+                    left.slug.toLocalMemoAddress(),
+                    memo: memo,
+                    size: info.size
+                )
+            // .rightOnly = delete. Remove from search index
+            case .rightOnly(let right):
+                try database.removeMemo(
+                    right.slug.toLocalMemoAddress()
+                )
+            // .same = no change. Do nothing.
+            case .same:
+                break
+            }
+        }
+        return changes
+    }
+
+    func syncLocalWithDatabaseAsync() -> AnyPublisher<[FileFingerprintChange], Error> {
+        CombineUtilities.async(qos: .utility) {
+            try syncLocalWithDatabase()
         }
     }
 

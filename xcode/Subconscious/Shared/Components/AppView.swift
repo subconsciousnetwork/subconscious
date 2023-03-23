@@ -29,10 +29,15 @@ struct AppView: View {
                 }
             }
             .zIndex(0)
+            if (store.state.isRebuilding) {
+                RebuildView()
+                    .animation(.default, value: store.state.isRebuilding)
+                    .zIndex(1)
+            }
             if (store.state.shouldPresentFirstRun) {
                 FirstRunView(app: store)
                     .animation(.default, value: store.state.shouldPresentFirstRun)
-                    .zIndex(1)
+                    .zIndex(2)
             }
         }
         .sheet(
@@ -125,6 +130,7 @@ enum AppAction: CustomLogStringConvertible {
     case succeedMigrateDatabase(Int)
     /// Database is ready for use
     case rebuildDatabase
+    case succeedRebuildDatabase(DatabaseRebuildReceipt)
     case failRebuildDatabase(String)
     /// App ready for database calls and interaction
     case ready
@@ -165,6 +171,8 @@ enum AppAction: CustomLogStringConvertible {
         switch self {
         case let .succeedMigrateDatabase(version):
             return "succeedMigrateDatabase(\(version))"
+        case .succeedRebuildDatabase(let receipt):
+            return "succeedRebuildDatabase(\(receipt.databaseVersion)...)"
         case let .succeedSyncLocalFilesWithDatabase(fingerprints):
             return "succeedSyncLocalFilesWithDatabase(...) \(fingerprints.count) items"
         default:
@@ -225,9 +233,15 @@ enum GatewaySyncStatus: Equatable {
 struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
+    
     /// Should first run show?
     /// Distinct from whether first run has actually run.
     var shouldPresentFirstRun = !AppDefaults.standard.firstRunComplete
+
+    /// Is app in progress of rebuilding database?
+    /// Toggled to true when database is rebuilt from scratch.
+    /// Remains true until first file sync completes.
+    var isRebuilding = false
 
     var nickname = AppDefaults.standard.nickname
     var nicknameTextField = AppDefaults.standard.nickname ?? ""
@@ -359,6 +373,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .succeedRebuildDatabase(let receipt):
+            return succeedRebuildDatabase(
+                state: state,
+                environment: environment,
+                receipt: receipt
+            )
         case let .failRebuildDatabase(error):
             return failRebuildDatabase(
                 state: state,
@@ -421,8 +441,11 @@ struct AppModel: ModelProtocol {
                 changes: changes
             )
         case let .failSyncLocalFilesWithDatabase(message):
-            logger.log("File sync failed: \(message)")
-            return Update(state: state)
+            return failSyncLocalFilesWithDatabase(
+                state: state,
+                environment: environment,
+                message: message
+            )
         case let .presentSettingsSheet(isPresented):
             return presentSettingsSheet(
                 state: state,
@@ -431,7 +454,7 @@ struct AppModel: ModelProtocol {
             )
         }
     }
-    
+
     /// Log message and no-op
     static func log(
         state: AppModel,
@@ -694,19 +717,45 @@ struct AppModel: ModelProtocol {
         logger.warning(
             "No valid migrations for database. Rebuilding."
         )
-        let fx: Fx<AppAction> = environment.data.rebuildAsync()
-            .map({ info in
-                AppAction.succeedMigrateDatabase(info)
-            })
-            .catch({ error in
-                Just(
-                    AppAction.failRebuildDatabase(
-                        error.localizedDescription
-                    )
+        var model = state
+
+        // Toggle rebuild state
+        model.isRebuilding = true
+
+        let fx: Fx<AppAction> = environment.data.rebuildAsync().map({
+            receipt in
+            AppAction.succeedRebuildDatabase(receipt)
+        }).catch({ error in
+            Just(
+                AppAction.failRebuildDatabase(
+                    error.localizedDescription
                 )
-            })
-                .eraseToAnyPublisher()
-                    return Update(state: state, fx: fx)
+            )
+        }).eraseToAnyPublisher()
+
+        return Update(state: model, fx: fx)
+    }
+    
+    static func succeedRebuildDatabase(
+        state: AppModel,
+        environment: AppEnvironment,
+        receipt: DatabaseRebuildReceipt
+    ) -> Update<AppModel> {
+        logger.log(
+            "Rebuilt database"
+        )
+        var model = state
+        model.databaseState = .ready
+        model.isRebuilding = false
+        return update(
+            state: model,
+            actions: [
+                .succeedMigrateDatabase(receipt.databaseVersion),
+                .succeedSyncLocalFilesWithDatabase(receipt.localChanges),
+                .succeedSyncSphereWithDatabase(version: receipt.sphereVersion)
+            ],
+            environment: environment
+        )
     }
     
     static func failRebuildDatabase(
@@ -718,6 +767,7 @@ struct AppModel: ModelProtocol {
             "Could not rebuild database: \(error)"
         )
         var model = state
+        model.isRebuilding = false
         model.databaseState = .broken
         return Update(state: model)
     }
@@ -819,17 +869,14 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let fx: Fx<AppAction> = environment.data
-            .syncSphereWithDatabaseAsync()
-            .map({ version in
-                AppAction.succeedSyncSphereWithDatabase(version: version)
-            })
-            .catch({ error in
-                Just(
-                    AppAction.failSyncSphereWithDatabase(error.localizedDescription)
-                )
-            })
-            .eraseToAnyPublisher()
+        let fx: Fx<AppAction> = environment.data.syncSphereWithDatabaseAsync().map({
+            version in
+            AppAction.succeedSyncSphereWithDatabase(version: version)
+        }).catch({ error in
+            Just(
+                AppAction.failSyncSphereWithDatabase(error.localizedDescription)
+            )
+        }).eraseToAnyPublisher()
         return Update(state: state, fx: fx)
     }
     
@@ -858,16 +905,13 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         logger.log("File sync started")
-        let fx: Fx<AppAction> = environment.data
-            .syncLocalWithDatabase()
-            .map({ changes in
-                AppAction.succeedSyncLocalFilesWithDatabase(changes)
-            })
-            .catch({ error in
-                Just(AppAction.failSyncLocalFilesWithDatabase(error.localizedDescription))
-            })
-                .eraseToAnyPublisher()
-                    return Update(state: state, fx: fx)
+        let fx: Fx<AppAction> = environment.data.syncLocalWithDatabaseAsync().map({
+            changes in
+            AppAction.succeedSyncLocalFilesWithDatabase(changes)
+        }).catch({ error in
+            Just(AppAction.failSyncLocalFilesWithDatabase(error.localizedDescription))
+        }).eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
     
     /// Handle successful sync
@@ -882,6 +926,15 @@ struct AppModel: ModelProtocol {
         return Update(state: state)
     }
     
+    static func failSyncLocalFilesWithDatabase(
+        state: AppModel,
+        environment: AppEnvironment,
+        message: String
+    ) -> Update<AppModel> {
+        logger.log("File sync failed: \(message)")
+        return Update(state: state)
+    }
+
     static func presentSettingsSheet(
         state: AppModel,
         environment: AppEnvironment,
