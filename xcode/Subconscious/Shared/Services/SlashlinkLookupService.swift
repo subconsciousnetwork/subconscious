@@ -17,7 +17,7 @@ class SlashlinkLookupService {
         self.cache = Dictionary()
     }
     
-    func listEntriesForSlashlinks(slashlinks: [Slashlink]) throws -> [EntryStub] {
+    func listEntriesForSlashlinks(slashlinks: [Slashlink]) throws -> Dictionary<Slashlink, EntryStub> {
         // Check for cached data
         let cacheHits =
             slashlinks.map { s in
@@ -27,7 +27,7 @@ class SlashlinkLookupService {
         
         // Do we have it all? Early return
         if cacheHits.count == slashlinks.count {
-            return cacheHits
+            return cache
         }
         
         // Otherwise, only look up the cache misses
@@ -40,10 +40,10 @@ class SlashlinkLookupService {
         }
         
         // Combine the two sets of results
-        return result + cacheHits
+        return cache
     }
     
-    func listEntriesForSlashlinksAsync(slashlinks: [Slashlink]) -> AnyPublisher<[EntryStub], Error> {
+    func listEntriesForSlashlinksAsync(slashlinks: [Slashlink]) -> AnyPublisher<Dictionary<Slashlink, EntryStub>, Error> {
         CombineUtilities.async(qos: .default) {
             return try self.listEntriesForSlashlinks(slashlinks: slashlinks)
         }
