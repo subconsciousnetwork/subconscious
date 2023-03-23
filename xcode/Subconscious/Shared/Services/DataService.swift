@@ -34,13 +34,6 @@ struct MoveReceipt: Hashable {
     var to: MemoAddress
 }
 
-/// Record of a successful database rebuild
-struct DatabaseRebuildReceipt: Hashable {
-    var databaseVersion: Int
-    var sphereVersion: String
-    var localChanges: [FileFingerprintChange]
-}
-
 // MARK: SERVICE
 /// Wraps both database and source-of-truth store, providing data
 /// access methods for the app.
@@ -105,16 +98,9 @@ struct DataService {
     }
 
     /// Rebuild database and re-sync everything.
-    func rebuildAsync() -> AnyPublisher<DatabaseRebuildReceipt, Error> {
+    func rebuildAsync() -> AnyPublisher<Int, Error> {
         CombineUtilities.async(qos: .utility) {
-            let databaseVersion = try database.rebuild()
-            let localChanges = try syncLocalWithDatabase()
-            let sphereVersion = try syncSphereWithDatabase()
-            return DatabaseRebuildReceipt(
-                databaseVersion: databaseVersion,
-                sphereVersion: sphereVersion,
-                localChanges: localChanges
-            )
+            try database.rebuild()
         }
     }
 

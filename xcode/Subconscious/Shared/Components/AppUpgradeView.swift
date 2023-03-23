@@ -1,5 +1,5 @@
 //
-//  RebuildView.swift
+//  AppUpgradeView.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 3/22/23.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Displays information to the user when app migration / rebuild happening.
-struct RebuildView: View {
+struct AppUpgradeView: View {
     var body: some View {
         VStack {
             Text("What? Subconscious is evolving!")
@@ -31,8 +31,8 @@ struct RebuildView: View {
     }
 }
 
-struct RebuildView_Previews: PreviewProvider {
+struct AppUpgradeView_Previews: PreviewProvider {
     static var previews: some View {
-        RebuildView()
+        AppUpgradeView()
     }
 }
