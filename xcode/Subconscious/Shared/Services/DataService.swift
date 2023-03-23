@@ -361,6 +361,12 @@ struct DataService {
             try database.listRecentMemos()
         }
     }
+    
+    func listEntriesForSlashlinks(slashlinks: [Slashlink]) -> AnyPublisher<[EntryStub], Error> {
+        CombineUtilities.async(qos: .default) {
+            try database.listEntriesForSlashlinks(slashlinks: slashlinks)
+        }
+    }
 
     func countMemos() throws -> Int {
         return try database.countMemos().unwrap()

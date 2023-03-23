@@ -258,12 +258,62 @@ final class DatabaseService {
         return results.first?.col(0)?.toInt()
     }
     
+    func listEntriesForSlashlinks(slashlinks: [Slashlink]) throws -> [EntryStub] {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        
+        let slashlinks = [
+            Slashlink("/hello-world")!,
+            Slashlink("@ben/hello-world")!,
+            Slashlink("/same-ish-different-day")!
+        ]
+        
+        let parameters =
+            slashlinks
+            .map { s in
+                SQLite3Database.Value.text(s.toPublicMemoAddress().description) // TODO: need to check if this is local or public
+            }
+
+        do {
+            let results = try database.execute(
+                sql: """
+            SELECT id, modified, excerpt
+            FROM memo
+            WHERE id IN (?, ?, ?)
+            ORDER BY modified DESC
+            LIMIT 1000
+            """,
+                parameters: parameters
+            )
+            
+            return results.compactMap({ row in
+                guard
+                    let address = row.col(0)?.toString()?.toMemoAddress(),
+                    let modified = row.col(1)?.toDate(),
+                    let excerpt = row.col(2)?.toString()
+                else {
+                    return nil
+                }
+                return EntryStub(
+                    address: address,
+                    excerpt: excerpt,
+                    modified: modified
+                )
+            })
+        } catch {
+            let x = error
+        }
+        
+        return []
+    }
+    
     /// List recent entries
     func listRecentMemos() throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
-
         }
+        
         let results = try database.execute(
             sql: """
             SELECT id, modified, excerpt
