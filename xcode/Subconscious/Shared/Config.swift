@@ -26,7 +26,7 @@ struct Config: Equatable, Codable {
         }
     }
     
-    var renderTranscludeBlocks: Bool = false
+    var renderTranscludeBlocks = false
 
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
