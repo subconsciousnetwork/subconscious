@@ -61,7 +61,7 @@ struct MemoEditorDetailView: View {
     private func onFetchSlashlinkPreviews(
         slashlinks: [Slashlink]
     ) -> Void {
-        notify(.fetchSlashlinkPreviews(slashlinks))
+        store.send(.fetchSlashlinkPreviews(slashlinks))
     }
 
     var body: some View {
@@ -269,9 +269,6 @@ enum MemoEditorDetailNotification: Hashable {
     case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)
     case succeedSaveEntry(address: MemoAddress, modified: Date)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
-    case fetchSlashlinkPreviews([Slashlink])
-    
-
 }
 
 extension MemoEditorDetailNotification {
@@ -426,6 +423,10 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
 
     /// Refresh after save
     case refreshLists
+    
+    /// Transclude block previews
+    case fetchSlashlinkPreviews([Slashlink])
+    case populateSlashlinkPreviews(Dictionary<Slashlink, EntryStub>)
 
     /// Local action for requesting editor focus.
     static func requestEditorFocus(_ focus: Bool) -> Self {
@@ -919,6 +920,24 @@ struct MemoEditorDetailModel: ModelProtocol {
         case .refreshLists:
             return refreshLists(
                 state: state,
+                environment: environment
+            )
+        case .fetchSlashlinkPreviews(let slashlinks):
+           let fx: Fx<MemoEditorDetailAction> =
+               environment.slashlinks.listEntriesForSlashlinksAsync(slashlinks: slashlinks)
+               .catch({ err in
+                   Just([:])
+               })
+               .map { v in
+                   .populateSlashlinkPreviews(v)
+               }
+               .eraseToAnyPublisher()
+           
+           return Update(state: state, fx: fx)
+        case .populateSlashlinkPreviews(let slashlinks):
+            return update(
+                state: state,
+                action: .editor(.populateSlashlinkPreviews(slashlinks)),
                 environment: environment
             )
         }

@@ -43,6 +43,7 @@ enum SubtextTextAction: Hashable, CustomLogStringConvertible {
     case setSelection(range: NSRange, text: String)
     /// Set selection at the end of the text
     case setSelectionAtEnd
+    case populateSlashlinkPreviews(Dictionary<Slashlink, EntryStub>)
 
     var logDescription: String {
         switch self {
@@ -61,6 +62,9 @@ struct SubtextTextModel: ModelProtocol {
     var focus = false
     var text = ""
     var selection = NSMakeRange(0, 0)
+    
+    /// Transclude block preview cache
+    var slashlinkPreviews: Dictionary<Slashlink, EntryStub> = Dictionary()
 
     //  MARK: Update
     static func update(
@@ -106,6 +110,10 @@ struct SubtextTextModel: ModelProtocol {
                 action: .setSelection(range: range, text: state.text),
                 environment: ()
             )
+        case .populateSlashlinkPreviews(let slashlinks):
+            var model = state
+            model.slashlinkPreviews = slashlinks
+            return Update(state: model)
         }
     }
 }
@@ -190,6 +198,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         /// Subtext renderer instance
         var renderer: SubtextAttributedStringRenderer
         var subtext: Subtext? = nil
+        var slashlinkPreviews: Dictionary<Slashlink, EntryStub> = Dictionary()
 
         init(
             representable: SubtextTextViewRepresentable
@@ -319,7 +328,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             }
 
             // Only render transcludes for a single slashlink in a single block
-            guard let _ = subtext?
+            guard let slashlink = subtext?
                 .block(forParagraph: paragraph)?
                 .slashlinks
                 .get(0)?
@@ -332,7 +341,9 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
                 textElement: paragraph,
                 range: paragraph.elementRange
             )
-
+            layoutFragment.slashlink = slashlink
+            layoutFragment.entry = slashlinkPreviews[slashlink]
+            
             return layoutFragment
         }
     }
@@ -424,6 +435,12 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             // body size preferenced changed.
             context.coordinator.renderer.bodySize = bodySize
             view.text = state.text
+        }
+        
+        if state.slashlinkPreviews.count > 0 {
+            let links = state.slashlinkPreviews
+            context.coordinator.slashlinkPreviews = links
+            SubtextTextViewRepresentable.logger.debug("got linkz?")
         }
 
         // Update width

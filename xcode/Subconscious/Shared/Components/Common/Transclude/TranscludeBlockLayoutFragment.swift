@@ -76,6 +76,9 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
     var text: String?
     var height: CGFloat? = 128.0
     
+    var slashlink: Slashlink?
+    var entry: EntryStub?
+    
     override var leadingPadding: CGFloat { return 0 }
     override var trailingPadding: CGFloat { return 0 }
     override var topMargin: CGFloat { return 0 }
@@ -93,13 +96,15 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
         
         let content = textContentStorage.attributedString(for: textElement)
         let rawContent = content?.string.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let slashlink = Slashlink(rawContent ?? "/fallback") else {
+        
+        guard let slashlink = slashlink else {
+            TranscludeBlockLayoutFragment.logger.warning("nil slashlink provided to transclude block")
             return
         }
         
         let v = Transclude2View(
             address: MemoAddress.public(slashlink),
-            excerpt: "Call me Ishmael.",
+            excerpt: entry?.excerpt ?? "MISSING ENTRY",
             action: { }
         )
         
