@@ -904,6 +904,7 @@ struct AppEnvironment {
 
     var data: DataService
     var feed: FeedService
+    var slashlinks: SlashlinkLookupService
     
     var recoveryPhrase = RecoveryPhraseEnvironment()
     var addressBook: AddressBookEnvironment
@@ -962,18 +963,19 @@ struct AppEnvironment {
             migrations: Config.migrations
         )
         
-        let addresBook = AddressBookService(noosphere: noosphere, database: databaseService)
+        let addressBook = AddressBookService(noosphere: noosphere, database: databaseService)
         
         self.data = DataService(
             noosphere: noosphere,
             database: databaseService,
             local: local,
-            addressBook: addresBook
+            addressBook: addressBook
         )
         
         self.addressBook = AddressBookEnvironment(data: data)
 
         self.feed = FeedService()
+        self.slashlinks = SlashlinkLookupService(database: databaseService)
     }
 }
 
