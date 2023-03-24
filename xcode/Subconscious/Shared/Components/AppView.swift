@@ -29,19 +29,21 @@ struct AppView: View {
                 }
             }
             .zIndex(0)
-            if (!store.state.isUpgraded) {
+            if (!store.state.isAppUpgraded) {
                 AppUpgradeView(
-                    database: store.state.databaseMigrationStatus,
-                    local: store.state.localSyncStatus,
-                    sphere: store.state.sphereSyncStatus
+                    state: store.state.appUpgrade,
+                    send: Address.forward(
+                        send: store.send,
+                        tag: AppUpgradeCursor.tag
+                    )
                 )
-                .animation(.default, value: store.state.isUpgraded)
-                .zIndex(1)
+                .animation(.default, value: store.state.isAppUpgraded)
+                .zIndex(2)
             }
             if (store.state.shouldPresentFirstRun) {
                 FirstRunView(app: store)
                     .animation(.default, value: store.state.shouldPresentFirstRun)
-                    .zIndex(2)
+                    .zIndex(1)
             }
         }
         .sheet(
@@ -89,6 +91,7 @@ struct AppView: View {
 enum AppAction: CustomLogStringConvertible {
     case recoveryPhrase(RecoveryPhraseAction)
     case addressBook(AddressBookAction)
+    case appUpgrade(AppUpgradeAction)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -96,6 +99,8 @@ enum AppAction: CustomLogStringConvertible {
 
     /// On view appear
     case appear
+
+    case setAppUpgraded(_ isUpgraded: Bool)
 
     /// Set sphere/user nickname
     case setNicknameTextField(_ nickname: String)
@@ -142,10 +147,6 @@ enum AppAction: CustomLogStringConvertible {
     /// App ready for database calls and interaction
     case ready
     
-    /// Called after every sync action to toggle off "upgrading" state
-    /// if app is undergoing an upgrade, and if all syncs have completed.
-    case checkUpgradeFinished
-    
     /// Sync gateway to sphere, sphere to DB, and local file system to DB
     case syncAll
 
@@ -176,6 +177,19 @@ enum AppAction: CustomLogStringConvertible {
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
         .recoveryPhrase(.setPhrase(phrase))
+    }
+
+    /// Synonym for AppUpgrade event action.
+    static func appUpgradeAddEventAndSetComplete(
+        event: AppUpgradeEvent,
+        isComplete: Bool
+    ) -> AppAction {
+        .appUpgrade(
+            .addEventAndSetComplete(
+                event: event,
+                isComplete: isComplete
+            )
+        )
     }
 
     var logDescription: String {
@@ -224,21 +238,46 @@ struct AppAddressBookCursor: CursorProtocol {
     }
 }
 
+struct AppUpgradeCursor: CursorProtocol {
+    typealias Model = AppModel
+    typealias ViewModel = AppUpgradeModel
+    
+    static func get(state: Model) -> ViewModel {
+        state.appUpgrade
+    }
+    
+    static func set(state: AppModel, inner: AppUpgradeModel) -> AppModel {
+        var model = state
+        model.appUpgrade = inner
+        return model
+    }
+    
+    static func tag(_ action: AppUpgradeAction) -> AppAction {
+        switch action {
+        case .continue:
+            return .setAppUpgraded(true)
+        default:
+            return .appUpgrade(action)
+        }
+    }
+}
+
 //  MARK: Model
 struct AppModel: ModelProtocol {
     /// Should first run show?
     /// Distinct from whether first run has actually run.
     var shouldPresentFirstRun = !AppDefaults.standard.firstRunComplete
 
-    /// Is app in progress of upgrading database?
-    /// Toggled to true when database is rebuilt from scratch.
-    /// Remains true until first file sync completes.
-    var isUpgraded = true
-
     /// Is database connected and migrated?
     var databaseMigrationStatus = ResourceStatus.initial
     var localSyncStatus = ResourceStatus.initial
     var sphereSyncStatus = ResourceStatus.initial
+
+    var isSyncAllResolved: Bool {
+        databaseMigrationStatus.isResolved &&
+        localSyncStatus.isResolved &&
+        sphereSyncStatus.isResolved
+    }
 
     var nickname = AppDefaults.standard.nickname
     var nicknameTextField = AppDefaults.standard.nickname ?? ""
@@ -255,7 +294,16 @@ struct AppModel: ModelProtocol {
     /// Holds the state of the petname directory
     /// Will be persisted to and read from the underlying sphere
     var addressBook = AddressBookModel()
-
+    
+    /// Is app in progress of upgrading?
+    /// Toggled to true when database is rebuilt from scratch.
+    /// Remains true until first file sync completes.
+    var isAppUpgraded = true
+    
+    /// State for app upgrade view that takes over if we have to do any
+    /// one-time long-running migration tasks at startup.
+    var appUpgrade = AppUpgradeModel()
+    
     var gatewayURL = AppDefaults.standard.gatewayURL
     var gatewayURLTextField = AppDefaults.standard.gatewayURL
     var isGatewayURLTextFieldValid = true
@@ -297,6 +345,12 @@ struct AppModel: ModelProtocol {
                 action: action,
                 environment: environment.addressBook
             )
+        case .appUpgrade(let action):
+            return AppUpgradeCursor.update(
+                state: state,
+                action: action,
+                environment: ()
+            )
         case .scenePhaseChange(let scenePhase):
             return scenePhaseChange(
                 state: state,
@@ -307,6 +361,12 @@ struct AppModel: ModelProtocol {
             return appear(
                 state: state,
                 environment: environment
+            )
+        case let .setAppUpgraded(isUpgraded):
+            return setAppUpgraded(
+                state: state,
+                environment: environment,
+                isUpgraded: isUpgraded
             )
         case let .setNicknameTextField(nickname):
             return setNicknameTextField(
@@ -384,11 +444,6 @@ struct AppModel: ModelProtocol {
             )
         case .ready:
             return ready(
-                state: state,
-                environment: environment
-            )
-        case .checkUpgradeFinished:
-            return checkUpgradeFinished(
                 state: state,
                 environment: environment
             )
@@ -504,6 +559,16 @@ struct AppModel: ModelProtocol {
             ],
             environment: environment
         )
+    }
+    
+    static func setAppUpgraded(
+        state: AppModel,
+        environment: AppEnvironment,
+        isUpgraded: Bool
+    ) -> Update<AppModel> {
+        var model = state
+        model.isAppUpgraded = isUpgraded
+        return Update(state: model)
     }
     
     static func setNicknameTextField(
@@ -724,8 +789,9 @@ struct AppModel: ModelProtocol {
         
         // Toggle app "upgrading" state.
         // Upgrade screen will be shown to user.
-        model.isUpgraded = false
-        
+        model.isAppUpgraded = false
+        model.databaseMigrationStatus = .pending
+
         let fx: Fx<AppAction> = environment.data.rebuildAsync().map({
             receipt in
             AppAction.succeedRebuildDatabase(receipt)
@@ -747,8 +813,12 @@ struct AppModel: ModelProtocol {
         return update(
             state: state,
             actions: [
+                // This will kick off .ready and .syncAll
                 .succeedMigrateDatabase(version),
-                .syncAll
+                .appUpgradeAddEventAndSetComplete(
+                    event: .success(String(localized: "Upgraded database")),
+                    isComplete: state.isSyncAllResolved
+                )
             ],
             environment: environment
         )
@@ -764,7 +834,14 @@ struct AppModel: ModelProtocol {
         )
         var model = state
         model.databaseMigrationStatus = .failed(error)
-        return Update(state: model)
+        return update(
+            state: model,
+            action: .appUpgradeAddEventAndSetComplete(
+                event: .failure("Could not upgrade database"),
+                isComplete: model.isSyncAllResolved
+            ),
+            environment: environment
+        )
     }
     
     static func ready(
@@ -786,22 +863,6 @@ struct AppModel: ModelProtocol {
             action: .syncAll,
             environment: environment
         )
-    }
-
-    static func checkUpgradeFinished(
-        state: AppModel,
-        environment: AppEnvironment
-    ) -> Update<AppModel> {
-        // If not upgrading, we're already done.
-        if state.isUpgraded {
-            return Update(state: state)
-        }
-        var model = state
-        model.isUpgraded = (
-            state.localSyncStatus.isResolved &&
-            state.sphereSyncStatus.isResolved
-        )
-        return Update(state: model)
     }
 
     static func syncAll(
@@ -908,7 +969,10 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .checkUpgradeFinished,
+            action: .appUpgradeAddEventAndSetComplete(
+                event: .success(String(localized: "Sphere content synced")),
+                isComplete: model.isSyncAllResolved
+            ),
             environment: environment
         )
     }
@@ -925,7 +989,10 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .checkUpgradeFinished,
+            action: .appUpgradeAddEventAndSetComplete(
+                event: .failure(String(localized: "Sphere sync failed")),
+                isComplete: model.isSyncAllResolved
+            ),
             environment: environment
         )
     }
@@ -964,7 +1031,10 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .checkUpgradeFinished,
+            action: .appUpgradeAddEventAndSetComplete(
+                event: .success(String(localized: "Local content synced")),
+                isComplete: model.isSyncAllResolved
+            ),
             environment: environment
         )
     }
@@ -981,7 +1051,10 @@ struct AppModel: ModelProtocol {
         
         return update(
             state: model,
-            action: .checkUpgradeFinished,
+            action: .appUpgradeAddEventAndSetComplete(
+                event: .failure(String(localized: "Local content sync failed")),
+                isComplete: model.isSyncAllResolved
+            ),
             environment: environment
         )
     }

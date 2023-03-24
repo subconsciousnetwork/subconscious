@@ -6,47 +6,12 @@
 //
 
 import SwiftUI
-
-struct SyncStatusIconView: View {
-    var status: ResourceStatus
-    
-    private var color: Color {
-        switch status {
-        case .initial:
-            return .secondaryIcon
-        case .pending:
-            return .secondaryIcon
-        case .succeeded:
-            return .green
-        case .failed:
-            return .red
-        }
-    }
-
-    private var systemName: String {
-        switch status {
-        case .initial:
-            return "circle"
-        case .pending:
-            return "circle"
-        case .succeeded:
-            return "checkmark.circle.fill"
-        case .failed:
-            return "checkmark.circle.trianglebadge.exclamationmark"
-        }
-    }
-
-    var body: some View {
-        Image(systemName: systemName)
-            .foregroundColor(color)
-    }
-}
+import ObservableStore
 
 /// Displays information to the user when app migration / rebuild happening.
 struct AppUpgradeView: View {
-    var database: ResourceStatus
-    var local: ResourceStatus
-    var sphere: ResourceStatus
+    var state: AppUpgradeModel
+    var send: (AppUpgradeAction) -> Void
 
     var body: some View {
         VStack {
@@ -57,24 +22,33 @@ struct AppUpgradeView: View {
             ProgressView()
             Spacer()
             VStack(alignment: .leading, spacing: AppTheme.unit) {
-                Label(
-                    title: { Text("Upgrading database") },
-                    icon: {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
+                ForEach(state.events) { event in
+                    switch event.value {
+                    case .success(let message):
+                        Label(
+                            title: {
+                                Text(verbatim: message)
+                            },
+                            icon: {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                            }
+                        )
+                        .transition(.push(from: .bottom))
+                    case .failure(let message):
+                        Label(
+                            title: {
+                                Text(verbatim: message)
+                            },
+                            icon: {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .foregroundColor(.red)
+                            }
+                        )
+                        .transition(.push(from: .bottom))
                     }
-                )
-                .labelStyle(.titleAndIcon)
-                Label(
-                    title: { Text("Migrating local notes") },
-                    icon: { SyncStatusIconView(status: local) }
-                )
-                .labelStyle(.titleAndIcon)
-                Label(
-                    title: { Text("Migrating sphere notes") },
-                    icon: { SyncStatusIconView(status: sphere) }
-                )
-                .labelStyle(.titleAndIcon)
+                }
+
             }
             .multilineTextAlignment(.center)
             .font(.body)
@@ -84,7 +58,7 @@ struct AppUpgradeView: View {
 
             Button("Continue", action: {})
                 .buttonStyle(LargeButtonStyle())
-                .disabled(true)
+                .disabled(!state.isComplete)
         }
         .padding()
         .frame(maxWidth: .infinity)
@@ -92,12 +66,68 @@ struct AppUpgradeView: View {
     }
 }
 
+enum AppUpgradeAction: Hashable {
+    case event(_ event: AppUpgradeEvent)
+    case setComplete(_ isComplete: Bool)
+    case addEventAndSetComplete(event: AppUpgradeEvent, isComplete: Bool)
+    case `continue`
+}
+
+/// Represents an event during the sync process
+enum AppUpgradeEvent: Hashable {
+    case success(_ message: String)
+    case failure(_ message: String)
+}
+
+struct AppUpgradeModel: ModelProtocol {
+    typealias Action = AppUpgradeAction
+    typealias Environment = Void
+
+    var events: [Identified<AppUpgradeEvent>] = []
+    var isComplete = false
+    
+    static func update(
+        state: Self,
+        action: Action,
+        environment: Environment
+    ) -> Update<Self> {
+        switch action {
+        case .event(let event):
+            var model = state
+            model.events.append(
+                Identified(value: event)
+            )
+            return Update(state: model).animation(.default)
+        case .setComplete(let isComplete):
+            var model = state
+            model.isComplete = isComplete
+            return Update(state: model).animation(.default)
+        case .continue:
+            return Update(state: state)
+        case let .addEventAndSetComplete(event, isComplete):
+            return update(
+                state: state,
+                actions: [
+                    .event(event),
+                    .setComplete(isComplete)
+                ],
+                environment: ()
+            ).animation(.default)
+        }
+    }
+}
+
 struct AppUpgradeView_Previews: PreviewProvider {
     static var previews: some View {
         AppUpgradeView(
-            database: .initial,
-            local: .initial,
-            sphere: .initial
+            state: AppUpgradeModel(
+                events: [
+                    Identified(value: .success("Database upgraded")),
+                    Identified(value: .success("Local files synced")),
+                    Identified(value: .failure("Sphere files didn't sync")),
+                ]
+            ),
+            send: { action in }
         )
     }
 }
