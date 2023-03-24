@@ -98,33 +98,29 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
             return
         }
         
-        view.translatesAutoresizingMaskIntoConstraints = false
+        let width = textContainer.size.width
+        
         view.backgroundColor = .clear
         mountSubview(view: view)
         
-        let width = textContainer.size.width
+        view.translatesAutoresizingMaskIntoConstraints = false
         
-        // We walk through a bunch of template sizes and check how the view is responding when measured
-        // within those bounds. When the view stops growing we know it's at the natural size to
-        // fit the text.
-        let sizes = [0.0, 16.0, 32.0, 48.0, 64.0, 80.0, 96.0, 100.0, 128.0]
-        var maxSize = 0.0
-        for size in sizes {
-            let fit = hosted.sizeThatFits(in: CGSize(width: width, height: size))
+        // First, we try and render the view at zero size
+        do {
+            let fit = hosted.sizeThatFits(in: CGSize(width: width, height: 0))
             view.frame = CGRect(origin: CGPoint(x: 0, y: fit.height), size: CGSize(width: 0, height: fit.height))
             view.bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: width, height: fit.height))
-            let height = view.intrinsicContentSize.height
-            
-            TranscludeBlockLayoutFragment.logger.debug("\(size): Height: \(height), Fit: \(fit.height)")
-            
-            // Skip the first iteration of s == 0 because .sizeThatFits reports the wrong size on the first call
-            if fit.height > maxSize && size > 1 {
-                maxSize = fit.height
-            }
         }
         
-        TranscludeBlockLayoutFragment.logger.debug("Max height: \(maxSize)")
-        self.height = maxSize
+        let HEIGHT_CONSTRAINT = 128.0
+        
+        // Re-layout at the frame size. Now, magically, the fit will return the minimum height needed to fit the view.
+        let fit = hosted.sizeThatFits(in: CGSize(width: width, height: HEIGHT_CONSTRAINT))
+        view.frame = CGRect(origin: CGPoint(x: 0, y: fit.height), size: CGSize(width: 0, height: fit.height))
+        view.bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: width, height: fit.height))
+        
+        TranscludeBlockLayoutFragment.logger.debug("Calculated height: \(fit.height)")
+        self.height = fit.height
         self.width = width
         
         unmountSubview()
