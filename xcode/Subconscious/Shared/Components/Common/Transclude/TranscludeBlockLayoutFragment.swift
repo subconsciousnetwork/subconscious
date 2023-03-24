@@ -60,22 +60,20 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
         category: "editor"
     )
 
-    // Max height constraint
-    let SLASHLINK_PREVIEW_HEIGHT = 128.0
-    var text: String?
-    var height: CGFloat? = 128.0
+    var height: CGFloat? = 0.0
+    var width: CGFloat? = 0.0
     
     var slashlink: Slashlink?
     var entry: EntryStub?
+    
+    var hosted: UIHostingController<EmbeddedTranscludePreview>?
     
     override var leadingPadding: CGFloat { return 0 }
     override var trailingPadding: CGFloat { return 0 }
     override var topMargin: CGFloat { return 0 }
     override var bottomMargin: CGFloat { return 0 }
     
-    private var img: UIImage?
-    
-    private func render() {
+    func prepare(textContainer: NSTextContainer) {
         guard let slashlink = slashlink else {
             TranscludeBlockLayoutFragment.logger.warning("nil slashlink provided to transclude block")
             return
@@ -92,38 +90,30 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
         )
         
         // Host our SwiftUI view within a UIKit view
-        let hosted = UIHostingController(rootView: v)
+        self.hosted = UIHostingController(rootView: v)
+        guard let hosted = hosted else {
+            return
+        }
         guard let view = hosted.view else {
             return
         }
         
         view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = .clear
+        mountSubview(view: view)
         
-        // We have to mount the view before it will actually do layout calculations
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
-            TranscludeBlockLayoutFragment.logger.warning("Could not find UIWindowScene")
-            return
-        }
-        
-        guard let rootView = scene.windows.first?.rootViewController?.view else {
-            TranscludeBlockLayoutFragment.logger.warning("Could not find rootViewController")
-            return
-        }
-        
-        hosted.view.backgroundColor = .clear
-        rootView.addSubview(hosted.view)
+        let width = textContainer.size.width
         
         // We walk through a bunch of template sizes and check how the view is responding when measured
         // within those bounds. When the view stops growing we know it's at the natural size to
         // fit the text.
         let sizes = [0.0, 16.0, 32.0, 48.0, 64.0, 80.0, 96.0, 100.0, 128.0]
-        let width = containerWidth()
         var maxSize = 0.0
         for size in sizes {
             let fit = hosted.sizeThatFits(in: CGSize(width: width, height: size))
-            hosted.view.frame = CGRect(origin: CGPoint(x: 0, y: fit.height), size: CGSize(width: 0, height: fit.height))
-            hosted.view.bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: width, height: fit.height))
-            let height = hosted.view.intrinsicContentSize.height
+            view.frame = CGRect(origin: CGPoint(x: 0, y: fit.height), size: CGSize(width: 0, height: fit.height))
+            view.bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: width, height: fit.height))
+            let height = view.intrinsicContentSize.height
             
             TranscludeBlockLayoutFragment.logger.debug("\(size): Height: \(height), Fit: \(fit.height)")
             
@@ -135,35 +125,68 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
         
         TranscludeBlockLayoutFragment.logger.debug("Max height: \(maxSize)")
         self.height = maxSize
-        hosted.view.frame = CGRect(origin: CGPoint(x: 0, y: maxSize), size: CGSize(width: 0, height: maxSize))
-        hosted.view.bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: width, height: maxSize))
+        self.width = width
         
-        let img = view.asImage()
-        hosted.view.removeFromSuperview()
-        
-        // Cache for reuse in layout calculations
-        self.img = img
-        
-        // Reflow the document layout to include the subview dimensions
-        invalidateLayout()
+        unmountSubview()
     }
     
-    private func containerWidth() -> CGFloat {
-        return self.textLayoutManager!.textContainer!.size.width - leadingPadding - trailingPadding
+    private func unmountSubview() {
+        guard let view = hosted?.view else {
+            return
+        }
+        
+        view.removeFromSuperview()
+    }
+    
+    private func mountSubview(view: UIView) {
+        // We have to mount the view before it will actually do layout calculations
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+            TranscludeBlockLayoutFragment.logger.warning("Could not find UIWindowScene")
+            return
+        }
+        
+        guard let rootView = scene.windows.first?.rootViewController?.view else {
+            TranscludeBlockLayoutFragment.logger.warning("Could not find rootViewController")
+            return
+        }
+        
+        rootView.addSubview(view)
+    }
+    
+    private func render() -> UIImage? {
+        let height = height ?? 0.0
+        let width = width ?? 0.0
+        
+        guard let view = hosted?.view else {
+            return nil
+        }
+        
+        mountSubview(view: view)
+        
+        view.frame = CGRect(origin: CGPoint(x: 0, y: height), size: CGSize(width: 0, height: height))
+        view.bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: width, height: height))
+        
+        let img = view.asImage()
+        unmountSubview()
+        
+        // Cache for reuse in layout calculations
+        return img
     }
     
     // Determines how this flows around text
     override var layoutFragmentFrame: CGRect {
         let parent = super.layoutFragmentFrame
-        let r = CGRect(origin: parent.origin, size: CGSize(width: parent.width, height: parent.height + (self.height ?? 0) + 3))
+        let h = height ?? 0.0
+        let r = CGRect(origin: parent.origin, size: CGSize(width: parent.width, height: parent.height + h))
         return r
     }
     
     // Determines the full drawing bounds, should be larger than layoutFragmentFrame
     override var renderingSurfaceBounds: CGRect {
-        let w = containerWidth()
+        let w = width ?? 0.0
+        let h = height ?? 0.0
         
-        let size = super.renderingSurfaceBounds.union(CGRect(x: 0, y: 0, width: w, height: (self.height ?? 128.0)))
+        let size = super.renderingSurfaceBounds.union(CGRect(x: 0, y: 0, width: w, height: h))
         return size
     }
     
@@ -174,16 +197,17 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
     }
     
     override func draw(at renderingOrigin: CGPoint, in ctx: CGContext) {
-        render()
+        guard let img = render() else {
+            return super.draw(at: renderingOrigin, in: ctx)
+        }
+        
         ctx.saveGState()
         
-        if let img = self.img {
-            let height = img.size.height
-            withTranslation(x: leadingPadding, y: super.layoutFragmentFrame.height, ctx: ctx) { ctx in
-                ctx.draw(img.cgImage!, in: CGRect(x: 0, y: 0, width: img.size.width, height: height))
-                // DEBUG: Render border around the cached view image
+        let height = img.size.height
+        withTranslation(x: leadingPadding, y: super.layoutFragmentFrame.height, ctx: ctx) { ctx in
+            ctx.draw(img.cgImage!, in: CGRect(x: 0, y: 0, width: img.size.width, height: height))
+            // DEBUG: Render border around the cached view image
 //                ctx.stroke(CGRect(origin: renderingSurfaceBounds.origin, size: img.size))
-            }
         }
         
         // DEBUG: render border around entire draw surface

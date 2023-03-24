@@ -340,6 +340,9 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             guard let entry = slashlinkPreviews[slashlink] else {
                 return baseLayoutFragment
             }
+            guard let container = textLayoutManager.textContainer else {
+                return baseLayoutFragment
+            }
 
             let layoutFragment = TranscludeBlockLayoutFragment(
                 textElement: paragraph,
@@ -347,6 +350,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             )
             layoutFragment.slashlink = slashlink
             layoutFragment.entry = entry
+            layoutFragment.prepare(textContainer: container)
             
             return layoutFragment
         }
