@@ -68,12 +68,16 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
     
     var hosted: UIHostingController<EmbeddedTranscludePreview>?
     
+    let MAX_HEIGHT: CGFloat = 128.0
+    
     override var leadingPadding: CGFloat { return 0 }
     override var trailingPadding: CGFloat { return 0 }
     override var topMargin: CGFloat { return 0 }
     override var bottomMargin: CGFloat { return 0 }
     
     func prepare(textContainer: NSTextContainer) {
+        let width = textContainer.size.width
+        
         guard let slashlink = slashlink else {
             TranscludeBlockLayoutFragment.logger.warning("nil slashlink provided to transclude block")
             return
@@ -84,6 +88,7 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
             return
         }
         
+        // Construct view
         let v = EmbeddedTranscludePreview(
             address: MemoAddress.public(slashlink),
             excerpt: entry.excerpt
@@ -98,12 +103,9 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
             return
         }
         
-        let width = textContainer.size.width
-        
         view.backgroundColor = .clear
-        mountSubview(view: view)
-        
         view.translatesAutoresizingMaskIntoConstraints = false
+        mountSubview(view: view)
         
         // First, we try and render the view at zero size
         do {
@@ -112,10 +114,8 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
             view.bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: width, height: fit.height))
         }
         
-        let HEIGHT_CONSTRAINT = 128.0
-        
         // Re-layout at the frame size. Now, magically, the fit will return the minimum height needed to fit the view.
-        let fit = hosted.sizeThatFits(in: CGSize(width: width, height: HEIGHT_CONSTRAINT))
+        let fit = hosted.sizeThatFits(in: CGSize(width: width, height: MAX_HEIGHT))
         view.frame = CGRect(origin: CGPoint(x: 0, y: fit.height), size: CGSize(width: 0, height: fit.height))
         view.bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: width, height: fit.height))
         
@@ -165,7 +165,6 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
         let img = view.asImage()
         unmountSubview()
         
-        // Cache for reuse in layout calculations
         return img
     }
     
