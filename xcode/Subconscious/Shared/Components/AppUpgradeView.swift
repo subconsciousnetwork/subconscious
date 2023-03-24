@@ -6,84 +6,102 @@
 //
 
 import SwiftUI
+import Combine
 import ObservableStore
 
 /// Displays information to the user when app migration / rebuild happening.
 struct AppUpgradeView: View {
+    private let bgGradient = LinearGradient(
+        gradient: Gradient(
+            colors: [.brandBgTan, .brandBgGrey, .brandBgBlush]
+        ),
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+    private let spinnerSize: CGFloat = 256
+    private let logoSize: CGFloat = 180
+
     var state: AppUpgradeModel
     var send: (AppUpgradeAction) -> Void
 
     var body: some View {
         VStack {
-            Text("What? Subconscious is evolving!")
-                .font(.title2)
-            Spacer()
-            
-            ProgressView()
-            Spacer()
-            VStack(alignment: .leading, spacing: AppTheme.unit) {
-                ForEach(state.events) { event in
-                    switch event.value {
-                    case .success(let message):
-                        Label(
-                            title: {
-                                Text(verbatim: message)
-                            },
-                            icon: {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
-                            }
-                        )
+            VStack {
+                if state.isComplete {
+                    Text("Welcome to Subconscious")
                         .transition(.push(from: .bottom))
-                    case .failure(let message):
-                        Label(
-                            title: {
-                                Text(verbatim: message)
-                            },
-                            icon: {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .foregroundColor(.red)
-                            }
-                        )
+                } else {
+                    Text("What? Subconscious is evolving!")
                         .transition(.push(from: .bottom))
-                    }
                 }
-
+                Spacer()
             }
+            .foregroundColor(.brandBgBlack)
             .multilineTextAlignment(.center)
-            .font(.body)
+            .font(.title3)
+            .bold()
+            .frame(height: AppTheme.unit * 32)
+
+            VStack(alignment: .center) {
+                ProgressTorusView(
+                    isComplete: state.isComplete,
+                    size: spinnerSize
+                ) {
+                    Image("sub_logo_light")
+                        .resizable()
+                        .frame(width: logoSize, height: logoSize)
+                }
+                .shadow(color: .brandMarkPurple, radius: 72)
+                Spacer().frame(height: AppTheme.unit * 12)
+                if !state.isComplete {
+                    Text(verbatim: state.progressMessage)
+                        .id(state.progressMessage)
+                        .transition(.push(from: .bottom))
+                }
+            }
+            .italic()
             .foregroundColor(.secondary)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: spinnerSize)
 
             Spacer()
 
-            Button("Continue", action: {})
-                .buttonStyle(LargeButtonStyle())
-                .disabled(!state.isComplete)
+            VStack(alignment: .center, spacing: AppTheme.unit) {
+                    Text("Upgrading your Subconscious.")
+                    Text("This might take a minute.")
+            }
+            .fontWeight(.medium)
+            .foregroundColor(.brandBgBlack)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: spinnerSize)
+            .opacity(state.isComplete ? 0 : 1)
+            .animation(.default, value: state.isComplete)
+
+            Spacer()
+
+            Button("Continue", action: {
+                send(.continue)
+            })
+            .buttonStyle(LargeButtonStyle())
+            .disabled(!state.isComplete)
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(.white)
+        .background(bgGradient)
     }
 }
 
 enum AppUpgradeAction: Hashable {
-    case event(_ event: AppUpgradeEvent)
+    case setProgressMessage(_ message: String)
     case setComplete(_ isComplete: Bool)
-    case addEventAndSetComplete(event: AppUpgradeEvent, isComplete: Bool)
     case `continue`
-}
-
-/// Represents an event during the sync process
-enum AppUpgradeEvent: Hashable {
-    case success(_ message: String)
-    case failure(_ message: String)
 }
 
 struct AppUpgradeModel: ModelProtocol {
     typealias Action = AppUpgradeAction
     typealias Environment = Void
 
-    var events: [Identified<AppUpgradeEvent>] = []
+    var progressMessage: String = String(localized: "Upgrading...")
     var isComplete = false
     
     static func update(
@@ -92,11 +110,9 @@ struct AppUpgradeModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         switch action {
-        case .event(let event):
+        case .setProgressMessage(let message):
             var model = state
-            model.events.append(
-                Identified(value: event)
-            )
+            model.progressMessage = message
             return Update(state: model).animation(.default)
         case .setComplete(let isComplete):
             var model = state
@@ -104,28 +120,42 @@ struct AppUpgradeModel: ModelProtocol {
             return Update(state: model).animation(.default)
         case .continue:
             return Update(state: state)
-        case let .addEventAndSetComplete(event, isComplete):
-            return update(
-                state: state,
-                actions: [
-                    .event(event),
-                    .setComplete(isComplete)
-                ],
-                environment: ()
-            ).animation(.default)
         }
     }
 }
 
 struct AppUpgradeView_Previews: PreviewProvider {
+    struct TestView: View {
+        private let timer = Timer
+            .publish(every: 5, on: .main, in: .common)
+            .autoconnect()
+
+        @StateObject private var store = Store(
+            state: AppUpgradeModel(),
+            environment: ()
+        )
+
+        var body: some View {
+            AppUpgradeView(state: store.state, send: store.send)
+                .onReceive(timer) { time in
+                    store.send(.setComplete(!store.state.isComplete))
+                }
+        }
+    }
+
     static var previews: some View {
+        TestView()
         AppUpgradeView(
             state: AppUpgradeModel(
-                events: [
-                    Identified(value: .success("Database upgraded")),
-                    Identified(value: .success("Local files synced")),
-                    Identified(value: .failure("Sphere files didn't sync")),
-                ]
+                progressMessage: "Transferring notes to database...",
+                isComplete: false
+            ),
+            send: { action in }
+        )
+        AppUpgradeView(
+            state: AppUpgradeModel(
+                progressMessage: "Transferring notes to database...",
+                isComplete: true
             ),
             send: { action in }
         )
