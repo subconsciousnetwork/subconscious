@@ -13,6 +13,16 @@ struct DeveloperSettingsView: View {
 
     var body: some View {
         Form {
+            Section(footer: Text("**Beta**: Noosphere is an open and decentralized protocol for sharing notes. This feature is in development. Enable at your own risk.")) {
+                Toggle(
+                    "Enable Noosphere",
+                    isOn: Binding(
+                        get: { app.state.isNoosphereEnabled },
+                        send: app.send,
+                        tag: AppAction.persistNoosphereEnabled
+                    )
+                )
+            }
             Button(
                 action: {
                     app.send(.persistFirstRunComplete(false))

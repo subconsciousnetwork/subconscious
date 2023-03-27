@@ -107,6 +107,9 @@ enum AppAction: CustomLogStringConvertible {
     /// Fetch the latest sphere version, and store on model
     case refreshSphereVersion
 
+    /// Set and persist Noosphere enabled state
+    case persistNoosphereEnabled(_ isEnabled: Bool)
+
     /// Set and persist first run complete state
     case persistFirstRunComplete(_ isComplete: Bool)
 
@@ -229,8 +232,15 @@ struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
 
+    /// Is Noosphere enabled?
+    /// We assign UserDefault property to model property at startup.
+    /// This property is changed via `persistNoosphereEnabled`, which will
+    /// update both the model property (triggering a view re-render)
+    /// and persist the new value to UserDefaults.
+    var isNoosphereEnabled = AppDefaults.standard.noosphereEnabled
+
     /// Has first run completed?
-    /// We assign user default to model property at startup.
+    /// We assign UserDefault property to model property at startup.
     /// This property is changed via `persistFirstRunComplete`, which will
     /// update both the model property (triggering a view re-render)
     /// and persist the new value to UserDefaults.
@@ -349,6 +359,12 @@ struct AppModel: ModelProtocol {
             return refreshSphereVersion(
                 state: state,
                 environment: environment
+            )
+        case let .persistNoosphereEnabled(isEnabled):
+            return persistNoosphereEnabled(
+                state: state,
+                environment: environment,
+                isEnabled: isEnabled
             )
         case let .persistFirstRunComplete(isComplete):
             return persistFirstRunComplete(
@@ -627,6 +643,21 @@ struct AppModel: ModelProtocol {
         var model = state
         model.sphereVersion = version
         logger.debug("Refreshed sphere version: \(version)")
+        return Update(state: model)
+    }
+
+    /// Persist Noosphere enabled state.
+    /// Note that this updates the model state (triggering a re-render),
+    /// and ALSO perists the state to UserDefaults.
+    static func persistNoosphereEnabled(
+        state: AppModel,
+        environment: AppEnvironment,
+        isEnabled: Bool
+    ) -> Update<AppModel> {
+        // Persist setting to UserDefaults
+        AppDefaults.standard.noosphereEnabled = isEnabled
+        var model = state
+        model.isNoosphereEnabled = isEnabled
         return Update(state: model)
     }
 
