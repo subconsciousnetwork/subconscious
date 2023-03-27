@@ -13,7 +13,7 @@ struct AppDefaults {
     
     /// Are Noosphere features enabled for end-users?
     @UserDefaultsProperty(forKey: "noosphereEnabled")
-    var noosphereEnabled = true
+    var noosphereEnabled = false
 
     @UserDefaultsProperty(forKey: "ownerKeyName")
     var ownerKeyName: String? = nil
