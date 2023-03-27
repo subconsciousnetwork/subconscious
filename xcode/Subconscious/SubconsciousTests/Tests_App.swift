@@ -9,6 +9,22 @@ import XCTest
 @testable import Subconscious
 
 final class Tests_App: XCTestCase {
+    func testPersistNoosphereEnabled() throws {
+        let model = AppModel()
+        let up1 = AppModel.update(
+            state: model,
+            action: .persistNoosphereEnabled(true),
+            environment: AppEnvironment()
+        )
+        XCTAssertTrue(up1.state.isNoosphereEnabled, "isNoosphereEnabled set")
+        let up2 = AppModel.update(
+            state: model,
+            action: .persistNoosphereEnabled(false),
+            environment: AppEnvironment()
+        )
+        XCTAssertFalse(up2.state.isFirstRunComplete, "isNoosphereEnabled set")
+    }
+
     func testPersistFirstRunComplete() throws {
         let model = AppModel()
         let up1 = AppModel.update(
