@@ -69,29 +69,47 @@ struct MemoEditorDetailView: View {
             VStack(spacing: 0) {
                 ScrollView(.vertical) {
                     VStack(spacing: 0) {
-                        SubtextTextViewRepresentable(
-                            state: store.state.editor,
-                            send: Address.forward(
-                                send: store.send,
-                                tag: MemoEditorDetailSubtextTextCursor.tag
-                            ),
-                            onFetchSlashlinkPreviews: self.onFetchSlashlinkPreviews,
-                            frame: geometry.frame(in: .local),
-                            onLink: self.onLink,
-                            onSlashlink: self.onSlashlink
-                        )
-                        .insets(
-                            EdgeInsets(
-                                top: AppTheme.padding,
-                                leading: AppTheme.padding,
-                                bottom: AppTheme.padding,
-                                trailing: AppTheme.padding
+                        ZStack(alignment: .top) {
+                            SubtextTextViewRepresentable(
+                                state: store.state.editor,
+                                send: Address.forward(
+                                    send: store.send,
+                                    tag: MemoEditorDetailSubtextTextCursor.tag
+                                ),
+                                onFetchSlashlinkPreviews: self.onFetchSlashlinkPreviews,
+                                frame: geometry.frame(in: .local),
+                                onLink: self.onLink,
+                                onSlashlink: self.onSlashlink
                             )
-                        )
-                        .frame(
-                            minHeight: UIFont.appTextMono.lineHeight * 8
-
-                        )
+                            .insets(
+                                EdgeInsets(
+                                    top: AppTheme.padding,
+                                    leading: AppTheme.padding,
+                                    bottom: AppTheme.padding,
+                                    trailing: AppTheme.padding
+                                )
+                            )
+                            .frame(
+                                minHeight: UIFont.appTextMono.lineHeight * 8
+                            )
+                            
+                            Group {
+                                Transclude2View(
+                                    address: MemoAddress.public(Slashlink("/same-ish-different-day")!),
+                                    excerpt: "Short.",
+                                    action: { }
+                                )
+                                .offset(x: -4, y:  212.6666 + 26 )
+                                
+                                Transclude2View(
+                                    address: MemoAddress.public(Slashlink("/here-is-a-possible-title")!),
+                                    excerpt: "Here is a possivle title, with more content to appear in the except!",
+                                    action: { }
+                                )
+                                .offset(x: -4, y:  45.5999 + 26 )
+                            }
+                            .padding(AppTheme.padding)
+                        }
                         ThickDividerView()
                             .padding(.bottom, AppTheme.unit4)
                         BacklinksView(

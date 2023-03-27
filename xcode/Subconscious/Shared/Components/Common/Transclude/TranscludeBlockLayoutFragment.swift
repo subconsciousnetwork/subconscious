@@ -165,6 +165,8 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
         let img = view.asImage()
         unmountSubview()
         
+        print("ORIGIN \(layoutFragmentFrame.origin) \(layoutFragmentFrame.size)")
+        
         return img
     }
     
@@ -200,7 +202,8 @@ class TranscludeBlockLayoutFragment: NSTextLayoutFragment {
         
         let height = img.size.height
         withTranslation(x: leadingPadding, y: super.layoutFragmentFrame.height, ctx: ctx) { ctx in
-            ctx.draw(img.cgImage!, in: CGRect(x: 0, y: 0, width: img.size.width, height: height))
+//            ctx.draw(img.cgImage!, in: CGRect(x: 0, y: 0, width: img.size.width, height: height))
+//            ctx.fill([CGRect(x: 0, y: 0, width: img.size.width, height: img.size.height)])
             // DEBUG: Render border around the cached view image
 //                ctx.stroke(CGRect(origin: renderingSurfaceBounds.origin, size: img.size))
         }
