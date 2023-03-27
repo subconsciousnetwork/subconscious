@@ -229,7 +229,7 @@ struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
 
-    /// Has first run completed.
+    /// Has first run completed?
     /// We assign user default to model property at startup.
     /// This property is changed via `persistFirstRunComplete`, which will
     /// update both the model property (triggering a view re-render)
