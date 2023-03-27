@@ -30,51 +30,32 @@ struct UserProfileView: View {
         NavigationStack {
             ScrollView {
                 VStack {
-                    VStack() {
-                        AsyncImage(url: URL(string: user.profilePicture), content: { image in
-                            image.resizable()
-                        }, placeholder: {
-                            ProgressView()
-                        })
-                        .frame(width: 128, height: 128)
-                        .background(.background)
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
-
-                        VStack(spacing: AppTheme.unit) {
-                            Text(user.petname)
-                                .font(.callout)
-                                .foregroundColor(.buttonText)
-                                .fontWeight(.semibold)
-
-                            Text(user.bio)
-                                .font(.callout)
-                                .multilineTextAlignment(.leading)
-                        }
-
-                    }
-                    .padding(AppTheme.padding)
-                    .frame(maxWidth: .infinity)
-                    //                .background(RadialGradient(stops: Color.brandDarkMarkGradient, center: .center, startRadius: 100, endRadius: 500))
-                    .background(
-                        AsyncImage(url: URL(string: user.profilePicture), content: { image in
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .blur(radius: 10)
-                                .opacity(0.5)
-                        }, placeholder: {
-                            ProgressView()
-                        })
-                    )
-                    .frame(maxHeight: 256)
-                    
                     VStack(alignment: .leading) {
+                        HStack(spacing: AppTheme.unit3) {
+                            
+                            AsyncImage(url: URL(string: user.profilePicture), content: { image in
+                                ProfilePic(image: image)
+                            }, placeholder: {
+                                ProgressView()
+                            })
+                            VStack(alignment: .leading, spacing: AppTheme.unit) {
+                                Text(verbatim: "@\(user.petname)")
+                                    .foregroundColor(.buttonText)
+                                    .fontWeight(.semibold)
+                                Text(verbatim: user.bio)
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
+                            }
+                            Spacer()
+                        }
+                        
+                        Spacer(minLength: AppTheme.padding*2)
+                        
                         HStack {
-                            Image(systemName: "sparkles.rectangle.stack")
+                            Image(systemName: "sparkles")
                             Text("Recent Activity")
                         }
-                        .font(.callout)
+                        .font(.caption)
                         .foregroundColor(.secondary)
                         .fontWeight(.semibold)
                         VStack {
@@ -89,22 +70,13 @@ struct UserProfileView: View {
                             Button(action: {}, label: { Text("More...") })
                         }
                         
-                        Spacer(minLength: AppTheme.padding*3)
-                        //                    }
+                        Spacer(minLength: AppTheme.padding*2)
                         
-                        //                    Section(
-                        //                        header: HStack {
-                        //                            Image(systemName: "person.2")
-                        //                            Text("Address Book")
-                        //                        }
-                        //                            .foregroundColor(.buttonText)
-                        //                            .fontWeight(.semibold)
-                        //                    ) {
                         HStack {
-                            Image(systemName: "person.2")
+                            Image(systemName: "person.2.fill")
                             Text("Address Book")
                         }
-                        .font(.callout)
+                        .font(.caption)
                         .foregroundColor(.secondary)
                         .fontWeight(.semibold)
                         VStack {
@@ -117,10 +89,6 @@ struct UserProfileView: View {
                         Spacer(minLength: AppTheme.padding * 3)
                     }
                     .padding(AppTheme.padding)
-                    .frame(maxWidth: .infinity)
-                    .background(.white)
-                    .cornerRadius(16, corners: .allCorners)
-                    .shadow(color: .secondary.opacity(0.5), radius: 10, x: 0, y: 0)
                     
                     //                    }
                     

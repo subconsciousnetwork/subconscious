@@ -14,6 +14,7 @@ struct ProfilePic: View {
             .resizable()
             .frame(width: 48, height: 48)
             .clipShape(Circle())
+            .overlay(Circle().stroke(Color.separator, lineWidth: 0.5))
     }
 }
 
