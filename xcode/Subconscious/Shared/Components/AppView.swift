@@ -31,7 +31,10 @@ struct AppView: View {
             .zIndex(0)
             if (store.state.shouldPresentFirstRun) {
                 FirstRunView(app: store)
-                    .animation(.default, value: store.state.shouldPresentFirstRun)
+                    .animation(
+                        .default,
+                        value: store.state.shouldPresentFirstRun
+                    )
                     .zIndex(1)
             }
         }
@@ -225,9 +228,14 @@ enum GatewaySyncStatus: Equatable {
 struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
+
     /// Should first run show?
-    /// Distinct from whether first run has actually run.
-    var shouldPresentFirstRun = !AppDefaults.standard.firstRunComplete
+    var shouldPresentFirstRun: Bool {
+        guard AppDefaults.standard.noosphereEnabled else {
+            return false
+        }
+        return !AppDefaults.standard.firstRunComplete
+    }
 
     var nickname = AppDefaults.standard.nickname
     var nicknameTextField = AppDefaults.standard.nickname ?? ""
@@ -617,11 +625,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         // Persist value
         AppDefaults.standard.firstRunComplete = isComplete
-        // Update state
-        var model = state
-        model.shouldPresentFirstRun = !isComplete
-        return Update(state: model)
-            .animation(.default)
+        return Update(state: state).animation(.default)
     }
 
     /// Reset NoosphereService managed instances of `Noosphere` and `SphereFS`.
