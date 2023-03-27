@@ -13,6 +13,8 @@
 		B550E04029AF219100050F19 /* Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D30029AF1F9B0011D820 /* Did.swift */; };
 		B569971629B6A0DF003204FC /* FollowUserViaQRCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */; };
 		B569971729B6A0DF003204FC /* DidQrCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B569971529B6A0DF003204FC /* DidQrCodeView.swift */; };
+		B571B77C29D159A400B02A6C /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B571B77B29D159A400B02A6C /* UserProfileView.swift */; };
+		B571B77D29D159A400B02A6C /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B571B77B29D159A400B02A6C /* UserProfileView.swift */; };
 		B575834528ED8D9100F6EE88 /* combo.json in Resources */ = {isa = PBXBuildFile; fileRef = B575834428ED8D9100F6EE88 /* combo.json */; };
 		B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BA29B1CA8B008BBB62 /* DidView.swift */; };
 		B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BC29B56699008BBB62 /* AddressBookModel.swift */; };
@@ -376,6 +378,7 @@
 		B54B922728E669D6003ACA1F /* MementoGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MementoGeist.swift; sourceTree = "<group>"; };
 		B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserViaQRCodeView.swift; sourceTree = "<group>"; };
 		B569971529B6A0DF003204FC /* DidQrCodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DidQrCodeView.swift; sourceTree = "<group>"; };
+		B571B77B29D159A400B02A6C /* UserProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
 		B575834428ED8D9100F6EE88 /* combo.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = combo.json; sourceTree = "<group>"; };
 		B57D63BA29B1CA8B008BBB62 /* DidView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DidView.swift; sourceTree = "<group>"; };
 		B57D63BC29B56699008BBB62 /* AddressBookModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookModel.swift; sourceTree = "<group>"; };
@@ -1119,6 +1122,7 @@
 				B532F8C129B1750F00CE9256 /* Transclude */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
 				B8B6BCBA29CE1FCF000DB410 /* ProgressTorusView.swift */,
+				B571B77B29D159A400B02A6C /* UserProfileView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1542,6 +1546,7 @@
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,
 				B8CC434927A0CA8D0079D2F9 /* AnimationUtilities.swift in Sources */,
 				B89966C728B6EE2300DF1F8C /* Notebook.swift in Sources */,
+				B571B77C29D159A400B02A6C /* UserProfileView.swift in Sources */,
 				B8925B2D29C0FD91001F9503 /* MemoDetailResponse.swift in Sources */,
 				B88B1CE7298EEC240062CB7F /* GatewayURLSettingsView.swift in Sources */,
 				B8B4251228FDE7780081B8D5 /* Mapping.swift in Sources */,
@@ -1647,6 +1652,7 @@
 				B8DEBF232798EE99007CB528 /* RenameSuggestionLabelView.swift in Sources */,
 				B8A41D522811F87C0096D2E7 /* SlashlinkBarView.swift in Sources */,
 				B866868B27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */,
+				B571B77D29D159A400B02A6C /* UserProfileView.swift in Sources */,
 				B8133AEC29B8FD1300B38760 /* SubtextAttributedStringRenderer.swift in Sources */,
 				B84AD8E4281073CE006B3153 /* InlineFormattingBarView.swift in Sources */,
 				B8AE34C6276BF72500777FF0 /* LinkSearchView.swift in Sources */,
