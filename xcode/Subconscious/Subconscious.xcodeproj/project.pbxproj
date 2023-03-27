@@ -144,6 +144,7 @@
 		B87288DC299AB01800EF7E07 /* Noosphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DB299AB01800EF7E07 /* Noosphere.swift */; };
 		B87288DE299AB02400EF7E07 /* SphereFS.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DD299AB02400EF7E07 /* SphereFS.swift */; };
 		B87288E0299B05B500EF7E07 /* Tests_DataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DF299B05B500EF7E07 /* Tests_DataService.swift */; };
+		B884565329D2102D00DBCD39 /* Tests_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B884565229D2102D00DBCD39 /* Tests_App.swift */; };
 		B886A9B829A7E41700BFF9A2 /* Tests_MemoAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = B886A9B729A7E41700BFF9A2 /* Tests_MemoAddress.swift */; };
 		B8879EA026F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */; };
 		B8879EA126F90C5100A0B4FF /* NotebookNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */; };
@@ -458,6 +459,7 @@
 		B87288DB299AB01800EF7E07 /* Noosphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Noosphere.swift; sourceTree = "<group>"; };
 		B87288DD299AB02400EF7E07 /* SphereFS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SphereFS.swift; sourceTree = "<group>"; };
 		B87288DF299B05B500EF7E07 /* Tests_DataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_DataService.swift; sourceTree = "<group>"; };
+		B884565229D2102D00DBCD39 /* Tests_App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_App.swift; sourceTree = "<group>"; };
 		B886A9B729A7E41700BFF9A2 /* Tests_MemoAddress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_MemoAddress.swift; sourceTree = "<group>"; };
 		B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookNavigationView.swift; sourceTree = "<group>"; };
 		B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinksView.swift; sourceTree = "<group>"; };
@@ -669,6 +671,7 @@
 				B80057EA27DC355E002C0129 /* SubconsciousTests.swift */,
 				B5D8D2FE29AF1DBB0011D820 /* Test_Did.swift */,
 				B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */,
+				B884565229D2102D00DBCD39 /* Tests_App.swift */,
 				B8B604EA29148C82006FCB77 /* Tests_AppMigrations.swift */,
 				B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */,
 				B88CC955284FCF8C00994928 /* Tests_DatabaseService.swift */,
@@ -1367,6 +1370,7 @@
 				B85D5E3F28BE4B4600EE0078 /* Tests_FeedUpdate.swift in Sources */,
 				B8E2B02729AD053D004A78B3 /* Tests_Petname.swift in Sources */,
 				B80057EB27DC355E002C0129 /* SubconsciousTests.swift in Sources */,
+				B884565329D2102D00DBCD39 /* Tests_App.swift in Sources */,
 				B84AD8DF280F3659006B3153 /* Tests_EntryLink.swift in Sources */,
 				B8B604E9291476E9006FCB77 /* Tests_Migrations.swift in Sources */,
 				B8A617222971E4860054D410 /* Tests_Slashlink.swift in Sources */,

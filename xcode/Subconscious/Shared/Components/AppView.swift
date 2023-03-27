@@ -229,12 +229,19 @@ struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
 
+    /// Has first run completed.
+    /// We assign user default to model property at startup.
+    /// This property is changed via `persistFirstRunComplete`, which will
+    /// update both the model property (triggering a view re-render)
+    /// and persist the new value to UserDefaults.
+    var isFirstRunComplete = AppDefaults.standard.firstRunComplete
+
     /// Should first run show?
     var shouldPresentFirstRun: Bool {
         guard AppDefaults.standard.noosphereEnabled else {
             return false
         }
-        return !AppDefaults.standard.firstRunComplete
+        return !isFirstRunComplete
     }
 
     var nickname = AppDefaults.standard.nickname
@@ -479,6 +486,12 @@ struct AppModel: ModelProtocol {
         logger.debug(
             "Sphere ID: \(sphereIdentity)"
         )
+        logger.debug(
+            "Sphere ID: \(sphereIdentity)"
+        )
+        logger.debug(
+            "Noosphere enabled? \(AppDefaults.standard.noosphereEnabled)"
+        )
         return update(
             state: state,
             actions: [
@@ -625,7 +638,9 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         // Persist value
         AppDefaults.standard.firstRunComplete = isComplete
-        return Update(state: state).animation(.default)
+        var model = state
+        model.isFirstRunComplete = isComplete
+        return Update(state: model).animation(.default)
     }
 
     /// Reset NoosphereService managed instances of `Noosphere` and `SphereFS`.
