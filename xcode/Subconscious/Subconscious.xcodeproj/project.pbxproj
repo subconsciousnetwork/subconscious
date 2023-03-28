@@ -17,7 +17,6 @@
 		B571B77D29D159A400B02A6C /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B571B77B29D159A400B02A6C /* UserProfileView.swift */; };
 		B575834528ED8D9100F6EE88 /* combo.json in Resources */ = {isa = PBXBuildFile; fileRef = B575834428ED8D9100F6EE88 /* combo.json */; };
 		B57C0AE929D2782C00D352E3 /* PetnameBylineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AE829D2782C00D352E3 /* PetnameBylineView.swift */; };
-		B57C0AEB29D2807B00D352E3 /* ScrollableColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AEA29D2807B00D352E3 /* ScrollableColumnView.swift */; };
 		B57C0AEE29D280BB00D352E3 /* MultiColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AED29D280BB00D352E3 /* MultiColumnView.swift */; };
 		B57C0AF129D280E900D352E3 /* TabButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AF029D280E900D352E3 /* TabButtonView.swift */; };
 		B57C0AF329D2810700D352E3 /* TabHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AF229D2810700D352E3 /* TabHeaderView.swift */; };
@@ -387,7 +386,6 @@
 		B571B77B29D159A400B02A6C /* UserProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
 		B575834428ED8D9100F6EE88 /* combo.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = combo.json; sourceTree = "<group>"; };
 		B57C0AE829D2782C00D352E3 /* PetnameBylineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetnameBylineView.swift; sourceTree = "<group>"; };
-		B57C0AEA29D2807B00D352E3 /* ScrollableColumnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableColumnView.swift; sourceTree = "<group>"; };
 		B57C0AED29D280BB00D352E3 /* MultiColumnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiColumnView.swift; sourceTree = "<group>"; };
 		B57C0AF029D280E900D352E3 /* TabButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButtonView.swift; sourceTree = "<group>"; };
 		B57C0AF229D2810700D352E3 /* TabHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabHeaderView.swift; sourceTree = "<group>"; };
@@ -681,7 +679,6 @@
 		B57C0AEC29D280AC00D352E3 /* Layout */ = {
 			isa = PBXGroup;
 			children = (
-				B57C0AEA29D2807B00D352E3 /* ScrollableColumnView.swift */,
 				B57C0AED29D280BB00D352E3 /* MultiColumnView.swift */,
 			);
 			path = Layout;
@@ -1457,7 +1454,6 @@
 				B8E00A302992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
 				B85652222975F16B00B7FCA0 /* BylineView.swift in Sources */,
 				B8B3EE732979DEE900779B7F /* FirstRunView.swift in Sources */,
-				B57C0AEB29D2807B00D352E3 /* ScrollableColumnView.swift in Sources */,
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8A59D7228B693100010DB2F /* StoryView.swift in Sources */,
 				B84AD8EA2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,

@@ -17,9 +17,11 @@ struct MultiColumnView<Content: View>: View {
                 HStack(alignment: .top, spacing: 0) {
                     ForEach(columns.indices, id: \.self) { index in
                         let column = columns[index]
-                        ScrollableColumnView(width: geometry.size.width) {
-                            column
+                        
+                        ScrollView {
+                            column.padding(AppTheme.padding)
                         }
+                        .frame(width: geometry.size.width)
                         // Ensures you cannot peek at neighbouring columns in landscape
                         .opacity(index == focusedColumnIndex ? 1 : 0)
                     }
