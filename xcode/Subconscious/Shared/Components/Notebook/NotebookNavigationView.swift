@@ -80,6 +80,14 @@ struct NotebookNavigationView: View {
                             tag: NotebookAction.tag
                         )
                     )
+                case .profile(let description):
+                    UserProfileDetailView(
+                        description: description,
+                        notify: Address.forward(
+                            send: store.send,
+                            tag: NotebookAction.tag
+                        )
+                    )
                 }
             }
             .navigationTitle("Notes")
