@@ -8,17 +8,6 @@
 import Foundation
 import SwiftUI
 
-struct User {
-    let id: UUID
-    let notes: Int
-    let backlinks: Int
-    let following: Int
-    let petname: String
-    let bio: String
-    let profilePicture: String
-    let recentArticles: [Article]
-}
-
 struct Article {
     let id: UUID
     let title: String
