@@ -26,38 +26,92 @@ struct Article {
     let datePublished: Date
 }
 
+struct UserProfileStatistics {
+    let noteCount: Int
+    let backlinkCount: Int
+    let followingCount: Int
+}
+
+struct UserProfile {
+    let petname: Petname
+    let pfp: Image
+    let bio: String
+    
+    let statistics: UserProfileStatistics
+}
+
+struct ProfileStatisticView: View {
+    var label: String
+    var count: Int
+    
+    var body: some View {
+        HStack(spacing: AppTheme.unit) {
+            Text("\(count)").bold()
+            Text(label).foregroundColor(.secondary)
+        }
+    }
+}
+
 struct UserProfileView: View {
-    let user: User
+    let user: UserProfile
+    let articles: [Article]
     @State var selectedTab = 0
+    
+    func makeColumns() -> [any View] {
+        return [
+            Group {
+                //TODO: note card component
+                ForEach(articles, id: \.id) { article in
+                    Button(
+                        action: {},
+                        label: {
+                            Transclude2View(address: Slashlink(article.slug)!.toPublicMemoAddress(), excerpt: article.title, action: {})
+                        }
+                    )
+                }
+                Button(action: {}, label: { Text("More...") })
+            },
+            Group {
+                //TODO: note card component
+                ForEach(articles, id: \.id) { article in
+                    Button(
+                        action: {},
+                        label: {
+                            Transclude2View(address: Slashlink(article.slug)!.toPublicMemoAddress(), excerpt: article.title, action: {})
+                        }
+                    )
+                }
+                Button(action: {}, label: { Text("More...") })
+            },
+            Group {
+                //TODO: user card component
+                ForEach(0..<30) {_ in
+                    Button(action: {}, label: { AddressBookEntryView(pfp: Image("pfp-dog"), petname: Petname("ben")!, did: Did("did:key:123")!) })
+                }
+                
+                Button(action: {}, label: { Text("View All") })
+            }
+        ]
+    }
 
     var body: some View {
+        // Break this up so SwiftUI can actually typecheck
+        let columns = self.makeColumns().map({ v in AnyView(v) })
+        
         NavigationStack {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading) {
                     HStack(alignment: .top, spacing: AppTheme.unit3) {
+                        ProfilePic(image: user.pfp)
                         
-                        AsyncImage(url: URL(string: user.profilePicture), content: { image in
-                            ProfilePic(image: image)
-                        }, placeholder: {
-                            ProgressView()
-                        })
                         VStack(alignment: .leading, spacing: AppTheme.unit) {
-                            PetnameBylineView(rawString: user.petname)
+                            PetnameBylineView(petname: user.petname)
                             Text(verbatim: user.bio)
                             
                             HStack(spacing: AppTheme.unit2) {
-                                HStack(spacing: AppTheme.unit) {
-                                    Text("\(user.notes)").bold()
-                                    Text("Notes").foregroundColor(.secondary)
-                                }
-                                HStack(spacing: AppTheme.unit) {
-                                    Text("\(user.backlinks)").bold()
-                                    Text("Backlinks").foregroundColor(.secondary)
-                                }
-                                HStack(spacing: AppTheme.unit) {
-                                    Text("\(user.following)").bold()
-                                    Text("Following").foregroundColor(.secondary)
-                                }
+                                ProfileStatisticView(label: "Notes", count: user.statistics.noteCount)
+                                ProfileStatisticView(label: "Backlinks", count: user.statistics.backlinkCount)
+                                ProfileStatisticView(label: "Following", count: user.statistics.followingCount)
                             }
                             .padding([.top], AppTheme.unit2)
                             .font(.caption)
@@ -75,50 +129,15 @@ struct UserProfileView: View {
                         tabChanged: { index, tab in selectedTab = index },
                         focusedTabIndex: selectedTab
                     )
-                        
                 }
                 
                 MultiColumnView(
-                    user: user,
                     focusedColumnIndex: selectedTab,
-                    columns: [
-                        AnyView(Group {
-                            //TODO: note card component
-                            ForEach(user.recentArticles, id: \.id) { article in
-                                Button(
-                                    action: {},
-                                    label: {
-                                        Transclude2View(address: Slashlink(article.slug)!.toPublicMemoAddress(), excerpt: article.title, action: {})
-                                    }
-                                )
-                            }
-                            Button(action: {}, label: { Text("More...") })
-                        }),
-                        AnyView(Group {
-                            //TODO: note card component
-                            ForEach(user.recentArticles, id: \.id) { article in
-                                Button(
-                                    action: {},
-                                    label: {
-                                        Transclude2View(address: Slashlink(article.slug)!.toPublicMemoAddress(), excerpt: article.title, action: {})
-                                    }
-                                )
-                            }
-                            Button(action: {}, label: { Text("More...") })
-                        }),
-                        AnyView(Group {
-                            //TODO: user card component
-                            ForEach(0..<30) {_ in
-                                Button(action: {}, label: { AddressBookEntryView(pfp: Image("pfp-dog"), petname: Petname("ben")!, did: Did("did:key:123")!) })
-                            }
-                            
-                            Button(action: {}, label: { Text("View All") })
-                        })
-                    ]
+                    columns: columns
                 )
             }
         }
-        .navigationTitle(user.petname)
+        .navigationTitle(user.petname.verbatim)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             DetailToolbarContent(
@@ -134,29 +153,34 @@ struct UserProfileView: View {
 
 struct UserProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        UserProfileView(user: User(id: UUID(),
-                                   notes: 123,
-                                   backlinks: 64,
-                                   following: 19,
-                                   petname: "john-doe",
-                                   bio: "SwiftUI developer and tech enthusiast.",
-                                   profilePicture: "https://api.dicebear.com/6.x/shapes/png?seed=john-doe",
-                                   recentArticles: [
-                                    Article(id: UUID(), title: "Article 1", slug: "/article-1", datePublished: Date()),
-                                    Article(id: UUID(), title: "Article 2", slug: "/article-2", datePublished: Date().addingTimeInterval(-86400)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                    Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-                                   ]))
+        UserProfileView(
+            user: UserProfile(
+                petname: Petname("ben")!,
+                pfp: Image("pfp-dog"),
+                bio: "Henlo world.",
+                statistics: UserProfileStatistics(
+                    noteCount: 123,
+                    backlinkCount: 64,
+                    followingCount: 19
+                )
+            ),
+            articles: [
+                Article(id: UUID(), title: "Article 1", slug: "/article-1", datePublished: Date()),
+                Article(id: UUID(), title: "Article 2", slug: "/article-2", datePublished: Date().addingTimeInterval(-86400)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+                Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
+            ]
+        )
     }
 }

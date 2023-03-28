@@ -7,10 +7,9 @@
 
 import SwiftUI
 
-struct MultiColumnView: View {
-    var user: User
+struct MultiColumnView<Content: View>: View {
     let focusedColumnIndex: Int
-    let columns: [AnyView]
+    let columns: [Content]
 
     var body: some View {
         VStack {
