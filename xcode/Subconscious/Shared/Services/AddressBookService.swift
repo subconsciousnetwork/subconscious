@@ -10,6 +10,25 @@ import Combine
 // temp
 import SwiftUI
 
+enum AddressBookError: Error {
+    case cannotFollowYourself
+    case alreadyFollowing
+    case other(String)
+}
+
+extension AddressBookError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .cannotFollowYourself:
+            return NSLocalizedString("You cannot follow yourself.", comment: "Address Book error description")
+        case .alreadyFollowing:
+            return NSLocalizedString("You are already following {}.", comment: "Address Book error description")
+        case .other(let msg):
+            return NSLocalizedString("An unknown error occurred: \(msg)", comment: "Unknown Address Book error description")
+        }
+    }
+}
+
 class AddressBookService {
     private(set) var noosphere: NoosphereService
     private(set) var database: DatabaseService
@@ -57,6 +76,10 @@ class AddressBookService {
     }
     
     func followUser(did: Did, petname: Petname) throws {
+        if try self.noosphere.identity() == did.id {
+            throw AddressBookError.cannotFollowYourself
+        }
+        
         try setPetname(did: did, petname: petname)
         let version = try self.noosphere.save()
         try database.writeMetadatadata(key: .sphereVersion, value: version)
