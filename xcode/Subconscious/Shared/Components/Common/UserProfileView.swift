@@ -26,168 +26,6 @@ struct Article {
     let datePublished: Date
 }
 
-struct TabButtonView<Label: View>: View {
-    var action: () -> Void
-    let label: Label
-    var selected: Bool
-
-    init(@ViewBuilder label: () -> Label) {
-        self.label = label()
-        self.selected = false
-        self.action = {}
-    }
-    
-    init(@ViewBuilder label: () -> Label, action: @escaping () -> Void, selected: Bool) {
-        self.label = label()
-        self.action = action
-        self.selected = selected
-    }
-    
-    var body: some View {
-        Button(
-            action: action,
-            label: {
-                label
-                    .font(.callout)
-                    .bold(selected)
-            }
-        )
-        .foregroundColor(selected ? Color.accentColor : Color.secondary )
-        .frame(maxWidth: .infinity)
-        .padding()
-    }
-}
-
-struct TabViewItem {
-    var label: String
-    var action: () -> Void
-}
-
-struct TabHeaderView: View {
-    var items: [TabViewItem]
-    var tabChanged: (Int, TabViewItem) -> Void
-    var selectedIndex: Int = 0
-    /// Slightly narrow the "selected" bar that appears under the current tab
-    let inset = 16.0
-    
-    var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            HStack {
-                ForEach(items.indices, id: \.self) { index in
-                    let item = items[index]
-                    TabButtonView(
-                        label: {
-                            Text(item.label)
-                            
-                        },
-                        action: {
-                            withAnimation {
-                                tabChanged(index, item)
-                            }
-                        },
-                        selected: index == selectedIndex
-                    )
-                }
-            }
-            
-            // Position the "selected" bar on top of the buttons
-            GeometryReader { geometry in
-                let increment = geometry.size.width * (1.0 / CGFloat(items.count))
-                Rectangle()
-                    .fill(Color.accentColor)
-                    .frame(width: increment - inset, height: geometry.size.height)
-                    .cornerRadius(2)
-                    .offset(x: inset / 2 + increment * CGFloat(selectedIndex), y: 0)
-                    .animation(.easeInOut(duration: Duration.fast), value: selectedIndex)
-            }
-            .frame(height: 3)
-        }
-        .frame(maxWidth: .infinity)
-        .overlay(
-            Rectangle()
-                .fill(Color.separator)
-                .frame(height: 1),
-            alignment: .bottom
-        )
-    }
-}
-
-struct ColumnView<Content: View>: View {
-    var width: CGFloat
-    var content: Content
-    
-    init(width: CGFloat, content: () -> Content) {
-        self.width = width
-        self.content = content()
-    }
-    
-    var body: some View {
-        ScrollView {
-            VStack {
-                Spacer(minLength: AppTheme.padding)
-                content
-            }
-            .padding(EdgeInsets(top: 0, leading: AppTheme.padding, bottom: 0, trailing: AppTheme.padding))
-        }
-        .frame(width: width)
-    }
-}
-
-struct ThreeColumnView: View {
-    var user: User
-    let focusedColumn: Int
-
-    var body: some View {
-        VStack {
-            GeometryReader { geometry in
-                HStack(alignment: .top, spacing: 0) {
-                    ColumnView(width: geometry.size.width) {
-                        Group {
-                            //TODO: note card component
-                            ForEach(user.recentArticles, id: \.id) { article in
-                                Button(
-                                    action: {},
-                                    label: {
-                                        Transclude2View(address: Slashlink(article.slug)!.toPublicMemoAddress(), excerpt: article.title, action: {})
-                                    }
-                                )
-                            }
-                            Button(action: {}, label: { Text("More...") })
-                        }
-                    }
-                    
-                    ColumnView(width: geometry.size.width) {
-                        Group {
-                            //TODO: note card component
-                            ForEach(user.recentArticles, id: \.id) { article in
-                                Button(
-                                    action: {},
-                                    label: {
-                                        Transclude2View(address: Slashlink(article.slug)!.toPublicMemoAddress(), excerpt: article.title, action: {})
-                                    }
-                                )
-                            }
-                            Button(action: {}, label: { Text("More...") })
-                        }
-                    }
-                    
-                    ColumnView(width: geometry.size.width) {
-                        Group {
-                            //TODO: user card component
-                            ForEach(0..<30) {_ in
-                                Button(action: {}, label: { AddressBookEntryView(pfp: Image("pfp-dog"), petname: Petname("ben")!, did: Did("did:key:123")!) })
-                            }
-                            
-                            Button(action: {}, label: { Text("View All") })
-                        }
-                    }
-                }
-                .offset(x: -CGFloat(focusedColumn) * geometry.size.width)
-            }
-        }
-    }
-}
-
 struct UserProfileView: View {
     let user: User
     @State var selectedTab = 0
@@ -195,7 +33,7 @@ struct UserProfileView: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 0) {
-                VStack {
+                VStack(alignment: .leading) {
                     HStack(alignment: .top, spacing: AppTheme.unit3) {
                         
                         AsyncImage(url: URL(string: user.profilePicture), content: { image in
@@ -235,12 +73,49 @@ struct UserProfileView: View {
                             TabViewItem(label: "Following", action: {}),
                         ],
                         tabChanged: { index, tab in selectedTab = index },
-                        selectedIndex: selectedTab
+                        focusedTabIndex: selectedTab
                     )
                         
                 }
                 
-                ThreeColumnView(user: user, focusedColumn: selectedTab)
+                MultiColumnView(
+                    user: user,
+                    focusedColumnIndex: selectedTab,
+                    columns: [
+                        AnyView(Group {
+                            //TODO: note card component
+                            ForEach(user.recentArticles, id: \.id) { article in
+                                Button(
+                                    action: {},
+                                    label: {
+                                        Transclude2View(address: Slashlink(article.slug)!.toPublicMemoAddress(), excerpt: article.title, action: {})
+                                    }
+                                )
+                            }
+                            Button(action: {}, label: { Text("More...") })
+                        }),
+                        AnyView(Group {
+                            //TODO: note card component
+                            ForEach(user.recentArticles, id: \.id) { article in
+                                Button(
+                                    action: {},
+                                    label: {
+                                        Transclude2View(address: Slashlink(article.slug)!.toPublicMemoAddress(), excerpt: article.title, action: {})
+                                    }
+                                )
+                            }
+                            Button(action: {}, label: { Text("More...") })
+                        }),
+                        AnyView(Group {
+                            //TODO: user card component
+                            ForEach(0..<30) {_ in
+                                Button(action: {}, label: { AddressBookEntryView(pfp: Image("pfp-dog"), petname: Petname("ben")!, did: Did("did:key:123")!) })
+                            }
+                            
+                            Button(action: {}, label: { Text("View All") })
+                        })
+                    ]
+                )
             }
         }
         .navigationTitle(user.petname)

@@ -17,6 +17,10 @@
 		B571B77D29D159A400B02A6C /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B571B77B29D159A400B02A6C /* UserProfileView.swift */; };
 		B575834528ED8D9100F6EE88 /* combo.json in Resources */ = {isa = PBXBuildFile; fileRef = B575834428ED8D9100F6EE88 /* combo.json */; };
 		B57C0AE929D2782C00D352E3 /* PetnameBylineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AE829D2782C00D352E3 /* PetnameBylineView.swift */; };
+		B57C0AEB29D2807B00D352E3 /* ScrollableColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AEA29D2807B00D352E3 /* ScrollableColumnView.swift */; };
+		B57C0AEE29D280BB00D352E3 /* MultiColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AED29D280BB00D352E3 /* MultiColumnView.swift */; };
+		B57C0AF129D280E900D352E3 /* TabButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AF029D280E900D352E3 /* TabButtonView.swift */; };
+		B57C0AF329D2810700D352E3 /* TabHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AF229D2810700D352E3 /* TabHeaderView.swift */; };
 		B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BA29B1CA8B008BBB62 /* DidView.swift */; };
 		B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BC29B56699008BBB62 /* AddressBookModel.swift */; };
 		B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = B57D63BF29B574C3008BBB62 /* CodeScanner */; };
@@ -382,6 +386,10 @@
 		B571B77B29D159A400B02A6C /* UserProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
 		B575834428ED8D9100F6EE88 /* combo.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = combo.json; sourceTree = "<group>"; };
 		B57C0AE829D2782C00D352E3 /* PetnameBylineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetnameBylineView.swift; sourceTree = "<group>"; };
+		B57C0AEA29D2807B00D352E3 /* ScrollableColumnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableColumnView.swift; sourceTree = "<group>"; };
+		B57C0AED29D280BB00D352E3 /* MultiColumnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiColumnView.swift; sourceTree = "<group>"; };
+		B57C0AF029D280E900D352E3 /* TabButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButtonView.swift; sourceTree = "<group>"; };
+		B57C0AF229D2810700D352E3 /* TabHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabHeaderView.swift; sourceTree = "<group>"; };
 		B57D63BA29B1CA8B008BBB62 /* DidView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DidView.swift; sourceTree = "<group>"; };
 		B57D63BC29B56699008BBB62 /* AddressBookModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookModel.swift; sourceTree = "<group>"; };
 		B584813E29AC32410033F434 /* AddressBookView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookView.swift; sourceTree = "<group>"; };
@@ -666,6 +674,24 @@
 				B8616DF729C38775001C666A /* TranscludeButtonStyle.swift */,
 			);
 			path = Transclude;
+			sourceTree = "<group>";
+		};
+		B57C0AEC29D280AC00D352E3 /* Layout */ = {
+			isa = PBXGroup;
+			children = (
+				B57C0AEA29D2807B00D352E3 /* ScrollableColumnView.swift */,
+				B57C0AED29D280BB00D352E3 /* MultiColumnView.swift */,
+			);
+			path = Layout;
+			sourceTree = "<group>";
+		};
+		B57C0AEF29D280DC00D352E3 /* Tabs */ = {
+			isa = PBXGroup;
+			children = (
+				B57C0AF029D280E900D352E3 /* TabButtonView.swift */,
+				B57C0AF229D2810700D352E3 /* TabHeaderView.swift */,
+			);
+			path = Tabs;
 			sourceTree = "<group>";
 		};
 		B584814029AC32550033F434 /* AddressBook */ = {
@@ -1102,6 +1128,7 @@
 				B83E91D627692EC600045C6A /* FAB.swift */,
 				B8CBAFA029930C5D0079107E /* Forms */,
 				B84AD8E2281073CE006B3153 /* InlineFormattingBarView.swift */,
+				B57C0AEC29D280AC00D352E3 /* Layout */,
 				B8AE34CA276C195E00777FF0 /* LinkSuggestionLabelView.swift */,
 				B856521F2975BA9000B7FCA0 /* MetaTableView.swift */,
 				B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */,
@@ -1122,6 +1149,7 @@
 				B81EACD727B724A000B3B8DC /* ThickDividerView.swift */,
 				B8DEBF1E2798EC23007CB528 /* TitleGroupView.swift */,
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
+				B57C0AEF29D280DC00D352E3 /* Tabs */,
 				B532F8C129B1750F00CE9256 /* Transclude */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
 				B8B6BCBA29CE1FCF000DB410 /* ProgressTorusView.swift */,
@@ -1426,6 +1454,7 @@
 				B8E00A302992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
 				B85652222975F16B00B7FCA0 /* BylineView.swift in Sources */,
 				B8B3EE732979DEE900779B7F /* FirstRunView.swift in Sources */,
+				B57C0AEB29D2807B00D352E3 /* ScrollableColumnView.swift in Sources */,
 				B8AE34B0276A9F9C00777FF0 /* ColorUtilities.swift in Sources */,
 				B8A59D7228B693100010DB2F /* StoryView.swift in Sources */,
 				B84AD8EA2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
@@ -1439,6 +1468,7 @@
 				B82C3A6226F576FC00833CC8 /* URLUtilities.swift in Sources */,
 				B88B1CDE298DE66E0062CB7F /* SettingsView.swift in Sources */,
 				B8B4251528FDE8570081B8D5 /* Memo.swift in Sources */,
+				B57C0AF329D2810700D352E3 /* TabHeaderView.swift in Sources */,
 				B866868A27AC8BED00A03A55 /* DetailKeyboardToolbarView.swift in Sources */,
 				B800ABE8297DE7D20024D1FD /* DataService.swift in Sources */,
 				B88B1CE3298EB0100062CB7F /* BarButtonStyle.swift in Sources */,
@@ -1471,6 +1501,7 @@
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
 				B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
 				B8E00A2D299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */,
+				B57C0AF129D280E900D352E3 /* TabButtonView.swift in Sources */,
 				B8B604E629146DF6006FCB77 /* MemoryStore.swift in Sources */,
 				B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B822F18D27C9C0AB00943C6B /* CountChip.swift in Sources */,
@@ -1484,6 +1515,7 @@
 				B85BF47827BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
 				B8CBAFA42994491B0079107E /* MenuButtonView.swift in Sources */,
 				B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */,
+				B57C0AEE29D280BB00D352E3 /* MultiColumnView.swift in Sources */,
 				B8133AEB29B8FD1300B38760 /* SubtextAttributedStringRenderer.swift in Sources */,
 				B85EC460296F099700558761 /* ProfilePic.swift in Sources */,
 				B8EB2A1F26F27797006E97C3 /* SubconsciousApp.swift in Sources */,
