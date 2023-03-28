@@ -82,7 +82,7 @@ struct UserProfileView: View {
                     ForEach(0..<30) {_ in
                         Button(
                             action: {
-                                onNavigateToUser(Slashlink("@ben/profile")!.toPublicMemoAddress())
+                                onNavigateToUser(Slashlink("@ben/_profile_")!.toPublicMemoAddress())
                                 
                             },
                             label: {
@@ -137,7 +137,7 @@ struct UserProfileView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             DetailToolbarContent(
-                address: Slashlink("@\(user.petname)/profile")!.toPublicMemoAddress(),
+                address: Slashlink(petname: user.petname).toPublicMemoAddress(),
                 defaultAudience: .public,
                 onTapOmnibox: {
                     

@@ -104,6 +104,10 @@ extension MemoAddress {
             return slashlink.toSlug()
         }
     }
+    
+    func isProfile() -> Bool {
+        return self.slug.isProfile()
+    }
 }
 
 extension MemoAddress {

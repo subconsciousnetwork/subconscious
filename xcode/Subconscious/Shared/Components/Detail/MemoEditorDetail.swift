@@ -50,7 +50,7 @@ struct MemoEditorDetailView: View {
     
     private func onProfile() -> Bool {
         notify(
-            .requestDetail(.profile(UserProfileDetailDescription(address: Slashlink("@ben/profile")!.toPublicMemoAddress())))
+            .requestDetail(.profile(UserProfileDetailDescription(address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress())))
         )
         return false
     }
