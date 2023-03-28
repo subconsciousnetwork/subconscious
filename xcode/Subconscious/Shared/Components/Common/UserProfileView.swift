@@ -29,108 +29,108 @@ struct UserProfileView: View {
     
     @State var selectedTab = 0
     
-    func makeColumns() -> [any View] {
+    func makeColumns() -> [TabbedColumnItem] {
         return [
-            Group {
-                //TODO: note card component
-                ForEach(articles, id: \.id) { article in
-                    Button(
-                        action: {},
-                        label: {
-                            let address = Slashlink(article.slug)!.toPublicMemoAddress()
-                            Transclude2View(
-                                address: address,
-                                excerpt: article.title,
-                                action: {
-                                    onNavigateToNote(address)
-                                }
-                            )
-                        }
-                    )
+            TabbedColumnItem(
+                label: "Recent",
+                view: Group {
+                    //TODO: note card component
+                    ForEach(articles, id: \.id) { article in
+                        Button(
+                            action: {},
+                            label: {
+                                let address = Slashlink(article.slug)!.toPublicMemoAddress()
+                                Transclude2View(
+                                    address: address,
+                                    excerpt: article.title,
+                                    action: {
+                                        onNavigateToNote(address)
+                                    }
+                                )
+                            }
+                        )
+                    }
+                    Button(action: {}, label: { Text("More...") })
                 }
-                Button(action: {}, label: { Text("More...") })
-            },
-            Group {
-                //TODO: note card component
-                ForEach(articles, id: \.id) { article in
-                    Button(
-                        action: {},
-                        label: {
-                            let address = Slashlink(article.slug)!.toPublicMemoAddress()
-                            Transclude2View(
-                                address: address,
-                                excerpt: article.title,
-                                action: {
-                                    onNavigateToNote(address)
-                                }
-                            )
-                        }
-                    )
+            ),
+            TabbedColumnItem(
+                label: "Top",
+                view: Group {
+                    //TODO: note card component
+                    ForEach(articles, id: \.id) { article in
+                        Button(
+                            action: {},
+                            label: {
+                                let address = Slashlink(article.slug)!.toPublicMemoAddress()
+                                Transclude2View(
+                                    address: address,
+                                    excerpt: article.title,
+                                    action: {
+                                        onNavigateToNote(address)
+                                    }
+                                )
+                            }
+                        )
+                    }
+                    Button(action: {}, label: { Text("More...") })
                 }
-                Button(action: {}, label: { Text("More...") })
-            },
-            Group {
-                //TODO: user card component
-                ForEach(0..<30) {_ in
-                    Button(
-                        action: {
-                            onNavigateToUser(Slashlink("@ben/profile")!.toPublicMemoAddress())
-                            
-                        },
-                        label: {
-                            AddressBookEntryView(
-                                pfp: Image("pfp-dog"),
-                                petname: Petname("ben")!,
-                                did: Did("did:key:123")!
-                            )
-                        }
-                    )
+            ),
+            TabbedColumnItem(
+                label: "Following",
+                view: Group {
+                    //TODO: user card component
+                    ForEach(0..<30) {_ in
+                        Button(
+                            action: {
+                                onNavigateToUser(Slashlink("@ben/profile")!.toPublicMemoAddress())
+                                
+                            },
+                            label: {
+                                AddressBookEntryView(
+                                    pfp: Image("pfp-dog"),
+                                    petname: Petname("ben")!,
+                                    did: Did("did:key:123")!
+                                )
+                            }
+                        )
+                    }
+                    
+                    Button(action: {}, label: { Text("View All") })
                 }
-                
-                Button(action: {}, label: { Text("View All") })
-            }
+            )
         ]
     }
 
     var body: some View {
         // Break this up so SwiftUI can actually typecheck
-        let columns = self.makeColumns().map({ v in AnyView(v) })
+        let columns = self.makeColumns()
         
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading) {
-                HStack(alignment: .top, spacing: AppTheme.unit3) {
-                    ProfilePic(image: user.pfp)
-                    
-                    VStack(alignment: .leading, spacing: AppTheme.unit) {
-                        PetnameBylineView(petname: user.petname)
-                        Text(verbatim: user.bio)
-                        
-                        HStack(spacing: AppTheme.unit2) {
-                            ProfileStatisticView(label: "Notes", count: user.statistics.noteCount)
-                            ProfileStatisticView(label: "Backlinks", count: user.statistics.backlinkCount)
-                            ProfileStatisticView(label: "Following", count: user.statistics.followingCount)
-                        }
-                        .padding([.top], AppTheme.unit2)
-                        .font(.caption)
-                        .foregroundColor(.primary)
-                    }
-                }
-                .padding(AppTheme.padding)
+            HStack(alignment: .top, spacing: AppTheme.unit3) {
+                ProfilePic(image: user.pfp)
                 
-                TabHeaderView(
-                    items: [
-                        TabViewItem(label: "Recent", action: {}),
-                        TabViewItem(label: "Top", action: {}),
-                        TabViewItem(label: "Following", action: {}),
-                    ],
-                    tabChanged: { index, tab in selectedTab = index },
-                    focusedTabIndex: selectedTab
-                )
+                VStack(alignment: .leading, spacing: AppTheme.unit) {
+                    PetnameBylineView(petname: user.petname)
+                    Text(verbatim: user.bio)
+                    
+                    HStack(spacing: AppTheme.unit2) {
+                        ProfileStatisticView(label: "Notes", count: user.statistics.noteCount)
+                        ProfileStatisticView(label: "Backlinks", count: user.statistics.backlinkCount)
+                        ProfileStatisticView(label: "Following", count: user.statistics.followingCount)
+                    }
+                    .padding([.top], AppTheme.unit2)
+                    .font(.caption)
+                    .foregroundColor(.primary)
+                }
             }
+            .padding(AppTheme.padding)
             
-            MultiColumnView(
-                focusedColumnIndex: selectedTab,
-                columns: columns
+            TabbedColumnView(
+                columns: columns,
+                selectedColumnIndex: selectedTab,
+                changeColumn: { index in
+                    selectedTab = index
+                }
             )
         }
         .navigationTitle(user.petname.verbatim)

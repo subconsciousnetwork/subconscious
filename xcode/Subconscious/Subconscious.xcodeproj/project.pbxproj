@@ -21,6 +21,7 @@
 		B57C0AF129D280E900D352E3 /* TabButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AF029D280E900D352E3 /* TabButtonView.swift */; };
 		B57C0AF329D2810700D352E3 /* TabHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AF229D2810700D352E3 /* TabHeaderView.swift */; };
 		B57C0AF529D2865600D352E3 /* UserProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AF429D2865600D352E3 /* UserProfileDetailView.swift */; };
+		B57C0AF729D29A8F00D352E3 /* TabbedColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AF629D29A8F00D352E3 /* TabbedColumnView.swift */; };
 		B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BA29B1CA8B008BBB62 /* DidView.swift */; };
 		B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BC29B56699008BBB62 /* AddressBookModel.swift */; };
 		B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = B57D63BF29B574C3008BBB62 /* CodeScanner */; };
@@ -390,6 +391,7 @@
 		B57C0AF029D280E900D352E3 /* TabButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabButtonView.swift; sourceTree = "<group>"; };
 		B57C0AF229D2810700D352E3 /* TabHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabHeaderView.swift; sourceTree = "<group>"; };
 		B57C0AF429D2865600D352E3 /* UserProfileDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileDetailView.swift; sourceTree = "<group>"; };
+		B57C0AF629D29A8F00D352E3 /* TabbedColumnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabbedColumnView.swift; sourceTree = "<group>"; };
 		B57D63BA29B1CA8B008BBB62 /* DidView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DidView.swift; sourceTree = "<group>"; };
 		B57D63BC29B56699008BBB62 /* AddressBookModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookModel.swift; sourceTree = "<group>"; };
 		B584813E29AC32410033F434 /* AddressBookView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookView.swift; sourceTree = "<group>"; };
@@ -680,6 +682,7 @@
 			isa = PBXGroup;
 			children = (
 				B57C0AED29D280BB00D352E3 /* MultiColumnView.swift */,
+				B57C0AF629D29A8F00D352E3 /* TabbedColumnView.swift */,
 			);
 			path = Layout;
 			sourceTree = "<group>";
@@ -1514,6 +1517,7 @@
 				B85BF47827BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
 				B8CBAFA42994491B0079107E /* MenuButtonView.swift in Sources */,
 				B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */,
+				B57C0AF729D29A8F00D352E3 /* TabbedColumnView.swift in Sources */,
 				B57C0AEE29D280BB00D352E3 /* MultiColumnView.swift in Sources */,
 				B8133AEB29B8FD1300B38760 /* SubtextAttributedStringRenderer.swift in Sources */,
 				B85EC460296F099700558761 /* ProfilePic.swift in Sources */,
