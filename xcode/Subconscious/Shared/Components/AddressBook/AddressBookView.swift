@@ -26,7 +26,7 @@ struct AddressBookView: View {
                     .padding(AppTheme.unit2)
                     .frame(maxWidth: .infinity, alignment: .center)
                 } else {
-                    Section(header: Text("Following")) {
+                    Section {
                         List {
                             ForEach(state.follows, id: \.did) { user in
                                 AddressBookEntryView(
@@ -51,7 +51,7 @@ struct AddressBookView: View {
                     }
                 }
             }
-            .navigationTitle("Address Book")
+            .navigationTitle("Following")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close", role: .cancel) {

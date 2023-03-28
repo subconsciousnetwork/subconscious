@@ -16,6 +16,7 @@
 		B571B77C29D159A400B02A6C /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B571B77B29D159A400B02A6C /* UserProfileView.swift */; };
 		B571B77D29D159A400B02A6C /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B571B77B29D159A400B02A6C /* UserProfileView.swift */; };
 		B575834528ED8D9100F6EE88 /* combo.json in Resources */ = {isa = PBXBuildFile; fileRef = B575834428ED8D9100F6EE88 /* combo.json */; };
+		B57C0AE929D2782C00D352E3 /* PetnameBylineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AE829D2782C00D352E3 /* PetnameBylineView.swift */; };
 		B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BA29B1CA8B008BBB62 /* DidView.swift */; };
 		B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BC29B56699008BBB62 /* AddressBookModel.swift */; };
 		B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = B57D63BF29B574C3008BBB62 /* CodeScanner */; };
@@ -380,6 +381,7 @@
 		B569971529B6A0DF003204FC /* DidQrCodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DidQrCodeView.swift; sourceTree = "<group>"; };
 		B571B77B29D159A400B02A6C /* UserProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
 		B575834428ED8D9100F6EE88 /* combo.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = combo.json; sourceTree = "<group>"; };
+		B57C0AE829D2782C00D352E3 /* PetnameBylineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetnameBylineView.swift; sourceTree = "<group>"; };
 		B57D63BA29B1CA8B008BBB62 /* DidView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DidView.swift; sourceTree = "<group>"; };
 		B57D63BC29B56699008BBB62 /* AddressBookModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookModel.swift; sourceTree = "<group>"; };
 		B584813E29AC32410033F434 /* AddressBookView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookView.swift; sourceTree = "<group>"; };
@@ -764,6 +766,7 @@
 				B85EC468296F11F000558761 /* BylineSmView.swift */,
 				B85652212975F16B00B7FCA0 /* BylineView.swift */,
 				B8A1620D29B27D80008322EB /* SlashlinkBylineView.swift */,
+				B57C0AE829D2782C00D352E3 /* PetnameBylineView.swift */,
 			);
 			path = Byline;
 			sourceTree = "<group>";
@@ -1463,6 +1466,7 @@
 				B82C3A5A26F5761700833CC8 /* FileSync.swift in Sources */,
 				B8A59D7528B694C40010DB2F /* Geist.swift in Sources */,
 				B8B4250F28FDE6960081B8D5 /* FileStore.swift in Sources */,
+				B57C0AE929D2782C00D352E3 /* PetnameBylineView.swift in Sources */,
 				B8A617202971D3000054D410 /* Slashlink.swift in Sources */,
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
 				B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,

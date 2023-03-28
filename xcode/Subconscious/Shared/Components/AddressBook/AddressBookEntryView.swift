@@ -17,9 +17,7 @@ struct AddressBookEntryView: View {
         HStack(spacing: AppTheme.unit3) {
             ProfilePic(image: pfp)
             VStack(alignment: .leading, spacing: AppTheme.unit) {
-                Text(verbatim: "@\(petname.verbatim)")
-                    .foregroundColor(.buttonText)
-                    .fontWeight(.semibold)
+                PetnameBylineView(petname: petname)
                 Text(verbatim: did.did)
                     .foregroundColor(.secondary)
                     .font(.caption.monospaced())
