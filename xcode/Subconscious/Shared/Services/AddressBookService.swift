@@ -20,11 +20,11 @@ extension AddressBookError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .cannotFollowYourself:
-            return NSLocalizedString("You cannot follow yourself.", comment: "Address Book error description")
+            return String(localized: "You cannot follow yourself.", comment: "Address Book error description")
         case .alreadyFollowing:
-            return NSLocalizedString("You are already following {}.", comment: "Address Book error description")
+            return String(localized: "You are already following {}.", comment: "Address Book error description")
         case .other(let msg):
-            return NSLocalizedString("An unknown error occurred: \(msg)", comment: "Unknown Address Book error description")
+            return String(localized: "An unknown error occurred: \(msg)", comment: "Unknown Address Book error description")
         }
     }
 }
