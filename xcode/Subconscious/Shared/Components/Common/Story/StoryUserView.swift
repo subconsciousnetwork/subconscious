@@ -44,6 +44,7 @@ struct StoryUserView_Previews: PreviewProvider {
         StoryUserView(
             story: StoryUser(
                 user: UserProfile(
+                    did: Did("did:key:123")!,
                     petname: Petname("ben")!,
                     pfp: "pfp-dog",
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber."

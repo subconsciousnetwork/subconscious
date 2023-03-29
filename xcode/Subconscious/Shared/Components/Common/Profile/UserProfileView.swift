@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import ObservableStore
 
 struct ProfileStatisticView: View {
     var label: String
@@ -21,14 +22,12 @@ struct ProfileStatisticView: View {
 }
 
 struct UserProfileView: View {
-    let user: UserProfile
-    let statistics: UserProfileStatistics
+    var state: UserProfileDetailModel
+    var send: (UserProfileDetailAction) -> Void
     let entries: [EntryStub]
     
     let onNavigateToNote: (MemoAddress) -> Void
     let onNavigateToUser: (MemoAddress) -> Void
-    
-    @State var selectedTab = 0
     
     func makeColumns() -> [TabbedColumnItem] {
         return [
@@ -59,8 +58,16 @@ struct UserProfileView: View {
             TabbedColumnItem(
                 label: "Following",
                 view: Group {
-                    ForEach(0..<30) {_ in
-                        StoryUserView(story: StoryUser(user: user, statistics: statistics), action: { address, _ in onNavigateToUser(address) })
+                    if let user = state.user {
+                        ForEach(0..<30) {_ in
+                            StoryUserView(
+                                story: StoryUser(
+                                    user: user,
+                                    statistics: state.statistics
+                                ),
+                                action: { address, _ in onNavigateToUser(address) }
+                            )
+                        }
                     }
                     
                     Button(action: {}, label: { Text("View All") })
@@ -74,44 +81,56 @@ struct UserProfileView: View {
         let columns = self.makeColumns()
         
         VStack(alignment: .leading, spacing: 0) {
-            BylineLgView(user: user, statistics: statistics)
-            .padding(AppTheme.padding)
+            if let user = state.user {
+                BylineLgView(user: user, statistics: state.statistics)
+                    .padding(AppTheme.padding)
+            }
             
             TabbedColumnView(
                 columns: columns,
-                selectedColumnIndex: selectedTab,
+                selectedColumnIndex: state.selectedTabIndex,
                 changeColumn: { index in
-                    selectedTab = index
+                    send(.tabIndexSelected(index))
                 }
             )
         }
-        .navigationTitle(user.petname.verbatim)
+        .navigationTitle(state.user?.petname.verbatim ?? "unknown")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
-            DetailToolbarContent(
-                address: Slashlink(petname: user.petname).toPublicMemoAddress(),
-                defaultAudience: .public,
-                onTapOmnibox: {
-                    
-                }
-            )
+            if let user = state.user {
+                DetailToolbarContent(
+                    address: Slashlink(petname: user.petname).toPublicMemoAddress(),
+                    defaultAudience: .public,
+                    onTapOmnibox: {
+                        send(.presentMetaSheet(true))
+                    }
+                )
+            }
         })
+        .sheet(
+            isPresented: Binding(
+                get: { state.isMetaSheetPresented },
+                send: send,
+                tag: UserProfileDetailAction.presentMetaSheet
+            )
+        ) {
+            UserProfileDetailMetaSheet(
+                state: state.metaSheet,
+                profile: state,
+                send: Address.forward(
+                    send: send,
+                    tag: UserProfileDetailMetaSheetCursor.tag
+                )
+            )
+        }
     }
 }
 
 struct UserProfileView_Previews: PreviewProvider {
     static var previews: some View {
         UserProfileView(
-            user: UserProfile(
-                petname: Petname("ben")!,
-                pfp: "pfp-dog",
-                bio: "Henlo world."
-            ),
-            statistics: UserProfileStatistics(
-                noteCount: 123,
-                backlinkCount: 64,
-                followingCount: 19
-            ),
+            state: UserProfileDetailModel(isMetaSheetPresented: true),
+            send: { _ in },
             entries: UserProfileDetailModel.generateEntryStubs(petname: "ben", count: 10),
             onNavigateToNote: { _ in print("navigate to note") },
             onNavigateToUser: { _ in print("navigate to user") }

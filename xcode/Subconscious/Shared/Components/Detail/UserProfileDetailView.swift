@@ -29,8 +29,8 @@ struct UserProfileDetailView: View {
 
     var body: some View {
         UserProfileView(
-            user: store.state.user,
-            statistics: store.state.statistics,
+            state: store.state,
+            send: store.send,
             entries: store.state.articles,
             onNavigateToNote: self.onNavigateToNote,
             onNavigateToUser: self.onNavigateToUser
@@ -51,7 +51,10 @@ struct UserProfileDetailDescription: Hashable {
 }
 
 enum UserProfileDetailAction: Hashable {
-    
+    case populate(UserProfile, UserProfileStatistics?)
+    case tabIndexSelected(Int)
+    case presentMetaSheet(Bool)
+    case metaSheet(UserProfileDetailMetaSheetAction)
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -61,6 +64,7 @@ struct UserProfileStatistics: Equatable, Codable, Hashable {
 }
 
 struct UserProfile: Equatable, Codable, Hashable {
+    let did: Did
     let petname: Petname
     let pfp: String
     let bio: String
@@ -70,13 +74,18 @@ struct UserProfileDetailModel: ModelProtocol {
     typealias Action = UserProfileDetailAction
     typealias Environment = AppEnvironment
     
-    var user: UserProfile = UserProfile(
+    var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
+    var selectedTabIndex = 0
+    var isMetaSheetPresented = false
+    
+    var user: UserProfile? = UserProfile(
+        did: Did("did:key:123")!,
         petname: Petname("ben")!,
         pfp: "pfp-dog",
         bio: "Henlo world."
     )
     
-    var statistics: UserProfileStatistics = UserProfileStatistics(
+    var statistics: UserProfileStatistics? = UserProfileStatistics(
         noteCount: 123,
         backlinkCount: 64,
         followingCount: 19
@@ -90,7 +99,28 @@ struct UserProfileDetailModel: ModelProtocol {
         action: Action,
         environment: Environment
     ) -> Update<Self> {
-        Update(state: state)
+        switch action {
+        case .metaSheet(let action):
+            return UserProfileDetailMetaSheetCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+        case .populate(let user, let statistics):
+            var model = state
+            model.user = user
+            model.statistics = statistics
+            return Update(state: model)
+            
+        case .tabIndexSelected(let index):
+            var model = state
+            model.selectedTabIndex = index
+            return Update(state: model)
+        case .presentMetaSheet(let presented):
+            var model = state
+            model.isMetaSheetPresented = presented
+            return Update(state: model)
+        }
     }
     
     static func generateEntryStubs(petname: String, count: Int) -> [EntryStub] {

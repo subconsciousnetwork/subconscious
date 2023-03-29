@@ -70,3 +70,4 @@ struct Petname:
         self.init(Self.format(string))
     }
 }
+

@@ -39,10 +39,10 @@ struct BylineLgView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             BylineLgView(
-                user: UserProfile(petname: Petname("ben")!, pfp: "pfp-dog", bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.")
+                user: UserProfile(did: Did("did:key:123")!, petname: Petname("ben")!, pfp: "pfp-dog", bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.")
             )
             BylineLgView(
-                user: UserProfile(petname: Petname("ben")!, pfp: "pfp-dog", bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
+                user: UserProfile(did: Did("did:key:123")!, petname: Petname("ben")!, pfp: "pfp-dog", bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle."),
                 statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19)
             )
         }

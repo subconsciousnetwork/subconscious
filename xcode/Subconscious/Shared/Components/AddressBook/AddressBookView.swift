@@ -47,7 +47,7 @@ struct AddressBookView: View {
                 
                 if let did = state.did {
                     Section(header: Text("My DID")) {
-                        DidView(did: did)
+                        DidView(did: did, qrCode: true)
                     }
                 }
             }

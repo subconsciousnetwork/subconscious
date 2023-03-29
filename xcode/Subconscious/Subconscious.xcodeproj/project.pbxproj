@@ -32,6 +32,7 @@
 		B58A46B329D3CE6100491E43 /* StoryUserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B229D3CE6100491E43 /* StoryUserView.swift */; };
 		B58A46B529D3CE9700491E43 /* StoryUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B429D3CE9700491E43 /* StoryUser.swift */; };
 		B58A46B729D3D09500491E43 /* BylineLgView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B629D3D09500491E43 /* BylineLgView.swift */; };
+		B58A46BA29D4004B00491E43 /* UserProfileDetailMetaSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B929D4004B00491E43 /* UserProfileDetailMetaSheet.swift */; };
 		B58FE48A28DED93F00E000CC /* ComboGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48928DED93F00E000CC /* ComboGeist.swift */; };
 		B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48B28DED9B600E000CC /* StoryCombo.swift */; };
 		B58FE48E28DEDAEA00E000CC /* StoryComboView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */; };
@@ -406,6 +407,7 @@
 		B58A46B229D3CE6100491E43 /* StoryUserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryUserView.swift; sourceTree = "<group>"; };
 		B58A46B429D3CE9700491E43 /* StoryUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryUser.swift; sourceTree = "<group>"; };
 		B58A46B629D3D09500491E43 /* BylineLgView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BylineLgView.swift; sourceTree = "<group>"; };
+		B58A46B929D4004B00491E43 /* UserProfileDetailMetaSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileDetailMetaSheet.swift; sourceTree = "<group>"; };
 		B58FE48928DED93F00E000CC /* ComboGeist.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComboGeist.swift; sourceTree = "<group>"; };
 		B58FE48B28DED9B600E000CC /* StoryCombo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryCombo.swift; sourceTree = "<group>"; };
 		B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryComboView.swift; sourceTree = "<group>"; };
@@ -719,6 +721,17 @@
 			path = AddressBook;
 			sourceTree = "<group>";
 		};
+		B58A46B829D4001500491E43 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				B85EC45F296F099700558761 /* ProfilePic.swift */,
+				B85EC465296F0D0A00558761 /* ProfilePicMd.swift */,
+				B85EC462296F0CBD00558761 /* ProfilePicSm.swift */,
+				B571B77B29D159A400B02A6C /* UserProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
 		B80057E927DC355E002C0129 /* SubconsciousTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -839,6 +852,7 @@
 				B86BC75929B24BEF005B5833 /* DetailMetaSheet.swift */,
 				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
 				B8925B2E29C23017001F9503 /* MemoViewerDetailView.swift */,
+				B58A46B929D4004B00491E43 /* UserProfileDetailMetaSheet.swift */,
 				B57C0AF429D2865600D352E3 /* UserProfileDetailView.swift */,
 				B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */,
 				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
@@ -1132,6 +1146,7 @@
 		B8EC568426F41A2C00AC64E5 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				B58A46B829D4001500491E43 /* Profile */,
 				B8CBAFA5299449810079107E /* Audience */,
 				B8AC648E278F7E7B0099E96B /* BackLabelStyle.swift */,
 				B8545F0C2970577600BC4EA1 /* BacklinkReacts.swift */,
@@ -1151,9 +1166,6 @@
 				B856521F2975BA9000B7FCA0 /* MetaTableView.swift */,
 				B8DEBF182798B6A8007CB528 /* NavigationToolbar.swift */,
 				B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */,
-				B85EC45F296F099700558761 /* ProfilePic.swift */,
-				B85EC465296F0D0A00558761 /* ProfilePicMd.swift */,
-				B85EC462296F0CBD00558761 /* ProfilePicSm.swift */,
 				B8AC648B278F757B0099E96B /* ProgressScrimView.swift */,
 				B8DEBF212798EE99007CB528 /* RenameSuggestionLabelView.swift */,
 				B8AE34B5276AAAFF00777FF0 /* RoundedTextFieldViewModifier.swift */,
@@ -1572,6 +1584,7 @@
 				B8AC648A278F53920099E96B /* EntryStub.swift in Sources */,
 				B88B1CE5298EB10D0062CB7F /* RecoveryPhraseView.swift in Sources */,
 				B8B4250C28FB43C90081B8D5 /* ContentType.swift in Sources */,
+				B58A46BA29D4004B00491E43 /* UserProfileDetailMetaSheet.swift in Sources */,
 				B8AE34C5276BF72500777FF0 /* LinkSearchView.swift in Sources */,
 				B8AE34CB276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
 				B8AC648C278F757B0099E96B /* ProgressScrimView.swift in Sources */,
