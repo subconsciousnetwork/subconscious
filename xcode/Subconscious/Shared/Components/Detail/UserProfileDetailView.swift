@@ -66,13 +66,6 @@ struct UserProfile: Equatable, Codable, Hashable {
     let bio: String
 }
 
-// TODO: stubbed type, use real data
-struct Article: Equatable, Codable {
-    let id: UUID
-    let address: MemoAddress
-    let datePublished: Date
-}
-
 struct UserProfileDetailModel: ModelProtocol {
     typealias Action = UserProfileDetailAction
     typealias Environment = AppEnvironment
