@@ -38,6 +38,12 @@ struct TabHeaderView: View {
                     )
                 }
             }
+            .overlay(
+                Rectangle()
+                    .fill(Color.separator)
+                    .frame(height: 1),
+                alignment: .bottom
+            )
             
             // Position the "selected" bar on top of the buttons
             GeometryReader { geometry in
@@ -52,11 +58,5 @@ struct TabHeaderView: View {
             .frame(height: 3) // Vertical height of the bar
         }
         .frame(maxWidth: .infinity)
-        .overlay(
-            Rectangle()
-                .fill(Color.separator)
-                .frame(height: 1),
-            alignment: .bottom
-        )
     }
 }
