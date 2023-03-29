@@ -45,7 +45,7 @@ struct TabHeaderView: View {
                 Rectangle()
                     .fill(Color.accentColor)
                     .frame(width: increment - inset, height: geometry.size.height)
-                    .cornerRadius(2)
+                    .cornerRadius(2, corners: [.topLeft, .topRight])
                     .offset(x: inset / 2 + increment * CGFloat(focusedTabIndex), y: 0)
                     .animation(.easeInOut(duration: Duration.fast), value: focusedTabIndex)
             }
