@@ -30,7 +30,8 @@ struct UserProfileDetailView: View {
     var body: some View {
         UserProfileView(
             user: store.state.user,
-            articles: store.state.articles,
+            statistics: store.state.statistics,
+            entries: store.state.articles,
             onNavigateToNote: self.onNavigateToNote,
             onNavigateToUser: self.onNavigateToUser
         )
@@ -53,25 +54,22 @@ enum UserProfileDetailAction: Hashable {
     
 }
 
-struct UserProfileStatistics: Equatable {
+struct UserProfileStatistics: Equatable, Codable, Hashable {
     let noteCount: Int
     let backlinkCount: Int
     let followingCount: Int
 }
 
-struct UserProfile: Equatable {
+struct UserProfile: Equatable, Codable, Hashable {
     let petname: Petname
-    let pfp: Image
+    let pfp: String
     let bio: String
-    
-    let statistics: UserProfileStatistics
 }
 
 // TODO: stubbed type, use real data
-struct Article: Equatable {
+struct Article: Equatable, Codable {
     let id: UUID
-    let title: String
-    let slug: String
+    let address: MemoAddress
     let datePublished: Date
 }
 
@@ -81,32 +79,18 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var user: UserProfile = UserProfile(
         petname: Petname("ben")!,
-        pfp: Image("pfp-dog"),
-        bio: "Henlo world.",
-        statistics: UserProfileStatistics(
-            noteCount: 123,
-            backlinkCount: 64,
-            followingCount: 19
-        )
+        pfp: "pfp-dog",
+        bio: "Henlo world."
     )
     
-    var articles: [Article] = [
-        Article(id: UUID(), title: "Article 1", slug: "/article-1", datePublished: Date()),
-        Article(id: UUID(), title: "Article 2", slug: "/article-2", datePublished: Date().addingTimeInterval(-86400)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800)),
-        Article(id: UUID(), title: "Article 3", slug: "/article-3", datePublished: Date().addingTimeInterval(-172800))
-    ]
+    var statistics: UserProfileStatistics = UserProfileStatistics(
+        noteCount: 123,
+        backlinkCount: 64,
+        followingCount: 19
+    )
+    
+    
+    var articles: [EntryStub] = generateEntryStubs(petname: "ben", count: 10)
 
     static func update(
         state: Self,
@@ -114,5 +98,22 @@ struct UserProfileDetailModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         Update(state: state)
+    }
+    
+    static func generateEntryStubs(petname: String, count: Int) -> [EntryStub] {
+        let excerpts = [
+            "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle. Snufflewumpus, indeed!",
+            "Quibbling frizznips flabbled with snerkling snarklewinks, creating a glorptastic kerfuffle.",
+            "Frobbly zingledorp spluttered, \"Wibbly-wabbly zorptang, snigglefritz me dooflebop!\" Skrinkle-plonk went the sploofinator, gorfing jibberjabberly amidst the blibber-blabber..",
+        ]
+        
+        return (1...count).map { index in
+            let slashlink = Slashlink("@\(petname)/article-\(index)")!
+            let address = slashlink.toPublicMemoAddress()
+            let excerpt = excerpts[index % excerpts.count]
+            let modified = Date().addingTimeInterval(TimeInterval(-86400 * index))
+            
+            return EntryStub(address: address, excerpt: excerpt, modified: modified)
+        }
     }
 }

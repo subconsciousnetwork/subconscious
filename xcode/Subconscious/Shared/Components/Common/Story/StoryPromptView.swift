@@ -38,8 +38,7 @@ struct StoryPromptView: View {
                     label: {
                         TranscludeView(
                             pfp: Image("pfp-dog"),
-                            petname: "@doge",
-                            slashlink: story.entry.address.slug.description,
+                            slashlink: story.entry.address.toSlashlink(),
                             excerpt: story.entry.excerpt
                         )
                     }

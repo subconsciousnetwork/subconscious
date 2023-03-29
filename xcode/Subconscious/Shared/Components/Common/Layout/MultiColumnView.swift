@@ -19,7 +19,7 @@ struct MultiColumnView<Content: View>: View {
                         let column = columns[index]
                         
                         ScrollView {
-                            column.padding(AppTheme.padding)
+                            column
                         }
                         .frame(width: geometry.size.width)
                         // Ensures you cannot peek at neighbouring columns in landscape
@@ -29,5 +29,6 @@ struct MultiColumnView<Content: View>: View {
                 .offset(x: -CGFloat(focusedColumnIndex) * geometry.size.width)
             }
         }
+        .background(Color.secondaryBackground)
     }
 }

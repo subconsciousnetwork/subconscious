@@ -9,16 +9,14 @@ import SwiftUI
 
 struct TranscludeView: View {
     var pfp: Image
-    var petname: String
-    var slashlink: String
+    var slashlink: Slashlink
     var excerpt: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit) {
             BylineSmView(
                 pfp: pfp,
-                petname: petname,
-                slug: slashlink
+                slashlink: slashlink
             )
             Text(excerpt)
         }
@@ -37,8 +35,7 @@ struct TranscludeView_Previews: PreviewProvider {
     static var previews: some View {
         TranscludeView(
             pfp: Image("pfp-dog"),
-            petname: "@doge",
-            slashlink: "/thoughts",
+            slashlink: Slashlink("@doge/thoughts")!,
             excerpt: "Thoughts of Doge. Food food park park park run run play run fetch ball run water shlorp shlorp shlorp dog bork bork bork home sleep sleep dream sleep"
         )
     }
