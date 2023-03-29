@@ -41,23 +41,6 @@ struct StoryPlainView: View {
                     
                 }
                 .padding()
-                //            Divider()
-                //            HStack {
-                //                Button(
-                //                    action: {
-                //                        action(
-                //                            story.entry.address,
-                //                            story.entry.excerpt
-                //                        )
-                //                    },
-                //                    label: {
-                //                        Text("Open")
-                //                    }
-                //                )
-                //                Spacer()
-                //            }
-                //            .padding()
-                //            .frame(height: AppTheme.unit * 15)
             }
         }
         .buttonStyle(.plain)
