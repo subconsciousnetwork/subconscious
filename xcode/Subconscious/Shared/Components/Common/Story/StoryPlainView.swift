@@ -15,7 +15,10 @@ struct StoryPlainView: View {
     var body: some View {
         Button(
             action: {
-                action(story.entry.address, story.entry.excerpt)
+                action(
+                    story.entry.address,
+                    story.entry.excerpt
+                )
             }
         ) {
             VStack(alignment: .leading, spacing: 0) {

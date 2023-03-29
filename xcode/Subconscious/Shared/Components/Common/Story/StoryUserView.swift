@@ -13,11 +13,21 @@ struct StoryUserView: View {
     var action: (MemoAddress, String) -> Void
 
     var body: some View {
-        Button(action: { action(Slashlink(petname: story.user.petname).toPublicMemoAddress(), story.user
-            .bio) }) {
+        Button(
+            action: {
+                action(
+                    Slashlink(petname: story.user.petname)
+                        .toPublicMemoAddress(),
+                    story.user.bio
+                )
+            }
+        ) {
             HStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: AppTheme.unit4) {
-                    BylineLgView(user: story.user, statistics: story.statistics)
+                    BylineLgView(
+                        user: story.user,
+                        statistics: story.statistics
+                    )
                 }
                 .padding()
                 Spacer()
