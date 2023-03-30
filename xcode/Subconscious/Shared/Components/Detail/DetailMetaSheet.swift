@@ -29,7 +29,7 @@ struct DetailMetaSheet: View {
                         }
                     }
                     .font(.callout)
-                    if AppDefaults.standard.noosphereEnabled {
+                    if AppDefaults.standard.isNoosphereEnabled {
                         AudienceMenuButtonView(
                             audience: Binding(
                                 get: { state.audience },

@@ -318,6 +318,7 @@
 		B8E2B02729AD053D004A78B3 /* Tests_Petname.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E2B02529AD0539004A78B3 /* Tests_Petname.swift */; };
 		B8E2B02929AD0E23004A78B3 /* Petname.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E2B02829AD0E23004A78B3 /* Petname.swift */; };
 		B8E2B02B29AD0E4D004A78B3 /* Slug.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E2B02A29AD0E4D004A78B3 /* Slug.swift */; };
+		B8E62AE829D61E69008F7E74 /* Tests_UserDefaultProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E62AE729D61E69008F7E74 /* Tests_UserDefaultProperty.swift */; };
 		B8EA3757299EBA5500D98E2B /* Tests_NoosphereService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EA3756299EBA5500D98E2B /* Tests_NoosphereService.swift */; };
 		B8EA3EE529159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EA3EE429159C5500B92C2E /* HeaderSubtextMemoStore.swift */; };
 		B8EA3EE629159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EA3EE429159C5500B92C2E /* HeaderSubtextMemoStore.swift */; };
@@ -572,6 +573,7 @@
 		B8E2B02529AD0539004A78B3 /* Tests_Petname.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Petname.swift; sourceTree = "<group>"; };
 		B8E2B02829AD0E23004A78B3 /* Petname.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Petname.swift; sourceTree = "<group>"; };
 		B8E2B02A29AD0E4D004A78B3 /* Slug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slug.swift; sourceTree = "<group>"; };
+		B8E62AE729D61E69008F7E74 /* Tests_UserDefaultProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_UserDefaultProperty.swift; sourceTree = "<group>"; };
 		B8EA3756299EBA5500D98E2B /* Tests_NoosphereService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_NoosphereService.swift; sourceTree = "<group>"; };
 		B8EA3EE429159C5500B92C2E /* HeaderSubtextMemoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderSubtextMemoStore.swift; sourceTree = "<group>"; };
 		B8EA3EE72915C23200B92C2E /* HeaderSubtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderSubtext.swift; sourceTree = "<group>"; };
@@ -706,6 +708,7 @@
 				B831BDB62824DA9700C4CE92 /* Tests_Tape.swift */,
 				B84AD8E72811C827006B3153 /* Tests_URLComponentsUtilities.swift */,
 				B8D328B929A69D2D00850A37 /* Tests_URLUtilities.swift */,
+				B8E62AE729D61E69008F7E74 /* Tests_UserDefaultProperty.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
@@ -1346,6 +1349,7 @@
 				B84AD8E1280F7A19006B3153 /* Tests_StringUtilities.swift in Sources */,
 				B8B604EB29148C82006FCB77 /* Tests_AppMigrations.swift in Sources */,
 				B8AAAAD928CBD68600DBC8A9 /* Tests_Detail.swift in Sources */,
+				B8E62AE829D61E69008F7E74 /* Tests_UserDefaultProperty.swift in Sources */,
 				B8C7E8C0280A2B7700E439DC /* Test_Markup.swift in Sources */,
 				B80CC805299D14C900C4D7C0 /* Tests_Memo.swift in Sources */,
 				B8F27EE42970CD8F00A33E78 /* Tests_SphereFS.swift in Sources */,

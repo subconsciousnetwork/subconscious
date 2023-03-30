@@ -15,6 +15,7 @@ struct AppView: View {
     /// Store for global application state
     @StateObject private var store = Store(
         state: AppModel(),
+        action: .start,
         environment: AppEnvironment.default
     )
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
@@ -81,6 +82,9 @@ struct AppView: View {
 
 //  MARK: Action
 enum AppAction: CustomLogStringConvertible {
+    /// Sent immediately upon store creation
+    case start
+
     case recoveryPhrase(RecoveryPhraseAction)
     case addressBook(AddressBookAction)
 
@@ -109,6 +113,9 @@ enum AppAction: CustomLogStringConvertible {
 
     /// Set and persist Noosphere enabled state
     case persistNoosphereEnabled(_ isEnabled: Bool)
+    /// Handle changes to AppDefaults.standard.isNoosphereEnabled, and
+    /// sync the value to our store state.
+    case notifyNoosphereEnabled(_ isEnabled: Bool)
 
     /// Set and persist first run complete state
     case persistFirstRunComplete(_ isComplete: Bool)
@@ -299,6 +306,11 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         switch action {
+        case .start:
+            return start(
+                state: state,
+                environment: environment
+            )
         case .recoveryPhrase(let action):
             return AppRecoveryPhraseCursor.update(
                 state: state,
@@ -362,6 +374,12 @@ struct AppModel: ModelProtocol {
             )
         case let .persistNoosphereEnabled(isEnabled):
             return persistNoosphereEnabled(
+                state: state,
+                environment: environment,
+                isEnabled: isEnabled
+            )
+        case let .notifyNoosphereEnabled(isEnabled):
+            return notifyNoosphereEnabled(
                 state: state,
                 environment: environment,
                 isEnabled: isEnabled
@@ -473,6 +491,17 @@ struct AppModel: ModelProtocol {
         return Update(state: state)
     }
     
+    static func start(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        // Subscribe to changes in AppDefaults.isNoosphereEnabled
+        let fx: Fx<AppAction> = AppDefaults.standard.$isNoosphereEnabled
+            .map(AppAction.notifyNoosphereEnabled)
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
     /// Handle scene phase change
     static func scenePhaseChange(
         state: AppModel,
@@ -656,6 +685,20 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         // Persist setting to UserDefaults
         AppDefaults.standard.isNoosphereEnabled = isEnabled
+        var model = state
+        model.isNoosphereEnabled = isEnabled
+        return Update(state: model)
+    }
+
+    /// Update model to match persisted enabled state.
+    /// A notification is generated for every
+    /// This will take care of cases where the enabled state has been set
+    /// in some other place outside of our store.
+    static func notifyNoosphereEnabled(
+        state: AppModel,
+        environment: AppEnvironment,
+        isEnabled: Bool
+    ) -> Update<AppModel> {
         var model = state
         model.isNoosphereEnabled = isEnabled
         return Update(state: model)
