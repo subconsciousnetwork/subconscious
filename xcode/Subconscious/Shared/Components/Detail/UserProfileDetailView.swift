@@ -48,6 +48,7 @@ enum UserProfileDetailNotification: Hashable {
 /// detal's internal state.
 struct UserProfileDetailDescription: Hashable {
     var address: MemoAddress
+    var initialProfileTabIndex: Int = 0 // TODO: change to enum
 }
 
 enum UserProfileDetailAction: Hashable {
@@ -63,11 +64,18 @@ struct UserProfileStatistics: Equatable, Codable, Hashable {
     let followingCount: Int
 }
 
+enum UserCategory: Equatable, Codable, Hashable, CaseIterable {
+    case human
+    case geist
+    case you
+}
+
 struct UserProfile: Equatable, Codable, Hashable {
     let did: Did
     let petname: Petname
     let pfp: String
     let bio: String
+    let category: UserCategory
 }
 
 struct UserProfileDetailModel: ModelProtocol {
@@ -82,7 +90,8 @@ struct UserProfileDetailModel: ModelProtocol {
         did: Did("did:key:123")!,
         petname: Petname("ben")!,
         pfp: "pfp-dog",
-        bio: "Henlo world."
+        bio: "Henlo world.",
+        category: .human
     )
     
     var statistics: UserProfileStatistics? = UserProfileStatistics(
@@ -110,6 +119,12 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.user = user
             model.statistics = statistics
+            
+            // TODO: move this to the model init when we can init using a closure https://github.com/subconsciousnetwork/ObservableStore/pull/30
+            if user.category == .you {
+                model.selectedTabIndex = 2
+            }
+            
             return Update(state: model)
             
         case .tabIndexSelected(let index):

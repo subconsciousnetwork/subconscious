@@ -24,9 +24,10 @@ struct StoryUserView: View {
         ) {
             HStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: AppTheme.unit4) {
-                    BylineLgView(
+                    UserProfileHeaderView(
                         user: story.user,
-                        statistics: story.statistics
+                        statistics: story.statistics,
+                        following: story.following
                     )
                 }
                 .padding()
@@ -47,8 +48,10 @@ struct StoryUserView_Previews: PreviewProvider {
                     did: Did("did:key:123")!,
                     petname: Petname("ben")!,
                     pfp: "pfp-dog",
-                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber."
-                )
+                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
+                    category: .human
+                ),
+                following: false
             ),
             action: { link, fallback in }
         )

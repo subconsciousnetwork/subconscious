@@ -58,16 +58,11 @@ struct UserProfileView: View {
             TabbedColumnItem(
                 label: "Following",
                 view: Group {
-                    if let user = state.user {
-                        ForEach(0..<30) {_ in
-                            StoryUserView(
-                                story: StoryUser(
-                                    user: user,
-                                    statistics: state.statistics
-                                ),
-                                action: { address, _ in onNavigateToUser(address) }
-                            )
-                        }
+                    ForEach(0..<30) {_ in
+                        StoryUserView(
+                            story: StoryUser.generateRandomTestInstance(),
+                            action: { address, _ in onNavigateToUser(address) }
+                        )
                     }
                     
                     Button(action: {}, label: { Text("View All") })
@@ -82,7 +77,7 @@ struct UserProfileView: View {
         
         VStack(alignment: .leading, spacing: 0) {
             if let user = state.user {
-                BylineLgView(user: user, statistics: state.statistics)
+                UserProfileHeaderView(user: user, statistics: state.statistics, following: false)
                     .padding(AppTheme.padding)
             }
             
@@ -129,7 +124,7 @@ struct UserProfileView: View {
 struct UserProfileView_Previews: PreviewProvider {
     static var previews: some View {
         UserProfileView(
-            state: UserProfileDetailModel(isMetaSheetPresented: true),
+            state: UserProfileDetailModel(isMetaSheetPresented: false),
             send: { _ in },
             entries: UserProfileDetailModel.generateEntryStubs(petname: "ben", count: 10),
             onNavigateToNote: { _ in print("navigate to note") },
