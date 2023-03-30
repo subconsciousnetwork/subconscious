@@ -40,7 +40,7 @@ struct FirstRunCreateSphereView: View {
                         Text("Ok, I wrote it down")
                     }
                 )
-                .buttonStyle(LargeButtonStyle())
+                .buttonStyle(PillButtonStyle())
             }
             .padding()
         }

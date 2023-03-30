@@ -46,20 +46,20 @@ struct UserProfileHeaderView: View {
                     Button(action: {}, label: {
                         Label("Edit Profile", systemImage: "pencil")
                     })
-                    .buttonStyle(LargeButtonStyle())
+                    .buttonStyle(PillButtonStyle(size: .small))
                     .frame(maxWidth: 160)
                 } else {
                     if following {
                         Button(action: {}, label: {
                             Label("Following", systemImage: "person.fill.checkmark")
                         })
-                        .buttonStyle(LargeGhostButtonStyle())
+                        .buttonStyle(GhostPillButtonStyle(size: .small))
                         .frame(maxWidth: 160)
                     } else {
                         Button(action: {}, label: {
                             Text("Follow")
                         })
-                        .buttonStyle(LargeButtonStyle())
+                        .buttonStyle(PillButtonStyle(size: .small))
                         .frame(maxWidth: 160)
                     }
                 }
