@@ -211,7 +211,7 @@ struct AddressBookModel: ModelProtocol {
             guard !state.follows.contains(where: { f in f.did == did }) else {
                 return update(
                     state: state,
-                    action: .failFollow(error: "Already following user"),
+                    action: .failFollow(error: AddressBookError.alreadyFollowing.localizedDescription),
                     environment: environment
                 )
             }
