@@ -348,7 +348,7 @@ final class DatabaseService {
         var special: [Suggestion] = []
         
         // Insert quick-create suggestion
-        if AppDefaults.standard.noosphereEnabled {
+        if AppDefaults.standard.isNoosphereEnabled {
             special.append(.createPublicMemo(fallback: ""))
         }
         special.append(.createLocalMemo(fallback: ""))
@@ -375,7 +375,7 @@ final class DatabaseService {
         var suggestions: [Suggestion] = []
         
         // Create suggestions for the literal query
-        if AppDefaults.standard.noosphereEnabled {
+        if AppDefaults.standard.isNoosphereEnabled {
             suggestions.append(.createPublicMemo(fallback: query))
         }
         suggestions.append(.createLocalMemo(fallback: query))

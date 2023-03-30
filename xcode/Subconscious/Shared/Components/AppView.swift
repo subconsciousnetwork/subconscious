@@ -237,7 +237,7 @@ struct AppModel: ModelProtocol {
     /// This property is changed via `persistNoosphereEnabled`, which will
     /// update both the model property (triggering a view re-render)
     /// and persist the new value to UserDefaults.
-    var isNoosphereEnabled = AppDefaults.standard.noosphereEnabled
+    var isNoosphereEnabled = AppDefaults.standard.isNoosphereEnabled
 
     /// Has first run completed?
     /// We assign UserDefault property to model property at startup.
@@ -248,7 +248,7 @@ struct AppModel: ModelProtocol {
 
     /// Should first run show?
     var shouldPresentFirstRun: Bool {
-        guard AppDefaults.standard.noosphereEnabled else {
+        guard isNoosphereEnabled else {
             return false
         }
         return !isFirstRunComplete
@@ -506,7 +506,7 @@ struct AppModel: ModelProtocol {
             "Sphere ID: \(sphereIdentity)"
         )
         logger.debug(
-            "Noosphere enabled? \(AppDefaults.standard.noosphereEnabled)"
+            "Noosphere enabled? \(AppDefaults.standard.isNoosphereEnabled)"
         )
         return update(
             state: state,
@@ -655,7 +655,7 @@ struct AppModel: ModelProtocol {
         isEnabled: Bool
     ) -> Update<AppModel> {
         // Persist setting to UserDefaults
-        AppDefaults.standard.noosphereEnabled = isEnabled
+        AppDefaults.standard.isNoosphereEnabled = isEnabled
         var model = state
         model.isNoosphereEnabled = isEnabled
         return Update(state: model)
