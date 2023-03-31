@@ -29,11 +29,11 @@ struct UserProfileView: View {
     let onNavigateToNote: (MemoAddress) -> Void
     let onNavigateToUser: (MemoAddress) -> Void
     
-    func makeColumns() -> [TabbedColumnItem] {
-        return [
-            TabbedColumnItem(
-                label: "Recent",
-                view: Group {
+    var body: some View {
+        let columnA = TabbedColumnItem(
+            label: "Recent",
+            view:
+                Group {
                     ForEach(entries, id: \.id) { entry in
                         StoryPlainView(
                             story: StoryPlain(entry: entry),
@@ -42,10 +42,13 @@ struct UserProfileView: View {
                     }
                     Button(action: {}, label: { Text("More...") })
                 }
-            ),
-            TabbedColumnItem(
-                label: "Top",
-                view: Group {
+            
+        )
+        
+        let columnB = TabbedColumnItem(
+            label: "Top",
+            view:
+                Group {
                     ForEach(entries, id: \.id) { entry in
                         StoryPlainView(
                             story: StoryPlain(entry: entry),
@@ -54,10 +57,13 @@ struct UserProfileView: View {
                     }
                     Button(action: {}, label: { Text("More...") })
                 }
-            ),
-            TabbedColumnItem(
-                label: "Following",
-                view: Group {
+            
+        )
+         
+        let columnC = TabbedColumnItem(
+            label: "Following",
+            view:
+                Group {
                     ForEach(0..<30) {_ in
                         StoryUserView(
                             story: StoryUser.generateRandomTestInstance(),
@@ -67,13 +73,8 @@ struct UserProfileView: View {
                     
                     Button(action: {}, label: { Text("View All") })
                 }
-            )
-        ]
-    }
-
-    var body: some View {
-        // Break this up so SwiftUI can actually typecheck
-        let columns = self.makeColumns()
+            
+        )
         
         VStack(alignment: .leading, spacing: 0) {
             if let user = state.user {
@@ -81,8 +82,10 @@ struct UserProfileView: View {
                     .padding(AppTheme.padding)
             }
             
-            TabbedColumnView(
-                columns: columns,
+            TabbedThreeColumnView(
+                columnA: columnA,
+                columnB: columnB,
+                columnC: columnC,
                 selectedColumnIndex: state.selectedTabIndex,
                 changeColumn: { index in
                     send(.tabIndexSelected(index))
