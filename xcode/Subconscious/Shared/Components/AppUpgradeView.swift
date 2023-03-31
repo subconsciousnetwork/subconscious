@@ -20,6 +20,8 @@ struct AppUpgradeView: View {
     )
     private let spinnerSize: CGFloat = 256
     private let logoSize: CGFloat = 180
+    // Duration of certain completion transition animations
+    private let transitionDuration: CGFloat = 1
 
     var state: AppUpgradeModel
     var send: (AppUpgradeAction) -> Void
@@ -28,11 +30,21 @@ struct AppUpgradeView: View {
         VStack {
             VStack {
                 if state.isComplete {
-                    Text("Welcome to Subconscious")
-                        .transition(.push(from: .bottom))
+                    Text("Welcome to Subconscious").transition(
+                        .asymmetric(
+                            insertion: .opacity.animation(
+                                .easeOut(duration: transitionDuration)
+                                .delay(transitionDuration)
+                            ),
+                            removal: .opacity.animation(.default)
+                        )
+                    )
                 } else {
-                    Text("What? Subconscious is evolving!")
-                        .transition(.push(from: .bottom))
+                    Text("What? Subconscious is evolving!").transition(
+                        .opacity.animation(
+                            .easeOut(duration: transitionDuration)
+                        )
+                    )
                 }
                 Spacer()
             }
