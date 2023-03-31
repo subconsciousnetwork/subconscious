@@ -31,54 +31,48 @@ struct UserProfileView: View {
     var body: some View {
         let columnRecent = TabbedColumnItem(
             label: "Recent",
-            view:
-                Group {
-                    if let user = state.user {
-                        ForEach(state.recentEntries, id: \.id) { entry in
-                            StoryEntryView(
-                                story: StoryEntry(
-                                    author: user,
-                                    entry: entry
-                                ),
-                                action: { address, excerpt in onNavigateToNote(address) }
-                            )
-                        }
+            view: Group {
+                if let user = state.user {
+                    ForEach(state.recentEntries, id: \.id) { entry in
+                        StoryEntryView(
+                            story: StoryEntry(
+                                author: user,
+                                entry: entry
+                            ),
+                            action: { address, excerpt in onNavigateToNote(address) }
+                        )
                     }
                 }
-            
+            }
         )
         
         let columnTop = TabbedColumnItem(
             label: "Top",
-            view:
-                Group {
-                    if let user = state.user {
-                        ForEach(state.topEntries, id: \.id) { entry in
-                            StoryEntryView(
-                                story: StoryEntry(
-                                    author: user,
-                                    entry: entry
-                                ),
-                                action: { address, excerpt in onNavigateToNote(address) }
-                            )
-                        }
+            view: Group {
+                if let user = state.user {
+                    ForEach(state.topEntries, id: \.id) { entry in
+                        StoryEntryView(
+                            story: StoryEntry(
+                                author: user,
+                                entry: entry
+                            ),
+                            action: { address, excerpt in onNavigateToNote(address) }
+                        )
                     }
                 }
-            
+            }
         )
          
         let columnFollowing = TabbedColumnItem(
             label: "Following",
-            view:
-                Group {
-                    ForEach(state.following, id: \.user.did) { follow in
-                        StoryUserView(
-                            story: follow,
-                            action: { address, _ in onNavigateToUser(address) }
-                        )
-                    }
+            view: Group {
+                ForEach(state.following, id: \.user.did) { follow in
+                    StoryUserView(
+                        story: follow,
+                        action: { address, _ in onNavigateToUser(address) }
+                    )
                 }
-            
+            }
         )
         
         VStack(alignment: .leading, spacing: 0) {

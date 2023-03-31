@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// Compact byline combines a small profile pic, username, and path
+/// Byline style for displaying a petname
 struct PetnameBylineView: View {
     var petname: String
     private var petnameColor = Color.accentColor

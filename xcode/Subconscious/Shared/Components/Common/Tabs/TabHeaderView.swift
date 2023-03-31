@@ -27,7 +27,6 @@ struct TabHeaderView: View {
                     TabButtonView(
                         label: {
                             Text(item.label)
-                            
                         },
                         action: {
                             withAnimation {

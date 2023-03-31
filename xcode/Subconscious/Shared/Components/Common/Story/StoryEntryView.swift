@@ -38,11 +38,10 @@ struct StoryEntryView: View {
                 }
                 .padding()
                 .frame(height: AppTheme.unit * 11)
+                
                 Divider()
-                VStack(alignment: .leading, spacing: AppTheme.unit4) {
-                    Text(story.entry.excerpt)
-                    
-                }
+                
+                Text(story.entry.excerpt)
                 .padding()
             }
         }

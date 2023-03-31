@@ -43,7 +43,7 @@ extension StoryUser: DummyData {
                 bio: String.dummyDataMedium(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
             ),
-            following: Bool.dummyData()
+            isFollowingUser: Bool.dummyData()
         )
     }
 }

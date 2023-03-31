@@ -1,5 +1,5 @@
 //
-//  LargeGhostButtonStyle.swift
+//  GhostPillButtonStyle.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 30/3/2023.
@@ -13,29 +13,29 @@ struct GhostPillButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         PillButtonView(size: size, label: configuration.label)
-            .foregroundColor(
+        .foregroundColor(
+            Color.chooseForState(
+                isPressed: configuration.isPressed,
+                isEnabled: isEnabled,
+                normal: Color.primaryButtonText,
+                pressed: Color.primaryButtonTextPressed,
+                disabled: Color.primaryButtonTextDisabled
+            )
+        )
+        .background(
+            Color.clear
+        )
+        .overlay(
+            Capsule().stroke().foregroundColor(
                 Color.chooseForState(
                     isPressed: configuration.isPressed,
                     isEnabled: isEnabled,
-                    normal: Color.primaryButtonText,
-                    pressed: Color.primaryButtonTextPressed,
-                    disabled: Color.primaryButtonTextDisabled
+                    normal: Color.primaryButtonBackground,
+                    pressed: Color.primaryButtonBackgroundPressed,
+                    disabled: Color.primaryButtonBackgroundDisabled
                 )
             )
-            .background(
-                Color.clear
-            )
-            .overlay(
-                Capsule().stroke().foregroundColor(
-                    Color.chooseForState(
-                        isPressed: configuration.isPressed,
-                        isEnabled: isEnabled,
-                        normal: Color.primaryButtonBackground,
-                        pressed: Color.primaryButtonBackgroundPressed,
-                        disabled: Color.primaryButtonBackgroundDisabled
-                    )
-                )
-            )
+        )
     }
 }
 

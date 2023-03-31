@@ -1,5 +1,5 @@
 //
-//  TabbedColumnView.swift
+//  TabbedThreeColumnView.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 28/3/2023.

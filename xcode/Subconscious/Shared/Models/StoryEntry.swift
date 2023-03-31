@@ -1,5 +1,5 @@
 //
-//  StoryPlain.swift
+//  StoryEntry.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 29/3/2023.

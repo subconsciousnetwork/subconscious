@@ -1,5 +1,5 @@
 //
-//  StoryPlainView.swift
+//  StoryUserView.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 29/3/2023.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// A story is a single update within the FeedView
+/// Show a user card in a feed format
 struct StoryUserView: View {
     var story: StoryUser
     var action: (MemoAddress, String) -> Void
@@ -27,7 +27,7 @@ struct StoryUserView: View {
                     UserProfileHeaderView(
                         user: story.user,
                         statistics: story.statistics,
-                        isFollowingUser: story.following
+                        isFollowingUser: story.isFollowingUser
                     )
                 }
                 .padding()
@@ -51,7 +51,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                     category: .human
                 ),
-                following: false
+                isFollowingUser: false
             ),
             action: { link, fallback in }
         )

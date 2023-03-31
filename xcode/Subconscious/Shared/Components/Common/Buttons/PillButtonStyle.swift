@@ -1,5 +1,5 @@
 //
-//  PrimaryButtonStyle.swift
+//  PillButtonStyle.swift
 //  Subconscious
 //
 //  Created by Gordon Brander on 12/15/21.

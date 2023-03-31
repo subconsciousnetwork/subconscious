@@ -1,19 +1,11 @@
 //
-//  BylineLgView.swift
+//  UserProfileHeaderView.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 29/3/2023.
 //
 
-import Foundation
 import SwiftUI
-
-enum ProfileActionButton {
-    case follow
-    case following
-    case editProfile
-}
-
 
 struct UserProfileHeaderView: View {
     var user: UserProfile

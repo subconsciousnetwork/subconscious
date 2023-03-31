@@ -8,8 +8,8 @@
 import SwiftUI
 import ObservableStore
 
-/// Display a read-only memo detail view.
-/// Used for content from other spheres that we don't have write access to.
+/// Display a user profile detail view.
+/// Used to browse users entries and list of petnames.
 struct UserProfileDetailView: View {
     @StateObject private var store = Store(
         state: UserProfileDetailModel(),
