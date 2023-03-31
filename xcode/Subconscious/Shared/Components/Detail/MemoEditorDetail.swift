@@ -34,8 +34,6 @@ struct MemoEditorDetailView: View {
     private func onLink(
         url: URL
     ) -> Bool {
-        return onProfile()
-        
         guard let sub = url.toSubSlashlinkURL() else {
             return true
         }
@@ -44,13 +42,6 @@ struct MemoEditorDetailView: View {
                 slashlink: sub.slashlink,
                 fallback: sub.fallback
             )
-        )
-        return false
-    }
-    
-    private func onProfile() -> Bool {
-        notify(
-            .requestDetail(.profile(UserProfileDetailDescription(address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress())))
         )
         return false
     }

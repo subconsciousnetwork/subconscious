@@ -119,6 +119,21 @@ struct NotebookNavigationView: View {
                         }
                     }
                 }
+                if Config.default.userProfile {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(
+                            action: {
+                                let detail = UserProfileDetailDescription(
+                                    address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress()
+                                )
+                                
+                                store.send(.pushDetail(.profile(detail)))
+                            }
+                        ) {
+                            Image(systemName: "person")
+                        }
+                    }
+                }
             }
         }
     }
