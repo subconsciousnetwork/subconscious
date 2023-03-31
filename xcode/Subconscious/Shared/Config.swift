@@ -17,6 +17,8 @@ struct Config: Equatable, Codable {
     var appTabs = false
     var addressBook = false
     var addByQRCode = true
+    var userProfile = false
+    var userProfileDetailsTable = false
     
     /// What value should the DID QR code scanner return in the simulator?
     /// Only returns test data when Config.debug is enabled

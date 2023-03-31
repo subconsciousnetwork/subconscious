@@ -112,6 +112,7 @@ struct UserProfileView: View {
             UserProfileDetailMetaSheet(
                 state: state.metaSheet,
                 profile: state,
+                followingUser: state.followingUser,
                 send: Address.forward(
                     send: send,
                     tag: UserProfileDetailMetaSheetCursor.tag

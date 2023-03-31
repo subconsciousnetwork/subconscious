@@ -8,12 +8,114 @@
 import SwiftUI
 import ObservableStore
 
+struct MetaTableItemShareLinkView: View {
+    var label: String
+    var item: String
+    
+    var body: some View {
+        ShareLink(item: item) {
+            Label(
+                label,
+                systemImage: "square.and.arrow.up"
+            )
+            .labelStyle(RowLabelStyle())
+        }
+        .padding(
+            EdgeInsets(
+                top: 0,
+                leading: AppTheme.padding,
+                bottom: 0,
+                trailing: AppTheme.padding
+            )
+        )
+        .frame(height: AppTheme.unit * 11) // There has to be a better way...
+    }
+}
+
+struct MetaTableItemButtonView: View {
+    var label: String
+    var systemImage: String
+    var action: () -> Void
+    var role: ButtonRole? = nil
+    
+    var body: some View {
+        Button(
+            role: role,
+            action: action
+        ) {
+            Label(
+                label,
+                systemImage: systemImage
+            )
+        }
+        .buttonStyle(RowButtonStyle())
+    }
+}
+
+struct UserProfileMetaSheetDetailsView: View {
+    var user: UserProfile
+    var ipfsHash: String
+    var gatewayUrl: String
+    
+    var body: some View {
+        DidQrCodeView(did: user.did, color: Color.secondary)
+            .frame(maxWidth: 128)
+        
+        Spacer(minLength: AppTheme.padding)
+        
+        MetaTableView {
+            Button(
+                action: {},
+                label: {
+                    Label(
+                        ipfsHash,
+                        systemImage: "number"
+                    )
+                    .labelStyle(RowLabelStyle())
+                }
+            )
+            .disabled(true)
+            .buttonStyle(RowButtonStyle())
+            
+            Button(
+                action: {},
+                label: {
+                    HStack {
+                        Text(user.did.did)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Image(systemName: "key")
+                    }
+                }
+            )
+            .disabled(true)
+            .buttonStyle(RowButtonStyle())
+            
+            Button(
+                action: {},
+                label: {
+                    HStack {
+                        Text(gatewayUrl)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Image(systemName: "network")
+                    }
+                }
+            )
+            .disabled(true)
+            .buttonStyle(RowButtonStyle())
+        }
+        
+    }
+}
+
 struct UserProfileDetailMetaSheet: View {
     @Environment(\.dismiss) private var dismiss
     var state: UserProfileDetailMetaSheetModel
     var profile: UserProfileDetailModel
+    var followingUser: Bool
     var send: (UserProfileDetailMetaSheetAction) -> Void
-
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
@@ -22,13 +124,12 @@ struct UserProfileDetailMetaSheet: View {
                         HStack {
                             Text("@\(user.petname.verbatim)")
                                 .foregroundColor(.secondary)
+                            if user.category == .you {
+                            Text("(you)")
+                                .foregroundColor(.secondary)
+                            }
                         }
                         .font(.callout)
-                        
-                        Text(user.did.description)
-                        .font(.caption.monospaced())
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.leading)
                     }
                 }
                 Spacer()
@@ -42,42 +143,66 @@ struct UserProfileDetailMetaSheet: View {
                 VStack(alignment: .center) {
                     if let user = profile.user {
                         MetaTableView {
-                            ShareLink(item: user.did.did) {
-                                Label(
-                                    "Share DID",
-                                    systemImage: "square.and.arrow.up"
-                                )
-                                .labelStyle(RowLabelStyle())
-                            }
-                            .padding(
-                                EdgeInsets(
-                                    top: 0,
-                                    leading: AppTheme.padding,
-                                    bottom: 0,
-                                    trailing: AppTheme.padding
-                                )
-                            )
-                            .frame(height: AppTheme.unit * 11) // There has to be a better way...
+                            MetaTableItemShareLinkView(label: "Share DID", item: user.did.did)
                             
-                            Button(
-                                role: .destructive,
-                                action: {
-                                    send(.presentDeleteConfirmationDialog(true))
+                            // None of these actions make sense to apply to yourself
+                            if user.category != .you {
+                                if followingUser {
+                                    MetaTableItemButtonView(
+                                        label: "Unfollow",
+                                        systemImage: "person.2.slash",
+                                        action: {
+                                            send(.requestUnfollow(petname: user.petname))
+                                        },
+                                        role: .destructive
+                                    )
+                                } else {
+                                    MetaTableItemButtonView(
+                                        label: "Follow",
+                                        systemImage: "person.badge.plus",
+                                        action: {
+                                            send(.requestFollow(did: user.did))
+                                        }
+                                    )
                                 }
-                            ) {
-                                Label(
-                                    "Follow/Unfollow",
-                                    systemImage: "trash"
+                                
+                                MetaTableItemButtonView(
+                                    label: "Block",
+                                    systemImage: "hand.raised",
+                                    action: {},
+                                    role: .destructive
                                 )
                             }
-                            .buttonStyle(RowButtonStyle())
+                            
                         }
-                    
-                        DidQrCodeView(did: user.did, color: Color.secondary)
-                            .frame(maxWidth: 128)
+                        
+                        if Config.default.userProfileDetailsTable {
+                            if state.isDetailsTablePresented {
+                                Spacer(minLength: AppTheme.padding)
+                                
+                                UserProfileMetaSheetDetailsView(
+                                    user: user,
+                                    ipfsHash: "Qmf412jQZiuVUtdgnB36FXF",
+                                    gatewayUrl: "https://ben.subconscious.network"
+                                )
+                            }
+                            
+                            MetaTableView {
+                                MetaTableItemButtonView(
+                                    label: state.isDetailsTablePresented ? "Hide Details" : "Show Details",
+                                    systemImage: "tablecells",
+                                    action: {
+                                        withAnimation {
+                                            send(.presentDetailsTable(!state.isDetailsTablePresented))
+                                        }
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
                 .padding()
+                
             }
         }
         .presentationDragIndicator(.hidden)
@@ -141,6 +266,8 @@ enum UserProfileDetailMetaSheetAction: Hashable {
     /// Request to unfollow this user
     /// Should be handled by parent component.
     case requestUnfollow(petname: Petname)
+    
+    case presentDetailsTable(Bool)
 }
 
 struct UserProfileDetailMetaSheetModel: ModelProtocol {
@@ -149,6 +276,8 @@ struct UserProfileDetailMetaSheetModel: ModelProtocol {
     
     /// Is delete confirmation dialog presented?
     var isDeleteConfirmationDialogPresented = false
+    
+    var isDetailsTablePresented = false
     
     static func update(
         state: Self,
@@ -163,6 +292,10 @@ struct UserProfileDetailMetaSheetModel: ModelProtocol {
         case .presentDeleteConfirmationDialog(let presented):
             var model = state
             model.isDeleteConfirmationDialogPresented = presented
+            return Update(state: model)
+        case .presentDetailsTable(let presented):
+            var model = state
+            model.isDetailsTablePresented = presented
             return Update(state: model)
         }
     }

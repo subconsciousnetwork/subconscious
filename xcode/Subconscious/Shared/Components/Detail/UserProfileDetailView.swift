@@ -93,6 +93,7 @@ struct UserProfileDetailModel: ModelProtocol {
         bio: "Henlo world.",
         category: .human
     )
+    var followingUser: Bool = false
     
     var statistics: UserProfileStatistics? = UserProfileStatistics(
         noteCount: 123,
