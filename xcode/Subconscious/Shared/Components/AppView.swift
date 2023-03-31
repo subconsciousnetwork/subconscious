@@ -101,7 +101,6 @@ enum AppAction: CustomLogStringConvertible {
     case recoveryPhrase(RecoveryPhraseAction)
     case addressBook(AddressBookAction)
     case appUpgrade(AppUpgradeAction)
-    case yourProfile(UserProfileDetailAction)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -273,22 +272,6 @@ struct AppUpgradeCursor: CursorProtocol {
         }
     }
 }
-    
-struct AppYourProfileCursor: CursorProtocol {
-    static func get(state: AppModel) -> UserProfileDetailModel {
-        state.yourProfile
-    }
-    
-    static func set(state: AppModel, inner: UserProfileDetailModel) -> AppModel {
-        var model = state
-        model.yourProfile = inner
-        return model
-    }
-    
-    static func tag(_ action: UserProfileDetailAction) -> AppAction {
-        .yourProfile(action)
-    }
-}
 
 enum AppDatabaseState {
     case initial
@@ -363,8 +346,6 @@ struct AppModel: ModelProtocol {
     /// State for app upgrade view that takes over if we have to do any
     /// one-time long-running migration tasks at startup.
     var appUpgrade = AppUpgradeModel()
-    
-    var yourProfile = UserProfileDetailModel()
 
     var gatewayURL = AppDefaults.standard.gatewayURL
     var gatewayURLTextField = AppDefaults.standard.gatewayURL
@@ -417,12 +398,6 @@ struct AppModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: ()
-            )
-        case .yourProfile(let action):
-            return AppYourProfileCursor.update(
-                state: state,
-                action: action,
-                environment: environment
             )
         case .scenePhaseChange(let scenePhase):
             return scenePhaseChange(
