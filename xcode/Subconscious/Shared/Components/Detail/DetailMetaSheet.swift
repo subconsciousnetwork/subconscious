@@ -29,13 +29,15 @@ struct DetailMetaSheet: View {
                         }
                     }
                     .font(.callout)
-                    AudienceMenuButtonView(
-                        audience: Binding(
-                            get: { state.audience },
-                            send: send,
-                            tag: DetailMetaSheetAction.requestUpdateAudience
+                    if AppDefaults.standard.isNoosphereEnabled {
+                        AudienceMenuButtonView(
+                            audience: Binding(
+                                get: { state.audience },
+                                send: send,
+                                tag: DetailMetaSheetAction.requestUpdateAudience
+                            )
                         )
-                    )
+                    }
                 }
                 Spacer()
                 CloseButtonView(action: { dismiss() })

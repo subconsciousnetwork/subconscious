@@ -7,6 +7,7 @@
 
 import SwiftUI
 import ObservableStore
+import CodeScanner
 
 struct FollowUserView: View {
     var state: AddressBookModel
@@ -14,6 +15,15 @@ struct FollowUserView: View {
         get { state.followUserForm }
     }
     var send: (AddressBookAction) -> Void
+    
+    func onQRCodeScanResult(res: Result<ScanResult, ScanError>) {
+        switch res {
+        case .success(let result):
+            send(.qrCodeScanned(scannedContent: result.string))
+        case .failure(let error):
+            send(.qrCodeScanError(error: error.localizedDescription))
+        }
+    }
     
     var body: some View {
         NavigationStack {
@@ -64,6 +74,23 @@ struct FollowUserView: View {
                             .disableAutocorrection(true)
                         }
                     }
+                    
+                    if Config.default.addByQRCode {
+                        Section(header: Text("Add via QR Code")) {
+                            Button(
+                                action: {
+                                    send(.presentQRCodeScanner(true))
+                                },
+                                label: {
+                                    HStack {
+                                        Image(systemName: "qrcode")
+                                        Text("Scan Code")
+                                    }
+                                    .foregroundColor(.accentColor)
+                                }
+                            )
+                        }
+                    }
                 }
             }
             .navigationTitle("Follow User")
@@ -89,6 +116,19 @@ struct FollowUserView: View {
                 Alert(
                     title: Text("Failed to Follow User"),
                     message: Text(state.failFollowErrorMessage ?? "An unknown error ocurred")
+                )
+            }
+            .fullScreenCover(
+                isPresented: Binding(
+                    get: { state.isQrCodeScannerPresented && Config.default.addByQRCode },
+                    send: send,
+                    tag: AddressBookAction.presentQRCodeScanner
+                )
+            ) {
+                FollowUserViaQRCodeView(
+                    onScanResult: onQRCodeScanResult,
+                    onCancel: { send(.presentQRCodeScanner(false)) },
+                    errorMessage: state.failQRCodeScanErrorMessage
                 )
             }
         }

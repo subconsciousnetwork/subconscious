@@ -89,6 +89,10 @@ enum AddressBookAction {
     case presentFollowUserForm(_ isPresented: Bool)
     case didField(FormFieldAction<String>)
     case petnameField(FormFieldAction<String>)
+
+    case presentQRCodeScanner(_ isPresented: Bool)
+    case qrCodeScanned(scannedContent: String)
+    case qrCodeScanError(error: String)
 }
 
 struct AddressBookModel: ModelProtocol {
@@ -101,8 +105,11 @@ struct AddressBookModel: ModelProtocol {
     
     var failFollowErrorMessage: String? = nil
     var failUnfollowErrorMessage: String? = nil
+    var failQRCodeScanErrorMessage: String? = nil
     
     var unfollowCandidate: Petname? = nil
+    
+    var isQrCodeScannerPresented = false
 
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -191,6 +198,7 @@ struct AddressBookModel: ModelProtocol {
                 ],
                 environment: environment
             )
+
             
         case .attemptFollow:
             guard let did = state.followUserForm.did.validated else {
@@ -203,7 +211,7 @@ struct AddressBookModel: ModelProtocol {
             guard !state.follows.contains(where: { f in f.did == did }) else {
                 return update(
                     state: state,
-                    action: .failFollow(error: "Already following user"),
+                    action: .failFollow(error: AddressBookError.alreadyFollowing.localizedDescription),
                     environment: environment
                 )
             }
@@ -296,6 +304,29 @@ struct AddressBookModel: ModelProtocol {
             var model = state
             model.failUnfollowErrorMessage = nil
             return Update(state: model)
+        
+        case .presentQRCodeScanner(let isPresented):
+            var model = state
+            model.failQRCodeScanErrorMessage = nil
+            model.isQrCodeScannerPresented = isPresented
+            return Update(state: model)
+        
+        case .qrCodeScanned(scannedContent: let content):
+            return update(
+                state: state,
+                actions: [
+                    .didField(.markAsTouched),
+                    .didField(.setValue(input: content))
+                ],
+                environment: environment
+            )
+            
+        case .qrCodeScanError(error: let error):
+            var model = state
+            model.failQRCodeScanErrorMessage = error
+            return Update(state: model)
+            
         }
+        
     }
 }
