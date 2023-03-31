@@ -113,7 +113,7 @@ struct UserProfileDetailMetaSheet: View {
     @Environment(\.dismiss) private var dismiss
     var state: UserProfileDetailMetaSheetModel
     var profile: UserProfileDetailModel
-    var followingUser: Bool
+    var isFollowingUser: Bool
     var send: (UserProfileDetailMetaSheetAction) -> Void
     
     var body: some View {
@@ -147,7 +147,7 @@ struct UserProfileDetailMetaSheet: View {
                             
                             // None of these actions make sense to apply to yourself
                             if user.category != .you {
-                                if followingUser {
+                                if isFollowingUser {
                                     MetaTableItemButtonView(
                                         label: "Unfollow",
                                         systemImage: "person.2.slash",

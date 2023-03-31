@@ -92,7 +92,7 @@ struct UserProfileDetailModel: ModelProtocol {
         bio: String.dummyDataMedium(),
         category: .human
     )
-    var followingUser: Bool = false
+    var isFollowingUser: Bool = Bool.dummyData()
     
     var recentEntries: [EntryStub] = (1...10).map { _ in
         EntryStub.dummyData()
@@ -122,7 +122,7 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
-            
+           
         case .populate(let user, let statistics):
             var model = state
             model.user = user

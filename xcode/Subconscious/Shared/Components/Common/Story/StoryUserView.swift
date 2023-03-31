@@ -27,7 +27,7 @@ struct StoryUserView: View {
                     UserProfileHeaderView(
                         user: story.user,
                         statistics: story.statistics,
-                        following: story.following
+                        isFollowingUser: story.following
                     )
                 }
                 .padding()

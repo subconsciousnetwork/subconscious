@@ -19,7 +19,7 @@ struct UserProfileHeaderView: View {
     var user: UserProfile
     var statistics: UserProfileStatistics?
     
-    var following: Bool
+    var isFollowingUser: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
@@ -49,7 +49,7 @@ struct UserProfileHeaderView: View {
                     .buttonStyle(PillButtonStyle(size: .small))
                     .frame(maxWidth: 160)
                 } else {
-                    if following {
+                    if isFollowingUser {
                         Button(action: {}, label: {
                             Label("Following", systemImage: "person.fill.checkmark")
                         })
@@ -63,8 +63,6 @@ struct UserProfileHeaderView: View {
                         .frame(maxWidth: 160)
                     }
                 }
-                
-                
             }
             
             if let statistics = statistics {
@@ -87,16 +85,16 @@ struct BylineLgView_Previews: PreviewProvider {
         VStack {
             UserProfileHeaderView(
                 user: UserProfile(did: Did("did:key:123")!, petname: Petname("ben")!, pfp: "pfp-dog", bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.", category: .human),
-                following: false
+                isFollowingUser: false
             )
             UserProfileHeaderView(
                 user: UserProfile(did: Did("did:key:123")!, petname: Petname("ben")!, pfp: "pfp-dog", bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.", category: .geist),
                 statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19),
-                following: true
+                isFollowingUser: true
             )
             UserProfileHeaderView(
                 user: UserProfile(did: Did("did:key:123")!, petname: Petname("ben")!, pfp: "pfp-dog", bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.", category: .you),
-                following: false
+                isFollowingUser: false
             )
         }
     }

@@ -76,7 +76,7 @@ struct UserProfileView: View {
                 UserProfileHeaderView(
                     user: user,
                     statistics: state.statistics,
-                    following: false
+                    isFollowingUser: state.isFollowingUser
                 )
                 .padding(AppTheme.padding)
             }
@@ -91,7 +91,7 @@ struct UserProfileView: View {
                 }
             )
         }
-        .navigationTitle(state.user?.petname.verbatim ?? "unknown")
+        .navigationTitle(state.user?.petname.verbatim ?? "loading...")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             if let user = state.user {
@@ -114,7 +114,7 @@ struct UserProfileView: View {
             UserProfileDetailMetaSheet(
                 state: state.metaSheet,
                 profile: state,
-                followingUser: state.followingUser,
+                isFollowingUser: state.isFollowingUser,
                 send: Address.forward(
                     send: send,
                     tag: UserProfileDetailMetaSheetCursor.tag
