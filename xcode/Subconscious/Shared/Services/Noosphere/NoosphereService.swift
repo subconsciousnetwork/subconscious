@@ -54,7 +54,7 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
     /// Identity of default sphere
     private var _sphereIdentity: String?
     /// Memoized Sphere instance
-    private var _sphere: SphereFS?
+    private var _sphere: Sphere?
     
     init(
         globalStorageURL: URL,
@@ -108,7 +108,7 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         }
     }
     
-    /// Reset managed instances of Noosphere and SphereFS
+    /// Reset managed instances of Noosphere and Sphere
     func reset() {
         queue.sync {
             logger.debug("Reset memoized instances of Noosphere and Sphere")
@@ -133,7 +133,7 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
     }
     
     /// Get or open default Sphere.
-    private func sphere() throws -> SphereFS {
+    private func sphere() throws -> Sphere {
         if let sphere = self._sphere {
             return sphere
         }
@@ -141,8 +141,8 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
             throw NoosphereServiceError.defaultSphereNotFound
         }
         let noosphere = try noosphere()
-        logger.debug("init SphereFS with identity: \(identity)")
-        let sphere = try SphereFS(
+        logger.debug("init Sphere with identity: \(identity)")
+        let sphere = try Sphere(
             noosphere: noosphere,
             identity: identity
         )

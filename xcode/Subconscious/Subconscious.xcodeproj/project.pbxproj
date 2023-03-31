@@ -142,7 +142,7 @@
 		B86E943329AFD5680073929B /* SubtextTextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86E943229AFD5680073929B /* SubtextTextViewRepresentable.swift */; };
 		B86F1AB728C77E8C00DA264E /* Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86F1AB628C77E8C00DA264E /* Search.swift */; };
 		B87288DC299AB01800EF7E07 /* Noosphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DB299AB01800EF7E07 /* Noosphere.swift */; };
-		B87288DE299AB02400EF7E07 /* SphereFS.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DD299AB02400EF7E07 /* SphereFS.swift */; };
+		B87288DE299AB02400EF7E07 /* Sphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DD299AB02400EF7E07 /* Sphere.swift */; };
 		B87288E0299B05B500EF7E07 /* Tests_DataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87288DF299B05B500EF7E07 /* Tests_DataService.swift */; };
 		B884565329D2102D00DBCD39 /* Tests_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B884565229D2102D00DBCD39 /* Tests_App.swift */; };
 		B886A9B829A7E41700BFF9A2 /* Tests_MemoAddress.swift in Sources */ = {isa = PBXBuildFile; fileRef = B886A9B729A7E41700BFF9A2 /* Tests_MemoAddress.swift */; };
@@ -336,7 +336,7 @@
 		B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */; };
 		B8EF986E29034ADF0029363D /* Pathlike.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EF986D29034ADF0029363D /* Pathlike.swift */; };
 		B8EF986F29034ADF0029363D /* Pathlike.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EF986D29034ADF0029363D /* Pathlike.swift */; };
-		B8F27EE42970CD8F00A33E78 /* Tests_SphereFS.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F27EE32970CD8F00A33E78 /* Tests_SphereFS.swift */; };
+		B8F27EE42970CD8F00A33E78 /* Tests_Sphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F27EE32970CD8F00A33E78 /* Tests_Sphere.swift */; };
 		B8F832E329B9292C00DFDFA8 /* Tests_SubtextAttributedStringRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F832E229B9292C00DFDFA8 /* Tests_SubtextAttributedStringRenderer.swift */; };
 /* End PBXBuildFile section */
 
@@ -458,7 +458,7 @@
 		B86E943229AFD5680073929B /* SubtextTextViewRepresentable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SubtextTextViewRepresentable.swift; path = Shared/Components/Common/SubtextTextViewRepresentable.swift; sourceTree = SOURCE_ROOT; };
 		B86F1AB628C77E8C00DA264E /* Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Search.swift; sourceTree = "<group>"; };
 		B87288DB299AB01800EF7E07 /* Noosphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Noosphere.swift; sourceTree = "<group>"; };
-		B87288DD299AB02400EF7E07 /* SphereFS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SphereFS.swift; sourceTree = "<group>"; };
+		B87288DD299AB02400EF7E07 /* Sphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sphere.swift; sourceTree = "<group>"; };
 		B87288DF299B05B500EF7E07 /* Tests_DataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_DataService.swift; sourceTree = "<group>"; };
 		B884565229D2102D00DBCD39 /* Tests_App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_App.swift; sourceTree = "<group>"; };
 		B886A9B729A7E41700BFF9A2 /* Tests_MemoAddress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_MemoAddress.swift; sourceTree = "<group>"; };
@@ -593,7 +593,7 @@
 		B8EB2A1D26F27797006E97C3 /* Tests_macOSLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_macOSLaunchTests.swift; sourceTree = "<group>"; };
 		B8EC568826F4204F00AC64E5 /* SQLite3Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLite3Database.swift; sourceTree = "<group>"; };
 		B8EF986D29034ADF0029363D /* Pathlike.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pathlike.swift; sourceTree = "<group>"; };
-		B8F27EE32970CD8F00A33E78 /* Tests_SphereFS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_SphereFS.swift; sourceTree = "<group>"; };
+		B8F27EE32970CD8F00A33E78 /* Tests_Sphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Sphere.swift; sourceTree = "<group>"; };
 		B8F832E229B9292C00DFDFA8 /* Tests_SubtextAttributedStringRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_SubtextAttributedStringRenderer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -700,7 +700,7 @@
 				B8AAAADA28CBDED800DBC8A9 /* Tests_Search.swift */,
 				B8A617212971E4860054D410 /* Tests_Slashlink.swift */,
 				B80057F327DC35BE002C0129 /* Tests_Slug.swift */,
-				B8F27EE32970CD8F00A33E78 /* Tests_SphereFS.swift */,
+				B8F27EE32970CD8F00A33E78 /* Tests_Sphere.swift */,
 				B80CC806299D4DF000C4D7C0 /* Tests_SQLite3Database.swift */,
 				B84AD8E0280F7A19006B3153 /* Tests_StringUtilities.swift */,
 				B8682DCA2804BF04001CD8DD /* Tests_Subtext.swift */,
@@ -761,7 +761,7 @@
 			children = (
 				B87288DB299AB01800EF7E07 /* Noosphere.swift */,
 				B8E1BB7A296DEF3200B86E0E /* NoosphereService.swift */,
-				B87288DD299AB02400EF7E07 /* SphereFS.swift */,
+				B87288DD299AB02400EF7E07 /* Sphere.swift */,
 			);
 			path = Noosphere;
 			sourceTree = "<group>";
@@ -1352,7 +1352,7 @@
 				B8E62AE829D61E69008F7E74 /* Tests_UserDefaultProperty.swift in Sources */,
 				B8C7E8C0280A2B7700E439DC /* Test_Markup.swift in Sources */,
 				B80CC805299D14C900C4D7C0 /* Tests_Memo.swift in Sources */,
-				B8F27EE42970CD8F00A33E78 /* Tests_SphereFS.swift in Sources */,
+				B8F27EE42970CD8F00A33E78 /* Tests_Sphere.swift in Sources */,
 				B82BB7FE28243F32000C9FCC /* Tests_Parser.swift in Sources */,
 				B84AD8E82811C827006B3153 /* Tests_URLComponentsUtilities.swift in Sources */,
 				B87288E0299B05B500EF7E07 /* Tests_DataService.swift in Sources */,
@@ -1453,7 +1453,7 @@
 				B8B604E629146DF6006FCB77 /* MemoryStore.swift in Sources */,
 				B8DEBF192798B6A8007CB528 /* NavigationToolbar.swift in Sources */,
 				B822F18D27C9C0AB00943C6B /* CountChip.swift in Sources */,
-				B87288DE299AB02400EF7E07 /* SphereFS.swift in Sources */,
+				B87288DE299AB02400EF7E07 /* Sphere.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */,
 				B5F6ADC929C02F4A00690DE4 /* AddressBookService.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */,
@@ -2207,7 +2207,7 @@
 			repositoryURL = "https://github.com/subconsciousnetwork/noosphere";
 			requirement = {
 				kind = revision;
-				revision = 44f71e57918e0e8ca8d806db0aff82ff5ed0a5ba;
+				revision = 16fa036a1c499678afdc39dfbdb6f0e6fcfe01ee;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
