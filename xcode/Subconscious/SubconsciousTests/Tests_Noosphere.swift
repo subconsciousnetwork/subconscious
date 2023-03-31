@@ -20,7 +20,7 @@ final class Tests_Noosphere: XCTestCase {
         
         XCTAssertThrowsError(
             try Noosphere.callWithError(
-                ns_sphere_fs_open,
+                ns_sphere_open,
                 noosphere,
                 bad_sphere_identity
             )
