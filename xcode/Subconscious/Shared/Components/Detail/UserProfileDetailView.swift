@@ -31,7 +31,6 @@ struct UserProfileDetailView: View {
         UserProfileView(
             state: store.state,
             send: store.send,
-            entries: store.state.articles,
             onNavigateToNote: self.onNavigateToNote,
             onNavigateToUser: self.onNavigateToUser
         )
@@ -95,14 +94,21 @@ struct UserProfileDetailModel: ModelProtocol {
     )
     var followingUser: Bool = false
     
+    var recentEntries: [EntryStub] = (1...10).map { _ in
+        EntryStub.dummyData()
+    }
+    var topEntries: [EntryStub] = (1...10).map { _ in
+        EntryStub.dummyData()
+    }
+    var following: [StoryUser] = (1...10).map { _ in
+        StoryUser.dummyData()
+    }
+    
     var statistics: UserProfileStatistics? = UserProfileStatistics(
         noteCount: 123,
         backlinkCount: 64,
         followingCount: 19
     )
-    
-    
-    var articles: [EntryStub] = generateEntryStubs(petname: "ben", count: 10)
 
     static func update(
         state: Self,
@@ -136,23 +142,6 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.isMetaSheetPresented = presented
             return Update(state: model)
-        }
-    }
-    
-    static func generateEntryStubs(petname: String, count: Int) -> [EntryStub] {
-        let excerpts = [
-            "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle. Snufflewumpus, indeed!",
-            "Quibbling frizznips flabbled with snerkling snarklewinks, creating a glorptastic kerfuffle.",
-            "Frobbly zingledorp spluttered, \"Wibbly-wabbly zorptang, snigglefritz me dooflebop!\" Skrinkle-plonk went the sploofinator, gorfing jibberjabberly amidst the blibber-blabber..",
-        ]
-        
-        return (1...count).map { index in
-            let slashlink = Slashlink("@\(petname)/article-\(index)")!
-            let address = slashlink.toPublicMemoAddress()
-            let excerpt = excerpts[index % excerpts.count]
-            let modified = Date().addingTimeInterval(TimeInterval(-86400 * index))
-            
-            return EntryStub(address: address, excerpt: excerpt, modified: modified)
         }
     }
 }

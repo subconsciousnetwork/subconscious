@@ -24,68 +24,67 @@ struct ProfileStatisticView: View {
 struct UserProfileView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
-    let entries: [EntryStub]
     
     let onNavigateToNote: (MemoAddress) -> Void
     let onNavigateToUser: (MemoAddress) -> Void
     
     var body: some View {
-        let columnA = TabbedColumnItem(
+        let columnRecent = TabbedColumnItem(
             label: "Recent",
             view:
                 Group {
-                    ForEach(entries, id: \.id) { entry in
+                    ForEach(state.recentEntries, id: \.id) { entry in
                         StoryPlainView(
                             story: StoryPlain(entry: entry),
                             action: { address, excerpt in onNavigateToNote(address) }
                         )
                     }
-                    Button(action: {}, label: { Text("More...") })
                 }
             
         )
         
-        let columnB = TabbedColumnItem(
+        let columnTop = TabbedColumnItem(
             label: "Top",
             view:
                 Group {
-                    ForEach(entries, id: \.id) { entry in
+                    ForEach(state.topEntries, id: \.id) { entry in
                         StoryPlainView(
                             story: StoryPlain(entry: entry),
                             action: { address, excerpt in onNavigateToNote(address) }
                         )
                     }
-                    Button(action: {}, label: { Text("More...") })
                 }
             
         )
          
-        let columnC = TabbedColumnItem(
+        let columnFollowing = TabbedColumnItem(
             label: "Following",
             view:
                 Group {
-                    ForEach(0..<30) {_ in
+                    ForEach(state.following, id: \.user.did) { follow in
                         StoryUserView(
-                            story: StoryUser.dummyData(),
+                            story: follow,
                             action: { address, _ in onNavigateToUser(address) }
                         )
                     }
-                    
-                    Button(action: {}, label: { Text("View All") })
                 }
             
         )
         
         VStack(alignment: .leading, spacing: 0) {
             if let user = state.user {
-                UserProfileHeaderView(user: user, statistics: state.statistics, following: false)
-                    .padding(AppTheme.padding)
+                UserProfileHeaderView(
+                    user: user,
+                    statistics: state.statistics,
+                    following: false
+                )
+                .padding(AppTheme.padding)
             }
             
             TabbedThreeColumnView(
-                columnA: columnA,
-                columnB: columnB,
-                columnC: columnC,
+                columnA: columnRecent,
+                columnB: columnTop,
+                columnC: columnFollowing,
                 selectedColumnIndex: state.selectedTabIndex,
                 changeColumn: { index in
                     send(.tabIndexSelected(index))
@@ -130,7 +129,6 @@ struct UserProfileView_Previews: PreviewProvider {
         UserProfileView(
             state: UserProfileDetailModel(isMetaSheetPresented: false),
             send: { _ in },
-            entries: UserProfileDetailModel.generateEntryStubs(petname: "ben", count: 10),
             onNavigateToNote: { _ in print("navigate to note") },
             onNavigateToUser: { _ in print("navigate to user") }
         )
