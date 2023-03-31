@@ -15,6 +15,7 @@ struct AppView: View {
     /// Store for global application state
     @StateObject private var store = Store(
         state: AppModel(),
+        action: .start,
         environment: AppEnvironment.default
     )
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
@@ -31,7 +32,10 @@ struct AppView: View {
             .zIndex(0)
             if (store.state.shouldPresentFirstRun) {
                 FirstRunView(app: store)
-                    .animation(.default, value: store.state.shouldPresentFirstRun)
+                    .animation(
+                        .default,
+                        value: store.state.shouldPresentFirstRun
+                    )
                     .zIndex(1)
             }
         }
@@ -78,6 +82,9 @@ struct AppView: View {
 
 //  MARK: Action
 enum AppAction: CustomLogStringConvertible {
+    /// Sent immediately upon store creation
+    case start
+
     case recoveryPhrase(RecoveryPhraseAction)
     case addressBook(AddressBookAction)
 
@@ -103,6 +110,12 @@ enum AppAction: CustomLogStringConvertible {
     case setSphereIdentity(String?)
     /// Fetch the latest sphere version, and store on model
     case refreshSphereVersion
+
+    /// Set and persist Noosphere enabled state
+    case persistNoosphereEnabled(_ isEnabled: Bool)
+    /// Handle changes to AppDefaults.standard.isNoosphereEnabled, and
+    /// sync the value to our store state.
+    case notifyNoosphereEnabled(_ isEnabled: Bool)
 
     /// Set and persist first run complete state
     case persistFirstRunComplete(_ isComplete: Bool)
@@ -225,9 +238,28 @@ enum GatewaySyncStatus: Equatable {
 struct AppModel: ModelProtocol {
     /// Is database connected and migrated?
     var databaseState = AppDatabaseState.initial
+
+    /// Is Noosphere enabled?
+    /// We assign UserDefault property to model property at startup.
+    /// This property is changed via `persistNoosphereEnabled`, which will
+    /// update both the model property (triggering a view re-render)
+    /// and persist the new value to UserDefaults.
+    var isNoosphereEnabled = AppDefaults.standard.isNoosphereEnabled
+
+    /// Has first run completed?
+    /// We assign UserDefault property to model property at startup.
+    /// This property is changed via `persistFirstRunComplete`, which will
+    /// update both the model property (triggering a view re-render)
+    /// and persist the new value to UserDefaults.
+    var isFirstRunComplete = AppDefaults.standard.firstRunComplete
+
     /// Should first run show?
-    /// Distinct from whether first run has actually run.
-    var shouldPresentFirstRun = !AppDefaults.standard.firstRunComplete
+    var shouldPresentFirstRun: Bool {
+        guard isNoosphereEnabled else {
+            return false
+        }
+        return !isFirstRunComplete
+    }
 
     var nickname = AppDefaults.standard.nickname
     var nicknameTextField = AppDefaults.standard.nickname ?? ""
@@ -274,6 +306,11 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         switch action {
+        case .start:
+            return start(
+                state: state,
+                environment: environment
+            )
         case .recoveryPhrase(let action):
             return AppRecoveryPhraseCursor.update(
                 state: state,
@@ -334,6 +371,18 @@ struct AppModel: ModelProtocol {
             return refreshSphereVersion(
                 state: state,
                 environment: environment
+            )
+        case let .persistNoosphereEnabled(isEnabled):
+            return persistNoosphereEnabled(
+                state: state,
+                environment: environment,
+                isEnabled: isEnabled
+            )
+        case let .notifyNoosphereEnabled(isEnabled):
+            return notifyNoosphereEnabled(
+                state: state,
+                environment: environment,
+                isEnabled: isEnabled
             )
         case let .persistFirstRunComplete(isComplete):
             return persistFirstRunComplete(
@@ -442,6 +491,17 @@ struct AppModel: ModelProtocol {
         return Update(state: state)
     }
     
+    static func start(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        // Subscribe to changes in AppDefaults.isNoosphereEnabled
+        let fx: Fx<AppAction> = AppDefaults.standard.$isNoosphereEnabled
+            .map(AppAction.notifyNoosphereEnabled)
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
     /// Handle scene phase change
     static func scenePhaseChange(
         state: AppModel,
@@ -470,6 +530,12 @@ struct AppModel: ModelProtocol {
         let sphereIdentity = state.sphereIdentity ?? "Unknown"
         logger.debug(
             "Sphere ID: \(sphereIdentity)"
+        )
+        logger.debug(
+            "Sphere ID: \(sphereIdentity)"
+        )
+        logger.debug(
+            "Noosphere enabled? \(AppDefaults.standard.isNoosphereEnabled)"
         )
         return update(
             state: state,
@@ -609,6 +675,35 @@ struct AppModel: ModelProtocol {
         return Update(state: model)
     }
 
+    /// Persist Noosphere enabled state.
+    /// Note that this updates the model state (triggering a re-render),
+    /// and ALSO perists the state to UserDefaults.
+    static func persistNoosphereEnabled(
+        state: AppModel,
+        environment: AppEnvironment,
+        isEnabled: Bool
+    ) -> Update<AppModel> {
+        // Persist setting to UserDefaults
+        AppDefaults.standard.isNoosphereEnabled = isEnabled
+        var model = state
+        model.isNoosphereEnabled = isEnabled
+        return Update(state: model)
+    }
+
+    /// Update model to match persisted enabled state.
+    /// A notification is generated for every
+    /// This will take care of cases where the enabled state has been set
+    /// in some other place outside of our store.
+    static func notifyNoosphereEnabled(
+        state: AppModel,
+        environment: AppEnvironment,
+        isEnabled: Bool
+    ) -> Update<AppModel> {
+        var model = state
+        model.isNoosphereEnabled = isEnabled
+        return Update(state: model)
+    }
+
     /// Persist first run complete state
     static func persistFirstRunComplete(
         state: AppModel,
@@ -617,11 +712,9 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         // Persist value
         AppDefaults.standard.firstRunComplete = isComplete
-        // Update state
         var model = state
-        model.shouldPresentFirstRun = !isComplete
-        return Update(state: model)
-            .animation(.default)
+        model.isFirstRunComplete = isComplete
+        return Update(state: model).animation(.default)
     }
 
     /// Reset NoosphereService managed instances of `Noosphere` and `SphereFS`.

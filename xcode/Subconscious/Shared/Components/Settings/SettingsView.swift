@@ -80,57 +80,60 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Noosphere")) {
-                    NavigationLink(
-                        destination: {
-                            ProfileSettingsView(app: app)
-                        },
-                        label: {
-                            LabeledContent(
-                                "Nickname",
-                                value: app.state.nickname ?? ""
-                            )
-                            .lineLimit(1)
-                            .textSelection(.enabled)
-                        }
-                    )
-                    LabeledContent(
-                        "Sphere",
-                        value: app.state.sphereIdentity ?? unknown
-                    )
-                    .lineLimit(1)
-                    .textSelection(.enabled)
-                    LabeledContent(
-                        "Version",
-                        value: app.state.sphereVersion ?? unknown
-                    )
-                    .lineLimit(1)
-                    .textSelection(.enabled)
-                }
-                
-                Section(header: Text("Gateway")) {
-                    NavigationLink(
-                        destination: {
-                            GatewayURLSettingsView(app: app)
-                        },
-                        label: {
-                            LabeledContent(
-                                "Gateway",
-                                value: app.state.gatewayURL
-                            )
-                            .lineLimit(1)
-                        }
-                    )
-                    Button(
-                        action: {
-                            app.send(.syncSphereWithGateway)
-                        },
-                        label: {
-                            GatewaySyncLabel(status: app.state.lastGatewaySyncStatus)
-                        }
-                    )
-                }
+                if app.state.isNoosphereEnabled {
+                    Section(header: Text("Noosphere")) {
+                        NavigationLink(
+                            destination: {
+                                ProfileSettingsView(app: app)
+                            },
+                            label: {
+                                LabeledContent(
+                                    "Nickname",
+                                    value: app.state.nickname ?? ""
+                                )
+                                .lineLimit(1)
+                                .textSelection(.enabled)
+                            }
+                        )
+                        LabeledContent(
+                            "Sphere",
+                            value: app.state.sphereIdentity ?? unknown
+                        )
+                        .lineLimit(1)
+                        .textSelection(.enabled)
+                        LabeledContent(
+                            "Version",
+                            value: app.state.sphereVersion ?? unknown
+                        )
+                        .lineLimit(1)
+                        .textSelection(.enabled)
+                    }
 
+                    Section(header: Text("Gateway")) {
+                        NavigationLink(
+                            destination: {
+                                GatewayURLSettingsView(app: app)
+                            },
+                            label: {
+                                LabeledContent(
+                                    "Gateway",
+                                    value: app.state.gatewayURL
+                                )
+                                .lineLimit(1)
+                            }
+                        )
+                        Button(
+                            action: {
+                                app.send(.syncSphereWithGateway)
+                            },
+                            label: {
+                                GatewaySyncLabel(
+                                    status: app.state.lastGatewaySyncStatus
+                                )
+                            }
+                        )
+                    }
+                }
                 Section {
                     NavigationLink("Developer Settings") {
                         DeveloperSettingsView(app: app)
