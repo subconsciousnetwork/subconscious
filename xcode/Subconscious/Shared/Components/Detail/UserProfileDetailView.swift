@@ -86,10 +86,10 @@ struct UserProfileDetailModel: ModelProtocol {
     var isMetaSheetPresented = false
     
     var user: UserProfile? = UserProfile(
-        did: Did("did:key:123")!,
-        petname: Petname("ben")!,
+        did: Did.dummyData(),
+        petname: Petname.dummyData(),
         pfp: "pfp-dog",
-        bio: "Henlo world.",
+        bio: String.dummyDataMedium(),
         category: .human
     )
     var followingUser: Bool = false
@@ -105,9 +105,9 @@ struct UserProfileDetailModel: ModelProtocol {
     }
     
     var statistics: UserProfileStatistics? = UserProfileStatistics(
-        noteCount: 123,
-        backlinkCount: 64,
-        followingCount: 19
+        noteCount: Int.random(in: 0..<999),
+        backlinkCount: Int.random(in: 0..<999),
+        followingCount: Int.random(in: 0..<99)
     )
 
     static func update(
@@ -122,15 +122,11 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
+            
         case .populate(let user, let statistics):
             var model = state
             model.user = user
             model.statistics = statistics
-            
-            // TODO: move this to the model init when we can init using a closure https://github.com/subconsciousnetwork/ObservableStore/pull/30
-            if user.category == .you {
-                model.selectedTabIndex = 2
-            }
             
             return Update(state: model)
             
@@ -138,6 +134,7 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.selectedTabIndex = index
             return Update(state: model)
+            
         case .presentMetaSheet(let presented):
             var model = state
             model.isMetaSheetPresented = presented

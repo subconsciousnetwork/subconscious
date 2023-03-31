@@ -48,17 +48,28 @@ extension StoryUser: DummyData {
     }
 }
 
-extension EntryStub: DummyData {
-    static func dummyData() -> EntryStub {
+extension String {
+    static func dummyDataShort() -> String {
+        let letters = "abcdefghijklmnopqrstuvwxyz-_0123456789"
+        return String((0..<12).map{ _ in letters.randomElement()! })
+    }
+    
+    static func dummyDataMedium() -> String {
         let excerpts = [
             "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle. Snufflewumpus, indeed!",
             "Quibbling frizznips flabbled with snerkling snarklewinks, creating a glorptastic kerfuffle.",
             "Frobbly zingledorp spluttered, \"Wibbly-wabbly zorptang, snigglefritz me dooflebop!\" Skrinkle-plonk went the sploofinator, gorfing jibberjabberly amidst the blibber-blabber..",
         ]
         
+        return excerpts.randomElement()!
+    }
+}
+
+extension EntryStub: DummyData {
+    static func dummyData() -> EntryStub {
         let slashlink = Slashlink("@\(Petname.dummyData())/article-\(Int.random(in: 0..<99))")!
         let address = slashlink.toPublicMemoAddress()
-        let excerpt = excerpts.randomElement()!
+        let excerpt = String.dummyDataMedium()
         let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
         
         return EntryStub(address: address, excerpt: excerpt, modified: modified)
