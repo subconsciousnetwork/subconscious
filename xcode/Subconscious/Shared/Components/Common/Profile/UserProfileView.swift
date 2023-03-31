@@ -66,7 +66,7 @@ struct UserProfileView: View {
                 Group {
                     ForEach(0..<30) {_ in
                         StoryUserView(
-                            story: StoryUser.generateRandomTestInstance(),
+                            story: StoryUser.dummyData(),
                             action: { address, _ in onNavigateToUser(address) }
                         )
                     }
