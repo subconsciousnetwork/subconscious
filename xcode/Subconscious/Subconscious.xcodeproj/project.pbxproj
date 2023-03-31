@@ -1030,6 +1030,7 @@
 			children = (
 				B584814029AC32550033F434 /* AddressBook */,
 				B82F053628D60EE60025A8B5 /* AppTabView.swift */,
+				B8DA32B429CB999500EA166E /* AppUpgradeView.swift */,
 				B8EB29F526F27794006E97C3 /* AppView.swift */,
 				B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */,
 				B8EC568426F41A2C00AC64E5 /* Common */,
@@ -1039,7 +1040,6 @@
 				B8AE34C4276BF72500777FF0 /* LinkSearchView.swift */,
 				B87288E1299C02BA00EF7E07 /* Notebook */,
 				B8545F09296F8FB700BC4EA1 /* OmniboxView.swift */,
-				B8DA32B429CB999500EA166E /* AppUpgradeView.swift */,
 				B88B1CDC298DE65E0062CB7F /* Settings */,
 			);
 			path = Components;
