@@ -717,7 +717,7 @@ struct AppModel: ModelProtocol {
         return Update(state: model).animation(.default)
     }
 
-    /// Reset NoosphereService managed instances of `Noosphere` and `SphereFS`.
+    /// Reset NoosphereService managed instances of `Noosphere` and `Sphere`.
     static func resetNoosphereService(
         state: AppModel,
         environment: AppEnvironment

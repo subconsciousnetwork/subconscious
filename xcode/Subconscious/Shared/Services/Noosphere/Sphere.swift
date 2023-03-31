@@ -1,5 +1,5 @@
 //
-//  SphereFS.swift
+//  Sphere.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 2/13/23.
@@ -10,7 +10,7 @@ import SwiftNoosphere
 import os
 
 /// Describes a Sphere.
-/// See `SphereFS` for a concrete implementation.
+/// See `Sphere` for a concrete implementation.
 public protocol SphereProtocol {
     associatedtype Memo
     
@@ -66,26 +66,26 @@ enum SphereFSError: Error, LocalizedError {
 
 /// Sphere file system access.
 /// Provides sphere file system methods and manages lifetime of sphere pointer.
-public final class SphereFS: SphereProtocol {
+public final class Sphere: SphereProtocol {
     private let logger = Logger(
         subsystem: Config.default.rdns,
-        category: "SphereFS"
+        category: "Sphere"
     )
     private let noosphere: Noosphere
-    public let fs: OpaquePointer
+    public let sphere: OpaquePointer
     public let identity: String
     
     init(noosphere: Noosphere, identity: String) throws {
         self.noosphere = noosphere
         self.identity = identity
         guard let fs = try Noosphere.callWithError(
-            ns_sphere_fs_open,
+            ns_sphere_open,
             noosphere.noosphere,
             identity
         ) else {
             throw NoosphereError.nullPointer
         }
-        self.fs = fs
+        self.sphere = fs
         logger.debug("init with identity: \(identity)")
     }
     
@@ -111,9 +111,9 @@ public final class SphereFS: SphereProtocol {
         name: String
     ) -> String? {
         guard let file = try? Noosphere.callWithError(
-            ns_sphere_fs_read,
+            ns_sphere_content_read,
             noosphere.noosphere,
-            fs,
+            sphere,
             slashlink
         ) else {
             return nil
@@ -131,9 +131,9 @@ public final class SphereFS: SphereProtocol {
     /// content of this sphere file.
     public func getFileVersion(slashlink: String) -> String? {
         guard let file = try? Noosphere.callWithError(
-            ns_sphere_fs_read,
+            ns_sphere_content_read,
             noosphere.noosphere,
-            fs,
+            sphere,
             slashlink
         ) else {
             return nil
@@ -153,9 +153,9 @@ public final class SphereFS: SphereProtocol {
     /// Read all header names for a given slashlink
     public func readHeaderNames(slashlink: String) -> [String] {
         guard let file = try? Noosphere.callWithError(
-            ns_sphere_fs_read,
+            ns_sphere_content_read,
             noosphere.noosphere,
-            fs,
+            sphere,
             slashlink
         ) else {
             return []
@@ -170,9 +170,9 @@ public final class SphereFS: SphereProtocol {
     /// - Returns: `Memo`
     public func read(slashlink: String) throws -> MemoData {
         guard let file = try Noosphere.callWithError(
-            ns_sphere_fs_read,
+            ns_sphere_content_read,
             noosphere.noosphere,
-            fs,
+            sphere,
             slashlink
         ) else {
             throw SphereFSError.fileDoesNotExist(slashlink)
@@ -251,9 +251,9 @@ public final class SphereFS: SphereProtocol {
             }
             
             try Noosphere.callWithError { error in
-                ns_sphere_fs_write(
+                ns_sphere_content_write(
                     noosphere.noosphere,
-                    fs,
+                    sphere,
                     slug,
                     contentType,
                     bodyRaw,
@@ -268,7 +268,7 @@ public final class SphereFS: SphereProtocol {
         let name = try Noosphere.callWithError(
             ns_sphere_petname_get,
             noosphere.noosphere,
-            fs,
+            sphere,
             petname
         )
         
@@ -286,7 +286,7 @@ public final class SphereFS: SphereProtocol {
         try Noosphere.callWithError(
             ns_sphere_petname_set,
             noosphere.noosphere,
-            fs,
+            sphere,
             petname,
             did
         )
@@ -296,7 +296,7 @@ public final class SphereFS: SphereProtocol {
         try Noosphere.callWithError(
             ns_sphere_petname_set,
             noosphere.noosphere,
-            fs,
+            sphere,
             petname,
             nil
         )
@@ -306,7 +306,7 @@ public final class SphereFS: SphereProtocol {
         let did = try Noosphere.callWithError(
             ns_sphere_petname_resolve,
             noosphere.noosphere,
-            fs,
+            sphere,
             petname
         )
         
@@ -324,7 +324,7 @@ public final class SphereFS: SphereProtocol {
         let petnames = try Noosphere.callWithError(
             ns_sphere_petname_list,
             noosphere.noosphere,
-            fs
+            sphere
         )
         
         defer {
@@ -338,7 +338,7 @@ public final class SphereFS: SphereProtocol {
         let changes = try Noosphere.callWithError(
             ns_sphere_petname_changes,
             noosphere.noosphere,
-            fs,
+            sphere,
             sinceCid
         )
         defer {
@@ -351,9 +351,9 @@ public final class SphereFS: SphereProtocol {
     /// Save outstanding writes and return new Sphere version
     @discardableResult public func save() throws -> String {
         try Noosphere.callWithError(
-            ns_sphere_fs_save,
+            ns_sphere_save,
             noosphere.noosphere,
-            fs,
+            sphere,
             nil
         )
         return try self.version()
@@ -362,9 +362,9 @@ public final class SphereFS: SphereProtocol {
     /// Remove slug from sphere
     public func remove(slug: String) throws {
         try Noosphere.callWithError(
-            ns_sphere_fs_remove,
+            ns_sphere_content_remove,
             noosphere.noosphere,
-            fs,
+            sphere,
             slug
         )
     }
@@ -372,9 +372,9 @@ public final class SphereFS: SphereProtocol {
     /// List all slugs in sphere
     public func list() throws -> [String] {
         let slugs = try Noosphere.callWithError(
-            ns_sphere_fs_list,
+            ns_sphere_content_list,
             noosphere.noosphere,
-            fs
+            sphere
         )
         defer {
             ns_string_array_free(slugs)
@@ -405,9 +405,9 @@ public final class SphereFS: SphereProtocol {
     /// what changed.
     public func changes(_ since: String? = nil) throws -> [String] {
         let changes = try Noosphere.callWithError(
-            ns_sphere_fs_changes,
+            ns_sphere_content_changes,
             noosphere.noosphere,
-            fs,
+            sphere,
             since
         )
         defer {
@@ -418,7 +418,7 @@ public final class SphereFS: SphereProtocol {
     }
     
     deinit {
-        ns_sphere_fs_free(fs)
+        ns_sphere_free(sphere)
         logger.debug("deinit with identity \(self.identity)")
     }
     

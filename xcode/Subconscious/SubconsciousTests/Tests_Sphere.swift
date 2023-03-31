@@ -1,5 +1,5 @@
 //
-//  Tests_NoosphereService.swift
+//  Tests_Sphere.swift
 //  SubconsciousTests
 //
 //  Created by Gordon Brander on 1/12/23.
@@ -8,7 +8,7 @@
 import XCTest
 @testable import Subconscious
 
-final class Tests_SphereFS: XCTestCase {
+final class Tests_Sphere: XCTestCase {
     /// Create a unique temp dir and return URL
     func createTmpDir(path: String) throws -> URL {
         let url = FileManager.default.temporaryDirectory.appending(
@@ -39,7 +39,7 @@ final class Tests_SphereFS: XCTestCase {
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
         do {
-            let sphere = try SphereFS(
+            let sphere = try Sphere(
                 noosphere: noosphere,
                 identity: sphereReceipt.identity
             )
@@ -58,7 +58,7 @@ final class Tests_SphereFS: XCTestCase {
         
         // Re-open sphere
         do {
-            let sphere = try SphereFS(
+            let sphere = try Sphere(
                 noosphere: noosphere,
                 identity: sphereReceipt.identity
             )
@@ -83,7 +83,7 @@ final class Tests_SphereFS: XCTestCase {
         
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
-        let sphere = try SphereFS(
+        let sphere = try Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -134,7 +134,7 @@ final class Tests_SphereFS: XCTestCase {
         
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
-        let sphere = try SphereFS(
+        let sphere = try Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -188,7 +188,7 @@ final class Tests_SphereFS: XCTestCase {
         
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
-        let sphere = try SphereFS(
+        let sphere = try Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -254,7 +254,7 @@ final class Tests_SphereFS: XCTestCase {
         
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
-        let sphere = try SphereFS(
+        let sphere = try Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -301,7 +301,7 @@ final class Tests_SphereFS: XCTestCase {
         
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
-        let sphere = try SphereFS(
+        let sphere = try Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -348,7 +348,7 @@ final class Tests_SphereFS: XCTestCase {
         
         let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         
-        let sphere = try SphereFS(
+        let sphere = try Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -398,7 +398,7 @@ final class Tests_SphereFS: XCTestCase {
             
             sphereIdentity = sphereReceipt.identity
             
-            let sphere = try SphereFS(
+            let sphere = try Sphere(
                 noosphere: noosphere,
                 identity: sphereReceipt.identity
             )
@@ -422,7 +422,7 @@ final class Tests_SphereFS: XCTestCase {
                 sphereStoragePath: sphereStoragePath
             )
             
-            let sphere = try SphereFS(
+            let sphere = try Sphere(
                 noosphere: noosphere,
                 identity: sphereIdentity
             )
@@ -450,7 +450,7 @@ final class Tests_SphereFS: XCTestCase {
         
         let sphereIdentity = sphereReceipt.identity
 
-        var sphere = try SphereFS(
+        var sphere = try Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
@@ -479,7 +479,7 @@ final class Tests_SphereFS: XCTestCase {
             sphereStoragePath: sphereStoragePath
         )
         // Overwrite sphere with new sphere
-        sphere = try SphereFS(
+        sphere = try Sphere(
             noosphere: noosphere,
             identity: sphereIdentity
         )
