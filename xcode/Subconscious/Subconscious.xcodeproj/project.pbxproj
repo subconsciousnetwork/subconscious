@@ -27,8 +27,8 @@
 		B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = B57D63BF29B574C3008BBB62 /* CodeScanner */; };
 		B584813F29AC32410033F434 /* AddressBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584813E29AC32410033F434 /* AddressBookView.swift */; };
 		B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814129AC335B0033F434 /* AddressBookEntryView.swift */; };
-		B58A46AF29D3C62B00491E43 /* StoryPlainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46AE29D3C62B00491E43 /* StoryPlainView.swift */; };
-		B58A46B129D3C6B300491E43 /* StoryPlain.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B029D3C6B300491E43 /* StoryPlain.swift */; };
+		B58A46AF29D3C62B00491E43 /* StoryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46AE29D3C62B00491E43 /* StoryEntryView.swift */; };
+		B58A46B129D3C6B300491E43 /* StoryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B029D3C6B300491E43 /* StoryEntry.swift */; };
 		B58A46B329D3CE6100491E43 /* StoryUserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B229D3CE6100491E43 /* StoryUserView.swift */; };
 		B58A46B529D3CE9700491E43 /* StoryUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B429D3CE9700491E43 /* StoryUser.swift */; };
 		B58A46B729D3D09500491E43 /* UserProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B629D3D09500491E43 /* UserProfileHeaderView.swift */; };
@@ -406,8 +406,8 @@
 		B57D63BC29B56699008BBB62 /* AddressBookModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookModel.swift; sourceTree = "<group>"; };
 		B584813E29AC32410033F434 /* AddressBookView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookView.swift; sourceTree = "<group>"; };
 		B584814129AC335B0033F434 /* AddressBookEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookEntryView.swift; sourceTree = "<group>"; };
-		B58A46AE29D3C62B00491E43 /* StoryPlainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryPlainView.swift; sourceTree = "<group>"; };
-		B58A46B029D3C6B300491E43 /* StoryPlain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryPlain.swift; sourceTree = "<group>"; };
+		B58A46AE29D3C62B00491E43 /* StoryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryEntryView.swift; sourceTree = "<group>"; };
+		B58A46B029D3C6B300491E43 /* StoryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryEntry.swift; sourceTree = "<group>"; };
 		B58A46B229D3CE6100491E43 /* StoryUserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryUserView.swift; sourceTree = "<group>"; };
 		B58A46B429D3CE9700491E43 /* StoryUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryUser.swift; sourceTree = "<group>"; };
 		B58A46B629D3D09500491E43 /* UserProfileHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileHeaderView.swift; sourceTree = "<group>"; };
@@ -801,7 +801,7 @@
 			isa = PBXGroup;
 			children = (
 				B58FE48D28DEDAEA00E000CC /* StoryComboView.swift */,
-				B58A46AE29D3C62B00491E43 /* StoryPlainView.swift */,
+				B58A46AE29D3C62B00491E43 /* StoryEntryView.swift */,
 				B8CA8F2728909FBA005F8802 /* StoryPromptView.swift */,
 				B58A46B229D3CE6100491E43 /* StoryUserView.swift */,
 				B8A59D7128B693100010DB2F /* StoryView.swift */,
@@ -969,7 +969,7 @@
 				B8E2B02A29AD0E4D004A78B3 /* Slug.swift */,
 				B8A59D6B28B692A00010DB2F /* Story.swift */,
 				B58FE48B28DED9B600E000CC /* StoryCombo.swift */,
-				B58A46B029D3C6B300491E43 /* StoryPlain.swift */,
+				B58A46B029D3C6B300491E43 /* StoryEntry.swift */,
 				B8A59D6828B692900010DB2F /* StoryPrompt.swift */,
 				B58A46B429D3CE9700491E43 /* StoryUser.swift */,
 				B8B54F3C271F7C6B00B9B507 /* Suggestion.swift */,
@@ -1538,7 +1538,7 @@
 				B8A617202971D3000054D410 /* Slashlink.swift in Sources */,
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
 				B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
-				B58A46AF29D3C62B00491E43 /* StoryPlainView.swift in Sources */,
+				B58A46AF29D3C62B00491E43 /* StoryEntryView.swift in Sources */,
 				B8E00A2D299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */,
 				B57C0AF129D280E900D352E3 /* TabButtonView.swift in Sources */,
 				B8B604E629146DF6006FCB77 /* MemoryStore.swift in Sources */,
@@ -1586,7 +1586,7 @@
 				B85EC469296F11F000558761 /* BylineSmView.swift in Sources */,
 				B82BB7FB2821DA61000C9FCC /* Parser.swift in Sources */,
 				B8249DA027E2668500BCDFBA /* PinTrailingBottom.swift in Sources */,
-				B58A46B129D3C6B300491E43 /* StoryPlain.swift in Sources */,
+				B58A46B129D3C6B300491E43 /* StoryEntry.swift in Sources */,
 				B85EC466296F0D0A00558761 /* ProfilePicMd.swift in Sources */,
 				B59D556329BBFF56007915E2 /* FormField.swift in Sources */,
 				B81A535C27275138001A6268 /* Tape.swift in Sources */,

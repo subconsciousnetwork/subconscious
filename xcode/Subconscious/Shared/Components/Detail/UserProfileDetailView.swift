@@ -34,6 +34,12 @@ struct UserProfileDetailView: View {
             onNavigateToNote: self.onNavigateToNote,
             onNavigateToUser: self.onNavigateToUser
         )
+        .onAppear {
+            // When an editor is presented, refresh if stale.
+            // This covers the case where the editor might have been in the
+            // background for a while, and the content changed in another tab.
+            store.send(UserProfileDetailAction.populate(UserProfile.dummyData(), UserProfileStatistics.dummyData()))
+        }
     }
 }
 
@@ -43,11 +49,10 @@ enum UserProfileDetailNotification: Hashable {
     case requestDetail(MemoDetailDescription)
 }
 
-/// A description of a memo detail that can be used to set up the memo
-/// detal's internal state.
+/// A description of a user profile that can be used to set up the user
+/// profile's internal state.
 struct UserProfileDetailDescription: Hashable {
     var address: MemoAddress
-    var initialProfileTabIndex: Int = 0 // TODO: change to enum
 }
 
 enum UserProfileDetailAction: Hashable {
@@ -85,30 +90,14 @@ struct UserProfileDetailModel: ModelProtocol {
     var selectedTabIndex = 0
     var isMetaSheetPresented = false
     
-    var user: UserProfile? = UserProfile(
-        did: Did.dummyData(),
-        petname: Petname.dummyData(),
-        pfp: "pfp-dog",
-        bio: String.dummyDataMedium(),
-        category: .human
-    )
+    var user: UserProfile? = UserProfile.dummyData()
     var isFollowingUser: Bool = Bool.dummyData()
     
-    var recentEntries: [EntryStub] = (1...10).map { _ in
-        EntryStub.dummyData()
-    }
-    var topEntries: [EntryStub] = (1...10).map { _ in
-        EntryStub.dummyData()
-    }
-    var following: [StoryUser] = (1...10).map { _ in
-        StoryUser.dummyData()
-    }
+    var recentEntries: [EntryStub] = []
+    var topEntries: [EntryStub] = []
+    var following: [StoryUser] = []
     
-    var statistics: UserProfileStatistics? = UserProfileStatistics(
-        noteCount: Int.random(in: 0..<999),
-        backlinkCount: Int.random(in: 0..<999),
-        followingCount: Int.random(in: 0..<99)
-    )
+    var statistics: UserProfileStatistics? = UserProfileStatistics.dummyData()
 
     static func update(
         state: Self,
@@ -127,6 +116,9 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.user = user
             model.statistics = statistics
+            model.recentEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
+            model.topEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
+            model.following = (1...10).map { _ in StoryUser.dummyData() }
             
             return Update(state: model)
             

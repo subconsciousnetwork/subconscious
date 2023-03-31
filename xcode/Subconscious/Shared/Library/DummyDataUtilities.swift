@@ -39,8 +39,8 @@ extension StoryUser: DummyData {
             user: UserProfile(
                 did: Did.dummyData(),
                 petname: Petname.dummyData(),
-                pfp: "pfp-dog",
-                bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
+                pfp: String.dummyProfilePicture(),
+                bio: String.dummyDataMedium(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
             ),
             following: Bool.dummyData()
@@ -49,6 +49,15 @@ extension StoryUser: DummyData {
 }
 
 extension String {
+    static func dummyProfilePicture() -> String {
+        let pfps = [
+            "pfp-dog",
+            "sub_logo_dark",
+            "sub_logo_light"
+        ]
+        return pfps.randomElement()!
+    }
+    
     static func dummyDataShort() -> String {
         let letters = "abcdefghijklmnopqrstuvwxyz-_0123456789"
         return String((0..<12).map{ _ in letters.randomElement()! })
@@ -67,11 +76,37 @@ extension String {
 
 extension EntryStub: DummyData {
     static func dummyData() -> EntryStub {
-        let slashlink = Slashlink("@\(Petname.dummyData())/article-\(Int.random(in: 0..<99))")!
+        return dummyData(petname: Petname.dummyData())
+    }
+    
+    static func dummyData(petname: Petname) -> EntryStub {
+        let slashlink = Slashlink("@\(petname)/entry-\(Int.random(in: 0..<99))")!
         let address = slashlink.toPublicMemoAddress()
         let excerpt = String.dummyDataMedium()
         let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
         
         return EntryStub(address: address, excerpt: excerpt, modified: modified)
+    }
+}
+
+extension UserProfile: DummyData {
+    static func dummyData() -> UserProfile {
+        UserProfile(
+            did: Did.dummyData(),
+            petname: Petname.dummyData(),
+            pfp: String.dummyProfilePicture(),
+            bio: String.dummyDataMedium(),
+            category: .human
+        )
+    }
+}
+
+extension UserProfileStatistics: DummyData {
+    static func dummyData() -> UserProfileStatistics {
+        UserProfileStatistics(
+            noteCount: Int.random(in: 0..<999),
+            backlinkCount: Int.random(in: 0..<999),
+            followingCount: Int.random(in: 0..<99)
+        )
     }
 }

@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-/// A story is a single update within the FeedView
-struct StoryPlainView: View {
-    var story: StoryPlain
+/// Show an excerpt of an entry in a feed
+struct StoryEntryView: View {
+    var story: StoryEntry
     var action: (MemoAddress, String) -> Void
 
     var body: some View {
@@ -24,7 +24,7 @@ struct StoryPlainView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .lastTextBaseline, spacing: AppTheme.unit) {
                     BylineSmView(
-                        pfp: Image("pfp-dog"),
+                        pfp: Image(story.author.pfp),
                         slashlink: story.entry.address.toSlashlink()
                     )
                     Group {
@@ -53,8 +53,9 @@ struct StoryPlainView: View {
 
 struct StoryPlainView_Previews: PreviewProvider {
     static var previews: some View {
-        StoryPlainView(
-            story: StoryPlain(
+        StoryEntryView(
+            story: StoryEntry(
+                author: UserProfile.dummyData(),
                 entry: EntryStub(
                     MemoEntry(
                         address: MemoAddress.public(

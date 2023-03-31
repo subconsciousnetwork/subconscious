@@ -285,9 +285,9 @@ struct UserProfileDetailMetaSheetModel: ModelProtocol {
         environment: Environment
     ) -> ObservableStore.Update<Self> {
         switch action {
-        case .requestUnfollow(petname: let petname):
+        case .requestUnfollow:
             return Update(state: state)
-        case .requestFollow(did: let did):
+        case .requestFollow:
             return Update(state: state)
         case .presentDeleteConfirmationDialog(let presented):
             var model = state

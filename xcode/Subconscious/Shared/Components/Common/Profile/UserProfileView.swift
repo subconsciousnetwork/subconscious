@@ -33,11 +33,16 @@ struct UserProfileView: View {
             label: "Recent",
             view:
                 Group {
-                    ForEach(state.recentEntries, id: \.id) { entry in
-                        StoryPlainView(
-                            story: StoryPlain(entry: entry),
-                            action: { address, excerpt in onNavigateToNote(address) }
-                        )
+                    if let user = state.user {
+                        ForEach(state.recentEntries, id: \.id) { entry in
+                            StoryEntryView(
+                                story: StoryEntry(
+                                    author: user,
+                                    entry: entry
+                                ),
+                                action: { address, excerpt in onNavigateToNote(address) }
+                            )
+                        }
                     }
                 }
             
@@ -47,11 +52,16 @@ struct UserProfileView: View {
             label: "Top",
             view:
                 Group {
-                    ForEach(state.topEntries, id: \.id) { entry in
-                        StoryPlainView(
-                            story: StoryPlain(entry: entry),
-                            action: { address, excerpt in onNavigateToNote(address) }
-                        )
+                    if let user = state.user {
+                        ForEach(state.topEntries, id: \.id) { entry in
+                            StoryEntryView(
+                                story: StoryEntry(
+                                    author: user,
+                                    entry: entry
+                                ),
+                                action: { address, excerpt in onNavigateToNote(address) }
+                            )
+                        }
                     }
                 }
             

@@ -7,18 +7,20 @@
 
 import Foundation
 
-/// Story prompt model
-struct StoryPlain:
+/// A story representing a single entry by a user
+struct StoryEntry:
     Hashable,
     Identifiable,
     CustomStringConvertible,
     Codable
 {
     var id = UUID()
+    var author: UserProfile
     var entry: EntryStub
 
     var description: String {
         """
+        @\(author.petname.description)
         \(String(describing: entry))
         """
     }
