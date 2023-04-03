@@ -357,7 +357,7 @@ public final class Sphere: SphereProtocol {
     /// Load the sphere of a user by petname, they must already
     /// be present in your address book
     public func traverseByPetname(petname: String) throws -> Sphere? {
-        let identity = try self.resolvePetname(petname: petname)
+        let identity = try self.getPetname(petname: petname)
         
         let sphere = try Noosphere.callWithError(
             ns_sphere_traverse_by_petname,
