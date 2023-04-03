@@ -34,12 +34,13 @@ final class Tests_NoosphereService: XCTestCase {
         let bobSphere = try noosphere.open(identity: bobReceipt.identity)
         
         try bobSphere.setPetname(did: aliceReceipt.identity, petname: "alice")
+        try aliceSphere.setPetname(did: bobReceipt.identity, petname: "bob")
         try noosphere.save()
         
         let aliceDid = try bobSphere.getPetname(petname: "alice")
         XCTAssertEqual(aliceDid, aliceReceipt.identity)
         
-        let result = try noosphere.sync() // Must sync before we can resolve, no gateway atm
+//        let result = try noosphere.sync() 
         let newSphere = try noosphere.traverse(sphere: bobSphere, petname: "alice")
 
         // Clear out Noosphere and Sphere instance
