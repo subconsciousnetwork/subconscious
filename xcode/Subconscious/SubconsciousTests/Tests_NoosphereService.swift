@@ -21,7 +21,33 @@ final class Tests_NoosphereService: XCTestCase {
         )
         return url
     }
+    
+    func testSphereTraversal() throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try TestUtilities.createDataService(tmp: tmp)
+        let noosphere = data.noosphere
+        
+        let bobReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        let aliceReceipt = try noosphere.createSphere(ownerKeyName: "alice")
+        
+        let aliceSphere = try noosphere.open(identity: aliceReceipt.identity)
+        let bobSphere = try noosphere.open(identity: bobReceipt.identity)
+        
+        try bobSphere.setPetname(did: aliceReceipt.identity, petname: "alice")
+        try noosphere.save()
+        
+        let aliceDid = try bobSphere.getPetname(petname: "alice")
+        XCTAssertEqual(aliceDid, aliceReceipt.identity)
+        
+        let result = try noosphere.sync() // Must sync before we can resolve, no gateway atm
+        let newSphere = try noosphere.traverse(sphere: bobSphere, petname: "alice")
 
+        // Clear out Noosphere and Sphere instance
+        noosphere.reset()
+        
+        XCTAssertEqual(newSphere?.identity, aliceSphere.identity)
+    }
+    
     func testNoosphereReset() throws {
         let base = UUID()
         

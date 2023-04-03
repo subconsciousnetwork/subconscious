@@ -75,6 +75,12 @@ public final class Sphere: SphereProtocol {
     public let sphere: OpaquePointer
     public let identity: String
     
+    init(noosphere: Noosphere, sphere: OpaquePointer, identity: String) {
+        self.noosphere = noosphere
+        self.sphere = sphere
+        self.identity = identity
+    }
+    
     init(noosphere: Noosphere, identity: String) throws {
         self.noosphere = noosphere
         self.identity = identity
@@ -346,6 +352,26 @@ public final class Sphere: SphereProtocol {
         }
         
         return changes.toStringArray()
+    }
+    
+    /// Load the sphere of a user by petname, they must already
+    /// be present in your address book
+    public func traverseByPetname(petname: String) throws -> Sphere? {
+        let identity = try self.resolvePetname(petname: petname)
+        
+        let sphere = try Noosphere.callWithError(
+            ns_sphere_traverse_by_petname,
+            noosphere.noosphere,
+            sphere,
+            petname
+        )
+        
+        guard let sphere = sphere else {
+            logger.warning("Failed to traverse sphere for \(petname)")
+            return nil
+        }
+        
+        return Sphere(noosphere: noosphere, sphere: sphere, identity: identity)
     }
     
     /// Save outstanding writes and return new Sphere version

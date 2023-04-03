@@ -11,77 +11,14 @@ import ObservableStore
 @testable import Subconscious
 
 final class Tests_DataService: XCTestCase {
-    /// Create a unique temp dir and return URL
-    func createTmpDir() throws -> URL {
-        let path = UUID().uuidString
-        let url = FileManager.default.temporaryDirectory.appending(
-            path: path,
-            directoryHint: .isDirectory
-        )
-        try FileManager.default.createDirectory(
-            at: url,
-            withIntermediateDirectories: true
-        )
-        return url
-    }
-    
-    /// Set up and return a data service instance
-    func createDataService(
-        tmp: URL
-    ) throws -> DataService {
-        let globalStorageURL = tmp.appending(path: "noosphere")
-        let sphereStorageURL = tmp.appending(path: "sphere")
-        
-        let noosphere = NoosphereService(
-            globalStorageURL: globalStorageURL,
-            sphereStorageURL: sphereStorageURL,
-            gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite")
-        )
-        
-        let receipt = try noosphere.createSphere(ownerKeyName: "bob")
-        noosphere.resetSphere(receipt.identity)
-        
-        let databaseURL = tmp.appending(
-            path: "database.sqlite",
-            directoryHint: .notDirectory
-        )
-        let db = SQLite3Database(
-            path: databaseURL.path(percentEncoded: false),
-            mode: .readwrite
-        )
-        
-        let database = DatabaseService(
-            database: db,
-            migrations: Config.migrations
-        )
-        _ = try database.migrate()
-        
-        let files = FileStore(
-            documentURL: tmp.appending(path: "docs")
-        )
-        
-        let local = HeaderSubtextMemoStore(store: files)
-        let addressBook = AddressBookService(
-            noosphere: noosphere,
-            database: database
-        )
-        
-        return DataService(
-            noosphere: noosphere,
-            database: database,
-            local: local,
-            addressBook: addressBook
-        )
-    }
-    
     /// A place to put cancellables from publishers
     var cancellables: Set<AnyCancellable> = Set()
     
     var data: DataService?
     
     func testWriteThenReadMemo() throws {
-        let tmp = try createTmpDir()
-        let data = try createDataService(tmp: tmp)
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try TestUtilities.createDataService(tmp: tmp)
         
         let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         let memoIn = Memo(
@@ -104,8 +41,8 @@ final class Tests_DataService: XCTestCase {
     }
     
     func testReadMemoBeforeWrite() throws {
-        let tmp = try createTmpDir()
-        let data = try createDataService(tmp: tmp)
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try TestUtilities.createDataService(tmp: tmp)
         
         let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         
@@ -113,8 +50,8 @@ final class Tests_DataService: XCTestCase {
     }
     
     func testWriteThenBadSyncThenReadMemo() throws {
-        let tmp = try createTmpDir()
-        let data = try createDataService(tmp: tmp)
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try TestUtilities.createDataService(tmp: tmp)
         
         let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         let memoIn = Memo(
@@ -140,8 +77,8 @@ final class Tests_DataService: XCTestCase {
     }
     
     func testWriteThenBadSyncThenReadDetail() throws {
-        let tmp = try createTmpDir()
-        let data = try createDataService(tmp: tmp)
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try TestUtilities.createDataService(tmp: tmp)
         
         let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         let memo = Memo(
@@ -171,7 +108,7 @@ final class Tests_DataService: XCTestCase {
     }
     
     func testManyWritesThenCloseThenReopen() throws {
-        let tmp = try createTmpDir()
+        let tmp = try TestUtilities.createTmpDir()
         
         let globalStorageURL = tmp.appending(path: "noosphere")
         let sphereStorageURL = tmp.appending(path: "sphere")
@@ -296,8 +233,8 @@ final class Tests_DataService: XCTestCase {
     }
     
     func testFindUniqueAddressFor() throws {
-        let tmp = try createTmpDir()
-        let data = try createDataService(tmp: tmp)
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try TestUtilities.createDataService(tmp: tmp)
         
         let memo = Memo(
             contentType: ContentType.subtext.rawValue,
@@ -317,8 +254,8 @@ final class Tests_DataService: XCTestCase {
     }
     
     func testReadMemoDetail() throws {
-        let tmp = try createTmpDir()
-        let data = try createDataService(tmp: tmp)
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try TestUtilities.createDataService(tmp: tmp)
         
         let memo = Memo(
             contentType: ContentType.subtext.rawValue,
@@ -339,8 +276,8 @@ final class Tests_DataService: XCTestCase {
     }
     
     func testReadMemoDetailDoesNotExist() throws {
-        let tmp = try createTmpDir()
-        let data = try createDataService(tmp: tmp)
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try TestUtilities.createDataService(tmp: tmp)
         
         let addressA = MemoAddress.public(Slashlink("/a")!)
 
