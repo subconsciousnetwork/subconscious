@@ -73,7 +73,7 @@ struct ProgressTorusView_Previews: PreviewProvider {
     static var previews: some View {
         ProgressTorusView(
             inner: {
-                Image("sub_logo_light")
+                Image("sub_logo")
                     .resizable()
                     .frame(width: 200, height: 200)
             }

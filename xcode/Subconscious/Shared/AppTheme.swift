@@ -35,8 +35,7 @@ extension AppTheme {
     static let cornerRadius: Double = 8
     static let cornerRadiusLg: Double = 16
     
-    static let brandMarkLight = Image("sub_logo_light")
-    static let brandMarkDark = Image("sub_logo_dark")
+    static let brandMark = Image("sub_logo")
 }
 
 //  MARK: UIFonts

@@ -14,7 +14,7 @@ struct FirstRunView: View {
         NavigationStack {
             VStack {
                 Spacer()
-                Image("sub_logo_light")
+                Image("sub_logo")
                     .resizable()
                     .frame(width: 128, height: 128)
                 Spacer()

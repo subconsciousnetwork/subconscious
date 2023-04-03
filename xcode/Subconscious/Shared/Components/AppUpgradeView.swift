@@ -11,18 +11,45 @@ import ObservableStore
 
 /// Displays information to the user when app migration / rebuild happening.
 struct AppUpgradeView: View {
-    private let bgGradient = LinearGradient(
+    private let bgGradientLight = LinearGradient(
         gradient: Gradient(
             colors: [.brandBgTan, .brandBgGrey, .brandBgBlush]
         ),
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+    private let bgGradientDark = LinearGradient(
+        gradient: Gradient(
+            colors: [.brandBgBlack, .brandBgSlate, .brandBgPurple]
+        ),
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    private var bgGradient: LinearGradient {
+        switch colorScheme {
+        case .dark:
+            return bgGradientDark
+        default:
+            return bgGradientLight
+        }
+    }
+
+    private var shadow: Color {
+        switch colorScheme {
+        case .dark:
+            return .brandBgPurple
+        default:
+            return .brandMarkPurple
+        }
+    }
+
     private let spinnerSize: CGFloat = 256
     private let logoSize: CGFloat = 180
     // Duration of certain completion transition animations
     private let transitionDuration: CGFloat = 1
 
+    @Environment(\.colorScheme) var colorScheme
     var state: AppUpgradeModel
     var send: (AppUpgradeAction) -> Void
 
@@ -48,7 +75,7 @@ struct AppUpgradeView: View {
                 }
                 Spacer()
             }
-            .foregroundColor(.brandBgBlack)
+            .foregroundColor(.primary)
             .multilineTextAlignment(.center)
             .font(.title3)
             .bold()
@@ -59,11 +86,11 @@ struct AppUpgradeView: View {
                     isComplete: state.isComplete,
                     size: spinnerSize
                 ) {
-                    Image("sub_logo_light")
+                    Image("sub_logo")
                         .resizable()
                         .frame(width: logoSize, height: logoSize)
                 }
-                .shadow(color: .brandMarkPurple, radius: 72)
+                .shadow(color: shadow, radius: 72)
                 Spacer().frame(height: AppTheme.unit * 12)
                 if !state.isComplete {
                     Text(verbatim: state.progressMessage)
@@ -79,11 +106,11 @@ struct AppUpgradeView: View {
             Spacer()
 
             VStack(alignment: .center, spacing: AppTheme.unit) {
-                    Text("Upgrading your Subconscious.")
-                    Text("This might take a minute.")
+                Text("Upgrading your Subconscious.")
+                Text("This might take a minute.")
             }
             .fontWeight(.medium)
-            .foregroundColor(.brandBgBlack)
+            .foregroundColor(.primary)
             .multilineTextAlignment(.center)
             .frame(maxWidth: spinnerSize)
             .opacity(state.isComplete ? 0 : 1)
