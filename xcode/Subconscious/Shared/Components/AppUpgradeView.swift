@@ -89,6 +89,7 @@ struct AppUpgradeView: View {
                     Image("sub_logo")
                         .resizable()
                         .frame(width: logoSize, height: logoSize)
+                        .animation(.none, value: colorScheme)
                 }
                 .shadow(color: shadow, radius: 72)
                 Spacer().frame(height: AppTheme.unit * 12)
