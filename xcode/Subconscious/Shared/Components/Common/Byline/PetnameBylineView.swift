@@ -37,14 +37,6 @@ extension PetnameBylineView {
             petname: petname.verbatim
         )
     }
-    
-    init(
-        rawString: String
-    ) {
-        self.init(
-            petname: rawString
-        )
-    }
 }
 
 struct PetnameBylineView_Previews: PreviewProvider {
