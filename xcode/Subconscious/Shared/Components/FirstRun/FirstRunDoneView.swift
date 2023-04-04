@@ -29,7 +29,7 @@ struct FirstRunDoneView: View {
                 ) {
                     Text("Continue")
                 }
-                .buttonStyle(LargeButtonStyle())
+                .buttonStyle(PillButtonStyle())
                 .disabled(app.state.sphereIdentity == nil)
             }
             .padding()

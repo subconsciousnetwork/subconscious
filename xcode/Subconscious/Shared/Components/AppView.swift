@@ -273,6 +273,20 @@ struct AppUpgradeCursor: CursorProtocol {
     }
 }
 
+enum AppDatabaseState {
+    case initial
+    case migrating
+    case broken
+    case ready
+}
+
+enum GatewaySyncStatus: Equatable {
+    case initial
+    case inProgress
+    case success
+    case failure(String)
+}
+
 //  MARK: Model
 struct AppModel: ModelProtocol {
     /// Is Noosphere enabled?
@@ -332,7 +346,7 @@ struct AppModel: ModelProtocol {
     /// State for app upgrade view that takes over if we have to do any
     /// one-time long-running migration tasks at startup.
     var appUpgrade = AppUpgradeModel()
-    
+
     var gatewayURL = AppDefaults.standard.gatewayURL
     var gatewayURLTextField = AppDefaults.standard.gatewayURL
     var isGatewayURLTextFieldValid = true

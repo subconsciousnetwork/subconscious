@@ -26,7 +26,7 @@ struct AddressBookView: View {
                     .padding(AppTheme.unit2)
                     .frame(maxWidth: .infinity, alignment: .center)
                 } else {
-                    Section(header: Text("Following")) {
+                    Section {
                         List {
                             ForEach(state.follows, id: \.did) { user in
                                 AddressBookEntryView(
@@ -47,11 +47,14 @@ struct AddressBookView: View {
                 
                 if let did = state.did {
                     Section(header: Text("My DID")) {
-                        DidView(did: did)
+                        VStack {
+                            DidQrCodeView(did: did, color: Color.accentColor)
+                            DidView(did: did)
+                        }
                     }
                 }
             }
-            .navigationTitle("Address Book")
+            .navigationTitle("Following")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close", role: .cancel) {

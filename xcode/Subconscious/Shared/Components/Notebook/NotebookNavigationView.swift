@@ -80,6 +80,14 @@ struct NotebookNavigationView: View {
                             tag: NotebookAction.tag
                         )
                     )
+                case .profile(let description):
+                    UserProfileDetailView(
+                        description: description,
+                        notify: Address.forward(
+                            send: store.send,
+                            tag: NotebookAction.tag
+                        )
+                    )
                 }
             }
             .navigationTitle("Notes")
@@ -108,6 +116,21 @@ struct NotebookNavigationView: View {
                             }
                         ) {
                             Image(systemName: "person.2")
+                        }
+                    }
+                }
+                if Config.default.userProfile {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(
+                            action: {
+                                let detail = UserProfileDetailDescription(
+                                    address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress()
+                                )
+                                
+                                store.send(.pushDetail(.profile(detail)))
+                            }
+                        ) {
+                            Image(systemName: "person")
                         }
                     }
                 }

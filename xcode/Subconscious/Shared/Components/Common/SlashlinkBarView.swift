@@ -36,7 +36,7 @@ struct SlashlinkBarView_Previews: PreviewProvider {
             links: [
                 EntryLink(
                     address: MemoAddress.public(
-                        Slashlink("@here/loomings")!
+                        Slashlink("@here/loomings/test")!
                     ),
                     title: "Loomings"
                 ),

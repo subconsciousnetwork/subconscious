@@ -33,6 +33,8 @@ struct Slashlink:
     
     var id: String { description }
     
+    static let profileSlug = Slug("_profile_")!
+    
     // The normalized markup form of the slashlink
     var markup: String { description }
 
@@ -59,6 +61,11 @@ struct Slashlink:
         self.slugPart = slug
         self.petnamePart = match.petname?.toString()
     }
+    
+    /// Convenience initializer that creates a link to `@user/_profile_`
+    init (petname: Petname) {
+        self.init(petname: petname, slug: Self.profileSlug)
+    }
 }
 
 extension Slug {
@@ -73,6 +80,10 @@ extension Slug {
 extension Slug {
     func toSlashlink() -> Slashlink {
         Slashlink(slug: self)
+    }
+    
+    func isProfile() -> Bool {
+        self == Slashlink.profileSlug
     }
 }
 

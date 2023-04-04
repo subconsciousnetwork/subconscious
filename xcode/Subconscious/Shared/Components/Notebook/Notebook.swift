@@ -265,6 +265,13 @@ extension NotebookAction {
             return .pushDetail(detail)
         }
     }
+    
+    static func tag(_ action: UserProfileDetailNotification) -> Self {
+        switch action {
+        case let .requestDetail(detail):
+            return .pushDetail(detail)
+        }
+    }
 }
 
 extension NotebookAction {
@@ -754,6 +761,9 @@ struct NotebookModel: ModelProtocol {
             case .viewer(var description):
                 description.address = to
                 return .viewer(description)
+            case .profile(var description):
+                description.address = to
+                return .profile(description)
             }
         })
         
@@ -786,6 +796,9 @@ struct NotebookModel: ModelProtocol {
             case .viewer(var description):
                 description.address = parent
                 return .viewer(description)
+            case .profile(var description):
+                description.address = parent
+                return .profile(description)
             }
         })
         
@@ -820,6 +833,9 @@ struct NotebookModel: ModelProtocol {
             case .viewer(var description):
                 description.address = receipt.to
                 return .viewer(description)
+            case .profile(var description):
+                description.address = receipt.to
+                return .profile(description)
             }
         })
         

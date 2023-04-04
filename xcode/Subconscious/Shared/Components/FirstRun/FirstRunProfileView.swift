@@ -39,7 +39,7 @@ struct FirstRunProfileView: View {
                         Text("Continue")
                     }
                 )
-                .buttonStyle(LargeButtonStyle())
+                .buttonStyle(PillButtonStyle())
                 .simultaneousGesture(TapGesture().onEnded {
                     app.send(.createSphere(app.state.nickname))
                 })

@@ -36,7 +36,7 @@ struct FirstRunView: View {
                         Text("Get Started")
                     }
                 )
-                .buttonStyle(LargeButtonStyle())
+                .buttonStyle(PillButtonStyle())
             }
             .navigationTitle("Welcome")
             .navigationBarTitleDisplayMode(.inline)
