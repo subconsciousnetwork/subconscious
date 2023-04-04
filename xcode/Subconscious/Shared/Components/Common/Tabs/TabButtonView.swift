@@ -7,28 +7,16 @@
 
 import SwiftUI
 
-struct TabButtonView<Label: View>: View {
+struct TabButtonView: View {
     var action: () -> Void
-    let label: Label
+    var label: String
     var selected: Bool
-
-    init(@ViewBuilder label: () -> Label) {
-        self.label = label()
-        self.selected = false
-        self.action = {}
-    }
-    
-    init(@ViewBuilder label: () -> Label, action: @escaping () -> Void, selected: Bool) {
-        self.label = label()
-        self.action = action
-        self.selected = selected
-    }
     
     var body: some View {
         Button(
             action: action,
             label: {
-                label
+                Text(label)
                     .font(.callout)
                     .bold(selected)
             }

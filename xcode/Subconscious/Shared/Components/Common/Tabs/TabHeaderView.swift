@@ -25,14 +25,12 @@ struct TabHeaderView: View {
                 ForEach(items.indices, id: \.self) { index in
                     let item = items[index]
                     TabButtonView(
-                        label: {
-                            Text(item.label)
-                        },
                         action: {
                             withAnimation {
                                 tabChanged(index, item)
                             }
                         },
+                        label: item.label,
                         selected: index == focusedTabIndex
                     )
                 }
