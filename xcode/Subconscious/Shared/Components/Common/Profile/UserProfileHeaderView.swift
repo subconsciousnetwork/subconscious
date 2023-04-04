@@ -34,27 +34,20 @@ struct UserProfileHeaderView: View {
                 
                 Spacer()
                 
-                if user.category == .you {
-                    Button(action: {}, label: {
+                // TODO: make this button do something
+                Button(action: {}, label: {
+                    if user.category == .you {
                         Label("Edit Profile", systemImage: "pencil")
-                    })
-                    .buttonStyle(PillButtonStyle(size: .small))
-                    .frame(maxWidth: 160)
-                } else {
-                    if isFollowingUser {
-                        Button(action: {}, label: {
-                            Label("Following", systemImage: "person.fill.checkmark")
-                        })
-                        .buttonStyle(GhostPillButtonStyle(size: .small))
-                        .frame(maxWidth: 160)
                     } else {
-                        Button(action: {}, label: {
+                        if isFollowingUser {
+                            Label("Following", systemImage: "person.fill.checkmark")
+                        } else {
                             Text("Follow")
-                        })
-                        .buttonStyle(PillButtonStyle(size: .small))
-                        .frame(maxWidth: 160)
+                        }
                     }
-                }
+                })
+                .buttonStyle(GhostPillButtonStyle(size: .small))
+                .frame(maxWidth: 160)
             }
             
             if let statistics = statistics {
