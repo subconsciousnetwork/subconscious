@@ -52,13 +52,13 @@ final class Tests_NoosphereService: XCTestCase {
         let result = try noosphere.sync()
         // This should loop back around to bob
         let destinationSphere = try noosphere
-            .traverse(petname: "alice")?
+            .traverse(petname: "alice")
             .traverse(petname: "bob")
 
         // Clear out Noosphere and Sphere instance
         noosphere.reset()
         
-        XCTAssertEqual(destinationSphere?.identity, bobReceipt.identity)
+        XCTAssertEqual(destinationSphere.identity, bobReceipt.identity)
     }
     
     func testNoosphereReset() throws {

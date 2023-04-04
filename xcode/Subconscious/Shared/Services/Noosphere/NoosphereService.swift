@@ -275,7 +275,7 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         }
     }
 
-    func traverse(petname: String) throws -> Sphere? {
+    func traverse(petname: String) throws -> Sphere {
         try queue.sync {
             try self.sphere().traverse(petname: petname)
         }

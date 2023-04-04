@@ -47,9 +47,9 @@ public protocol SphereProtocol {
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
     /// over multiple spheres:
     ///
-    /// `sphere().traverse(petname: "alice")?.traverse(petname: "bob")?.traverse(petname: "alice)` etc.
+    /// `sphere().traverse(petname: "alice").traverse(petname: "bob").traverse(petname: "alice)` etc.
     ///
-    func traverse(petname: String) throws -> Sphere?
+    func traverse(petname: String) throws -> Sphere
 }
 
 protocol SphereIdentityProtocol {
@@ -362,7 +362,7 @@ public final class Sphere: SphereProtocol {
     }
     
     
-    public func traverse(petname: String) throws -> Sphere? {
+    public func traverse(petname: String) throws -> Sphere {
         let identity = try self.getPetname(petname: petname)
         
         let sphere = try Noosphere.callWithError(
@@ -373,8 +373,7 @@ public final class Sphere: SphereProtocol {
         )
         
         guard let sphere = sphere else {
-            logger.warning("Failed to traverse sphere for \(petname)")
-            return nil
+            throw NoosphereError.foreignError("ns_sphere_traverse_by_petname failed to find sphere")
         }
         
         return Sphere(noosphere: noosphere, sphere: sphere, identity: identity)
