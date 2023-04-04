@@ -33,9 +33,12 @@ final class Tests_NoosphereService: XCTestCase {
         let aliceReceipt = try noosphere.createSphere(ownerKeyName: "alice")
         
         // Put bob in alice's address book
-        let aliceSphere = try noosphere.sphere(identity: aliceReceipt.identity)
-        try aliceSphere.setPetname(did: bobReceipt.identity, petname: "bob")
-        try aliceSphere.save()
+        noosphere.resetSphere(aliceReceipt.identity)
+        try noosphere.setPetname(did: bobReceipt.identity, petname: "bob")
+        try noosphere.save()
+        
+        let bobDid = try noosphere.getPetname(petname: "bob")
+        XCTAssertEqual(bobDid, bobReceipt.identity)
         
         // Put alice in bob's address book & set bob as default sphere
         noosphere.resetSphere(bobReceipt.identity)
@@ -45,8 +48,6 @@ final class Tests_NoosphereService: XCTestCase {
         let aliceDid = try noosphere.getPetname(petname: "alice")
         XCTAssertEqual(aliceDid, aliceReceipt.identity)
         
-        let bobDid = try aliceSphere.getPetname(petname: "bob")
-        XCTAssertEqual(bobDid, bobReceipt.identity)
         
         let result = try noosphere.sync()
         // This should loop back around to bob

@@ -141,11 +141,6 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
             throw NoosphereServiceError.defaultSphereNotFound
         }
         
-        return try sphere(identity: identity)
-    }
-    
-    /// Open a sphere using its identity
-    func sphere(identity: String) throws -> Sphere {
         let noosphere = try noosphere()
         logger.debug("init Sphere with identity: \(identity)")
         return try Sphere(
