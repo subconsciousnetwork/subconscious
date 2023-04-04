@@ -62,9 +62,12 @@ struct OmniboxSlashlinkView: View {
                 Text(verbatim: "@\(petname)").fontWeight(.medium)
                 
                 // Hide the slug if it's the profile view, just the username is cleaner
-                if slug != Slashlink.profileSlug {
-                    Text(verbatim: "/\(slug)")
+                if let slug = Slug(slug) {
+                    if !slug.isProfile() {
+                        Text(verbatim: "/\(slug)")
+                    }
                 }
+                
             } else {
                 Text(verbatim: slug)
             }

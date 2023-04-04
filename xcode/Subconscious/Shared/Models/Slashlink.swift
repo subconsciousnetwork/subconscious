@@ -33,7 +33,7 @@ struct Slashlink:
     
     var id: String { description }
     
-    static let profileSlug = "_profile_"
+    static let profileSlug = Slug("_profile_")!
     
     // The normalized markup form of the slashlink
     var markup: String { description }
@@ -64,7 +64,7 @@ struct Slashlink:
     
     /// Convenience initializer that creates a link to `@user/_profile_`
     init (petname: Petname) {
-        self.init(petname: petname, slug: Slug(Self.profileSlug)!)
+        self.init(petname: petname, slug: Self.profileSlug)
     }
 }
 
@@ -83,7 +83,7 @@ extension Slug {
     }
     
     func isProfile() -> Bool {
-        self.verbatim == Slashlink.profileSlug
+        self == Slashlink.profileSlug
     }
 }
 
