@@ -30,23 +30,32 @@ final class Tests_NoosphereService: XCTestCase {
         let bobReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         let aliceReceipt = try noosphere.createSphere(ownerKeyName: "alice")
         
-        let aliceSphere = try noosphere.open(identity: aliceReceipt.identity)
-        let bobSphere = try noosphere.open(identity: bobReceipt.identity)
-        
-        try bobSphere.setPetname(did: aliceReceipt.identity, petname: "alice")
+        // Put bob in alice's address book
+        let aliceSphere = try noosphere.sphere(identity: aliceReceipt.identity)
         try aliceSphere.setPetname(did: bobReceipt.identity, petname: "bob")
+        try aliceSphere.save()
+        
+        // Put alice in bob's address book & set bob as default sphere
+        noosphere.resetSphere(bobReceipt.identity)
+        try noosphere.setPetname(did: aliceReceipt.identity, petname: "alice")
         try noosphere.save()
         
-        let aliceDid = try bobSphere.getPetname(petname: "alice")
+        let aliceDid = try noosphere.getPetname(petname: "alice")
         XCTAssertEqual(aliceDid, aliceReceipt.identity)
         
-//        let result = try noosphere.sync() 
-        let newSphere = try noosphere.traverse(sphere: bobSphere, petname: "alice")
+        let bobDid = try aliceSphere.getPetname(petname: "bob")
+        XCTAssertEqual(bobDid, bobReceipt.identity)
+        
+//        let result = try noosphere.sync()
+        // This should loop back around to bob
+        let destinationSphere = try noosphere
+            .traverse(petname: "alice")?
+            .traverse(petname: "bob")
 
         // Clear out Noosphere and Sphere instance
         noosphere.reset()
         
-        XCTAssertEqual(newSphere?.identity, aliceSphere.identity)
+        XCTAssertEqual(destinationSphere?.identity, bobReceipt.identity)
     }
     
     func testNoosphereReset() throws {

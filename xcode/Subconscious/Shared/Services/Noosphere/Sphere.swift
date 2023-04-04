@@ -43,6 +43,8 @@ public protocol SphereProtocol {
     func sync() throws -> String
     
     func changes(_ since: String?) throws -> [String]
+    
+    func traverse(petname: String) throws -> Sphere?
 }
 
 protocol SphereIdentityProtocol {
@@ -356,7 +358,7 @@ public final class Sphere: SphereProtocol {
     
     /// Load the sphere of a user by petname, they must already
     /// be present in your address book
-    public func traverseByPetname(petname: String) throws -> Sphere? {
+    public func traverse(petname: String) throws -> Sphere? {
         let identity = try self.getPetname(petname: petname)
         
         let sphere = try Noosphere.callWithError(

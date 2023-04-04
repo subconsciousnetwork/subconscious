@@ -141,19 +141,17 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
             throw NoosphereServiceError.defaultSphereNotFound
         }
         
-        return try open(identity: identity)
+        return try sphere(identity: identity)
     }
     
     /// Open a sphere using its identity
-    func open(identity: String) throws -> Sphere {
+    func sphere(identity: String) throws -> Sphere {
         let noosphere = try noosphere()
         logger.debug("init Sphere with identity: \(identity)")
-        let sphere = try Sphere(
+        return try Sphere(
             noosphere: noosphere,
             identity: identity
         )
-        self._sphere = sphere
-        return sphere
     }
     
     func identity() throws -> String {
@@ -282,15 +280,14 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         }
     }
     
+    /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
+    /// over multiple spheres:
+    ///
+    /// `sphere().traverse(petname: "alice")?.traverse(petname: "bob")?.traverse(petname: "alice)` etc.
+    ///
     func traverse(petname: String) throws -> Sphere? {
         try queue.sync {
-            try self.sphere().traverseByPetname(petname: petname)
-        }
-    }
-    
-    func traverse(sphere: Sphere, petname: String) throws -> Sphere? {
-        try queue.sync {
-            try sphere.traverseByPetname(petname: petname)
+            try self.sphere().traverse(petname: petname)
         }
     }
 }
