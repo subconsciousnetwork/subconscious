@@ -279,12 +279,7 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
             try self.sphere().getPetnameChanges(sinceCid: sinceCid)
         }
     }
-    
-    /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
-    /// over multiple spheres:
-    ///
-    /// `sphere().traverse(petname: "alice")?.traverse(petname: "bob")?.traverse(petname: "alice)` etc.
-    ///
+
     func traverse(petname: String) throws -> Sphere? {
         try queue.sync {
             try self.sphere().traverse(petname: petname)

@@ -44,6 +44,11 @@ public protocol SphereProtocol {
     
     func changes(_ since: String?) throws -> [String]
     
+    /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
+    /// over multiple spheres:
+    ///
+    /// `sphere().traverse(petname: "alice")?.traverse(petname: "bob")?.traverse(petname: "alice)` etc.
+    ///
     func traverse(petname: String) throws -> Sphere?
 }
 
@@ -356,8 +361,7 @@ public final class Sphere: SphereProtocol {
         return changes.toStringArray()
     }
     
-    /// Load the sphere of a user by petname, they must already
-    /// be present in your address book
+    
     public func traverse(petname: String) throws -> Sphere? {
         let identity = try self.getPetname(petname: petname)
         
