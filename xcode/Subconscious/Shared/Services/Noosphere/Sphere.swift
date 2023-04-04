@@ -82,7 +82,7 @@ public final class Sphere: SphereProtocol {
     public let sphere: OpaquePointer
     public let identity: String
     
-    init(noosphere: Noosphere, sphere: OpaquePointer, identity: String) {
+    private init(noosphere: Noosphere, sphere: OpaquePointer, identity: String) {
         self.noosphere = noosphere
         self.sphere = sphere
         self.identity = identity
