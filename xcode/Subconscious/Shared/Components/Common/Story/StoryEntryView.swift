@@ -28,10 +28,13 @@ struct StoryEntryView: View {
                         slashlink: story.entry.address.toSlashlink()
                     )
                     Group {
-                        Text("at")
-                            .foregroundColor(Color.secondary)
-                        Text(story.entry.modified.formatted())
-                            .foregroundColor(Color.secondary)
+                        Text(
+                            NiceDateFormatter.shared.string(
+                                from: story.entry.modified,
+                                relativeTo: Date.now
+                            )
+                        )
+                        .foregroundColor(Color.secondary)
                     }
                     .font(.caption)
                     Spacer()
@@ -63,7 +66,7 @@ struct StoryPlainView_Previews: PreviewProvider {
                         contents: Memo(
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,
-                            modified: Date.now,
+                            modified: Date.now.addingTimeInterval(TimeInterval(10000)),
                             fileExtension: ContentType.subtext.fileExtension,
                             additionalHeaders: [],
                             body: """
