@@ -13,17 +13,12 @@ struct MetaTableItemShareLinkView: View {
     var item: String
     
     var body: some View {
-        Button(
-            action: {}, // Action is handled by ShareLink
-            label: {
-                ShareLink(item: item) {
-                    Label(
-                        label,
-                        systemImage: "square.and.arrow.up"
-                    )
-                }
-            }
-        )
+        ShareLink(item: item) {
+            Label(
+                label,
+                systemImage: "square.and.arrow.up"
+            )
+        }
         .buttonStyle(RowButtonStyle())
     }
 }
