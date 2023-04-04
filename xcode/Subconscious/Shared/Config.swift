@@ -17,8 +17,16 @@ struct Config: Equatable, Codable {
     var appTabs = false
     var addressBook = false
     var addByQRCode = true
-    var userProfile = true
-    var userProfileDetailsTable = false
+    var userProfile: Bool {
+        get {
+            AppDefaults.standard.isNoosphereEnabled && false
+        }
+    }
+    var userProfileDetailsTable: Bool {
+        get {
+            userProfile && false
+        }
+    }
     
     /// What value should the DID QR code scanner return in the simulator?
     /// Only returns test data when Config.debug is enabled
