@@ -10,26 +10,17 @@ import SwiftUI
 
 struct DidView: View {
     var did: Did
-    var qrCode: Bool = false
-    var qrCodeSize: CGFloat = 256
     
     var body: some View {
-        VStack {
-            if qrCode {
-                DidQrCodeView(did: did, color: .accentColor)
-                    .frame(maxWidth: qrCodeSize, alignment: .center)
-            }
-            
-            ShareLink(item: did.did) {
-                HStack {
-                    Text(did.did)
-                        .font(.callout.monospaced())
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.leading)
-                    Spacer(minLength: AppTheme.unit2)
-                        Image(systemName: "square.and.arrow.up")
-                    }
-            }
+        ShareLink(item: did.did) {
+            HStack {
+                Text(did.did)
+                    .font(.callout.monospaced())
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: AppTheme.unit2)
+                    Image(systemName: "square.and.arrow.up")
+                }
         }
     }
 }
