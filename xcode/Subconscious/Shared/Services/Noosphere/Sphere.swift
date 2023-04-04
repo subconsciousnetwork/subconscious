@@ -43,6 +43,13 @@ public protocol SphereProtocol {
     func sync() throws -> String
     
     func changes(_ since: String?) throws -> [String]
+    
+    /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
+    /// over multiple spheres:
+    ///
+    /// `sphere().traverse(petname: "alice").traverse(petname: "bob").traverse(petname: "alice)` etc.
+    ///
+    func traverse(petname: String) throws -> Sphere
 }
 
 protocol SphereIdentityProtocol {
@@ -74,6 +81,12 @@ public final class Sphere: SphereProtocol {
     private let noosphere: Noosphere
     public let sphere: OpaquePointer
     public let identity: String
+    
+    private init(noosphere: Noosphere, sphere: OpaquePointer, identity: String) {
+        self.noosphere = noosphere
+        self.sphere = sphere
+        self.identity = identity
+    }
     
     init(noosphere: Noosphere, identity: String) throws {
         self.noosphere = noosphere
@@ -346,6 +359,24 @@ public final class Sphere: SphereProtocol {
         }
         
         return changes.toStringArray()
+    }
+    
+    
+    public func traverse(petname: String) throws -> Sphere {
+        let identity = try self.getPetname(petname: petname)
+        
+        let sphere = try Noosphere.callWithError(
+            ns_sphere_traverse_by_petname,
+            noosphere.noosphere,
+            sphere,
+            petname
+        )
+        
+        guard let sphere = sphere else {
+            throw NoosphereError.foreignError("ns_sphere_traverse_by_petname failed to find sphere")
+        }
+        
+        return Sphere(noosphere: noosphere, sphere: sphere, identity: identity)
     }
     
     /// Save outstanding writes and return new Sphere version

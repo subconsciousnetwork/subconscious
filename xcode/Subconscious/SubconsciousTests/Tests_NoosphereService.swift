@@ -21,7 +21,46 @@ final class Tests_NoosphereService: XCTestCase {
         )
         return url
     }
+    
+    func testSphereTraversal() throws {
+        throw XCTSkip("Sphere Traversal relies on running a gateway, this test will not pass currently.")
+        
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try TestUtilities.createDataService(tmp: tmp)
+        let noosphere = data.noosphere
+        
+        let bobReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        let aliceReceipt = try noosphere.createSphere(ownerKeyName: "alice")
+        
+        // Put bob in alice's address book
+        noosphere.resetSphere(aliceReceipt.identity)
+        try noosphere.setPetname(did: bobReceipt.identity, petname: "bob")
+        try noosphere.save()
+        
+        let bobDid = try noosphere.getPetname(petname: "bob")
+        XCTAssertEqual(bobDid, bobReceipt.identity)
+        
+        // Put alice in bob's address book & set bob as default sphere
+        noosphere.resetSphere(bobReceipt.identity)
+        try noosphere.setPetname(did: aliceReceipt.identity, petname: "alice")
+        try noosphere.save()
+        
+        let aliceDid = try noosphere.getPetname(petname: "alice")
+        XCTAssertEqual(aliceDid, aliceReceipt.identity)
+        
+        
+        let result = try noosphere.sync()
+        // This should loop back around to bob
+        let destinationSphere = try noosphere
+            .traverse(petname: "alice")
+            .traverse(petname: "bob")
 
+        // Clear out Noosphere and Sphere instance
+        noosphere.reset()
+        
+        XCTAssertEqual(destinationSphere.identity, bobReceipt.identity)
+    }
+    
     func testNoosphereReset() throws {
         let base = UUID()
         
