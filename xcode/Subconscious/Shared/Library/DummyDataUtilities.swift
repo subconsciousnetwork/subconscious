@@ -27,8 +27,41 @@ extension Did: DummyData {
 
 extension Petname: DummyData {
     static func dummyData() -> Petname {
-        let letters = "abcdefghijklmnopqrstuvwxyz-_0123456789"
-        let randomString = String((0..<8).map{ _ in letters.randomElement()! })
+        let options = [
+            "mystic_mind",
+            "dreamweaverz",
+            "tarotwizdom",
+            "psycheawaken",
+            "enigmachine",
+            "astralnavigatr",
+            "magikalecho",
+            "karmicwhisper",
+            "spiritrealmer",
+            "psychicmaze",
+            "occultfusion",
+            "mentalvoyage",
+            "mysticforest",
+            "soulscaper",
+            "thoughtalchemy",
+            "consciousflux",
+            "astralpilgrim",
+            "shadowgrimoire",
+            "clairvoyantsea",
+            "etherealstargaze",
+            "transcendentpath",
+            "arcane_insight",
+            "soulcartographr",
+            "realityshifter",
+            "mindmirage",
+            "enchantedportal",
+            "cosmicintuition",
+            "astraldreamer",
+            "fateweaver",
+            "spiritquester",
+            "metaphysicalmage",
+            "wisdomkeybearer"
+        ]
+        let randomString = options.randomElement()!
         return Petname(randomString)! // OK to do this for test data
     }
 }
@@ -52,8 +85,7 @@ extension String {
     static func dummyProfilePicture() -> String {
         let pfps = [
             "pfp-dog",
-            "sub_logo_dark",
-            "sub_logo_light"
+            "sub_logo"
         ]
         return pfps.randomElement()!
     }
