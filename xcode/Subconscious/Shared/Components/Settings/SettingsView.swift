@@ -9,41 +9,43 @@ import SwiftUI
 import ObservableStore
 
 struct GatewaySyncLabel: View {
-    var status: GatewaySyncStatus
+    var status: ResourceStatus
     @State var spin = false
     
-    func label(status: GatewaySyncStatus) -> String {
-        switch (status) {
+    func label(status: ResourceStatus) -> String {
+        switch status {
         case .initial:
             return "Sync with Gateway"
-        case .inProgress:
+        case .pending:
             return "Syncing..."
-        case .failure:
+        case .failed:
             return "Sync Failed"
-        case .success:
+        case .succeeded:
             return "Sync Complete"
         }
     }
     
+    private func labelColor(status: ResourceStatus) -> Color {
+        switch status {
+        case .failed:
+            return .red
+        default:
+            return .accentColor
+        }
+    }
+
     var body: some View {
         HStack {
             VStack(alignment: .leading) {
-                switch (status) {
-                case .failure(_):
-                    Text(label(status: status))
-                        .foregroundColor(.red)
-                default:
-                    Text(label(status: status))
-                        .foregroundColor(.accentColor)
-                }
+                Text(label(status: status))
+                    .foregroundColor(labelColor(status: status))
                 
-                if case .failure(let message) = status {
+                if case .failed(let message) = status {
                     Text("\(message)")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
             }
-
             
             Spacer()
             
@@ -51,7 +53,7 @@ struct GatewaySyncLabel: View {
             case .initial:
                 Image(systemName: "arrow.triangle.2.circlepath")
                     .foregroundColor(.secondary)
-            case .inProgress:
+            case .pending:
                 Image(systemName: "arrow.triangle.2.circlepath")
                     .foregroundColor(.accentColor)
                     .rotationEffect(.degrees(spin ? 360 : 0))
@@ -61,10 +63,10 @@ struct GatewaySyncLabel: View {
                     .onAppear() {
                         self.spin = true
                     }
-            case .success:
+            case .succeeded:
                 Image(systemName: "checkmark.circle")
                     .foregroundColor(.secondary)
-            case .failure:
+            case .failed:
                 Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
                     .foregroundColor(.red)
             }

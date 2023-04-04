@@ -57,7 +57,7 @@ class AddressBookService {
                         .map { did -> AddressBookEntry? in
                             guard let did = did else { return nil }
                             // TODO: hardcoded pfp
-                            return AddressBookEntry(pfp: AppTheme.brandMarkDark, petname: f, did: did)
+                            return AddressBookEntry(pfp: AppTheme.brandMark, petname: f, did: did)
                         }
                         .compactMap { value in value }
                 })

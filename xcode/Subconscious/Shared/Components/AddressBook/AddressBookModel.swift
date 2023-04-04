@@ -232,7 +232,7 @@ struct AddressBookModel: ModelProtocol {
             return Update(state: state, fx: fx)
             
         case .succeedFollow(did: let did, petname: let petname):
-            let entry = AddressBookEntry(pfp: Image("sub_logo_dark"), petname: petname, did: did)
+            let entry = AddressBookEntry(pfp: Image("sub_logo"), petname: petname, did: did)
             
             var model = state
             model.isFollowUserFormPresented = false
