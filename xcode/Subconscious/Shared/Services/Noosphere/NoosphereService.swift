@@ -143,10 +143,12 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         
         let noosphere = try noosphere()
         logger.debug("init Sphere with identity: \(identity)")
-        return try Sphere(
+        let sphere = try Sphere(
             noosphere: noosphere,
             identity: identity
         )
+        self._sphere = sphere
+        return sphere
     }
     
     func identity() throws -> String {
