@@ -122,7 +122,7 @@ struct AppUpgradeView: View {
             Button("Continue", action: {
                 send(.continue)
             })
-            .buttonStyle(LargeButtonStyle())
+            .buttonStyle(PillButtonStyle())
             .disabled(!state.isComplete)
         }
         .padding()
