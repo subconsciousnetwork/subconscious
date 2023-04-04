@@ -11,7 +11,7 @@ struct OmniboxView: View {
     var address: MemoAddress?
     var defaultAudience: Audience
 
-    func icon() -> Image {
+    private func icon() -> Image {
         if address?.isProfile() ?? false {
            return Image(systemName: "person.circle")
         } else {
@@ -22,8 +22,8 @@ struct OmniboxView: View {
     var body: some View {
         HStack(spacing: 8) {
             icon()
-            .resizable()
-            .frame(width: 17, height: 17)
+                .resizable()
+                .frame(width: 17, height: 17)
             
             Spacer(minLength: AppTheme.unit)
             if let slashlink = address?.toSlashlink() {
