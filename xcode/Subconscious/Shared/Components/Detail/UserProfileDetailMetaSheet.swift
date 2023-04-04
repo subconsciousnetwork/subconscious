@@ -13,22 +13,18 @@ struct MetaTableItemShareLinkView: View {
     var item: String
     
     var body: some View {
-        ShareLink(item: item) {
-            Label(
-                label,
-                systemImage: "square.and.arrow.up"
-            )
-            .labelStyle(RowLabelStyle())
-        }
-        .padding(
-            EdgeInsets(
-                top: 0,
-                leading: AppTheme.padding,
-                bottom: 0,
-                trailing: AppTheme.padding
-            )
+        Button(
+            action: {}, // Action is handled by ShareLink
+            label: {
+                ShareLink(item: item) {
+                    Label(
+                        label,
+                        systemImage: "square.and.arrow.up"
+                    )
+                }
+            }
         )
-        .frame(height: AppTheme.unit * 11) // There has to be a better way...
+        .buttonStyle(RowButtonStyle())
     }
 }
 
