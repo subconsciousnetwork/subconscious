@@ -761,8 +761,7 @@ struct NotebookModel: ModelProtocol {
             case .viewer(var description):
                 description.address = to
                 return .viewer(description)
-            case .profile(var description):
-                description.address = to
+            case .profile(let description):
                 return .profile(description)
             }
         })
@@ -796,8 +795,7 @@ struct NotebookModel: ModelProtocol {
             case .viewer(var description):
                 description.address = parent
                 return .viewer(description)
-            case .profile(var description):
-                description.address = parent
+            case .profile(let description):
                 return .profile(description)
             }
         })
@@ -833,8 +831,7 @@ struct NotebookModel: ModelProtocol {
             case .viewer(var description):
                 description.address = receipt.to
                 return .viewer(description)
-            case .profile(var description):
-                description.address = receipt.to
+            case .profile(let description):
                 return .profile(description)
             }
         })

@@ -123,8 +123,10 @@ struct NotebookNavigationView: View {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(
                             action: {
+                                let dummyUser = UserProfile.dummyData()
                                 let detail = UserProfileDetailDescription(
-                                    address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress()
+                                    user: dummyUser,
+                                    spherePath: [dummyUser]
                                 )
                                 
                                 store.send(.pushDetail(.profile(detail)))

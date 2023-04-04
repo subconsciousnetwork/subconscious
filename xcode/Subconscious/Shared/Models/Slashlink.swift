@@ -91,8 +91,15 @@ public struct Slashlink:
     }
     
     /// Convenience initializer that creates a link to `@user/_profile_`
-    init (petname: Petname) {
+    init(petname: Petname) {
         self.init(petname: petname, slug: Self.profileSlug)
+    }
+    
+    init?(petnames: [Petname]) {
+        self.petnamePart = petnames.description
+        self.slugPart = Self.profileSlug.markup
+        self.verbatim = "\(petnamePart ?? "")\(slugPart)"
+        self.description = self.verbatim
     }
 }
 

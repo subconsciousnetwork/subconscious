@@ -111,9 +111,11 @@ struct UserProfileDetailMetaSheet: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                    if let user = profile.user {
+                    if let user = profile.user,
+                       let fullPath = profile.spherePath.map({ s in s.petname.description }).joined(separator: ".")
+                    {
                         HStack {
-                            Text("@\(user.petname.verbatim)")
+                            Text("@\(fullPath)")
                                 .foregroundColor(.secondary)
                             if user.category == .you {
                             Text("(you)")

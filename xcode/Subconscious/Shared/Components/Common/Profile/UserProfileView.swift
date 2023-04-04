@@ -26,7 +26,7 @@ struct UserProfileView: View {
     var send: (UserProfileDetailAction) -> Void
     
     let onNavigateToNote: (MemoAddress) -> Void
-    let onNavigateToUser: (MemoAddress) -> Void
+    let onNavigateToUser: (UserProfile) -> Void
     
     let onProfileAction: (UserProfile, UserProfileAction) -> Void
     
@@ -71,7 +71,7 @@ struct UserProfileView: View {
                 ForEach(state.following, id: \.user.did) { follow in
                     StoryUserView(
                         story: follow,
-                        action: { address, _ in onNavigateToUser(address) },
+                        action: { address, _ in onNavigateToUser(follow.user) },
                         profileAction: onProfileAction
                     )
                 }

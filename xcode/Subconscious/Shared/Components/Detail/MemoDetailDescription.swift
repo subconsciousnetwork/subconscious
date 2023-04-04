@@ -23,7 +23,11 @@ enum MemoDetailDescription: Hashable {
         case .viewer(let description):
             return description.address
         case .profile(let description):
-            return description.address
+            let petnames =
+                description.spherePath
+                .map { u in u.petname }
+            
+            return Slashlink(petnames: petnames)?.toPublicMemoAddress()
         }
     }
 }
