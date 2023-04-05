@@ -23,11 +23,65 @@ struct MemoViewerDetailView: View {
 
     var body: some View {
         VStack {
-            Text("View")
+            if store.state.isLoading {
+                MemoViewerDetailLoadingView(
+                    notify: notify
+                )
+            } else {
+                MemoViewerDetailLoadedView(
+                    title: store.state.title,
+                    content: store.state.content,
+                    backlinks: store.state.backlinks,
+                    notify: notify
+                )
+            }
         }
+        .navigationTitle(store.state.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.visible)
+        .toolbarBackground(Color.background, for: .navigationBar)
+        .toolbar(content: {
+            DetailToolbarContent(
+                address: store.state.address,
+                defaultAudience: store.state.defaultAudience,
+                onTapOmnibox: {
+                }
+            )
+        })
         .onAppear {
             store.send(.appear(description))
         }
+    }
+}
+
+struct MemoViewerDetailLoadingView: View {
+    var notify: (MemoViewerDetailNotification) -> Void
+
+    var body: some View {
+        ProgressView()
+    }
+}
+
+struct MemoViewerDetailLoadedView: View {
+    var title: String
+    var content: String
+    var backlinks: [EntryStub]
+    var notify: (MemoViewerDetailNotification) -> Void
+    
+    var body: some View {
+        BacklinksView(
+            backlinks: backlinks,
+            onSelect: { link in
+                notify(
+                    .requestDetail(
+                        MemoDetailDescription.from(
+                            address: link.address,
+                            fallback: link.title
+                        )
+                    )
+                )
+            }
+        )
     }
 }
 
@@ -57,9 +111,12 @@ struct MemoViewerDetailModel: ModelProtocol {
         subsystem: Config.default.rdns,
         category: "MemoViewerDetail"
     )
-        
+    
+    var isLoading = true
     var address: MemoAddress?
-    var memo: Memo?
+    var defaultAudience = Audience.local
+    var title = ""
+    var content = ""
     var backlinks: [EntryStub] = []
     
     static func update(
@@ -92,6 +149,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         description: MemoViewerDetailDescription
     ) -> Update<Self> {
         var model = state
+        model.isLoading = true
         model.address = description.address
         let fx: Fx<Action> = environment.data.readMemoDetailAsync(
             address: description.address
@@ -106,13 +164,16 @@ struct MemoViewerDetailModel: ModelProtocol {
         environment: Environment,
         response: MemoDetailResponse?
     ) -> Update<Self> {
+        var model = state
+        model.isLoading = false
         // TODO handle loading state
         guard let response = response else {
-            return Update(state: state)
+            return Update(state: model)
         }
-        var model = state
+        let memo = response.entry.contents
         model.address = response.entry.address
-        model.memo = response.entry.contents
+        model.title = memo.title()
+        model.content = memo.body
         model.backlinks = response.backlinks
         return Update(state: model)
     }
