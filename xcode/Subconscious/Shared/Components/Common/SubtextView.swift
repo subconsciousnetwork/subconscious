@@ -29,11 +29,11 @@ struct SubtextView_Previews: PreviewProvider {
 
                 Say not, "I have found the path of the soul." Say rather, "I have met the soul walking upon my path."
 
-                For the soul walks upon all paths.
+                For the soul walks upon all paths. /infinity-paths
 
                 The soul walks not upon a line, neither does it grow like a reed.
 
-                The soul unfolds itself, like a lotus of countless petals.
+                The soul unfolds itself, like a [[lotus]] of countless petals.
                 """
             ),
             renderer: SubtextAttributedStringRenderer()
