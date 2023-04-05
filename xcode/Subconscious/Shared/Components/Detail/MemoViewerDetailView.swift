@@ -72,20 +72,27 @@ struct MemoViewerDetailLoadedView: View {
     var backlinks: [EntryStub]
     var notify: (MemoViewerDetailNotification) -> Void
     
+    private var dom: Subtext {
+        Subtext(markup: content)
+    }
+
     var body: some View {
-        BacklinksView(
-            backlinks: backlinks,
-            onSelect: { link in
-                notify(
-                    .requestDetail(
-                        MemoDetailDescription.from(
-                            address: link.address,
-                            fallback: link.title
+        ScrollView {
+            Text(content)
+            BacklinksView(
+                backlinks: backlinks,
+                onSelect: { link in
+                    notify(
+                        .requestDetail(
+                            MemoDetailDescription.from(
+                                address: link.address,
+                                fallback: link.title
+                            )
                         )
                     )
-                )
-            }
-        )
+                }
+            )
+        }
     }
 }
 
