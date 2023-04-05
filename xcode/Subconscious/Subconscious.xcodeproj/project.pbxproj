@@ -2320,7 +2320,7 @@
 			repositoryURL = "https://github.com/subconsciousnetwork/noosphere";
 			requirement = {
 				kind = revision;
-				revision = 16fa036a1c499678afdc39dfbdb6f0e6fcfe01ee;
+				revision = 8ed33aaa3555efef343807611214f6436c7eefb3;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
