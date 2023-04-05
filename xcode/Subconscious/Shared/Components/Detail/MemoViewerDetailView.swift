@@ -51,6 +51,10 @@ struct MemoViewerDetailView: View {
         .onAppear {
             store.send(.appear(description))
         }
+        .onReceive(store.actions) { action in
+            let message = String.loggable(action)
+            MemoViewerDetailModel.logger.debug("[action] \(message)")
+        }
     }
 }
 
