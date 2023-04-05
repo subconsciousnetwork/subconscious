@@ -43,6 +43,7 @@ enum SubtextTextAction: Hashable, CustomLogStringConvertible {
     case setSelection(range: NSRange, text: String)
     /// Set selection at the end of the text
     case setSelectionAtEnd
+    case setEditable(Bool)
 
     var logDescription: String {
         switch self {
@@ -61,6 +62,7 @@ struct SubtextTextModel: ModelProtocol {
     var focus = false
     var text = ""
     var selection = NSMakeRange(0, 0)
+    var isEditable = true
 
     //  MARK: Update
     static func update(
@@ -105,6 +107,10 @@ struct SubtextTextModel: ModelProtocol {
                 action: .setSelection(range: range, text: state.text),
                 environment: ()
             )
+        case .setEditable(let isEditable):
+            var model = state
+            model.isEditable = isEditable
+            return Update(state: model)
         }
     }
 }
@@ -372,6 +378,7 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
         view.backgroundColor = .clear
         view.textColor = textColor
         view.isScrollEnabled = false
+        view.isEditable = state.isEditable
         return view
     }
 
@@ -428,6 +435,10 @@ struct SubtextTextViewRepresentable: UIViewRepresentable {
             SubtextTextViewRepresentable.logger.debug("updateUIView: set inset")
             // Set inner padding
             view.textContainerInset = self.textContainerInset
+        }
+
+        if view.isEditable != self.state.isEditable {
+            view.isEditable = self.state.isEditable
         }
     }
 
