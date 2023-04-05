@@ -30,8 +30,9 @@ struct MemoViewerDetailView: View {
             } else {
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
-                    content: store.state.content,
+                    editor: store.state.editor,
                     backlinks: store.state.backlinks,
+                    send: store.send,
                     notify: notify
                 )
             }
@@ -68,34 +69,54 @@ struct MemoViewerDetailLoadingView: View {
 
 struct MemoViewerDetailLoadedView: View {
     var title: String
-    var content: String
+    var editor: SubtextTextModel
     var backlinks: [EntryStub]
+    var send: (MemoViewerDetailAction) -> Void
     var notify: (MemoViewerDetailNotification) -> Void
     
-    private var dom: Subtext {
-        Subtext(markup: content)
+    func onBacklinkSelect(_ link: EntryLink) {
+        notify(
+            .requestDetail(
+                MemoDetailDescription.from(
+                    address: link.address,
+                    fallback: link.title
+                )
+            )
+        )
     }
 
     var body: some View {
-        ScrollView {
-            VStack {
-                SubtextView(subtext: dom)
-            }
-            .padding()
-            ThickDividerView()
-            BacklinksView(
-                backlinks: backlinks,
-                onSelect: { link in
-                    notify(
-                        .requestDetail(
-                            MemoDetailDescription.from(
-                                address: link.address,
-                                fallback: link.title
-                            )
+        GeometryReader { geometry in
+            ScrollView {
+                VStack {
+                    SubtextTextViewRepresentable(
+                        state: editor,
+                        send: Address.forward(
+                            send: send,
+                            tag: MemoViewerDetailSubtextTextCursor.tag
+                        ),
+                        frame: geometry.frame(in: .local),
+                        onLink: { link in true }
+                    )
+                    .insets(
+                        EdgeInsets(
+                            top: AppTheme.padding,
+                            leading: AppTheme.padding,
+                            bottom: AppTheme.padding,
+                            trailing: AppTheme.padding
                         )
                     )
+                    .frame(
+                        minHeight: UIFont.appTextMono.lineHeight * 8
+                    )
+                    ThickDividerView()
+                        .padding(.bottom, AppTheme.unit4)
+                    BacklinksView(
+                        backlinks: backlinks,
+                        onSelect: onBacklinkSelect
+                    )
                 }
-            )
+            }
         }
     }
 }
@@ -113,6 +134,7 @@ struct MemoViewerDetailDescription: Hashable {
 }
 
 enum MemoViewerDetailAction: Hashable {
+    case editor(SubtextTextAction)
     case appear(_ description: MemoViewerDetailDescription)
     case setDetail(_ detail: MemoDetailResponse?)
     case failLoadDetail(_ message: String)
@@ -131,7 +153,7 @@ struct MemoViewerDetailModel: ModelProtocol {
     var address: MemoAddress?
     var defaultAudience = Audience.local
     var title = ""
-    var content = ""
+    var editor = SubtextTextModel(isEditable: false)
     var backlinks: [EntryStub] = []
     
     static func update(
@@ -140,6 +162,12 @@ struct MemoViewerDetailModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         switch action {
+        case .editor(let action):
+            return MemoViewerDetailSubtextTextCursor.update(
+                state: state,
+                action: action,
+                environment: ()
+            )
         case .appear(let description):
             return appear(
                 state: state,
@@ -188,9 +216,33 @@ struct MemoViewerDetailModel: ModelProtocol {
         let memo = response.entry.contents
         model.address = response.entry.address
         model.title = memo.title()
-        model.content = memo.body
         model.backlinks = response.backlinks
-        return Update(state: model)
+        return update(
+            state: model,
+            action: .editor(.setText(memo.body)),
+            environment: environment
+        )
+    }
+}
+
+//  MARK: Cursors
+/// Editor cursor
+struct MemoViewerDetailSubtextTextCursor: CursorProtocol {
+    static func get(state: MemoViewerDetailModel) -> SubtextTextModel {
+        state.editor
+    }
+
+    static func set(
+        state: MemoViewerDetailModel,
+        inner: SubtextTextModel
+    ) -> MemoViewerDetailModel {
+        var model = state
+        model.editor = inner
+        return model
+    }
+
+    static func tag(_ action: SubtextTextAction) -> MemoViewerDetailAction {
+        return .editor(action)
     }
 }
 
@@ -198,18 +250,21 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
     static var previews: some View {
         MemoViewerDetailLoadedView(
             title: "Truth, The Prophet",
-            content: """
-            Say not, "I have found _the_ truth," but rather, "I have found a truth."
+            editor: SubtextTextModel(
+                text:"""
+                Say not, "I have found _the_ truth," but rather, "I have found a truth."
 
-            Say not, "I have found the path of the soul." Say rather, "I have met the soul walking upon my path."
+                Say not, "I have found the path of the soul." Say rather, "I have met the soul walking upon my path."
 
-            For the soul walks upon all paths. /infinity-paths
+                For the soul walks upon all paths. /infinity-paths
 
-            The soul walks not upon a line, neither does it grow like a reed.
+                The soul walks not upon a line, neither does it grow like a reed.
 
-            The soul unfolds itself, like a [[lotus]] of countless petals.
-            """,
+                The soul unfolds itself, like a [[lotus]] of countless petals.
+                """
+            ),
             backlinks: [],
+            send: { action in },
             notify: { action in }
         )
     }

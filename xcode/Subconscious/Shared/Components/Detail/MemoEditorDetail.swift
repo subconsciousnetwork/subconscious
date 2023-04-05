@@ -70,7 +70,6 @@ struct MemoEditorDetailView: View {
                         )
                         .frame(
                             minHeight: UIFont.appTextMono.lineHeight * 8
-
                         )
                         ThickDividerView()
                             .padding(.bottom, AppTheme.unit4)
