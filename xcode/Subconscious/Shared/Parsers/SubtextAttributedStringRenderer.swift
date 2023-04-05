@@ -108,7 +108,18 @@ struct SubtextAttributedStringRenderer {
     var slashlinkToURL: (String) -> URL? = Self.slashlinkToURL
     /// Delegate allowing wikilink-to-url override
     var wikilinkToURL: (String) -> URL? = Self.wikilinkToURL
-    
+
+    /// Render string to new-style SwiftUI AttributedString
+    /// You can use this to produce strings which can be rendered in
+    /// `Text` blocks.
+    func render(_ string: String) -> AttributedString {
+        let nsAttributedString = NSMutableAttributedString(
+            string: string
+        )
+        _ = renderAttributesOf(nsAttributedString)
+        return AttributedString(nsAttributedString)
+    }
+
     /// Read markup in NSMutableAttributedString, and render as attributes.
     /// Resets all attributes on string, replacing them with style attributes
     /// corresponding to the semantic meaning of Subtext markup.

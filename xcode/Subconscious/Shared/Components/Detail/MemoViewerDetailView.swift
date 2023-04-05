@@ -78,7 +78,7 @@ struct MemoViewerDetailLoadedView: View {
 
     var body: some View {
         ScrollView {
-            Text(content)
+            SubtextView(subtext: dom)
             BacklinksView(
                 backlinks: backlinks,
                 onSelect: { link in
@@ -187,5 +187,25 @@ struct MemoViewerDetailModel: ModelProtocol {
         model.content = memo.body
         model.backlinks = response.backlinks
         return Update(state: model)
+    }
+}
+
+struct MemoViewerDetailView_Previews: PreviewProvider {
+    static var previews: some View {
+        SubtextView(
+            subtext: Subtext(
+                markup: """
+                Say not, "I have found the truth," but rather, "I have found a truth."
+
+                Say not, "I have found the path of the soul." Say rather, "I have met the soul walking upon my path."
+
+                For the soul walks upon all paths.
+
+                The soul walks not upon a line, neither does it grow like a reed.
+
+                The soul unfolds itself, like a lotus of countless petals.
+                """
+            )
+        )
     }
 }
