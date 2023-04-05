@@ -8,7 +8,7 @@
 import Foundation
 
 /// A type representing a valid slug (`/slug`)
-struct Slug:
+public struct Slug:
     Hashable,
     Equatable,
     Identifiable,
@@ -18,11 +18,11 @@ struct Slug:
 {
     private static let slugRegex = /([\w\d\-]+)(\/[\w\d\-]+)*/
 
-    static func < (lhs: Slug, rhs: Slug) -> Bool {
+    public static func < (lhs: Slug, rhs: Slug) -> Bool {
         lhs.id < rhs.id
     }
     
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
     
@@ -49,19 +49,19 @@ struct Slug:
         return formatted
     }
     
-    let description: String
-    let verbatim: String
+    public let description: String
+    public let verbatim: String
 
-    var id: String { description }
+    public var id: String { description }
 
-    var markup: String {
+    public var markup: String {
         "/\(verbatim)"
     }
     
     /// Losslessly create a slug from a string.
     /// This requires that the string already be formatted like a
     /// valid slug.
-    init?(_ description: String) {
+    public init?(_ description: String) {
         guard description.wholeMatch(of: Self.slugRegex) != nil else {
             return nil
         }
@@ -71,7 +71,7 @@ struct Slug:
     
     /// Convert a string into a slug.
     /// This will sanitize the string as best it can to create a valid slug.
-    init?(formatting string: String) {
+    public init?(formatting string: String) {
         self.init(Self.format(string))
     }
 
@@ -79,7 +79,7 @@ struct Slug:
     ///
     /// Note this is lossless, so it will only support URLs that contain
     /// valid slug strings as paths.
-    init?(url: URL, relativeTo base: URL) {
+    public init?(url: URL, relativeTo base: URL) {
         // NOTE: it is extremely important that we call relativizingPath
         // WITHOUT calling `url.deletePathExtension()`.
         // This is because `url.relativizingPath()` calls

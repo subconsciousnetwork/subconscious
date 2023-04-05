@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents a fully-qualified slashlink with petname and slug.
-struct Slashlink:
+public struct Slashlink:
     Hashable,
     Equatable,
     Identifiable,
@@ -18,27 +18,27 @@ struct Slashlink:
 {
     private static let slashlinkRegex = /(\@(?<petname>[\w\d\-]+))?\/(?<slug>(?:[\w\d\-]+)(?:\/[\w\d\-]+)*)/
     
-    static func < (lhs: Slashlink, rhs: Slashlink) -> Bool {
+    public static func < (lhs: Slashlink, rhs: Slashlink) -> Bool {
         lhs.id < rhs.id
     }
     
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
     
-    let description: String
-    let verbatim: String
+    public let description: String
+    public let verbatim: String
     let petnamePart: String?
     let slugPart: String
     
-    var id: String { description }
+    public var id: String { description }
     
     static let profileSlug = Slug("_profile_")!
     
     // The normalized markup form of the slashlink
-    var markup: String { description }
+    public var markup: String { description }
 
-    init(
+    public init(
         petname: Petname? = nil,
         slug: Slug
     ) {
@@ -49,7 +49,7 @@ struct Slashlink:
         self.verbatim = description
     }
     
-    init?(_ description: String) {
+    public init?(_ description: String) {
         guard
             let match = description.wholeMatch(of: Self.slashlinkRegex)
         else {
