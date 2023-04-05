@@ -23,13 +23,16 @@ struct MemoViewerDetailView: View {
         VStack {
             Text("View")
         }
+        .onAppear {
+            store.send(.appear(description))
+        }
     }
 }
 
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
 enum MemoViewerDetailNotification: Hashable {
-    case requestDetail(MemoDetailDescription)
+    case requestDetail(_ description: MemoDetailDescription)
 }
 
 /// A description of a memo detail that can be used to set up the memo
@@ -39,18 +42,37 @@ struct MemoViewerDetailDescription: Hashable {
 }
 
 enum MemoViewerDetailAction: Hashable {
-    
+    case appear(_ description: MemoViewerDetailDescription)
 }
 
 struct MemoViewerDetailModel: ModelProtocol {
     typealias Action = MemoViewerDetailAction
     typealias Environment = AppEnvironment
+    
+    var address: MemoAddress?
 
     static func update(
         state: Self,
         action: Action,
         environment: Environment
     ) -> Update<Self> {
-        Update(state: state)
+        switch action {
+        case .appear(let description):
+            return appear(
+                state: state,
+                environment: environment,
+                description: description
+            )
+        }
+    }
+    
+    static func appear(
+        state: Self,
+        environment: Environment,
+        description: MemoViewerDetailDescription
+    ) -> Update<Self> {
+        var model = state
+        model.address = description.address
+        return Update(state: state)
     }
 }
