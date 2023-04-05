@@ -212,7 +212,7 @@ struct DataService {
     ) throws -> Memo {
         switch address {
         case .public(let slashlink):
-            return try noosphere.read(slashlink: slashlink.description)
+            return try noosphere.read(slashlink)
                 .toMemo()
                 .unwrap()
         case .local(let slug):
@@ -481,7 +481,7 @@ struct DataService {
     private func readSphereMemo(
         slashlink: Slashlink
     ) -> Memo? {
-        try? noosphere.read(slashlink: slashlink.description).toMemo()
+        try? noosphere.read(slashlink).toMemo()
     }
 
     /// Read memo from local store

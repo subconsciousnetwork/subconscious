@@ -195,6 +195,21 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         }
     }
     
+    func read(_ slashlink: Slashlink) throws -> MemoData {
+        try queue.sync {
+            let sphere = try self.sphere()
+            // No petname? This is local sphere content
+            guard let petname = slashlink.toPetname() else {
+                return try sphere.read(
+                    slashlink: slashlink.toSlug().description
+                )
+            }
+            return try sphere
+                .traverse(petname: petname.description)
+                .read(slashlink: slashlink.toSlug().description)
+        }
+    }
+
     func write(
         slug: String,
         contentType: String,

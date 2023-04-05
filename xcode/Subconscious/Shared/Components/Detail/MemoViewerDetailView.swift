@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Combine
+import os
 import ObservableStore
 
 /// Display a read-only memo detail view.
@@ -43,14 +45,23 @@ struct MemoViewerDetailDescription: Hashable {
 
 enum MemoViewerDetailAction: Hashable {
     case appear(_ description: MemoViewerDetailDescription)
+    case setDetail(_ detail: MemoDetailResponse?)
+    case failLoadDetail(_ message: String)
 }
 
 struct MemoViewerDetailModel: ModelProtocol {
     typealias Action = MemoViewerDetailAction
     typealias Environment = AppEnvironment
-    
-    var address: MemoAddress?
 
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "MemoViewerDetail"
+    )
+        
+    var address: MemoAddress?
+    var memo: Memo?
+    var backlinks: [EntryStub] = []
+    
     static func update(
         state: Self,
         action: Action,
@@ -63,6 +74,15 @@ struct MemoViewerDetailModel: ModelProtocol {
                 environment: environment,
                 description: description
             )
+        case .setDetail(let response):
+            return setDetail(
+                state: state,
+                environment: environment,
+                response: response
+            )
+        case .failLoadDetail(let message):
+            logger.log("\(message)")
+            return Update(state: state)
         }
     }
     
@@ -73,6 +93,27 @@ struct MemoViewerDetailModel: ModelProtocol {
     ) -> Update<Self> {
         var model = state
         model.address = description.address
-        return Update(state: state)
+        let fx: Fx<Action> = environment.data.readMemoDetailAsync(
+            address: description.address
+        ).map({ response in
+            Action.setDetail(response)
+        }).eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+    
+    static func setDetail(
+        state: Self,
+        environment: Environment,
+        response: MemoDetailResponse?
+    ) -> Update<Self> {
+        // TODO handle loading state
+        guard let response = response else {
+            return Update(state: state)
+        }
+        var model = state
+        model.address = response.entry.address
+        model.memo = response.entry.contents
+        model.backlinks = response.backlinks
+        return Update(state: model)
     }
 }
