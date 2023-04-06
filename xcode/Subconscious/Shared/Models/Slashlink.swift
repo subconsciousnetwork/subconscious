@@ -26,11 +26,23 @@ public struct Slashlink:
         lhs.id == rhs.id
     }
     
-    public let description: String
-    public let verbatim: String
-    let petnamePart: String?
-    let slugPart: String
+    let petname: Petname?
+    let slug: Slug
     
+    public var description: String {
+        guard let petname = petname else {
+            return "/\(slug.description)"
+        }
+        return "@\(petname.description)/\(slug.description)"
+    }
+
+    public var verbatim: String {
+        guard let petname = petname else {
+            return "/\(slug.verbatim)"
+        }
+        return "@\(petname.verbatim)/\(slug.verbatim)"
+    }
+
     public var id: String { description }
     
     static let profileSlug = Slug("_profile_")!
@@ -42,11 +54,8 @@ public struct Slashlink:
         petname: Petname? = nil,
         slug: Slug
     ) {
-        self.petnamePart = petname?.verbatim
-        self.slugPart = slug.verbatim
-        let description = "\(petname?.markup ?? "")\(slug.markup)"
-        self.description = description.lowercased()
-        self.verbatim = description
+        self.petname = petname
+        self.slug = slug
     }
     
     public init?(_ description: String) {
@@ -55,11 +64,11 @@ public struct Slashlink:
         else {
             return nil
         }
-        self.description = description.lowercased()
-        self.verbatim = description
-        let slug = match.slug.toString()
-        self.slugPart = slug
-        self.petnamePart = match.petname?.toString()
+        let slug = Slug(uncheckedRawString: match.slug.toString())
+        let petname = match.petname.map({ substring in
+            Petname(uncheckedRawString: substring.toString())
+        })
+        self.init(petname: petname, slug: slug)
     }
     
     /// Convenience initializer that creates a link to `@user/_profile_`
@@ -89,7 +98,7 @@ extension Slug {
 
 extension Slashlink {
     func toSlug() -> Slug {
-        Slug(uncheckedRawString: self.slugPart)
+        self.slug
     }
 }
 
@@ -104,10 +113,7 @@ extension Petname {
 
 extension Slashlink {
     func toPetname() -> Petname? {
-        guard let petnamePart = self.petnamePart else {
-            return nil
-        }
-        return Petname(uncheckedRawString: petnamePart)
+        self.petname
     }
 }
 

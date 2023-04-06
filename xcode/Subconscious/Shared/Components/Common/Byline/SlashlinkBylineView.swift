@@ -9,18 +9,17 @@ import SwiftUI
 
 /// Compact byline combines a small profile pic, username, and path
 struct SlashlinkBylineView: View {
-    var petname: String?
-    var slug: String
-    private var petnameColor = Color.accentColor
-    private var slugColor = Color.secondary
+    var slashlink: Slashlink
+    var petnameColor = Color.accentColor
+    var slugColor = Color.secondary
     
     var body: some View {
         HStack(spacing: 0) {
-            if let petname = petname.flatMap({ string in Petname(string) }) {
+            if let petname = slashlink.petname {
                 PetnameBylineView(petname: petname)
                     .theme(petname: petnameColor)
             }
-            Text(verbatim: "/\(slug)")
+            Text(verbatim: slashlink.slug.markup)
                 .foregroundColor(slugColor)
             Spacer()
         }
@@ -35,17 +34,6 @@ struct SlashlinkBylineView: View {
         this.petnameColor = petnameColor
         this.slugColor = slugColor
         return this
-    }
-}
-
-extension SlashlinkBylineView {
-    init(
-        slashlink: Slashlink
-    ) {
-        self.init(
-            petname: slashlink.petnamePart,
-            slug: slashlink.slugPart
-        )
     }
 }
 
