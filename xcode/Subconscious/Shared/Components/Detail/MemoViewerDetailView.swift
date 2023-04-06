@@ -23,16 +23,21 @@ struct MemoViewerDetailView: View {
 
     var body: some View {
         VStack {
-            if store.state.isLoading {
+            switch store.state.loadingState {
+            case .loading:
                 MemoViewerDetailLoadingView(
                     notify: notify
                 )
-            } else {
+            case .loaded:
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
                     editor: store.state.editor,
                     backlinks: store.state.backlinks,
                     send: store.send,
+                    notify: notify
+                )
+            case .notFound:
+                MemoViewerDetailNotFoundView(
                     notify: notify
                 )
             }
@@ -56,6 +61,14 @@ struct MemoViewerDetailView: View {
             let message = String.loggable(action)
             MemoViewerDetailModel.logger.debug("[action] \(message)")
         }
+    }
+}
+
+struct MemoViewerDetailNotFoundView: View {
+    var notify: (MemoViewerDetailNotification) -> Void
+    
+    var body: some View {
+        Text("Not found")
     }
 }
 
@@ -149,7 +162,8 @@ struct MemoViewerDetailModel: ModelProtocol {
         category: "MemoViewerDetail"
     )
     
-    var isLoading = true
+    var loadingState = LoadingState.loading
+    
     var address: MemoAddress?
     var defaultAudience = Audience.local
     var title = ""
@@ -192,7 +206,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         description: MemoViewerDetailDescription
     ) -> Update<Self> {
         var model = state
-        model.isLoading = true
+        model.loadingState = .loading
         model.address = description.address
         let fx: Fx<Action> = environment.data.readMemoDetailAsync(
             address: description.address
@@ -208,11 +222,12 @@ struct MemoViewerDetailModel: ModelProtocol {
         response: MemoDetailResponse?
     ) -> Update<Self> {
         var model = state
-        model.isLoading = false
-        // TODO handle loading state
+        // If no response, then mark not found
         guard let response = response else {
+            model.loadingState = .notFound
             return Update(state: model)
         }
+        model.loadingState = .loaded
         let memo = response.entry.contents
         model.address = response.entry.address
         model.title = memo.title()
