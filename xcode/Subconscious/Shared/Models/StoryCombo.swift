@@ -55,8 +55,8 @@ extension MemoEntry {
                 body: """
                 \(story.prompt)
                 
-                \(x.address.slug.toSlashlink().description)
-                \(y.address.slug.toSlashlink().description)
+                \(x.address.slug.toSlashlink().verbatim)
+                \(y.address.slug.toSlashlink().verbatim)
                 """
             )
         )
