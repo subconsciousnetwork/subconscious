@@ -19,7 +19,7 @@ struct SlashlinkBylineView: View {
                 PetnameBylineView(petname: petname)
                     .theme(petname: petnameColor)
             }
-            Text(verbatim: slashlink.slug.markup)
+            Text(verbatim: slashlink.slug.verbatimMarkup)
                 .foregroundColor(slugColor)
             Spacer()
         }

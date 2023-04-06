@@ -55,6 +55,10 @@ public struct Slug:
     public var id: String { description }
 
     public var markup: String {
+        "/\(description)"
+    }
+    
+    public var verbatimMarkup: String {
         "/\(verbatim)"
     }
     

@@ -55,14 +55,14 @@ struct OmniboxSlashlinkView: View {
     var body: some View {
         HStack(spacing: 0) {
             if let petname = slashlink.petname {
-                Text(verbatim: petname.markup).fontWeight(.medium)
+                Text(verbatim: petname.verbatimMarkup).fontWeight(.medium)
                 
                 // Hide the slug if it's the profile view, just the username is cleaner
                 if !slashlink.slug.isProfile() {
-                    Text(verbatim: slashlink.slug.markup)
+                    Text(verbatim: slashlink.slug.verbatimMarkup)
                 }
             } else {
-                Text(verbatim: slashlink.slug.description)
+                Text(verbatim: slashlink.slug.verbatim)
             }
         }
         .lineLimit(1)

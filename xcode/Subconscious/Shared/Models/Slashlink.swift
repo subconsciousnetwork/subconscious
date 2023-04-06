@@ -50,6 +50,9 @@ public struct Slashlink:
     // The normalized markup form of the slashlink
     public var markup: String { description }
 
+    // The non-normalized markup form of the slashlink
+    public var verbatimMarkup: String { verbatim }
+
     public init(
         petname: Petname? = nil,
         slug: Slug

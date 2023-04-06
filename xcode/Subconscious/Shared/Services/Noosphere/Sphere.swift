@@ -194,16 +194,16 @@ public final class Sphere: SphereProtocol {
         return Self.readFileHeaderNames(file: file)
     }
     
-    /// Read the value of a memo from a Sphere
-    /// - Returns: `Memo`
-    public func read(slashlink: Slashlink) throws -> MemoData {
+    /// Read the value of a memo from this Sphere
+    /// - Returns: `MemoData`
+    private func read(slug: Slug) throws -> MemoData {
         guard let file = try Noosphere.callWithError(
             ns_sphere_content_read,
             noosphere.noosphere,
             sphere,
-            slashlink.description
+            slug.markup
         ) else {
-            throw SphereError.fileDoesNotExist(slashlink.description)
+            throw SphereError.fileDoesNotExist(slug.description)
         }
         defer {
             ns_sphere_file_free(file)
@@ -213,7 +213,7 @@ public final class Sphere: SphereProtocol {
             file: file,
             name: "Content-Type"
         ) else {
-            throw SphereError.contentTypeMissing(slashlink.description)
+            throw SphereError.contentTypeMissing(slug.description)
         }
         
         let bodyRaw = try Noosphere.callWithError(
@@ -249,6 +249,17 @@ public final class Sphere: SphereProtocol {
         )
     }
     
+    /// Read the value of a memo from this, or another sphere
+    /// - Returns: `MemoData`
+    public func read(slashlink: Slashlink) throws -> MemoData {
+        // If slashlink is local, just read from this sphere
+        guard let petname = slashlink.petname else {
+            return try read(slug: slashlink.slug)
+        }
+        // Otherwise, traverse, then read
+        return try traverse(petname: petname).read(slug: slashlink.slug)
+    }
+
     /// Write to sphere
     public func write(
         slug: Slug,

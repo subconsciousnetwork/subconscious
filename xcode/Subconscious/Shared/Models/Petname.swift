@@ -53,9 +53,13 @@ public struct Petname:
     public var id: String { description }
     
     public var markup: String {
-        "@\(self.verbatim)"
+        "@\(self.description)"
     }
     
+    public var verbatimMarkup: String {
+        "@\(self.verbatim)"
+    }
+
     public init?(_ description: String) {
         guard description.wholeMatch(of: Self.petnameRegex) != nil else {
             return nil
