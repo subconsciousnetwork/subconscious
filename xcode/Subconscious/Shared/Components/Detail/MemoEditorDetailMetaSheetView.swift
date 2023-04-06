@@ -1,5 +1,5 @@
 //
-//  DetailMetaSheet.swift
+//  MemoEditorDetailMetaSheetView.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 3/3/23.
@@ -8,7 +8,7 @@
 import SwiftUI
 import ObservableStore
 
-struct DetailMetaSheet: View {
+struct MemoEditorDetailMetaSheetView: View {
     @Environment(\.dismiss) private var dismiss
     var state: DetailMetaSheetModel
     var send: (DetailMetaSheetAction) -> Void
@@ -319,7 +319,7 @@ struct DetailActionBottomSheetView_Previews: PreviewProvider {
             Text("Hello")
         }
         .sheet(isPresented: .constant(true)) {
-            DetailMetaSheet(
+            MemoEditorDetailMetaSheetView(
                 state: DetailMetaSheetModel(
                     address: MemoAddress.local(Slug("the-whale-the-whale")!)
                 ),

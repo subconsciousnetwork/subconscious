@@ -150,7 +150,7 @@
 		B8682DCB2804BF04001CD8DD /* Tests_Subtext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8682DCA2804BF04001CD8DD /* Tests_Subtext.swift */; };
 		B8682DCD2804C379001CD8DD /* Tests_CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */; };
 		B86BC75429B143CD005B5833 /* Identified.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86BC75329B143CD005B5833 /* Identified.swift */; };
-		B86BC75A29B24BEF005B5833 /* DetailMetaSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86BC75929B24BEF005B5833 /* DetailMetaSheet.swift */; };
+		B86BC75A29B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86BC75929B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift */; };
 		B86DFF2827BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2927BF02F0002E57ED /* CollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */; };
 		B86DFF2D27C0280B002E57ED /* EntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86DFF2C27C0280B002E57ED /* EntryListView.swift */; };
@@ -492,7 +492,7 @@
 		B8682DCA2804BF04001CD8DD /* Tests_Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Subtext.swift; sourceTree = "<group>"; };
 		B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_CollectionUtilities.swift; sourceTree = "<group>"; };
 		B86BC75329B143CD005B5833 /* Identified.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Identified.swift; sourceTree = "<group>"; };
-		B86BC75929B24BEF005B5833 /* DetailMetaSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailMetaSheet.swift; sourceTree = "<group>"; };
+		B86BC75929B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoEditorDetailMetaSheetView.swift; sourceTree = "<group>"; };
 		B86DFF2727BF02F0002E57ED /* CollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionUtilities.swift; sourceTree = "<group>"; };
 		B86DFF2C27C0280B002E57ED /* EntryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryListView.swift; sourceTree = "<group>"; };
 		B86DFF3027C06EBC002E57ED /* RenameSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenameSuggestion.swift; sourceTree = "<group>"; };
@@ -861,15 +861,15 @@
 		B87288E2299C02E200EF7E07 /* Detail */ = {
 			isa = PBXGroup;
 			children = (
-				B8925B3029C2320D001F9503 /* MemoDetailDescription.swift */,
 				B866868927AC8BED00A03A55 /* DetailKeyboardToolbarView.swift */,
-				B86BC75929B24BEF005B5833 /* DetailMetaSheet.swift */,
 				B85BF47727BC2B4700F55730 /* DetailToolbarContent.swift */,
+				B8925B3029C2320D001F9503 /* MemoDetailDescription.swift */,
+				B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */,
+				B86BC75929B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift */,
 				B8925B2E29C23017001F9503 /* MemoViewerDetailView.swift */,
+				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 				B58A46B929D4004B00491E43 /* UserProfileDetailMetaSheet.swift */,
 				B57C0AF429D2865600D352E3 /* UserProfileDetailView.swift */,
-				B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */,
-				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 			);
 			path = Detail;
 			sourceTree = "<group>";
@@ -1636,7 +1636,7 @@
 				B8AE34BF276BD61400777FF0 /* RowButtonStyle.swift in Sources */,
 				B8CA8F2628909E66005F8802 /* Feed.swift in Sources */,
 				B85652202975BA9000B7FCA0 /* MetaTableView.swift in Sources */,
-				B86BC75A29B24BEF005B5833 /* DetailMetaSheet.swift in Sources */,
+				B86BC75A29B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift in Sources */,
 				B8B6BCB529CCDDF6000DB410 /* ResourceStatus.swift in Sources */,
 				B58FE48C28DED9B600E000CC /* StoryCombo.swift in Sources */,
 				B86DFF3727C09CA2002E57ED /* DateUtilities.swift in Sources */,

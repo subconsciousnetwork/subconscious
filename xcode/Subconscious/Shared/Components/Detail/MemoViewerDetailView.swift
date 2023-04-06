@@ -51,6 +51,7 @@ struct MemoViewerDetailView: View {
                 address: store.state.address,
                 defaultAudience: store.state.defaultAudience,
                 onTapOmnibox: {
+                    
                 }
             )
         })
