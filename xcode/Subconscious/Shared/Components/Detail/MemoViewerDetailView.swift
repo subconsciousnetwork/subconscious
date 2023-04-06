@@ -81,7 +81,8 @@ struct MemoViewerDetailView: View {
 struct MemoViewerDetailNotFoundView: View {
     var backlinks: [EntryStub]
     var notify: (MemoViewerDetailNotification) -> Void
-
+    var contentFrameHeight = UIFont.appTextMono.lineHeight * 8
+    
     func onBacklinkSelect(_ link: EntryLink) {
         notify(
             .requestDetail(
@@ -95,7 +96,11 @@ struct MemoViewerDetailNotFoundView: View {
     
     var body: some View {
         ScrollView {
-            Text("Not found")
+            VStack {
+                Text("Nothing here yet")
+            }
+            .frame(minHeight: contentFrameHeight)
+            .foregroundColor(.secondary)
             ThickDividerView()
                 .padding(.bottom, AppTheme.unit4)
             BacklinksView(
