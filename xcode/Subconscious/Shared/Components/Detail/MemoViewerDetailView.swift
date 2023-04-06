@@ -71,7 +71,11 @@ struct MemoViewerDetailView: View {
             )
         ) {
             MemoViewerDetailMetaSheetView(
-                address: store.state.address
+                state: store.state.metaSheet,
+                send: Address.forward(
+                    send: store.send,
+                    tag: MemoViewerDetailMetaSheetCursor.tag
+                )
             )
         }
     }
@@ -173,6 +177,7 @@ struct MemoViewerDetailLoadedView: View {
     }
 }
 
+// MARK: Notifications
 /// Actions forwarded up to the parent context to notify it of specific
 /// lifecycle events that happened within our component.
 enum MemoViewerDetailNotification: Hashable {
@@ -185,14 +190,17 @@ struct MemoViewerDetailDescription: Hashable {
     var address: MemoAddress
 }
 
+// MARK: Actions
 enum MemoViewerDetailAction: Hashable {
     case editor(SubtextTextAction)
+    case metaSheet(MemoViewerDetailMetaSheetAction)
     case appear(_ description: MemoViewerDetailDescription)
     case setDetail(_ detail: MemoDetailResponse?)
     case failLoadDetail(_ message: String)
     case presentMetaSheet(_ isPresented: Bool)
 }
 
+// MARK: Model
 struct MemoViewerDetailModel: ModelProtocol {
     typealias Action = MemoViewerDetailAction
     typealias Environment = AppEnvironment
@@ -210,7 +218,9 @@ struct MemoViewerDetailModel: ModelProtocol {
     var editor = SubtextTextModel(isEditable: false)
     var backlinks: [EntryStub] = []
     
+    // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
+    var metaSheet = MemoViewerDetailMetaSheetModel()
     
     static func update(
         state: Self,
@@ -220,6 +230,12 @@ struct MemoViewerDetailModel: ModelProtocol {
         switch action {
         case .editor(let action):
             return MemoViewerDetailSubtextTextCursor.update(
+                state: state,
+                action: action,
+                environment: ()
+            )
+        case .metaSheet(let action):
+            return MemoViewerDetailMetaSheetCursor.update(
                 state: state,
                 action: action,
                 environment: ()
@@ -316,6 +332,26 @@ struct MemoViewerDetailSubtextTextCursor: CursorProtocol {
 
     static func tag(_ action: SubtextTextAction) -> MemoViewerDetailAction {
         return .editor(action)
+    }
+}
+
+/// Meta sheet cursor
+struct MemoViewerDetailMetaSheetCursor: CursorProtocol {
+    typealias Model = MemoViewerDetailModel
+    typealias ViewModel = MemoViewerDetailMetaSheetModel
+
+    static func get(state: Model) -> ViewModel {
+        state.metaSheet
+    }
+
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.metaSheet = inner
+        return model
+    }
+
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        return .metaSheet(action)
     }
 }
 

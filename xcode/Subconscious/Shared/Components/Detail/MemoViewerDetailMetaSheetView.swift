@@ -6,17 +6,19 @@
 //
 
 import SwiftUI
+import ObservableStore
 
 struct MemoViewerDetailMetaSheetView: View {
     @Environment(\.dismiss) private var dismiss
-    var address: MemoAddress?
+    var state: MemoViewerDetailMetaSheetModel
+    var send: (MemoViewerDetailMetaSheetAction) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     HStack {
-                        if let slashlink = address?.toSlashlink() {
+                        if let slashlink = state.address?.toSlashlink() {
                             SlashlinkBylineView(slashlink: slashlink).theme(
                                 petname: Color.primary,
                                 slug: Color.secondary
@@ -38,6 +40,7 @@ struct MemoViewerDetailMetaSheetView: View {
                     MetaTableView {
                         Button(
                             action: {
+                                
                             }
                         ) {
                             Label(
@@ -45,6 +48,7 @@ struct MemoViewerDetailMetaSheetView: View {
                                 systemImage: "doc.on.doc"
                             )
                         }
+                        .disabled(state.address == nil)
                         .buttonStyle(RowButtonStyle())
                         Divider()
                         Button(
@@ -56,6 +60,7 @@ struct MemoViewerDetailMetaSheetView: View {
                                 systemImage: "square.and.arrow.up"
                             )
                         }
+                        .disabled(state.address == nil)
                         .buttonStyle(RowButtonStyle())
                     }
 
@@ -92,6 +97,31 @@ struct MemoViewerDetailMetaSheetView: View {
     }
 }
 
+enum MemoViewerDetailMetaSheetAction: Hashable {
+    case copyAddress
+}
+
+struct MemoViewerDetailMetaSheetModel: ModelProtocol {
+    typealias Action = MemoViewerDetailMetaSheetAction
+    typealias Environment = Void
+    
+    var address: MemoAddress?
+    var memoVersion: String?
+    var noteVersion: String?
+    var authorKey: String?
+    
+    static func update(
+        state: Self,
+        action: Action,
+        environment: Environment
+    ) -> Update<Self> {
+        switch action {
+        case .copyAddress:
+            return Update(state: state)
+        }
+    }
+}
+
 struct MemoViewerDetailMetaSheetView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
@@ -99,7 +129,10 @@ struct MemoViewerDetailMetaSheetView_Previews: PreviewProvider {
         }
         .sheet(isPresented: .constant(true)) {
             MemoViewerDetailMetaSheetView(
-                address: MemoAddress("public::@bob/foo")!
+                state: MemoViewerDetailMetaSheetModel(
+                    address: MemoAddress("public::@bob/foo")!
+                ),
+                send: { action in }
             )
         }
     }
