@@ -868,11 +868,11 @@
 				B8925B3029C2320D001F9503 /* MemoDetailDescription.swift */,
 				B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */,
 				B86BC75929B24BEF005B5833 /* MemoEditorDetailMetaSheetView.swift */,
+				B81A1A6E29DF29BF00B4CD1C /* MemoViewerDetailMetaSheetView.swift */,
 				B8925B2E29C23017001F9503 /* MemoViewerDetailView.swift */,
 				B8DEBF242798EF6A007CB528 /* RenameSearchView.swift */,
 				B58A46B929D4004B00491E43 /* UserProfileDetailMetaSheet.swift */,
 				B57C0AF429D2865600D352E3 /* UserProfileDetailView.swift */,
-				B81A1A6E29DF29BF00B4CD1C /* MemoViewerDetailMetaSheetView.swift */,
 			);
 			path = Detail;
 			sourceTree = "<group>";

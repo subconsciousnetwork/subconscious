@@ -51,7 +51,7 @@ struct MemoViewerDetailView: View {
                 address: store.state.address,
                 defaultAudience: store.state.defaultAudience,
                 onTapOmnibox: {
-                    
+                    store.send(.presentMetaSheet(true))
                 }
             )
         })
@@ -61,6 +61,17 @@ struct MemoViewerDetailView: View {
         .onReceive(store.actions) { action in
             let message = String.loggable(action)
             MemoViewerDetailModel.logger.debug("[action] \(message)")
+        }
+        .sheet(
+            isPresented: Binding(
+                get: { store.state.isMetaSheetPresented },
+                send: store.send,
+                tag: MemoViewerDetailAction.presentMetaSheet
+            )
+        ) {
+            MemoViewerDetailMetaSheetView(
+                address: store.state.address
+            )
         }
     }
 }
@@ -152,12 +163,13 @@ enum MemoViewerDetailAction: Hashable {
     case appear(_ description: MemoViewerDetailDescription)
     case setDetail(_ detail: MemoDetailResponse?)
     case failLoadDetail(_ message: String)
+    case presentMetaSheet(_ isPresented: Bool)
 }
 
 struct MemoViewerDetailModel: ModelProtocol {
     typealias Action = MemoViewerDetailAction
     typealias Environment = AppEnvironment
-
+    
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "MemoViewerDetail"
@@ -170,6 +182,8 @@ struct MemoViewerDetailModel: ModelProtocol {
     var title = ""
     var editor = SubtextTextModel(isEditable: false)
     var backlinks: [EntryStub] = []
+    
+    var isMetaSheetPresented = false
     
     static func update(
         state: Self,
@@ -198,6 +212,12 @@ struct MemoViewerDetailModel: ModelProtocol {
         case .failLoadDetail(let message):
             logger.log("\(message)")
             return Update(state: state)
+        case .presentMetaSheet(let isPresented):
+            return presentMetaSheet(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
+            )
         }
     }
     
@@ -214,7 +234,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         ).map({ response in
             Action.setDetail(response)
         }).eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+        return Update(state: model, fx: fx)
     }
     
     static func setDetail(
@@ -238,6 +258,16 @@ struct MemoViewerDetailModel: ModelProtocol {
             action: .editor(.setText(memo.body)),
             environment: environment
         )
+    }
+    
+    static func presentMetaSheet(
+        state: Self,
+        environment: Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isMetaSheetPresented = isPresented
+        return Update(state: model)
     }
 }
 
