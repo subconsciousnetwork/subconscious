@@ -32,28 +32,31 @@ final class Tests_NoosphereService: XCTestCase {
         let bobReceipt = try noosphere.createSphere(ownerKeyName: "bob")
         let aliceReceipt = try noosphere.createSphere(ownerKeyName: "alice")
         
+        let bob = Petname("bob")!
+        let alice = Petname("alice")!
+
         // Put bob in alice's address book
         noosphere.resetSphere(aliceReceipt.identity)
-        try noosphere.setPetname(did: bobReceipt.identity, petname: "bob")
+        try noosphere.setPetname(did: bobReceipt.identity, petname: bob)
         try noosphere.save()
         
-        let bobDid = try noosphere.getPetname(petname: "bob")
+        let bobDid = try noosphere.getPetname(petname: bob)
         XCTAssertEqual(bobDid, bobReceipt.identity)
         
         // Put alice in bob's address book & set bob as default sphere
         noosphere.resetSphere(bobReceipt.identity)
-        try noosphere.setPetname(did: aliceReceipt.identity, petname: "alice")
+        try noosphere.setPetname(did: aliceReceipt.identity, petname: alice)
         try noosphere.save()
         
-        let aliceDid = try noosphere.getPetname(petname: "alice")
+        let aliceDid = try noosphere.getPetname(petname: alice)
         XCTAssertEqual(aliceDid, aliceReceipt.identity)
         
         
-        let result = try noosphere.sync()
+        _ = try noosphere.sync()
         // This should loop back around to bob
         let destinationSphere = try noosphere
-            .traverse(petname: "alice")
-            .traverse(petname: "bob")
+            .traverse(petname: alice)
+            .traverse(petname: bob)
 
         // Clear out Noosphere and Sphere instance
         noosphere.reset()
@@ -79,7 +82,7 @@ final class Tests_NoosphereService: XCTestCase {
         
         let body = try "Test content".toData().unwrap()
         try noosphere.write(
-            slug: "a",
+            slug: Slug("a")!,
             contentType: "text/subtext",
             additionalHeaders: [],
             body: body
@@ -88,13 +91,13 @@ final class Tests_NoosphereService: XCTestCase {
         XCTAssertNotEqual(versionA, versionB)
 
         try noosphere.write(
-            slug: "b",
+            slug: Slug("b")!,
             contentType: "text/subtext",
             additionalHeaders: [],
             body: body
         )
         try noosphere.write(
-            slug: "c",
+            slug: Slug("c")!,
             contentType: "text/subtext",
             additionalHeaders: [],
             body: body

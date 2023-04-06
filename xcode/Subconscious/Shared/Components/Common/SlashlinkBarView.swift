@@ -21,7 +21,7 @@ struct SlashlinkBarView: View {
                         onSelectLink(link)
                     },
                     label: {
-                        Text(link.address.slug.markup)
+                        Text(link.address.slug.verbatimMarkup)
                             .lineLimit(1)
                     }
                 )

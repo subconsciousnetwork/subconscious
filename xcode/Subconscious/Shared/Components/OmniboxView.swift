@@ -27,10 +27,7 @@ struct OmniboxView: View {
             
             Spacer(minLength: AppTheme.unit)
             if let slashlink = address?.toSlashlink() {
-                OmniboxSlashlinkView(
-                    petname: slashlink.petnamePart,
-                    slug: slashlink.slugPart
-                )
+                OmniboxSlashlinkView(slashlink: slashlink)
             } else {
                 Text("Untitled")
                     .foregroundColor(Color.secondary)
@@ -53,23 +50,19 @@ struct OmniboxView: View {
 
 /// Helper view that knows how to format slashlinks with or without petname.
 struct OmniboxSlashlinkView: View {
-    var petname: String?
-    var slug: String
+    var slashlink: Slashlink
     
     var body: some View {
         HStack(spacing: 0) {
-            if let petname = petname {
-                Text(verbatim: "@\(petname)").fontWeight(.medium)
+            if let petname = slashlink.petname {
+                Text(verbatim: petname.verbatimMarkup).fontWeight(.medium)
                 
                 // Hide the slug if it's the profile view, just the username is cleaner
-                if let slug = Slug(slug) {
-                    if !slug.isProfile() {
-                        Text(verbatim: "/\(slug)")
-                    }
+                if !slashlink.slug.isProfile() {
+                    Text(verbatim: slashlink.slug.verbatimMarkup)
                 }
-                
             } else {
-                Text(verbatim: slug)
+                Text(verbatim: slashlink.slug.verbatim)
             }
         }
         .lineLimit(1)

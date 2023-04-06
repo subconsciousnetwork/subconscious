@@ -46,8 +46,8 @@ final class Tests_Slashlink: XCTestCase {
             return
         }
         XCTAssertEqual(slashlink.description, "/valid-slashlink")
-        XCTAssertEqual(slashlink.slugPart, "valid-slashlink")
-        XCTAssertNil(slashlink.petnamePart)
+        XCTAssertEqual(slashlink.slug.description, "valid-slashlink")
+        XCTAssertNil(slashlink.petname)
     }
     
     func testFull() throws {
@@ -56,8 +56,8 @@ final class Tests_Slashlink: XCTestCase {
             return
         }
         XCTAssertEqual(slashlink.description, "@valid-petname/valid-slashlink")
-        XCTAssertEqual(slashlink.petnamePart, "valid-petname")
-        XCTAssertEqual(slashlink.slugPart, "valid-slashlink")
+        XCTAssertEqual(slashlink.petname?.description, "valid-petname")
+        XCTAssertEqual(slashlink.slug.description, "valid-slashlink")
     }
     
     func testUnicode() throws {
@@ -66,8 +66,8 @@ final class Tests_Slashlink: XCTestCase {
             return
         }
         XCTAssertEqual(slashlink.description, "@ⴙvalid-petname/valid-slashlink")
-        XCTAssertEqual(slashlink.petnamePart, "ⴙvalid-petname")
-        XCTAssertEqual(slashlink.slugPart, "valid-slashlink")
+        XCTAssertEqual(slashlink.petname?.description, "ⴙvalid-petname")
+        XCTAssertEqual(slashlink.slug.description, "valid-slashlink")
     }
     
     func testUppercase() throws {
@@ -77,8 +77,8 @@ final class Tests_Slashlink: XCTestCase {
         }
         XCTAssertEqual(slashlink.description, "@valid-petname/valid-slashlink")
         XCTAssertEqual(slashlink.verbatim, "@VALID-PETNAME/valid-slashlink")
-        XCTAssertEqual(slashlink.petnamePart, "VALID-PETNAME")
-        XCTAssertEqual(slashlink.slugPart, "valid-slashlink")
+        XCTAssertEqual(slashlink.petname?.verbatim, "VALID-PETNAME")
+        XCTAssertEqual(slashlink.slug.description, "valid-slashlink")
     }
     
     func testDeepSlashlink() throws {
@@ -87,7 +87,7 @@ final class Tests_Slashlink: XCTestCase {
             XCTFail("Failed to parse deep slashlink")
             return
         }
-        XCTAssertEqual(slashlink.slugPart, "deep/slashlinks/supported")
+        XCTAssertEqual(slashlink.slug.description, "deep/slashlinks/supported")
     }
     
     func testInvalidDoubleSlash() throws {
@@ -135,8 +135,8 @@ final class Tests_Slashlink: XCTestCase {
         let slashlink = Slashlink(petname: petname, slug: slug)
         XCTAssertEqual(slashlink.description, "@foo/bar-baz")
         XCTAssertEqual(slashlink.verbatim, "@FOO/BAR-baz")
-        XCTAssertEqual(slashlink.petnamePart, "FOO")
-        XCTAssertEqual(slashlink.slugPart, "BAR-baz")
+        XCTAssertEqual(slashlink.petname?.verbatim, "FOO")
+        XCTAssertEqual(slashlink.slug.verbatim, "BAR-baz")
     }
 
     func testsInitFromSlug() throws {

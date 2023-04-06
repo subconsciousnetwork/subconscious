@@ -899,7 +899,7 @@ struct NotebookModel: ModelProtocol {
         // If slashlink pointing to other sphere, dispatch action for viewer.
         // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
         // to find in local or sphere content and then push editor detail.
-        switch slashlink.petnamePart {
+        switch slashlink.petname {
         case .some:
             if Config.default.memoViewerDetailEnabled {
                 return update(

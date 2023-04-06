@@ -16,49 +16,62 @@ public protocol SphereProtocol {
     
     func version() throws -> String
     
-    func getFileVersion(slashlink: String) -> String?
+    func getFileVersion(slashlink: Slashlink) -> String?
     
     func readHeaderValueFirst(
-        slashlink: String,
+        slashlink: Slashlink,
         name: String
     ) -> String?
     
-    func readHeaderNames(slashlink: String) -> [String]
+    func readHeaderNames(slashlink: Slashlink) -> [String]
     
-    func read(slashlink: String) throws -> Memo
+    func read(slashlink: Slashlink) throws -> Memo
     
     func write(
-        slug: String,
+        slug: Slug,
         contentType: String,
         additionalHeaders: [Header],
         body: Data
     ) throws
     
-    func remove(slug: String) throws
+    func remove(slug: Slug) throws
     
     func save() throws -> String
     
-    func list() throws -> [String]
+    func list() throws -> [Slug]
     
     func sync() throws -> String
     
-    func changes(_ since: String?) throws -> [String]
+    func changes(_ since: String?) throws -> [Slug]
+    
+    func getPetname(petname: Petname) throws -> String
+    
+    func setPetname(did: String, petname: Petname) throws
+    
+    func unsetPetname(petname: Petname) throws
+    
+    func resolvePetname(petname: Petname) throws -> String
+    
+    func listPetnames() throws -> [Petname]
+    
+    func getPetnameChanges(sinceCid: String) throws -> [Petname]
     
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
     /// over multiple spheres:
     ///
     /// `sphere().traverse(petname: "alice").traverse(petname: "bob").traverse(petname: "alice)` etc.
     ///
-    func traverse(petname: String) throws -> Sphere
+    func traverse(petname: Petname) throws -> Sphere
 }
 
 protocol SphereIdentityProtocol {
     func identity() throws -> String
 }
 
-enum SphereFSError: Error, LocalizedError {
+enum SphereError: Error, LocalizedError {
     case contentTypeMissing(_ slashlink: String)
     case fileDoesNotExist(_ slashlink: String)
+    case parseError(_ message: String)
     
     var errorDescription: String? {
         switch self {
@@ -66,6 +79,8 @@ enum SphereFSError: Error, LocalizedError {
             return "Content-Type header is missing for file: \(slashlink)"
         case .fileDoesNotExist(let slashlink):
             return "File does not exist: \(slashlink)"
+        case .parseError(let message):
+            return "Parse error: \(message)"
         }
     }
 }
@@ -120,14 +135,14 @@ public final class Sphere: SphereProtocol {
     /// Read first header value for memo at slashlink
     /// - Returns: value, if any
     public func readHeaderValueFirst(
-        slashlink: String,
+        slashlink: Slashlink,
         name: String
     ) -> String? {
         guard let file = try? Noosphere.callWithError(
             ns_sphere_content_read,
             noosphere.noosphere,
             sphere,
-            slashlink
+            slashlink.description
         ) else {
             return nil
         }
@@ -142,12 +157,12 @@ public final class Sphere: SphereProtocol {
     
     /// Get the base64-encoded CID v1 string for the memo that refers to the
     /// content of this sphere file.
-    public func getFileVersion(slashlink: String) -> String? {
+    public func getFileVersion(slashlink: Slashlink) -> String? {
         guard let file = try? Noosphere.callWithError(
             ns_sphere_content_read,
             noosphere.noosphere,
             sphere,
-            slashlink
+            slashlink.description
         ) else {
             return nil
         }
@@ -164,12 +179,12 @@ public final class Sphere: SphereProtocol {
     }
     
     /// Read all header names for a given slashlink
-    public func readHeaderNames(slashlink: String) -> [String] {
+    public func readHeaderNames(slashlink: Slashlink) -> [String] {
         guard let file = try? Noosphere.callWithError(
             ns_sphere_content_read,
             noosphere.noosphere,
             sphere,
-            slashlink
+            slashlink.description
         ) else {
             return []
         }
@@ -179,16 +194,16 @@ public final class Sphere: SphereProtocol {
         return Self.readFileHeaderNames(file: file)
     }
     
-    /// Read the value of a memo from a Sphere
-    /// - Returns: `Memo`
-    public func read(slashlink: String) throws -> MemoData {
+    /// Read the value of a memo from this Sphere
+    /// - Returns: `MemoData`
+    private func read(slug: Slug) throws -> MemoData {
         guard let file = try Noosphere.callWithError(
             ns_sphere_content_read,
             noosphere.noosphere,
             sphere,
-            slashlink
+            slug.markup
         ) else {
-            throw SphereFSError.fileDoesNotExist(slashlink)
+            throw SphereError.fileDoesNotExist(slug.description)
         }
         defer {
             ns_sphere_file_free(file)
@@ -198,7 +213,7 @@ public final class Sphere: SphereProtocol {
             file: file,
             name: "Content-Type"
         ) else {
-            throw SphereFSError.contentTypeMissing(slashlink)
+            throw SphereError.contentTypeMissing(slug.description)
         }
         
         let bodyRaw = try Noosphere.callWithError(
@@ -234,9 +249,20 @@ public final class Sphere: SphereProtocol {
         )
     }
     
+    /// Read the value of a memo from this, or another sphere
+    /// - Returns: `MemoData`
+    public func read(slashlink: Slashlink) throws -> MemoData {
+        // If slashlink is local, just read from this sphere
+        guard let petname = slashlink.petname else {
+            return try read(slug: slashlink.slug)
+        }
+        // Otherwise, traverse, then read
+        return try traverse(petname: petname).read(slug: slashlink.slug)
+    }
+
     /// Write to sphere
     public func write(
-        slug: String,
+        slug: Slug,
         contentType: String,
         additionalHeaders: [Header] = [],
         body: Data
@@ -267,7 +293,7 @@ public final class Sphere: SphereProtocol {
                 ns_sphere_content_write(
                     noosphere.noosphere,
                     sphere,
-                    slug,
+                    slug.description,
                     contentType,
                     bodyRaw,
                     additionalHeadersContainer,
@@ -277,12 +303,12 @@ public final class Sphere: SphereProtocol {
         })
     }
     
-    public func getPetname(petname: String) throws -> String {
+    public func getPetname(petname: Petname) throws -> String {
         let name = try Noosphere.callWithError(
             ns_sphere_petname_get,
             noosphere.noosphere,
             sphere,
-            petname
+            petname.description
         )
         
         guard let name = name else {
@@ -295,32 +321,32 @@ public final class Sphere: SphereProtocol {
         return String(cString: name)
     }
     
-    public func setPetname(did: String, petname: String) throws {
+    public func setPetname(did: String, petname: Petname) throws {
         try Noosphere.callWithError(
             ns_sphere_petname_set,
             noosphere.noosphere,
             sphere,
-            petname,
+            petname.description,
             did
         )
     }
     
-    public func unsetPetname(petname: String) throws {
+    public func unsetPetname(petname: Petname) throws {
         try Noosphere.callWithError(
             ns_sphere_petname_set,
             noosphere.noosphere,
             sphere,
-            petname,
+            petname.description,
             nil
         )
     }
     
-    public func resolvePetname(petname: String) throws -> String {
+    public func resolvePetname(petname: Petname) throws -> String {
         let did = try Noosphere.callWithError(
             ns_sphere_petname_resolve,
             noosphere.noosphere,
             sphere,
-            petname
+            petname.description
         )
         
         guard let did = did else {
@@ -333,7 +359,7 @@ public final class Sphere: SphereProtocol {
         return String(cString: did)
     }
     
-    public func listPetnames() throws -> [String] {
+    public func listPetnames() throws -> [Petname] {
         let petnames = try Noosphere.callWithError(
             ns_sphere_petname_list,
             noosphere.noosphere,
@@ -344,10 +370,14 @@ public final class Sphere: SphereProtocol {
             ns_string_array_free(petnames)
         }
         
-        return petnames.toStringArray()
+        return try petnames.toStringArray().map({ string in
+            try Petname(string).unwrap(
+                SphereError.parseError(string)
+            )
+        })
     }
     
-    public func getPetnameChanges(sinceCid: String) throws -> [String] {
+    public func getPetnameChanges(sinceCid: String) throws -> [Petname] {
         let changes = try Noosphere.callWithError(
             ns_sphere_petname_changes,
             noosphere.noosphere,
@@ -358,18 +388,21 @@ public final class Sphere: SphereProtocol {
             ns_string_array_free(changes)
         }
         
-        return changes.toStringArray()
+        return try changes.toStringArray().map({ string in
+            try Petname(string).unwrap(
+                SphereError.parseError(string)
+            )
+        })
     }
     
-    
-    public func traverse(petname: String) throws -> Sphere {
+    public func traverse(petname: Petname) throws -> Sphere {
         let identity = try self.getPetname(petname: petname)
         
         let sphere = try Noosphere.callWithError(
             ns_sphere_traverse_by_petname,
             noosphere.noosphere,
             sphere,
-            petname
+            petname.description
         )
         
         guard let sphere = sphere else {
@@ -391,17 +424,17 @@ public final class Sphere: SphereProtocol {
     }
     
     /// Remove slug from sphere
-    public func remove(slug: String) throws {
+    public func remove(slug: Slug) throws {
         try Noosphere.callWithError(
             ns_sphere_content_remove,
             noosphere.noosphere,
             sphere,
-            slug
+            slug.description
         )
     }
     
     /// List all slugs in sphere
-    public func list() throws -> [String] {
+    public func list() throws -> [Slug] {
         let slugs = try Noosphere.callWithError(
             ns_sphere_content_list,
             noosphere.noosphere,
@@ -411,7 +444,9 @@ public final class Sphere: SphereProtocol {
             ns_string_array_free(slugs)
         }
         
-        return slugs.toStringArray()
+        return try slugs.toStringArray().map({ string in
+            try Slug(string).unwrap(SphereError.parseError(string))
+        })
     }
     
     /// Sync sphere with gateway.
@@ -434,7 +469,7 @@ public final class Sphere: SphereProtocol {
     /// List all changed slugs between two versions of a sphere.
     /// This method lists which slugs changed between version, but not
     /// what changed.
-    public func changes(_ since: String? = nil) throws -> [String] {
+    public func changes(_ since: String? = nil) throws -> [Slug] {
         let changes = try Noosphere.callWithError(
             ns_sphere_content_changes,
             noosphere.noosphere,
@@ -445,7 +480,9 @@ public final class Sphere: SphereProtocol {
             ns_string_array_free(changes)
         }
         
-        return changes.toStringArray()
+        return try changes.toStringArray().map({ string in
+            try Slug(string).unwrap(SphereError.parseError(string))
+        })
     }
     
     deinit {

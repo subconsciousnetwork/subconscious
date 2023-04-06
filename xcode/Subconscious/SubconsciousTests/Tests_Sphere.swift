@@ -45,12 +45,12 @@ final class Tests_Sphere: XCTestCase {
             )
             
             try sphere.write(
-                slug: "foo",
+                slug: Slug("foo")!,
                 contentType: "text/subtext",
                 body: "Test".toData(encoding: .utf8)!
             )
             _ = try sphere.save()
-            let memo = try sphere.read(slashlink: "/foo")
+            let memo = try sphere.read(slashlink: Slashlink("/foo")!)
             XCTAssertEqual(memo.contentType, "text/subtext")
             let content = memo.body.toString()
             XCTAssertEqual(content, "Test")
@@ -62,7 +62,7 @@ final class Tests_Sphere: XCTestCase {
                 noosphere: noosphere,
                 identity: sphereReceipt.identity
             )
-            let memo = try sphere.read(slashlink: "/foo")
+            let memo = try sphere.read(slashlink: Slashlink("/foo")!)
             XCTAssertEqual(memo.contentType, "text/subtext")
         }
     }
@@ -90,7 +90,7 @@ final class Tests_Sphere: XCTestCase {
         
         let then = Date.distantPast.ISO8601Format()
         try sphere.write(
-            slug: "foo",
+            slug: Slug("foo")!,
             contentType: "text/subtext",
             additionalHeaders: [
                 Header(name: "Title", value: "Foo"),
@@ -101,7 +101,7 @@ final class Tests_Sphere: XCTestCase {
             body: "Test".toData(encoding: .utf8)!
         )
         _ = try sphere.save()
-        let memo = try sphere.read(slashlink: "/foo")
+        let memo = try sphere.read(slashlink: Slashlink("/foo")!)
         XCTAssertEqual(memo.contentType, "text/subtext")
         XCTAssertEqual(memo.body.toString(), "Test")
         
@@ -142,17 +142,17 @@ final class Tests_Sphere: XCTestCase {
         let body = "Test".toData(encoding: .utf8)!
         
         try sphere.write(
-            slug: "foo",
+            slug: Slug("foo")!,
             contentType: "text/subtext",
             body: body
         )
         try sphere.write(
-            slug: "bar",
+            slug: Slug("bar")!,
             contentType: "text/subtext",
             body: body
         )
         try sphere.write(
-            slug: "baz",
+            slug: Slug("baz")!,
             contentType: "text/subtext",
             body: body
         )
@@ -167,9 +167,9 @@ final class Tests_Sphere: XCTestCase {
         _ = try sphere.save()
         
         let slugsB = try sphere.list()
-        XCTAssertTrue(slugsB.contains("foo"))
-        XCTAssertTrue(slugsB.contains("bar"))
-        XCTAssertTrue(slugsB.contains("baz"))
+        XCTAssertTrue(slugsB.contains(Slug("foo")!))
+        XCTAssertTrue(slugsB.contains(Slug("bar")!))
+        XCTAssertTrue(slugsB.contains(Slug("baz")!))
     }
     
     func testChanges() throws {
@@ -196,7 +196,7 @@ final class Tests_Sphere: XCTestCase {
         let body = "Test".toData(encoding: .utf8)!
         
         try sphere.write(
-            slug: "foo",
+            slug: Slug("foo")!,
             contentType: "text/subtext",
             body: body
         )
@@ -204,15 +204,15 @@ final class Tests_Sphere: XCTestCase {
         let a = try sphere.save()
         let changesA = try sphere.changes()
         XCTAssertEqual(changesA.count, 1)
-        XCTAssertTrue(changesA.contains("foo"))
+        XCTAssertTrue(changesA.contains(Slug("foo")!))
         
         try sphere.write(
-            slug: "bar",
+            slug: Slug("bar")!,
             contentType: "text/subtext",
             body: body
         )
         try sphere.write(
-            slug: "baz",
+            slug: Slug("baz")!,
             contentType: "text/subtext",
             body: body
         )
@@ -220,12 +220,12 @@ final class Tests_Sphere: XCTestCase {
         
         let changesB = try sphere.changes(a)
         XCTAssertEqual(changesB.count, 2)
-        XCTAssertTrue(changesB.contains("bar"))
-        XCTAssertTrue(changesB.contains("baz"))
-        XCTAssertFalse(changesB.contains("foo"))
+        XCTAssertTrue(changesB.contains(Slug("bar")!))
+        XCTAssertTrue(changesB.contains(Slug("baz")!))
+        XCTAssertFalse(changesB.contains(Slug("foo")!))
         
         try sphere.write(
-            slug: "bing",
+            slug: Slug("bing")!,
             contentType: "text/subtext",
             body: body
         )
@@ -233,9 +233,9 @@ final class Tests_Sphere: XCTestCase {
         
         let changesC = try sphere.changes(b)
         XCTAssertEqual(changesC.count, 1)
-        XCTAssertTrue(changesC.contains("bing"))
-        XCTAssertFalse(changesC.contains("baz"))
-        XCTAssertFalse(changesC.contains("foo"))
+        XCTAssertTrue(changesC.contains(Slug("bing")!))
+        XCTAssertFalse(changesC.contains(Slug("baz")!))
+        XCTAssertFalse(changesC.contains(Slug("foo")!))
     }
     
     func testRemove() throws {
@@ -262,27 +262,27 @@ final class Tests_Sphere: XCTestCase {
         let body = "Test".toData(encoding: .utf8)!
         
         try sphere.write(
-            slug: "foo",
+            slug: Slug("foo")!,
             contentType: "text/subtext",
             body: body
         )
         try sphere.write(
-            slug: "bar",
+            slug: Slug("bar")!,
             contentType: "text/subtext",
             body: body
         )
         
         _ = try sphere.save()
         
-        try sphere.remove(slug: "foo")
+        try sphere.remove(slug: Slug("foo")!)
         
         _ = try sphere.save()
         
         let slugs = try sphere.list()
         
         XCTAssertEqual(slugs.count, 1)
-        XCTAssertTrue(slugs.contains("bar"))
-        XCTAssertFalse(slugs.contains("foo"))
+        XCTAssertTrue(slugs.contains(Slug("bar")!))
+        XCTAssertFalse(slugs.contains(Slug("foo")!))
     }
     
     func testSaveVersion() throws {
@@ -309,7 +309,7 @@ final class Tests_Sphere: XCTestCase {
         let versionA = try sphere.version()
         
         try sphere.write(
-            slug: "foo",
+            slug: Slug("foo")!,
             contentType: "text/subtext",
             body: "Test".toData(encoding: .utf8)!
         )
@@ -357,14 +357,14 @@ final class Tests_Sphere: XCTestCase {
         _ = try? sphere.sync()
         
         try sphere.write(
-            slug: "foo",
+            slug: Slug("foo")!,
             contentType: "text/subtext",
             body: "Test".toData(encoding: .utf8)!
         )
         
         try sphere.save()
         
-        let foo = try sphere.read(slashlink: "/foo")
+        let foo = try sphere.read(slashlink: Slashlink("/foo")!)
         
         // Should fail
         _ = try? sphere.sync()
@@ -407,9 +407,9 @@ final class Tests_Sphere: XCTestCase {
             
             let body = try "Test content".toData().unwrap()
             let contentType = "text/subtext"
-            try sphere.write(slug: "a", contentType: contentType, body: body)
-            try sphere.write(slug: "b", contentType: contentType, body: body)
-            try sphere.write(slug: "c", contentType: contentType, body: body)
+            try sphere.write(slug: Slug("a")!, contentType: contentType, body: body)
+            try sphere.write(slug: Slug("b")!, contentType: contentType, body: body)
+            try sphere.write(slug: Slug("c")!, contentType: contentType, body: body)
             let version = try sphere.save()
             endVersion = try sphere.version()
             XCTAssertEqual(version, endVersion)
@@ -459,12 +459,12 @@ final class Tests_Sphere: XCTestCase {
 
         let body = try "Test content".toData().unwrap()
         let contentType = "text/subtext"
-        try sphere.write(slug: "a", contentType: contentType, body: body)
+        try sphere.write(slug: Slug("a")!, contentType: contentType, body: body)
 
         let versionA1 = try sphere.save()
 
-        try sphere.write(slug: "b", contentType: contentType, body: body)
-        try sphere.write(slug: "c", contentType: contentType, body: body)
+        try sphere.write(slug: Slug("b")!, contentType: contentType, body: body)
+        try sphere.write(slug: Slug("c")!, contentType: contentType, body: body)
         let versionA2 = try sphere.save()
 
         let versionAN = try sphere.version()

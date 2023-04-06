@@ -60,7 +60,8 @@ class Tests_Petname: XCTestCase {
     
     func testMarkup() throws {
         let petname = Petname("VALID-petname")
-        XCTAssertEqual(petname?.markup, "@VALID-petname")
+        XCTAssertEqual(petname?.markup, "@valid-petname")
+        XCTAssertEqual(petname?.verbatimMarkup, "@VALID-petname")
     }
     
     func testFormatStripsInvalidCharacters() throws {
