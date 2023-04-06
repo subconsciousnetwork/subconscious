@@ -51,7 +51,8 @@ class Tests_Slug: XCTestCase {
 
     func testMarkup() throws {
         let slug = Slug("VALID-slug")
-        XCTAssertEqual(slug?.markup, "/VALID-slug")
+        XCTAssertEqual(slug?.markup, "/valid-slug")
+        XCTAssertEqual(slug?.verbatimMarkup, "/VALID-slug")
     }
 
     func testSlugFromPathlike() throws {

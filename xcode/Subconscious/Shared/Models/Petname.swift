@@ -8,7 +8,7 @@
 import Foundation
 
 /// A type representing a valid petname (`@petname`)
-struct Petname:
+public struct Petname:
     Hashable,
     Equatable,
     Identifiable,
@@ -18,11 +18,11 @@ struct Petname:
 {
     private static let petnameRegex = /[\w\d\-]+/
     
-    static func < (lhs: Self, rhs: Self) -> Bool {
+    public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.id < rhs.id
     }
     
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
 
@@ -48,15 +48,19 @@ struct Petname:
         return formatted
     }
 
-    let description: String
-    let verbatim: String
-    var id: String { description }
+    public let description: String
+    public let verbatim: String
+    public var id: String { description }
     
-    var markup: String {
-        "@\(self.verbatim)"
+    public var markup: String {
+        "@\(self.description)"
     }
     
-    init?(_ description: String) {
+    public var verbatimMarkup: String {
+        "@\(self.verbatim)"
+    }
+
+    public init?(_ description: String) {
         guard description.wholeMatch(of: Self.petnameRegex) != nil else {
             return nil
         }
@@ -66,7 +70,7 @@ struct Petname:
     
     /// Convert a string into a petname.
     /// This will sanitize the string as best it can to create a valid petname.
-    init?(formatting string: String) {
+    public init?(formatting string: String) {
         self.init(Self.format(string))
     }
 }

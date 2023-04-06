@@ -45,7 +45,7 @@ extension MemoDetailDescription {
                     defaultAudience: .local
                 )
             )
-        case .public(let slashlink) where slashlink.petnamePart == nil:
+        case .public(let slashlink) where slashlink.petname == nil:
             return .editor(
                 MemoEditorDetailDescription(
                     address: slashlink.toPublicMemoAddress(),

@@ -163,13 +163,13 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         }
     }
     
-    func getFileVersion(slashlink: String) -> String? {
+    func getFileVersion(slashlink: Slashlink) -> String? {
         queue.sync {
             try? self.sphere().getFileVersion(slashlink: slashlink)
         }
     }
     
-    func readHeaderValueFirst(slashlink: String, name: String) -> String? {
+    func readHeaderValueFirst(slashlink: Slashlink, name: String) -> String? {
         queue.sync {
             try? self.sphere().readHeaderValueFirst(
                 slashlink: slashlink,
@@ -178,7 +178,7 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         }
     }
     
-    func readHeaderNames(slashlink: String) -> [String] {
+    func readHeaderNames(slashlink: Slashlink) -> [String] {
         queue.sync {
             guard let names = try? self.sphere().readHeaderNames(
                 slashlink: slashlink
@@ -189,7 +189,7 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         }
     }
     
-    func read(slashlink: String) throws -> MemoData {
+    func read(slashlink: Slashlink) throws -> MemoData {
         try queue.sync {
             try self.sphere().read(slashlink: slashlink)
         }
@@ -211,7 +211,7 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
     }
 
     func write(
-        slug: String,
+        slug: Slug,
         contentType: String,
         additionalHeaders: [Header],
         body: Data
@@ -226,7 +226,7 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         }
     }
     
-    func remove(slug: String) throws {
+    func remove(slug: Slug) throws {
         try queue.sync {
             try self.sphere().remove(slug: slug)
         }
@@ -238,7 +238,7 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         }
     }
     
-    func list() throws -> [String] {
+    func list() throws -> [Slug] {
         try queue.sync {
             try self.sphere().list()
         }
@@ -250,49 +250,49 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         }
     }
     
-    func changes(_ since: String?) throws -> [String] {
+    func changes(_ since: String?) throws -> [Slug] {
         try queue.sync {
             try self.sphere().changes(since)
         }
     }
     
-    func getPetname(petname: String) throws -> String {
+    func getPetname(petname: Petname) throws -> String {
         try queue.sync {
             try self.sphere().getPetname(petname: petname)
         }
     }
     
-    func setPetname(did: String, petname: String) throws {
+    func setPetname(did: String, petname: Petname) throws {
         try queue.sync {
             try self.sphere().setPetname(did: did, petname: petname)
         }
     }
     
-    func unsetPetname(petname: String) throws {
+    func unsetPetname(petname: Petname) throws {
         try queue.sync {
             try self.sphere().unsetPetname(petname: petname)
         }
     }
     
-    func resolvePetname(petname: String) throws -> String {
+    func resolvePetname(petname: Petname) throws -> String {
         try queue.sync {
             try self.sphere().resolvePetname(petname: petname)
         }
     }
     
-    func listPetnames() throws -> [String] {
+    func listPetnames() throws -> [Petname] {
         try queue.sync {
             try self.sphere().listPetnames()
         }
     }
     
-    func getPetnameChanges(sinceCid: String) throws -> [String] {
+    func getPetnameChanges(sinceCid: String) throws -> [Petname] {
         try queue.sync {
             try self.sphere().getPetnameChanges(sinceCid: sinceCid)
         }
     }
 
-    func traverse(petname: String) throws -> Sphere {
+    func traverse(petname: Petname) throws -> Sphere {
         try queue.sync {
             try self.sphere().traverse(petname: petname)
         }

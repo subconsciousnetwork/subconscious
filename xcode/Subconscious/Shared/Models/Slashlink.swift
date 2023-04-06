@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents a fully-qualified slashlink with petname and slug.
-struct Slashlink:
+public struct Slashlink:
     Hashable,
     Equatable,
     Identifiable,
@@ -18,48 +18,60 @@ struct Slashlink:
 {
     private static let slashlinkRegex = /(\@(?<petname>[\w\d\-]+))?\/(?<slug>(?:[\w\d\-]+)(?:\/[\w\d\-]+)*)/
     
-    static func < (lhs: Slashlink, rhs: Slashlink) -> Bool {
+    public static func < (lhs: Slashlink, rhs: Slashlink) -> Bool {
         lhs.id < rhs.id
     }
     
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
     
-    let description: String
-    let verbatim: String
-    let petnamePart: String?
-    let slugPart: String
+    let petname: Petname?
+    let slug: Slug
     
-    var id: String { description }
+    public var description: String {
+        guard let petname = petname else {
+            return "/\(slug.description)"
+        }
+        return "@\(petname.description)/\(slug.description)"
+    }
+
+    public var verbatim: String {
+        guard let petname = petname else {
+            return "/\(slug.verbatim)"
+        }
+        return "@\(petname.verbatim)/\(slug.verbatim)"
+    }
+
+    public var id: String { description }
     
     static let profileSlug = Slug("_profile_")!
     
     // The normalized markup form of the slashlink
-    var markup: String { description }
+    public var markup: String { description }
 
-    init(
+    // The non-normalized markup form of the slashlink
+    public var verbatimMarkup: String { verbatim }
+
+    public init(
         petname: Petname? = nil,
         slug: Slug
     ) {
-        self.petnamePart = petname?.verbatim
-        self.slugPart = slug.verbatim
-        let description = "\(petname?.markup ?? "")\(slug.markup)"
-        self.description = description.lowercased()
-        self.verbatim = description
+        self.petname = petname
+        self.slug = slug
     }
     
-    init?(_ description: String) {
+    public init?(_ description: String) {
         guard
             let match = description.wholeMatch(of: Self.slashlinkRegex)
         else {
             return nil
         }
-        self.description = description.lowercased()
-        self.verbatim = description
-        let slug = match.slug.toString()
-        self.slugPart = slug
-        self.petnamePart = match.petname?.toString()
+        let slug = Slug(uncheckedRawString: match.slug.toString())
+        let petname = match.petname.map({ substring in
+            Petname(uncheckedRawString: substring.toString())
+        })
+        self.init(petname: petname, slug: slug)
     }
     
     /// Convenience initializer that creates a link to `@user/_profile_`
@@ -89,7 +101,7 @@ extension Slug {
 
 extension Slashlink {
     func toSlug() -> Slug {
-        Slug(uncheckedRawString: self.slugPart)
+        self.slug
     }
 }
 
@@ -104,10 +116,7 @@ extension Petname {
 
 extension Slashlink {
     func toPetname() -> Petname? {
-        guard let petnamePart = self.petnamePart else {
-            return nil
-        }
-        return Petname(uncheckedRawString: petnamePart)
+        self.petname
     }
 }
 

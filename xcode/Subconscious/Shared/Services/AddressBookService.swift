@@ -106,7 +106,7 @@ class AddressBookService {
     }
     
     func getPetname(petname: Petname) throws -> Did? {
-        return try Did(noosphere.getPetname(petname: petname.verbatim))
+        return try Did(noosphere.getPetname(petname: petname))
     }
 
     func getPetnameAsync(petname: Petname) -> AnyPublisher<Did?, Error> {
@@ -116,7 +116,7 @@ class AddressBookService {
     }
 
     func setPetname(did: Did, petname: Petname) throws {
-        try noosphere.setPetname(did: did.did, petname: petname.verbatim)
+        try noosphere.setPetname(did: did.did, petname: petname)
     }
 
     func setPetnameAsync(did: Did, petname: Petname) -> AnyPublisher<Void, Error> {
@@ -126,7 +126,7 @@ class AddressBookService {
     }
 
     func unsetPetname(petname: Petname) throws {
-        try noosphere.unsetPetname(petname: petname.verbatim)
+        try noosphere.unsetPetname(petname: petname)
     }
 
     func unsetPetnameAsync(petname: Petname) -> AnyPublisher<Void, Error> {
@@ -137,8 +137,6 @@ class AddressBookService {
 
     func listPetnames() throws -> [Petname] {
         return try noosphere.listPetnames()
-            .map { name in Petname(name) }
-            .compactMap { $0 }
     }
 
     func listPetnamesAsync() -> AnyPublisher<[Petname], Error> {
@@ -147,11 +145,11 @@ class AddressBookService {
         }
     }
 
-    func getPetnameChanges(sinceCid: String) throws -> [String] {
+    func getPetnameChanges(sinceCid: String) throws -> [Petname] {
         return try noosphere.getPetnameChanges(sinceCid: sinceCid)
     }
       
-    func getPetnameChangesAsync(sinceCid: String) -> AnyPublisher<[String], Error> {
+    func getPetnameChangesAsync(sinceCid: String) -> AnyPublisher<[Petname], Error> {
         CombineUtilities.async(qos: .utility) {
             return try self.getPetnameChanges(sinceCid: sinceCid)
         }
