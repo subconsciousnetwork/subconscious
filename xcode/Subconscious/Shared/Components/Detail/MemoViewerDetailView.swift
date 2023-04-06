@@ -38,6 +38,7 @@ struct MemoViewerDetailView: View {
                 )
             case .notFound:
                 MemoViewerDetailNotFoundView(
+                    backlinks: store.state.backlinks,
                     notify: notify
                 )
             }
@@ -76,11 +77,32 @@ struct MemoViewerDetailView: View {
     }
 }
 
+/// View for the "not found" state of content
 struct MemoViewerDetailNotFoundView: View {
+    var backlinks: [EntryStub]
     var notify: (MemoViewerDetailNotification) -> Void
+
+    func onBacklinkSelect(_ link: EntryLink) {
+        notify(
+            .requestDetail(
+                MemoDetailDescription.from(
+                    address: link.address,
+                    fallback: link.title
+                )
+            )
+        )
+    }
     
     var body: some View {
-        Text("Not found")
+        ScrollView {
+            Text("Not found")
+            ThickDividerView()
+                .padding(.bottom, AppTheme.unit4)
+            BacklinksView(
+                backlinks: backlinks,
+                onSelect: onBacklinkSelect
+            )
+        }
     }
 }
 
@@ -311,6 +333,22 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
             ),
             backlinks: [],
             send: { action in },
+            notify: { action in }
+        )
+
+        MemoViewerDetailNotFoundView(
+            backlinks: [
+                EntryStub(
+                    address: MemoAddress("public::@bob/bar")!,
+                    excerpt: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless.",
+                    modified: Date.now
+                ),
+                EntryStub(
+                    address: MemoAddress("public::@bob/baz")!,
+                    excerpt: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?",
+                    modified: Date.now
+                )
+            ],
             notify: { action in }
         )
     }
