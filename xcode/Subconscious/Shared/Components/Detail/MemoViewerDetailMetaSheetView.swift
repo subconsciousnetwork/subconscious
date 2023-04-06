@@ -35,6 +35,8 @@ struct MemoViewerDetailMetaSheetView: View {
             Divider()
             Spacer()
         }
+        .presentationDragIndicator(.hidden)
+        .presentationDetents([.medium, .large])
     }
 }
 
