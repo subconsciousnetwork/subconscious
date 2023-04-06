@@ -44,6 +44,18 @@ public protocol SphereProtocol {
     
     func changes(_ since: String?) throws -> [Slug]
     
+    func getPetname(petname: Petname) throws -> String
+    
+    func setPetname(did: String, petname: Petname) throws
+    
+    func unsetPetname(petname: Petname) throws
+    
+    func resolvePetname(petname: Petname) throws -> String
+    
+    func listPetnames() throws -> [Petname]
+    
+    func getPetnameChanges(sinceCid: String) throws -> [Petname]
+    
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
     /// over multiple spheres:
     ///
@@ -371,7 +383,6 @@ public final class Sphere: SphereProtocol {
             )
         })
     }
-    
     
     public func traverse(petname: Petname) throws -> Sphere {
         let identity = try self.getPetname(petname: petname)
