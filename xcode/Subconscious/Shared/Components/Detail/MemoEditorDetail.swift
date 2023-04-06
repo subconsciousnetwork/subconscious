@@ -275,7 +275,7 @@ extension MemoEditorDetailNotification {
 /// Actions handled by detail's private store.
 enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     /// Tagging action for detail meta bottom sheet
-    case metaSheet(DetailMetaSheetAction)
+    case metaSheet(MemoEditorDetailMetaSheetAction)
 
     /// Sent once and only once on Store initialization
     case start
@@ -508,7 +508,7 @@ struct MemoEditorDetailSubtextTextCursor: CursorProtocol {
 
 struct DetailMetaSheetCursor: CursorProtocol {
     typealias Model = MemoEditorDetailModel
-    typealias ViewModel = DetailMetaSheetModel
+    typealias ViewModel = MemoEditorDetailMetaSheetModel
 
     static func get(state: Model) -> ViewModel {
         state.metaSheet
@@ -579,7 +579,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     /// Meta bottom sheet is presented?
     var isMetaSheetPresented = false
     /// Meta bottom sheet model
-    var metaSheet = DetailMetaSheetModel()
+    var metaSheet = MemoEditorDetailMetaSheetModel()
     
     /// Link suggestions for modal and bar in edit mode
     var isLinkSheetPresented = false
