@@ -110,14 +110,12 @@ struct DataService {
         let since = try? database.readMetadata(key: .sphereVersion)
         let changes = try noosphere.changes(since)
         for change in changes {
-            guard let address = Slug(change)?.toPublicMemoAddress() else {
-                continue
-            }
+            let address = change.toPublicMemoAddress()
             let slashlink = address.toSlashlink()
             // If memo does exist, write it to database
             // Sphere content is always public right now
             if let memo = try? noosphere.read(
-                slashlink: slashlink.description
+                slashlink: slashlink
             ).toMemo() {
                 try database.writeMemo(
                     address,
@@ -212,7 +210,7 @@ struct DataService {
     ) throws -> Memo {
         switch address {
         case .public(let slashlink):
-            return try noosphere.read(slashlink: slashlink.description)
+            return try noosphere.read(slashlink: slashlink)
                 .toMemo()
                 .unwrap()
         case .local(let slug):
@@ -233,7 +231,7 @@ struct DataService {
         case .public(let slashlink):
             let body = try memo.body.toData().unwrap()
             try noosphere.write(
-                slug: slashlink.toSlug().description,
+                slug: slashlink.slug,
                 contentType: memo.contentType,
                 additionalHeaders: memo.headers,
                 body: body
@@ -285,7 +283,7 @@ struct DataService {
             try database.removeMemo(address)
             return
         case .public(let slashlink):
-            try noosphere.remove(slug: slashlink.toSlug().description)
+            try noosphere.remove(slug: slashlink.slug)
             let version = try noosphere.save()
             try database.removeMemo(address)
             try database.writeMetadatadata(key: .sphereVersion, value: version)
@@ -426,7 +424,7 @@ struct DataService {
         switch address {
         case .public(let slashlink):
             let version = noosphere.getFileVersion(
-                slashlink: slashlink.description
+                slashlink: slashlink
             )
             return version != nil
         case .local(let slug):
@@ -443,7 +441,7 @@ struct DataService {
     ) -> MemoAddress? {
         // If slug exists in default sphere, return that.
         if noosphere.getFileVersion(
-            slashlink: slug.toSlashlink().description
+            slashlink: slug.toSlashlink()
         ) != nil {
             return slug.toPublicMemoAddress()
         }
@@ -481,7 +479,7 @@ struct DataService {
     private func readSphereMemo(
         slashlink: Slashlink
     ) -> Memo? {
-        try? noosphere.read(slashlink: slashlink.description).toMemo()
+        try? noosphere.read(slashlink: slashlink).toMemo()
     }
 
     /// Read memo from local store
