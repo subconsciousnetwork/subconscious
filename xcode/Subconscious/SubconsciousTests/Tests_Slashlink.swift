@@ -95,8 +95,12 @@ final class Tests_Slashlink: XCTestCase {
         XCTAssertNil(Slashlink("@bork/invalid//deep/slashlink"))
     }
 
-    func testPetnameOnlyInvalid() throws {
-        XCTAssertNil(Slashlink("@only-petname-should-fail"))
+    func testPetnameOnlyImplicitlyPointsToProfile() throws {
+        guard let slashlink = Slashlink("@only-petname-points-to-profile") else {
+            XCTFail("Failed to parse slashlink")
+            return
+        }
+        XCTAssertEqual(slashlink.description, "@only-petname-points-to-profile/\(Slashlink.profileSlug.description)")
     }
     
     func testToPetname() throws {
