@@ -6,8 +6,9 @@
 //
 
 import SwiftUI
-import ObservableStore
+import Combine
 import os
+import ObservableStore
 
 struct MemoViewerDetailMetaSheetView: View {
     @Environment(\.dismiss) private var dismiss
@@ -41,7 +42,7 @@ struct MemoViewerDetailMetaSheetView: View {
                     MetaTableView {
                         Button(
                             action: {
-                                send(.copyAddress)
+                                send(.copyLink)
                             }
                         ) {
                             Label(
@@ -100,7 +101,8 @@ struct MemoViewerDetailMetaSheetView: View {
 
 enum MemoViewerDetailMetaSheetAction: Hashable {
     case setAddress(_ address: MemoAddress)
-    case copyAddress
+    case copyLink
+    case requestDismiss
 }
 
 struct MemoViewerDetailMetaSheetModel: ModelProtocol {
@@ -127,25 +129,38 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
             var model = state
             model.address = address
             return Update(state: model)
-        case .copyAddress:
-            return copyAddress(
+        case .copyLink:
+            return copyLink(
                 state: state,
                 environment: environment
             )
+        case .requestDismiss:
+            return Update(state: state)
         }
     }
     
-    static func copyAddress(
+    static func copyLink(
         state: Self,
         environment: Environment
     ) -> Update<Self> {
         guard let address = state.address else {
-            Self.logger.log("Copy address: (nil)")
+            Self.logger.log("Copy link: (nil)")
             return Update(state: state)
         }
-        environment.string = address.description
-        Self.logger.log("Copied address: \(address)")
-        return Update(state: state)
+        
+        switch address {
+        case .local(let slug):
+            environment.string = slug.markup
+            logger.log("Copy link: \(slug)")
+        case .public(let slashlink):
+            environment.string = slashlink.markup
+            logger.log("Copy link: \(slashlink)")
+        }
+        
+        let fx: Fx<Action> = Just(Action.requestDismiss)
+            .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
 }
 

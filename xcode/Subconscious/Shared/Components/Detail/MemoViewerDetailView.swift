@@ -361,7 +361,12 @@ struct MemoViewerDetailMetaSheetCursor: CursorProtocol {
     }
 
     static func tag(_ action: ViewModel.Action) -> Model.Action {
-        return .metaSheet(action)
+        switch action {
+        case .requestDismiss:
+            return .presentMetaSheet(false)
+        default:
+            return .metaSheet(action)
+        }
     }
 }
 
