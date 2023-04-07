@@ -52,43 +52,6 @@ struct MemoViewerDetailMetaSheetView: View {
                         }
                         .disabled(state.address == nil)
                         .buttonStyle(RowButtonStyle())
-                        Divider()
-                        Button(
-                            action: {
-                            }
-                        ) {
-                            Label(
-                                "Share",
-                                systemImage: "square.and.arrow.up"
-                            )
-                        }
-                        .disabled(state.address == nil)
-                        .buttonStyle(RowButtonStyle())
-                    }
-
-                    MetaTableView {
-                        MetaTableRowView(
-                            icon: Image(systemName: "number"),
-                            label: Text("Note Revision"),
-                            text: Text(verbatim: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf")
-                        ) {
-                            
-                        }
-                        MetaTableRowView(
-                            icon: Image(systemName: "network"),
-                            label: Text("Sphere Revision"),
-                            text: Text(verbatim: "Qmf412jQZiuVUtdgnB36FXFasdfasdfasdfasdf")
-                        ) {
-                            
-                        }
-                        MetaTableRowView(
-                            icon: Image(systemName: "key"),
-                            label: Text("Author Key"),
-                            text: Text(verbatim: "0xb794f5ea0ba39494ce8"),
-                            hasDivider: false
-                        ) {
-                            
-                        }
                     }
                 }
                 .padding()
