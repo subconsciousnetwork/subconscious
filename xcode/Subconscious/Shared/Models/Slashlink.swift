@@ -70,7 +70,7 @@ public struct Slashlink:
         
         // There are four cases: petname-only, slug-only, petname+slug and empty.
         // All are valid constructions except for empty.
-        // Petname only will use `profileSlug` as the slug.
+        // Petname-only will use `profileSlug` as the slug.
         let slug = match.slug.map({ substring in
             Slug(uncheckedRawString: substring.toString()
         )})
