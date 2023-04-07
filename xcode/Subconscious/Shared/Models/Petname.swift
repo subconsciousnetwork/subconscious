@@ -68,6 +68,8 @@ public struct Petname:
         self.verbatim = description
     }
     
+    /// Join a list of petnames into a dotted string, i.e. [foo, bar, baz] -> foo.bar.baz
+    /// Names are joined in order of their appearance in `petnames`
     public init?(petnames: [Petname]) {
         let petnamePath = petnames.map({ s in s.verbatim }).joined(separator: ".")
         self.init(petnamePath)
