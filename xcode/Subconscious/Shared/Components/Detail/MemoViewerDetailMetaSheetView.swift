@@ -7,6 +7,7 @@
 
 import SwiftUI
 import ObservableStore
+import os
 
 struct MemoViewerDetailMetaSheetView: View {
     @Environment(\.dismiss) private var dismiss
@@ -98,12 +99,22 @@ struct MemoViewerDetailMetaSheetView: View {
 }
 
 enum MemoViewerDetailMetaSheetAction: Hashable {
+    case setAddress(_ address: MemoAddress)
     case copyAddress
+}
+
+protocol MemoViewerDetailMetaSheetEnvironmentProtocol {
+    var pasteboard: PasteboardProtocol { get }
 }
 
 struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     typealias Action = MemoViewerDetailMetaSheetAction
-    typealias Environment = Void
+    typealias Environment = MemoViewerDetailMetaSheetEnvironmentProtocol
+    
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "MemoViewerDetailMetaSheet"
+    )
     
     var address: MemoAddress?
     var memoVersion: String?
@@ -116,9 +127,29 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         switch action {
+        case .setAddress(let address):
+            var model = state
+            model.address = address
+            return Update(state: model)
         case .copyAddress:
+            return copyAddress(
+                state: state,
+                environment: environment
+            )
+        }
+    }
+    
+    static func copyAddress(
+        state: Self,
+        environment: Environment
+    ) -> Update<Self> {
+        guard let address = state.address else {
+            Self.logger.log("Copy address: (nil)")
             return Update(state: state)
         }
+        environment.pasteboard.string = address.description
+        Self.logger.log("Copied address: \(address)")
+        return Update(state: state)
     }
 }
 
