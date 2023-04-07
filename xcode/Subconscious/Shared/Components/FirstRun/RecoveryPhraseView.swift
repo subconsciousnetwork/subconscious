@@ -99,17 +99,9 @@ struct RecoveryPhraseModel: ModelProtocol {
     }
 }
 
-/// Exposes a minimal API surface to the pasteboard.
-/// Just the parts we use here.
-protocol RecoveryPhrasePasteboardProtocol {
-    var string: String? { get nonmutating set }
-}
-
-extension UIPasteboard: RecoveryPhrasePasteboardProtocol {}
-
 struct RecoveryPhraseEnvironment {
     // Pasteboard is defined as a protocol. This allows us to mock for testing.
-    var pasteboard: RecoveryPhrasePasteboardProtocol = UIPasteboard.general
+    var pasteboard: PasteboardProtocol = UIPasteboard.general
 }
 
 struct RecoveryPhraseView_Previews: PreviewProvider {

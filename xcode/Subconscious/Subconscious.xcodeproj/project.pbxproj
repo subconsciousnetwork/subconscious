@@ -173,6 +173,8 @@
 		B8879EAA26F93EBF00A0B4FF /* BacklinksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */; };
 		B8879EAC26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */; };
 		B8879EAD26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */; };
+		B88A76D429E09B51005F3422 /* PasteboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88A76D329E09B51005F3422 /* PasteboardService.swift */; };
+		B88A76D529E09B51005F3422 /* PasteboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88A76D329E09B51005F3422 /* PasteboardService.swift */; };
 		B88B1CDE298DE66E0062CB7F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CDD298DE66E0062CB7F /* SettingsView.swift */; };
 		B88B1CE1298EAE730062CB7F /* PillButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE0298EAE730062CB7F /* PillButtonStyle.swift */; };
 		B88B1CE3298EB0100062CB7F /* BarButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88B1CE2298EB0100062CB7F /* BarButtonStyle.swift */; };
@@ -512,6 +514,7 @@
 		B8879E9F26F90C5100A0B4FF /* NotebookNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookNavigationView.swift; sourceTree = "<group>"; };
 		B8879EA826F93EBF00A0B4FF /* BacklinksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklinksView.swift; sourceTree = "<group>"; };
 		B8879EAB26F944DA00A0B4FF /* MemoEditorDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoEditorDetail.swift; sourceTree = "<group>"; };
+		B88A76D329E09B51005F3422 /* PasteboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardService.swift; sourceTree = "<group>"; };
 		B88B1CDD298DE66E0062CB7F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B88B1CE0298EAE730062CB7F /* PillButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PillButtonStyle.swift; sourceTree = "<group>"; };
 		B88B1CE2298EB0100062CB7F /* BarButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarButtonStyle.swift; sourceTree = "<group>"; };
@@ -880,7 +883,6 @@
 		B8879E9B26F8F3BD00A0B4FF /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				B87288DA299AB00700EF7E07 /* Noosphere */,
 				B5F6ADC829C02F4A00690DE4 /* AddressBookService.swift */,
 				B8E00A2929928DD2003B40C1 /* AppDefaults.swift */,
 				B58FE48928DED93F00E000CC /* ComboGeist.swift */,
@@ -892,6 +894,8 @@
 				B8EA3EE429159C5500B92C2E /* HeaderSubtextMemoStore.swift */,
 				B54B922728E669D6003ACA1F /* MementoGeist.swift */,
 				B8B604E529146DF6006FCB77 /* MemoryStore.swift */,
+				B87288DA299AB00700EF7E07 /* Noosphere */,
+				B88A76D329E09B51005F3422 /* PasteboardService.swift */,
 				B8CE40E628D2707D00819064 /* QueryPromptGeist.swift */,
 				B8CA8F1F288F1875005F8802 /* RandomPromptGeist.swift */,
 				B8CBAFA8299580E50079107E /* StoreProtocol.swift */,
@@ -1492,6 +1496,7 @@
 				B82FD4562730A62C002CB641 /* EntryRow.swift in Sources */,
 				B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */,
 				B8CA8F2828909FBA005F8802 /* StoryPromptView.swift in Sources */,
+				B88A76D429E09B51005F3422 /* PasteboardService.swift in Sources */,
 				B831BDB92825A28A00C4CE92 /* Header.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
 				B856521C2975B2CF00B7FCA0 /* StoryAudienceView.swift in Sources */,
@@ -1748,6 +1753,7 @@
 				B822F18E27C9C0AB00943C6B /* CountChip.swift in Sources */,
 				B8B604E729146DF6006FCB77 /* MemoryStore.swift in Sources */,
 				B8DEBF262798EF6A007CB528 /* RenameSearchView.swift in Sources */,
+				B88A76D529E09B51005F3422 /* PasteboardService.swift in Sources */,
 				B81A5360272751EE001A6268 /* Subtext.swift in Sources */,
 				B8545F0B296F8FB700BC4EA1 /* OmniboxView.swift in Sources */,
 				B8AC648D278F757B0099E96B /* ProgressScrimView.swift in Sources */,

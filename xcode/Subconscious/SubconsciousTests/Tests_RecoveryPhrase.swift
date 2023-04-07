@@ -9,7 +9,7 @@ import XCTest
 @testable import Subconscious
 
 final class Tests_RecoveryPhrase: XCTestCase {
-    final class MockPasteboard: RecoveryPhrasePasteboardProtocol {
+    final class MockPasteboard: PasteboardProtocol {
         var sets: Int = 0
         var _string: String? = nil
 
