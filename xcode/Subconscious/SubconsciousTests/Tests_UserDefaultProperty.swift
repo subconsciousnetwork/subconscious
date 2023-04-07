@@ -46,6 +46,6 @@ final class Tests_UserDefaultProperty: XCTestCase {
         test.isToggled = false
         test.isToggled = false
         test.isToggled = false
-        XCTAssertEqual(count, 2)
+        XCTAssertEqual(count, 1)
     }
 }
