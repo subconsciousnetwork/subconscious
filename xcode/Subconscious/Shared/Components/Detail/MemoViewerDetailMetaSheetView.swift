@@ -100,7 +100,7 @@ struct MemoViewerDetailMetaSheetView: View {
 }
 
 enum MemoViewerDetailMetaSheetAction: Hashable {
-    case setAddress(_ address: MemoAddress)
+    case setAddress(_ address: MemoAddress?)
     case copyLink
     case requestDismiss
 }

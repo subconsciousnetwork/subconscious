@@ -15,11 +15,11 @@ struct Config: Equatable, Codable {
     var noosphere = NoosphereConfig()
 
     var appTabs = false
-    var addressBook = false
+    var addressBook = true
     var addByQRCode = true
     var userProfile: Bool {
         get {
-            AppDefaults.standard.isNoosphereEnabled && false
+            AppDefaults.standard.isNoosphereEnabled && true
         }
     }
     var userProfileDetailsTable: Bool {
