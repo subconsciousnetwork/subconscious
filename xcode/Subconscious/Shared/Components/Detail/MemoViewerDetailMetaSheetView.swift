@@ -41,7 +41,7 @@ struct MemoViewerDetailMetaSheetView: View {
                     MetaTableView {
                         Button(
                             action: {
-                                
+                                send(.copyAddress)
                             }
                         ) {
                             Label(
