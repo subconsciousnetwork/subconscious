@@ -111,9 +111,11 @@ struct UserProfileDetailMetaSheet: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                    if let user = profile.user, let slashlink = Slashlink(petnames: profile.spherePath.map({ s in s.petname })) {
+                    if let user = profile.user,
+                       let petname = Petname(petnames: profile.spherePath.map({ s in s.petname })),
+                       let slashlink = Slashlink(petname: petname) {
                         HStack {
-                            Text("@\(slashlink.description)")
+                            Text(slashlink.markup)
                                 .foregroundColor(.secondary)
                                 .font(.callout.monospaced())
                             

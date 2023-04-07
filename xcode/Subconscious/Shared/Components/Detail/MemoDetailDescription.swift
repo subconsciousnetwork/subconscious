@@ -27,7 +27,11 @@ enum MemoDetailDescription: Hashable {
                 description.spherePath
                 .map { u in u.petname }
             
-            return Slashlink(petnames: petnames)?.toPublicMemoAddress()
+            guard let petname = Petname(petnames: petnames) else {
+                return nil
+            }
+            
+            return Slashlink(petname: petname).toPublicMemoAddress()
         }
     }
 }
