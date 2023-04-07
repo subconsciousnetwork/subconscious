@@ -80,6 +80,24 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
+    func isFollowingUser(did: Did, petname: Petname) throws -> Bool {
+        do {
+            guard let user = try getPetname(petname: petname) else {
+                return false
+            }
+            
+            return user == did
+        } catch {
+            return false
+        }
+    }
+    
+    func isFollowingUserAsync(did: Did, petname: Petname) -> AnyPublisher<Bool, Error> {
+        CombineUtilities.async(qos: .default) {
+            return try self.isFollowingUser(did: did, petname: petname)
+        }
+    }
+    
     func followUser(did: Did, petname: Petname) async throws {
         if try await noosphere.identity() == did.id {
             throw AddressBookError.cannotFollowYourself

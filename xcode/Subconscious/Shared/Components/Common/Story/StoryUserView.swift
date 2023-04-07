@@ -11,6 +11,8 @@ import SwiftUI
 struct StoryUserView: View {
     var story: StoryUser
     var action: (MemoAddress, String) -> Void
+    
+    var profileAction: (UserProfile, UserProfileAction) -> Void = { _, _ in }
 
     var body: some View {
         Button(
@@ -27,7 +29,10 @@ struct StoryUserView: View {
                     UserProfileHeaderView(
                         user: story.user,
                         statistics: story.statistics,
-                        isFollowingUser: story.isFollowingUser
+                        isFollowingUser: story.isFollowingUser,
+                        action: { action in
+                            self.profileAction(story.user, action)
+                        }
                     )
                 }
                 .padding()

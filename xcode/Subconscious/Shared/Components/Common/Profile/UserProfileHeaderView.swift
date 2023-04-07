@@ -7,11 +7,18 @@
 
 import SwiftUI
 
+enum UserProfileAction {
+    case requestFollow
+    case requestUnfollow
+    case editOwnProfile
+}
+
 struct UserProfileHeaderView: View {
     var user: UserProfile
     var statistics: UserProfileStatistics?
     
     var isFollowingUser: Bool
+    var action: (UserProfileAction) -> Void = { _ in }
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
@@ -34,18 +41,30 @@ struct UserProfileHeaderView: View {
                 
                 Spacer()
                 
-                // TODO: make this button do something
-                Button(action: {}, label: {
-                    if user.category == .you {
-                        Label("Edit Profile", systemImage: "pencil")
-                    } else {
-                        if isFollowingUser {
-                            Label("Following", systemImage: "person.fill.checkmark")
+                Button(
+                    action: {
+                        if user.category == .you {
+                            action(.editOwnProfile)
                         } else {
-                            Text("Follow")
+                            if isFollowingUser {
+                                action(.requestUnfollow)
+                            } else {
+                                action(.requestFollow)
+                            }
+                        }
+                    },
+                    label: {
+                        if user.category == .you {
+                            Label("Edit Profile", systemImage: "pencil")
+                        } else {
+                            if isFollowingUser {
+                                Label("Following", systemImage: "person.fill.checkmark")
+                            } else {
+                                Text("Follow")
+                            }
                         }
                     }
-                })
+                )
                 .buttonStyle(GhostPillButtonStyle(size: .small))
                 .frame(maxWidth: 160)
             }

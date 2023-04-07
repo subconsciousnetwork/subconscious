@@ -7,6 +7,7 @@
 
 import SwiftUI
 import ObservableStore
+import Combine
 
 /// Display a user profile detail view.
 /// Used to browse users entries and list of petnames.
@@ -26,13 +27,18 @@ struct UserProfileDetailView: View {
     func onNavigateToUser(address: MemoAddress) {
         notify(.requestDetail(.profile(UserProfileDetailDescription(address: address))))
     }
+    
+    func onProfileAction(user: UserProfile, action: UserProfileAction) {
+        
+    }
 
     var body: some View {
         UserProfileView(
             state: store.state,
             send: store.send,
             onNavigateToNote: self.onNavigateToNote,
-            onNavigateToUser: self.onNavigateToUser
+            onNavigateToUser: self.onNavigateToUser,
+            onProfileAction: self.onProfileAction
         )
         .onAppear {
             // When an editor is presented, refresh if stale.
@@ -60,6 +66,10 @@ enum UserProfileDetailAction: Hashable {
     case tabIndexSelected(Int)
     case presentMetaSheet(Bool)
     case metaSheet(UserProfileDetailMetaSheetAction)
+    
+    case populateFollowingStatus(UserProfile)
+    case failedToUpdateFollowingStatus(String)
+    case updateFollowingStatus(Bool)
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -91,7 +101,7 @@ struct UserProfileDetailModel: ModelProtocol {
     var isMetaSheetPresented = false
     
     var user: UserProfile? = UserProfile.dummyData()
-    var isFollowingUser: Bool = Bool.dummyData()
+    var isFollowingUser: Bool = false
     
     var recentEntries: [EntryStub] = []
     var topEntries: [EntryStub] = []
@@ -120,7 +130,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.topEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
             model.following = (1...10).map { _ in StoryUser.dummyData() }
             
-            return Update(state: model)
+            return update(state: model, actions: [.populateFollowingStatus(user)], environment: environment)
             
         case .tabIndexSelected(let index):
             var model = state
@@ -130,6 +140,27 @@ struct UserProfileDetailModel: ModelProtocol {
         case .presentMetaSheet(let presented):
             var model = state
             model.isMetaSheetPresented = presented
+            return Update(state: model)
+            
+        case .populateFollowingStatus(let user):
+            let fx: Fx<UserProfileDetailAction> =
+                environment.data.addressBook.isFollowingUserAsync(did: user.did, petname: user.petname)
+                .map { following in
+                    UserProfileDetailAction.updateFollowingStatus(following)
+                }
+                .catch { err in
+                    Just(UserProfileDetailAction.failedToUpdateFollowingStatus(err.localizedDescription))
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+            
+        case .failedToUpdateFollowingStatus(let error):
+            return Update(state: state)
+            
+        case .updateFollowingStatus(let following):
+            var model = state
+            model.isFollowingUser = following
             return Update(state: model)
         }
     }

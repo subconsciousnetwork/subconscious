@@ -28,6 +28,8 @@ struct UserProfileView: View {
     let onNavigateToNote: (MemoAddress) -> Void
     let onNavigateToUser: (MemoAddress) -> Void
     
+    let onProfileAction: (UserProfile, UserProfileAction) -> Void
+    
     var body: some View {
         let columnRecent = TabbedColumnItem(
             label: "Recent",
@@ -69,7 +71,8 @@ struct UserProfileView: View {
                 ForEach(state.following, id: \.user.did) { follow in
                     StoryUserView(
                         story: follow,
-                        action: { address, _ in onNavigateToUser(address) }
+                        action: { address, _ in onNavigateToUser(address) },
+                        profileAction: onProfileAction
                     )
                 }
             }
@@ -80,7 +83,10 @@ struct UserProfileView: View {
                 UserProfileHeaderView(
                     user: user,
                     statistics: state.statistics,
-                    isFollowingUser: state.isFollowingUser
+                    isFollowingUser: state.isFollowingUser,
+                    action: { action in
+                        onProfileAction(user, action)
+                    }
                 )
                 .padding(AppTheme.padding)
             }
@@ -134,7 +140,8 @@ struct UserProfileView_Previews: PreviewProvider {
             state: UserProfileDetailModel(isMetaSheetPresented: false),
             send: { _ in },
             onNavigateToNote: { _ in print("navigate to note") },
-            onNavigateToUser: { _ in print("navigate to user") }
+            onNavigateToUser: { _ in print("navigate to user") },
+            onProfileAction: { user, action in print("profile action") }
         )
     }
 }
