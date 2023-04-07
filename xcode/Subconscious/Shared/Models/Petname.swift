@@ -16,7 +16,7 @@ public struct Petname:
     Codable,
     LosslessStringConvertible
 {
-    private static let petnameRegex = /[\w\d\-]+/
+    private static let petnameRegex = /[\w\d\-\.]+/
     
     public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.id < rhs.id
@@ -66,6 +66,11 @@ public struct Petname:
         }
         self.description = description.lowercased()
         self.verbatim = description
+    }
+    
+    public init?(petnames: [Petname]) {
+        let petnamePath = petnames.map({ s in s.verbatim }).joined(separator: ".")
+        self.init(petnamePath)
     }
     
     /// Convert a string into a petname.
