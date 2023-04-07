@@ -103,13 +103,9 @@ enum MemoViewerDetailMetaSheetAction: Hashable {
     case copyAddress
 }
 
-protocol MemoViewerDetailMetaSheetEnvironmentProtocol {
-    var pasteboard: PasteboardProtocol { get }
-}
-
 struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     typealias Action = MemoViewerDetailMetaSheetAction
-    typealias Environment = MemoViewerDetailMetaSheetEnvironmentProtocol
+    typealias Environment = PasteboardProtocol
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -147,7 +143,7 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
             Self.logger.log("Copy address: (nil)")
             return Update(state: state)
         }
-        environment.pasteboard.string = address.description
+        environment.string = address.description
         Self.logger.log("Copied address: \(address)")
         return Update(state: state)
     }

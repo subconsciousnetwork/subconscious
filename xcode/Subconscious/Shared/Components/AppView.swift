@@ -1177,6 +1177,8 @@ struct AppEnvironment {
     var recoveryPhrase = RecoveryPhraseEnvironment()
     var addressBook: AddressBookEnvironment
 
+    var pasteboard = UIPasteboard.general
+    
     /// Create a long polling publisher that never completes
     static func poll(every interval: Double) -> AnyPublisher<Date, Never> {
         Timer.publish(

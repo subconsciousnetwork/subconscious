@@ -198,6 +198,11 @@ enum MemoViewerDetailAction: Hashable {
     case setDetail(_ detail: MemoDetailResponse?)
     case failLoadDetail(_ message: String)
     case presentMetaSheet(_ isPresented: Bool)
+    
+    /// Synonym for `.metaSheet(.setAddress(_))`
+    static func setMetaSheetAddress(_ address: MemoAddress) -> Self {
+        .metaSheet(.setAddress(address))
+    }
 }
 
 // MARK: Model
@@ -238,7 +243,7 @@ struct MemoViewerDetailModel: ModelProtocol {
             return MemoViewerDetailMetaSheetCursor.update(
                 state: state,
                 action: action,
-                environment: ()
+                environment: environment.pasteboard
             )
         case .appear(let description):
             return appear(
@@ -277,7 +282,12 @@ struct MemoViewerDetailModel: ModelProtocol {
         ).map({ response in
             Action.setDetail(response)
         }).eraseToAnyPublisher()
-        return Update(state: model, fx: fx)
+        return update(
+            state: model,
+            // Set meta sheet address as well
+            action: .setMetaSheetAddress(description.address),
+            environment: environment
+        ).mergeFx(fx)
     }
     
     static func setDetail(
