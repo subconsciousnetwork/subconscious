@@ -16,10 +16,10 @@ struct Config: Equatable, Codable {
 
     var appTabs = false
     var addressBook = false
-    var addByQRCode = false
+    var addByQRCode = true
     var userProfile: Bool {
         get {
-            AppDefaults.standard.isNoosphereEnabled && true
+            AppDefaults.standard.isNoosphereEnabled && false
         }
     }
     var userProfileDetailsTable: Bool {
@@ -44,8 +44,6 @@ struct Config: Equatable, Codable {
     /// Toggle random suggestion feature
     var randomSuggestionEnabled = true
 
-    var memoViewerDetailEnabled = false
-    
     /// Toggle on/off simple Tracery-based Geists
     var traceryZettelkasten = "zettelkasten"
     var traceryCombo = "combo"
