@@ -9,6 +9,59 @@ import SwiftUI
 import ObservableStore
 import CodeScanner
 
+struct FollowUserForm: View {
+    var state: FollowUserFormModel
+    var send: (FollowUserFormAction) -> Void
+    
+    var body: some View {
+        Section(header: Text("User To Follow")) {
+            HStack(alignment: .top) {
+                Image(systemName: "key")
+                    .foregroundColor(.accentColor)
+                ValidatedTextField(
+                    placeholder: "DID",
+                    text: Binding(
+                        get: { state.did.value },
+                        send: send,
+                        tag: { v in .didField(.setValue(input: v))}
+                    ),
+                    onFocusChanged: { focused in
+                        send(.didField(.focusChange(focused: focused)))
+                    },
+                    caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                    hasError: state.did.hasError
+                )
+                .formField()
+                .lineLimit(1)
+                .textInputAutocapitalization(.never)
+                .disableAutocorrection(true)
+            }
+            
+            HStack(alignment: .top) {
+                Image(systemName: "at")
+                    .foregroundColor(.accentColor)
+                ValidatedTextField(
+                    placeholder: "Petname",
+                    text: Binding(
+                        get: { state.petname.value },
+                        send: send,
+                        tag: { v in .petnameField(.setValue(input: v))}
+                    ),
+                    onFocusChanged: { focused in
+                        send(.petnameField(.focusChange(focused: focused)))
+                    },
+                    caption: "Lowercase letters, numbers and dashes only.",
+                    hasError: state.petname.hasError
+                )
+                .formField()
+                .lineLimit(1)
+                .textInputAutocapitalization(.never)
+                .disableAutocorrection(true)
+            }
+        }
+    }
+}
+
 struct FollowUserView: View {
     var state: AddressBookModel
     var form: FollowUserFormModel {
@@ -26,54 +79,12 @@ struct FollowUserView: View {
     }
     
     var body: some View {
-        NavigationStack {
             VStack {
                 Form {
-                    Section(header: Text("User To Follow")) {
-                        HStack(alignment: .top) {
-                            Image(systemName: "key")
-                                .foregroundColor(.accentColor)
-                            ValidatedTextField(
-                                placeholder: "DID",
-                                text: Binding(
-                                    get: { form.did.value },
-                                    send: send,
-                                    tag: { v in .didField(.setValue(input: v))}
-                                ),
-                                onFocusChanged: { focused in
-                                    send(.didField(.focusChange(focused: focused)))
-                                },
-                                caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
-                                hasError: form.did.hasError
-                            )
-                            .formField()
-                            .lineLimit(1)
-                            .textInputAutocapitalization(.never)
-                            .disableAutocorrection(true)
-                        }
-                        
-                        HStack(alignment: .top) {
-                            Image(systemName: "at")
-                                .foregroundColor(.accentColor)
-                            ValidatedTextField(
-                                placeholder: "Petname",
-                                text: Binding(
-                                    get: { form.petname.value },
-                                    send: send,
-                                    tag: { v in .petnameField(.setValue(input: v))}
-                                ),
-                                onFocusChanged: { focused in
-                                    send(.petnameField(.focusChange(focused: focused)))
-                                },
-                                caption: "Lowercase letters, numbers and dashes only.",
-                                hasError: form.petname.hasError
-                            )
-                            .formField()
-                            .lineLimit(1)
-                            .textInputAutocapitalization(.never)
-                            .disableAutocorrection(true)
-                        }
-                    }
+                    FollowUserForm(
+                        state: state.followUserForm,
+                        send: Address.forward(send: send, tag: FollowUserFormCursor.tag)
+                    )
                     
                     if Config.default.addByQRCode {
                         Section(header: Text("Add via QR Code")) {
@@ -131,7 +142,6 @@ struct FollowUserView: View {
                     errorMessage: state.failQRCodeScanErrorMessage
                 )
             }
-        }
     }
 }
 
