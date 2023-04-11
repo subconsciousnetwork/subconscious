@@ -62,7 +62,7 @@ enum MemoViewerDetailMetaSheetAction: Hashable {
 
 struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     typealias Action = MemoViewerDetailMetaSheetAction
-    typealias Environment = PasteboardProtocol
+    typealias Environment = ()
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
