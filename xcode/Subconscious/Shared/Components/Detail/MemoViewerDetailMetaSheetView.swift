@@ -40,18 +40,11 @@ struct MemoViewerDetailMetaSheetView: View {
             ScrollView {
                 VStack(spacing: AppTheme.unit4) {
                     MetaTableView {
-                        Button(
-                            action: {
-                                send(.copyLink)
-                            }
-                        ) {
-                            Label(
-                                "Copy link",
-                                systemImage: "doc.on.doc"
-                            )
-                        }
-                        .disabled(state.address == nil)
-                        .buttonStyle(RowButtonStyle())
+                        MetaTableItemShareLinkView(
+                            label: "Copy link",
+                            item: state.shareableLink ?? ""
+                        )
+                        .disabled(state.shareableLink == nil)
                     }
                 }
                 .padding()
@@ -64,13 +57,12 @@ struct MemoViewerDetailMetaSheetView: View {
 
 enum MemoViewerDetailMetaSheetAction: Hashable {
     case setAddress(_ address: MemoAddress?)
-    case copyLink
     case requestDismiss
 }
 
 struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     typealias Action = MemoViewerDetailMetaSheetAction
-    typealias Environment = PasteboardProtocol
+    typealias Environment = ()
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -82,6 +74,19 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     var noteVersion: String?
     var authorKey: String?
     
+    var shareableLink: String? {
+        guard let address = address else {
+            return nil
+        }
+        
+        switch address {
+        case .local(let slug):
+            return slug.markup
+        case .public(let slashlink):
+            return slashlink.markup
+        }
+    }
+    
     static func update(
         state: Self,
         action: Action,
@@ -92,38 +97,9 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
             var model = state
             model.address = address
             return Update(state: model)
-        case .copyLink:
-            return copyLink(
-                state: state,
-                environment: environment
-            )
         case .requestDismiss:
             return Update(state: state)
         }
-    }
-    
-    static func copyLink(
-        state: Self,
-        environment: Environment
-    ) -> Update<Self> {
-        guard let address = state.address else {
-            Self.logger.log("Copy link: (nil)")
-            return Update(state: state)
-        }
-        
-        switch address {
-        case .local(let slug):
-            environment.string = slug.markup
-            logger.log("Copy link: \(slug)")
-        case .public(let slashlink):
-            environment.string = slashlink.markup
-            logger.log("Copy link: \(slashlink)")
-        }
-        
-        let fx: Fx<Action> = Just(Action.requestDismiss)
-            .eraseToAnyPublisher()
-        
-        return Update(state: state, fx: fx)
     }
 }
 
