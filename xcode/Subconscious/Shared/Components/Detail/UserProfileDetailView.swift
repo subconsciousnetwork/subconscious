@@ -29,7 +29,16 @@ struct UserProfileDetailView: View {
     }
     
     func onProfileAction(user: UserProfile, action: UserProfileAction) {
-        
+        switch (action) {
+        case .requestFollow:
+            store.send(.requestFollow)
+        // TODO
+        case .requestUnfollow:
+            return
+        // TODO
+        case .editOwnProfile:
+            return
+        }
     }
 
     var body: some View {
@@ -69,9 +78,15 @@ enum UserProfileDetailAction: Hashable {
     case metaSheet(UserProfileDetailMetaSheetAction)
     case followUserSheet(FollowUserSheetAction)
     
-    case populateFollowingStatus(UserProfile)
+    case fetchFollowingStatus(UserProfile)
     case failedToUpdateFollowingStatus(String)
-    case updateFollowingStatus(Bool)
+    case populateFollowingStatus(Bool)
+    
+    case requestFollow
+    case attemptFollow
+    case failFollow(error: String)
+    case dismissFailFollowError
+    case succeedFollow(did: Did, petname: Petname)
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -100,6 +115,7 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
     var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
+    var failFollowErrorMessage: String?
     
     var selectedTabIndex = 0
     var isMetaSheetPresented = false
@@ -127,10 +143,10 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: environment
             )
         case .followUserSheet(let action):
-            return FollowUserSheetSheetCursor.update(
+            return FollowUserSheetCursor.update(
                 state: state,
                 action: action,
-                environment: FollowUserSheetEnvironment(addressBook: environment.data.addressBook) // TODO: cache this and reuse?
+                environment: ()
             )
            
         case .populate(let user, let statistics):
@@ -141,7 +157,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.topEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
             model.following = (1...10).map { _ in StoryUser.dummyData() }
             
-            return update(state: model, actions: [.populateFollowingStatus(user)], environment: environment)
+            return update(state: model, actions: [.fetchFollowingStatus(user)], environment: environment)
             
         case .tabIndexSelected(let index):
             var model = state
@@ -158,11 +174,11 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isFollowSheetPresented = presented
             return Update(state: model)
             
-        case .populateFollowingStatus(let user):
+        case .fetchFollowingStatus(let user):
             let fx: Fx<UserProfileDetailAction> =
                 environment.data.addressBook.isFollowingUserAsync(did: user.did, petname: user.petname)
                 .map { following in
-                    UserProfileDetailAction.updateFollowingStatus(following)
+                    UserProfileDetailAction.populateFollowingStatus(following)
                 }
                 .catch { err in
                     Just(UserProfileDetailAction.failedToUpdateFollowingStatus(err.localizedDescription))
@@ -174,9 +190,59 @@ struct UserProfileDetailModel: ModelProtocol {
         case .failedToUpdateFollowingStatus(let error):
             return Update(state: state)
             
-        case .updateFollowingStatus(let following):
+        case .populateFollowingStatus(let following):
             var model = state
             model.isFollowingUser = following
+            return Update(state: model)
+            
+        case .requestFollow:
+            return update(state: state, action: .presentFollowSheet(true), environment: environment)
+            
+        case .attemptFollow:
+            guard let did = state.followUserSheet.followUserForm.did.validated else {
+                return Update(state: state)
+            }
+            guard let petname = state.followUserSheet.followUserForm.petname.validated else {
+                return Update(state: state)
+            }
+            
+            // TODO: check if we're already following a user with this name before calling
+            // or, introducing .followUserAsync(did:petname:preventOverwrite:) to throw on
+            // overwrite
+            
+            // Regardless, we actually need to check this in .populate and apply a numerical -2, -3 etc. suffix
+            // as needed.
+
+            let fx: Fx<UserProfileDetailAction> =
+                environment.data.addressBook
+                .followUserAsync(did: did, petname: petname)
+                .map({ _ in
+                    .succeedFollow(did: did, petname: petname)
+                })
+                .catch({ error in
+                    Just(
+                        .failFollow(error: error.localizedDescription)
+                    )
+                })
+                .eraseToAnyPublisher()
+
+            return Update(state: state, fx: fx)
+            
+        case .succeedFollow(_, _):
+            return update(
+                state: state,
+                action: .presentFollowSheet(false),
+                environment: environment
+            )
+          
+        case .failFollow(error: let error):
+            var model = state
+            model.failFollowErrorMessage = error
+            return Update(state: model)
+          
+        case .dismissFailFollowError:
+            var model = state
+            model.failFollowErrorMessage = nil
             return Update(state: model)
         }
     }

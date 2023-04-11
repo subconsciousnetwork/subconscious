@@ -197,7 +197,7 @@ struct UserProfileDetailMetaSheet: View {
             }
         }
         .presentationDragIndicator(.hidden)
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.medium])
         .confirmationDialog(
             "Are you sure you want to unfollow \(profile.user?.petname.verbatim ?? "unknown")",
             isPresented: Binding(

@@ -80,6 +80,24 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
+    func hasEntryForPetname(petname: Petname) throws -> Bool {
+        do {
+            guard try getPetname(petname: petname) != nil else {
+                return false
+            }
+            
+            return true
+        } catch {
+            return false
+        }
+    }
+    
+    func hasEntryForPetnameAsync(petname: Petname) -> AnyPublisher<Bool, Error> {
+        CombineUtilities.async(qos: .default) {
+            return try self.hasEntryForPetname(petname: petname)
+        }
+    }
+    
     func isFollowingUser(did: Did, petname: Petname) throws -> Bool {
         do {
             guard let user = try getPetname(petname: petname) else {

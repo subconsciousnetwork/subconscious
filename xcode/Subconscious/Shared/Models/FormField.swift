@@ -13,7 +13,7 @@ import Combine
 
 typealias FormFieldValidator<Input, Output> = (Input) -> Output?
 
-enum FormFieldAction<Input: Equatable> {
+enum FormFieldAction<Input: Equatable>: Equatable {
     case reset
     /// Intended for triggering validation errors when a user submits a form containing this field
     case markAsTouched

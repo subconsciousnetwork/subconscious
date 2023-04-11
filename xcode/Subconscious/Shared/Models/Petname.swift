@@ -80,5 +80,10 @@ public struct Petname:
     public init?(formatting string: String) {
         self.init(Self.format(string))
     }
+    
+    public init?(petnames: [Petname]) {
+        let petnamePath = petnames.map({ s in s.verbatim }).joined(separator: ".")
+        self.init(petnamePath)
+    }
 }
 

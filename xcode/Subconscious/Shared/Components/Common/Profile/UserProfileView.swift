@@ -5,9 +5,9 @@
 //  Created by Ben Follington on 27/3/2023.
 //
 
-import Foundation
 import SwiftUI
 import ObservableStore
+import Combine
 
 struct ProfileStatisticView: View {
     var label: String
@@ -17,134 +17,6 @@ struct ProfileStatisticView: View {
         HStack(spacing: AppTheme.unit) {
             Text("\(count)").bold()
             Text(label).foregroundColor(.secondary)
-        }
-    }
-}
-
-enum FollowUserSheetAction: Equatable {
-    case populate(UserProfile)
-    case followUserForm(FollowUserFormAction)
-    case requestFollow
-}
-
-struct FollowUserSheetEnvironment {
-    var addressBook: AddressBookService
-}
-
-struct FollowUserSheetModel: ModelProtocol {
-    typealias Action = FollowUserSheetAction
-    typealias Environment = FollowUserSheetEnvironment
-    
-    var followUserForm: FollowUserFormModel = FollowUserFormModel()
-    
-    static func update(state: Self, action: Action, environment: Environment) -> Update<Self> {
-        switch action {
-        case .populate(let user):
-            return update(
-                state: state,
-                actions: [
-                    .followUserForm(.didField(.setValue(input: user.did.did))),
-                    .followUserForm(.petnameField(.setValue(input: user.petname.verbatim)))
-                ],
-                environment: environment
-            )
-        case .followUserForm(let action):
-            return FollowUserSheetFormCursor.update(
-                state: state,
-                action: action,
-                environment: ()
-            )
-        case .requestFollow:
-            return Update(state: state)
-        }
-    }
-}
-
-struct FollowUserSheetFormCursor: CursorProtocol {
-    typealias Model = FollowUserSheetModel
-    typealias ViewModel = FollowUserFormModel
-    
-    static func get(state: FollowUserSheetModel) -> FollowUserFormModel {
-        state.followUserForm
-    }
-    
-    static func set(state: FollowUserSheetModel, inner: FollowUserFormModel) -> FollowUserSheetModel {
-        var model = state
-        model.followUserForm = inner
-        return model
-    }
-    
-    static func tag(_ action: FollowUserFormAction) -> FollowUserSheetAction {
-        .followUserForm(action)
-    }
-}
-
-struct FollowUserSheetSheetCursor: CursorProtocol {
-    typealias Model = UserProfileDetailModel
-    typealias ViewModel = FollowUserSheetModel
-
-    static func get(state: Model) -> ViewModel {
-        state.followUserSheet
-    }
-
-    static func set(
-        state: Model,
-        inner: ViewModel
-    ) -> Model {
-        var model = state
-        model.followUserSheet = inner
-        return model
-    }
-    
-    static func tag(_ action: ViewModel.Action) -> Model.Action {
-        switch action {
-        default:
-            return .followUserSheet(action)
-        }
-    }
-}
-
-struct FollowUserSheet: View {
-    var state: FollowUserSheetModel
-    var send: (FollowUserSheetAction) -> Void
-    var user: UserProfile
-    
-    var body: some View {
-        VStack(alignment: .center, spacing: AppTheme.unit2) {
-            ProfilePic(image: Image(user.pfp))
-            
-            Text(user.did.did)
-                .font(.caption.monospaced())
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.leading)
-            
-            Spacer()
-            
-            ValidatedTextField(
-                placeholder: "@petname",
-                text: Binding(
-                    get: { state.followUserForm.petname.value },
-                    send: send,
-                    tag: { input in
-                        .followUserForm(.petnameField(.setValue(input: input)))
-                    }
-                ),
-                caption: "You already follow @petname"
-            )
-            .textFieldStyle(.roundedBorder)
-            
-            Spacer()
-            
-            Button(
-                action: { send(.requestFollow) },
-                label: { Text("Follow @petname-2") }
-            )
-            .buttonStyle(PillButtonStyle())
-        }
-        .padding(AppTheme.padding)
-        .presentationDetents([.fraction(0.33)])
-        .onAppear {
-            send(.populate(user))
         }
     }
 }
@@ -252,8 +124,14 @@ struct UserProfileView: View {
             if let user = state.user {
                 FollowUserSheet(
                     state: state.followUserSheet,
-                    send: { _ in },
-                    user: user
+                    send: Address.forward(
+                        send: send,
+                        tag: FollowUserSheetCursor.tag
+                    ),
+                    user: user,
+                    onAttemptFollow: {
+                        send(.attemptFollow)
+                    }
                 )
             }
         }
