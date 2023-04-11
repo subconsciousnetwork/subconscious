@@ -1,5 +1,5 @@
 //
-//  DetailMetaSheet.swift
+//  MemoEditorDetailMetaSheetView.swift
 //  Subconscious (iOS)
 //
 //  Created by Gordon Brander on 3/3/23.
@@ -8,10 +8,10 @@
 import SwiftUI
 import ObservableStore
 
-struct DetailMetaSheet: View {
+struct MemoEditorDetailMetaSheetView: View {
     @Environment(\.dismiss) private var dismiss
-    var state: DetailMetaSheetModel
-    var send: (DetailMetaSheetAction) -> Void
+    var state: MemoEditorDetailMetaSheetModel
+    var send: (MemoEditorDetailMetaSheetAction) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -34,7 +34,7 @@ struct DetailMetaSheet: View {
                             audience: Binding(
                                 get: { state.audience },
                                 send: send,
-                                tag: DetailMetaSheetAction.requestUpdateAudience
+                                tag: MemoEditorDetailMetaSheetAction.requestUpdateAudience
                             )
                         )
                     }
@@ -82,14 +82,14 @@ struct DetailMetaSheet: View {
             isPresented: Binding(
                 get: { state.isRenameSheetPresented },
                 send: send,
-                tag: DetailMetaSheetAction.presentRenameSheet
+                tag: MemoEditorDetailMetaSheetAction.presentRenameSheet
             )
         ) {
             RenameSearchView(
                 state: state.renameSearch,
                 send: Address.forward(
                     send: send,
-                    tag: DetailMetaSheetRenameSearchCursor.tag
+                    tag: MemoEditorDetailMetaSheetRenameSearchCursor.tag
                 )
             )
         }
@@ -98,7 +98,7 @@ struct DetailMetaSheet: View {
             isPresented: Binding(
                 get: { state.isDeleteConfirmationDialogPresented },
                 send: send,
-                tag: DetailMetaSheetAction.presentDeleteConfirmationDialog
+                tag: MemoEditorDetailMetaSheetAction.presentDeleteConfirmationDialog
             ),
             titleVisibility: .visible
         ) {
@@ -114,7 +114,7 @@ struct DetailMetaSheet: View {
     }
 }
 
-enum DetailMetaSheetAction: Hashable {
+enum MemoEditorDetailMetaSheetAction: Hashable {
     /// Tagged actions for rename search sheet
     case renameSearch(RenameSearchAction)
     case presentRenameSheet(_ isPresented: Bool)
@@ -143,8 +143,8 @@ enum DetailMetaSheetAction: Hashable {
     }
 }
 
-struct DetailMetaSheetModel: ModelProtocol {
-    typealias Action = DetailMetaSheetAction
+struct MemoEditorDetailMetaSheetModel: ModelProtocol {
+    typealias Action = MemoEditorDetailMetaSheetAction
     typealias Environment = AppEnvironment
     
     var address: MemoAddress?
@@ -165,7 +165,7 @@ struct DetailMetaSheetModel: ModelProtocol {
     ) -> ObservableStore.Update<Self> {
         switch action {
         case .renameSearch(let action):
-            return DetailMetaSheetRenameSearchCursor.update(
+            return MemoEditorDetailMetaSheetRenameSearchCursor.update(
                 state: state,
                 action: action,
                 environment: environment
@@ -286,8 +286,8 @@ struct DetailMetaSheetModel: ModelProtocol {
 }
 
 //  MARK: RenameSearchCursor
-struct DetailMetaSheetRenameSearchCursor: CursorProtocol {
-    typealias Model = DetailMetaSheetModel
+struct MemoEditorDetailMetaSheetRenameSearchCursor: CursorProtocol {
+    typealias Model = MemoEditorDetailMetaSheetModel
     typealias ViewModel = RenameSearchModel
 
     static func get(state: Model) -> ViewModel {
@@ -313,14 +313,14 @@ struct DetailMetaSheetRenameSearchCursor: CursorProtocol {
     }
 }
 
-struct DetailActionBottomSheetView_Previews: PreviewProvider {
+struct MemoEditorDetailActionBottomSheetView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             Text("Hello")
         }
         .sheet(isPresented: .constant(true)) {
-            DetailMetaSheet(
-                state: DetailMetaSheetModel(
+            MemoEditorDetailMetaSheetView(
+                state: MemoEditorDetailMetaSheetModel(
                     address: MemoAddress.local(Slug("the-whale-the-whale")!)
                 ),
                 send: { action in }
