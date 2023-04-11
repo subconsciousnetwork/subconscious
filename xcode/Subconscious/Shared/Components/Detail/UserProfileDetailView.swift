@@ -65,7 +65,9 @@ enum UserProfileDetailAction: Hashable {
     case populate(UserProfile, UserProfileStatistics?)
     case tabIndexSelected(Int)
     case presentMetaSheet(Bool)
+    case presentFollowSheet(Bool)
     case metaSheet(UserProfileDetailMetaSheetAction)
+    case followUserSheet(FollowUserSheetAction)
     
     case populateFollowingStatus(UserProfile)
     case failedToUpdateFollowingStatus(String)
@@ -97,8 +99,11 @@ struct UserProfileDetailModel: ModelProtocol {
     typealias Environment = AppEnvironment
     
     var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
+    var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
+    
     var selectedTabIndex = 0
     var isMetaSheetPresented = false
+    var isFollowSheetPresented = false
     
     var user: UserProfile? = UserProfile.dummyData()
     var isFollowingUser: Bool = false
@@ -121,6 +126,12 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
+        case .followUserSheet(let action):
+            return FollowUserSheetSheetCursor.update(
+                state: state,
+                action: action,
+                environment: FollowUserSheetEnvironment(addressBook: environment.data.addressBook) // TODO: cache this and reuse?
+            )
            
         case .populate(let user, let statistics):
             var model = state
@@ -140,6 +151,11 @@ struct UserProfileDetailModel: ModelProtocol {
         case .presentMetaSheet(let presented):
             var model = state
             model.isMetaSheetPresented = presented
+            return Update(state: model)
+            
+        case .presentFollowSheet(let presented):
+            var model = state
+            model.isFollowSheetPresented = presented
             return Update(state: model)
             
         case .populateFollowingStatus(let user):
