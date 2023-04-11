@@ -10,10 +10,15 @@ import XCTest
 
 class Tests_Petname: XCTestCase {
     func testValid() throws {
+        XCTAssertNotNil(Petname("bob"))
         XCTAssertNotNil(Petname("valid-petname"))
         XCTAssertNotNil(Petname("PETNAME"))
         XCTAssertNotNil(Petname("PET_NAME"))
         XCTAssertNotNil(Petname("-_-"))
+        XCTAssertNotNil(Petname("alice.bob"))
+        XCTAssertNotNil(Petname("dan.charlie.bob.alice"))
+        XCTAssertNotNil(Petname("bob-foo.alice-foo"))
+        XCTAssertNotNil(Petname("bob_foo.alice_foo"))
     }
     
     func testNotValid() throws {
@@ -24,6 +29,10 @@ class Tests_Petname: XCTestCase {
         XCTAssertNil(Petname("invalid@petname"))
         XCTAssertNil(Petname("invalid-petname "))
         XCTAssertNil(Petname("invalid😈petname"))
+        XCTAssertNil(Petname("eve...alice"))
+        XCTAssertNil(Petname("eve.alice..bob"))
+        XCTAssertNil(Petname(".eve.alice"))
+        XCTAssertNil(Petname("alice.eve."))
     }
     
     func testLosslessStringConvertable() throws {

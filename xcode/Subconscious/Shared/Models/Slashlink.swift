@@ -16,7 +16,7 @@ public struct Slashlink:
     Codable,
     LosslessStringConvertible
 {
-    private static let slashlinkRegex = /(\@(?<petname>[\w\d\-]+))?\/(?<slug>(?:[\w\d\-]+)(?:\/[\w\d\-]+)*)/
+    private static let slashlinkRegex = /(\@(?<petname>(?:[\w\d\-]+)(?:\.[\w\d\-]+)*))?(\/(?<slug>(?:[\w\d\-]+)(?:\/[\w\d\-]+)*))?/
     
     public static func < (lhs: Slashlink, rhs: Slashlink) -> Bool {
         lhs.id < rhs.id
@@ -67,11 +67,27 @@ public struct Slashlink:
         else {
             return nil
         }
-        let slug = Slug(uncheckedRawString: match.slug.toString())
+        
+        // There are four cases: petname-only, slug-only, petname+slug and empty.
+        // All are valid constructions except for empty.
+        // Petname-only will use `profileSlug` as the slug.
+        let slug = match.slug.map({ substring in
+            Slug(uncheckedRawString: substring.toString()
+        )})
         let petname = match.petname.map({ substring in
             Petname(uncheckedRawString: substring.toString())
         })
-        self.init(petname: petname, slug: slug)
+        
+        switch (petname, slug) {
+        case (.some(let petname), .some(let slug)):
+            self.init(petname: petname, slug: slug)
+        case (.none, .some(let slug)):
+            self.init(slug: slug)
+        case (.some(let petname), .none):
+            self.init(petname: petname, slug: Self.profileSlug)
+        case (_, _):
+            return nil
+        }
     }
     
     /// Convenience initializer that creates a link to `@user/_profile_`

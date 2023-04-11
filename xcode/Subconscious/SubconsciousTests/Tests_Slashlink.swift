@@ -15,7 +15,14 @@ final class Tests_Slashlink: XCTestCase {
         XCTAssertNotNil(Slashlink("@__valid-petname__/__foo__"))
         XCTAssertNotNil(Slashlink("@PETNAME/foo"))
         XCTAssertNotNil(Slashlink("/bar"))
+        XCTAssertNotNil(Slashlink("/bar/baz/foo"))
         XCTAssertNotNil(Slashlink("@-_-/-_-"))
+        XCTAssertNotNil(Slashlink("@bob"))
+        XCTAssertNotNil(Slashlink("@alice.bob"))
+        XCTAssertNotNil(Slashlink("@dan.charlie.bob.alice"))
+        XCTAssertNotNil(Slashlink("@bob-foo.alice-foo"))
+        XCTAssertNotNil(Slashlink("@bob_foo.alice_foo"))
+        XCTAssertNotNil(Slashlink("@bob_foo.alice_foo/foo/bar/baz"))
     }
     
     func testNotValid() throws {
@@ -38,6 +45,15 @@ final class Tests_Slashlink: XCTestCase {
         XCTAssertNil(Slashlink("/special//slashlink"))
         XCTAssertNil(Slashlink("/invalid😈petname"))
         XCTAssertNil(Slashlink("@invalid😈petname/foo"))
+        XCTAssertNil(Slashlink("@eve...alice"))
+        XCTAssertNil(Slashlink("@.eve.alice"))
+        XCTAssertNil(Slashlink("@alice.eve."))
+        XCTAssertNil(Slashlink("@@eve.alice"))
+        XCTAssertNil(Slashlink("@eve@alice"))
+        XCTAssertNil(Slashlink("@eve//foo"))
+        XCTAssertNil(Slashlink("@eve..alice/foo"))
+        XCTAssertNil(Slashlink("@eve.evelyn/foo//bar"))
+        XCTAssertNil(Slashlink("@eve.evelyn/foo/@bar"))
     }
     
     func testSlugOnly() throws {
@@ -95,8 +111,12 @@ final class Tests_Slashlink: XCTestCase {
         XCTAssertNil(Slashlink("@bork/invalid//deep/slashlink"))
     }
 
-    func testPetnameOnlyInvalid() throws {
-        XCTAssertNil(Slashlink("@only-petname-should-fail"))
+    func testPetnameOnlyImplicitlyPointsToProfile() throws {
+        guard let slashlink = Slashlink("@only-petname-points-to-profile") else {
+            XCTFail("Failed to parse slashlink")
+            return
+        }
+        XCTAssertEqual(slashlink.description, "@only-petname-points-to-profile/\(Slashlink.profileSlug.description)")
     }
     
     func testToPetname() throws {
