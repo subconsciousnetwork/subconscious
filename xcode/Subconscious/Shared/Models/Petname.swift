@@ -16,7 +16,7 @@ public struct Petname:
     Codable,
     LosslessStringConvertible
 {
-    private static let petnameRegex = /[\w\d\-\.]+/
+    private static let petnameRegex = /([\w\d\-]+)(\.[\w\d\-]+)*/
     
     public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.id < rhs.id
