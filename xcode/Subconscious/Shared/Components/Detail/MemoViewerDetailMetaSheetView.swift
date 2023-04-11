@@ -76,16 +76,13 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
     
     var shareableLink: String? {
         guard let address = address else {
-            Self.logger.log("Copy link: (nil)")
             return nil
         }
         
         switch address {
         case .local(let slug):
-            Self.logger.log("Copy link: \(slug)")
             return slug.markup
         case .public(let slashlink):
-            Self.logger.log("Copy link: \(slashlink)")
             return slashlink.markup
         }
     }
