@@ -78,15 +78,15 @@ public struct Slashlink:
             Petname(uncheckedRawString: substring.toString())
         })
         
-        if let slug = slug {
+        switch (petname, slug) {
+        case (.some(let petname), .some(let slug)):
             self.init(petname: petname, slug: slug)
-        } else {
-            guard let petname = petname else {
-                return nil
-            }
-            
-            // Petname only
+        case (.none, .some(let slug)):
+            self.init(slug: slug)
+        case (.some(let petname), .none):
             self.init(petname: petname, slug: Self.profileSlug)
+        case (_, _):
+            return nil
         }
     }
     
