@@ -108,7 +108,7 @@ struct NotebookNavigationView: View {
                         Image(systemName: "gearshape")
                     }
                 }
-                if Config.default.addressBook {
+                if AppDefaults.standard.isNoosphereEnabled {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(
                             action: {
