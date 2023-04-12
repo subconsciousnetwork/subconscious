@@ -32,7 +32,7 @@ extension AddressBookError: LocalizedError {
         case .exhaustedUniquePetnameRange:
             return String(localized: "Failed to find an available petname.", comment: "Address Book error description")
         case .invalidAttemptToOverwitePetname:
-            return String(localized: "preventOverwrite was set to true but this petname is already in use", comment: "Address Book error description")
+            return String(localized: "This petname is already in use.", comment: "Address Book error description")
         case .other(let msg):
             return String(localized: "An unknown error occurred: \(msg)", comment: "Unknown Address Book error description")
         }
