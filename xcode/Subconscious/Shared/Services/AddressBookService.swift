@@ -94,15 +94,7 @@ actor AddressBookService {
     }
     
     func hasEntryForPetname(petname: Petname) throws -> Bool {
-        do {
-            guard try getPetname(petname: petname) != nil else {
-                return false
-            }
-            
-            return true
-        } catch {
-            return false
-        }
+        return try getPetname(petname: petname) != nil
     }
     
     func hasEntryForPetnameAsync(petname: Petname) -> AnyPublisher<Bool, Error> {
@@ -112,15 +104,11 @@ actor AddressBookService {
     }
     
     func isFollowingUser(did: Did, petname: Petname) throws -> Bool {
-        do {
-            guard let user = try getPetname(petname: petname) else {
-                return false
-            }
-            
-            return user == did
-        } catch {
+        guard let user = try getPetname(petname: petname) else {
             return false
         }
+        
+        return user == did
     }
     
     func isFollowingUserAsync(did: Did, petname: Petname) -> AnyPublisher<Bool, Error> {
