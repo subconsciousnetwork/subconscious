@@ -37,9 +37,9 @@ struct MoveReceipt: Hashable {
 // MARK: SERVICE
 /// Wraps both database and source-of-truth store, providing data
 /// access methods for the app.
-struct DataService {
-    var addressBook: AddressBookService
+actor DataService {
     var noosphere: NoosphereService
+    var addressBook: AddressBookService
     var database: DatabaseService
     var local: HeaderSubtextMemoStore
     var logger: Logger
@@ -64,12 +64,12 @@ struct DataService {
     /// - Returns: SphereReceipt
     /// Will not create sphere if a sphereIdentity already appears in
     /// the user defaults.
-    func createSphere(ownerKeyName: String) throws -> SphereReceipt {
+    func createSphere(ownerKeyName: String) async throws -> SphereReceipt {
         // Do not create sphere if one already exists
         if let sphereIdentity = AppDefaults.standard.sphereIdentity {
             throw DataServiceError.sphereExists(sphereIdentity)
         }
-        let sphereReceipt = try noosphere.createSphere(
+        let sphereReceipt = try await noosphere.createSphere(
             ownerKeyName: ownerKeyName
         )
         // Persist sphere identity to user defaults.
@@ -79,42 +79,43 @@ struct DataService {
         AppDefaults.standard.sphereIdentity = sphereReceipt.identity
         AppDefaults.standard.ownerKeyName = ownerKeyName
         // Set sphere identity on NoosphereService
-        noosphere.resetSphere(sphereReceipt.identity)
+        await noosphere.resetSphere(sphereReceipt.identity)
         return sphereReceipt
     }
 
     /// Sync local state to gateway
     func syncSphereWithGateway() -> AnyPublisher<String, Error> {
-        CombineUtilities.async(qos: .utility) {
-            try noosphere.sync()
+        Future.detatched(priority: .low) {
+            try await self.noosphere.sync()
         }
+        .eraseToAnyPublisher()
     }
 
     /// Migrate database off main thread, returning a publisher
     func migrateAsync() -> AnyPublisher<Int, Error> {
         CombineUtilities.async(qos: .utility) {
-            try database.migrate()
+            try self.database.migrate()
         }
     }
 
     /// Rebuild database and re-sync everything.
     func rebuildAsync() -> AnyPublisher<Int, Error> {
         CombineUtilities.async(qos: .utility) {
-            try database.rebuild()
+            try self.database.rebuild()
         }
     }
 
-    func syncSphereWithDatabase() throws -> String {
-        let identity = try noosphere.identity()
-        let version = try noosphere.version()
+    func syncSphereWithDatabase() async throws -> String {
+        let identity = try await noosphere.identity()
+        let version = try await noosphere.version()
         let since = try? database.readMetadata(key: .sphereVersion)
-        let changes = try noosphere.changes(since)
+        let changes = try await noosphere.changes(since)
         for change in changes {
             let address = change.toPublicMemoAddress()
             let slashlink = address.toSlashlink()
             // If memo does exist, write it to database
             // Sphere content is always public right now
-            if let memo = try? noosphere.read(
+            if let memo = try? await noosphere.read(
                 slashlink: slashlink
             ).toMemo() {
                 try database.writeMemo(
@@ -133,9 +134,10 @@ struct DataService {
     }
 
     func syncSphereWithDatabaseAsync() -> AnyPublisher<String, Error> {
-        CombineUtilities.async(qos: .utility) {
-            try syncSphereWithDatabase()
+        Future.detatched(priority: .utility) {
+            try await self.syncSphereWithDatabase()
         }
+        .eraseToAnyPublisher()
     }
 
     /// Sync file system with database.
@@ -200,17 +202,17 @@ struct DataService {
 
     func syncLocalWithDatabaseAsync() -> AnyPublisher<[FileFingerprintChange], Error> {
         CombineUtilities.async(qos: .utility) {
-            try syncLocalWithDatabase()
+            try self.syncLocalWithDatabase()
         }
     }
 
     /// Read memo from sphere or local
     func readMemo(
         address: MemoAddress
-    ) throws -> Memo {
+    ) async throws -> Memo {
         switch address {
         case .public(let slashlink):
-            return try noosphere.read(slashlink: slashlink)
+            return try await noosphere.read(slashlink: slashlink)
                 .toMemo()
                 .unwrap()
         case .local(let slug):
@@ -223,20 +225,20 @@ struct DataService {
     func writeMemo(
         address: MemoAddress,
         memo: Memo
-    ) throws {
+    ) async throws {
         var memo = memo
         memo.modified = Date.now
 
         switch address {
         case .public(let slashlink):
             let body = try memo.body.toData().unwrap()
-            try noosphere.write(
+            try await noosphere.write(
                 slug: slashlink.slug,
                 contentType: memo.contentType,
                 additionalHeaders: memo.headers,
                 body: body
             )
-            let version = try noosphere.save()
+            let version = try await noosphere.save()
             // Write to database
             try database.writeMemo(
                 address,
@@ -265,26 +267,27 @@ struct DataService {
         }
     }
 
-    func writeEntry(_ entry: MemoEntry) throws {
-        try writeMemo(address: entry.address, memo: entry.contents)
+    func writeEntry(_ entry: MemoEntry) async throws {
+        try await writeMemo(address: entry.address, memo: entry.contents)
     }
 
     func writeEntryAsync(_ entry: MemoEntry) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .utility) {
-            try writeEntry(entry)
+        Future.detatched(priority: .utility) {
+            try await self.writeEntry(entry)
         }
+        .eraseToAnyPublisher()
     }
     
     /// Delete entry from file system and database
-    func deleteMemo(_ address: MemoAddress) throws {
+    func deleteMemo(_ address: MemoAddress) async throws {
         switch address {
         case .local(let slug):
             try local.remove(slug)
             try database.removeMemo(address)
             return
         case .public(let slashlink):
-            try noosphere.remove(slug: slashlink.slug)
-            let version = try noosphere.save()
+            try await noosphere.remove(slug: slashlink.slug)
+            let version = try await noosphere.save()
             try database.removeMemo(address)
             try database.writeMetadatadata(key: .sphereVersion, value: version)
             return
@@ -293,26 +296,30 @@ struct DataService {
     
     /// Delete entry from file system and database
     func deleteMemoAsync(_ address: MemoAddress) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .background) {
-            try deleteMemo(address)
+        Future.detatched(priority: .background) {
+            try await self.deleteMemo(address)
         }
+        .eraseToAnyPublisher()
     }
     
     /// Move entry to a new location, updating file system and database.
-    func moveEntry(from: MemoAddress, to: MemoAddress) throws -> MoveReceipt {
+    func moveEntry(
+        from: MemoAddress,
+        to: MemoAddress
+    ) async throws -> MoveReceipt {
         guard from != to else {
             throw DataServiceError.fileExists(to.description)
         }
-        guard !self.exists(to) else {
+        guard await !self.exists(to) else {
             throw DataServiceError.fileExists(to.description)
         }
-        let fromMemo = try readMemo(address: from)
+        let fromMemo = try await readMemo(address: from)
         // Make a copy representing new location and set new title and slug
         let toMemo = fromMemo
         // Write to new destination
-        try writeMemo(address: to, memo: toMemo)
+        try await writeMemo(address: to, memo: toMemo)
         // ...Then delete old entry
-        try deleteMemo(from)
+        try await deleteMemo(from)
         return MoveReceipt(from: from, to: to)
     }
     
@@ -322,9 +329,10 @@ struct DataService {
         from: MemoAddress,
         to: MemoAddress
     ) -> AnyPublisher<MoveReceipt, Error> {
-        CombineUtilities.async {
-            try moveEntry(from: from, to: to)
+        Future.detatched(priority: .medium) {
+            try await self.moveEntry(from: from, to: to)
         }
+        .eraseToAnyPublisher()
     }
     
     /// Merge child entry into parent entry.
@@ -334,15 +342,15 @@ struct DataService {
     func mergeEntry(
         parent: MemoAddress,
         child: MemoAddress
-    ) throws {
-        let childMemo = try readMemo(address: child)
-        let parentMemo = try readMemo(address: parent)
+    ) async throws {
+        let childMemo = try await readMemo(address: child)
+        let parentMemo = try await readMemo(address: parent)
         let mergedMemo = parentMemo.merge(childMemo)
         //  First write the merged file to "to" location
-        try writeMemo(address: parent, memo: mergedMemo)
+        try await writeMemo(address: parent, memo: mergedMemo)
         //  Then delete child entry *afterwards*.
         //  We do this last to avoid data loss in case of write errors.
-        try deleteMemo(child)
+        try await deleteMemo(child)
     }
     
     /// Merge child entry into parent entry.
@@ -354,36 +362,37 @@ struct DataService {
         parent: MemoAddress,
         child: MemoAddress
     ) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async {
-            try mergeEntry(parent: parent, child: child)
+        Future.detatched(priority: .medium) {
+            try await self.mergeEntry(parent: parent, child: child)
         }
+        .eraseToAnyPublisher()
     }
     
     func listRecentMemos() -> AnyPublisher<[EntryStub], Error> {
         CombineUtilities.async(qos: .default) {
-            try database.listRecentMemos()
+            try self.database.listRecentMemos()
         }
     }
-
+    
     func countMemos() throws -> Int {
         return try database.countMemos().unwrap()
     }
-
+    
     /// Count all entries
     func countMemos() -> AnyPublisher<Int, Error> {
         CombineUtilities.async(qos: .userInteractive) {
-            try countMemos()
+            try self.countMemos()
         }
     }
-
+    
     func searchSuggestions(
         query: String
     ) -> AnyPublisher<[Suggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            try database.searchSuggestions(query: query)
+            try self.database.searchSuggestions(query: query)
         }
     }
-
+    
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchLinkSuggestions(
@@ -392,7 +401,7 @@ struct DataService {
         fallback: [LinkSuggestion] = []
     ) -> AnyPublisher<[LinkSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            return database.searchLinkSuggestions(
+            self.database.searchLinkSuggestions(
                 query: query,
                 omitting: invalidSuggestions,
                 fallback: fallback
@@ -405,25 +414,25 @@ struct DataService {
         current: MemoAddress
     ) -> AnyPublisher<[RenameSuggestion], Error> {
         CombineUtilities.async(qos: .userInitiated) {
-            try database.searchRenameSuggestions(
+            try self.database.searchRenameSuggestions(
                 query: query,
                 current: current
             )
         }
     }
-
+    
     /// Log a search query in search history db
     func createSearchHistoryItem(query: String) -> AnyPublisher<String, Error> {
         CombineUtilities.async(qos: .utility) {
-            database.createSearchHistoryItem(query: query)
+            self.database.createSearchHistoryItem(query: query)
         }
     }
     
     /// Check if a given address exists
-    func exists(_ address: MemoAddress) -> Bool {
+    func exists(_ address: MemoAddress) async -> Bool {
         switch address {
         case .public(let slashlink):
-            let version = noosphere.getFileVersion(
+            let version = await noosphere.getFileVersion(
                 slashlink: slashlink
             )
             return version != nil
@@ -432,15 +441,15 @@ struct DataService {
             return info != nil
         }
     }
-
+    
     /// Given a slug, get back a resolved MemoAddress for our own sphere.
     /// If there is public content, that will be returned.
     /// Otherwise, if there is local content, that will be returned.
     func findAddressInOurs(
         slug: Slug
-    ) -> MemoAddress? {
+    ) async -> MemoAddress? {
         // If slug exists in default sphere, return that.
-        if noosphere.getFileVersion(
+        if await noosphere.getFileVersion(
             slashlink: slug.toSlashlink()
         ) != nil {
             return slug.toPublicMemoAddress()
@@ -451,17 +460,17 @@ struct DataService {
         }
         return nil
     }
-
+    
     func findUniqueAddressFor(
         _ text: String,
         audience: Audience
-    ) -> MemoAddress? {
+    ) async -> MemoAddress? {
         // If we can't derive slug from text, exit early.
         guard let slug = Slug(formatting: text) else {
             return nil
         }
         // If slug does not exist in any address space, return it.
-        if findAddressInOurs(slug: slug) == nil {
+        if await findAddressInOurs(slug: slug) == nil {
             return slug.toMemoAddress(audience)
         }
         for n in 2..<500 {
@@ -469,7 +478,7 @@ struct DataService {
             guard let slugN = Slug("\(slug.description)-\(n)") else {
                 return nil
             }
-            if findAddressInOurs(slug: slugN) == nil {
+            if await findAddressInOurs(slug: slugN) == nil {
                 return slugN.toMemoAddress(audience)
             }
         }
@@ -478,8 +487,8 @@ struct DataService {
     
     private func readSphereMemo(
         slashlink: Slashlink
-    ) -> Memo? {
-        try? noosphere.read(slashlink: slashlink).toMemo()
+    ) async -> Memo? {
+        try? await noosphere.read(slashlink: slashlink).toMemo()
     }
 
     /// Read memo from local store
@@ -496,7 +505,7 @@ struct DataService {
     func readMemoEditorDetail(
         address: MemoAddress,
         fallback: String
-    ) throws -> MemoEditorDetailResponse {
+    ) async throws -> MemoEditorDetailResponse {
         // We do not allow editing 3p memos. Throw.
         if !address.isOurs {
             throw DataServiceError.permissionsError(
@@ -504,13 +513,13 @@ struct DataService {
             )
         }
         // Read memo from local or sphere.
-        let memo = Func.run {
+        let memo = await Func.run {
             switch address {
             case .local(let slug):
                 return readLocalMemo(slug: slug)
             
             case .public(let slashlink):
-                return readSphereMemo(slashlink: slashlink)
+                return await readSphereMemo(slashlink: slashlink)
             }
         }
 
@@ -548,23 +557,27 @@ struct DataService {
         address: MemoAddress,
         fallback: String
     ) -> AnyPublisher<MemoEditorDetailResponse, Error> {
-        CombineUtilities.async {
-            try readMemoEditorDetail(address: address, fallback: fallback)
+        Future.detatched {
+            try await self.readMemoEditorDetail(
+                address: address,
+                fallback: fallback
+            )
         }
+        .eraseToAnyPublisher()
     }
     
     /// Read view-only memo detail for address.
     /// - Returns `MemoDetailResponse`
     func readMemoDetail(
         address: MemoAddress
-    ) -> MemoDetailResponse? {
+    ) async -> MemoDetailResponse? {
         // Read memo from local or sphere.
-        let memo = Func.run {
+        let memo = await Func.run {
             switch address {
             case .local(let slug):
                 return readLocalMemo(slug: slug)
             case .public(let slashlink):
-                return readSphereMemo(slashlink: slashlink)
+                return await readSphereMemo(slashlink: slashlink)
             }
         }
 
@@ -588,9 +601,10 @@ struct DataService {
     func readMemoDetailAsync(
         address: MemoAddress
     ) -> AnyPublisher<MemoDetailResponse?, Never> {
-        CombineUtilities.async {
-            readMemoDetail(address: address)
+        Future.detatched {
+            await self.readMemoDetail(address: address)
         }
+        .eraseToAnyPublisher()
     }
 
     /// Choose a random entry and publish slug
@@ -602,9 +616,11 @@ struct DataService {
     }
 
     /// Choose a random entry and publish slug
-    func readRandomEntryLinkAsync() -> AnyPublisher<EntryLink, Error> {
-        CombineUtilities.async(qos: .default) {
-            try readRandomEntryLink()
+    nonisolated func readRandomEntryLinkAsync() ->
+        AnyPublisher<EntryLink, Error> {
+        Future.detatched {
+            try await self.readRandomEntryLink()
         }
+        .eraseToAnyPublisher()
     }
 }

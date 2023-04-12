@@ -14,58 +14,58 @@ import os
 public protocol SphereProtocol {
     associatedtype Memo
     
-    func version() throws -> String
+    func version() async throws -> String
     
-    func getFileVersion(slashlink: Slashlink) -> String?
+    func getFileVersion(slashlink: Slashlink) async -> String?
     
     func readHeaderValueFirst(
         slashlink: Slashlink,
         name: String
-    ) -> String?
+    ) async -> String?
     
-    func readHeaderNames(slashlink: Slashlink) -> [String]
+    func readHeaderNames(slashlink: Slashlink) async -> [String]
     
-    func read(slashlink: Slashlink) throws -> Memo
+    func read(slashlink: Slashlink) async throws -> Memo
     
     func write(
         slug: Slug,
         contentType: String,
         additionalHeaders: [Header],
         body: Data
-    ) throws
+    ) async throws
     
-    func remove(slug: Slug) throws
+    func remove(slug: Slug) async throws
     
-    func save() throws -> String
+    func save() async throws -> String
     
-    func list() throws -> [Slug]
+    func list() async throws -> [Slug]
     
-    func sync() throws -> String
+    func sync() async throws -> String
     
-    func changes(_ since: String?) throws -> [Slug]
+    func changes(_ since: String?) async throws -> [Slug]
     
-    func getPetname(petname: Petname) throws -> String
+    func getPetname(petname: Petname) async throws -> String
     
-    func setPetname(did: String, petname: Petname) throws
+    func setPetname(did: String, petname: Petname) async throws
     
-    func unsetPetname(petname: Petname) throws
+    func unsetPetname(petname: Petname) async throws
     
-    func resolvePetname(petname: Petname) throws -> String
+    func resolvePetname(petname: Petname) async throws -> String
     
-    func listPetnames() throws -> [Petname]
+    func listPetnames() async throws -> [Petname]
     
-    func getPetnameChanges(sinceCid: String) throws -> [Petname]
+    func getPetnameChanges(sinceCid: String) async throws -> [Petname]
     
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
     /// over multiple spheres:
     ///
     /// `sphere().traverse(petname: "alice").traverse(petname: "bob").traverse(petname: "alice)` etc.
     ///
-    func traverse(petname: Petname) throws -> Sphere
+    func traverse(petname: Petname) async throws -> Sphere
 }
 
 protocol SphereIdentityProtocol {
-    func identity() throws -> String
+    func identity() async throws -> String
 }
 
 enum SphereError: Error, LocalizedError {
@@ -88,7 +88,7 @@ enum SphereError: Error, LocalizedError {
 
 /// Sphere file system access.
 /// Provides sphere file system methods and manages lifetime of sphere pointer.
-public final class Sphere: SphereProtocol {
+public actor Sphere: SphereProtocol {
     private let logger = Logger(
         subsystem: Config.default.rdns,
         category: "Sphere"
@@ -476,7 +476,8 @@ public final class Sphere: SphereProtocol {
     
     deinit {
         ns_sphere_free(sphere)
-        logger.debug("deinit with identity \(self.identity)")
+        let message = "deinit with identity \(self.identity)"
+        logger.debug("\(message)")
     }
     
     /// Read first header value for file pointer

@@ -41,7 +41,7 @@ public struct SphereReceipt {
 ///
 /// - Property noosphere: pointer that holds all the internal book keeping.
 ///   DB pointers, key storage interfaces, active HTTP clients etc.
-public final class Noosphere {
+public actor Noosphere {
     private let logger: Logger = Logger(
         subsystem: Config.default.rdns,
         category: "Noosphere"

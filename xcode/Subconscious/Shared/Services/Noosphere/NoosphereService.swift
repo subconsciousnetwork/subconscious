@@ -15,6 +15,7 @@
 import Foundation
 import SwiftNoosphere
 import os
+import Combine
 
 enum NoosphereServiceError: Error, LocalizedError {
     case defaultSphereNotFound
@@ -28,24 +29,14 @@ enum NoosphereServiceError: Error, LocalizedError {
 }
 
 /// Creates and manages Noosphere and default sphere singletons.
-final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
+actor NoosphereService: SphereProtocol, SphereIdentityProtocol {
     /// Default logger for NoosphereService instances.
     private static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "NoosphereService"
     )
 
-    /// Dispatch queue for NoosphereService instances.
-    /// We use this queue to make NoosphereService threadsafe.
-    private static let queue = DispatchQueue(
-        label: "NoosphereService",
-        qos: .default,
-        // Queues are serial by default.
-        attributes: []
-    )
-
     private var logger: Logger
-    private var queue: DispatchQueue
     var globalStorageURL: URL
     var sphereStorageURL: URL
     var gatewayURL: URL?
@@ -61,8 +52,7 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         sphereStorageURL: URL,
         gatewayURL: URL? = nil,
         sphereIdentity: String? = nil,
-        logger: Logger = logger,
-        queue: DispatchQueue = queue
+        logger: Logger = logger
     ) {
         logger.debug("init NoosphereService")
         logger.debug("Global storage URL: \(globalStorageURL.absoluteString)")
@@ -74,47 +64,38 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         self.gatewayURL = gatewayURL
         self._sphereIdentity = sphereIdentity
         self.logger = logger
-        self.queue = queue
     }
     
     /// Create a default sphere for user and persist sphere details
     /// This creates, but does not save the sphere as default.
     /// - Returns: SphereReceipt
-    func createSphere(ownerKeyName: String) throws -> SphereReceipt {
-        try queue.sync {
-            try self.noosphere().createSphere(
-                ownerKeyName: ownerKeyName
-            )
-        }
+    func createSphere(ownerKeyName: String) async throws -> SphereReceipt {
+        try await self.noosphere().createSphere(
+            ownerKeyName: ownerKeyName
+        )
     }
     
     /// Set a new default sphere
     func resetSphere(_ identity: String?) {
-        queue.sync {
-            logger.debug("Reset sphere identity: \(identity ?? "none")")
-            self._sphereIdentity = identity
-            self._sphere = nil
-        }
+        logger.debug("Reset sphere identity: \(identity ?? "none")")
+        self._sphereIdentity = identity
+        self._sphere = nil
     }
     
     /// Update Gateway.
     /// Resets memoized Noosphere and Sphere instances.
     func resetGateway(url: URL?) {
-        queue.sync {
-            logger.debug("Reset gateway: \(url?.absoluteString ?? "none")")
-            self.gatewayURL = url
-            self._noosphere = nil
-            self._sphere = nil
-        }
+        logger.debug("Reset gateway: \(url?.absoluteString ?? "none")")
+        self.gatewayURL = url
+        self._noosphere = nil
+        self._sphere = nil
     }
     
     /// Reset managed instances of Noosphere and Sphere
     func reset() {
-        queue.sync {
-            logger.debug("Reset memoized instances of Noosphere and Sphere")
-            self._noosphere = nil
-            self._sphere = nil
-        }
+        logger.debug("Reset memoized instances of Noosphere and Sphere")
+        self._noosphere = nil
+        self._sphere = nil
     }
     
     /// Gets or creates memoized Noosphere singleton instance
@@ -152,47 +133,37 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
     }
     
     func identity() throws -> String {
-        try queue.sync {
-            try self.sphere().identity
-        }
+        try self.sphere().identity
     }
 
-    func version() throws -> String {
-        try queue.sync {
-            try self.sphere().version()
-        }
+    func version() async throws -> String {
+        try await self.sphere().version()
     }
     
-    func getFileVersion(slashlink: Slashlink) -> String? {
-        queue.sync {
-            try? self.sphere().getFileVersion(slashlink: slashlink)
-        }
+    func getFileVersion(slashlink: Slashlink) async -> String? {
+        try? await self.sphere().getFileVersion(slashlink: slashlink)
     }
     
-    func readHeaderValueFirst(slashlink: Slashlink, name: String) -> String? {
-        queue.sync {
-            try? self.sphere().readHeaderValueFirst(
-                slashlink: slashlink,
-                name: name
-            )
-        }
+    func readHeaderValueFirst(
+        slashlink: Slashlink, name: String
+    ) async -> String? {
+        try? await self.sphere().readHeaderValueFirst(
+            slashlink: slashlink,
+            name: name
+        )
     }
     
-    func readHeaderNames(slashlink: Slashlink) -> [String] {
-        queue.sync {
-            guard let names = try? self.sphere().readHeaderNames(
-                slashlink: slashlink
-            ) else {
-                return []
-            }
-            return names
+    func readHeaderNames(slashlink: Slashlink) async -> [String] {
+        guard let names = try? await self.sphere().readHeaderNames(
+            slashlink: slashlink
+        ) else {
+            return []
         }
+        return names
     }
     
-    func read(slashlink: Slashlink) throws -> MemoData {
-        try queue.sync {
-            try self.sphere().read(slashlink: slashlink)
-        }
+    func read(slashlink: Slashlink) async throws -> MemoData {
+        try await self.sphere().read(slashlink: slashlink)
     }
     
     func write(
@@ -200,86 +171,60 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         contentType: String,
         additionalHeaders: [Header],
         body: Data
-    ) throws {
-        try queue.sync {
-            try self.sphere().write(
-                slug: slug,
-                contentType: contentType,
-                additionalHeaders: additionalHeaders,
-                body: body
-            )
-        }
+    ) async throws {
+        try await self.sphere().write(
+            slug: slug,
+            contentType: contentType,
+            additionalHeaders: additionalHeaders,
+            body: body
+        )
     }
     
-    func remove(slug: Slug) throws {
-        try queue.sync {
-            try self.sphere().remove(slug: slug)
-        }
+    func remove(slug: Slug) async throws {
+        try await self.sphere().remove(slug: slug)
     }
     
-    @discardableResult func save() throws -> String {
-        try queue.sync {
-            try self.sphere().save()
-        }
+    @discardableResult func save() async throws -> String {
+        try await self.sphere().save()
     }
     
-    func list() throws -> [Slug] {
-        try queue.sync {
-            try self.sphere().list()
-        }
+    func list() async throws -> [Slug] {
+        try await self.sphere().list()
     }
     
-    func sync() throws -> String {
-        try queue.sync {
-            try self.sphere().sync()
-        }
+    func sync() async throws -> String {
+        try await self.sphere().sync()
     }
     
-    func changes(_ since: String?) throws -> [Slug] {
-        try queue.sync {
-            try self.sphere().changes(since)
-        }
+    func changes(_ since: String?) async throws -> [Slug] {
+        try await self.sphere().changes(since)
     }
     
-    func getPetname(petname: Petname) throws -> String {
-        try queue.sync {
-            try self.sphere().getPetname(petname: petname)
-        }
+    func getPetname(petname: Petname) async throws -> String {
+        try await self.sphere().getPetname(petname: petname)
     }
     
-    func setPetname(did: String, petname: Petname) throws {
-        try queue.sync {
-            try self.sphere().setPetname(did: did, petname: petname)
-        }
+    func setPetname(did: String, petname: Petname) async throws {
+        try await self.sphere().setPetname(did: did, petname: petname)
     }
     
-    func unsetPetname(petname: Petname) throws {
-        try queue.sync {
-            try self.sphere().unsetPetname(petname: petname)
-        }
+    func unsetPetname(petname: Petname) async throws {
+        try await self.sphere().unsetPetname(petname: petname)
     }
     
-    func resolvePetname(petname: Petname) throws -> String {
-        try queue.sync {
-            try self.sphere().resolvePetname(petname: petname)
-        }
+    func resolvePetname(petname: Petname) async throws -> String {
+        try await self.sphere().resolvePetname(petname: petname)
     }
     
-    func listPetnames() throws -> [Petname] {
-        try queue.sync {
-            try self.sphere().listPetnames()
-        }
+    func listPetnames() async throws -> [Petname] {
+        try await self.sphere().listPetnames()
     }
     
-    func getPetnameChanges(sinceCid: String) throws -> [Petname] {
-        try queue.sync {
-            try self.sphere().getPetnameChanges(sinceCid: sinceCid)
-        }
+    func getPetnameChanges(sinceCid: String) async throws -> [Petname] {
+        try await self.sphere().getPetnameChanges(sinceCid: sinceCid)
     }
 
-    func traverse(petname: Petname) throws -> Sphere {
-        try queue.sync {
-            try self.sphere().traverse(petname: petname)
-        }
+    func traverse(petname: Petname) async throws -> Sphere {
+        try await self.sphere().traverse(petname: petname)
     }
 }
