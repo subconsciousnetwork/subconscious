@@ -139,7 +139,7 @@ actor AddressBookService {
         var count = 0
         
         while try await hasEntryForPetname(petname: name) {
-            guard let next = petname.increment() else {
+            guard let next = name.increment() else {
                 throw AddressBookError.exhaustedUniquePetnameRange
             }
            
