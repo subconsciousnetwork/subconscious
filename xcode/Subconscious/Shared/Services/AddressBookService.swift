@@ -40,6 +40,10 @@ actor AddressBookService {
         self.addressBook = nil
     }
     
+    private func invalidateCache() {
+        addressBook = nil
+    }
+    
     /// Get the full list of entries in the address book.
     /// This is cached after the first use unless requested using refetch.
     /// If an error occurs producing the entries the resulting list will be empty.
@@ -124,6 +128,7 @@ actor AddressBookService {
         try await noosphere.setPetname(did: did.did, petname: petname)
         let version = try await noosphere.save()
         try database.writeMetadatadata(key: .sphereVersion, value: version)
+        invalidateCache()
     }
     
     /// Associates the passed DID with the passed petname within the sphere,
@@ -142,6 +147,7 @@ actor AddressBookService {
         try await unsetPetname(petname: petname)
         let version = try await noosphere.save()
         try database.writeMetadatadata(key: .sphereVersion, value: version)
+        invalidateCache()
     }
     
     /// Unassociates the passed DID with the passed petname within the sphere,
