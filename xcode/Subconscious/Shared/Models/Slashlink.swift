@@ -94,13 +94,6 @@ public struct Slashlink:
     init(petname: Petname) {
         self.init(petname: petname, slug: Self.profileSlug)
     }
-    
-    init?(petnames: [Petname]) {
-        self.petnamePart = petnames.description
-        self.slugPart = Self.profileSlug.markup
-        self.verbatim = "\(petnamePart ?? "")\(slugPart)"
-        self.description = self.verbatim
-    }
 }
 
 extension Slug {

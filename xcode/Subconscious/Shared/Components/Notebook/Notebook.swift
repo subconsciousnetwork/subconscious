@@ -906,6 +906,29 @@ struct NotebookModel: ModelProtocol {
             )
         }
         if AppDefaults.standard.isNoosphereEnabled {
+            // Need a UserProfileService that takes a DID -> UserProfile
+            // also retrieves posts, following, statistics etc.
+            // SpherePath should be lighter... (DID, Petname) pairs.
+            
+            // Realising that tapping on a link in a note goes WAY deeper than originally thought.
+            // If I am browsing @gordon's note and tap on his link to @cdata/lol
+            // I need to know I'm at `@cdata.gordon/lol` but this keeps going!
+            
+            if slashlink.slug.isProfile() {
+                return update(
+                    state: state,
+                    action: .pushDetail(
+                        .profile(
+                            UserProfileDetailDescription(
+                                 user: <#T##UserProfile#>,
+                                 spherePath: <#T##[UserProfile]#>
+                            )
+                        )
+                    ),
+                    environment: environment
+                )
+            }
+            
             // If Noosphere is enabled, and slashlink pointing to other sphere,
             // dispatch action for viewer.
             return update(
