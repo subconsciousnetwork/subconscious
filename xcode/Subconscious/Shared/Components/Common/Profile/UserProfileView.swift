@@ -114,45 +114,129 @@ struct UserProfileView: View {
                 )
             }
         })
-        .sheet(
-            isPresented: Binding(
-                get: { state.isFollowSheetPresented },
-                send: send,
-                tag: UserProfileDetailAction.presentFollowSheet
-            )
-        ) {
-            if let user = state.user {
-                FollowUserSheet(
-                    state: state.followUserSheet,
+        .metaSheet(state: state, send: send)
+        .follow(state: state, send: send)
+        .unfollow(state: state, send: send)
+    }
+}
+
+private extension View {
+    func unfollow(state: UserProfileDetailModel, send: @escaping (UserProfileDetailAction) -> Void) -> some View {
+      self.modifier(UnfollowModifier(state: state, send: send))
+    }
+    
+    func follow(state: UserProfileDetailModel, send: @escaping (UserProfileDetailAction) -> Void) -> some View {
+      self.modifier(FollowModifier(state: state, send: send))
+    }
+    
+    func metaSheet(state: UserProfileDetailModel, send: @escaping (UserProfileDetailAction) -> Void) -> some View {
+      self.modifier(MetaSheetModifier(state: state, send: send))
+    }
+}
+
+struct MetaSheetModifier: ViewModifier {
+    let state: UserProfileDetailModel
+    let send: (UserProfileDetailAction) -> Void
+    
+    func body(content: Content) -> some View {
+        content
+            .sheet(
+                isPresented: Binding(
+                    get: { state.isMetaSheetPresented },
+                    send: send,
+                    tag: UserProfileDetailAction.presentMetaSheet
+                )
+            ) {
+                UserProfileDetailMetaSheet(
+                    state: state.metaSheet,
+                    profile: state,
+                    isFollowingUser: state.isFollowingUser,
                     send: Address.forward(
                         send: send,
-                        tag: FollowUserSheetCursor.tag
-                    ),
-                    user: user,
-                    onAttemptFollow: {
-                        send(.attemptFollow)
-                    }
+                        tag: UserProfileDetailMetaSheetCursor.tag
+                    )
                 )
             }
-        }
-        .sheet(
-            isPresented: Binding(
-                get: { state.isMetaSheetPresented },
-                send: send,
-                tag: UserProfileDetailAction.presentMetaSheet
-            )
-        ) {
-            UserProfileDetailMetaSheet(
-                state: state.metaSheet,
-                profile: state,
-                isFollowingUser: state.isFollowingUser,
-                send: Address.forward(
-                    send: send,
-                    tag: UserProfileDetailMetaSheetCursor.tag
-                )
-            )
-        }
     }
+}
+
+struct FollowModifier: ViewModifier {
+    let state: UserProfileDetailModel
+    let send: (UserProfileDetailAction) -> Void
+    
+    func body(content: Content) -> some View {
+        content
+            .alert(
+                isPresented: Binding(
+                    get: { state.failFollowErrorMessage != nil },
+                    set: { _ in send(.dismissFailFollowError) }
+                )
+            ) {
+                Alert(
+                    title: Text("Failed to Follow User"),
+                    message: Text(state.failFollowErrorMessage ?? "An unknown error occurred")
+                )
+            }
+            .sheet(
+                isPresented: Binding(
+                    get: { state.isFollowSheetPresented },
+                    send: send,
+                    tag: UserProfileDetailAction.presentFollowSheet
+                )
+            ) {
+                if let user = state.user {
+                    FollowUserSheet(
+                        state: state.followUserSheet,
+                        send: Address.forward(
+                            send: send,
+                            tag: FollowUserSheetCursor.tag
+                        ),
+                        user: user,
+                        onAttemptFollow: {
+                            send(.attemptFollow)
+                        }
+                    )
+                }
+            }
+    }
+}
+
+
+struct UnfollowModifier: ViewModifier {
+  let state: UserProfileDetailModel
+  let send: (UserProfileDetailAction) -> Void
+
+  func body(content: Content) -> some View {
+    content
+      .alert(
+          isPresented: Binding(
+              get: { state.failUnfollowErrorMessage != nil },
+              set: { _ in send(.dismissFailUnfollowError) }
+          )
+      ) {
+          Alert(
+              title: Text("Failed to Unfollow User"),
+              message: Text(state.failUnfollowErrorMessage ?? "An unknown error occurred")
+          )
+      }
+      .confirmationDialog(
+          "Are you sure?",
+          isPresented:
+              Binding(
+                  get: { state.isUnfollowConfirmationPresented },
+                  set: { _ in send(.presentUnfollowConfirmation(false)) }
+              )
+      ) {
+          Button(
+              "Unfollow \(state.user?.petname.markup ?? "user")?",
+              role: .destructive
+          ) {
+              send(.attemptUnfollow)
+          }
+      } message: {
+          Text("You cannot undo this action")
+      }
+  }
 }
 
 struct UserProfileView_Previews: PreviewProvider {

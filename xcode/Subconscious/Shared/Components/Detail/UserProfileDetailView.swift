@@ -32,9 +32,8 @@ struct UserProfileDetailView: View {
         switch (action) {
         case .requestFollow:
             store.send(.requestFollow)
-        // TODO
         case .requestUnfollow:
-            return
+            store.send(.requestUnfollow)
         // TODO
         case .editOwnProfile:
             return
@@ -70,15 +69,18 @@ struct UserProfileDetailDescription: Hashable {
     var address: MemoAddress
 }
 
-enum UserProfileDetailAction: Hashable {
+enum UserProfileDetailAction {
     case populate(UserProfile, UserProfileStatistics?)
     case tabIndexSelected(Int)
+    
     case presentMetaSheet(Bool)
     case presentFollowSheet(Bool)
+    case presentUnfollowConfirmation(Bool)
+    
     case metaSheet(UserProfileDetailMetaSheetAction)
     case followUserSheet(FollowUserSheetAction)
     
-    case fetchFollowingStatus(UserProfile)
+    case fetchFollowingStatus(Did, Petname)
     case failedToUpdateFollowingStatus(String)
     case populateFollowingStatus(Bool)
     
@@ -87,6 +89,12 @@ enum UserProfileDetailAction: Hashable {
     case failFollow(error: String)
     case dismissFailFollowError
     case succeedFollow(did: Did, petname: Petname)
+    
+    case requestUnfollow
+    case attemptUnfollow
+    case failUnfollow(error: String)
+    case dismissFailUnfollowError
+    case succeedUnfollow(did: Did, petname: Petname)
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -116,10 +124,12 @@ struct UserProfileDetailModel: ModelProtocol {
     var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
     var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
     var failFollowErrorMessage: String?
+    var failUnfollowErrorMessage: String?
     
     var selectedTabIndex = 0
     var isMetaSheetPresented = false
     var isFollowSheetPresented = false
+    var isUnfollowConfirmationPresented = false
     
     var user: UserProfile? = UserProfile.dummyData()
     var isFollowingUser: Bool = false
@@ -129,7 +139,7 @@ struct UserProfileDetailModel: ModelProtocol {
     var following: [StoryUser] = []
     
     var statistics: UserProfileStatistics? = UserProfileStatistics.dummyData()
-
+    
     static func update(
         state: Self,
         action: Action,
@@ -148,7 +158,7 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: ()
             )
-           
+            
         case .populate(let user, let statistics):
             var model = state
             model.user = user
@@ -157,7 +167,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.topEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
             model.following = (1...10).map { _ in StoryUser.dummyData() }
             
-            return update(state: model, actions: [.fetchFollowingStatus(user)], environment: environment)
+            return update(state: model, actions: [.fetchFollowingStatus(user.did, user.petname)], environment: environment)
             
         case .tabIndexSelected(let index):
             var model = state
@@ -174,9 +184,9 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isFollowSheetPresented = presented
             return Update(state: model)
             
-        case .fetchFollowingStatus(let user):
+        case .fetchFollowingStatus(let did, let petname):
             let fx: Fx<UserProfileDetailAction> =
-                environment.data.addressBook.isFollowingUserAsync(did: user.did, petname: user.petname)
+            environment.data.addressBook.isFollowingUserAsync(did: did, petname: petname)
                 .map { following in
                     UserProfileDetailAction.populateFollowingStatus(following)
                 }
@@ -212,9 +222,9 @@ struct UserProfileDetailModel: ModelProtocol {
             
             // Regardless, we actually need to check this in .populate and apply a numerical -2, -3 etc. suffix
             // as needed.
-
+            
             let fx: Fx<UserProfileDetailAction> =
-                environment.data.addressBook
+            environment.data.addressBook
                 .followUserAsync(did: did, petname: petname)
                 .map({ _ in
                     .succeedFollow(did: did, petname: petname)
@@ -225,24 +235,78 @@ struct UserProfileDetailModel: ModelProtocol {
                     )
                 })
                 .eraseToAnyPublisher()
-
+            
             return Update(state: state, fx: fx)
             
-        case .succeedFollow(_, _):
+        case .succeedFollow(let did, let petname):
             return update(
                 state: state,
-                action: .presentFollowSheet(false),
+                actions: [
+                    .presentFollowSheet(false),
+                    .fetchFollowingStatus(did, petname)
+                ],
                 environment: environment
             )
-          
+            
         case .failFollow(error: let error):
             var model = state
             model.failFollowErrorMessage = error
             return Update(state: model)
-          
+            
         case .dismissFailFollowError:
             var model = state
             model.failFollowErrorMessage = nil
+            return Update(state: model)
+            
+        case .presentUnfollowConfirmation(let presented):
+            var model = state
+            model.isUnfollowConfirmationPresented = presented
+            return Update(state: model)
+            
+        case .requestUnfollow:
+            return update(state: state, action: .presentUnfollowConfirmation(true), environment: environment)
+            
+        case .attemptUnfollow:
+            guard let did = state.followUserSheet.followUserForm.did.validated else {
+                return Update(state: state)
+            }
+            guard let petname = state.followUserSheet.followUserForm.petname.validated else {
+                return Update(state: state)
+            }
+            
+            let fx: Fx<UserProfileDetailAction> =
+            environment.data.addressBook
+                .unfollowUserAsync(petname: petname)
+                .map({ _ in
+                    .succeedUnfollow(did: did, petname: petname)
+                })
+                .catch({ error in
+                    Just(
+                        .failUnfollow(error: error.localizedDescription)
+                    )
+                })
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+            
+        case .succeedUnfollow(let did, let petname):
+            return update(
+                state: state,
+                actions: [
+                    .presentUnfollowConfirmation(false),
+                    .fetchFollowingStatus(did, petname)
+                ],
+                environment: environment
+            )
+            
+        case .failUnfollow(error: let error):
+            var model = state
+            model.failUnfollowErrorMessage = error
+            return Update(state: model)
+            
+        case .dismissFailUnfollowError:
+            var model = state
+            model.failUnfollowErrorMessage = nil
             return Update(state: model)
         }
     }

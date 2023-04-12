@@ -23,7 +23,7 @@ enum FormFieldAction<Input: Equatable>: Equatable {
 
 struct FormFieldEnvironment {}
 
-struct FormField<Input: Equatable, Output>: Equatable, ModelProtocol {
+struct FormField<Input: Equatable, Output>: ModelProtocol {
     static func == (lhs: FormField<Input, Output>, rhs: FormField<Input, Output>) -> Bool {
         return (
             lhs.value == rhs.value &&
