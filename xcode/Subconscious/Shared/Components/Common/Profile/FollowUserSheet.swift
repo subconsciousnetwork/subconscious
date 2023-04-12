@@ -147,6 +147,9 @@ struct FollowUserSheet: View {
     
     var onAttemptFollow: () -> Void
     
+    var failFollowError: String?
+    var onDismissError: () -> Void
+    
     var body: some View {
         VStack(alignment: .center, spacing: AppTheme.unit2) {
             ProfilePic(image: Image(user.pfp))
@@ -197,6 +200,17 @@ struct FollowUserSheet: View {
         .presentationDetents([.fraction(0.33)])
         .onAppear {
             send(.populate(user))
+        }
+        .alert(
+            isPresented: Binding(
+                get: { failFollowError != nil },
+                set: { _ in onDismissError() }
+            )
+        ) {
+            Alert(
+                title: Text("Failed to Follow User"),
+                message: Text(failFollowError ?? "An unknown error occurred")
+            )
         }
     }
 }
