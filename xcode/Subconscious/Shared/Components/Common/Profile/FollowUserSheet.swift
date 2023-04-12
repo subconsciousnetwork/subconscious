@@ -167,7 +167,7 @@ struct FollowUserSheet: View {
             Spacer()
             
             ValidatedTextField(
-                placeholder: "@petname",
+                placeholder: "petname",
                 text: Binding(
                     get: { state.followUserForm.petname.value },
                     send: send,
@@ -175,9 +175,16 @@ struct FollowUserSheet: View {
                         .followUserForm(.petnameField(.setValue(input: input)))
                     }
                 ),
-                caption: state.petnameFieldCaption ?? ""
+                onFocusChanged: { focused in
+                    send(.followUserForm(.petnameField(.focusChange(focused: focused))))
+                },
+                caption: state.petnameFieldCaption ?? "",
+                hasError: !state.followUserForm.petname.isValid
             )
             .textFieldStyle(.roundedBorder)
+            .lineLimit(1)
+            .textInputAutocapitalization(.never)
+            .disableAutocorrection(true)
             
             Spacer()
             
