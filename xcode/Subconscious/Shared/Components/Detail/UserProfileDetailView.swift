@@ -117,6 +117,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     let category: UserCategory
 }
 
+// MARK: Model
 struct UserProfileDetailModel: ModelProtocol {
     typealias Action = UserProfileDetailAction
     typealias Environment = AppEnvironment
@@ -169,7 +170,9 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return update(
                 state: model,
-                actions: [.fetchFollowingStatus(user.did, user.petname)],
+                actions: [
+                    .fetchFollowingStatus(user.did, user.petname)
+                ],
                 environment: environment
             )
             
@@ -188,6 +191,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isFollowSheetPresented = presented
             return Update(state: model)
             
+        // MARK: Following status
         case .fetchFollowingStatus(let did, let petname):
             let fx: Fx<UserProfileDetailAction> =
             environment.data.addressBook.isFollowingUserAsync(did: did, petname: petname)
@@ -209,8 +213,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isFollowingUser = following
             return Update(state: model)
             
-        
-            
+        // MARK: Following
         case .requestFollow:
             return update(state: state, action: .presentFollowSheet(true), environment: environment)
             
@@ -255,6 +258,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.failFollowErrorMessage = nil
             return Update(state: model)
             
+        // MARK: Unfollowing
         case .presentUnfollowConfirmation(let presented):
             var model = state
             model.isUnfollowConfirmationPresented = presented
