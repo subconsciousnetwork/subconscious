@@ -141,6 +141,11 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var statistics: UserProfileStatistics? = UserProfileStatistics.dummyData()
     
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "UserProfileDetailModel"
+    )
+    
     static func update(
         state: Self,
         action: Action,
@@ -206,6 +211,7 @@ struct UserProfileDetailModel: ModelProtocol {
             return Update(state: state, fx: fx)
             
         case .failedToUpdateFollowingStatus(let error):
+            logger.warning("Failed to fetch following status: \(error)")
             return Update(state: state)
             
         case .populateFollowingStatus(let following):

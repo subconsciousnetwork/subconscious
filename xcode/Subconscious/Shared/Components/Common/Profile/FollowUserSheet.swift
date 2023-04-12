@@ -5,6 +5,7 @@
 //  Created by Ben Follington on 11/4/2023.
 //
 
+import os
 import ObservableStore
 import SwiftUI
 import Combine
@@ -32,6 +33,11 @@ struct FollowUserSheetModel: ModelProtocol {
     var isPetnamePresentInAddressBook: Bool = false
     
     var petnameFieldCaption: String? = nil
+    
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "FollowUserSheetModel"
+    )
     
     static func update(state: Self, action: Action, environment: Environment) -> Update<Self> {
         switch action {
@@ -67,6 +73,7 @@ struct FollowUserSheetModel: ModelProtocol {
             return Update(state: state, fx: fx)
             
         case .failedToUpdatePetnameCollisionStatus(let error):
+            logger.warning("Failed to check for petname collisions: \(error)")
             return Update(state: state)
             
         case .populatePetnameCollisionStatus(let petname, let collision):

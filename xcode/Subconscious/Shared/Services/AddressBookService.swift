@@ -132,7 +132,7 @@ actor AddressBookService {
     func findAvailablePetname(petname: Petname) throws -> Petname {
         var name = petname
         var count = 0
-        var MAX = 99
+        let MAX = 99
         
         while try hasEntryForPetname(petname: name) {
             guard let next = petname.increment() else {
