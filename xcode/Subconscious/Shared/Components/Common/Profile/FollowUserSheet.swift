@@ -104,6 +104,7 @@ struct FollowUserSheetModel: ModelProtocol {
             // This is a no-op at the moment, if we failed to find a unique name the user
             // will be unable to submit the form anyway so adding an extra error message
             // seems redundant.
+            logger.warning("Failed to find a unique petname")
             return Update(state: state)
         }
     }
