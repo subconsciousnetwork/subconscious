@@ -36,32 +36,29 @@ struct UserProfileHeaderView: View {
                         Text("(you)")
                             .foregroundColor(.secondary)
                     }
-                    
                 }
                 
                 Spacer()
                 
                 Button(
                     action: {
-                        if user.category == .you {
+                        switch (user.category, isFollowingUser) {
+                        case (.you, _):
                             action(.editOwnProfile)
-                        } else {
-                            if isFollowingUser {
-                                action(.requestUnfollow)
-                            } else {
-                                action(.requestFollow)
-                            }
+                        case (_, true):
+                            action(.requestUnfollow)
+                        case (_, false):
+                            action(.requestFollow)
                         }
                     },
                     label: {
-                        if user.category == .you {
+                        switch (user.category, isFollowingUser) {
+                        case (.you, _):
                             Label("Edit Profile", systemImage: "pencil")
-                        } else {
-                            if isFollowingUser {
-                                Label("Following", systemImage: "person.fill.checkmark")
-                            } else {
-                                Text("Follow")
-                            }
+                        case (_, true):
+                            Label("Following", systemImage: "person.fill.checkmark")
+                        case (_, false):
+                            Text("Follow")
                         }
                     }
                 )
