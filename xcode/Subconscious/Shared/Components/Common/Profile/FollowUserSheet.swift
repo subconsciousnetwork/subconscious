@@ -7,17 +7,31 @@
 
 import ObservableStore
 import SwiftUI
+import Combine
 
 enum FollowUserSheetAction: Equatable {
     case populate(UserProfile)
     case followUserForm(FollowUserFormAction)
+    
+    case fetchPetnameCollisionStatus(Petname)
+    case failedToUpdatePetnameCollisionStatus(String)
+    case populatePetnameCollisionStatus(Petname, Bool)
+    case attemptToFindUniquePetname(Petname)
+    case failToFindUniquePetname
+}
+
+struct FollowUserSheetEnvironment {
+    var addressBook: AddressBookService
 }
 
 struct FollowUserSheetModel: ModelProtocol {
     typealias Action = FollowUserSheetAction
-    typealias Environment = ()
+    typealias Environment = FollowUserSheetEnvironment
     
     var followUserForm: FollowUserFormModel = FollowUserFormModel()
+    var isPetnamePresentInAddressBook: Bool = false
+    
+    var petnameFieldCaption: String? = nil
     
     static func update(state: Self, action: Action, environment: Environment) -> Update<Self> {
         switch action {
@@ -26,16 +40,64 @@ struct FollowUserSheetModel: ModelProtocol {
                 state: state,
                 actions: [
                     .followUserForm(.didField(.setValue(input: user.did.did))),
-                    .followUserForm(.petnameField(.setValue(input: user.petname.verbatim)))
+                    .followUserForm(.petnameField(.setValue(input: user.petname.verbatim))),
+                    .fetchPetnameCollisionStatus(user.petname)
                 ],
                 environment: environment
             )
+            
         case .followUserForm(let action):
             return FollowUserSheetFormCursor.update(
                 state: state,
                 action: action,
                 environment: ()
             )
+            
+        case .fetchPetnameCollisionStatus(let petname):
+            let fx: Fx<FollowUserSheetAction> =
+            environment.addressBook.hasEntryForPetnameAsync(petname: petname)
+                .map { collision in
+                    FollowUserSheetAction.populatePetnameCollisionStatus(petname, collision)
+                }
+                .catch { err in
+                    Just(FollowUserSheetAction.failedToUpdatePetnameCollisionStatus(err.localizedDescription))
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+            
+        case .failedToUpdatePetnameCollisionStatus(let error):
+            return Update(state: state)
+            
+        case .populatePetnameCollisionStatus(let petname, let collision):
+            var model = state
+            model.isPetnamePresentInAddressBook = collision
+            
+            if collision {
+                model.petnameFieldCaption = "You already follow a \(petname.markup)"
+                return update(state: model, actions: [.attemptToFindUniquePetname(petname)], environment: environment)
+            }
+            
+            return Update(state: model)
+            
+        case .attemptToFindUniquePetname(let petname):
+            let fx: Fx<FollowUserSheetAction> =
+                environment.addressBook.findAvailablePetnameAsync(petname: petname)
+                .map { petname in
+                    FollowUserSheetAction.followUserForm(.petnameField(.setValue(input: petname.verbatim)))
+                }
+                .catch { error in
+                    Just(FollowUserSheetAction.failToFindUniquePetname)
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+            
+        case .failToFindUniquePetname:
+            // This is a no-op at the moment, if we failed to find a unique name the user
+            // will be unable to submit the form anyway so adding an extra error message
+            // seems redundant.
+            return Update(state: state)
         }
     }
 }
@@ -105,7 +167,7 @@ struct FollowUserSheet: View {
                         .followUserForm(.petnameField(.setValue(input: input)))
                     }
                 ),
-                caption: "You already follow @petname"
+                caption: state.petnameFieldCaption ?? ""
             )
             .textFieldStyle(.roundedBorder)
             

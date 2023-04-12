@@ -80,5 +80,20 @@ public struct Petname:
     public init?(formatting string: String) {
         self.init(Self.format(string))
     }
+    
+    public func increment() -> Petname? {
+        let regex = /^(?<petname>(.*?))(?<suffix>(?:-(\d+))?)$/
+        guard let match = description.wholeMatch(of: regex) else {
+            return Petname(formatting: verbatim + "-1")
+        }
+        
+        let numberString = match.output.suffix
+        
+        if let number = Int(numberString) {
+            return Petname(formatting: match.output.petname + String(number + 1))
+        } else {
+            return Petname(formatting: verbatim + "-1")
+        }
+    }
 }
 

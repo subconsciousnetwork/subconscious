@@ -166,17 +166,6 @@ struct FollowModifier: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .alert(
-                isPresented: Binding(
-                    get: { state.failFollowErrorMessage != nil },
-                    set: { _ in send(.dismissFailFollowError) }
-                )
-            ) {
-                Alert(
-                    title: Text("Failed to Follow User"),
-                    message: Text(state.failFollowErrorMessage ?? "An unknown error occurred")
-                )
-            }
             .sheet(
                 isPresented: Binding(
                     get: { state.isFollowSheetPresented },
@@ -197,6 +186,17 @@ struct FollowModifier: ViewModifier {
                         }
                     )
                 }
+            }
+            .alert(
+                isPresented: Binding(
+                    get: { state.failFollowErrorMessage != nil },
+                    set: { _ in send(.dismissFailFollowError) }
+                )
+            ) {
+                Alert(
+                    title: Text("Failed to Follow User"),
+                    message: Text(state.failFollowErrorMessage ?? "An unknown error occurred")
+                )
             }
     }
 }

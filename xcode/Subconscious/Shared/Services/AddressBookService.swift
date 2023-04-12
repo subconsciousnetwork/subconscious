@@ -13,6 +13,9 @@ import SwiftUI
 enum AddressBookError: Error {
     case cannotFollowYourself
     case alreadyFollowing
+    case failedToIncrementPetname
+    case exhaustedUniquePetnameRange
+    case invalidAttemptToOverwitePetname
     case other(String)
 }
 
@@ -23,6 +26,12 @@ extension AddressBookError: LocalizedError {
             return String(localized: "You cannot follow yourself.", comment: "Address Book error description")
         case .alreadyFollowing:
             return String(localized: "You are already following {}.", comment: "Address Book error description")
+        case .failedToIncrementPetname:
+            return String(localized: "Failed to increment a petname's suffix.", comment: "Address Book error description")
+        case .exhaustedUniquePetnameRange:
+            return String(localized: "Failed to find an available petname.", comment: "Address Book error description")
+        case .invalidAttemptToOverwitePetname:
+            return String(localized: "preventOverwrite was set to true but this petname is already in use", comment: "Address Book error description")
         case .other(let msg):
             return String(localized: "An unknown error occurred: \(msg)", comment: "Unknown Address Book error description")
         }
@@ -120,9 +129,41 @@ actor AddressBookService {
         }
     }
     
-    func followUser(did: Did, petname: Petname) async throws {
+    func findAvailablePetname(petname: Petname) throws -> Petname {
+        var name = petname
+        var count = 0
+        var MAX = 99
+        
+        while try hasEntryForPetname(petname: name) {
+            guard let next = petname.increment() else {
+                throw AddressBookError.exhaustedUniquePetnameRange
+            }
+           
+            name = next
+            count += 1
+            
+            // Escape hatch, no infinite loops plz
+            if count > MAX {
+                throw AddressBookError.exhaustedUniquePetnameRange
+            }
+        }
+        
+        return name
+    }
+    
+    func findAvailablePetnameAsync(petname: Petname) -> AnyPublisher<Petname, Error> {
+        CombineUtilities.async(qos: .default) {
+            return try self.findAvailablePetname(petname: petname)
+        }
+    }
+    
+    func followUser(did: Did, petname: Petname, preventOverwrite: Bool = false) async throws {
         if try await noosphere.identity() == did.id {
             throw AddressBookError.cannotFollowYourself
+        }
+        
+        if try await hasEntryForPetname(petname: petname) && preventOverwrite {
+            throw AddressBookError.invalidAttemptToOverwitePetname
         }
         
         try await noosphere.setPetname(did: did.did, petname: petname)

@@ -156,7 +156,7 @@ struct UserProfileDetailModel: ModelProtocol {
             return FollowUserSheetCursor.update(
                 state: state,
                 action: action,
-                environment: ()
+                environment: FollowUserSheetEnvironment(addressBook: environment.data.addressBook)
             )
             
         case .populate(let user, let statistics):
@@ -167,7 +167,11 @@ struct UserProfileDetailModel: ModelProtocol {
             model.topEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
             model.following = (1...10).map { _ in StoryUser.dummyData() }
             
-            return update(state: model, actions: [.fetchFollowingStatus(user.did, user.petname)], environment: environment)
+            return update(
+                state: model,
+                actions: [.fetchFollowingStatus(user.did, user.petname)],
+                environment: environment
+            )
             
         case .tabIndexSelected(let index):
             var model = state
@@ -205,6 +209,8 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isFollowingUser = following
             return Update(state: model)
             
+        
+            
         case .requestFollow:
             return update(state: state, action: .presentFollowSheet(true), environment: environment)
             
@@ -216,24 +222,15 @@ struct UserProfileDetailModel: ModelProtocol {
                 return Update(state: state)
             }
             
-            // TODO: check if we're already following a user with this name before calling
-            // or, introducing .followUserAsync(did:petname:preventOverwrite:) to throw on
-            // overwrite
-            
-            // Regardless, we actually need to check this in .populate and apply a numerical -2, -3 etc. suffix
-            // as needed.
-            
             let fx: Fx<UserProfileDetailAction> =
-            environment.data.addressBook
-                .followUserAsync(did: did, petname: petname)
+                environment.data.addressBook
+                .followUserAsync(did: did, petname: petname, preventOverwrite: true)
                 .map({ _ in
-                    .succeedFollow(did: did, petname: petname)
+                    UserProfileDetailAction.succeedFollow(did: did, petname: petname)
                 })
-                .catch({ error in
-                    Just(
-                        .failFollow(error: error.localizedDescription)
-                    )
-                })
+                .catch { error in
+                    Just(UserProfileDetailAction.failFollow(error: error.localizedDescription))
+                }
                 .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
