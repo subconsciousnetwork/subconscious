@@ -15,7 +15,6 @@ enum FollowUserSheetAction: Equatable {
     case followUserForm(FollowUserFormAction)
     
     case fetchPetnameCollisionStatus(Petname)
-    case failedToUpdatePetnameCollisionStatus(String)
     case populatePetnameCollisionStatus(Petname, Bool)
     case attemptToFindUniquePetname(Petname)
     case failToFindUniquePetname
@@ -65,16 +64,9 @@ struct FollowUserSheetModel: ModelProtocol {
                 .map { collision in
                     FollowUserSheetAction.populatePetnameCollisionStatus(petname, collision)
                 }
-                .catch { err in
-                    Just(FollowUserSheetAction.failedToUpdatePetnameCollisionStatus(err.localizedDescription))
-                }
                 .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
-            
-        case .failedToUpdatePetnameCollisionStatus(let error):
-            logger.warning("Failed to check for petname collisions: \(error)")
-            return Update(state: state)
             
         case .populatePetnameCollisionStatus(let petname, let collision):
             var model = state

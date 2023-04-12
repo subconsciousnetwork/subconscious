@@ -86,7 +86,6 @@ enum UserProfileDetailAction {
     case followUserSheet(FollowUserSheetAction)
     
     case fetchFollowingStatus(Did, Petname)
-    case failedToUpdateFollowingStatus(String)
     case populateFollowingStatus(Bool)
     
     case requestFollow
@@ -208,16 +207,9 @@ struct UserProfileDetailModel: ModelProtocol {
                 .map { following in
                     UserProfileDetailAction.populateFollowingStatus(following)
                 }
-                .catch { err in
-                    Just(UserProfileDetailAction.failedToUpdateFollowingStatus(err.localizedDescription))
-                }
                 .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
-            
-        case .failedToUpdateFollowingStatus(let error):
-            logger.warning("Failed to fetch following status: \(error)")
-            return Update(state: state)
             
         case .populateFollowingStatus(let following):
             var model = state
@@ -279,10 +271,7 @@ struct UserProfileDetailModel: ModelProtocol {
             return update(state: state, action: .presentUnfollowConfirmation(true), environment: environment)
             
         case .attemptUnfollow:
-            guard let did = state.followUserSheet.followUserForm.did.validated else {
-                return Update(state: state)
-            }
-            guard let petname = state.followUserSheet.followUserForm.petname.validated else {
+            guard let petname = state.user?.petname, let did = state.user?.did else {
                 return Update(state: state)
             }
             

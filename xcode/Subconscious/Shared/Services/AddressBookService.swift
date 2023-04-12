@@ -5,6 +5,7 @@
 //  Created by Ben Follington on 14/3/2023.
 //
 
+import os
 import Foundation
 import Combine
 // temp
@@ -44,6 +45,11 @@ actor AddressBookService {
     private var addressBook: [AddressBookEntry]?
     
     private static let MAX_ATTEMPTS_TO_INCREMENT_PETNAME = 99
+    
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "AddressBookService"
+    )
     
     init(noosphere: NoosphereService, database: DatabaseService) {
         self.noosphere = noosphere
@@ -95,35 +101,44 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
-    func hasEntryForPetname(petname: Petname) throws -> Bool {
-        return try getPetname(petname: petname) != nil
-    }
-    
-    func hasEntryForPetnameAsync(petname: Petname) -> AnyPublisher<Bool, Error> {
-        CombineUtilities.async(qos: .default) {
-            return try self.hasEntryForPetname(petname: petname)
-        }
-    }
-    
-    func isFollowingUser(did: Did, petname: Petname) throws -> Bool {
-        guard let user = try getPetname(petname: petname) else {
+    func hasEntryForPetname(petname: Petname) async throws -> Bool {
+        do {
+            return try await self.noosphere.getPetname(petname: petname) != nil
+        } catch {
+            Self.logger.error("An error occurred checking for \(petname.markup), returning false. Reason: \(error.localizedDescription)")
             return false
         }
-        
-        return user == did
     }
     
-    func isFollowingUserAsync(did: Did, petname: Petname) -> AnyPublisher<Bool, Error> {
-        CombineUtilities.async(qos: .default) {
-            return try self.isFollowingUser(did: did, petname: petname)
+    func hasEntryForPetnamePublisher(petname: Petname) -> AnyPublisher<Bool, Never> {
+        Future.detached {
+            return self.hasEntryForPetname(petname: petname)
+        }
+        .eraseToAnyPublisher()
+    }
+    
+    func isFollowingUser(did: Did, petname: Petname) async -> Bool {
+        do {
+            let user = try await self.noosphere.getPetname(petname: petname) 
+            return user == did.did
+        } catch {
+            Self.logger.error("An error occurred checking following status for \(petname.markup), returning false. Reason: \(error.localizedDescription)")
+            return false
         }
     }
     
-    func findAvailablePetname(petname: Petname) throws -> Petname {
+    func isFollowingUserPublisher(did: Did, petname: Petname) -> AnyPublisher<Bool, Never> {
+        Future.detatched {
+            return await self.isFollowingUser(did: did, petname: petname)
+        }
+        .eraseToAnyPublisher()
+    }
+    
+    func findAvailablePetname(petname: Petname) async throws -> Petname {
         var name = petname
         var count = 0
         
-        while try hasEntryForPetname(petname: name) {
+        while try await hasEntryForPetname(petname: name) {
             guard let next = petname.increment() else {
                 throw AddressBookError.exhaustedUniquePetnameRange
             }
@@ -140,10 +155,11 @@ actor AddressBookService {
         return name
     }
     
-    func findAvailablePetnameAsync(petname: Petname) -> AnyPublisher<Petname, Error> {
-        CombineUtilities.async(qos: .default) {
-            return try self.findAvailablePetname(petname: petname)
+    func findAvailablePetnamePublisher(petname: Petname) -> AnyPublisher<Petname, Error> {
+        Future.detatched {
+            return try await self.findAvailablePetname(petname: petname)
         }
+        .eraseToAnyPublisher()
     }
     
     func followUser(did: Did, petname: Petname, preventOverwrite: Bool = false) async throws {
@@ -151,7 +167,8 @@ actor AddressBookService {
             throw AddressBookError.cannotFollowYourself
         }
         
-        if try await hasEntryForPetname(petname: petname) && preventOverwrite {
+        let hasEntry = try await hasEntryForPetname(petname: petname)
+        if preventOverwrite && hasEntry {
             throw AddressBookError.invalidAttemptToOverwitePetname
         }
         
