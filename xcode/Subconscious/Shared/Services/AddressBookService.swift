@@ -43,6 +43,8 @@ actor AddressBookService {
     private(set) var database: DatabaseService
     private var addressBook: [AddressBookEntry]?
     
+    private static let MAX_ATTEMPTS_TO_INCREMENT_PETNAME = 99
+    
     init(noosphere: NoosphereService, database: DatabaseService) {
         self.noosphere = noosphere
         self.database = database
@@ -120,7 +122,6 @@ actor AddressBookService {
     func findAvailablePetname(petname: Petname) throws -> Petname {
         var name = petname
         var count = 0
-        let MAX = 99
         
         while try hasEntryForPetname(petname: name) {
             guard let next = petname.increment() else {
@@ -131,7 +132,7 @@ actor AddressBookService {
             count += 1
             
             // Escape hatch, no infinite loops plz
-            if count > MAX {
+            if count > Self.MAX_ATTEMPTS_TO_INCREMENT_PETNAME {
                 throw AddressBookError.exhaustedUniquePetnameRange
             }
         }
