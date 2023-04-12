@@ -17,6 +17,11 @@ struct UserProfileDetailView: View {
         state: UserProfileDetailModel(),
         environment: AppEnvironment.default
     )
+    
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "UserProfileDetailView"
+    )
 
     var description: UserProfileDetailDescription
     var notify: (UserProfileDetailNotification) -> Void
@@ -35,9 +40,8 @@ struct UserProfileDetailView: View {
             store.send(.requestFollow)
         case .requestUnfollow:
             store.send(.requestUnfollow)
-        // TODO
         case .editOwnProfile:
-            return
+            Self.logger.warning("Editing profiles is not supported yet, doing nothing")
         }
     }
 
