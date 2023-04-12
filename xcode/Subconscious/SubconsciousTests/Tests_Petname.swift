@@ -119,4 +119,74 @@ class Tests_Petname: XCTestCase {
             "Trims non-allowed characters and whitespace before slashes"
         )
     }
+    
+    func testIncrementBasePetname() throws {
+        let petname = Petname("ziggy")!
+        let next = petname.increment()
+        
+        XCTAssertEqual(
+            next?.description,
+            "ziggy-1"
+        )
+    }
+    
+    func testIncrementTrailingDash() throws {
+        let petname = Petname("rodrigo-")!
+        let next = petname.increment()
+        
+        XCTAssertEqual(
+            next?.description,
+            "rodrigo-1"
+        )
+    }
+    
+    func testIncrementTrailingDashes() throws {
+        let petname = Petname("james-baxter------")!
+        let next = petname.increment()
+        
+        XCTAssertEqual(
+            next?.description,
+            "james-baxter------1"
+        )
+    }
+    
+    func testIncrementTrailingNumbers() throws {
+        let petname = Petname("django999")!
+        let next = petname.increment()
+        
+        XCTAssertEqual(
+            next?.description,
+            "django999-1"
+        )
+    }
+    
+    func testIncrementExistingSuffix() throws {
+        let petname = Petname("princess-arabella-3")!
+        let next = petname.increment()
+        
+        XCTAssertEqual(
+            next?.description,
+            "princess-arabella-4"
+        )
+    }
+    
+    func testIncrementDoubleDigitSuffix() throws {
+        let petname = Petname("xxx-31")!
+        let next = petname.increment()
+        
+        XCTAssertEqual(
+            next?.description,
+            "xxx-32"
+        )
+    }
+    
+    func testIncrementExtremelyLargeSuffix() throws {
+        let petname = Petname("ben-9999")!
+        let next = petname.increment()
+        
+        XCTAssertEqual(
+            next?.description,
+            "ben-10000"
+        )
+    }
 }
