@@ -144,7 +144,7 @@ struct UserProfileDetailModel: ModelProtocol {
     var topEntries: [EntryStub] = []
     var following: [StoryUser] = []
     
-    var statistics: UserProfileStatistics? = UserProfileStatistics.dummyData()
+    var statistics: UserProfileStatistics? = nil
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
