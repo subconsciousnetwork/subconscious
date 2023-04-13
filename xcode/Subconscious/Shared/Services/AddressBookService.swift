@@ -126,7 +126,7 @@ class AddressBookService {
     }
 
     func unsetPetname(petname: Petname) throws {
-        try noosphere.unsetPetname(petname: petname)
+        try noosphere.setPetname(did: nil, petname: petname)
     }
 
     func unsetPetnameAsync(petname: Petname) -> AnyPublisher<Void, Error> {

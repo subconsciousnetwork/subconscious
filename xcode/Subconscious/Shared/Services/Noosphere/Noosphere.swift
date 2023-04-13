@@ -13,6 +13,7 @@
 //  4. Open sphere file system (on-demand)
 
 import Foundation
+import Combine
 import SwiftNoosphere
 import os
 
@@ -42,10 +43,21 @@ public struct SphereReceipt {
 /// - Property noosphere: pointer that holds all the internal book keeping.
 ///   DB pointers, key storage interfaces, active HTTP clients etc.
 public final class Noosphere {
+    /// Dispatch queue used for Noosphere and Sphere instances.
+    ///
+    /// We use this queue to make Noosphere and Sphere thread-safe by forcing
+    /// writes to be serial and atomic.
+    ///
+    /// Note that queues are serial by default, making this a serial queue.
+    private static let queue = DispatchQueue(
+        label: "Noosphere",
+        qos: .default
+    )
     private let logger: Logger = Logger(
         subsystem: Config.default.rdns,
         category: "Noosphere"
     )
+    let queue: DispatchQueue
     let noosphere: OpaquePointer
     let globalStoragePath: String
     let sphereStoragePath: String
@@ -54,7 +66,8 @@ public final class Noosphere {
     init(
         globalStoragePath: String,
         sphereStoragePath: String,
-        gatewayURL: String? = nil
+        gatewayURL: String? = nil,
+        queue: DispatchQueue = queue
     ) throws {
         guard let noosphere = try Self.callWithError(
             ns_initialize,
@@ -68,6 +81,7 @@ public final class Noosphere {
         self.globalStoragePath = globalStoragePath
         self.sphereStoragePath = sphereStoragePath
         self.gatewayURL = gatewayURL
+        self.queue = queue
         logger.debug("init")
     }
     
@@ -80,7 +94,7 @@ public final class Noosphere {
     /// - Initializes a namespace
     /// - Creates a key
     /// - Creates a sphere for that key
-    public func createSphere(
+    private func _createSphere(
         ownerKeyName: String
     ) throws -> SphereReceipt {
         try Self.callWithError(
@@ -135,6 +149,20 @@ public final class Noosphere {
         )
     }
     
+    func createSphere(ownerKeyName: String) throws -> SphereReceipt {
+        try queue.sync {
+            try self._createSphere(ownerKeyName: ownerKeyName)
+        }
+    }
+    
+    func createSphereFuture(
+        ownerKeyName: String
+    ) -> Future<SphereReceipt, Error> {
+        queue.future {
+            try self._createSphere(ownerKeyName: ownerKeyName)
+        }
+    }
+
     deinit {
         ns_free(noosphere)
         logger.debug("deinit")
