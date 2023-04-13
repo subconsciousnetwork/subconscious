@@ -13,6 +13,7 @@
 //  4. Open sphere file system (on-demand)
 
 import Foundation
+import Combine
 import SwiftNoosphere
 import os
 
@@ -131,12 +132,26 @@ final class NoosphereService: SphereProtocol {
         return sphere
     }
     
+    private func spherePublisher() -> AnyPublisher<Sphere, Error> {
+        Future {
+            try self.sphere()
+        }
+        .eraseToAnyPublisher()
+    }
+
     func identity() throws -> String {
         try self.sphere().identity
     }
 
     func version() throws -> String {
         try self.sphere().version()
+    }
+    
+    func versionPublisher() -> AnyPublisher<String, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.versionPublisher()
+        })
+        .eraseToAnyPublisher()
     }
     
     func getFileVersion(slashlink: Slashlink) -> String? {

@@ -155,12 +155,13 @@ public final class Noosphere {
         }
     }
     
-    func createSphereFuture(
+    func createSpherePublisher(
         ownerKeyName: String
-    ) -> Future<SphereReceipt, Error> {
+    ) -> AnyPublisher<SphereReceipt, Error> {
         queue.future {
             try self._createSphere(ownerKeyName: ownerKeyName)
         }
+        .eraseToAnyPublisher()
     }
 
     deinit {
