@@ -47,7 +47,7 @@ class UserProfileService<Sphere : SphereProtocol> {
     
     func getUserProfile(petname: Petname) throws -> UserProfileContentPayload {
         let sphere = try self.sphere.traverse(petname: petname)
-        let localAddressBook = AddressBookService(noosphere: sphere, database: database)
+        let localAddressBook = AddressBookService(sphere: sphere, database: database)
         let following: [StoryUser] =
             try sphere.listPetnames()
             .compactMap { f in
@@ -55,9 +55,13 @@ class UserProfileService<Sphere : SphereProtocol> {
                     return nil
                 }
                 
+                guard let petname = Petname(petnames: [f, petname]) else {
+                    return nil
+                }
+                
                 let user = UserProfile(
                     did: did,
-                    petname: f,
+                    petname: petname,
                     pfp: String.dummyProfilePicture(),
                     bio: String.dummyDataMedium(),
                     category: .human
@@ -74,6 +78,7 @@ class UserProfileService<Sphere : SphereProtocol> {
                 
                 return StoryUser(user: user, isFollowingUser: following)
             }
+        
         let notes = try sphere.list()
         guard let did = Did(try sphere.identity()) else {
             throw UserProfileServiceError.invalidSphereIdentity
