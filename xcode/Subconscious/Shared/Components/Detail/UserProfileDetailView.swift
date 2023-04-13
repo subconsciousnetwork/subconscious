@@ -277,7 +277,7 @@ struct UserProfileDetailModel: ModelProtocol {
             
             let fx: Fx<UserProfileDetailAction> =
             environment.data.addressBook
-                .unfollowUserAsync(petname: petname)
+                .unfollowUserAsync(did: did)
                 .map({ _ in
                     .succeedUnfollow(did: did, petname: petname)
                 })
