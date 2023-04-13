@@ -9,15 +9,32 @@ import SwiftUI
 
 /// Byline style for displaying a petname
 struct PetnameBylineView: View {
-    var petname: String
-    private var petnameColor = Color.accentColor
+    var petname: Petname
+    var petnameColor = Color.accentColor
     
     var body: some View {
-        Text(verbatim: "@\(petname)")
-            .font(.body)
-            .fontWeight(.medium)
-            .foregroundColor(petnameColor)
-            .lineLimit(1)
+        let parts = petname.markup.split(separator: ".")
+
+        HStack(alignment: .lastTextBaseline, spacing: 0) {
+            let first = parts[0]
+            let rest = parts[1...].joined(separator: ".")
+            
+            Text(first)
+                .foregroundColor(petnameColor)
+                .fixedSize(horizontal: true, vertical: false) // May need to come back to this
+                .font(.body)
+                .fontWeight(.medium)
+                .lineLimit(1)
+            
+            if rest.count > 0 {
+                // Particular structure to ensure truncation trims the path and never the name
+                Text(".\(rest)")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                    .fontWeight(.regular)
+                    .lineLimit(1)
+            }
+        }
     }
     
     func theme(
@@ -29,20 +46,19 @@ struct PetnameBylineView: View {
     }
 }
 
-extension PetnameBylineView {
-    init(
-        petname: Petname
-    ) {
-        self.init(
-            petname: petname.verbatim
-        )
-    }
-}
-
 struct PetnameBylineView_Previews: PreviewProvider {
     static var previews: some View {
-        PetnameBylineView(
-            petname: Petname("melville")!
-        )
+        VStack {
+            PetnameBylineView(
+                petname: Petname("melville")!
+            )
+            PetnameBylineView(
+                petname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])!
+            )
+            PetnameBylineView(
+                petname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])!
+            )
+            .frame(maxWidth: 128)
+        }
     }
 }
