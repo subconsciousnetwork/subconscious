@@ -29,7 +29,7 @@ enum NoosphereServiceError: Error, LocalizedError {
 }
 
 /// Creates and manages Noosphere and default sphere singletons.
-final class NoosphereService: SphereProtocol {
+final class NoosphereService: SphereProtocol, SpherePublisherProtocol {
     /// Default logger for NoosphereService instances.
     private static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -158,11 +158,36 @@ final class NoosphereService: SphereProtocol {
         try? self.sphere().getFileVersion(slashlink: slashlink)
     }
     
+    func getFileVersionPublisher(
+        slashlink: Slashlink
+    ) -> AnyPublisher<String?, Never> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.getFileVersionPublisher(slashlink: slashlink)
+        }).catch({ error in
+            Just(nil)
+        })
+        .eraseToAnyPublisher()
+    }
+    
     func readHeaderValueFirst(slashlink: Slashlink, name: String) -> String? {
         try? self.sphere().readHeaderValueFirst(
             slashlink: slashlink,
             name: name
         )
+    }
+    
+    func readHeaderValueFirstPublisher(
+        slashlink: Slashlink,
+        name: String
+    ) -> AnyPublisher<String?, Never> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.readHeaderValueFirstPublisher(
+                slashlink: slashlink,
+                name: name
+            )
+        }).catch({ error in
+            Just(nil)
+        }).eraseToAnyPublisher()
     }
     
     func readHeaderNames(slashlink: Slashlink) -> [String] {
@@ -172,6 +197,16 @@ final class NoosphereService: SphereProtocol {
             return []
         }
         return names
+    }
+    
+    func readHeaderNamesPublisher(
+        slashlink: Slashlink
+    ) -> AnyPublisher<[String], Never> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.readHeaderNamesPublisher(slashlink: slashlink)
+        }).catch({ error in
+            Just([])
+        }).eraseToAnyPublisher()
     }
     
     func read(slashlink: Slashlink) throws -> MemoData {
