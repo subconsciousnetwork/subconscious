@@ -213,6 +213,12 @@ final class NoosphereService: SphereProtocol, SpherePublisherProtocol {
         try self.sphere().read(slashlink: slashlink)
     }
     
+    func readPublisher(slashlink: Slashlink) -> AnyPublisher<MemoData, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.readPublisher(slashlink: slashlink)
+        }).eraseToAnyPublisher()
+    }
+    
     func write(
         slug: Slug,
         contentType: String,
@@ -227,6 +233,22 @@ final class NoosphereService: SphereProtocol, SpherePublisherProtocol {
         )
     }
     
+    func writePublisher(
+        slug: Slug,
+        contentType: String,
+        additionalHeaders: [Header],
+        body: Data
+    ) -> AnyPublisher<Void, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.writePublisher(
+                slug: slug,
+                contentType: contentType,
+                additionalHeaders: additionalHeaders,
+                body: body
+            )
+        }).eraseToAnyPublisher()
+    }
+
     func remove(slug: Slug) throws {
         try self.sphere().remove(slug: slug)
     }
