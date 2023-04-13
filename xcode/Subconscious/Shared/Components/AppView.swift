@@ -236,17 +236,20 @@ struct AppRecoveryPhraseCursor: CursorProtocol {
 }
 
 struct AppAddressBookCursor: CursorProtocol {
-    static func get(state: AppModel) -> AddressBookModel {
+    typealias Model = AppModel
+    typealias ViewModel = AddressBookModel
+
+    static func get(state: Model) -> ViewModel {
         state.addressBook
     }
     
-    static func set(state: AppModel, inner: AddressBookModel) -> AppModel {
+    static func set(state: Model, inner: ViewModel) -> Model {
         var model = state
         model.addressBook = inner
         return model
     }
     
-    static func tag(_ action: AddressBookAction) -> AppAction {
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
         .addressBook(action)
     }
 }
@@ -393,7 +396,7 @@ struct AppModel: ModelProtocol {
             return AppAddressBookCursor.update(
                 state: state,
                 action: action,
-                environment: environment.addressBook
+                environment: AddressBookEnvironment(environment)
             )
         case .appUpgrade(let action):
             return AppUpgradeCursor.update(
@@ -781,7 +784,7 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let fx: Fx<AppAction> = environment.sphere.versionPublisher()
+        let fx: Fx<AppAction> = environment.noosphere.versionPublisher()
             .map({ version in
                 .succeedRefreshSphereVersion(version)
             }).recover({ error in
@@ -987,9 +990,9 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         do {
-            let sphereIdentity = try environment.data.database
+            let sphereIdentity = try environment.database
                 .readMetadata(key: .sphereIdentity)
-            let sphereVersion = try environment.data.database
+            let sphereVersion = try environment.database
                 .readMetadata(key: .sphereVersion)
             logger.log("Database last-known sphere state: \(sphereIdentity) @ \(sphereVersion)")
         } catch {
@@ -1205,17 +1208,15 @@ struct AppEnvironment {
     var documentURL: URL
     var applicationSupportURL: URL
 
-    private var _noosphere: NoosphereService
-    var noosphere: some NoosphereServiceProtocol { _noosphere }
-    /// Exposes sphere publisher protocol for Noosphere
-    var sphere: some SpherePublisherProtocol { _noosphere }
-
+    var noosphere: NoosphereService
+    var database: DatabaseService
     var data: DataService
     var feed: FeedService
     
     var recoveryPhrase = RecoveryPhraseEnvironment()
-    var addressBook: AddressBookEnvironment
-
+    
+    var addressBook: AddressBookService
+    
     var pasteboard = UIPasteboard.general
     
     /// Create a long polling publisher that never completes
@@ -1260,31 +1261,43 @@ struct AppEnvironment {
             gatewayURL: defaultGateway,
             sphereIdentity: defaultSphereIdentity
         )
-        self._noosphere = noosphere
+        self.noosphere = noosphere
 
         let databaseURL = self.applicationSupportURL
             .appendingPathComponent("database.sqlite")
 
-        let databaseService = DatabaseService(
+        let database = DatabaseService(
             database: SQLite3Database(
                 path: databaseURL.absoluteString,
                 mode: .readwrite
             ),
             migrations: Config.migrations
         )
+        self.database = database
         
-        let addresBook = AddressBookService(noosphere: noosphere, database: databaseService)
+        let addressBook = AddressBookService(
+            noosphere: noosphere,
+            database: database
+        )
+        self.addressBook = addressBook
         
         self.data = DataService(
             noosphere: noosphere,
-            database: databaseService,
+            database: database,
             local: local,
-            addressBook: addresBook
+            addressBook: addressBook
         )
         
-        self.addressBook = AddressBookEnvironment(data: data)
-
         self.feed = FeedService()
     }
 }
 
+extension AddressBookEnvironment {
+    init(_ environment: AppEnvironment) {
+        self.init(
+            noosphere: environment.noosphere,
+            data: environment.data,
+            addressBook: environment.addressBook
+        )
+    }
+}
