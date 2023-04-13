@@ -253,16 +253,43 @@ final class NoosphereService: SphereProtocol, SpherePublisherProtocol {
         try self.sphere().remove(slug: slug)
     }
     
+    func removePublisher(slug: Slug) -> AnyPublisher<Void, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.removePublisher(slug: slug)
+        }).eraseToAnyPublisher()
+    }
+    
     @discardableResult func save() throws -> String {
         try self.sphere().save()
+    }
+    
+    func savePublisher() -> AnyPublisher<String, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.savePublisher()
+        })
+        .eraseToAnyPublisher()
     }
     
     func list() throws -> [Slug] {
         try self.sphere().list()
     }
     
+    func listPublisher() -> AnyPublisher<[Slug], Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.listPublisher()
+        })
+        .eraseToAnyPublisher()
+    }
+    
     func sync() throws -> String {
         try self.sphere().sync()
+    }
+    
+    func syncPublisher() -> AnyPublisher<String, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.syncPublisher()
+        })
+        .eraseToAnyPublisher()
     }
     
     func changes(_ since: String?) throws -> [Slug] {
