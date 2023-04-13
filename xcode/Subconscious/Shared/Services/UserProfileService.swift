@@ -34,12 +34,12 @@ struct UserProfileContentPayload: Equatable, Hashable {
     var isFollowingUser: Bool
 }
 
-class UserProfileService {
-    private(set) var sphere: any SphereProtocol
+class UserProfileService<Sphere : SphereProtocol> {
+    private(set) var sphere: Sphere
     private(set) var database: DatabaseService
     private(set) var addressBook: AddressBookService
     
-    init(sphere: any SphereProtocol, database: DatabaseService, addressBook: AddressBookService) {
+    init(sphere: Sphere, database: DatabaseService, addressBook: AddressBookService) {
         self.sphere = sphere
         self.database = database
         self.addressBook = addressBook
