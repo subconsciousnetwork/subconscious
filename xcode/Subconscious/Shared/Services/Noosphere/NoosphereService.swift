@@ -28,8 +28,30 @@ enum NoosphereServiceError: Error, LocalizedError {
     }
 }
 
+protocol NoosphereServiceProtocol {
+    var globalStorageURL: URL { get }
+    var sphereStorageURL: URL { get }
+    var gatewayURL: URL? { get }
+
+    func createSphere(ownerKeyName: String) throws -> SphereReceipt
+
+    /// Set a new default sphere
+    func resetSphere(_ identity: String?)
+    
+    /// Update Gateway.
+    /// Resets memoized Noosphere and Sphere instances.
+    func resetGateway(url: URL?)
+    
+    /// Reset managed instances of Noosphere and Sphere
+    func reset()
+}
+
 /// Creates and manages Noosphere and default sphere singletons.
-final class NoosphereService: SphereProtocol, SpherePublisherProtocol {
+final class NoosphereService:
+    SphereProtocol,
+    SpherePublisherProtocol,
+    NoosphereServiceProtocol
+{
     /// Default logger for NoosphereService instances.
     private static let logger = Logger(
         subsystem: Config.default.rdns,

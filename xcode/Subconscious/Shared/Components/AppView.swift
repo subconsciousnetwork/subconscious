@@ -730,7 +730,7 @@ struct AppModel: ModelProtocol {
         // Persist to UserDefaults
         AppDefaults.standard.gatewayURL = gatewayURL
         // Reset gateway on environment
-        environment.data.noosphere.resetGateway(url: url)
+        environment.noosphere.resetGateway(url: url)
 
         /// Only set valid nicknames
         return Update(state: model)
@@ -857,7 +857,7 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        environment.data.noosphere.reset()
+        environment.noosphere.reset()
         return Update(state: state)
     }
 
@@ -1022,7 +1022,7 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        guard let gatewayURL = environment.data.noosphere.gatewayURL else {
+        guard let gatewayURL = environment.noosphere.gatewayURL else {
             logger.log("No gateway configured. Skipping sync.")
             return Update(state: state)
         }
@@ -1205,9 +1205,10 @@ struct AppEnvironment {
     var documentURL: URL
     var applicationSupportURL: URL
 
-    private let noosphere: NoosphereService
+    private var _noosphere: NoosphereService
+    var noosphere: some NoosphereServiceProtocol { _noosphere }
     /// Exposes sphere publisher protocol for Noosphere
-    var sphere: some SpherePublisherProtocol { noosphere }
+    var sphere: some SpherePublisherProtocol { _noosphere }
 
     var data: DataService
     var feed: FeedService
@@ -1231,7 +1232,7 @@ struct AppEnvironment {
     init() {
         self.documentURL = FileManager.default.urls(
             for: .documentDirectory,
-               in: .userDomainMask
+            in: .userDomainMask
         ).first!
 
         self.applicationSupportURL = try! FileManager.default.url(
@@ -1259,7 +1260,7 @@ struct AppEnvironment {
             gatewayURL: defaultGateway,
             sphereIdentity: defaultSphereIdentity
         )
-        self.noosphere = noosphere
+        self._noosphere = noosphere
 
         let databaseURL = self.applicationSupportURL
             .appendingPathComponent("database.sqlite")

@@ -85,9 +85,7 @@ struct DataService {
 
     /// Sync local state to gateway
     func syncSphereWithGateway() -> AnyPublisher<String, Error> {
-        CombineUtilities.async(qos: .utility) {
-            try noosphere.sync()
-        }
+        noosphere.syncPublisher()
     }
 
     /// Migrate database off main thread, returning a publisher
