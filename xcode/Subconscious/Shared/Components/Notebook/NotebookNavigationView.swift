@@ -124,8 +124,8 @@ struct NotebookNavigationView: View {
                         Button(
                             action: {
                                 let detail = UserProfileDetailDescription(
-                                    user: Petname("ziggy")!,
-                                    spherePath: [Petname("ziggy")!]
+                                    user: Petname("flubbo")!,
+                                    spherePath: [Petname("flubbo")!]
                                 )
                                 
                                 store.send(.pushDetail(.profile(detail)))

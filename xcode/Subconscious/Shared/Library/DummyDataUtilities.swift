@@ -79,6 +79,19 @@ extension StoryUser: DummyData {
             isFollowingUser: Bool.dummyData()
         )
     }
+    
+    static func dummyData(petname: Petname) -> StoryUser {
+        StoryUser(
+            user: UserProfile(
+                did: Did.dummyData(),
+                petname: petname,
+                pfp: String.dummyProfilePicture(),
+                bio: String.dummyDataMedium(),
+                category: [UserCategory.human, UserCategory.geist].randomElement()!
+            ),
+            isFollowingUser: Bool.dummyData()
+        )
+    }
 }
 
 extension String {
@@ -113,6 +126,15 @@ extension EntryStub: DummyData {
     
     static func dummyData(petname: Petname) -> EntryStub {
         let slashlink = Slashlink("@\(petname)/entry-\(Int.random(in: 0..<99))")!
+        let address = slashlink.toPublicMemoAddress()
+        let excerpt = String.dummyDataMedium()
+        let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
+        
+        return EntryStub(address: address, excerpt: excerpt, modified: modified)
+    }
+    
+    static func dummyData(petname: Petname, slug: Slug) -> EntryStub {
+        let slashlink = Slashlink(petname: petname, slug: slug)
         let address = slashlink.toPublicMemoAddress()
         let excerpt = String.dummyDataMedium()
         let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))

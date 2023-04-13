@@ -87,7 +87,7 @@ struct UserProfileDetailDescription: Hashable {
 
 enum UserProfileDetailAction: Hashable {
     case appear(Petname, SpherePath)
-    case populate(UserProfile, UserProfileStatistics?)
+    case populate(UserProfileContentPayload)
     case failedToPopulate(String)
     
     case tabIndexSelected(Int)
@@ -198,8 +198,8 @@ struct UserProfileDetailModel: ModelProtocol {
             let fx: Fx<UserProfileDetailAction> =
                 environment.userProfile
                 .getUserProfileAsync(petname: petname)
-                .map { profile in
-                    UserProfileDetailAction.populate(profile, nil)
+                .map { content in
+                    UserProfileDetailAction.populate(content)
                 }
                 .catch { error in
                     Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
@@ -207,13 +207,13 @@ struct UserProfileDetailModel: ModelProtocol {
                 .eraseToAnyPublisher()
             
             return Update(state: model, fx: fx)
-        case .populate(let user, let spherePath, let statistics):
+        case .populate(let content):
             var model = state
-            model.user = user
-            model.statistics = stats
-            model.recentEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
-            model.topEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
-            model.following = (1...10).map { _ in StoryUser.dummyData() }
+            model.user = content.profile
+            model.statistics = content.statistics
+            model.recentEntries = content.slugs.map { s in EntryStub.dummyData(petname: content.profile.petname, slug: s) }
+            model.topEntries = content.slugs.map { s in EntryStub.dummyData(petname: content.profile.petname, slug: s) }
+            model.following = content.following.map { f in StoryUser.dummyData(petname: f) }
             
             return update(
                 state: model,
