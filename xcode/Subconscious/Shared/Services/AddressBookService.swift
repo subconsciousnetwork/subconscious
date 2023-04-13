@@ -101,6 +101,8 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
+    /// Is there a user with this petname in the AddressBook?
+    /// This method is designed not to throw for a quick check.
     func hasEntryForPetname(petname: Petname) async -> Bool {
         do {
             let _  = try await self.noosphere.getPetname(petname: petname)
@@ -111,6 +113,8 @@ actor AddressBookService {
         }
     }
     
+    /// Is there a user with this petname in the AddressBook?
+    /// This method is designed not to throw for a quick check.
     func hasEntryForPetnamePublisher(petname: Petname) -> AnyPublisher<Bool, Never> {
         Future.detatched {
             return await self.hasEntryForPetname(petname: petname)
@@ -118,6 +122,7 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
+    /// Is this user in the AddressBook?
     func isFollowingUser(did: Did) async throws -> Bool {
         let entries = try await listEntries()
         
@@ -126,6 +131,7 @@ actor AddressBookService {
         })
     }
     
+    /// Is this user in the AddressBook?
     func isFollowingUserPublisher(did: Did) -> AnyPublisher<Bool, Error> {
         Future.detatched {
             return try await self.isFollowingUser(did: did)
@@ -133,6 +139,9 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
+    /// Iteratively add a numerical suffix to petnames until we find an available alias.
+    /// This can fail if `MAX_ATTEMPTS_TO_INCREMENT_PETNAME` iterations occur without
+    /// finding a candidate.
     func findAvailablePetname(petname: Petname) async throws -> Petname {
         var name = petname
         var count = 0
@@ -154,6 +163,9 @@ actor AddressBookService {
         return name
     }
     
+    /// Iteratively add a numerical suffix to petnames until we find an available alias.
+    /// This can fail if `MAX_ATTEMPTS_TO_INCREMENT_PETNAME` iterations occur without
+    /// finding a candidate.
     func findAvailablePetnamePublisher(petname: Petname) -> AnyPublisher<Petname, Error> {
         Future.detatched {
             return try await self.findAvailablePetname(petname: petname)
@@ -161,6 +173,7 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
+    /// Associates the passed DID with the passed petname within the sphere, clears the cache, saves the changes and updates the database.
     func followUser(did: Did, petname: Petname, preventOverwrite: Bool = false) async throws {
         if try await noosphere.identity() == did.id {
             throw AddressBookError.cannotFollowYourself
@@ -189,6 +202,7 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
+    /// Disassociates the passed Petname from any DID within the sphere, clears the cache, saves the changes and updates the database.
     func unfollowUser(petname: Petname) async throws {
         try await unsetPetname(petname: petname)
         let version = try await noosphere.save()
@@ -196,6 +210,8 @@ actor AddressBookService {
         invalidateCache()
     }
     
+    /// Disassociates the passed DID from any petname(s) in the address book, clears the cache, saves the changes and updates the database.
+    /// Requires listing the contents of the address book.
     func unfollowUser(did: Did) async throws {
         let entries = try await listEntries()
         
