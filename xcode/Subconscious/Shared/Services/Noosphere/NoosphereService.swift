@@ -133,7 +133,7 @@ final class NoosphereService: SphereProtocol, SpherePublisherProtocol {
     }
     
     private func spherePublisher() -> AnyPublisher<Sphere, Error> {
-        Future {
+        Future.resolve {
             try self.sphere()
         }
         .eraseToAnyPublisher()

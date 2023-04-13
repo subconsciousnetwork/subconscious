@@ -76,7 +76,9 @@ extension DispatchQueue {
 
 extension Future where Failure == Error {
     /// Initialize a future by immediately performing a throwing closure.
-    convenience init(_ perform: @escaping () throws -> Output) {
+    static func resolve(
+        perform: @escaping () throws -> Output
+    ) -> Future {
         self.init { promise in
             do {
                 let value = try perform()
@@ -90,8 +92,8 @@ extension Future where Failure == Error {
 
 extension Future where Failure == Never {
     /// Initialize a future by immediately performing a throwing closure.
-    convenience init(_ perform: @escaping () -> Output) {
-        self.init { promise in
+    static func resolve(_ perform: @escaping () -> Output) -> Future {
+        Future { promise in
             let value = perform()
             promise(.success(value))
         }
