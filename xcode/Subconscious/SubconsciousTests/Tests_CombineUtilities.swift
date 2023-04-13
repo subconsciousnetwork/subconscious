@@ -13,7 +13,7 @@ final class Tests_CombineUtilities: XCTestCase {
     enum TestError: Error {
         case code(Int)
     }
-
+    
     var cancellables: Set<AnyCancellable> = Set()
     
     override func setUp() {
@@ -48,11 +48,11 @@ final class Tests_CombineUtilities: XCTestCase {
         let future: Future<Int, Error> = DispatchQueue.global().future {
             throw TestError.code(10)
         }
-
+        
         let expectation = XCTestExpectation(
             description: "Future succeeds"
         )
-
+        
         future.sink(
             receiveCompletion: { completion in
                 switch completion {
@@ -65,6 +65,34 @@ final class Tests_CombineUtilities: XCTestCase {
                 return
             },
             receiveValue: { value in
+            }
+        )
+        .store(in: &cancellables)
+        
+        wait(for: [expectation], timeout: 0.2)
+    }
+    
+    func testRecover() throws {
+        let future: Future<Int, Error> = DispatchQueue.global().future {
+            throw TestError.code(10)
+        }
+        
+        let expectation = XCTestExpectation(
+            description: "Future succeeds"
+        )
+        
+        future.recover({ error in 0 }).sink(
+            receiveCompletion: { completion in
+                switch completion {
+                case .finished:
+                    expectation.fulfill()
+                default:
+                    XCTFail("Incorrect completion: \(completion)")
+                }
+                return
+            },
+            receiveValue: { value in
+                XCTAssertEqual(value, 0)
             }
         )
         .store(in: &cancellables)

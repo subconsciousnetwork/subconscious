@@ -413,7 +413,7 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     public func write(
         slug: Slug,
         contentType: String,
-        additionalHeaders: [Header],
+        additionalHeaders: [Header] = [],
         body: Data
     ) throws {
         try queue.sync {
@@ -431,7 +431,7 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     public func writePublisher(
         slug: Slug,
         contentType: String,
-        additionalHeaders: [Header],
+        additionalHeaders: [Header] = [],
         body: Data
     ) -> AnyPublisher<Void, Error> {
         queue.future {

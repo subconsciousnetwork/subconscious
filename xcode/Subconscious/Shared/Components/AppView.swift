@@ -126,6 +126,8 @@ enum AppAction: CustomLogStringConvertible {
     case setSphereIdentity(String?)
     /// Fetch the latest sphere version, and store on model
     case refreshSphereVersion
+    case succeedRefreshSphereVersion(_ version: String)
+    case failRefreshSphereVersion(_ error: String)
 
     /// Set and persist Noosphere enabled state
     case persistNoosphereEnabled(_ isEnabled: Bool)
@@ -454,6 +456,18 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment
             )
+        case .succeedRefreshSphereVersion(let version):
+            return succeedRefreshSphereVersion(
+                state: state,
+                environment: environment,
+                version: version
+            )
+        case .failRefreshSphereVersion(let error):
+            return failRefreshSphereVersion(
+                state: state,
+                environment: environment,
+                error: error
+            )
         case let .persistNoosphereEnabled(isEnabled):
             return persistNoosphereEnabled(
                 state: state,
@@ -767,13 +781,33 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        guard let version = try? environment.data.noosphere.version() else {
-            return Update(state: state)
-        }
+        let fx: Fx<AppAction> = environment.sphere.versionPublisher()
+            .map({ version in
+                .succeedRefreshSphereVersion(version)
+            }).recover({ error in
+                .failRefreshSphereVersion(error.localizedDescription)
+            }).eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    static func succeedRefreshSphereVersion(
+        state: AppModel,
+        environment: AppEnvironment,
+        version: String
+    ) -> Update<AppModel> {
         var model = state
         model.sphereVersion = version
         logger.debug("Refreshed sphere version: \(version)")
         return Update(state: model)
+    }
+
+    static func failRefreshSphereVersion(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.log("Failed to refresh sphere version: \(error)")
+        return Update(state: state)
     }
 
     /// Persist Noosphere enabled state.
@@ -1171,6 +1205,10 @@ struct AppEnvironment {
     var documentURL: URL
     var applicationSupportURL: URL
 
+    private let noosphere: NoosphereService
+    /// Exposes sphere publisher protocol for Noosphere
+    var sphere: some SpherePublisherProtocol { noosphere }
+
     var data: DataService
     var feed: FeedService
     
@@ -1221,6 +1259,7 @@ struct AppEnvironment {
             gatewayURL: defaultGateway,
             sphereIdentity: defaultSphereIdentity
         )
+        self.noosphere = noosphere
 
         let databaseURL = self.applicationSupportURL
             .appendingPathComponent("database.sqlite")
