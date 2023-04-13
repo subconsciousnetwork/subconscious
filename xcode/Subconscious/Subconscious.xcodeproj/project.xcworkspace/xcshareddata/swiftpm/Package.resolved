@@ -14,8 +14,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/subconsciousnetwork/noosphere",
       "state" : {
-        "branch" : "main",
-        "revision" : "ffcff5d1d6f5cec3b6c34731dc5c99cc25c3bc34"
+        "revision" : "eb5c9d131e9e1d0e0f1205ad4dd421fba390cb70"
       }
     },
     {
