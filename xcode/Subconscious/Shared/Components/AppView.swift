@@ -1326,12 +1326,12 @@ struct AppEnvironment {
         self.database = database
         
         let addressBook = AddressBookService(
-            noosphere: noosphere,
+            sphere: noosphere,
             database: database
         )
         self.addressBook = addressBook
         self.userProfile = UserProfileService(
-            noosphere: noosphere,
+            sphere: noosphere,
             database: database,
             addressBook: addressBook
         )

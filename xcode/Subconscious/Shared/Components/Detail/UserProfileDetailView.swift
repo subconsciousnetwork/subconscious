@@ -213,7 +213,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.statistics = content.statistics
             model.recentEntries = content.entries
             model.topEntries = content.entries
-            model.following = content.following.map { f in StoryUser.dummyData(petname: f) }
+            model.following = content.following
             model.isFollowingUser = content.isFollowingUser
             
             return update(

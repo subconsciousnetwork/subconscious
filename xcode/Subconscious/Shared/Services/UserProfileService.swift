@@ -29,34 +29,58 @@ extension UserProfileServiceError: LocalizedError {
 struct UserProfileContentPayload: Equatable, Hashable {
     var profile: UserProfile
     var statistics: UserProfileStatistics
-    var following: [Petname]
+    var following: [StoryUser]
     var entries: [EntryStub]
     var isFollowingUser: Bool
 }
 
 class UserProfileService {
-    private(set) var noosphere: NoosphereService
+    private(set) var sphere: any SphereProtocol
     private(set) var database: DatabaseService
     private(set) var addressBook: AddressBookService
     
-    init(noosphere: NoosphereService, database: DatabaseService, addressBook: AddressBookService) {
-        self.noosphere = noosphere
+    init(sphere: any SphereProtocol, database: DatabaseService, addressBook: AddressBookService) {
+        self.sphere = sphere
         self.database = database
         self.addressBook = addressBook
     }
     
     func getUserProfile(petname: Petname) throws -> UserProfileContentPayload {
-        let sphere = try self.noosphere.traverse(petname: petname)
-        let following = try sphere.listPetnames()
+        let sphere = try self.sphere.traverse(petname: petname)
+        let localAddressBook = AddressBookService(noosphere: sphere, database: database)
+        let following: [StoryUser] =
+            try sphere.listPetnames()
+            .compactMap { f in
+                guard let did = try localAddressBook.getPetname(petname: f) else {
+                    return nil
+                }
+                
+                let user = UserProfile(
+                    did: did,
+                    petname: f,
+                    pfp: String.dummyProfilePicture(),
+                    bio: String.dummyDataMedium(),
+                    category: .human
+                )
+                
+                let following =
+                    try addressBook.listPetnames()
+                    .map { p in
+                        try addressBook.getPetname(petname: p)
+                    }
+                    .contains(where: { followedDid in
+                        followedDid == did
+                    })
+                
+                return StoryUser(user: user, isFollowingUser: following)
+            }
         let notes = try sphere.list()
-        guard let did = Did(sphere.identity) else {
+        guard let did = Did(try sphere.identity()) else {
             throw UserProfileServiceError.invalidSphereIdentity
         }
         
         // TODO: Replace with isFollowingUser with DID check once that PR lands
-        let isFollowing = Func.succeeds {
-          let _ = try sphere.getPetname(petname: petname)
-        }
+        let isFollowing = try self.addressBook.getPetname(petname: petname) != nil
         
         let entries: [EntryStub] = try notes.compactMap { slug in
             let slashlink = Slashlink(slug: slug)

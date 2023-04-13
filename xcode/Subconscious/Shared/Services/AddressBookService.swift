@@ -73,9 +73,9 @@ actor AddressBookService {
             }
         }
         var addressBook: [AddressBookEntry] = []
-        let petnames = try await noosphere.listPetnames()
+        let petnames = try await sphere.listPetnames()
         for petname in petnames {
-            let did = try await Did(noosphere.getPetname(petname: petname))
+            let did = try await Did(sphere.getPetname(petname: petname))
                 .unwrap()
             addressBook.append(
                 AddressBookEntry(
@@ -211,7 +211,7 @@ actor AddressBookService {
     /// Disassociates the passed Petname from any DID within the sphere, clears the cache, saves the changes and updates the database.
     func unfollowUser(petname: Petname) async throws {
         try await unsetPetname(petname: petname)
-        let version = try await noosphere.save()
+        let version = try await self.sphere.save()
         try database.writeMetadatadata(key: .sphereVersion, value: version)
         invalidateCache()
     }
@@ -249,6 +249,10 @@ actor AddressBookService {
         }
         .eraseToAnyPublisher()
     }
+
+    func getPetname(petname: Petname) async throws -> Did? {
+        return try await Did(self.sphere.getPetname(petname: petname))
+    }
     
     nonisolated func getPetnamePublisher(
         petname: Petname
@@ -260,7 +264,7 @@ actor AddressBookService {
     }
 
     func setPetname(did: Did, petname: Petname) async throws {
-        try await noosphere.setPetname(did: did.did, petname: petname)
+        try await sphere.setPetname(did: did.did, petname: petname)
     }
 
     nonisolated func setPetnamePublisher(
@@ -274,7 +278,7 @@ actor AddressBookService {
     }
 
     func unsetPetname(petname: Petname) async throws {
-        try await noosphere.setPetname(did: nil, petname: petname)
+        try await sphere.setPetname(did: nil, petname: petname)
     }
 
     nonisolated func unsetPetnamePublisher(
@@ -282,6 +286,28 @@ actor AddressBookService {
     ) -> AnyPublisher<Void, Error> {
         Future.detached(priority: .utility) {
           try await self.unsetPetname(petname: petname)
+        }
+        .eraseToAnyPublisher()
+    }
+
+    func listPetnames() async throws -> [Petname] {
+        return try await sphere.listPetnames()
+    }
+
+    func listPetnamesPublisher() -> AnyPublisher<[Petname], Error> {
+        Future.detatched(priority: .utility) {
+          return try await self.listPetnames()
+        }
+        .eraseToAnyPublisher()
+    }
+
+    func getPetnameChanges(sinceCid: String) async throws -> [Petname] {
+        return try await sphere.getPetnameChanges(sinceCid: sinceCid)
+    }
+      
+    func getPetnameChangesPublisher(sinceCid: String) -> AnyPublisher<[Petname], Error> {
+        Future.detatched(priority: .utility) {
+            return try await self.getPetnameChanges(sinceCid: sinceCid)
         }
         .eraseToAnyPublisher()
     }
