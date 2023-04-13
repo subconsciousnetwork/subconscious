@@ -85,7 +85,7 @@ enum UserProfileDetailAction {
     case metaSheet(UserProfileDetailMetaSheetAction)
     case followUserSheet(FollowUserSheetAction)
     
-    case fetchFollowingStatus(Did, Petname)
+    case fetchFollowingStatus(Did)
     case populateFollowingStatus(Bool)
     
     case requestFollow
@@ -180,7 +180,7 @@ struct UserProfileDetailModel: ModelProtocol {
             return update(
                 state: model,
                 actions: [
-                    .fetchFollowingStatus(user.did, user.petname)
+                    .fetchFollowingStatus(user.did)
                 ],
                 environment: environment
             )
@@ -201,12 +201,16 @@ struct UserProfileDetailModel: ModelProtocol {
             return Update(state: model)
             
         // MARK: Following status
-        case .fetchFollowingStatus(let did, let petname):
+        case .fetchFollowingStatus(let did):
             let fx: Fx<UserProfileDetailAction> =
                 environment.data.addressBook
-                .isFollowingUserAsync(did: did, petname: petname)
+                .isFollowingUserAsync(did: did)
                 .map { following in
                     UserProfileDetailAction.populateFollowingStatus(following)
+                }
+                .catch { error in
+                    logger.error("Failed to fetch following status for \(did): \(error)")
+                    return Just(UserProfileDetailAction.populateFollowingStatus(false))
                 }
                 .eraseToAnyPublisher()
             
@@ -242,12 +246,12 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return Update(state: state, fx: fx)
             
-        case .succeedFollow(let did, let petname):
+        case .succeedFollow(let did, _):
             return update(
                 state: state,
                 actions: [
                     .presentFollowSheet(false),
-                    .fetchFollowingStatus(did, petname)
+                    .fetchFollowingStatus(did)
                 ],
                 environment: environment
             )
@@ -291,12 +295,12 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return Update(state: state, fx: fx)
             
-        case .succeedUnfollow(let did, let petname):
+        case .succeedUnfollow(let did, _):
             return update(
                 state: state,
                 actions: [
                     .presentUnfollowConfirmation(false),
-                    .fetchFollowingStatus(did, petname)
+                    .fetchFollowingStatus(did)
                 ],
                 environment: environment
             )
