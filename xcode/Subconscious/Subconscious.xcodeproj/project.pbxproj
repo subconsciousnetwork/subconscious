@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B508956E29E7862A0048106B /* Tests_AddressBookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956D29E7862A0048106B /* Tests_AddressBookService.swift */; };
 		B51A895B29B80F6E00BF5C8A /* FollowUserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51A895A29B80F6E00BF5C8A /* FollowUserView.swift */; };
 		B532F8C329B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */; };
 		B54B922828E669D6003ACA1F /* MementoGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54B922728E669D6003ACA1F /* MementoGeist.swift */; };
@@ -399,6 +400,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B508956D29E7862A0048106B /* Tests_AddressBookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_AddressBookService.swift; sourceTree = "<group>"; };
 		B51A895A29B80F6E00BF5C8A /* FollowUserView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserView.swift; sourceTree = "<group>"; };
 		B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeBlockLayoutFragment.swift; sourceTree = "<group>"; };
 		B54B922728E669D6003ACA1F /* MementoGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MementoGeist.swift; sourceTree = "<group>"; };
@@ -770,14 +772,14 @@
 			isa = PBXGroup;
 			children = (
 				B80057EA27DC355E002C0129 /* SubconsciousTests.swift */,
-				B5D8D2FE29AF1DBB0011D820 /* Test_Did.swift */,
-				B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */,
+				B508956D29E7862A0048106B /* Tests_AddressBookService.swift */,
 				B884565229D2102D00DBCD39 /* Tests_App.swift */,
 				B8B604EA29148C82006FCB77 /* Tests_AppMigrations.swift */,
 				B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */,
 				B88DFEF029E7454100B00DE8 /* Tests_CombineUtilities.swift */,
 				B88CC955284FCF8C00994928 /* Tests_DatabaseService.swift */,
 				B87288DF299B05B500EF7E07 /* Tests_DataService.swift */,
+				B5D8D2FE29AF1DBB0011D820 /* Test_Did.swift */,
 				B8AAAAD828CBD68600DBC8A9 /* Tests_Detail.swift */,
 				B84AD8DE280F3659006B3153 /* Tests_EntryLink.swift */,
 				B85D5E3E28BE4B4600EE0078 /* Tests_FeedUpdate.swift */,
@@ -785,6 +787,7 @@
 				B5F6ADCB29C1323900690DE4 /* Tests_FormField.swift */,
 				B8925B2A29C0FA43001F9503 /* Tests_Func.swift */,
 				B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */,
+				B8C7E8BF280A2B7700E439DC /* Test_Markup.swift */,
 				B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */,
 				B80CC804299D14C900C4D7C0 /* Tests_Memo.swift */,
 				B886A9B729A7E41700BFF9A2 /* Tests_MemoAddress.swift */,
@@ -1464,6 +1467,7 @@
 			files = (
 				B88DFEF129E7454100B00DE8 /* Tests_CombineUtilities.swift in Sources */,
 				B82FF242298C0DAF0097D688 /* Tests_Noosphere.swift in Sources */,
+				B508956E29E7862A0048106B /* Tests_AddressBookService.swift in Sources */,
 				B80CC807299D4DF000C4D7C0 /* Tests_SQLite3Database.swift in Sources */,
 				B84AD8E1280F7A19006B3153 /* Tests_StringUtilities.swift in Sources */,
 				B8B604EB29148C82006FCB77 /* Tests_AppMigrations.swift in Sources */,
