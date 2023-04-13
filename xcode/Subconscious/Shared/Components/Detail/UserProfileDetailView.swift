@@ -360,14 +360,3 @@ struct UserProfileDetailModel: ModelProtocol {
         }
     }
 }
-
-extension SpherePath {
-    var description: String {
-        get {
-            return self
-                .reversed()
-                .map({ s in s.description })
-                .joined(separator: ".")
-        }
-    }
-}
