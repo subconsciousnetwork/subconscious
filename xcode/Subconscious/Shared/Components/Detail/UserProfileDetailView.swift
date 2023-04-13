@@ -203,7 +203,8 @@ struct UserProfileDetailModel: ModelProtocol {
         // MARK: Following status
         case .fetchFollowingStatus(let did, let petname):
             let fx: Fx<UserProfileDetailAction> =
-            environment.data.addressBook.isFollowingUserAsync(did: did, petname: petname)
+                environment.data.addressBook
+                .isFollowingUserAsync(did: did, petname: petname)
                 .map { following in
                     UserProfileDetailAction.populateFollowingStatus(following)
                 }
@@ -276,7 +277,7 @@ struct UserProfileDetailModel: ModelProtocol {
             }
             
             let fx: Fx<UserProfileDetailAction> =
-            environment.data.addressBook
+                environment.data.addressBook
                 .unfollowUserAsync(did: did)
                 .map({ _ in
                     .succeedUnfollow(did: did, petname: petname)

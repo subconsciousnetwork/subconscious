@@ -60,7 +60,7 @@ struct FollowUserSheetModel: ModelProtocol {
             
         case .fetchPetnameCollisionStatus(let petname):
             let fx: Fx<FollowUserSheetAction> =
-            environment.addressBook.hasEntryForPetnameAsync(petname: petname)
+                environment.addressBook.hasEntryForPetnameAsync(petname: petname)
                 .map { collision in
                     FollowUserSheetAction.populatePetnameCollisionStatus(petname, collision)
                 }
