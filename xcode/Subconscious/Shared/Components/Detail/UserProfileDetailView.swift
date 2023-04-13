@@ -157,7 +157,7 @@ struct UserProfileDetailModel: ModelProtocol {
     var isFollowSheetPresented = false
     var isUnfollowConfirmationPresented = false
     
-    var user: UserProfile? = UserProfile.dummyData()
+    var user: UserProfile? = nil
     var isFollowingUser: Bool = false
     
     var recentEntries: [EntryStub] = []
@@ -211,9 +211,10 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.user = content.profile
             model.statistics = content.statistics
-            model.recentEntries = content.slugs.map { s in EntryStub.dummyData(petname: content.profile.petname, slug: s) }
-            model.topEntries = content.slugs.map { s in EntryStub.dummyData(petname: content.profile.petname, slug: s) }
+            model.recentEntries = content.entries
+            model.topEntries = content.entries
             model.following = content.following.map { f in StoryUser.dummyData(petname: f) }
+            model.isFollowingUser = content.isFollowingUser
             
             return update(
                 state: model,

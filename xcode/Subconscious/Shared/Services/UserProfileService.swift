@@ -30,7 +30,8 @@ struct UserProfileContentPayload: Equatable, Hashable {
     var profile: UserProfile
     var statistics: UserProfileStatistics
     var following: [Petname]
-    var slugs: [Slug]
+    var entries: [EntryStub]
+    var isFollowingUser: Bool
 }
 
 class UserProfileService {
@@ -45,48 +46,47 @@ class UserProfileService {
     }
     
     func getUserProfile(petname: Petname) throws -> UserProfileContentPayload {
-        if petname.description == "flubbo" {
-            let sphere = try self.noosphere.traverse(petname: petname)
-            let following = try sphere.listPetnames()
-            let notes = try sphere.list()
-            guard let did = Did(sphere.identity) else {
-                throw UserProfileServiceError.invalidSphereIdentity
+        let sphere = try self.noosphere.traverse(petname: petname)
+        let following = try sphere.listPetnames()
+        let notes = try sphere.list()
+        guard let did = Did(sphere.identity) else {
+            throw UserProfileServiceError.invalidSphereIdentity
+        }
+        
+        // TODO: Replace with isFollowingUser with DID check once that PR lands
+        let isFollowing = try self.addressBook.getPetname(petname: petname) != nil
+        
+        let entries: [EntryStub] = try notes.compactMap { slug in
+            let slashlink = Slashlink(slug: slug)
+            let memo = try sphere.read(slashlink: slashlink)
+            guard let memo = memo.toMemo() else {
+                return nil
             }
             
-            let profile = UserProfile(
-                did: did,
-                petname: petname,
-                pfp: "pfp-dog",
-                bio: "Pretend this comes from _profile_.json",
-                category: .human
-            )
-            return UserProfileContentPayload(
-                profile: profile,
-                statistics: UserProfileStatistics(
-                    noteCount: notes.count,
-                    backlinkCount: -1,
-                    followingCount: following.count
-                ),
-                following: following,
-                slugs: notes
+            return EntryStub(
+                address: Slashlink(petname: petname, slug: slug).toPublicMemoAddress(),
+                excerpt: memo.excerpt(),
+                modified: memo.modified
             )
         }
         
-        // TODO: Impl
-        var profile = UserProfile.dummyData()
-        profile = UserProfile(
-            did: profile.did,
+        let profile = UserProfile(
+            did: did,
             petname: petname,
-            pfp: profile.pfp,
-            bio: profile.bio,
-            category: profile.category
+            pfp: "pfp-dog",
+            bio: "Pretend this comes from _profile_.json",
+            category: .human
         )
-        
         return UserProfileContentPayload(
             profile: profile,
-            statistics: UserProfileStatistics.dummyData(),
-            following: [],
-            slugs: []
+            statistics: UserProfileStatistics(
+                noteCount: entries.count,
+                backlinkCount: -1,
+                followingCount: following.count
+            ),
+            following: following,
+            entries: entries,
+            isFollowingUser: isFollowing
         )
     }
     
