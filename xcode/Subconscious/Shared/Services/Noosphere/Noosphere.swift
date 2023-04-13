@@ -43,20 +43,19 @@ public struct SphereReceipt {
 /// - Property noosphere: pointer that holds all the internal book keeping.
 ///   DB pointers, key storage interfaces, active HTTP clients etc.
 public final class Noosphere {
-    /// Dispatch queue used for Noosphere and Sphere instances.
-    ///
-    /// We use this queue to make Noosphere and Sphere thread-safe by forcing
-    /// writes to be serial and atomic.
-    ///
-    /// Note that queues are serial by default, making this a serial queue.
-    private static let queue = DispatchQueue(
-        label: "Noosphere",
-        qos: .default
-    )
     private let logger: Logger = Logger(
         subsystem: Config.default.rdns,
         category: "Noosphere"
     )
+    /// Queue for sequencing writes and keeping work off main thread.
+    /// 2023-04-13 Note that Noosphere currently has an internal lock so
+    /// that if a sync or write is happening, reads will be blocked until that
+    /// completes. We force all operations onto this serial queue to keep them
+    /// off main thread, and because serializing them makes no difference
+    /// (they are serial on the Rust side too).
+    /// In future if this lock is removed, we may want to turn this into a
+    /// write queue, push network requests or expensive reads onto the
+    /// Global concurrent queue.
     let queue: DispatchQueue
     let noosphere: OpaquePointer
     let globalStoragePath: String
@@ -66,8 +65,7 @@ public final class Noosphere {
     init(
         globalStoragePath: String,
         sphereStoragePath: String,
-        gatewayURL: String? = nil,
-        queue: DispatchQueue = queue
+        gatewayURL: String? = nil
     ) throws {
         guard let noosphere = try Self.callWithError(
             ns_initialize,
@@ -81,7 +79,11 @@ public final class Noosphere {
         self.globalStoragePath = globalStoragePath
         self.sphereStoragePath = sphereStoragePath
         self.gatewayURL = gatewayURL
-        self.queue = queue
+        /// Note that queues are serial by default, making this a serial queue.
+        self.queue = DispatchQueue(
+            label: "NoosphereQueue",
+            qos: .default
+        )
         logger.debug("init")
     }
     

@@ -157,7 +157,7 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     private var queue: DispatchQueue {
         noosphere.queue
     }
-
+    
     private init(noosphere: Noosphere, sphere: OpaquePointer, identity: String) {
         self.noosphere = noosphere
         self.sphere = sphere
@@ -300,6 +300,7 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
         .eraseToAnyPublisher()
     }
     
+
     /// Read the value of a memo from this, or another sphere
     /// - Returns: `MemoData`
     public func read(slashlink: Slashlink) throws -> MemoData {
