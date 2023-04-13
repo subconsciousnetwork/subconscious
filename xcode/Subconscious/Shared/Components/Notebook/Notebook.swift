@@ -895,7 +895,7 @@ struct NotebookModel: ModelProtocol {
     ) -> Update<NotebookModel> {
         // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
         // to find in local or sphere content and then push editor detail.
-        guard slashlink.petname != nil else {
+        guard let petname = slashlink.petname else {
             return update(
                 state: state,
                 action: .findAndPushMemoEditorDetail(
@@ -912,7 +912,7 @@ struct NotebookModel: ModelProtocol {
             
             // Realising that tapping on a link in a note goes WAY deeper than originally thought.
             // If I am browsing @gordon's note and tap on his link to @cdata/lol
-            // I need to know I'm at `@cdata.gordon/lol` but this keeps going!
+            // I need to know I'm at `@cdata.gordon/lol` but this keeps going further!
             
             if slashlink.slug.isProfile() {
                 return update(
@@ -920,8 +920,8 @@ struct NotebookModel: ModelProtocol {
                     action: .pushDetail(
                         .profile(
                             UserProfileDetailDescription(
-                                 user: <#T##UserProfile#>,
-                                 spherePath: <#T##[UserProfile]#>
+                                user: petname,
+                                spherePath: [petname]
                             )
                         )
                     ),

@@ -31,7 +31,12 @@ struct UserProfileDetailView: View {
     }
     
     func onNavigateToUser(user: UserProfile) {
-        notify(.requestDetail(.profile(UserProfileDetailDescription(user: user, spherePath: description.spherePath + [user]))))
+        notify(.requestDetail(.profile(
+            UserProfileDetailDescription(
+                user: user.petname,
+                spherePath: description.spherePath + [user.petname]
+            )
+        )))
     }
     
     func onProfileAction(user: UserProfile, action: UserProfileAction) {
@@ -57,7 +62,12 @@ struct UserProfileDetailView: View {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
-            store.send(UserProfileDetailAction.populate(description.user, description.spherePath, UserProfileStatistics.dummyData()))
+            store.send(
+                UserProfileDetailAction.appear(
+                    description.user,
+                    description.spherePath
+                )
+            )
         }
     }
 }
@@ -71,12 +81,15 @@ enum UserProfileDetailNotification: Hashable {
 /// A description of a user profile that can be used to set up the user
 /// profile's internal state.
 struct UserProfileDetailDescription: Hashable {
-    var user: UserProfile
-    var spherePath: [UserProfile]
+    var user: Petname
+    var spherePath: [Petname]
 }
 
 enum UserProfileDetailAction: Hashable {
-    case populate(UserProfile, [UserProfile], UserProfileStatistics?)
+    case appear(Petname, SpherePath)
+    case populate(UserProfile, UserProfileStatistics?)
+    case failedToPopulate(String)
+    
     case tabIndexSelected(Int)
     
     case presentMetaSheet(Bool)
@@ -122,13 +135,17 @@ struct UserProfile: Equatable, Codable, Hashable {
     let category: UserCategory
 }
 
-// TODO: should this just be [Petname]?
-typealias SpherePath = [UserProfile]
+typealias SpherePath = [Petname]
 
 // MARK: Model
 struct UserProfileDetailModel: ModelProtocol {
     typealias Action = UserProfileDetailAction
     typealias Environment = AppEnvironment
+    
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "UserProfileDetailModel"
+    )
     
     var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
     var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
@@ -174,14 +191,29 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
             )
+        case .appear(let petname, let spherePath):
+            var model = state
+            model.spherePath = spherePath
+            
+            let fx: Fx<UserProfileDetailAction> =
+                environment.userProfile
+                .getUserProfileAsync(petname: petname)
+                .map { profile in
+                    UserProfileDetailAction.populate(profile, nil)
+                }
+                .catch { error in
+                    Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: model, fx: fx)
         case .populate(let user, let spherePath, let statistics):
             var model = state
             model.user = user
-            model.statistics = statistics
+            model.statistics = stats
             model.recentEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
             model.topEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
             model.following = (1...10).map { _ in StoryUser.dummyData() }
-            model.spherePath = spherePath
             
             return update(
                 state: model,
@@ -190,6 +222,10 @@ struct UserProfileDetailModel: ModelProtocol {
                 ],
                 environment: environment
             )
+            
+        case .failedToPopulate(let error):
+            logger.error("Failed to fetch profile: \(error)")
+            return Update(state: state)
             
         case .tabIndexSelected(let index):
             var model = state
@@ -325,17 +361,6 @@ struct UserProfileDetailModel: ModelProtocol {
 }
 
 extension SpherePath {
-    var description: String {
-        get {
-            return self
-                .reversed()
-                .map({ s in s.petname.description })
-                .joined(separator: ".")
-        }
-    }
-}
-
-extension [Petname] {
     var description: String {
         get {
             return self

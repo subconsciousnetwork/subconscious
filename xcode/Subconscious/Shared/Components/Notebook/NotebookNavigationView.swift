@@ -123,10 +123,9 @@ struct NotebookNavigationView: View {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(
                             action: {
-                                let dummyUser = UserProfile.dummyData()
                                 let detail = UserProfileDetailDescription(
-                                    user: dummyUser,
-                                    spherePath: [dummyUser]
+                                    user: Petname("ziggy")!,
+                                    spherePath: [Petname("ziggy")!]
                                 )
                                 
                                 store.send(.pushDetail(.profile(detail)))

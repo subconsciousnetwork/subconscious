@@ -23,11 +23,7 @@ enum MemoDetailDescription: Hashable {
         case .viewer(let description):
             return description.address
         case .profile(let description):
-            let petnames =
-                description.spherePath
-                .map { u in u.petname }
-            
-            guard let petname = Petname(petnames: petnames) else {
+            guard let petname = Petname(petnames: description.spherePath) else {
                 return nil
             }
             

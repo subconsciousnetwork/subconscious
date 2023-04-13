@@ -53,7 +53,8 @@ actor DataService {
         noosphere: NoosphereService,
         database: DatabaseService,
         local: HeaderSubtextMemoStore,
-        addressBook: AddressBookService
+        addressBook: AddressBookService,
+        userProfile: UserProfileService
     ) {
         self.database = database
         self.noosphere = noosphere

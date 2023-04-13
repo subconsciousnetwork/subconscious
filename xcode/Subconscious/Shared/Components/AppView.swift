@@ -1265,6 +1265,7 @@ struct AppEnvironment {
     var recoveryPhrase = RecoveryPhraseEnvironment()
     
     var addressBook: AddressBookService
+    var userProfile: UserProfileService
     
     var pasteboard = UIPasteboard.general
     
@@ -1329,12 +1330,18 @@ struct AppEnvironment {
             database: database
         )
         self.addressBook = addressBook
+        self.userProfile = UserProfileService(
+            noosphere: noosphere,
+            database: database,
+            addressBook: addressBook
+        )
         
         self.data = DataService(
             noosphere: noosphere,
             database: database,
             local: local,
-            addressBook: addressBook
+            addressBook: addressBook,
+            userProfile: userProfile
         )
         
         self.feed = FeedService()
