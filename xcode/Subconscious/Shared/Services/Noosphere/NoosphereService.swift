@@ -162,7 +162,14 @@ final class NoosphereService:
     }
 
     func identity() throws -> String {
-        try self.sphere().identity
+        try self.sphere().identity()
+    }
+
+    func identityPublisher() -> AnyPublisher<String, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.identityPublisher()
+        })
+        .eraseToAnyPublisher()
     }
 
     func version() throws -> String {

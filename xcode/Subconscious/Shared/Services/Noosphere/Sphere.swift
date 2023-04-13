@@ -15,6 +15,8 @@ import os
 public protocol SphereProtocol {
     associatedtype Memo
     
+    func identity() throws -> String
+    
     func version() throws -> String
     
     func getFileVersion(slashlink: Slashlink) -> String?
@@ -67,6 +69,8 @@ public protocol SphereProtocol {
 /// See `Sphere` for concrete implementation.
 public protocol SpherePublisherProtocol {
     associatedtype Memo
+    
+    func identityPublisher() -> AnyPublisher<String, Error>
     
     func versionPublisher() -> AnyPublisher<String, Error>
     
@@ -152,7 +156,7 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     )
     private let noosphere: Noosphere
     public let sphere: OpaquePointer
-    public let identity: String
+    private let _identity: String
     
     private var queue: DispatchQueue {
         noosphere.queue
@@ -161,12 +165,12 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     private init(noosphere: Noosphere, sphere: OpaquePointer, identity: String) {
         self.noosphere = noosphere
         self.sphere = sphere
-        self.identity = identity
+        self._identity = identity
     }
     
     init(noosphere: Noosphere, identity: String) throws {
         self.noosphere = noosphere
-        self.identity = identity
+        self._identity = identity
         guard let fs = try Noosphere.callWithError(
             ns_sphere_open,
             noosphere.noosphere,
@@ -178,12 +182,23 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
         logger.debug("init with identity: \(identity)")
     }
     
+    public func identity() throws -> String {
+        self._identity
+    }
+
+    public func identityPublisher() -> AnyPublisher<String, Error> {
+        Future.resolve {
+            self._identity
+        }
+        .eraseToAnyPublisher()
+    }
+
     /// Get current version of sphere synchronously
     public func version() throws -> String {
         guard let sphereVersionPointer = try Noosphere.callWithError(
             ns_sphere_version_get,
             noosphere.noosphere,
-            identity
+            _identity
         ) else {
             throw NoosphereError.nullPointer
         }
@@ -738,7 +753,7 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
         let versionPointer = try Noosphere.callWithError(
             ns_sphere_sync,
             noosphere.noosphere,
-            identity
+            _identity
         )
         guard let versionPointer = versionPointer else {
             throw NoosphereError.nullPointer
@@ -806,7 +821,7 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     
     deinit {
         ns_sphere_free(sphere)
-        logger.debug("deinit with identity \(self.identity)")
+        logger.debug("deinit with identity \(self._identity)")
     }
     
     /// Read first header value for file pointer
