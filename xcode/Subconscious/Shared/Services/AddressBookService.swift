@@ -101,9 +101,10 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
-    func hasEntryForPetname(petname: Petname) async throws -> Bool {
+    func hasEntryForPetname(petname: Petname) async -> Bool {
         do {
-            return try await self.noosphere.getPetname(petname: petname) != nil
+            let _  = try await self.noosphere.getPetname(petname: petname)
+            return true
         } catch {
             Self.logger.error("An error occurred checking for \(petname.markup), returning false. Reason: \(error.localizedDescription)")
             return false
@@ -111,25 +112,23 @@ actor AddressBookService {
     }
     
     func hasEntryForPetnamePublisher(petname: Petname) -> AnyPublisher<Bool, Never> {
-        Future.detached {
-            return self.hasEntryForPetname(petname: petname)
+        Future.detatched {
+            return await self.hasEntryForPetname(petname: petname)
         }
         .eraseToAnyPublisher()
     }
     
-    func isFollowingUser(did: Did, petname: Petname) async -> Bool {
-        do {
-            let user = try await self.noosphere.getPetname(petname: petname) 
-            return user == did.did
-        } catch {
-            Self.logger.error("An error occurred checking following status for \(petname.markup), returning false. Reason: \(error.localizedDescription)")
-            return false
-        }
+    func isFollowingUser(did: Did) async throws -> Bool {
+        let entries = try await listEntries()
+        
+        return entries.contains(where: { entry in
+            entry.did == did
+        })
     }
     
-    func isFollowingUserPublisher(did: Did, petname: Petname) -> AnyPublisher<Bool, Never> {
+    func isFollowingUserPublisher(did: Did) -> AnyPublisher<Bool, Error> {
         Future.detatched {
-            return await self.isFollowingUser(did: did, petname: petname)
+            return try await self.isFollowingUser(did: did)
         }
         .eraseToAnyPublisher()
     }
@@ -138,7 +137,7 @@ actor AddressBookService {
         var name = petname
         var count = 0
         
-        while try await hasEntryForPetname(petname: name) {
+        while await hasEntryForPetname(petname: name) {
             guard let next = name.increment() else {
                 throw AddressBookError.exhaustedUniquePetnameRange
             }
@@ -167,7 +166,7 @@ actor AddressBookService {
             throw AddressBookError.cannotFollowYourself
         }
         
-        let hasEntry = try await hasEntryForPetname(petname: petname)
+        let hasEntry = await hasEntryForPetname(petname: petname)
         if preventOverwrite && hasEntry {
             throw AddressBookError.invalidAttemptToOverwitePetname
         }
@@ -197,13 +196,34 @@ actor AddressBookService {
         invalidateCache()
     }
     
-    /// Unassociates the passed DID with the passed petname within the sphere,
+    func unfollowUser(did: Did) async throws {
+        let entries = try await listEntries()
+        
+        for entry in entries {
+            if entry.did == did {
+                try await unfollowUser(petname: entry.petname)
+            }
+        }
+    }
+    
+    /// Unassociates the passed petname with any DID in the sphere,
     /// saves the changes and updates the database.
     nonisolated func unfollowUserPublisher(
         petname: Petname
     ) -> AnyPublisher<Void, Error> {
         Future.detatched {
             try await self.unfollowUser(petname: petname)
+        }
+        .eraseToAnyPublisher()
+    }
+    
+    /// Unassociates the passed DID with from any petname within the sphere,
+    /// saves the changes and updates the database.
+    nonisolated func unfollowUserPublisher(
+        did: Did
+    ) -> AnyPublisher<Void, Error> {
+        Future.detatched {
+            try await self.unfollowUser(did: did)
         }
         .eraseToAnyPublisher()
     }
