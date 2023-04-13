@@ -296,27 +296,83 @@ final class NoosphereService: SphereProtocol, SpherePublisherProtocol {
         try self.sphere().changes(since)
     }
     
+    func changesPublisher(_ since: String?) -> AnyPublisher<[Slug], Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.changesPublisher(since)
+        })
+        .eraseToAnyPublisher()
+    }
+    
     func getPetname(petname: Petname) throws -> String {
         try self.sphere().getPetname(petname: petname)
+    }
+    
+    func getPetnamePublisher(petname: Petname) -> AnyPublisher<String, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.getPetnamePublisher(petname: petname)
+        })
+        .eraseToAnyPublisher()
     }
     
     func setPetname(did: String?, petname: Petname) throws {
         try self.sphere().setPetname(did: did, petname: petname)
     }
     
+    func setPetnamePublisher(
+        did: String?,
+        petname: Petname
+    ) -> AnyPublisher<Void, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.setPetnamePublisher(did: did, petname: petname)
+        })
+        .eraseToAnyPublisher()
+    }
+    
     func resolvePetname(petname: Petname) throws -> String {
         try self.sphere().resolvePetname(petname: petname)
+    }
+    
+    func resolvePetnamePublisher(
+        petname: Petname
+    ) -> AnyPublisher<String, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.resolvePetnamePublisher(petname: petname)
+        })
+        .eraseToAnyPublisher()
     }
     
     func listPetnames() throws -> [Petname] {
         try self.sphere().listPetnames()
     }
     
+    func listPetnamesPublisher() -> AnyPublisher<[Petname], Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.listPetnamesPublisher()
+        })
+        .eraseToAnyPublisher()
+    }
+    
     func getPetnameChanges(sinceCid: String) throws -> [Petname] {
         try self.sphere().getPetnameChanges(sinceCid: sinceCid)
+    }
+    
+    func getPetnameChangesPublisher(
+        sinceCid: String
+    ) -> AnyPublisher<[Petname], Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.getPetnameChangesPublisher(sinceCid: sinceCid)
+        })
+        .eraseToAnyPublisher()
     }
 
     func traverse(petname: Petname) throws -> Sphere {
         try self.sphere().traverse(petname: petname)
+    }
+    
+    func traversePublisher(petname: Petname) -> AnyPublisher<Sphere, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.traversePublisher(petname: petname)
+        })
+        .eraseToAnyPublisher()
     }
 }
