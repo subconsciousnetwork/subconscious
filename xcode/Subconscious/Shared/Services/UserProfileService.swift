@@ -54,7 +54,9 @@ class UserProfileService {
         }
         
         // TODO: Replace with isFollowingUser with DID check once that PR lands
-        let isFollowing = try self.addressBook.getPetname(petname: petname) != nil
+        let isFollowing = Func.succeeds {
+          let _ = try sphere.getPetname(petname: petname)
+        }
         
         let entries: [EntryStub] = try notes.compactMap { slug in
             let slashlink = Slashlink(slug: slug)
