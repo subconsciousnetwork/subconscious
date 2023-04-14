@@ -25,7 +25,7 @@ struct FeedService {
     /// We should consider other approaches, including using a tracery grammar.
     /// Eventually, we want to do something based on follows.
     func generate(max: Int) -> AnyPublisher<[Story], Error> {
-        DispatchQueue.global().future {
+        Future.detatched {
             let geists = geists.values
             var stories: [Story] = []
             for _ in 0..<max {
