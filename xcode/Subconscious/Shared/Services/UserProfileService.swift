@@ -38,14 +38,14 @@ struct UserProfileContentPayload: Equatable, Hashable {
 class UserProfileService<Sphere : SphereProtocol> {
     private(set) var sphere: Sphere
     private(set) var database: DatabaseService
-    private(set) var addressBook: AddressBookService
+    private(set) var addressBook: AddressBookService<Sphere>
     
     private let logger = Logger(
         subsystem: Config.default.rdns,
         category: "UserProfileService"
     )
     
-    init(sphere: Sphere, database: DatabaseService, addressBook: AddressBookService) {
+    init(sphere: Sphere, database: DatabaseService, addressBook: AddressBookService<Sphere>) {
         self.sphere = sphere
         self.database = database
         self.addressBook = addressBook
