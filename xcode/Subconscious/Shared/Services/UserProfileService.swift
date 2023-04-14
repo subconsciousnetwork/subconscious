@@ -5,6 +5,7 @@
 //  Created by Ben Follington on 13/4/2023.
 //
 
+import os
 import Foundation
 import Combine
 // temp
@@ -39,14 +40,29 @@ class UserProfileService<Sphere : SphereProtocol> {
     private(set) var database: DatabaseService
     private(set) var addressBook: AddressBookService
     
+    private let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "UserProfileService"
+    )
+    
     init(sphere: Sphere, database: DatabaseService, addressBook: AddressBookService) {
         self.sphere = sphere
         self.database = database
         self.addressBook = addressBook
     }
     
-    func getUserProfile(petname: Petname) throws -> UserProfileContentPayload {
-        let sphere = try self.sphere.traverse(petname: petname)
+    private func isFollowing(sphere: Sphere, petname: Petname) -> Bool {
+        // TODO: Replace with isFollowingUser with DID check once that PR lands
+        do {
+            return try self.addressBook.getPetname(petname: petname) != nil
+        } catch {
+            logger.warning("Failed to check following status, temporary issue.")
+            return false
+        }
+    }
+    
+    func getUserProfile(did: Did, petname: Petname) throws -> UserProfileContentPayload {
+        let sphere = try self.sphere.traverse(did: did, petname: petname)
         let localAddressBook = AddressBookService(sphere: sphere, database: database)
         let following: [StoryUser] =
             try sphere.listPetnames()
@@ -84,8 +100,7 @@ class UserProfileService<Sphere : SphereProtocol> {
             throw UserProfileServiceError.invalidSphereIdentity
         }
         
-        // TODO: Replace with isFollowingUser with DID check once that PR lands
-        let isFollowing = try self.addressBook.getPetname(petname: petname) != nil
+        var isFollowing = isFollowing(sphere: self.sphere, petname: petname)
         
         let entries: [EntryStub] = try notes.compactMap { slug in
             let slashlink = Slashlink(slug: slug)
@@ -121,9 +136,9 @@ class UserProfileService<Sphere : SphereProtocol> {
         )
     }
     
-    func getUserProfileAsync(petname: Petname) -> AnyPublisher<UserProfileContentPayload, Error> {
+    func getUserProfileAsync(did: Did, petname: Petname) -> AnyPublisher<UserProfileContentPayload, Error> {
         CombineUtilities.async(qos: .utility) {
-            return try self.getUserProfile(petname: petname)
+            return try self.getUserProfile(did: did, petname: petname)
         }
     }
 }

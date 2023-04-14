@@ -124,6 +124,7 @@ struct NotebookNavigationView: View {
                         Button(
                             action: {
                                 let detail = UserProfileDetailDescription(
+                                    did: Did("did:key:z6MkvhatbCXzMVhHMFM5RrjihYeVstodoz4hy3Urf9GWaGCV")!,
                                     user: Petname("flubbo")!,
                                     spherePath: [Petname("flubbo")!]
                                 )

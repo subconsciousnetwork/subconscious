@@ -33,6 +33,7 @@ struct UserProfileDetailView: View {
     func onNavigateToUser(user: UserProfile) {
         notify(.requestDetail(.profile(
             UserProfileDetailDescription(
+                did: user.did,
                 user: user.petname,
                 spherePath: description.spherePath + [user.petname]
             )
@@ -64,6 +65,7 @@ struct UserProfileDetailView: View {
             // background for a while, and the content changed in another tab.
             store.send(
                 UserProfileDetailAction.appear(
+                    description.did,
                     description.user,
                     description.spherePath
                 )
@@ -81,12 +83,13 @@ enum UserProfileDetailNotification: Hashable {
 /// A description of a user profile that can be used to set up the user
 /// profile's internal state.
 struct UserProfileDetailDescription: Hashable {
+    var did: Did
     var user: Petname
     var spherePath: [Petname]
 }
 
 enum UserProfileDetailAction: Hashable {
-    case appear(Petname, SpherePath)
+    case appear(Did, Petname, SpherePath)
     case populate(UserProfileContentPayload)
     case failedToPopulate(String)
     
