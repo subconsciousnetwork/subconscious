@@ -152,6 +152,7 @@ enum NotebookAction {
     /// request an editor detail.
     case findAndPushDetail(
         slashlink: Slashlink,
+        spherePath: SpherePath,
         fallback: String
     )
     
@@ -196,7 +197,8 @@ extension NotebookAction {
             return .pushDetail(
                 MemoEditorDetailDescription(
                     address: address,
-                    fallback: fallback
+                    fallback: fallback,
+                    spherePath: []
                 )
             )
         case let .createLocalMemo(slug, fallback):
@@ -204,7 +206,8 @@ extension NotebookAction {
                 MemoEditorDetailDescription(
                     address: slug?.toLocalMemoAddress(),
                     fallback: fallback,
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    spherePath: []
                 )
             )
         case let .createPublicMemo(slug, fallback):
@@ -212,7 +215,8 @@ extension NotebookAction {
                 MemoEditorDetailDescription(
                     address: slug?.toPublicMemoAddress(),
                     fallback: fallback,
-                    defaultAudience: .public
+                    defaultAudience: .public,
+                    spherePath: []
                 )
             )
         case .random:
@@ -243,9 +247,10 @@ extension NotebookAction {
             return .deleteEntry(address)
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindDetail(slashlink, fallback):
+        case let .requestFindDetail(slashlink, spherePath, fallback):
             return .findAndPushDetail(
                 slashlink: slashlink,
+                spherePath: spherePath,
                 fallback: fallback
             )
         case let .succeedMoveEntry(from, to):
@@ -263,6 +268,12 @@ extension NotebookAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
+        case let .requestFindDetail(slashlink, spherePath, fallback):
+            return .findAndPushDetail(
+                slashlink: slashlink,
+                spherePath: spherePath,
+                fallback: fallback
+            )
         }
     }
     
@@ -508,10 +519,11 @@ struct NotebookModel: ModelProtocol {
             var model = state
             model.details = details
             return Update(state: model)
-        case let .findAndPushDetail(slashlink, fallback):
+        case let .findAndPushDetail(slashlink, spherePath, fallback):
             return findAndPushDetail(
                 state: state,
                 environment: environment,
+                spherePath: spherePath,
                 slashlink: slashlink,
                 fallback: fallback
             )
@@ -876,7 +888,8 @@ struct NotebookModel: ModelProtocol {
             NotebookAction.pushDetail(
                 MemoEditorDetailDescription(
                     address: address,
-                    fallback: query
+                    fallback: query,
+                    spherePath: []
                 )
             )
         )
@@ -890,6 +903,7 @@ struct NotebookModel: ModelProtocol {
     static func findAndPushDetail(
         state: NotebookModel,
         environment: AppEnvironment,
+        spherePath: SpherePath,
         slashlink: Slashlink,
         fallback: String
     ) -> Update<NotebookModel> {
@@ -915,19 +929,22 @@ struct NotebookModel: ModelProtocol {
             // I need to know I'm at `@cdata.gordon/lol` but this keeps going further!
             
             if slashlink.slug.isProfile() {
-                return update(
-                    state: state,
-                    action: .pushDetail(
-                        .profile(
-                            UserProfileDetailDescription(
-                                did: Did("did:key:123")!, // HACK: temp
-                                user: petname,
-                                spherePath: [petname]
+                let path = [petname] + spherePath
+                if let combined = Petname(petnames: path) {
+                    return update(
+                        state: state,
+                        action: .pushDetail(
+                            .profile(
+                                UserProfileDetailDescription(
+                                    did: Did("did:key:123")!, // HACK: temp
+                                    user: combined,
+                                    spherePath: path
+                                )
                             )
-                        )
-                    ),
-                    environment: environment
-                )
+                        ),
+                        environment: environment
+                    )
+                }
             }
             
             // If Noosphere is enabled, and slashlink pointing to other sphere,
@@ -937,7 +954,8 @@ struct NotebookModel: ModelProtocol {
                 action: .pushDetail(
                     .viewer(
                         MemoViewerDetailDescription(
-                            address: slashlink.toPublicMemoAddress()
+                            address: slashlink.toPublicMemoAddress(),
+                            spherePath: [petname]
                         )
                     )
                 ),
@@ -966,7 +984,8 @@ struct NotebookModel: ModelProtocol {
                 NotebookAction.pushDetail(
                     MemoEditorDetailDescription(
                         address: address ?? fallbackAddress,
-                        fallback: fallback
+                        fallback: fallback,
+                        spherePath: []
                     )
                 )
             })
@@ -986,7 +1005,8 @@ struct NotebookModel: ModelProtocol {
                 NotebookAction.pushDetail(
                     MemoEditorDetailDescription(
                         address: link.address,
-                        fallback: link.title
+                        fallback: link.title,
+                        spherePath: []
                     )
                 )
             })

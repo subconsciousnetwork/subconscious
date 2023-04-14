@@ -32,6 +32,7 @@ struct MemoViewerDetailView: View {
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
                     editor: store.state.editor,
+                    spherePath: store.state.spherePath,
                     backlinks: store.state.backlinks,
                     send: store.send,
                     notify: notify
@@ -126,6 +127,7 @@ struct MemoViewerDetailLoadingView: View {
 struct MemoViewerDetailLoadedView: View {
     var title: String
     var editor: SubtextTextModel
+    var spherePath: SpherePath
     var backlinks: [EntryStub]
     var send: (MemoViewerDetailAction) -> Void
     var notify: (MemoViewerDetailNotification) -> Void
@@ -140,6 +142,22 @@ struct MemoViewerDetailLoadedView: View {
             )
         )
     }
+    
+    private func onLink(
+        url: URL
+    ) -> Bool {
+        guard let sub = url.toSubSlashlinkURL() else {
+            return true
+        }
+        notify(
+            .requestFindDetail(
+                slashlink: sub.slashlink,
+                spherePath: spherePath,
+                fallback: sub.fallback
+            )
+        )
+        return false
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -152,7 +170,7 @@ struct MemoViewerDetailLoadedView: View {
                             tag: MemoViewerDetailSubtextTextCursor.tag
                         ),
                         frame: geometry.frame(in: .local),
-                        onLink: { link in true }
+                        onLink: self.onLink
                     )
                     .insets(
                         EdgeInsets(
@@ -182,12 +200,19 @@ struct MemoViewerDetailLoadedView: View {
 /// lifecycle events that happened within our component.
 enum MemoViewerDetailNotification: Hashable {
     case requestDetail(_ description: MemoDetailDescription)
+    /// Request detail from any audience scope
+    case requestFindDetail(
+        slashlink: Slashlink,
+        spherePath: SpherePath,
+        fallback: String
+    )
 }
 
 /// A description of a memo detail that can be used to set up the memo
 /// detal's internal state.
 struct MemoViewerDetailDescription: Hashable {
     var address: MemoAddress
+    var spherePath: SpherePath
 }
 
 // MARK: Actions
@@ -222,6 +247,8 @@ struct MemoViewerDetailModel: ModelProtocol {
     var title = ""
     var editor = SubtextTextModel(isEditable: false)
     var backlinks: [EntryStub] = []
+    
+    var spherePath: SpherePath = []
     
     // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
@@ -277,6 +304,8 @@ struct MemoViewerDetailModel: ModelProtocol {
         var model = state
         model.loadingState = .loading
         model.address = description.address
+        model.spherePath = description.spherePath
+        
         let fx: Fx<Action> = environment.data.readMemoDetailPublisher(
             address: description.address
         ).map({ response in
@@ -387,6 +416,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                 The soul unfolds itself, like a [[lotus]] of countless petals.
                 """
             ),
+            spherePath: [],
             backlinks: [],
             send: { action in },
             notify: { action in }

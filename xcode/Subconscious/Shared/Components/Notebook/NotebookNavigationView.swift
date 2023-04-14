@@ -27,7 +27,8 @@ struct NotebookNavigationView: View {
                             .pushDetail(
                                 MemoEditorDetailDescription(
                                     address: entry.address,
-                                    fallback: entry.excerpt
+                                    fallback: entry.excerpt,
+                                    spherePath: []
                                 )
                             )
                         )

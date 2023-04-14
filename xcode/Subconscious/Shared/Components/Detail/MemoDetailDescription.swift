@@ -46,7 +46,8 @@ extension MemoDetailDescription {
                 MemoEditorDetailDescription(
                     address: slug.toLocalMemoAddress(),
                     fallback: fallback,
-                    defaultAudience: .local
+                    defaultAudience: .local,
+                    spherePath: []
                 )
             )
         case .public(let slashlink) where slashlink.petname == nil:
@@ -54,20 +55,32 @@ extension MemoDetailDescription {
                 MemoEditorDetailDescription(
                     address: slashlink.toPublicMemoAddress(),
                     fallback: fallback,
-                    defaultAudience: .public
+                    defaultAudience: .public,
+                    spherePath: []
                 )
             )
         case .public(let slashlink):
+            if let petname = slashlink.petname {
+                return .viewer(
+                    MemoViewerDetailDescription(
+                        address: slashlink.toPublicMemoAddress(),
+                        spherePath: [petname]
+                    )
+                )
+            }
+            
             return .viewer(
                 MemoViewerDetailDescription(
-                    address: slashlink.toPublicMemoAddress()
+                    address: slashlink.toPublicMemoAddress(),
+                    spherePath: []
                 )
             )
         case .none:
             return .editor(
                 MemoEditorDetailDescription(
                     fallback: fallback,
-                    defaultAudience: defaultAudience
+                    defaultAudience: defaultAudience,
+                    spherePath: []
                 )
             )
         }

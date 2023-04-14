@@ -35,7 +35,7 @@ struct UserProfileDetailView: View {
             UserProfileDetailDescription(
                 did: user.did,
                 user: user.petname,
-                spherePath: description.spherePath + [user.petname]
+                spherePath: [user.petname] + description.spherePath
             )
         )))
     }
@@ -85,7 +85,7 @@ enum UserProfileDetailNotification: Hashable {
 struct UserProfileDetailDescription: Hashable {
     var did: Did
     var user: Petname
-    var spherePath: [Petname]
+    var spherePath: SpherePath
 }
 
 enum UserProfileDetailAction: Hashable {
