@@ -86,6 +86,7 @@ enum AddressBookAction {
     case failRefreshDid(_ error: String)
     
     case refreshEntries(forceRefetchFromNoosphere: Bool = false)
+    case failRefreshEntries(_ error: String)
     case populate([AddressBookEntry])
     
     case requestFollow
@@ -164,13 +165,23 @@ struct AddressBookModel: ModelProtocol {
             
         case .refreshEntries(let forceRefreshFromNoosphere):
             let fx: Fx<AddressBookAction> =
-            environment.addressBook.listEntries(refetch: forceRefreshFromNoosphere)
+            environment.addressBook
+                .listEntriesPublisher(refetch: forceRefreshFromNoosphere)
                 .map({ follows in
                     AddressBookAction.populate(follows)
+                })
+                .recover({ error in
+                    AddressBookAction.failRefreshEntries(
+                        error.localizedDescription
+                    )
                 })
                 .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
+
+        case .failRefreshEntries(let error):
+            AddressBookEnvironment.logger.log("Failed to refresh entries: \(error)")
+            return Update(state: state)
             
         case .populate(let follows):
             var model = state
@@ -237,14 +248,12 @@ struct AddressBookModel: ModelProtocol {
             
             let fx: Fx<AddressBookAction> =
             environment.addressBook
-                .followUserAsync(did: did, petname: petname)
+                .followUserPublisher(did: did, petname: petname)
                 .map({ _ in
                     AddressBookAction.succeedFollow(did: did, petname: petname)
                 })
-                .catch({ error in
-                    Just(
-                        AddressBookAction.failFollow(error: error.localizedDescription)
-                    )
+                .recover({ error in
+                    AddressBookAction.failFollow(error: error.localizedDescription)
                 })
                 .eraseToAnyPublisher()
             
@@ -288,19 +297,15 @@ struct AddressBookModel: ModelProtocol {
                 return Update(state: state)
             }
             
-            let fx: Fx<AddressBookAction> =
-            environment.addressBook
-                .unfollowUserAsync(petname: petname)
+            let fx: Fx<AddressBookAction> = environment.addressBook
+                .unfollowUserPublisher(petname: petname)
                 .map({ _ in
                     AddressBookAction.succeedUnfollow(petname: petname)
                 })
-                .catch({ error in
-                    Just(
-                        AddressBookAction.failUnfollow(error: error.localizedDescription)
-                    )
+                .recover({ error in
+                    AddressBookAction.failUnfollow(error: error.localizedDescription)
                 })
                 .eraseToAnyPublisher()
-            
             return Update(state: state, fx: fx)
             
         case .succeedUnfollow(let petname):

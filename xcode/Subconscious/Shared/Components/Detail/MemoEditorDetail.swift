@@ -337,6 +337,11 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     //  Saving entry
     /// Trigger autosave of current state
     case autosave
+
+    //  Give memo an address if it doesn't have one
+    case requestAssignAddress
+    case assignAddress(MemoAddress?)
+
     /// Save an entry at a particular snapshot value
     case save(MemoEntry?)
     case succeedSave(MemoEntry)
@@ -741,6 +746,17 @@ struct MemoEditorDetailModel: ModelProtocol {
             return autosave(
                 state: state,
                 environment: environment
+            )
+        case .requestAssignAddress:
+            return requestAssignAddress(
+                state: state,
+                environment: environment
+            )
+        case .assignAddress(let address):
+            return assignAddress(
+                state: state,
+                environment: environment,
+                address: address
             )
         case .save(let entry):
             return save(
@@ -1480,24 +1496,11 @@ struct MemoEditorDetailModel: ModelProtocol {
     ) -> Update<MemoEditorDetailModel> {
         /// If no address, derive one and update
         guard state.address != nil else {
-            let address = environment.data.findUniqueAddressFor(
-                state.editor.text,
-                audience: state.defaultAudience
-            )
-            var model = state
-            model.address = address
-
-            let entry = model.snapshotEntry()
-
             return update(
-                state: model,
-                actions: [
-                    .save(entry),
-                    .setMetaSheetAddress(address)
-                ],
+                state: state,
+                action: .requestAssignAddress,
                 environment: environment
             )
-            .animation(.default)
         }
         
         let entry = state.snapshotEntry()
@@ -1506,6 +1509,47 @@ struct MemoEditorDetailModel: ModelProtocol {
             action: .save(entry),
             environment: environment
         )
+    }
+    
+    static func requestAssignAddress(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment
+    ) -> Update<MemoEditorDetailModel> {
+        let fx: Fx<MemoEditorDetailAction> = environment.data
+            .findUniqueAddressForPublisher(
+                state.editor.text,
+                audience: state.defaultAudience
+            ).map({ address in
+                MemoEditorDetailAction.assignAddress(address)
+            }).eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+    
+    static func assignAddress(
+        state: MemoEditorDetailModel,
+        environment: AppEnvironment,
+        address: MemoAddress?
+    ) -> Update<MemoEditorDetailModel> {
+        guard let address = address else {
+            logger.log("Did not get unique address for note. Doing nothing.")
+            return Update(state: state)
+        }
+        
+        var model = state
+        model.address = address
+        
+        let entry = model.snapshotEntry()
+        
+        return update(
+            state: model,
+            actions: [
+                .save(entry),
+                .setMetaSheetAddress(address)
+            ],
+            environment: environment
+        )
+        .animation(.default)
     }
     
     /// Save snapshot of entry

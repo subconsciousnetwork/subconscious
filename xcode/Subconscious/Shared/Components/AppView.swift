@@ -117,9 +117,11 @@ enum AppAction: CustomLogStringConvertible {
     /// Set gateway URL
     case setGatewayURLTextField(_ gateway: String)
     case submitGatewayURL(_ gateway: String)
+    case succeedResetGatewayURL(_ url: URL)
 
     /// Create a new sphere given an owner key name
     case createSphere(_ ownerKeyName: String?)
+    case succeedCreateSphere(SphereReceipt)
     case failCreateSphere(_ message: String)
 
     /// Set identity of sphere
@@ -142,6 +144,7 @@ enum AppAction: CustomLogStringConvertible {
     /// This calls `Noosphere.reset` which resets memoized instances of
     /// `Noosphere` and `SphereFS`.
     case resetNoosphereService
+    case succeedResetNoosphereService
 
     //  Database
     /// Kick off database migration.
@@ -439,11 +442,23 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 gatewayURL: gateway
             )
+        case let .succeedResetGatewayURL(url):
+            return succeedResetGatewayURL(
+                state: state,
+                environment: environment,
+                url: url
+            )
         case let .createSphere(ownerKeyName):
             return createSphere(
                 state: state,
                 environment: environment,
                 ownerKeyName: ownerKeyName
+            )
+        case let .succeedCreateSphere(receipt):
+            return succeedCreateSphere(
+                state: state,
+                environment: environment,
+                receipt: receipt
             )
         case .failCreateSphere(let message):
             logger.warning("Failed to create Sphere: \(message)")
@@ -491,6 +506,11 @@ struct AppModel: ModelProtocol {
             )
         case .resetNoosphereService:
             return resetNoosphereService(
+                state: state,
+                environment: environment
+            )
+        case .succeedResetNoosphereService:
+            return succeedResetNoosphereService(
                 state: state,
                 environment: environment
             )
@@ -732,11 +752,25 @@ struct AppModel: ModelProtocol {
 
         // Persist to UserDefaults
         AppDefaults.standard.gatewayURL = gatewayURL
+
         // Reset gateway on environment
-        environment.noosphere.resetGateway(url: url)
+        let fx: Fx<AppAction> = Future.detatched {
+            await environment.noosphere.resetGateway(url: url)
+            return .succeedResetGatewayURL(url)
+        }
+        .eraseToAnyPublisher()
 
         /// Only set valid nicknames
-        return Update(state: model)
+        return Update(state: model, fx: fx)
+    }
+
+    static func succeedResetGatewayURL(
+        state: AppModel,
+        environment: AppEnvironment,
+        url: URL
+    ) -> Update<AppModel> {
+        logger.log("Reset gateway URL: \(url)")
+        return Update(state: state)
     }
 
     static func createSphere(
@@ -745,25 +779,34 @@ struct AppModel: ModelProtocol {
         ownerKeyName: String?
     ) -> Update<AppModel> {
         let ownerKeyName = ownerKeyName ?? Config.default.noosphere.ownerKeyName
-        do {
-            let receipt = try environment.data.createSphere(
+
+        let fx: Fx<AppAction> = Future.detatched {
+            let receipt = try await environment.data.createSphere(
                 ownerKeyName: ownerKeyName
             )
-            return update(
-                state: state,
-                actions: [
-                    .setSphereIdentity(receipt.identity),
-                    .setRecoveryPhrase(receipt.mnemonic)
-                ],
-                environment: environment
-            )
-        }  catch {
-            return update(
-                state: state,
-                action: .failCreateSphere(error.localizedDescription),
-                environment: environment
-            )
+            return AppAction.succeedCreateSphere(receipt)
         }
+        .recover({ error in
+            AppAction.failCreateSphere(error.localizedDescription)
+        })
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    static func succeedCreateSphere(
+        state: AppModel,
+        environment: AppEnvironment,
+        receipt: SphereReceipt
+    ) -> Update<AppModel> {
+        return update(
+            state: state,
+            actions: [
+                .setSphereIdentity(receipt.identity),
+                .setRecoveryPhrase(receipt.mnemonic)
+            ],
+            environment: environment
+        )
     }
 
     static func setSphereIdentity(
@@ -860,7 +903,19 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        environment.noosphere.reset()
+        let fx: Fx<AppAction> = Future.detatched {
+            await environment.noosphere.reset()
+            return .succeedResetNoosphereService
+        }
+        .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    static func succeedResetNoosphereService(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        logger.log("Reset noosphere service")
         return Update(state: state)
     }
 
@@ -1025,16 +1080,10 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        guard let gatewayURL = environment.noosphere.gatewayURL else {
-            logger.log("No gateway configured. Skipping sync.")
-            return Update(state: state)
-        }
-        
         var model = state
         model.lastGatewaySyncStatus = .pending
-        
-        logger.log("Syncing with gateway: \(gatewayURL.absoluteString)")
-        let fx: Fx<AppAction> = environment.data.syncSphereWithGateway()
+        logger.log("Syncing with gateway: \(model.gatewayURL)")
+        let fx: Fx<AppAction> = environment.noosphere.syncPublisher()
             .map({ version in
                 AppAction.succeedSyncSphereWithGateway(version: version)
             })
@@ -1205,26 +1254,6 @@ struct AppEnvironment {
     /// Default environment constant
     static let `default` = AppEnvironment()
 
-    /// A serial queue for dispatching work off-main-thread.
-    ///
-    /// GDC has two kinds of queues, serial and concurrent.
-    ///
-    /// - Serial queues run tasks in order, and use at most one thread
-    ///   per queue.
-    /// - Concurrent queues run tasks in parallel, and may create threads
-    ///   on-demand.
-    ///
-    /// If you submit too many concurrent tasks to a concurrent queue, you will
-    /// cause "thread explosion" e.g. creating many more threads than cores.
-    ///
-    /// To avoid this, we do most off-main-thread here. This keeps our use of
-    /// threads reasonable.
-    ///
-    /// However, be aware that this is a shared serial queue.
-    /// Extremely long-running tasks should be run on the
-    /// global (concurrent) queue.
-    var queue = DispatchQueue(label: "SubconsciousWorkQueue")
-
     var documentURL: URL
     var applicationSupportURL: URL
 
@@ -1305,8 +1334,7 @@ struct AppEnvironment {
             noosphere: noosphere,
             database: database,
             local: local,
-            addressBook: addressBook,
-            queue: queue
+            addressBook: addressBook
         )
         
         self.feed = FeedService()

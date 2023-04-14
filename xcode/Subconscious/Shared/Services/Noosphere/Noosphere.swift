@@ -42,21 +42,11 @@ public struct SphereReceipt {
 ///
 /// - Property noosphere: pointer that holds all the internal book keeping.
 ///   DB pointers, key storage interfaces, active HTTP clients etc.
-public final class Noosphere {
+public actor Noosphere {
     private let logger: Logger = Logger(
         subsystem: Config.default.rdns,
         category: "Noosphere"
     )
-    /// Queue for sequencing writes and keeping work off main thread.
-    /// 2023-04-13 Note that Noosphere currently has an internal lock so
-    /// that if a sync or write is happening, reads will be blocked until that
-    /// completes. We force all operations onto this serial queue to keep them
-    /// off main thread, and because serializing them makes no difference
-    /// (they are serial on the Rust side too).
-    /// In future if this lock is removed, we may want to turn this into a
-    /// write queue, push network requests or expensive reads onto the
-    /// Global concurrent queue.
-    let queue: DispatchQueue
     let noosphere: OpaquePointer
     let globalStoragePath: String
     let sphereStoragePath: String
@@ -65,8 +55,7 @@ public final class Noosphere {
     init(
         globalStoragePath: String,
         sphereStoragePath: String,
-        gatewayURL: String? = nil,
-        queue: DispatchQueue
+        gatewayURL: String? = nil
     ) throws {
         guard let noosphere = try Self.callWithError(
             ns_initialize,
@@ -80,7 +69,6 @@ public final class Noosphere {
         self.globalStoragePath = globalStoragePath
         self.sphereStoragePath = sphereStoragePath
         self.gatewayURL = gatewayURL
-        self.queue = queue
         logger.debug("init")
     }
     
@@ -93,7 +81,7 @@ public final class Noosphere {
     /// - Initializes a namespace
     /// - Creates a key
     /// - Creates a sphere for that key
-    private func _createSphere(
+    public func createSphere(
         ownerKeyName: String
     ) throws -> SphereReceipt {
         try Self.callWithError(
@@ -148,17 +136,11 @@ public final class Noosphere {
         )
     }
     
-    func createSphere(ownerKeyName: String) throws -> SphereReceipt {
-        try queue.sync {
-            try self._createSphere(ownerKeyName: ownerKeyName)
-        }
-    }
-    
-    func createSpherePublisher(
+    nonisolated func createSpherePublisher(
         ownerKeyName: String
     ) -> AnyPublisher<SphereReceipt, Error> {
-        queue.future {
-            try self._createSphere(ownerKeyName: ownerKeyName)
+        Future.detatched {
+            try await self.createSphere(ownerKeyName: ownerKeyName)
         }
         .eraseToAnyPublisher()
     }

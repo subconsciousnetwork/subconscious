@@ -29,7 +29,7 @@ extension AddressBookError: LocalizedError {
     }
 }
 
-class AddressBookService {
+actor AddressBookService {
     private(set) var noosphere: NoosphereService
     private(set) var database: DatabaseService
     private var addressBook: [AddressBookEntry]?
@@ -43,121 +43,114 @@ class AddressBookService {
     /// Get the full list of entries in the address book.
     /// This is cached after the first use unless requested using refetch.
     /// If an error occurs producing the entries the resulting list will be empty.
-    func listEntries(refetch: Bool = false) -> AnyPublisher<[AddressBookEntry], Never> {
-        if let entries = addressBook {
+    func listEntries(
+        refetch: Bool = false
+    ) async throws -> [AddressBookEntry] {
+        if let addressBook = addressBook {
             if !refetch {
-                return Just(entries).eraseToAnyPublisher()
+                return addressBook
             }
         }
-        
-        return self.listPetnamesAsync()
-            .flatMap { follows in
-                return Publishers.MergeMany(follows.map { f in
-                    return self.getPetnameAsync(petname: f)
-                        .map { did -> AddressBookEntry? in
-                            guard let did = did else { return nil }
-                            // TODO: hardcoded pfp
-                            return AddressBookEntry(pfp: AppTheme.brandMark, petname: f, did: did)
-                        }
-                        .compactMap { value in value }
-                })
-                .collect()
-                .eraseToAnyPublisher()
-            }
-            .catch { err in
-                Just([])
-            }
-            .map { entries in
-                // Here be dragons (mutation) to cache the result
-                self.addressBook = entries
-                return entries
-            }
-            .eraseToAnyPublisher()
+        var addressBook: [AddressBookEntry] = []
+        let petnames = try await noosphere.listPetnames()
+        for petname in petnames {
+            let did = try await Did(noosphere.getPetname(petname: petname))
+                .unwrap()
+            addressBook.append(
+                AddressBookEntry(
+                    pfp: AppTheme.brandMark,
+                    petname: petname,
+                    did: did
+                )
+            )
+        }
+        self.addressBook = addressBook
+        return addressBook
+    }
+
+    /// Get the full list of entries in the address book.
+    /// This is cached after the first use unless requested using refetch.
+    /// If an error occurs producing the entries the resulting list will be empty.
+    nonisolated func listEntriesPublisher(
+        refetch: Bool = false
+    ) -> AnyPublisher<[AddressBookEntry], Error> {
+        Future.detatched {
+            try await self.listEntries(refetch: refetch)
+        }
+        .eraseToAnyPublisher()
     }
     
-    func followUser(did: Did, petname: Petname) throws {
-        if try self.noosphere.identity() == did.id {
+    func followUser(did: Did, petname: Petname) async throws {
+        if try await noosphere.identity() == did.id {
             throw AddressBookError.cannotFollowYourself
         }
         
-        try setPetname(did: did, petname: petname)
-        let version = try self.noosphere.save()
+        try await noosphere.setPetname(did: did.did, petname: petname)
+        let version = try await noosphere.save()
         try database.writeMetadatadata(key: .sphereVersion, value: version)
     }
     
-    /// Associates the passed DID with the passed petname within the sphere, saves the changes and updates the database.
-    func followUserAsync(did: Did, petname: Petname) -> AnyPublisher<Void, Error> {
-        DispatchQueue.global(qos: .default).future {
-            return try self.followUser(did: did, petname: petname)
+    /// Associates the passed DID with the passed petname within the sphere,
+    /// saves the changes and updates the database.
+    nonisolated func followUserPublisher(
+        did: Did,
+        petname: Petname
+    ) -> AnyPublisher<Void, Error> {
+        Future.detatched {
+            try await self.followUser(did: did, petname: petname)
         }
         .eraseToAnyPublisher()
     }
     
-    func unfollowUser(petname: Petname) throws {
-        try unsetPetname(petname: petname)
-        let version = try self.noosphere.save()
+    func unfollowUser(petname: Petname) async throws {
+        try await unsetPetname(petname: petname)
+        let version = try await noosphere.save()
         try database.writeMetadatadata(key: .sphereVersion, value: version)
     }
     
-    /// Unassociates the passed DID with the passed petname within the sphere, saves the changes and updates the database.
-    func unfollowUserAsync(petname: Petname) -> AnyPublisher<Void, Error> {
-        DispatchQueue.global(qos: .default).future {
-            return try self.unfollowUser(petname: petname)
+    /// Unassociates the passed DID with the passed petname within the sphere,
+    /// saves the changes and updates the database.
+    nonisolated func unfollowUserPublisher(
+        petname: Petname
+    ) -> AnyPublisher<Void, Error> {
+        Future.detatched {
+            try await self.unfollowUser(petname: petname)
         }
         .eraseToAnyPublisher()
     }
     
-    func getPetname(petname: Petname) throws -> Did? {
-        return try Did(noosphere.getPetname(petname: petname))
-    }
-
-    func getPetnameAsync(petname: Petname) -> AnyPublisher<Did?, Error> {
-        DispatchQueue.global(qos: .utility).future {
-          return try self.getPetname(petname: petname)
+    nonisolated func getPetnamePublisher(
+        petname: Petname
+    ) -> AnyPublisher<Did?, Never> {
+        Future.detatched(priority: .utility) {
+            try? await Did(self.noosphere.getPetname(petname: petname))
         }
         .eraseToAnyPublisher()
     }
 
-    func setPetname(did: Did, petname: Petname) throws {
-        try noosphere.setPetname(did: did.did, petname: petname)
+    func setPetname(did: Did, petname: Petname) async throws {
+        try await noosphere.setPetname(did: did.did, petname: petname)
     }
 
-    func setPetnameAsync(did: Did, petname: Petname) -> AnyPublisher<Void, Error> {
-        DispatchQueue.global(qos: .default).future {
-          try self.setPetname(did: did, petname: petname)
+    nonisolated func setPetnamePublisher(
+        did: Did,
+        petname: Petname
+    ) -> AnyPublisher<Void, Error> {
+        Future.detatched {
+          try await self.setPetname(did: did, petname: petname)
         }
         .eraseToAnyPublisher()
     }
 
-    func unsetPetname(petname: Petname) throws {
-        try noosphere.setPetname(did: nil, petname: petname)
+    func unsetPetname(petname: Petname) async throws {
+        try await noosphere.setPetname(did: nil, petname: petname)
     }
 
-    func unsetPetnameAsync(petname: Petname) -> AnyPublisher<Void, Error> {
-        DispatchQueue.global(qos: .utility).future {
-          try self.unsetPetname(petname: petname)
-        }
-        .eraseToAnyPublisher()
-    }
-
-    func listPetnames() throws -> [Petname] {
-        return try noosphere.listPetnames()
-    }
-
-    func listPetnamesAsync() -> AnyPublisher<[Petname], Error> {
-        DispatchQueue.global(qos: .utility).future {
-          return try self.listPetnames()
-        }
-        .eraseToAnyPublisher()
-    }
-
-    func getPetnameChanges(sinceCid: String) throws -> [Petname] {
-        return try noosphere.getPetnameChanges(sinceCid: sinceCid)
-    }
-      
-    func getPetnameChangesAsync(sinceCid: String) -> AnyPublisher<[Petname], Error> {
-        DispatchQueue.global(qos: .utility).future {
-            return try self.getPetnameChanges(sinceCid: sinceCid)
+    nonisolated func unsetPetnamePublisher(
+        petname: Petname
+    ) -> AnyPublisher<Void, Error> {
+        Future.detatched(priority: .utility) {
+          try await self.unsetPetname(petname: petname)
         }
         .eraseToAnyPublisher()
     }

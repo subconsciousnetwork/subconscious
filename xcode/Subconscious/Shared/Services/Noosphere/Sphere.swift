@@ -15,54 +15,54 @@ import os
 public protocol SphereProtocol {
     associatedtype Memo
     
-    func identity() throws -> String
+    func identity() async throws -> String
     
-    func version() throws -> String
+    func version() async throws -> String
     
-    func getFileVersion(slashlink: Slashlink) -> String?
+    func getFileVersion(slashlink: Slashlink) async -> String?
     
     func readHeaderValueFirst(
         slashlink: Slashlink,
         name: String
-    ) -> String?
+    ) async -> String?
     
-    func readHeaderNames(slashlink: Slashlink) -> [String]
+    func readHeaderNames(slashlink: Slashlink) async -> [String]
     
-    func read(slashlink: Slashlink) throws -> Memo
+    func read(slashlink: Slashlink) async throws -> Memo
     
     func write(
         slug: Slug,
         contentType: String,
         additionalHeaders: [Header],
         body: Data
-    ) throws
+    ) async throws
     
-    func remove(slug: Slug) throws
+    func remove(slug: Slug) async throws
     
-    func save() throws -> String
+    func save() async throws -> String
     
-    func list() throws -> [Slug]
+    func list() async throws -> [Slug]
     
-    func sync() throws -> String
+    func sync() async throws -> String
     
-    func changes(_ since: String?) throws -> [Slug]
+    func changes(_ since: String?) async throws -> [Slug]
     
-    func getPetname(petname: Petname) throws -> String
+    func getPetname(petname: Petname) async throws -> String
     
-    func setPetname(did: String?, petname: Petname) throws
+    func setPetname(did: String?, petname: Petname) async throws
         
-    func resolvePetname(petname: Petname) throws -> String
+    func resolvePetname(petname: Petname) async throws -> String
     
-    func listPetnames() throws -> [Petname]
+    func listPetnames() async throws -> [Petname]
     
-    func getPetnameChanges(sinceCid: String) throws -> [Petname]
+    func getPetnameChanges(sinceCid: String) async throws -> [Petname]
     
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
     /// over multiple spheres:
     ///
     /// `sphere().traverse(petname: "alice").traverse(petname: "bob").traverse(petname: "alice)` etc.
     ///
-    func traverse(petname: Petname) throws -> Sphere
+    func traverse(petname: Petname) async throws -> Sphere
 }
 
 /// Describes a Sphere using a Combine Publisher-based API.
@@ -149,7 +149,7 @@ enum SphereError: Error, LocalizedError {
 
 /// Sphere file system access.
 /// Provides sphere file system methods and manages lifetime of sphere pointer.
-public final class Sphere: SphereProtocol, SpherePublisherProtocol {
+public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     private let logger = Logger(
         subsystem: Config.default.rdns,
         category: "Sphere"
@@ -157,10 +157,6 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     private let noosphere: Noosphere
     public let sphere: OpaquePointer
     private let _identity: String
-    
-    private var queue: DispatchQueue {
-        noosphere.queue
-    }
     
     private init(noosphere: Noosphere, sphere: OpaquePointer, identity: String) {
         self.noosphere = noosphere
@@ -186,8 +182,11 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
         self._identity
     }
 
-    public func identityPublisher() -> AnyPublisher<String, Error> {
-        Result.success(self._identity).publisher.eraseToAnyPublisher()
+    nonisolated public func identityPublisher() -> AnyPublisher<String, Error> {
+        Future.detatched {
+            self._identity
+        }
+        .eraseToAnyPublisher()
     }
 
     /// Get current version of sphere synchronously
@@ -206,9 +205,9 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     }
     
     /// Get current version of sphere as a publisher
-    public func versionPublisher() -> AnyPublisher<String, Error> {
-        queue.future {
-            try self.version()
+    nonisolated public func versionPublisher() -> AnyPublisher<String, Error> {
+        Future.detatched {
+            try await self.version()
         }
         .eraseToAnyPublisher()
     }
@@ -238,12 +237,12 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     
     /// Read first header value for memo at slashlink
     /// - Returns: `AnyPublisher` for value, if any
-    public func readHeaderValueFirstPublisher(
+    nonisolated public func readHeaderValueFirstPublisher(
         slashlink: Slashlink,
         name: String
     ) -> AnyPublisher<String?, Never> {
-        queue.future {
-            self.readHeaderValueFirst(slashlink: slashlink, name: name)
+        Future.detatched {
+            await self.readHeaderValueFirst(slashlink: slashlink, name: name)
         }
         .eraseToAnyPublisher()
     }
@@ -275,11 +274,11 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     /// Get the base64-encoded CID v1 string for the memo that refers to the
     /// content of this sphere file.
     /// - Returns `AnyPublisher` for CID string, if any
-    public func getFileVersionPublisher(
+    nonisolated public func getFileVersionPublisher(
         slashlink: Slashlink
     ) -> AnyPublisher<String?, Never> {
-        queue.future {
-            self.getFileVersion(slashlink: slashlink)
+        Future.detatched {
+            await self.getFileVersion(slashlink: slashlink)
         }
         .eraseToAnyPublisher()
     }
@@ -303,11 +302,11 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     
     /// Read all header names for a given slashlink.
     /// - Returns `AnyPublisher` for array of header name strings.
-    public func readHeaderNamesPublisher(
+    nonisolated public func readHeaderNamesPublisher(
         slashlink: Slashlink
     ) -> AnyPublisher<[String], Never> {
-        queue.future {
-            self.readHeaderNames(slashlink: slashlink)
+        Future.detatched {
+            await self.readHeaderNames(slashlink: slashlink)
         }
         .eraseToAnyPublisher()
     }
@@ -370,17 +369,17 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     
     /// Read the value of a memo from this, or another sphere
     /// - Returns: `AnyPublisher` for `MemoData`
-    public func readPublisher(
+    nonisolated public func readPublisher(
         slashlink: Slashlink
     ) -> AnyPublisher<MemoData, Error> {
-        queue.future {
-            try self.read(slashlink: slashlink)
+        Future.detatched {
+            try await self.read(slashlink: slashlink)
         }
         .eraseToAnyPublisher()
     }
 
     /// Write to sphere
-    private func _write(
+    public func write(
         slug: Slug,
         contentType: String,
         additionalHeaders: [Header] = [],
@@ -423,32 +422,15 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     }
     
     /// Write to sphere
-    public func write(
-        slug: Slug,
-        contentType: String,
-        additionalHeaders: [Header] = [],
-        body: Data
-    ) throws {
-        try queue.sync {
-            try self._write(
-                slug: slug,
-                contentType: contentType,
-                additionalHeaders: additionalHeaders,
-                body: body
-            )
-        }
-    }
-    
-    /// Write to sphere
     /// - Returns `AnyPublisher` for Void (success), or error
-    public func writePublisher(
+    nonisolated public func writePublisher(
         slug: Slug,
         contentType: String,
         additionalHeaders: [Header] = [],
         body: Data
     ) -> AnyPublisher<Void, Error> {
-        queue.future {
-            try self._write(
+        Future.detatched {
+            try await self.write(
                 slug: slug,
                 contentType: contentType,
                 additionalHeaders: additionalHeaders,
@@ -490,17 +472,17 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     /// a sphere identity (or was previously assigned to a sphere identity
     /// but has since been unassigned).
     /// - Returns `AnyPublisher` for DID string
-    public func getPetnamePublisher(
+    nonisolated public func getPetnamePublisher(
         petname: Petname
     ) -> AnyPublisher<String, Error> {
-        queue.future {
-            try self.getPetname(petname: petname)
+        Future.detatched {
+            try await self.getPetname(petname: petname)
         }
         .eraseToAnyPublisher()
     }
     
     /// Set petname for DID
-    private func _setPetname(did: String?, petname: Petname) throws {
+    public func setPetname(did: String?, petname: Petname) throws {
         try Noosphere.callWithError(
             ns_sphere_petname_set,
             noosphere.noosphere,
@@ -509,22 +491,15 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
             did
         )
     }
-    
-    /// Set petname for DID
-    public func setPetname(did: String?, petname: Petname) throws {
-        try queue.sync {
-            try _setPetname(did: did, petname: petname)
-        }
-    }
-    
+        
     /// Set petname for DID
     /// - Returns `AnyPublisher` for Void (success), or error
-    public func setPetnamePublisher(
+    nonisolated public func setPetnamePublisher(
         did: String?,
         petname: Petname
     ) -> AnyPublisher<Void, Error> {
-        queue.future {
-            try self._setPetname(did: did, petname: petname)
+        Future.detatched {
+            try await self.setPetname(did: did, petname: petname)
         }
         .eraseToAnyPublisher()
     }
@@ -551,11 +526,11 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     
     /// Resolve DID for petname
     /// - Returns `AnyPublisher` for DID string
-    public func resolvePetnamePublisher(
+    nonisolated public func resolvePetnamePublisher(
         petname: Petname
     ) -> AnyPublisher<String, Error> {
-        queue.future {
-            try self.resolvePetname(petname: petname)
+        Future.detatched {
+            try await self.resolvePetname(petname: petname)
         }
         .eraseToAnyPublisher()
     }
@@ -582,9 +557,9 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     
     /// List all petnames in user's follows (address book)
     /// - Returns an a `AnyPublisher` for an array of `Petname`
-    public func listPetnamesPublisher() -> AnyPublisher<[Petname], Error> {
-        queue.future {
-            try self.listPetnames()
+    nonisolated public func listPetnamesPublisher() -> AnyPublisher<[Petname], Error> {
+        Future.detatched {
+            try await self.listPetnames()
         }
         .eraseToAnyPublisher()
     }
@@ -615,11 +590,11 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     /// in some way. It is up to you to read them to find out what happend
     /// (deletion, update, etc).
     /// - Returns an `AnyPublisher` for array of `Petname`
-    public func getPetnameChangesPublisher(
+    nonisolated public func getPetnameChangesPublisher(
         sinceCid: String
     ) -> AnyPublisher<[Petname], Error> {
-        queue.future {
-            try self.getPetnameChanges(sinceCid: sinceCid)
+        Future.detatched {
+            try await self.getPetnameChanges(sinceCid: sinceCid)
         }
         .eraseToAnyPublisher()
     }
@@ -650,17 +625,20 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
     /// over multiple spheres.
     /// - Returns an `AnyPublisher` for  sphere
-    public func traversePublisher(
+    nonisolated public func traversePublisher(
         petname: Petname
     ) -> AnyPublisher<Sphere, Error> {
-        queue.future {
-            try self.traverse(petname: petname)
+        Future.detatched {
+            try await self.traverse(petname: petname)
         }
         .eraseToAnyPublisher()
     }
     
     /// Save outstanding writes and return new Sphere version
-    private func _save() throws -> String {
+    /// This method is called on the write queue, and is synchronous!
+    /// Use `.savePublisher` instead if you are on the main thread.
+    /// - Returns a version CID string
+    @discardableResult public func save() throws -> String {
         try Noosphere.callWithError(
             ns_sphere_save,
             noosphere.noosphere,
@@ -671,27 +649,17 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     }
 
     /// Save outstanding writes and return new Sphere version
-    /// This method is called on the write queue, and is synchronous!
-    /// Use `.savePublisher` instead if you are on the main thread.
-    /// - Returns a version CID string
-    @discardableResult public func save() throws -> String {
-        try queue.sync {
-            try _save()
-        }
-    }
-    
-    /// Save outstanding writes and return new Sphere version
     /// This method is called on the write queue, and is asynchronous.
     /// - Returns a `AnyPublisher` for version CID string, or error.
-    public func savePublisher() -> AnyPublisher<String, Error> {
-        queue.future {
-            try self._save()
+    nonisolated public func savePublisher() -> AnyPublisher<String, Error> {
+        Future.detatched {
+            try await self.save()
         }
         .eraseToAnyPublisher()
     }
     
-    /// Remove slug from sphere
-    private func _remove(slug: Slug) throws {
+    /// Remove slug from sphere.
+    public func remove(slug: Slug) throws {
         try Noosphere.callWithError(
             ns_sphere_content_remove,
             noosphere.noosphere,
@@ -701,19 +669,10 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     }
     
     /// Remove slug from sphere.
-    /// This method is called on the write queue, and is synchronous!
-    /// Use `.removePublisher` instead if you are on the main thread.
-    public func remove(slug: Slug) throws {
-        try queue.sync {
-            try self._remove(slug: slug)
-        }
-    }
-    
-    /// This method is called on the write queue, and is asynchronous.
     /// - Returns a `AnyPublisher` for Void (success) or error.
-    public func removePublisher(slug: Slug) -> AnyPublisher<Void, Error> {
-        queue.future {
-            try self._remove(slug: slug)
+    nonisolated public func removePublisher(slug: Slug) -> AnyPublisher<Void, Error> {
+        Future.detatched {
+            try await self.remove(slug: slug)
         }
         .eraseToAnyPublisher()
     }
@@ -737,16 +696,17 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     
     /// List all slugs in sphere.
     /// - Returns a `AnyPublisher` for an array of `Slug`, or error.
-    public func listPublisher() -> AnyPublisher<[Slug], Error> {
-        queue.future {
-            try self.list()
+    nonisolated public func listPublisher() -> AnyPublisher<[Slug], Error> {
+        Future.detatched {
+            try await self.list()
         }
         .eraseToAnyPublisher()
     }
 
     /// Sync sphere with gateway.
     /// Gateway must be configured when Noosphere was initialized.
-    private func _sync() throws -> String {
+    /// - Returns a CID string for the new sphere version.
+    public func sync() throws -> String {
         let versionPointer = try Noosphere.callWithError(
             ns_sphere_sync,
             noosphere.noosphere,
@@ -763,22 +723,11 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     
     /// Sync sphere with gateway.
     /// Gateway must be configured when Noosphere was initialized.
-    /// This method runs on the write queue and is synchronous!
-    /// Use `.syncPublisher` instead if on the main thread.
-    /// - Returns a CID string for the new sphere version.
-    public func sync() throws -> String {
-        try queue.sync {
-            try self._sync()
-        }
-    }
-    
-    /// Sync sphere with gateway.
-    /// Gateway must be configured when Noosphere was initialized.
     /// This method runs on the write queue and is asynchronous.
     /// - Returns a `AnyPublisher` CID string for the new sphere version.
-    public func syncPublisher() -> AnyPublisher<String, Error> {
-        queue.future {
-            try self._sync()
+    nonisolated public func syncPublisher() -> AnyPublisher<String, Error> {
+        Future.detatched {
+            try await self.sync()
         }
         .eraseToAnyPublisher()
     }
@@ -807,18 +756,19 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     /// This method lists which slugs changed between version, but not
     /// what changed.
     /// - Returns `AnyPublisher` for array of `Slug`
-    public func changesPublisher(
+    nonisolated public func changesPublisher(
         _ since: String?
     ) -> AnyPublisher<[Slug], Error> {
-        queue.future {
-            try self.changes(since)
+        Future.detatched {
+            try await self.changes(since)
         }
         .eraseToAnyPublisher()
     }
     
     deinit {
         ns_sphere_free(sphere)
-        logger.debug("deinit with identity \(self._identity)")
+        let identity = self._identity
+        logger.debug("deinit with identity \(identity)")
     }
     
     /// Read first header value for file pointer

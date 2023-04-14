@@ -939,18 +939,18 @@ struct NotebookModel: ModelProtocol {
         fallback: String
     ) -> Update<NotebookModel> {
         let fallbackAddress = slug.toLocalMemoAddress()
-        let address = environment.data
-            .findAddressInOurs(slug: slug) ?? fallbackAddress
-        return update(
-            state: state,
-            action: .pushDetail(
-                MemoEditorDetailDescription(
-                    address: address,
-                    fallback: fallback
+        let fx: Fx<NotebookAction> = environment.data
+            .findAddressInOursPublisher(slug: slug)
+            .map({ address in
+                NotebookAction.pushDetail(
+                    MemoEditorDetailDescription(
+                        address: address ?? fallbackAddress,
+                        fallback: fallback
+                    )
                 )
-            ),
-            environment: environment
-        )
+            })
+            .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
     }
 
     /// Request detail for a random entry
@@ -959,7 +959,8 @@ struct NotebookModel: ModelProtocol {
         environment: AppEnvironment,
         autofocus: Bool
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data.readRandomEntryLinkPublisher()
+        let fx: Fx<NotebookAction> = environment.data
+            .readRandomEntryLinkPublisher()
             .map({ link in
                 NotebookAction.pushDetail(
                     MemoEditorDetailDescription(
