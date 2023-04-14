@@ -106,7 +106,7 @@ final class Tests_DataService: XCTestCase {
         )
         
         // Supposed to fail
-        let synced = try await environment.noosphere.sync()
+        let synced = try? await environment.noosphere.sync()
         XCTAssertNil(synced)
         
         let detail = try await environment.data.readMemoEditorDetail(

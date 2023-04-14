@@ -23,7 +23,6 @@ final class Tests_CombineUtilities: XCTestCase {
     func testFutureTaskAsync() throws {
         let future = Future {
             XCTAssertFalse(Thread.isMainThread, "Run in separate thread")
-            try await Task.sleep(for: .seconds(0.2))
             return 10
         }
         
@@ -75,7 +74,6 @@ final class Tests_CombineUtilities: XCTestCase {
     func testFutureDetatchedTaskAsync() throws {
         let future = Future.detatched {
             XCTAssertFalse(Thread.isMainThread, "Run in separate thread")
-            try await Task.sleep(for: .seconds(0.2))
             return 10
         }
         
