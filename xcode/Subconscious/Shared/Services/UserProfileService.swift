@@ -54,7 +54,7 @@ class UserProfileService<Sphere : SphereProtocol> {
     private func isFollowing(sphere: Sphere, petname: Petname) -> Bool {
         // TODO: Replace with isFollowingUser with DID check once that PR lands
         do {
-            return try self.addressBook.getPetname(petname: petname) != nil
+            return try self.addressBook.addressBook.getPetname(petname: petname) != nil
         } catch {
             logger.warning("Failed to check following status, temporary issue.")
             return false
@@ -63,10 +63,10 @@ class UserProfileService<Sphere : SphereProtocol> {
     
     func getUserProfile(did: Did, petname: Petname) throws -> UserProfileContentPayload {
         let sphere = try self.sphere.traverse(did: did, petname: petname)
-        let localAddressBook = AddressBookService(sphere: sphere, database: database)
+        let localAddressBook = AddressBook(sphere: sphere)
         let following: [StoryUser] =
             try sphere.listPetnames()
-            .compactMap { f in
+            .compactMap { f -> StoryUser? in
                 guard let did = try localAddressBook.getPetname(petname: f) else {
                     return nil
                 }
@@ -84,9 +84,9 @@ class UserProfileService<Sphere : SphereProtocol> {
                 )
                 
                 let following =
-                    try addressBook.listPetnames()
+                    try addressBook.addressBook.listPetnames()
                     .map { p in
-                        try addressBook.getPetname(petname: p)
+                        try addressBook.addressBook.getPetname(petname: p)
                     }
                     .contains(where: { followedDid in
                         followedDid == did

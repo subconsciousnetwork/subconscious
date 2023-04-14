@@ -39,22 +39,13 @@ extension AddressBookError: LocalizedError {
     }
 }
 
-actor AddressBookService {
-    private var noosphere: NoosphereService
-    private var database: DatabaseService
+actor AddressBook<Sphere: SphereProtocol> {
+    private(set) var sphere: Sphere
     private var addressBook: [AddressBookEntry]?
     
-    private static let MAX_ATTEMPTS_TO_INCREMENT_PETNAME = 99
-    
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "AddressBookService"
-    )
-    
-    init(noosphere: NoosphereService, database: DatabaseService) {
-        self.noosphere = noosphere
-        self.database = database
-        self.addressBook = nil
+    init(sphere: Sphere, addressBook: [AddressBookEntry]? = nil) {
+        self.sphere = sphere
+        self.addressBook = addressBook
     }
     
     private func invalidateCache() {
@@ -173,6 +164,94 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
+    nonisolated func getPetnamePublisher(
+        petname: Petname
+    ) -> AnyPublisher<Did?, Never> {
+        Future.detached(priority: .utility) {
+            try? await Did(self.noosphere.getPetname(petname: petname))
+        }
+        .eraseToAnyPublisher()
+    }
+
+    func setPetname(did: Did, petname: Petname) async throws {
+        try await sphere.setPetname(did: did.did, petname: petname)
+    }
+
+    nonisolated func setPetnamePublisher(
+        did: Did,
+        petname: Petname
+    ) -> AnyPublisher<Void, Error> {
+        Future.detached {
+          try await self.setPetname(did: did, petname: petname)
+        }
+        .eraseToAnyPublisher()
+    }
+
+    func unsetPetname(petname: Petname) async throws {
+        try await sphere.setPetname(did: nil, petname: petname)
+    }
+
+    nonisolated func unsetPetnamePublisher(
+        petname: Petname
+    ) -> AnyPublisher<Void, Error> {
+        Future.detached(priority: .utility) {
+          try await self.unsetPetname(petname: petname)
+        }
+        .eraseToAnyPublisher()
+    }
+
+    func listPetnames() async throws -> [Petname] {
+        return try await sphere.listPetnames()
+    }
+
+    func listPetnamesPublisher() -> AnyPublisher<[Petname], Error> {
+        Future.detatched(priority: .utility) {
+          return try await self.listPetnames()
+        }
+        .eraseToAnyPublisher()
+    }
+
+    func getPetnameChanges(sinceCid: String) async throws -> [Petname] {
+        return try await sphere.getPetnameChanges(sinceCid: sinceCid)
+    }
+      
+    func getPetnameChangesPublisher(sinceCid: String) -> AnyPublisher<[Petname], Error> {
+        Future.detatched(priority: .utility) {
+            return try await self.getPetnameChanges(sinceCid: sinceCid)
+        }
+        .eraseToAnyPublisher()
+    }
+}
+
+actor AddressBookService<Sphere: SphereProtocol> {
+    private(set) var sphere: Sphere
+    private(set) var database: DatabaseService
+    private(set) var addressBook: AddressBook<Sphere>
+    
+    init(sphere: Sphere, database: DatabaseService) {
+        self.sphere = sphere
+        self.database = database
+        self.addressBook = AddressBook(sphere: sphere)
+    }
+    
+    /// Get the full list of entries in the address book.
+    /// This is cached after the first use unless requested using refetch.
+    /// If an error occurs producing the entries the resulting list will be empty.
+    func listEntries(
+        refetch: Bool = false
+    ) async throws -> [AddressBookEntry] {
+        return try await self.addressBook.listEntries(refetch: refetch)
+    }
+
+    /// Get the full list of entries in the address book.
+    /// This is cached after the first use unless requested using refetch.
+    /// If an error occurs producing the entries the resulting list will be empty.
+    nonisolated func listEntriesPublisher(
+        refetch: Bool = false
+    ) -> AnyPublisher<[AddressBookEntry], Error> {
+        return self.listEntriesPublisher(refetch: refetch)
+    }
+    
     /// Associates the passed DID with the passed petname within the sphere, clears the cache,
     /// saves the changes and updates the database.
     func followUser(
@@ -252,63 +331,5 @@ actor AddressBookService {
 
     func getPetname(petname: Petname) async throws -> Did? {
         return try await Did(self.sphere.getPetname(petname: petname))
-    }
-    
-    nonisolated func getPetnamePublisher(
-        petname: Petname
-    ) -> AnyPublisher<Did?, Never> {
-        Future.detached(priority: .utility) {
-            try? await Did(self.noosphere.getPetname(petname: petname))
-        }
-        .eraseToAnyPublisher()
-    }
-
-    func setPetname(did: Did, petname: Petname) async throws {
-        try await sphere.setPetname(did: did.did, petname: petname)
-    }
-
-    nonisolated func setPetnamePublisher(
-        did: Did,
-        petname: Petname
-    ) -> AnyPublisher<Void, Error> {
-        Future.detached {
-          try await self.setPetname(did: did, petname: petname)
-        }
-        .eraseToAnyPublisher()
-    }
-
-    func unsetPetname(petname: Petname) async throws {
-        try await sphere.setPetname(did: nil, petname: petname)
-    }
-
-    nonisolated func unsetPetnamePublisher(
-        petname: Petname
-    ) -> AnyPublisher<Void, Error> {
-        Future.detached(priority: .utility) {
-          try await self.unsetPetname(petname: petname)
-        }
-        .eraseToAnyPublisher()
-    }
-
-    func listPetnames() async throws -> [Petname] {
-        return try await sphere.listPetnames()
-    }
-
-    func listPetnamesPublisher() -> AnyPublisher<[Petname], Error> {
-        Future.detatched(priority: .utility) {
-          return try await self.listPetnames()
-        }
-        .eraseToAnyPublisher()
-    }
-
-    func getPetnameChanges(sinceCid: String) async throws -> [Petname] {
-        return try await sphere.getPetnameChanges(sinceCid: sinceCid)
-    }
-      
-    func getPetnameChangesPublisher(sinceCid: String) -> AnyPublisher<[Petname], Error> {
-        Future.detatched(priority: .utility) {
-            return try await self.getPetnameChanges(sinceCid: sinceCid)
-        }
-        .eraseToAnyPublisher()
     }
 }
