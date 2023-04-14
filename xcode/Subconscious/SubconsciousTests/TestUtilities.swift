@@ -69,12 +69,12 @@ struct TestUtilities {
         
         let local = HeaderSubtextMemoStore(store: files)
         let addressBook = AddressBookService(
-            noosphere: noosphere,
+            sphere: noosphere,
             database: database
         )
         
         let userProfile = UserProfileService(
-            noosphere: noosphere,
+            sphere: noosphere,
             database: database,
             addressBook: addressBook
         )

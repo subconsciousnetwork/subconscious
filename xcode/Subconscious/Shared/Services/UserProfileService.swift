@@ -100,7 +100,7 @@ class UserProfileService<Sphere : SphereProtocol> {
             throw UserProfileServiceError.invalidSphereIdentity
         }
         
-        var isFollowing = isFollowing(sphere: self.sphere, petname: petname)
+        let isFollowing = isFollowing(sphere: self.sphere, petname: petname)
         
         let entries: [EntryStub] = try notes.compactMap { slug in
             let slashlink = Slashlink(slug: slug)

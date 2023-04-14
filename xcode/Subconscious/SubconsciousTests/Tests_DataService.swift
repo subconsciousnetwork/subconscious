@@ -175,12 +175,12 @@ final class Tests_DataService: XCTestCase {
                 sphereIdentity: sphereIdentity
             )
             let addressBook = AddressBookService(
-                noosphere: noosphere,
+                sphere: noosphere,
                 database: database
             )
             
             let userProfile = UserProfileService(
-                noosphere: noosphere,
+                sphere: noosphere,
                 database: database,
                 addressBook: addressBook
             )
@@ -223,12 +223,12 @@ final class Tests_DataService: XCTestCase {
             sphereIdentity: sphereIdentity
         )
         let addressBook = AddressBookService(
-            noosphere: noosphere,
+            sphere: noosphere,
             database: database
         )
         
         let userProfile = UserProfileService(
-            noosphere: noosphere,
+            sphere: noosphere,
             database: database,
             addressBook: addressBook
         )
