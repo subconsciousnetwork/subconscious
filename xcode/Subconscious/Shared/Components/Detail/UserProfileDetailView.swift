@@ -150,6 +150,8 @@ struct UserProfileDetailModel: ModelProtocol {
         category: "UserProfileDetailModel"
     )
     
+    var loadingState = LoadingState.loading
+    
     var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
     var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
     var failFollowErrorMessage: String?
@@ -218,6 +220,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.topEntries = content.entries
             model.following = content.following
             model.isFollowingUser = content.isFollowingUser
+            model.loadingState = .loaded
             
             return update(
                 state: model,
@@ -228,8 +231,10 @@ struct UserProfileDetailModel: ModelProtocol {
             )
             
         case .failedToPopulate(let error):
+            var model = state
+            model.loadingState = .notFound
             logger.error("Failed to fetch profile: \(error)")
-            return Update(state: state)
+            return Update(state: model)
             
         case .tabIndexSelected(let index):
             var model = state

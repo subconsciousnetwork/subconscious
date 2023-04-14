@@ -79,29 +79,36 @@ struct UserProfileView: View {
         )
         
         VStack(alignment: .leading, spacing: 0) {
-            if let user = state.user {
-                UserProfileHeaderView(
-                    user: user,
-                    statistics: state.statistics,
-                    isFollowingUser: state.isFollowingUser,
-                    action: { action in
-                        onProfileAction(user, action)
+            switch (state.loadingState) {
+            case .loading:
+                ProgressView()
+            case .loaded:
+                if let user = state.user {
+                    UserProfileHeaderView(
+                        user: user,
+                        statistics: state.statistics,
+                        isFollowingUser: state.isFollowingUser,
+                        action: { action in
+                            onProfileAction(user, action)
+                        }
+                    )
+                    .padding(AppTheme.padding)
+                }
+                
+                TabbedThreeColumnView(
+                    columnA: columnRecent,
+                    columnB: columnTop,
+                    columnC: columnFollowing,
+                    selectedColumnIndex: state.selectedTabIndex,
+                    changeColumn: { index in
+                        send(.tabIndexSelected(index))
                     }
                 )
-                .padding(AppTheme.padding)
+            case .notFound:
+                Text("Not found")
             }
-            
-            TabbedThreeColumnView(
-                columnA: columnRecent,
-                columnB: columnTop,
-                columnC: columnFollowing,
-                selectedColumnIndex: state.selectedTabIndex,
-                changeColumn: { index in
-                    send(.tabIndexSelected(index))
-                }
-            )
         }
-        .navigationTitle(state.user?.petname.verbatim ?? "loading...")
+        .navigationTitle(state.user?.petname.verbatim ?? "")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             if let user = state.user {
