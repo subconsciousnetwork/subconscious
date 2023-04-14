@@ -875,7 +875,7 @@ struct AppModel: ModelProtocol {
         case .initial:
             logger.log("Readying database")
             let fx: Fx<AppAction> = environment.data
-                .migrateAsync()
+                .migratePublisher()
                 .map({ version in
                     AppAction.succeedMigrateDatabase(version)
                 })
@@ -933,7 +933,7 @@ struct AppModel: ModelProtocol {
         model.isAppUpgraded = false
         model.databaseMigrationStatus = .pending
 
-        let fx: Fx<AppAction> = environment.data.rebuildAsync().map({
+        let fx: Fx<AppAction> = environment.data.rebuildPublisher().map({
             receipt in
             AppAction.succeedRebuildDatabase(receipt)
         }).catch({ error in
@@ -1083,7 +1083,7 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let fx: Fx<AppAction> = environment.data.syncSphereWithDatabaseAsync().map({
+        let fx: Fx<AppAction> = environment.data.syncSphereWithDatabasePublisher().map({
             version in
             AppAction.succeedSyncSphereWithDatabase(version: version)
         }).catch({ error in
@@ -1139,7 +1139,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         logger.log("File sync started")
 
-        let fx: Fx<AppAction> = environment.data.syncLocalWithDatabaseAsync().map({
+        let fx: Fx<AppAction> = environment.data.syncLocalWithDatabasePublisher().map({
             changes in
             AppAction.succeedSyncLocalFilesWithDatabase(changes)
         }).catch({ error in
@@ -1204,6 +1204,26 @@ struct AppModel: ModelProtocol {
 struct AppEnvironment {
     /// Default environment constant
     static let `default` = AppEnvironment()
+
+    /// A serial queue for dispatching work off-main-thread.
+    ///
+    /// GDC has two kinds of queues, serial and concurrent.
+    ///
+    /// - Serial queues run tasks in order, and use at most one thread
+    ///   per queue.
+    /// - Concurrent queues run tasks in parallel, and may create threads
+    ///   on-demand.
+    ///
+    /// If you submit too many concurrent tasks to a concurrent queue, you will
+    /// cause "thread explosion" e.g. creating many more threads than cores.
+    ///
+    /// To avoid this, we do most off-main-thread here. This keeps our use of
+    /// threads reasonable.
+    ///
+    /// However, be aware that this is a shared serial queue.
+    /// Extremely long-running tasks should be run on the
+    /// global (concurrent) queue.
+    var queue = DispatchQueue(label: "SubconsciousWorkQueue")
 
     var documentURL: URL
     var applicationSupportURL: URL
@@ -1285,7 +1305,8 @@ struct AppEnvironment {
             noosphere: noosphere,
             database: database,
             local: local,
-            addressBook: addressBook
+            addressBook: addressBook,
+            queue: queue
         )
         
         self.feed = FeedService()

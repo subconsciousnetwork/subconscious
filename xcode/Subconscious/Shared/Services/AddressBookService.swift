@@ -87,9 +87,10 @@ class AddressBookService {
     
     /// Associates the passed DID with the passed petname within the sphere, saves the changes and updates the database.
     func followUserAsync(did: Did, petname: Petname) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .default) {
+        DispatchQueue.global(qos: .default).future {
             return try self.followUser(did: did, petname: petname)
         }
+        .eraseToAnyPublisher()
     }
     
     func unfollowUser(petname: Petname) throws {
@@ -100,9 +101,10 @@ class AddressBookService {
     
     /// Unassociates the passed DID with the passed petname within the sphere, saves the changes and updates the database.
     func unfollowUserAsync(petname: Petname) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .default) {
+        DispatchQueue.global(qos: .default).future {
             return try self.unfollowUser(petname: petname)
         }
+        .eraseToAnyPublisher()
     }
     
     func getPetname(petname: Petname) throws -> Did? {
@@ -110,9 +112,10 @@ class AddressBookService {
     }
 
     func getPetnameAsync(petname: Petname) -> AnyPublisher<Did?, Error> {
-        CombineUtilities.async(qos: .utility) {
+        DispatchQueue.global(qos: .utility).future {
           return try self.getPetname(petname: petname)
         }
+        .eraseToAnyPublisher()
     }
 
     func setPetname(did: Did, petname: Petname) throws {
@@ -120,9 +123,10 @@ class AddressBookService {
     }
 
     func setPetnameAsync(did: Did, petname: Petname) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .utility) {
+        DispatchQueue.global(qos: .default).future {
           try self.setPetname(did: did, petname: petname)
         }
+        .eraseToAnyPublisher()
     }
 
     func unsetPetname(petname: Petname) throws {
@@ -130,9 +134,10 @@ class AddressBookService {
     }
 
     func unsetPetnameAsync(petname: Petname) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .utility) {
+        DispatchQueue.global(qos: .utility).future {
           try self.unsetPetname(petname: petname)
         }
+        .eraseToAnyPublisher()
     }
 
     func listPetnames() throws -> [Petname] {
@@ -140,9 +145,10 @@ class AddressBookService {
     }
 
     func listPetnamesAsync() -> AnyPublisher<[Petname], Error> {
-        CombineUtilities.async(qos: .utility) {
+        DispatchQueue.global(qos: .utility).future {
           return try self.listPetnames()
         }
+        .eraseToAnyPublisher()
     }
 
     func getPetnameChanges(sinceCid: String) throws -> [Petname] {
@@ -150,8 +156,9 @@ class AddressBookService {
     }
       
     func getPetnameChangesAsync(sinceCid: String) -> AnyPublisher<[Petname], Error> {
-        CombineUtilities.async(qos: .utility) {
+        DispatchQueue.global(qos: .utility).future {
             return try self.getPetnameChanges(sinceCid: sinceCid)
         }
+        .eraseToAnyPublisher()
     }
 }

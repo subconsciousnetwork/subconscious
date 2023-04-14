@@ -18,7 +18,7 @@ struct AddressBookEntry: Equatable {
 }
 
 struct AddressBookEnvironment {
-    var logger = Logger(
+    static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "AddressBook"
     )
@@ -145,10 +145,10 @@ struct AddressBookModel: ModelProtocol {
                 .identityPublisher()
                 .tryMap({ identity in
                     let did = try Did(identity).unwrap()
-                    return .succeedRefreshDid(did)
+                    return AddressBookAction.succeedRefreshDid(did)
                 })
                 .recover({error in
-                        .failRefreshDid(error.localizedDescription)
+                    AddressBookAction.failRefreshDid(error.localizedDescription)
                 })
                 .eraseToAnyPublisher()
             return Update(state: state, fx: fx)
@@ -159,7 +159,7 @@ struct AddressBookModel: ModelProtocol {
             return Update(state: model)
             
         case .failRefreshDid(let error):
-            environment.logger.log("Failed to refresh sphere did: \(error)")
+            AddressBookEnvironment.logger.log("Failed to refresh sphere did: \(error)")
             return Update(state: state)
             
         case .refreshEntries(let forceRefreshFromNoosphere):

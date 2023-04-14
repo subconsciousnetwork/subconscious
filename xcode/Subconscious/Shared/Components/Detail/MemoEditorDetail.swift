@@ -1131,7 +1131,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         fallback: String,
         autofocus: Bool
     ) -> Update<MemoEditorDetailModel> {
-        let fx: Fx<MemoEditorDetailAction> = environment.data.readMemoEditorDetailAsync(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.readMemoEditorDetailPublisher(
             address: address,
             fallback: fallback
         ).map({ detail in
@@ -1161,7 +1161,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         
         let model = prepareLoadDetail(state)
         
-        let fx: Fx<MemoEditorDetailAction> = environment.data.readMemoEditorDetailAsync(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.readMemoEditorDetailPublisher(
             address: address,
             fallback: model.editor.text
         ).map({ detail in
@@ -1399,7 +1399,7 @@ struct MemoEditorDetailModel: ModelProtocol {
 
         let to = from.withAudience(audience)
 
-        let fx: Fx<MemoEditorDetailAction> = environment.data.moveEntryAsync(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.moveEntryPublisher(
             from: from,
             to: to
         ).map({ receipt in
@@ -1528,7 +1528,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         // Mark saving in-progress
         model.saveState = .saving
         
-        let fx: Fx<MemoEditorDetailAction> = environment.data.writeEntryAsync(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.writeEntryPublisher(
             entry
         ).map({ _ in
             MemoEditorDetailAction.succeedSave(entry)
@@ -1624,7 +1624,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         }
         
         // Search link suggestions
-        let fx: Fx<MemoEditorDetailAction> = environment.data.searchLinkSuggestions(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.searchLinkSuggestionsPublisher(
             query: text,
             omitting: omitting,
             fallback: []
@@ -1725,7 +1725,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         from: MemoAddress,
         to: MemoAddress
     ) -> Update<MemoEditorDetailModel> {
-        let fx: Fx<MemoEditorDetailAction> = environment.data.moveEntryAsync(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.moveEntryPublisher(
             from: from,
             to: to
         )
@@ -1800,7 +1800,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         parent: MemoAddress,
         child: MemoAddress
     ) -> Update<MemoEditorDetailModel> {
-        let fx: Fx<MemoEditorDetailAction> = environment.data.mergeEntryAsync(
+        let fx: Fx<MemoEditorDetailAction> = environment.data.mergeEntryPublisher(
             parent: parent,
             child: child
         ).map({ _ in

@@ -182,7 +182,7 @@ struct SearchModel: ModelProtocol {
         query: String
     ) -> Update<SearchModel> {
         let fx: Fx<SearchAction> = environment.data
-            .searchSuggestions(query: query)
+            .searchSuggestionsPublisher(query: query)
             .map({ suggestions in
                 SearchAction.setSuggestions(suggestions)
             })
@@ -238,7 +238,7 @@ struct SearchModel: ModelProtocol {
             return Update(state: state)
         }
         let fx: Fx<SearchAction> = environment.data
-            .createSearchHistoryItem(query: query)
+            .createSearchHistoryItemPublisher(query: query)
             .map({ query in
                 SearchAction.succeedCreateSearchHistoryItem(query)
             })

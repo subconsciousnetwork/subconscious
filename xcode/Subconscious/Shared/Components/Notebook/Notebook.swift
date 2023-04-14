@@ -619,7 +619,7 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data.countMemos()
+        let fx: Fx<NotebookAction> = environment.data.countMemosPublisher()
             .map({ count in
                 NotebookAction.setEntryCount(count)
             })
@@ -645,7 +645,7 @@ struct NotebookModel: ModelProtocol {
         state: NotebookModel,
         environment: AppEnvironment
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data.listRecentMemos()
+        let fx: Fx<NotebookAction> = environment.data.listRecentMemosPublisher()
             .map({ entries in
                 NotebookAction.setRecent(entries)
             })
@@ -708,7 +708,7 @@ struct NotebookModel: ModelProtocol {
             return Update(state: state)
         }
         let fx: Fx<NotebookAction> = environment.data
-            .deleteMemoAsync(address)
+            .deleteMemoPublisher(address)
             .map({ _ in
                 NotebookAction.succeedDeleteEntry(address)
             })
@@ -959,7 +959,7 @@ struct NotebookModel: ModelProtocol {
         environment: AppEnvironment,
         autofocus: Bool
     ) -> Update<NotebookModel> {
-        let fx: Fx<NotebookAction> = environment.data.readRandomEntryLinkAsync()
+        let fx: Fx<NotebookAction> = environment.data.readRandomEntryLinkPublisher()
             .map({ link in
                 NotebookAction.pushDetail(
                     MemoEditorDetailDescription(

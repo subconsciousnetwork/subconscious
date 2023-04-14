@@ -38,26 +38,30 @@ struct MoveReceipt: Hashable {
 /// Wraps both database and source-of-truth store, providing data
 /// access methods for the app.
 struct DataService {
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "DataService"
+    )
+
+    private var queue: DispatchQueue
     private var addressBook: AddressBookService
     private var noosphere: NoosphereService
     private var database: DatabaseService
     private var local: HeaderSubtextMemoStore
-    var logger: Logger
+    var logger: Logger = logger
 
     init(
         noosphere: NoosphereService,
         database: DatabaseService,
         local: HeaderSubtextMemoStore,
-        addressBook: AddressBookService
+        addressBook: AddressBookService,
+        queue: DispatchQueue
     ) {
         self.database = database
         self.noosphere = noosphere
         self.local = local
         self.addressBook = addressBook
-        self.logger = Logger(
-            subsystem: Config.default.rdns,
-            category: "DataService"
-        )
+        self.queue = queue
     }
 
     /// Create a default sphere for user if needed, and persist sphere details.
@@ -89,17 +93,19 @@ struct DataService {
     }
 
     /// Migrate database off main thread, returning a publisher
-    func migrateAsync() -> AnyPublisher<Int, Error> {
-        CombineUtilities.async(qos: .utility) {
+    func migratePublisher() -> AnyPublisher<Int, Error> {
+        queue.future(qos: .utility) {
             try database.migrate()
         }
+        .eraseToAnyPublisher()
     }
 
     /// Rebuild database and re-sync everything.
-    func rebuildAsync() -> AnyPublisher<Int, Error> {
-        CombineUtilities.async(qos: .utility) {
+    func rebuildPublisher() -> AnyPublisher<Int, Error> {
+        queue.future(qos: .utility) {
             try database.rebuild()
         }
+        .eraseToAnyPublisher()
     }
 
     func syncSphereWithDatabase() throws -> String {
@@ -130,10 +136,11 @@ struct DataService {
         return version
     }
 
-    func syncSphereWithDatabaseAsync() -> AnyPublisher<String, Error> {
-        CombineUtilities.async(qos: .utility) {
+    func syncSphereWithDatabasePublisher() -> AnyPublisher<String, Error> {
+        DispatchQueue.global(qos: .utility).future {
             try syncSphereWithDatabase()
         }
+        .eraseToAnyPublisher()
     }
 
     /// Sync file system with database.
@@ -196,10 +203,11 @@ struct DataService {
         return changes
     }
 
-    func syncLocalWithDatabaseAsync() -> AnyPublisher<[FileFingerprintChange], Error> {
-        CombineUtilities.async(qos: .utility) {
+    func syncLocalWithDatabasePublisher() -> AnyPublisher<[FileFingerprintChange], Error> {
+        DispatchQueue.global(qos: .utility).future {
             try syncLocalWithDatabase()
         }
+        .eraseToAnyPublisher()
     }
 
     /// Read memo from sphere or local
@@ -267,10 +275,11 @@ struct DataService {
         try writeMemo(address: entry.address, memo: entry.contents)
     }
 
-    func writeEntryAsync(_ entry: MemoEntry) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .utility) {
+    func writeEntryPublisher(_ entry: MemoEntry) -> AnyPublisher<Void, Error> {
+        DispatchQueue.global(qos: .utility).future {
             try writeEntry(entry)
         }
+        .eraseToAnyPublisher()
     }
     
     /// Delete entry from file system and database
@@ -290,10 +299,11 @@ struct DataService {
     }
     
     /// Delete entry from file system and database
-    func deleteMemoAsync(_ address: MemoAddress) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async(qos: .background) {
+    func deleteMemoPublisher(_ address: MemoAddress) -> AnyPublisher<Void, Error> {
+        DispatchQueue.global(qos: .utility).future {
             try deleteMemo(address)
         }
+        .eraseToAnyPublisher()
     }
     
     /// Move entry to a new location, updating file system and database.
@@ -316,13 +326,14 @@ struct DataService {
     
     /// Move entry to a new location, updating file system and database.
     /// - Returns a combine publisher
-    func moveEntryAsync(
+    func moveEntryPublisher(
         from: MemoAddress,
         to: MemoAddress
     ) -> AnyPublisher<MoveReceipt, Error> {
-        CombineUtilities.async {
+        DispatchQueue.global(qos: .default).future {
             try moveEntry(from: from, to: to)
         }
+        .eraseToAnyPublisher()
     }
     
     /// Merge child entry into parent entry.
@@ -348,19 +359,21 @@ struct DataService {
     /// - Writes the combined content to `parent`
     /// - Deletes `child`
     /// - Returns combine publisher
-    func mergeEntryAsync(
+    func mergeEntryPublisher(
         parent: MemoAddress,
         child: MemoAddress
     ) -> AnyPublisher<Void, Error> {
-        CombineUtilities.async {
+        DispatchQueue.global(qos: .default).future {
             try mergeEntry(parent: parent, child: child)
         }
+        .eraseToAnyPublisher()
     }
     
-    func listRecentMemos() -> AnyPublisher<[EntryStub], Error> {
-        CombineUtilities.async(qos: .default) {
+    func listRecentMemosPublisher() -> AnyPublisher<[EntryStub], Error> {
+        queue.future {
             try database.listRecentMemos()
         }
+        .eraseToAnyPublisher()
     }
 
     func countMemos() throws -> Int {
@@ -368,53 +381,58 @@ struct DataService {
     }
 
     /// Count all entries
-    func countMemos() -> AnyPublisher<Int, Error> {
-        CombineUtilities.async(qos: .userInteractive) {
+    func countMemosPublisher() -> AnyPublisher<Int, Error> {
+        queue.future {
             try countMemos()
         }
+        .eraseToAnyPublisher()
     }
 
-    func searchSuggestions(
+    func searchSuggestionsPublisher(
         query: String
     ) -> AnyPublisher<[Suggestion], Error> {
-        CombineUtilities.async(qos: .userInitiated) {
+        queue.future(qos: .userInteractive) {
             try database.searchSuggestions(query: query)
         }
+        .eraseToAnyPublisher()
     }
 
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
-    func searchLinkSuggestions(
+    func searchLinkSuggestionsPublisher(
         query: String,
         omitting invalidSuggestions: Set<MemoAddress> = Set(),
         fallback: [LinkSuggestion] = []
     ) -> AnyPublisher<[LinkSuggestion], Error> {
-        CombineUtilities.async(qos: .userInitiated) {
-            return database.searchLinkSuggestions(
+        queue.future(qos: .userInteractive) {
+            database.searchLinkSuggestions(
                 query: query,
                 omitting: invalidSuggestions,
                 fallback: fallback
             )
         }
+        .eraseToAnyPublisher()
     }
     
-    func searchRenameSuggestions(
+    func searchRenameSuggestionsPublisher(
         query: String,
         current: MemoAddress
     ) -> AnyPublisher<[RenameSuggestion], Error> {
-        CombineUtilities.async(qos: .userInitiated) {
+        queue.future(qos: .userInteractive) {
             try database.searchRenameSuggestions(
                 query: query,
                 current: current
             )
         }
+        .eraseToAnyPublisher()
     }
 
     /// Log a search query in search history db
-    func createSearchHistoryItem(query: String) -> AnyPublisher<String, Error> {
-        CombineUtilities.async(qos: .utility) {
+    func createSearchHistoryItemPublisher(query: String) -> AnyPublisher<String, Error> {
+        queue.future(qos: .utility) {
             database.createSearchHistoryItem(query: query)
         }
+        .eraseToAnyPublisher()
     }
     
     /// Check if a given address exists
@@ -542,13 +560,14 @@ struct DataService {
     /// We trust caller to slugify the string, if necessary.
     /// Allowing any string allows us to retreive files that don't have a
     /// clean slug.
-    func readMemoEditorDetailAsync(
+    func readMemoEditorDetailPublisher(
         address: MemoAddress,
         fallback: String
     ) -> AnyPublisher<MemoEditorDetailResponse, Error> {
-        CombineUtilities.async {
+        DispatchQueue.global(qos: .default).future {
             try readMemoEditorDetail(address: address, fallback: fallback)
         }
+        .eraseToAnyPublisher()
     }
     
     /// Read view-only memo detail for address.
@@ -583,12 +602,13 @@ struct DataService {
 
     /// Read view-only memo detail for address.
     /// - Returns publisher for `MemoDetailResponse` or error
-    func readMemoDetailAsync(
+    func readMemoDetailPublisher(
         address: MemoAddress
     ) -> AnyPublisher<MemoDetailResponse?, Never> {
-        CombineUtilities.async {
+        DispatchQueue.global(qos: .default).future {
             readMemoDetail(address: address)
         }
+        .eraseToAnyPublisher()
     }
 
     /// Choose a random entry and publish slug
@@ -600,9 +620,10 @@ struct DataService {
     }
 
     /// Choose a random entry and publish slug
-    func readRandomEntryLinkAsync() -> AnyPublisher<EntryLink, Error> {
-        CombineUtilities.async(qos: .default) {
+    func readRandomEntryLinkPublisher() -> AnyPublisher<EntryLink, Error> {
+        queue.future(qos: .default) {
             try readRandomEntryLink()
         }
+        .eraseToAnyPublisher()
     }
 }
