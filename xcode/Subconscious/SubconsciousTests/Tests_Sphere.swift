@@ -22,7 +22,7 @@ final class Tests_Sphere: XCTestCase {
         return url
     }
     
-    func testRoundtrip() throws {
+    func testRoundtrip() async throws {
         let base = UUID()
         
         let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
@@ -36,7 +36,9 @@ final class Tests_Sphere: XCTestCase {
             sphereStoragePath: sphereStoragePath
         )
         
-        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        let sphereReceipt = try await noosphere.createSphere(
+            ownerKeyName: "bob"
+        )
         
         do {
             let sphere = try Sphere(
@@ -44,13 +46,13 @@ final class Tests_Sphere: XCTestCase {
                 identity: sphereReceipt.identity
             )
             
-            try sphere.write(
+            try await sphere.write(
                 slug: Slug("foo")!,
                 contentType: "text/subtext",
                 body: "Test".toData(encoding: .utf8)!
             )
-            _ = try sphere.save()
-            let memo = try sphere.read(slashlink: Slashlink("/foo")!)
+            _ = try await sphere.save()
+            let memo = try await sphere.read(slashlink: Slashlink("/foo")!)
             XCTAssertEqual(memo.contentType, "text/subtext")
             let content = memo.body.toString()
             XCTAssertEqual(content, "Test")
@@ -62,12 +64,12 @@ final class Tests_Sphere: XCTestCase {
                 noosphere: noosphere,
                 identity: sphereReceipt.identity
             )
-            let memo = try sphere.read(slashlink: Slashlink("/foo")!)
+            let memo = try await sphere.read(slashlink: Slashlink("/foo")!)
             XCTAssertEqual(memo.contentType, "text/subtext")
         }
     }
     
-    func testHeadersRoundtrip() throws {
+    func testHeadersRoundtrip() async throws {
         let base = UUID()
         
         let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
@@ -81,7 +83,9 @@ final class Tests_Sphere: XCTestCase {
             sphereStoragePath: sphereStoragePath
         )
         
-        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        let sphereReceipt = try await noosphere.createSphere(
+            ownerKeyName: "bob"
+        )
         
         let sphere = try Sphere(
             noosphere: noosphere,
@@ -89,7 +93,7 @@ final class Tests_Sphere: XCTestCase {
         )
         
         let then = Date.distantPast.ISO8601Format()
-        try sphere.write(
+        try await sphere.write(
             slug: Slug("foo")!,
             contentType: "text/subtext",
             additionalHeaders: [
@@ -100,8 +104,8 @@ final class Tests_Sphere: XCTestCase {
             ],
             body: "Test".toData(encoding: .utf8)!
         )
-        _ = try sphere.save()
-        let memo = try sphere.read(slashlink: Slashlink("/foo")!)
+        _ = try await sphere.save()
+        let memo = try await sphere.read(slashlink: Slashlink("/foo")!)
         XCTAssertEqual(memo.contentType, "text/subtext")
         XCTAssertEqual(memo.body.toString(), "Test")
         
@@ -118,7 +122,7 @@ final class Tests_Sphere: XCTestCase {
         XCTAssertEqual(modified, then)
     }
     
-    func testList() throws {
+    func testList() async throws {
         let base = UUID()
         
         let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
@@ -132,7 +136,9 @@ final class Tests_Sphere: XCTestCase {
             sphereStoragePath: sphereStoragePath
         )
         
-        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        let sphereReceipt = try await noosphere.createSphere(
+            ownerKeyName: "bob"
+        )
         
         let sphere = try Sphere(
             noosphere: noosphere,
@@ -141,38 +147,38 @@ final class Tests_Sphere: XCTestCase {
         
         let body = "Test".toData(encoding: .utf8)!
         
-        try sphere.write(
+        try await sphere.write(
             slug: Slug("foo")!,
             contentType: "text/subtext",
             body: body
         )
-        try sphere.write(
+        try await sphere.write(
             slug: Slug("bar")!,
             contentType: "text/subtext",
             body: body
         )
-        try sphere.write(
+        try await sphere.write(
             slug: Slug("baz")!,
             contentType: "text/subtext",
             body: body
         )
         
-        let slugsA = try sphere.list()
+        let slugsA = try await sphere.list()
         XCTAssertEqual(
             slugsA,
             [],
             "Lists all slugs in latest version of sphere"
         )
         
-        _ = try sphere.save()
+        _ = try await sphere.save()
         
-        let slugsB = try sphere.list()
+        let slugsB = try await sphere.list()
         XCTAssertTrue(slugsB.contains(Slug("foo")!))
         XCTAssertTrue(slugsB.contains(Slug("bar")!))
         XCTAssertTrue(slugsB.contains(Slug("baz")!))
     }
     
-    func testChanges() throws {
+    func testChanges() async throws {
         let base = UUID()
         
         let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
@@ -186,7 +192,9 @@ final class Tests_Sphere: XCTestCase {
             sphereStoragePath: sphereStoragePath
         )
         
-        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        let sphereReceipt = try await noosphere.createSphere(
+            ownerKeyName: "bob"
+        )
         
         let sphere = try Sphere(
             noosphere: noosphere,
@@ -195,50 +203,50 @@ final class Tests_Sphere: XCTestCase {
         
         let body = "Test".toData(encoding: .utf8)!
         
-        try sphere.write(
+        try await sphere.write(
             slug: Slug("foo")!,
             contentType: "text/subtext",
             body: body
         )
         
-        let a = try sphere.save()
-        let changesA = try sphere.changes()
+        let a = try await sphere.save()
+        let changesA = try await sphere.changes()
         XCTAssertEqual(changesA.count, 1)
         XCTAssertTrue(changesA.contains(Slug("foo")!))
         
-        try sphere.write(
+        try await sphere.write(
             slug: Slug("bar")!,
             contentType: "text/subtext",
             body: body
         )
-        try sphere.write(
+        try await sphere.write(
             slug: Slug("baz")!,
             contentType: "text/subtext",
             body: body
         )
-        let b = try sphere.save()
+        let b = try await sphere.save()
         
-        let changesB = try sphere.changes(a)
+        let changesB = try await sphere.changes(a)
         XCTAssertEqual(changesB.count, 2)
         XCTAssertTrue(changesB.contains(Slug("bar")!))
         XCTAssertTrue(changesB.contains(Slug("baz")!))
         XCTAssertFalse(changesB.contains(Slug("foo")!))
         
-        try sphere.write(
+        try await sphere.write(
             slug: Slug("bing")!,
             contentType: "text/subtext",
             body: body
         )
-        _ = try sphere.save()
+        _ = try await sphere.save()
         
-        let changesC = try sphere.changes(b)
+        let changesC = try await sphere.changes(b)
         XCTAssertEqual(changesC.count, 1)
         XCTAssertTrue(changesC.contains(Slug("bing")!))
         XCTAssertFalse(changesC.contains(Slug("baz")!))
         XCTAssertFalse(changesC.contains(Slug("foo")!))
     }
     
-    func testRemove() throws {
+    func testRemove() async throws {
         let base = UUID()
         
         let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
@@ -252,7 +260,9 @@ final class Tests_Sphere: XCTestCase {
             sphereStoragePath: sphereStoragePath
         )
         
-        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        let sphereReceipt = try await noosphere.createSphere(
+            ownerKeyName: "bob"
+        )
         
         let sphere = try Sphere(
             noosphere: noosphere,
@@ -261,31 +271,31 @@ final class Tests_Sphere: XCTestCase {
         
         let body = "Test".toData(encoding: .utf8)!
         
-        try sphere.write(
+        try await sphere.write(
             slug: Slug("foo")!,
             contentType: "text/subtext",
             body: body
         )
-        try sphere.write(
+        try await sphere.write(
             slug: Slug("bar")!,
             contentType: "text/subtext",
             body: body
         )
         
-        _ = try sphere.save()
+        _ = try await sphere.save()
         
-        try sphere.remove(slug: Slug("foo")!)
+        try await sphere.remove(slug: Slug("foo")!)
         
-        _ = try sphere.save()
+        _ = try await sphere.save()
         
-        let slugs = try sphere.list()
+        let slugs = try await sphere.list()
         
         XCTAssertEqual(slugs.count, 1)
         XCTAssertTrue(slugs.contains(Slug("bar")!))
         XCTAssertFalse(slugs.contains(Slug("foo")!))
     }
     
-    func testSaveVersion() throws {
+    func testSaveVersion() async throws {
         let base = UUID()
         
         let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
@@ -299,24 +309,26 @@ final class Tests_Sphere: XCTestCase {
             sphereStoragePath: sphereStoragePath
         )
         
-        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        let sphereReceipt = try await noosphere.createSphere(
+            ownerKeyName: "bob"
+        )
         
         let sphere = try Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
         
-        let versionA = try sphere.version()
+        let versionA = try await sphere.version()
         
-        try sphere.write(
+        try await sphere.write(
             slug: Slug("foo")!,
             contentType: "text/subtext",
             body: "Test".toData(encoding: .utf8)!
         )
         
-        let version = try sphere.save()
+        let version = try await sphere.save()
         
-        let versionB = try sphere.version()
+        let versionB = try await sphere.version()
         
         XCTAssertNotEqual(
             versionA,
@@ -331,7 +343,7 @@ final class Tests_Sphere: XCTestCase {
         )
     }
     
-    func testFailedSync() throws {
+    func testFailedSync() async throws {
         let base = UUID()
         
         let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
@@ -346,7 +358,9 @@ final class Tests_Sphere: XCTestCase {
             gatewayURL: "http://fake-gateway.fake"
         )
         
-        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        let sphereReceipt = try await noosphere.createSphere(
+            ownerKeyName: "bob"
+        )
         
         let sphere = try Sphere(
             noosphere: noosphere,
@@ -354,20 +368,20 @@ final class Tests_Sphere: XCTestCase {
         )
         
         // Should fail
-        _ = try? sphere.sync()
+        _ = try? await sphere.sync()
         
-        try sphere.write(
+        try await sphere.write(
             slug: Slug("foo")!,
             contentType: "text/subtext",
             body: "Test".toData(encoding: .utf8)!
         )
         
-        try sphere.save()
+        try await sphere.save()
         
-        let foo = try sphere.read(slashlink: Slashlink("/foo")!)
+        let foo = try await sphere.read(slashlink: Slashlink("/foo")!)
         
         // Should fail
-        _ = try? sphere.sync()
+        _ = try? await sphere.sync()
         
         XCTAssertEqual(
             foo.body.toString(),
@@ -376,7 +390,7 @@ final class Tests_Sphere: XCTestCase {
         )
     }
     
-    func testWritesThenCloseThenReopenWithScopes() throws {
+    func testWritesThenCloseThenReopenWithScopes() async throws {
         let base = UUID()
         
         let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
@@ -394,7 +408,9 @@ final class Tests_Sphere: XCTestCase {
                 sphereStoragePath: sphereStoragePath
             )
             
-            let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+            let sphereReceipt = try await noosphere.createSphere(
+                ownerKeyName: "bob"
+            )
             
             sphereIdentity = sphereReceipt.identity
             
@@ -403,15 +419,15 @@ final class Tests_Sphere: XCTestCase {
                 identity: sphereReceipt.identity
             )
             
-            startVersion = try sphere.version()
+            startVersion = try await sphere.version()
             
             let body = try "Test content".toData().unwrap()
             let contentType = "text/subtext"
-            try sphere.write(slug: Slug("a")!, contentType: contentType, body: body)
-            try sphere.write(slug: Slug("b")!, contentType: contentType, body: body)
-            try sphere.write(slug: Slug("c")!, contentType: contentType, body: body)
-            let version = try sphere.save()
-            endVersion = try sphere.version()
+            try await sphere.write(slug: Slug("a")!, contentType: contentType, body: body)
+            try await sphere.write(slug: Slug("b")!, contentType: contentType, body: body)
+            try await sphere.write(slug: Slug("c")!, contentType: contentType, body: body)
+            let version = try await sphere.save()
+            endVersion = try await sphere.version()
             XCTAssertEqual(version, endVersion)
             XCTAssertNotEqual(startVersion, endVersion)
         }
@@ -426,13 +442,13 @@ final class Tests_Sphere: XCTestCase {
                 noosphere: noosphere,
                 identity: sphereIdentity
             )
-            let version = try sphere.version()
+            let version = try await sphere.version()
             
             XCTAssertEqual(version, endVersion)
         }
     }
     
-    func testWritesThenCloseThenReopenWithVars() throws {
+    func testWritesThenCloseThenReopenWithVars() async throws {
         let base = UUID()
 
         let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
@@ -446,7 +462,9 @@ final class Tests_Sphere: XCTestCase {
             sphereStoragePath: sphereStoragePath
         )
 
-        let sphereReceipt = try noosphere.createSphere(ownerKeyName: "bob")
+        let sphereReceipt = try await noosphere.createSphere(
+            ownerKeyName: "bob"
+        )
         
         let sphereIdentity = sphereReceipt.identity
 
@@ -455,19 +473,31 @@ final class Tests_Sphere: XCTestCase {
             identity: sphereReceipt.identity
         )
 
-        let versionA0 = try sphere.version()
+        let versionA0 = try await sphere.version()
 
         let body = try "Test content".toData().unwrap()
         let contentType = "text/subtext"
-        try sphere.write(slug: Slug("a")!, contentType: contentType, body: body)
+        try await sphere.write(
+            slug: Slug("a")!,
+            contentType: contentType,
+            body: body
+        )
 
-        let versionA1 = try sphere.save()
+        let versionA1 = try await sphere.save()
 
-        try sphere.write(slug: Slug("b")!, contentType: contentType, body: body)
-        try sphere.write(slug: Slug("c")!, contentType: contentType, body: body)
-        let versionA2 = try sphere.save()
+        try await sphere.write(
+            slug: Slug("b")!,
+            contentType: contentType,
+            body: body
+        )
+        try await sphere.write(
+            slug: Slug("c")!,
+            contentType: contentType,
+            body: body
+        )
+        let versionA2 = try await sphere.save()
 
-        let versionAN = try sphere.version()
+        let versionAN = try await sphere.version()
 
         XCTAssertNotEqual(versionA0, versionAN)
         XCTAssertNotEqual(versionA1, versionAN)
@@ -483,7 +513,7 @@ final class Tests_Sphere: XCTestCase {
             noosphere: noosphere,
             identity: sphereIdentity
         )
-        let versionB0 = try sphere.version()
+        let versionB0 = try await sphere.version()
 
         XCTAssertEqual(versionB0, versionAN)
     }
