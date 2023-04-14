@@ -761,6 +761,7 @@
 				B884565229D2102D00DBCD39 /* Tests_App.swift */,
 				B8B604EA29148C82006FCB77 /* Tests_AppMigrations.swift */,
 				B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */,
+				B88DFEF029E7454100B00DE8 /* Tests_CombineUtilities.swift */,
 				B88CC955284FCF8C00994928 /* Tests_DatabaseService.swift */,
 				B87288DF299B05B500EF7E07 /* Tests_DataService.swift */,
 				B8AAAAD828CBD68600DBC8A9 /* Tests_Detail.swift */,
@@ -773,6 +774,7 @@
 				B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */,
 				B80CC804299D14C900C4D7C0 /* Tests_Memo.swift */,
 				B886A9B729A7E41700BFF9A2 /* Tests_MemoAddress.swift */,
+				B88A76D629E0AA44005F3422 /* Tests_MemoViewerDetailMetaSheet.swift */,
 				B8B604E8291476E9006FCB77 /* Tests_Migrations.swift */,
 				B82FF241298C0DAF0097D688 /* Tests_Noosphere.swift */,
 				B8EA3756299EBA5500D98E2B /* Tests_NoosphereService.swift */,
@@ -795,8 +797,6 @@
 				B8D328B929A69D2D00850A37 /* Tests_URLUtilities.swift */,
 				B8E62AE729D61E69008F7E74 /* Tests_UserDefaultProperty.swift */,
 				B5908BEA29DAB05B00225B1A /* TestUtilities.swift */,
-				B88A76D629E0AA44005F3422 /* Tests_MemoViewerDetailMetaSheet.swift */,
-				B88DFEF029E7454100B00DE8 /* Tests_CombineUtilities.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";

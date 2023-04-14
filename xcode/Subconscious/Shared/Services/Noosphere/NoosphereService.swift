@@ -52,6 +52,22 @@ final class NoosphereService:
     SpherePublisherProtocol,
     NoosphereServiceProtocol
 {
+    /// Queue for sequencing writes and keeping work off main thread.
+    /// 2023-04-13 Note that Noosphere currently has an internal lock so
+    /// that if a sync or write is happening, reads will be blocked until that
+    /// completes. We force all operations onto this serial queue to keep them
+    /// off main thread, and because serializing them makes no difference
+    /// (they are serial on the Rust side too).
+    /// In future if this lock is removed, we may want to turn this into a
+    /// write queue, push network requests or expensive reads onto the
+    /// Global concurrent queue.
+    ///
+    /// Note that queues are serial by default, making this a serial queue.
+    static let queue = DispatchQueue(
+        label: "NoosphereQueue",
+        qos: .default
+    )
+    
     /// Default logger for NoosphereService instances.
     private static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -68,12 +84,14 @@ final class NoosphereService:
     private var _sphereIdentity: String?
     /// Memoized Sphere instance
     private var _sphere: Sphere?
+    private var queue: DispatchQueue
     
     init(
         globalStorageURL: URL,
         sphereStorageURL: URL,
         gatewayURL: URL? = nil,
         sphereIdentity: String? = nil,
+        queue: DispatchQueue = queue,
         logger: Logger = logger
     ) {
         logger.debug("init NoosphereService")
@@ -86,6 +104,7 @@ final class NoosphereService:
         self.gatewayURL = gatewayURL
         self._sphereIdentity = sphereIdentity
         self.logger = logger
+        self.queue = queue
     }
     
     /// Create a default sphere for user and persist sphere details
@@ -129,7 +148,8 @@ final class NoosphereService:
         let noosphere = try Noosphere(
             globalStoragePath: globalStorageURL.path(percentEncoded: false),
             sphereStoragePath: sphereStorageURL.path(percentEncoded: false),
-            gatewayURL: gatewayURL?.absoluteString
+            gatewayURL: gatewayURL?.absoluteString,
+            queue: queue
         )
         self._noosphere = noosphere
         return noosphere
@@ -155,7 +175,7 @@ final class NoosphereService:
     }
     
     private func spherePublisher() -> AnyPublisher<Sphere, Error> {
-        Future.resolve {
+        queue.future {
             try self.sphere()
         }
         .eraseToAnyPublisher()

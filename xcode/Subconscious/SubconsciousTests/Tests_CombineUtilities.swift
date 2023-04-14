@@ -71,62 +71,6 @@ final class Tests_CombineUtilities: XCTestCase {
         
         wait(for: [expectation], timeout: 0.2)
     }
-    
-    func testResolve() throws {
-        let future: Future<Int, Error> = Future.resolve {
-            10
-        }
-        
-        let expectation = XCTestExpectation(
-            description: "Future resolves"
-        )
-        
-        future.sink(
-            receiveCompletion: { completion in
-                switch completion {
-                case .finished:
-                    expectation.fulfill()
-                default:
-                    XCTFail("Incorrect completion: \(completion)")
-                }
-                return
-            },
-            receiveValue: { value in
-                XCTAssertEqual(value, 10)
-            }
-        )
-        .store(in: &cancellables)
-        
-        wait(for: [expectation], timeout: 0.2)
-    }
-    
-    func testResolveError() throws {
-        let future: Future<Int, Error> = Future.resolve {
-            throw TestError.code(10)
-        }
-        
-        let expectation = XCTestExpectation(
-            description: "Future resolves"
-        )
-        
-        future.sink(
-            receiveCompletion: { completion in
-                switch completion {
-                case let .failure(TestError.code(value)):
-                    XCTAssertEqual(value, 10)
-                    expectation.fulfill()
-                default:
-                    XCTFail("Incorrect completion: \(completion)")
-                }
-                return
-            },
-            receiveValue: { value in
-            }
-        )
-        .store(in: &cancellables)
-        
-        wait(for: [expectation], timeout: 0.2)
-    }
 
     func testRecover() throws {
         let future: Future<Int, Error> = DispatchQueue.global().future {

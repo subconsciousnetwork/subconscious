@@ -40,32 +40,6 @@ extension DispatchQueue {
     }
 }
 
-extension Future where Failure == Error {
-    /// Initialize a future by immediately performing a throwing closure.
-    static func resolve(
-        perform: @escaping () throws -> Output
-    ) -> Future {
-        self.init { promise in
-            do {
-                let value = try perform()
-                promise(.success(value))
-            } catch {
-                promise(.failure(error))
-            }
-        }
-    }
-}
-
-extension Future where Failure == Never {
-    /// Initialize a future by immediately performing a throwing closure.
-    static func resolve(_ perform: @escaping () -> Output) -> Future {
-        Future { promise in
-            let value = perform()
-            promise(.success(value))
-        }
-    }
-}
-
 extension Publisher {
     /// Recover from a failure.
     /// Similar to `catch` but allows you to map an `Error` to an `Output`,

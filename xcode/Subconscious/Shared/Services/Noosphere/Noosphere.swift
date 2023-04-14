@@ -65,7 +65,8 @@ public final class Noosphere {
     init(
         globalStoragePath: String,
         sphereStoragePath: String,
-        gatewayURL: String? = nil
+        gatewayURL: String? = nil,
+        queue: DispatchQueue
     ) throws {
         guard let noosphere = try Self.callWithError(
             ns_initialize,
@@ -79,11 +80,7 @@ public final class Noosphere {
         self.globalStoragePath = globalStoragePath
         self.sphereStoragePath = sphereStoragePath
         self.gatewayURL = gatewayURL
-        /// Note that queues are serial by default, making this a serial queue.
-        self.queue = DispatchQueue(
-            label: "NoosphereQueue",
-            qos: .default
-        )
+        self.queue = queue
         logger.debug("init")
     }
     

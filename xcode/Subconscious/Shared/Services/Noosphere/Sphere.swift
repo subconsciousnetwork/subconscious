@@ -187,10 +187,7 @@ public final class Sphere: SphereProtocol, SpherePublisherProtocol {
     }
 
     public func identityPublisher() -> AnyPublisher<String, Error> {
-        Future.resolve {
-            self._identity
-        }
-        .eraseToAnyPublisher()
+        Result.success(self._identity).publisher.eraseToAnyPublisher()
     }
 
     /// Get current version of sphere synchronously
