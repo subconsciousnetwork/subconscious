@@ -16,9 +16,11 @@ final class Tests_DataService: XCTestCase {
     
     var data: DataService?
     
-    func testWriteThenReadMemo() throws {
+    func testWriteThenReadMemo() async throws {
         let tmp = try TestUtilities.createTmpDir()
-        let data = try TestUtilities.createDataService(tmp: tmp)
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
         
         let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         let memoIn = Memo(
@@ -30,28 +32,33 @@ final class Tests_DataService: XCTestCase {
             body: "Test content"
         )
         
-        try data.writeMemo(
+        try await environment.data.writeMemo(
             address: address,
             memo: memoIn
         )
         
-        let memoOut = try data.readMemo(address: address)
+        let memoOut = try await environment.data.readMemo(address: address)
         
         XCTAssertEqual(memoOut.body, memoIn.body)
     }
     
-    func testReadMemoBeforeWrite() throws {
+    func testReadMemoBeforeWrite() async throws {
         let tmp = try TestUtilities.createTmpDir()
-        let data = try TestUtilities.createDataService(tmp: tmp)
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
         
         let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         
-        XCTAssertThrowsError(try data.readMemo(address: address))
+        let memo = try? await environment.data.readMemo(address: address)
+        XCTAssertNil(memo)
     }
     
-    func testWriteThenBadSyncThenReadMemo() throws {
+    func testWriteThenBadSyncThenReadMemo() async throws {
         let tmp = try TestUtilities.createTmpDir()
-        let data = try TestUtilities.createDataService(tmp: tmp)
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
         
         let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         let memoIn = Memo(
@@ -63,22 +70,25 @@ final class Tests_DataService: XCTestCase {
             body: "Test content"
         )
         
-        try data.writeMemo(
+        try await environment.data.writeMemo(
             address: address,
             memo: memoIn
         )
         
         // Supposed to fail
-        XCTAssertThrowsError(try data.noosphere.sync())
+        let synced = try? await environment.noosphere.sync()
+        XCTAssertNil(synced)
         
-        let memoOut = try data.readMemo(address: address)
+        let memoOut = try await environment.data.readMemo(address: address)
         
         XCTAssertEqual(memoOut.body, memoIn.body)
     }
     
-    func testWriteThenBadSyncThenReadDetail() throws {
+    func testWriteThenBadSyncThenReadDetail() async throws {
         let tmp = try TestUtilities.createTmpDir()
-        let data = try TestUtilities.createDataService(tmp: tmp)
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
         
         let address = Slug(formatting: "Test")!.toPublicMemoAddress()
         let memo = Memo(
@@ -90,15 +100,16 @@ final class Tests_DataService: XCTestCase {
             body: "Test content"
         )
         
-        try data.writeMemo(
+        try await environment.data.writeMemo(
             address: address,
             memo: memo
         )
         
         // Supposed to fail
-        XCTAssertThrowsError(try data.noosphere.sync())
+        let synced = try await environment.noosphere.sync()
+        XCTAssertNil(synced)
         
-        let detail = try data.readMemoEditorDetail(
+        let detail = try await environment.data.readMemoEditorDetail(
             address: address,
             fallback: "Fallback content"
         )
@@ -107,7 +118,7 @@ final class Tests_DataService: XCTestCase {
         XCTAssertEqual(detail.entry.contents.body, memo.body)
     }
     
-    func testManyWritesThenCloseThenReopen() throws {
+    func testManyWritesThenCloseThenReopen() async throws {
         let tmp = try TestUtilities.createTmpDir()
         
         let globalStorageURL = tmp.appending(path: "noosphere")
@@ -125,7 +136,7 @@ final class Tests_DataService: XCTestCase {
                 gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite")
             )
             
-            let receipt = try noosphere.createSphere(ownerKeyName: "bob")
+            let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
             sphereIdentity = receipt.identity
         }
         
@@ -175,7 +186,7 @@ final class Tests_DataService: XCTestCase {
                 addressBook: addressBook
             )
             
-            versionX = try data.noosphere.version()
+            versionX = try await noosphere.version()
             
             let addressA = Slug(formatting: "a")!.toPublicMemoAddress()
             let addressB = Slug(formatting: "b")!.toPublicMemoAddress()
@@ -190,12 +201,12 @@ final class Tests_DataService: XCTestCase {
                 body: "Test content"
             )
             
-            try data.writeMemo(address: addressA, memo: memo)
-            versionA = try data.noosphere.version()
-            try data.writeMemo(address: addressB, memo: memo)
-            versionB = try data.noosphere.version()
-            try data.writeMemo(address: addressC, memo: memo)
-            versionC = try data.noosphere.version()
+            try await data.writeMemo(address: addressA, memo: memo)
+            versionA = try await noosphere.version()
+            try await data.writeMemo(address: addressB, memo: memo)
+            versionB = try await noosphere.version()
+            try await data.writeMemo(address: addressC, memo: memo)
+            versionC = try await noosphere.version()
         }
         
         let noosphere = NoosphereService(
@@ -215,7 +226,7 @@ final class Tests_DataService: XCTestCase {
             local: local,
             addressBook: addressBook
         )
-        let versionY = try data.noosphere.version()
+        let versionY = try await noosphere.version()
         
         XCTAssertNotEqual(versionY, versionX)
         XCTAssertNotEqual(versionY, versionA)
@@ -224,17 +235,19 @@ final class Tests_DataService: XCTestCase {
         XCTAssertEqual(versionY, versionC)
         
         let addressB = Slug(formatting: "b")!.toPublicMemoAddress()
-        let memoB = try data.readMemo(address: addressB)
+        let memoB = try await data.readMemo(address: addressB)
         XCTAssertEqual(memoB.body, "Test content")
         
         let addressC = Slug(formatting: "c")!.toPublicMemoAddress()
-        let memoC = try data.readMemo(address: addressC)
+        let memoC = try await data.readMemo(address: addressC)
         XCTAssertEqual(memoC.body, "Test content")
     }
     
-    func testFindUniqueAddressFor() throws {
+    func testFindUniqueAddressFor() async throws {
         let tmp = try TestUtilities.createTmpDir()
-        let data = try TestUtilities.createDataService(tmp: tmp)
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
         
         let memo = Memo(
             contentType: ContentType.subtext.rawValue,
@@ -247,15 +260,16 @@ final class Tests_DataService: XCTestCase {
         
         let title = "A"
         let addressA = Slug(formatting: title)!.toPublicMemoAddress()
-        try data.writeMemo(address: addressA, memo: memo)
+        try await environment.data.writeMemo(address: addressA, memo: memo)
         
-        let addressA2 = data.findUniqueAddressFor(title, audience: .local)
+        let addressA2 = await environment.data
+            .findUniqueAddressFor(title, audience: .local)
         XCTAssertEqual(addressA2?.description, "local::/a-2")
     }
     
-    func testReadMemoDetail() throws {
+    func testReadMemoDetail() async throws {
         let tmp = try TestUtilities.createTmpDir()
-        let data = try TestUtilities.createDataService(tmp: tmp)
+        let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
         
         let memo = Memo(
             contentType: ContentType.subtext.rawValue,
@@ -267,20 +281,23 @@ final class Tests_DataService: XCTestCase {
         )
         
         let addressA = MemoAddress.public(Slashlink("/a")!)
-        try data.writeMemo(address: addressA, memo: memo)
+        try await environment.data.writeMemo(address: addressA, memo: memo)
         
-        let detail = data.readMemoDetail(address: addressA)
+        let detail = await environment.data.readMemoDetail(address: addressA)
         
         XCTAssertEqual(detail?.entry.address, addressA)
         XCTAssertEqual(detail?.entry.contents.body, memo.body)
     }
     
-    func testReadMemoDetailDoesNotExist() throws {
+    func testReadMemoDetailDoesNotExist() async throws {
         let tmp = try TestUtilities.createTmpDir()
-        let data = try TestUtilities.createDataService(tmp: tmp)
+        let environment = try await TestUtilities.createDataServiceEnvironment(
+            tmp: tmp
+        )
         
         let addressA = MemoAddress.public(Slashlink("/a")!)
 
-        XCTAssertNil(data.readMemoDetail(address: addressA))
+        let detail = await environment.data.readMemoDetail(address: addressA)
+        XCTAssertNil(detail)
     }
 }

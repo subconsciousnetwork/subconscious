@@ -20,10 +20,10 @@ final class Tests_CombineUtilities: XCTestCase {
         cancellables = Set()
     }
     
-    func testDispatchQueueFuture() throws {
-        let future = DispatchQueue.global().future {
+    func testFutureTaskAsync() throws {
+        let future = Future {
             XCTAssertFalse(Thread.isMainThread, "Run in separate thread")
-            Thread.sleep(forTimeInterval: 0.2)
+            try await Task.sleep(for: .seconds(0.2))
             return 10
         }
         
@@ -44,8 +44,60 @@ final class Tests_CombineUtilities: XCTestCase {
         wait(for: [expectation], timeout: 0.3)
     }
     
-    func testDispatchQueueError() throws {
-        let future: Future<Int, Error> = DispatchQueue.global().future {
+    func testFutureTaskError() throws {
+        let future: Future<Int, Error> = Future {
+            throw TestError.code(10)
+        }
+        
+        let expectation = XCTestExpectation(
+            description: "Future succeeds"
+        )
+        
+        future.sink(
+            receiveCompletion: { completion in
+                switch completion {
+                case let .failure(TestError.code(value)):
+                    XCTAssertEqual(value, 10)
+                    expectation.fulfill()
+                default:
+                    XCTFail("Incorrect completion: \(completion)")
+                }
+                return
+            },
+            receiveValue: { value in
+            }
+        )
+        .store(in: &cancellables)
+        
+        wait(for: [expectation], timeout: 0.2)
+    }
+    
+    func testFutureDetatchedTaskAsync() throws {
+        let future = Future.detatched {
+            XCTAssertFalse(Thread.isMainThread, "Run in separate thread")
+            try await Task.sleep(for: .seconds(0.2))
+            return 10
+        }
+        
+        let expectation = XCTestExpectation(
+            description: "Future succeeds"
+        )
+        
+        future.sink(
+            receiveCompletion: { completion in
+                expectation.fulfill()
+            },
+            receiveValue: { value in
+                XCTAssertEqual(value, 10)
+            }
+        )
+        .store(in: &cancellables)
+        
+        wait(for: [expectation], timeout: 0.3)
+    }
+    
+    func testFutureDetatchedTaskError() throws {
+        let future: Future<Int, Error> = Future.detatched {
             throw TestError.code(10)
         }
         
@@ -73,7 +125,7 @@ final class Tests_CombineUtilities: XCTestCase {
     }
 
     func testRecover() throws {
-        let future: Future<Int, Error> = DispatchQueue.global().future {
+        let future: Future<Int, Error> = Future.detatched {
             throw TestError.code(10)
         }
         

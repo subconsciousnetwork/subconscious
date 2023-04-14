@@ -25,10 +25,17 @@ struct TestUtilities {
         return url
     }
     
+    struct DataServiceEnvironment {
+        var data: DataService
+        var noosphere: NoosphereService
+        var local: HeaderSubtextMemoStore
+        var addressBook: AddressBookService
+    }
+
     /// Set up and return a data service instance
-    static func createDataService(
+    static func createDataServiceEnvironment(
         tmp: URL
-    ) throws -> DataService {
+    ) async throws -> DataServiceEnvironment {
         let globalStorageURL = tmp.appending(path: "noosphere")
         let sphereStorageURL = tmp.appending(path: "sphere")
         
@@ -38,8 +45,8 @@ struct TestUtilities {
             gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite")
         )
         
-        let receipt = try noosphere.createSphere(ownerKeyName: "bob")
-        noosphere.resetSphere(receipt.identity)
+        let receipt = try await noosphere.createSphere(ownerKeyName: "bob")
+        await noosphere.resetSphere(receipt.identity)
         
         let databaseURL = tmp.appending(
             path: "database.sqlite",
@@ -66,9 +73,16 @@ struct TestUtilities {
             database: database
         )
         
-        return DataService(
+        let data = DataService(
             noosphere: noosphere,
             database: database,
+            local: local,
+            addressBook: addressBook
+        )
+
+        return DataServiceEnvironment(
+            data: data,
+            noosphere: noosphere,
             local: local,
             addressBook: addressBook
         )
