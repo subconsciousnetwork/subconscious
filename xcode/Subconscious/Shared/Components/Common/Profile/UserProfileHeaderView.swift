@@ -25,7 +25,7 @@ struct UserProfileHeaderView: View {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
                 ProfilePic(image: Image(user.pfp))
                 
-                HStack(alignment: .firstTextBaseline, spacing: AppTheme.unit) {
+                VStack(alignment: .leading, spacing: AppTheme.unit) {
                     switch (user.category) {
                     case .human:
                         PetnameBylineView(petname: user.petname)
@@ -35,6 +35,7 @@ struct UserProfileHeaderView: View {
                         PetnameBylineView(petname: user.petname)
                         Text("(you)")
                             .foregroundColor(.secondary)
+                            .font(.caption)
                     }
                 }
                 

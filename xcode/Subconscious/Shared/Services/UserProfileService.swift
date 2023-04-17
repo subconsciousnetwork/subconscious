@@ -70,7 +70,7 @@ class UserProfileService {
     
     func getOwnProfile() throws -> UserProfileContentPayload {
         let did = try self.noosphere.identity()
-        let petname = Petname("me")!
+        let petname = Petname("___")!
         let sphere = try self.noosphere.sphere()
         let following = try self.produceFollowingList(sphere: sphere, localAddressBook: AddressBook(sphere: sphere), basePath: [])
         let notes = try self.noosphere.list()
@@ -98,7 +98,7 @@ class UserProfileService {
             did: did,
             petname: petname,
             pfp: "sub_logo",
-            bio: "Pretend this comes from _profile_.json",
+            bio: "Wow, it's your own profile! With its own codepath!",
             category: .you
         )
         

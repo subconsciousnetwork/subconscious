@@ -228,8 +228,6 @@ struct UserProfileDetailModel: ModelProtocol {
                 
                 return Update(state: model, fx: fx)
             case .you:
-                logger.warning("TODO: fetch own profile")
-                
                 let fx: Fx<UserProfileDetailAction> =
                     environment.userProfile
                     .getOwnProfileAsync()
