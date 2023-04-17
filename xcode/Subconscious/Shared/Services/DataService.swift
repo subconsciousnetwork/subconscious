@@ -38,7 +38,7 @@ struct MoveReceipt: Hashable {
 /// Wraps both database and source-of-truth store, providing data
 /// access methods for the app.
 actor DataService {
-    static let logger = Logger(
+    private static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "DataService"
     )
