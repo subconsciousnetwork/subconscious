@@ -18,10 +18,12 @@ struct AddressBookEntry: Equatable {
 }
 
 struct AddressBookEnvironment {
+    // Default logger for environment
     static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "AddressBook"
     )
+    var logger: Logger = logger
     var noosphere: NoosphereService
     var data: DataService
     var addressBook: AddressBookService
@@ -160,7 +162,7 @@ struct AddressBookModel: ModelProtocol {
             return Update(state: model)
             
         case .failRefreshDid(let error):
-            AddressBookEnvironment.logger.log("Failed to refresh sphere did: \(error)")
+            environment.logger.log("Failed to refresh sphere did: \(error)")
             return Update(state: state)
             
         case .refreshEntries(let forceRefreshFromNoosphere):
@@ -180,7 +182,7 @@ struct AddressBookModel: ModelProtocol {
             return Update(state: state, fx: fx)
 
         case .failRefreshEntries(let error):
-            AddressBookEnvironment.logger.log("Failed to refresh entries: \(error)")
+            environment.logger.log("Failed to refresh entries: \(error)")
             return Update(state: state)
             
         case .populate(let follows):
