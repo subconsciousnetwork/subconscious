@@ -19,6 +19,14 @@ final class Tests_Func: XCTestCase {
         XCTAssertEqual(x, 15, "Returns value")
     }
     
+    func testRunAsync() async throws {
+        let x = try await Func.run({
+            try await Task.sleep(for: .seconds(0.1))
+            return 15
+        })
+        XCTAssertEqual(x, 15, "Returns value")
+    }
+
     enum TestError: Error {
         case error
     }
