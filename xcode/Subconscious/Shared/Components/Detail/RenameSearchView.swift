@@ -149,7 +149,7 @@ struct RenameSearchModel: ModelProtocol {
             return Update(state: model)
         }
         let fx: Fx<RenameSearchAction> = environment.data
-            .searchRenameSuggestions(
+            .searchRenameSuggestionsPublisher(
                 query: query,
                 current: current
             )

@@ -13,6 +13,7 @@
 //  4. Open sphere file system (on-demand)
 
 import Foundation
+import Combine
 import SwiftNoosphere
 import os
 
@@ -41,7 +42,7 @@ public struct SphereReceipt {
 ///
 /// - Property noosphere: pointer that holds all the internal book keeping.
 ///   DB pointers, key storage interfaces, active HTTP clients etc.
-public final class Noosphere {
+public actor Noosphere {
     private let logger: Logger = Logger(
         subsystem: Config.default.rdns,
         category: "Noosphere"
@@ -135,6 +136,15 @@ public final class Noosphere {
         )
     }
     
+    nonisolated func createSpherePublisher(
+        ownerKeyName: String
+    ) -> AnyPublisher<SphereReceipt, Error> {
+        Future.detatched {
+            try await self.createSphere(ownerKeyName: ownerKeyName)
+        }
+        .eraseToAnyPublisher()
+    }
+
     deinit {
         ns_free(noosphere)
         logger.debug("deinit")

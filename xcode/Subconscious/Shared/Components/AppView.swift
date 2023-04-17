@@ -117,15 +117,19 @@ enum AppAction: CustomLogStringConvertible {
     /// Set gateway URL
     case setGatewayURLTextField(_ gateway: String)
     case submitGatewayURL(_ gateway: String)
+    case succeedResetGatewayURL(_ url: URL)
 
     /// Create a new sphere given an owner key name
     case createSphere(_ ownerKeyName: String?)
+    case succeedCreateSphere(SphereReceipt)
     case failCreateSphere(_ message: String)
 
     /// Set identity of sphere
     case setSphereIdentity(String?)
     /// Fetch the latest sphere version, and store on model
     case refreshSphereVersion
+    case succeedRefreshSphereVersion(_ version: String)
+    case failRefreshSphereVersion(_ error: String)
 
     /// Set and persist Noosphere enabled state
     case persistNoosphereEnabled(_ isEnabled: Bool)
@@ -140,6 +144,7 @@ enum AppAction: CustomLogStringConvertible {
     /// This calls `Noosphere.reset` which resets memoized instances of
     /// `Noosphere` and `SphereFS`.
     case resetNoosphereService
+    case succeedResetNoosphereService
 
     //  Database
     /// Kick off database migration.
@@ -234,17 +239,20 @@ struct AppRecoveryPhraseCursor: CursorProtocol {
 }
 
 struct AppAddressBookCursor: CursorProtocol {
-    static func get(state: AppModel) -> AddressBookModel {
+    typealias Model = AppModel
+    typealias ViewModel = AddressBookModel
+
+    static func get(state: Model) -> ViewModel {
         state.addressBook
     }
     
-    static func set(state: AppModel, inner: AddressBookModel) -> AppModel {
+    static func set(state: Model, inner: ViewModel) -> Model {
         var model = state
         model.addressBook = inner
         return model
     }
     
-    static func tag(_ action: AddressBookAction) -> AppAction {
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
         .addressBook(action)
     }
 }
@@ -391,7 +399,7 @@ struct AppModel: ModelProtocol {
             return AppAddressBookCursor.update(
                 state: state,
                 action: action,
-                environment: environment.addressBook
+                environment: AddressBookEnvironment(environment)
             )
         case .appUpgrade(let action):
             return AppUpgradeCursor.update(
@@ -434,11 +442,23 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 gatewayURL: gateway
             )
+        case let .succeedResetGatewayURL(url):
+            return succeedResetGatewayURL(
+                state: state,
+                environment: environment,
+                url: url
+            )
         case let .createSphere(ownerKeyName):
             return createSphere(
                 state: state,
                 environment: environment,
                 ownerKeyName: ownerKeyName
+            )
+        case let .succeedCreateSphere(receipt):
+            return succeedCreateSphere(
+                state: state,
+                environment: environment,
+                receipt: receipt
             )
         case .failCreateSphere(let message):
             logger.warning("Failed to create Sphere: \(message)")
@@ -453,6 +473,18 @@ struct AppModel: ModelProtocol {
             return refreshSphereVersion(
                 state: state,
                 environment: environment
+            )
+        case .succeedRefreshSphereVersion(let version):
+            return succeedRefreshSphereVersion(
+                state: state,
+                environment: environment,
+                version: version
+            )
+        case .failRefreshSphereVersion(let error):
+            return failRefreshSphereVersion(
+                state: state,
+                environment: environment,
+                error: error
             )
         case let .persistNoosphereEnabled(isEnabled):
             return persistNoosphereEnabled(
@@ -474,6 +506,11 @@ struct AppModel: ModelProtocol {
             )
         case .resetNoosphereService:
             return resetNoosphereService(
+                state: state,
+                environment: environment
+            )
+        case .succeedResetNoosphereService:
+            return succeedResetNoosphereService(
                 state: state,
                 environment: environment
             )
@@ -715,11 +752,25 @@ struct AppModel: ModelProtocol {
 
         // Persist to UserDefaults
         AppDefaults.standard.gatewayURL = gatewayURL
+
         // Reset gateway on environment
-        environment.data.noosphere.resetGateway(url: url)
+        let fx: Fx<AppAction> = Future.detatched {
+            await environment.noosphere.resetGateway(url: url)
+            return .succeedResetGatewayURL(url)
+        }
+        .eraseToAnyPublisher()
 
         /// Only set valid nicknames
-        return Update(state: model)
+        return Update(state: model, fx: fx)
+    }
+
+    static func succeedResetGatewayURL(
+        state: AppModel,
+        environment: AppEnvironment,
+        url: URL
+    ) -> Update<AppModel> {
+        logger.log("Reset gateway URL: \(url)")
+        return Update(state: state)
     }
 
     static func createSphere(
@@ -728,25 +779,34 @@ struct AppModel: ModelProtocol {
         ownerKeyName: String?
     ) -> Update<AppModel> {
         let ownerKeyName = ownerKeyName ?? Config.default.noosphere.ownerKeyName
-        do {
-            let receipt = try environment.data.createSphere(
+
+        let fx: Fx<AppAction> = Future.detatched {
+            let receipt = try await environment.data.createSphere(
                 ownerKeyName: ownerKeyName
             )
-            return update(
-                state: state,
-                actions: [
-                    .setSphereIdentity(receipt.identity),
-                    .setRecoveryPhrase(receipt.mnemonic)
-                ],
-                environment: environment
-            )
-        }  catch {
-            return update(
-                state: state,
-                action: .failCreateSphere(error.localizedDescription),
-                environment: environment
-            )
+            return AppAction.succeedCreateSphere(receipt)
         }
+        .recover({ error in
+            AppAction.failCreateSphere(error.localizedDescription)
+        })
+        .eraseToAnyPublisher()
+
+        return Update(state: state, fx: fx)
+    }
+
+    static func succeedCreateSphere(
+        state: AppModel,
+        environment: AppEnvironment,
+        receipt: SphereReceipt
+    ) -> Update<AppModel> {
+        return update(
+            state: state,
+            actions: [
+                .setSphereIdentity(receipt.identity),
+                .setRecoveryPhrase(receipt.mnemonic)
+            ],
+            environment: environment
+        )
     }
 
     static func setSphereIdentity(
@@ -767,13 +827,33 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        guard let version = try? environment.data.noosphere.version() else {
-            return Update(state: state)
-        }
+        let fx: Fx<AppAction> = environment.noosphere.versionPublisher()
+            .map({ version in
+                .succeedRefreshSphereVersion(version)
+            }).recover({ error in
+                .failRefreshSphereVersion(error.localizedDescription)
+            }).eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    static func succeedRefreshSphereVersion(
+        state: AppModel,
+        environment: AppEnvironment,
+        version: String
+    ) -> Update<AppModel> {
         var model = state
         model.sphereVersion = version
         logger.debug("Refreshed sphere version: \(version)")
         return Update(state: model)
+    }
+
+    static func failRefreshSphereVersion(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.log("Failed to refresh sphere version: \(error)")
+        return Update(state: state)
     }
 
     /// Persist Noosphere enabled state.
@@ -823,7 +903,19 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        environment.data.noosphere.reset()
+        let fx: Fx<AppAction> = Future.detatched {
+            await environment.noosphere.reset()
+            return .succeedResetNoosphereService
+        }
+        .eraseToAnyPublisher()
+        return Update(state: state, fx: fx)
+    }
+
+    static func succeedResetNoosphereService(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        logger.log("Reset noosphere service")
         return Update(state: state)
     }
 
@@ -838,7 +930,7 @@ struct AppModel: ModelProtocol {
         case .initial:
             logger.log("Readying database")
             let fx: Fx<AppAction> = environment.data
-                .migrateAsync()
+                .migratePublisher()
                 .map({ version in
                     AppAction.succeedMigrateDatabase(version)
                 })
@@ -896,7 +988,7 @@ struct AppModel: ModelProtocol {
         model.isAppUpgraded = false
         model.databaseMigrationStatus = .pending
 
-        let fx: Fx<AppAction> = environment.data.rebuildAsync().map({
+        let fx: Fx<AppAction> = environment.data.rebuildPublisher().map({
             receipt in
             AppAction.succeedRebuildDatabase(receipt)
         }).catch({ error in
@@ -953,9 +1045,9 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         do {
-            let sphereIdentity = try environment.data.database
+            let sphereIdentity = try environment.database
                 .readMetadata(key: .sphereIdentity)
-            let sphereVersion = try environment.data.database
+            let sphereVersion = try environment.database
                 .readMetadata(key: .sphereVersion)
             logger.log("Database last-known sphere state: \(sphereIdentity) @ \(sphereVersion)")
         } catch {
@@ -988,16 +1080,10 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        guard let gatewayURL = environment.data.noosphere.gatewayURL else {
-            logger.log("No gateway configured. Skipping sync.")
-            return Update(state: state)
-        }
-        
         var model = state
         model.lastGatewaySyncStatus = .pending
-        
-        logger.log("Syncing with gateway: \(gatewayURL.absoluteString)")
-        let fx: Fx<AppAction> = environment.data.syncSphereWithGateway()
+        logger.log("Syncing with gateway: \(model.gatewayURL)")
+        let fx: Fx<AppAction> = environment.noosphere.syncPublisher()
             .map({ version in
                 AppAction.succeedSyncSphereWithGateway(version: version)
             })
@@ -1046,7 +1132,7 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let fx: Fx<AppAction> = environment.data.syncSphereWithDatabaseAsync().map({
+        let fx: Fx<AppAction> = environment.data.syncSphereWithDatabasePublisher().map({
             version in
             AppAction.succeedSyncSphereWithDatabase(version: version)
         }).catch({ error in
@@ -1102,7 +1188,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         logger.log("File sync started")
 
-        let fx: Fx<AppAction> = environment.data.syncLocalWithDatabaseAsync().map({
+        let fx: Fx<AppAction> = environment.data.syncLocalWithDatabasePublisher().map({
             changes in
             AppAction.succeedSyncLocalFilesWithDatabase(changes)
         }).catch({ error in
@@ -1171,12 +1257,15 @@ struct AppEnvironment {
     var documentURL: URL
     var applicationSupportURL: URL
 
+    var noosphere: NoosphereService
+    var database: DatabaseService
     var data: DataService
     var feed: FeedService
     
     var recoveryPhrase = RecoveryPhraseEnvironment()
-    var addressBook: AddressBookEnvironment
-
+    
+    var addressBook: AddressBookService
+    
     var pasteboard = UIPasteboard.general
     
     /// Create a long polling publisher that never completes
@@ -1193,7 +1282,7 @@ struct AppEnvironment {
     init() {
         self.documentURL = FileManager.default.urls(
             for: .documentDirectory,
-               in: .userDomainMask
+            in: .userDomainMask
         ).first!
 
         self.applicationSupportURL = try! FileManager.default.url(
@@ -1221,30 +1310,43 @@ struct AppEnvironment {
             gatewayURL: defaultGateway,
             sphereIdentity: defaultSphereIdentity
         )
+        self.noosphere = noosphere
 
         let databaseURL = self.applicationSupportURL
             .appendingPathComponent("database.sqlite")
 
-        let databaseService = DatabaseService(
+        let database = DatabaseService(
             database: SQLite3Database(
                 path: databaseURL.absoluteString,
                 mode: .readwrite
             ),
             migrations: Config.migrations
         )
+        self.database = database
         
-        let addresBook = AddressBookService(noosphere: noosphere, database: databaseService)
+        let addressBook = AddressBookService(
+            noosphere: noosphere,
+            database: database
+        )
+        self.addressBook = addressBook
         
         self.data = DataService(
             noosphere: noosphere,
-            database: databaseService,
+            database: database,
             local: local,
-            addressBook: addresBook
+            addressBook: addressBook
         )
         
-        self.addressBook = AddressBookEnvironment(data: data)
-
         self.feed = FeedService()
     }
 }
 
+extension AddressBookEnvironment {
+    init(_ environment: AppEnvironment) {
+        self.init(
+            noosphere: environment.noosphere,
+            data: environment.data,
+            addressBook: environment.addressBook
+        )
+    }
+}

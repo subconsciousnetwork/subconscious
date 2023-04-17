@@ -277,7 +277,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         var model = state
         model.loadingState = .loading
         model.address = description.address
-        let fx: Fx<Action> = environment.data.readMemoDetailAsync(
+        let fx: Fx<Action> = environment.data.readMemoDetailPublisher(
             address: description.address
         ).map({ response in
             Action.setDetail(response)

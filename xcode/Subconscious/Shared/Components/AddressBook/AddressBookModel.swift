@@ -18,9 +18,16 @@ struct AddressBookEntry: Equatable {
 }
 
 struct AddressBookEnvironment {
+    // Default logger for environment
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "AddressBook"
+    )
+    var logger: Logger = logger
+    var noosphere: NoosphereService
     var data: DataService
+    var addressBook: AddressBookService
 }
-
 
 struct FollowUserFormModel: Equatable {
     var did: FormField<String, Did> = FormField(value: "", validate: Self.validateDid)
@@ -36,33 +43,39 @@ struct FollowUserFormModel: Equatable {
 }
 
 struct PetnameFieldCursor: CursorProtocol {
-    static func get(state: AddressBookModel) -> FormField<String, Petname> {
+    typealias Model = AddressBookModel
+    typealias ViewModel = FormField<String, Petname>
+
+    static func get(state: Model) -> ViewModel {
         state.followUserForm.petname
     }
     
-    static func set(state: AddressBookModel, inner: FormField<String, Petname>) -> AddressBookModel {
+    static func set(state: Model, inner: ViewModel) -> Model {
         var model = state
         model.followUserForm.petname = inner
         return model
     }
     
-    static func tag(_ action: FormFieldAction<String>) -> AddressBookAction {
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
         AddressBookAction.petnameField(action)
     }
 }
 
 struct DidFieldCursor: CursorProtocol {
-    static func get(state: AddressBookModel) -> FormField<String, Did> {
+    typealias Model = AddressBookModel
+    typealias ViewModel = FormField<String, Did>
+
+    static func get(state: Model) -> ViewModel {
         state.followUserForm.did
     }
     
-    static func set(state: AddressBookModel, inner: FormField<String, Did>) -> AddressBookModel {
+    static func set(state: Model, inner: ViewModel) -> Model {
         var model = state
         model.followUserForm.did = inner
         return model
     }
     
-    static func tag(_ action: FormFieldAction<String>) -> AddressBookAction {
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
         AddressBookAction.didField(action)
     }
 }
@@ -70,7 +83,12 @@ struct DidFieldCursor: CursorProtocol {
 enum AddressBookAction {
     case present(_ isPresented: Bool)
     
+    case refreshDid
+    case succeedRefreshDid(Did)
+    case failRefreshDid(_ error: String)
+    
     case refreshEntries(forceRefetchFromNoosphere: Bool = false)
+    case failRefreshEntries(_ error: String)
     case populate([AddressBookEntry])
     
     case requestFollow
@@ -110,12 +128,7 @@ struct AddressBookModel: ModelProtocol {
     var unfollowCandidate: Petname? = nil
     
     var isQrCodeScannerPresented = false
-
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "AddressBookModel"
-    )
-
+    
     static func update(
         state: AddressBookModel,
         action: AddressBookAction,
@@ -124,34 +137,53 @@ struct AddressBookModel: ModelProtocol {
         switch action {
             
         case .present(let isPresented):
-            var model = state
-            model.isPresented = isPresented
-            model.failUnfollowErrorMessage = nil
-            model.failFollowErrorMessage = nil
-            
-            if isPresented {
-                do {
-                    model.did = try Did(environment.data.noosphere.identity())
-                } catch {
-                    model.did = nil
-                }
-            }
-            
-            return update(
-                state: model,
-                action: .refreshEntries(forceRefetchFromNoosphere: false),
-                environment: environment
+            return present(
+                state: state,
+                environment: environment,
+                isPresented: isPresented
             )
+            
+        case .refreshDid:
+            let fx: Fx<AddressBookAction> = environment.noosphere
+                .identityPublisher()
+                .tryMap({ identity in
+                    let did = try Did(identity).unwrap()
+                    return AddressBookAction.succeedRefreshDid(did)
+                })
+                .recover({error in
+                    AddressBookAction.failRefreshDid(error.localizedDescription)
+                })
+                .eraseToAnyPublisher()
+            return Update(state: state, fx: fx)
+            
+        case .succeedRefreshDid(let did):
+            var model = state
+            model.did = did
+            return Update(state: model)
+            
+        case .failRefreshDid(let error):
+            environment.logger.log("Failed to refresh sphere did: \(error)")
+            return Update(state: state)
             
         case .refreshEntries(let forceRefreshFromNoosphere):
             let fx: Fx<AddressBookAction> =
-                environment.data.addressBook.listEntries(refetch: forceRefreshFromNoosphere)
+            environment.addressBook
+                .listEntriesPublisher(refetch: forceRefreshFromNoosphere)
                 .map({ follows in
                     AddressBookAction.populate(follows)
+                })
+                .recover({ error in
+                    AddressBookAction.failRefreshEntries(
+                        error.localizedDescription
+                    )
                 })
                 .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
+
+        case .failRefreshEntries(let error):
+            environment.logger.log("Failed to refresh entries: \(error)")
+            return Update(state: state)
             
         case .populate(let follows):
             var model = state
@@ -198,7 +230,7 @@ struct AddressBookModel: ModelProtocol {
                 ],
                 environment: environment
             )
-
+            
             
         case .attemptFollow:
             guard let did = state.followUserForm.did.validated else {
@@ -217,15 +249,13 @@ struct AddressBookModel: ModelProtocol {
             }
             
             let fx: Fx<AddressBookAction> =
-                environment.data.addressBook
-                .followUserAsync(did: did, petname: petname)
+            environment.addressBook
+                .followUserPublisher(did: did, petname: petname)
                 .map({ _ in
                     AddressBookAction.succeedFollow(did: did, petname: petname)
                 })
-                .catch({ error in
-                    Just(
-                        AddressBookAction.failFollow(error: error.localizedDescription)
-                    )
+                .recover({ error in
+                    AddressBookAction.failFollow(error: error.localizedDescription)
                 })
                 .eraseToAnyPublisher()
             
@@ -269,19 +299,15 @@ struct AddressBookModel: ModelProtocol {
                 return Update(state: state)
             }
             
-            let fx: Fx<AddressBookAction> =
-                environment.data.addressBook
-                .unfollowUserAsync(petname: petname)
+            let fx: Fx<AddressBookAction> = environment.addressBook
+                .unfollowUserPublisher(petname: petname)
                 .map({ _ in
                     AddressBookAction.succeedUnfollow(petname: petname)
                 })
-                .catch({ error in
-                    Just(
-                        AddressBookAction.failUnfollow(error: error.localizedDescription)
-                    )
+                .recover({ error in
+                    AddressBookAction.failUnfollow(error: error.localizedDescription)
                 })
                 .eraseToAnyPublisher()
-            
             return Update(state: state, fx: fx)
             
         case .succeedUnfollow(let petname):
@@ -304,13 +330,13 @@ struct AddressBookModel: ModelProtocol {
             var model = state
             model.failUnfollowErrorMessage = nil
             return Update(state: model)
-        
+            
         case .presentQRCodeScanner(let isPresented):
             var model = state
             model.failQRCodeScanErrorMessage = nil
             model.isQrCodeScannerPresented = isPresented
             return Update(state: model)
-        
+            
         case .qrCodeScanned(scannedContent: let content):
             return update(
                 state: state,
@@ -328,5 +354,33 @@ struct AddressBookModel: ModelProtocol {
             
         }
         
+    }
+    
+    static func present(
+        state: Self,
+        environment: Self.Environment,
+        isPresented: Bool
+    ) -> Update<Self> {
+        var model = state
+        model.isPresented = isPresented
+        model.failUnfollowErrorMessage = nil
+        model.failFollowErrorMessage = nil
+        
+        guard isPresented else {
+            return update(
+                state: model,
+                action: .refreshEntries(forceRefetchFromNoosphere: false),
+                environment: environment
+            )
+        }
+
+        return update(
+            state: model,
+            actions: [
+                .refreshDid,
+                .refreshEntries(forceRefetchFromNoosphere: false)
+            ],
+            environment: environment
+        )
     }
 }

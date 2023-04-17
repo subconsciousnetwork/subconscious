@@ -207,6 +207,7 @@
 		B88CC958284FF59900994928 /* OrderedCollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88CC957284FF59900994928 /* OrderedCollectionUtilities.swift */; };
 		B88CC959284FF59900994928 /* OrderedCollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88CC957284FF59900994928 /* OrderedCollectionUtilities.swift */; };
 		B88CC95B284FF64300994928 /* Tests_OrderedCollectionUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88CC95A284FF64300994928 /* Tests_OrderedCollectionUtilities.swift */; };
+		B88DFEF129E7454100B00DE8 /* Tests_CombineUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88DFEF029E7454100B00DE8 /* Tests_CombineUtilities.swift */; };
 		B8925B2B29C0FA43001F9503 /* Tests_Func.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8925B2A29C0FA43001F9503 /* Tests_Func.swift */; };
 		B8925B2D29C0FD91001F9503 /* MemoDetailResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8925B2C29C0FD91001F9503 /* MemoDetailResponse.swift */; };
 		B8925B2F29C23017001F9503 /* MemoViewerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8925B2E29C23017001F9503 /* MemoViewerDetailView.swift */; };
@@ -534,6 +535,7 @@
 		B88CC955284FCF8C00994928 /* Tests_DatabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_DatabaseService.swift; sourceTree = "<group>"; };
 		B88CC957284FF59900994928 /* OrderedCollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderedCollectionUtilities.swift; sourceTree = "<group>"; };
 		B88CC95A284FF64300994928 /* Tests_OrderedCollectionUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_OrderedCollectionUtilities.swift; sourceTree = "<group>"; };
+		B88DFEF029E7454100B00DE8 /* Tests_CombineUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_CombineUtilities.swift; sourceTree = "<group>"; };
 		B8925B2A29C0FA43001F9503 /* Tests_Func.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_Func.swift; sourceTree = "<group>"; };
 		B8925B2C29C0FD91001F9503 /* MemoDetailResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoDetailResponse.swift; sourceTree = "<group>"; };
 		B8925B2E29C23017001F9503 /* MemoViewerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoViewerDetailView.swift; sourceTree = "<group>"; };
@@ -759,6 +761,7 @@
 				B884565229D2102D00DBCD39 /* Tests_App.swift */,
 				B8B604EA29148C82006FCB77 /* Tests_AppMigrations.swift */,
 				B8682DCC2804C379001CD8DD /* Tests_CollectionUtilities.swift */,
+				B88DFEF029E7454100B00DE8 /* Tests_CombineUtilities.swift */,
 				B88CC955284FCF8C00994928 /* Tests_DatabaseService.swift */,
 				B87288DF299B05B500EF7E07 /* Tests_DataService.swift */,
 				B8AAAAD828CBD68600DBC8A9 /* Tests_Detail.swift */,
@@ -771,6 +774,7 @@
 				B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */,
 				B80CC804299D14C900C4D7C0 /* Tests_Memo.swift */,
 				B886A9B729A7E41700BFF9A2 /* Tests_MemoAddress.swift */,
+				B88A76D629E0AA44005F3422 /* Tests_MemoViewerDetailMetaSheet.swift */,
 				B8B604E8291476E9006FCB77 /* Tests_Migrations.swift */,
 				B82FF241298C0DAF0097D688 /* Tests_Noosphere.swift */,
 				B8EA3756299EBA5500D98E2B /* Tests_NoosphereService.swift */,
@@ -793,7 +797,6 @@
 				B8D328B929A69D2D00850A37 /* Tests_URLUtilities.swift */,
 				B8E62AE729D61E69008F7E74 /* Tests_UserDefaultProperty.swift */,
 				B5908BEA29DAB05B00225B1A /* TestUtilities.swift */,
-				B88A76D629E0AA44005F3422 /* Tests_MemoViewerDetailMetaSheet.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
@@ -1444,6 +1447,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B88DFEF129E7454100B00DE8 /* Tests_CombineUtilities.swift in Sources */,
 				B82FF242298C0DAF0097D688 /* Tests_Noosphere.swift in Sources */,
 				B80CC807299D4DF000C4D7C0 /* Tests_SQLite3Database.swift in Sources */,
 				B84AD8E1280F7A19006B3153 /* Tests_StringUtilities.swift in Sources */,

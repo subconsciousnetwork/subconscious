@@ -13,6 +13,7 @@
 //  4. Open sphere file system (on-demand)
 
 import Foundation
+import Combine
 import SwiftNoosphere
 import os
 
@@ -27,25 +28,37 @@ enum NoosphereServiceError: Error, LocalizedError {
     }
 }
 
+protocol NoosphereServiceProtocol {
+    var globalStorageURL: URL { get async }
+    var sphereStorageURL: URL { get async }
+    var gatewayURL: URL? { get async }
+
+    func createSphere(ownerKeyName: String) async throws -> SphereReceipt
+
+    /// Set a new default sphere
+    func resetSphere(_ identity: String?) async
+    
+    /// Update Gateway.
+    /// Resets memoized Noosphere and Sphere instances.
+    func resetGateway(url: URL?) async
+    
+    /// Reset managed instances of Noosphere and Sphere
+    func reset() async
+}
+
 /// Creates and manages Noosphere and default sphere singletons.
-final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
+actor NoosphereService:
+    SphereProtocol,
+    SpherePublisherProtocol,
+    NoosphereServiceProtocol
+{
     /// Default logger for NoosphereService instances.
     private static let logger = Logger(
         subsystem: Config.default.rdns,
         category: "NoosphereService"
     )
 
-    /// Dispatch queue for NoosphereService instances.
-    /// We use this queue to make NoosphereService threadsafe.
-    private static let queue = DispatchQueue(
-        label: "NoosphereService",
-        qos: .default,
-        // Queues are serial by default.
-        attributes: []
-    )
-
     private var logger: Logger
-    private var queue: DispatchQueue
     var globalStorageURL: URL
     var sphereStorageURL: URL
     var gatewayURL: URL?
@@ -61,8 +74,7 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         sphereStorageURL: URL,
         gatewayURL: URL? = nil,
         sphereIdentity: String? = nil,
-        logger: Logger = logger,
-        queue: DispatchQueue = queue
+        logger: Logger = logger
     ) {
         logger.debug("init NoosphereService")
         logger.debug("Global storage URL: \(globalStorageURL.absoluteString)")
@@ -74,47 +86,38 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         self.gatewayURL = gatewayURL
         self._sphereIdentity = sphereIdentity
         self.logger = logger
-        self.queue = queue
     }
     
     /// Create a default sphere for user and persist sphere details
     /// This creates, but does not save the sphere as default.
     /// - Returns: SphereReceipt
-    func createSphere(ownerKeyName: String) throws -> SphereReceipt {
-        try queue.sync {
-            try self.noosphere().createSphere(
-                ownerKeyName: ownerKeyName
-            )
-        }
+    func createSphere(ownerKeyName: String) async throws -> SphereReceipt {
+        try await self.noosphere().createSphere(
+            ownerKeyName: ownerKeyName
+        )
     }
     
     /// Set a new default sphere
     func resetSphere(_ identity: String?) {
-        queue.sync {
-            logger.debug("Reset sphere identity: \(identity ?? "none")")
-            self._sphereIdentity = identity
-            self._sphere = nil
-        }
+        logger.debug("Reset sphere identity: \(identity ?? "none")")
+        self._sphereIdentity = identity
+        self._sphere = nil
     }
     
     /// Update Gateway.
     /// Resets memoized Noosphere and Sphere instances.
     func resetGateway(url: URL?) {
-        queue.sync {
-            logger.debug("Reset gateway: \(url?.absoluteString ?? "none")")
-            self.gatewayURL = url
-            self._noosphere = nil
-            self._sphere = nil
-        }
+        logger.debug("Reset gateway: \(url?.absoluteString ?? "none")")
+        self.gatewayURL = url
+        self._noosphere = nil
+        self._sphere = nil
     }
     
     /// Reset managed instances of Noosphere and Sphere
     func reset() {
-        queue.sync {
-            logger.debug("Reset memoized instances of Noosphere and Sphere")
-            self._noosphere = nil
-            self._sphere = nil
-        }
+        logger.debug("Reset memoized instances of Noosphere and Sphere")
+        self._noosphere = nil
+        self._sphere = nil
     }
     
     /// Gets or creates memoized Noosphere singleton instance
@@ -151,48 +154,103 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         return sphere
     }
     
-    func identity() throws -> String {
-        try queue.sync {
-            try self.sphere().identity
+    nonisolated private func spherePublisher() -> AnyPublisher<Sphere, Error> {
+        Future {
+            try await self.sphere()
         }
+        .eraseToAnyPublisher()
     }
 
-    func version() throws -> String {
-        try queue.sync {
-            try self.sphere().version()
-        }
+    func identity() async throws -> String {
+        try await self.sphere().identity()
+    }
+
+    nonisolated func identityPublisher() -> AnyPublisher<String, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.identityPublisher()
+        })
+        .eraseToAnyPublisher()
+    }
+
+    func version() async throws -> String {
+        try await self.sphere().version()
     }
     
-    func getFileVersion(slashlink: Slashlink) -> String? {
-        queue.sync {
-            try? self.sphere().getFileVersion(slashlink: slashlink)
-        }
+    nonisolated func versionPublisher() -> AnyPublisher<String, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.versionPublisher()
+        })
+        .eraseToAnyPublisher()
     }
     
-    func readHeaderValueFirst(slashlink: Slashlink, name: String) -> String? {
-        queue.sync {
-            try? self.sphere().readHeaderValueFirst(
+    func getFileVersion(slashlink: Slashlink) async -> String? {
+        try? await self.sphere().getFileVersion(slashlink: slashlink)
+    }
+    
+    nonisolated func getFileVersionPublisher(
+        slashlink: Slashlink
+    ) -> AnyPublisher<String?, Never> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.getFileVersionPublisher(slashlink: slashlink)
+        }).catch({ error in
+            Just(nil)
+        })
+        .eraseToAnyPublisher()
+    }
+    
+    func readHeaderValueFirst(
+        slashlink: Slashlink,
+        name: String
+    ) async -> String? {
+        try? await self.sphere().readHeaderValueFirst(
+            slashlink: slashlink,
+            name: name
+        )
+    }
+    
+    nonisolated func readHeaderValueFirstPublisher(
+        slashlink: Slashlink,
+        name: String
+    ) -> AnyPublisher<String?, Never> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.readHeaderValueFirstPublisher(
                 slashlink: slashlink,
                 name: name
             )
-        }
+        }).catch({ error in
+            Just(nil)
+        }).eraseToAnyPublisher()
     }
     
-    func readHeaderNames(slashlink: Slashlink) -> [String] {
-        queue.sync {
-            guard let names = try? self.sphere().readHeaderNames(
-                slashlink: slashlink
-            ) else {
-                return []
-            }
-            return names
+    func readHeaderNames(slashlink: Slashlink) async -> [String] {
+        guard let names = try? await self.sphere().readHeaderNames(
+            slashlink: slashlink
+        ) else {
+            return []
         }
+        return names
     }
     
-    func read(slashlink: Slashlink) throws -> MemoData {
-        try queue.sync {
-            try self.sphere().read(slashlink: slashlink)
-        }
+    nonisolated func readHeaderNamesPublisher(
+        slashlink: Slashlink
+    ) -> AnyPublisher<[String], Never> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.readHeaderNamesPublisher(slashlink: slashlink)
+        }).catch({ error in
+            Just([])
+        }).eraseToAnyPublisher()
+    }
+    
+    func read(slashlink: Slashlink) async throws -> MemoData {
+        try await self.sphere().read(slashlink: slashlink)
+    }
+    
+    nonisolated func readPublisher(
+        slashlink: Slashlink
+    ) -> AnyPublisher<MemoData, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.readPublisher(slashlink: slashlink)
+        }).eraseToAnyPublisher()
     }
     
     func write(
@@ -200,86 +258,161 @@ final class NoosphereService: SphereProtocol, SphereIdentityProtocol {
         contentType: String,
         additionalHeaders: [Header],
         body: Data
-    ) throws {
-        try queue.sync {
-            try self.sphere().write(
+    ) async throws {
+        try await self.sphere().write(
+            slug: slug,
+            contentType: contentType,
+            additionalHeaders: additionalHeaders,
+            body: body
+        )
+    }
+    
+    nonisolated func writePublisher(
+        slug: Slug,
+        contentType: String,
+        additionalHeaders: [Header],
+        body: Data
+    ) -> AnyPublisher<Void, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.writePublisher(
                 slug: slug,
                 contentType: contentType,
                 additionalHeaders: additionalHeaders,
                 body: body
             )
-        }
-    }
-    
-    func remove(slug: Slug) throws {
-        try queue.sync {
-            try self.sphere().remove(slug: slug)
-        }
-    }
-    
-    @discardableResult func save() throws -> String {
-        try queue.sync {
-            try self.sphere().save()
-        }
-    }
-    
-    func list() throws -> [Slug] {
-        try queue.sync {
-            try self.sphere().list()
-        }
-    }
-    
-    func sync() throws -> String {
-        try queue.sync {
-            try self.sphere().sync()
-        }
-    }
-    
-    func changes(_ since: String?) throws -> [Slug] {
-        try queue.sync {
-            try self.sphere().changes(since)
-        }
-    }
-    
-    func getPetname(petname: Petname) throws -> String {
-        try queue.sync {
-            try self.sphere().getPetname(petname: petname)
-        }
-    }
-    
-    func setPetname(did: String, petname: Petname) throws {
-        try queue.sync {
-            try self.sphere().setPetname(did: did, petname: petname)
-        }
-    }
-    
-    func unsetPetname(petname: Petname) throws {
-        try queue.sync {
-            try self.sphere().unsetPetname(petname: petname)
-        }
-    }
-    
-    func resolvePetname(petname: Petname) throws -> String {
-        try queue.sync {
-            try self.sphere().resolvePetname(petname: petname)
-        }
-    }
-    
-    func listPetnames() throws -> [Petname] {
-        try queue.sync {
-            try self.sphere().listPetnames()
-        }
-    }
-    
-    func getPetnameChanges(sinceCid: String) throws -> [Petname] {
-        try queue.sync {
-            try self.sphere().getPetnameChanges(sinceCid: sinceCid)
-        }
+        }).eraseToAnyPublisher()
     }
 
-    func traverse(petname: Petname) throws -> Sphere {
-        try queue.sync {
-            try self.sphere().traverse(petname: petname)
-        }
+    func remove(slug: Slug) async throws {
+        try await self.sphere().remove(slug: slug)
+    }
+    
+    nonisolated func removePublisher(slug: Slug) -> AnyPublisher<Void, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.removePublisher(slug: slug)
+        }).eraseToAnyPublisher()
+    }
+    
+    @discardableResult func save() async throws -> String {
+        try await self.sphere().save()
+    }
+    
+    nonisolated func savePublisher() -> AnyPublisher<String, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.savePublisher()
+        })
+        .eraseToAnyPublisher()
+    }
+    
+    func list() async throws -> [Slug] {
+        try await self.sphere().list()
+    }
+    
+    nonisolated func listPublisher() -> AnyPublisher<[Slug], Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.listPublisher()
+        })
+        .eraseToAnyPublisher()
+    }
+    
+    func sync() async throws -> String {
+        try await self.sphere().sync()
+    }
+    
+    nonisolated func syncPublisher() -> AnyPublisher<String, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.syncPublisher()
+        })
+        .eraseToAnyPublisher()
+    }
+    
+    func changes(_ since: String?) async throws -> [Slug] {
+        try await self.sphere().changes(since)
+    }
+    
+    nonisolated func changesPublisher(
+        _ since: String?
+    ) -> AnyPublisher<[Slug], Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.changesPublisher(since)
+        })
+        .eraseToAnyPublisher()
+    }
+    
+    func getPetname(petname: Petname) async throws -> String {
+        try await self.sphere().getPetname(petname: petname)
+    }
+    
+    nonisolated func getPetnamePublisher(
+        petname: Petname
+    ) -> AnyPublisher<String, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.getPetnamePublisher(petname: petname)
+        })
+        .eraseToAnyPublisher()
+    }
+    
+    func setPetname(did: String?, petname: Petname) async throws {
+        try await self.sphere().setPetname(did: did, petname: petname)
+    }
+    
+    nonisolated func setPetnamePublisher(
+        did: String?,
+        petname: Petname
+    ) -> AnyPublisher<Void, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.setPetnamePublisher(did: did, petname: petname)
+        })
+        .eraseToAnyPublisher()
+    }
+    
+    func resolvePetname(petname: Petname) async throws -> String {
+        try await self.sphere().resolvePetname(petname: petname)
+    }
+    
+    nonisolated func resolvePetnamePublisher(
+        petname: Petname
+    ) -> AnyPublisher<String, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.resolvePetnamePublisher(petname: petname)
+        })
+        .eraseToAnyPublisher()
+    }
+    
+    func listPetnames() async throws -> [Petname] {
+        try await self.sphere().listPetnames()
+    }
+    
+    nonisolated func listPetnamesPublisher() -> AnyPublisher<[Petname], Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.listPetnamesPublisher()
+        })
+        .eraseToAnyPublisher()
+    }
+    
+    func getPetnameChanges(sinceCid: String) async throws -> [Petname] {
+        try await self.sphere().getPetnameChanges(sinceCid: sinceCid)
+    }
+    
+    nonisolated func getPetnameChangesPublisher(
+        sinceCid: String
+    ) -> AnyPublisher<[Petname], Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.getPetnameChangesPublisher(sinceCid: sinceCid)
+        })
+        .eraseToAnyPublisher()
+    }
+
+    func traverse(petname: Petname) async throws -> Sphere {
+        try await self.sphere().traverse(petname: petname)
+    }
+    
+    nonisolated func traversePublisher(
+        petname: Petname
+    ) -> AnyPublisher<Sphere, Error> {
+        self.spherePublisher().flatMap({ sphere in
+            sphere.traversePublisher(petname: petname)
+        })
+        .eraseToAnyPublisher()
     }
 }
