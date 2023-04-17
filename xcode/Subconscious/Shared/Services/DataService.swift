@@ -47,7 +47,7 @@ actor DataService {
     private var noosphere: NoosphereService
     private var database: DatabaseService
     private var local: HeaderSubtextMemoStore
-    var logger: Logger = logger
+    private var logger: Logger = logger
     
     init(
         noosphere: NoosphereService,
