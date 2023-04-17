@@ -936,9 +936,7 @@ struct NotebookModel: ModelProtocol {
                         action: .pushDetail(
                             .profile(
                                 UserProfileDetailDescription(
-                                    did: Did("did:key:123")!, // HACK: temp
-                                    user: combined,
-                                    spherePath: path
+                                    profile: .other(combined, path)
                                 )
                             )
                         ),

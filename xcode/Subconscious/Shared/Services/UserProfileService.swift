@@ -35,52 +35,111 @@ struct UserProfileContentPayload: Equatable, Hashable {
     var isFollowingUser: Bool
 }
 
-class UserProfileService<Sphere : SphereProtocol> {
-    private(set) var sphere: Sphere
+class UserProfileService {
+    private(set) var noosphere: NoosphereService
     private(set) var database: DatabaseService
-    private(set) var addressBook: AddressBookService<Sphere>
+    private(set) var addressBook: AddressBookService<NoosphereService>
     
     private let logger = Logger(
         subsystem: Config.default.rdns,
         category: "UserProfileService"
     )
     
-    init(sphere: Sphere, database: DatabaseService, addressBook: AddressBookService<Sphere>) {
-        self.sphere = sphere
+    init(noosphere: NoosphereService, database: DatabaseService, addressBook: AddressBookService<NoosphereService>) {
+        self.noosphere = noosphere
         self.database = database
         self.addressBook = addressBook
     }
     
-    private func isFollowing(sphere: Sphere, petname: Petname) -> Bool {
+    private func isFollowing(noosphere: NoosphereService, did: Did) -> Bool {
         // TODO: Replace with isFollowingUser with DID check once that PR lands
         do {
-            return try self.addressBook.addressBook.getPetname(petname: petname) != nil
+            return try noosphere.listPetnames()
+                .contains(where: { f in
+                    guard let followingDid = try self.addressBook.addressBook.getPetname(petname: f) else {
+                        return false
+                    }
+                    
+                    return did == followingDid
+                })
         } catch {
             logger.warning("Failed to check following status, temporary issue.")
             return false
         }
     }
     
-    func getUserProfile(did: Did, petname: Petname) throws -> UserProfileContentPayload {
-        let sphere = try self.sphere.traverse(did: did, petname: petname)
-        let localAddressBook = AddressBook(sphere: sphere)
-        let following: [StoryUser] =
-            try sphere.listPetnames()
+    func getOwnProfile() throws -> UserProfileContentPayload {
+        let did = try self.noosphere.identity()
+        let petname = Petname("me")!
+        let sphere = try self.noosphere.sphere()
+        let following = try self.produceFollowingList(sphere: sphere, localAddressBook: AddressBook(sphere: sphere), basePath: [])
+        let notes = try self.noosphere.list()
+        
+        let entries: [EntryStub] = try notes.compactMap { slug in
+            let slashlink = Slashlink(slug: slug)
+            let memo = try noosphere.read(slashlink: slashlink)
+            
+            guard let memo = memo.toMemo() else {
+                return nil
+            }
+
+            return EntryStub(
+                address: Slashlink(petname: petname, slug: slug).toPublicMemoAddress(),
+                excerpt: memo.excerpt(),
+                modified: memo.modified
+            )
+        }
+        
+        guard let did = Did(did) else {
+            throw UserProfileServiceError.invalidSphereIdentity
+        }
+        
+        let profile = UserProfile(
+            did: did,
+            petname: petname,
+            pfp: "sub_logo",
+            bio: "Pretend this comes from _profile_.json",
+            category: .you
+        )
+        
+        return UserProfileContentPayload(
+            profile: profile,
+            statistics: UserProfileStatistics(
+                noteCount: entries.count,
+                backlinkCount: -1,
+                followingCount: following.count
+            ),
+            following: following,
+            entries: entries,
+            isFollowingUser: false
+        )
+    }
+    
+    func getOwnProfileAsync() -> AnyPublisher<UserProfileContentPayload, Error> {
+        CombineUtilities.async(qos: .default) {
+            return try self.getOwnProfile()
+        }
+    }
+    
+    private func produceFollowingList<Sphere: SphereProtocol>(sphere: Sphere, localAddressBook: AddressBook<Sphere>, basePath: SpherePath) throws -> [StoryUser] {
+        return try sphere.listPetnames()
             .compactMap { f -> StoryUser? in
                 guard let did = try localAddressBook.getPetname(petname: f) else {
                     return nil
                 }
                 
-                guard let petname = Petname(petnames: [f, petname]) else {
+                guard let petname = Petname(petnames: [f] + basePath) else {
                     return nil
                 }
+                
+                let noosphereIdentity = try noosphere.identity()
                 
                 let user = UserProfile(
                     did: did,
                     petname: petname,
                     pfp: String.dummyProfilePicture(),
                     bio: String.dummyDataMedium(),
-                    category: .human
+                    category: noosphereIdentity == did.did ? .you : .human
                 )
                 
                 let following =
@@ -94,21 +153,37 @@ class UserProfileService<Sphere : SphereProtocol> {
                 
                 return StoryUser(user: user, isFollowingUser: following)
             }
+    }
+    
+    func getUserProfile(petname: Petname) throws -> UserProfileContentPayload {
+        let sphere = try self.noosphere.traverse(petname: petname)
+        let identity = try sphere.identity()
+        let localAddressBook = AddressBook(sphere: sphere)
+        let basePath = [petname]
+        let following: [StoryUser] = try self.produceFollowingList(sphere: sphere, localAddressBook: localAddressBook, basePath: basePath)
         
-        let notes = try sphere.list()
-        guard let did = Did(try sphere.identity()) else {
+        // Detect your own profile and intercept
+        guard try self.noosphere.identity() != identity else {
+            return try getOwnProfile()
+        }
+        
+        guard let did = Did(identity) else {
             throw UserProfileServiceError.invalidSphereIdentity
         }
         
-        let isFollowing = isFollowing(sphere: self.sphere, petname: petname)
+        let notes = try sphere.list()
+        
+        let isFollowing = isFollowing(noosphere: self.noosphere, did: did)
         
         let entries: [EntryStub] = try notes.compactMap { slug in
             let slashlink = Slashlink(slug: slug)
             let memo = try sphere.read(slashlink: slashlink)
+            
+            
             guard let memo = memo.toMemo() else {
                 return nil
             }
-            
+
             return EntryStub(
                 address: Slashlink(petname: petname, slug: slug).toPublicMemoAddress(),
                 excerpt: memo.excerpt(),
@@ -136,9 +211,9 @@ class UserProfileService<Sphere : SphereProtocol> {
         )
     }
     
-    func getUserProfileAsync(did: Did, petname: Petname) -> AnyPublisher<UserProfileContentPayload, Error> {
-        CombineUtilities.async(qos: .utility) {
-            return try self.getUserProfile(did: did, petname: petname)
+    func getUserProfileAsync(petname: Petname) -> AnyPublisher<UserProfileContentPayload, Error> {
+        CombineUtilities.async(qos: .default) {
+            return try self.getUserProfile(petname: petname)
         }
     }
 }

@@ -32,11 +32,22 @@ struct UserProfileDetailView: View {
     
     func onNavigateToUser(user: UserProfile) {
         notify(.requestDetail(.profile(
-            UserProfileDetailDescription(
-                did: user.did,
-                user: user.petname,
-                spherePath: [user.petname] + description.spherePath
-            )
+            Func.run {
+                switch (description.profile, user.category) {
+                case (_, .you):
+                    return UserProfileDetailDescription(
+                        profile: .you
+                    )
+                case (.other(_, let spherePath), _):
+                    return UserProfileDetailDescription(
+                        profile: .other(user.petname, [user.petname] + spherePath)
+                    )
+                case (.you, _):
+                    return UserProfileDetailDescription(
+                        profile: .other(user.petname, [user.petname])
+                    )
+                }
+            }
         )))
     }
     
@@ -65,9 +76,7 @@ struct UserProfileDetailView: View {
             // background for a while, and the content changed in another tab.
             store.send(
                 UserProfileDetailAction.appear(
-                    description.did,
-                    description.user,
-                    description.spherePath
+                    description.profile
                 )
             )
         }
@@ -80,16 +89,19 @@ enum UserProfileDetailNotification: Hashable {
     case requestDetail(MemoDetailDescription)
 }
 
+enum UserProfileType: Hashable, Equatable {
+    case you
+    case other(Petname, SpherePath)
+}
+
 /// A description of a user profile that can be used to set up the user
 /// profile's internal state.
 struct UserProfileDetailDescription: Hashable {
-    var did: Did
-    var user: Petname
-    var spherePath: SpherePath
+    var profile: UserProfileType
 }
 
 enum UserProfileDetailAction: Hashable {
-    case appear(Did, Petname, SpherePath)
+    case appear(UserProfileType)
     case populate(UserProfileContentPayload)
     case failedToPopulate(String)
     
@@ -196,22 +208,42 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
             )
-        case .appear(let petname, let spherePath):
+        case .appear(let profile):
             var model = state
-            model.spherePath = spherePath
             
-            let fx: Fx<UserProfileDetailAction> =
-                environment.userProfile
-                .getUserProfileAsync(petname: petname)
-                .map { content in
-                    UserProfileDetailAction.populate(content)
-                }
-                .catch { error in
-                    Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
-                }
-                .eraseToAnyPublisher()
+            switch (profile) {
+            case .other(let petname, let spherePath):
+                model.spherePath = spherePath
+                
+                let fx: Fx<UserProfileDetailAction> =
+                    environment.userProfile
+                    .getUserProfileAsync(petname: petname)
+                    .map { content in
+                        UserProfileDetailAction.populate(content)
+                    }
+                    .catch { error in
+                        Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
+                    }
+                    .eraseToAnyPublisher()
+                
+                return Update(state: model, fx: fx)
+            case .you:
+                logger.warning("TODO: fetch own profile")
+                
+                let fx: Fx<UserProfileDetailAction> =
+                    environment.userProfile
+                    .getOwnProfileAsync()
+                    .map { content in
+                        UserProfileDetailAction.populate(content)
+                    }
+                    .catch { error in
+                        Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
+                    }
+                    .eraseToAnyPublisher()
+                
+                return Update(state: model, fx: fx)
+            }
             
-            return Update(state: model, fx: fx)
         case .populate(let content):
             var model = state
             model.user = content.profile
