@@ -158,10 +158,12 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     public let sphere: OpaquePointer
     private let _identity: String
     
-    private init(noosphere: Noosphere, sphere: OpaquePointer, identity: String) {
+    private init(noosphere: Noosphere, sphere: OpaquePointer) throws {
         self.noosphere = noosphere
         self.sphere = sphere
+        let identity = try Self.fetchIdentityFromSphere(noosphere: noosphere.noosphere, sphere: sphere)
         self._identity = identity
+        logger.debug("init with sphere reference: \(identity)")
     }
     
     init(noosphere: Noosphere, identity: String) throws {
@@ -176,6 +178,20 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         }
         self.sphere = fs
         logger.debug("init with identity: \(identity)")
+    }
+    
+    private static nonisolated func fetchIdentityFromSphere(noosphere: OpaquePointer, sphere: OpaquePointer) throws -> String {
+        guard let sphereIdentity = try Noosphere.callWithError(
+            ns_sphere_identity,
+            noosphere,
+            sphere
+        ) else {
+            throw NoosphereError.nullPointer
+        }
+        defer {
+            ns_string_free(sphereIdentity)
+        }
+        return String.init(cString: sphereIdentity)
     }
     
     public func identity() throws -> String {
@@ -606,8 +622,6 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     ///
     /// - Returns a sphere
     public func traverse(petname: Petname) throws -> Sphere {
-        let identity = try self.getPetname(petname: petname)
-        
         let sphere = try Noosphere.callWithError(
             ns_sphere_traverse_by_petname,
             noosphere.noosphere,
@@ -619,7 +633,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
             throw NoosphereError.foreignError("ns_sphere_traverse_by_petname failed to find sphere")
         }
         
-        return Sphere(noosphere: noosphere, sphere: sphere, identity: identity)
+        return try Sphere(noosphere: noosphere, sphere: sphere)
     }
     
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk

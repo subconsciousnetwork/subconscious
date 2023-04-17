@@ -22,6 +22,34 @@ final class Tests_Sphere: XCTestCase {
         return url
     }
     
+    func testReadingIdentity() async throws {
+        let base = UUID()
+       
+        let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
+            .path()
+        
+        let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
+            .path()
+        
+        let noosphere = try Noosphere(
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath
+        )
+        
+        let sphereReceipt = try await noosphere.createSphere(
+            ownerKeyName: "bob"
+        )
+        
+        let sphere = try Sphere(
+            noosphere: noosphere,
+            identity: sphereReceipt.identity
+        )
+        
+        let identity = try await sphere.identity()
+        
+        XCTAssertEqual(sphereReceipt.identity, identity)
+    }
+    
     func testRoundtrip() async throws {
         let base = UUID()
         
