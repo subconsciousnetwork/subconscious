@@ -53,7 +53,7 @@ class UserProfileService {
     
     func getOwnProfile() async throws -> UserProfileContentPayload {
         let did = try await self.noosphere.identity()
-        let petname = Petname("___")!
+        let petname = Petname(AppDefaults.standard.nickname ?? "???")!
         let sphere = try await self.noosphere.sphere()
         let following = try await self.produceFollowingList(sphere: sphere, localAddressBook: AddressBook(sphere: sphere), basePath: [])
         let notes = try await self.noosphere.list()
