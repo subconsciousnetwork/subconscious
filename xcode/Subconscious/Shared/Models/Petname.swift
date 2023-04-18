@@ -17,7 +17,7 @@ public struct Petname:
     LosslessStringConvertible
 {
     private static let petnameRegex = /([\w\d\-]+)(\.[\w\d\-]+)*/
-    private static let numberedSuffixRegex = /^(?<petname>(.*?))-?(?<suffix>(\d+))?$/
+    private static let numberedSuffixRegex = /^(?<petname>(.*?))(?<separator>-+)?(?<suffix>(\d+))?$/
     
     public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.id < rhs.id
@@ -86,16 +86,16 @@ public struct Petname:
     /// A plain petname e.g. `ziggy` becomes `ziggy-1`
     /// But `ziggy-1` becomes `ziggy-2` etc.
     public func increment() -> Petname? {
-        guard let match = description.wholeMatch(of: Self.numberedSuffixRegex) else {
+        guard let match = description.wholeMatch(of: Self.numberedSuffixRegex),
+              let separator = match.output.separator else {
             return Petname(formatting: verbatim + "-1")
         }
         
         if let numberString = match.output.suffix,
            let number = Int(numberString) {
-            return Petname(formatting: "\(match.output.petname)-\(String(number + 1))")
+            return Petname(formatting: "\(match.output.petname)\(separator)\(String(number + 1))")
         } else {
-            return Petname(formatting: "\(match.output.petname)-1")
+            return Petname(formatting: "\(match.output.petname)\(separator)1")
         }
     }
 }
-
