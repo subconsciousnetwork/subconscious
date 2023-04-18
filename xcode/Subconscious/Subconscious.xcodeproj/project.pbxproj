@@ -43,7 +43,6 @@
 		B5CA448A29D6A1C7002FD83C /* DummyDataUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */; };
 		B5CFC7FE29E5403900178631 /* FollowUserSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */; };
 		B5CFC7FF29E5403900178631 /* FollowUserSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */; };
-		B5D6DAFF29E6560F006D1AC3 /* FollowUserForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D6DAFE29E6560F006D1AC3 /* FollowUserForm.swift */; };
 		B5D8D2FF29AF1DBB0011D820 /* Test_Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D2FE29AF1DBB0011D820 /* Test_Did.swift */; };
 		B5F6ADC929C02F4A00690DE4 /* AddressBookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F6ADC829C02F4A00690DE4 /* AddressBookService.swift */; };
 		B5F6ADCC29C1323900690DE4 /* Tests_FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F6ADCB29C1323900690DE4 /* Tests_FormField.swift */; };
@@ -431,7 +430,6 @@
 		B59D556229BBFF56007915E2 /* FormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormField.swift; sourceTree = "<group>"; };
 		B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyDataUtilities.swift; sourceTree = "<group>"; };
 		B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUserSheet.swift; sourceTree = "<group>"; };
-		B5D6DAFE29E6560F006D1AC3 /* FollowUserForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUserForm.swift; sourceTree = "<group>"; };
 		B5D8D2FE29AF1DBB0011D820 /* Test_Did.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Test_Did.swift; sourceTree = "<group>"; };
 		B5D8D30029AF1F9B0011D820 /* Did.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Did.swift; sourceTree = "<group>"; };
 		B5F6ADC829C02F4A00690DE4 /* AddressBookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookService.swift; sourceTree = "<group>"; };
@@ -740,7 +738,6 @@
 				B57D63BC29B56699008BBB62 /* AddressBookModel.swift */,
 				B584814129AC335B0033F434 /* AddressBookEntryView.swift */,
 				B584813E29AC32410033F434 /* AddressBookView.swift */,
-				B51A895A29B80F6E00BF5C8A /* FollowUserFormView.swift */,
 				B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */,
 				B569971529B6A0DF003204FC /* DidQrCodeView.swift */,
 			);
@@ -763,7 +760,7 @@
 		B5D6DAFD29E655FC006D1AC3 /* Form */ = {
 			isa = PBXGroup;
 			children = (
-				B5D6DAFE29E6560F006D1AC3 /* FollowUserForm.swift */,
+				B51A895A29B80F6E00BF5C8A /* FollowUserFormView.swift */,
 			);
 			path = Form;
 			sourceTree = "<group>";
@@ -1599,7 +1596,6 @@
 				B85BF47827BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
 				B8CBAFA42994491B0079107E /* MenuButtonView.swift in Sources */,
 				B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */,
-				B5D6DAFF29E6560F006D1AC3 /* FollowUserForm.swift in Sources */,
 				B57C0AF729D29A8F00D352E3 /* TabbedThreeColumnView.swift in Sources */,
 				B57C0AEE29D280BB00D352E3 /* ThreeColumnView.swift in Sources */,
 				B8133AEB29B8FD1300B38760 /* SubtextAttributedStringRenderer.swift in Sources */,
