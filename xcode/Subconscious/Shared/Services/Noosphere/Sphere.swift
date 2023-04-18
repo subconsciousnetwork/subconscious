@@ -197,7 +197,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         noosphere: OpaquePointer,
         sphere: OpaquePointer
     ) throws -> Future<String, any Error> {
-        Future.detatched {
+        Future.detached {
             guard let sphereIdentity = try Noosphere.callWithError(
                 ns_sphere_identity,
                 noosphere,

@@ -116,7 +116,7 @@ actor AddressBookService {
     /// Is there a user with this petname in the AddressBook?
     /// This method is designed not to throw for a quick check.
     nonisolated func hasEntryForPetnamePublisher(petname: Petname) -> AnyPublisher<Bool, Never> {
-        Future.detatched {
+        Future.detached {
             return await self.hasEntryForPetname(petname: petname)
         }
         .eraseToAnyPublisher()
@@ -133,7 +133,7 @@ actor AddressBookService {
     
     /// Is this user in the AddressBook?
     nonisolated func isFollowingUserPublisher(did: Did) -> AnyPublisher<Bool, Error> {
-        Future.detatched {
+        Future.detached {
             return try await self.isFollowingUser(did: did)
         }
         .eraseToAnyPublisher()
@@ -167,7 +167,7 @@ actor AddressBookService {
     /// This can fail if `MAX_ATTEMPTS_TO_INCREMENT_PETNAME` iterations occur without
     /// finding a candidate.
     nonisolated func findAvailablePetnamePublisher(petname: Petname) -> AnyPublisher<Petname, Error> {
-        Future.detatched {
+        Future.detached {
             return try await self.findAvailablePetname(petname: petname)
         }
         .eraseToAnyPublisher()
@@ -244,7 +244,7 @@ actor AddressBookService {
     nonisolated func unfollowUserPublisher(
         did: Did
     ) -> AnyPublisher<Void, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.unfollowUser(did: did)
         }
         .eraseToAnyPublisher()
