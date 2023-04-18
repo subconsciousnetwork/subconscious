@@ -157,6 +157,13 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     private let noosphere: Noosphere
     public let sphere: OpaquePointer
     private let _identity: String
+    
+    private init(noosphere: Noosphere, identity: String, sphere: OpaquePointer) throws {
+        self.noosphere = noosphere
+        self._identity = identity
+        self.sphere = sphere
+        logger.debug("init with identity: \(identity)")
+    }
 
     init(noosphere: Noosphere, identity: String) throws {
         self.noosphere = noosphere
@@ -183,7 +190,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
             )
             .value
         
-        return try self.init(noosphere: noosphere, identity: identity)
+        return try self.init(noosphere: noosphere, identity: identity, sphere: sphere)
     }
     
     private static func fetchIdentityFromSphere(
