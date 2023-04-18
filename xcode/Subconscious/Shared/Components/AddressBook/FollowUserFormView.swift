@@ -1,5 +1,5 @@
 //
-//  FollowUserView.swift
+//  FollowUserFormView.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 2/27/23.
@@ -9,7 +9,7 @@ import SwiftUI
 import ObservableStore
 import CodeScanner
 
-struct FollowUserForm: View {
+struct FollowUserFormView: View {
     var state: FollowUserFormModel
     var send: (FollowUserFormAction) -> Void
     
@@ -81,7 +81,7 @@ struct FollowUserView: View {
     var body: some View {
             VStack {
                 Form {
-                    FollowUserForm(
+                    FollowUserFormView(
                         state: state.followUserForm,
                         send: Address.forward(send: send, tag: FollowUserFormCursor.tag)
                     )
