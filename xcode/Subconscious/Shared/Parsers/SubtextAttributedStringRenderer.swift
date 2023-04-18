@@ -116,14 +116,14 @@ struct SubtextAttributedStringRenderer {
         let nsAttributedString = NSMutableAttributedString(
             string: string
         )
-        _ = renderAttributesOf(nsAttributedString)
+        renderAttributesOf(nsAttributedString)
         return AttributedString(nsAttributedString)
     }
 
     /// Read markup in NSMutableAttributedString, and render as attributes.
     /// Resets all attributes on string, replacing them with style attributes
     /// corresponding to the semantic meaning of Subtext markup.
-    func renderAttributesOf(
+    @discardableResult func renderAttributesOf(
         _ attributedString: NSMutableAttributedString
     ) -> Subtext {
         let dom = Subtext(markup: attributedString.string)
