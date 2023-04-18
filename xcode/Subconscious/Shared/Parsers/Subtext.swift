@@ -55,13 +55,34 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
     /// Empty document
     static let empty = Subtext(markup: "")
 
-    enum Block: Hashable, Equatable {
+    enum Block: Hashable, Equatable, CustomStringConvertible {
         case text(span: Substring, inline: [Inline])
         case list(span: Substring, inline: [Inline])
         case quote(span: Substring, inline: [Inline])
         case heading(span: Substring)
         case empty(span: Substring)
 
+        /// The substring span of the block text within the larger string
+        var span: Substring {
+            switch self {
+            case .text(let span, _):
+                return span
+            case .list(let span, _):
+                return span
+            case .quote(let span, _):
+                return span
+            case .heading(let span):
+                return span
+            case .empty(let span):
+                return span
+            }
+        }
+
+        /// String description for block.
+        var description: String {
+            String(span)
+        }
+        
         /// Returns the body of a block, without the leading sigil
         func body() -> Substring {
             switch self {
