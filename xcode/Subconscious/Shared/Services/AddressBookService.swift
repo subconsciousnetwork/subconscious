@@ -115,7 +115,7 @@ actor AddressBookService {
     
     /// Is there a user with this petname in the AddressBook?
     /// This method is designed not to throw for a quick check.
-    func hasEntryForPetnamePublisher(petname: Petname) -> AnyPublisher<Bool, Never> {
+    nonisolated func hasEntryForPetnamePublisher(petname: Petname) -> AnyPublisher<Bool, Never> {
         Future.detatched {
             return await self.hasEntryForPetname(petname: petname)
         }
@@ -132,7 +132,7 @@ actor AddressBookService {
     }
     
     /// Is this user in the AddressBook?
-    func isFollowingUserPublisher(did: Did) -> AnyPublisher<Bool, Error> {
+    nonisolated func isFollowingUserPublisher(did: Did) -> AnyPublisher<Bool, Error> {
         Future.detatched {
             return try await self.isFollowingUser(did: did)
         }
@@ -166,15 +166,20 @@ actor AddressBookService {
     /// Iteratively add a numerical suffix to petnames until we find an available alias.
     /// This can fail if `MAX_ATTEMPTS_TO_INCREMENT_PETNAME` iterations occur without
     /// finding a candidate.
-    func findAvailablePetnamePublisher(petname: Petname) -> AnyPublisher<Petname, Error> {
+    nonisolated func findAvailablePetnamePublisher(petname: Petname) -> AnyPublisher<Petname, Error> {
         Future.detatched {
             return try await self.findAvailablePetname(petname: petname)
         }
         .eraseToAnyPublisher()
     }
     
-    /// Associates the passed DID with the passed petname within the sphere, clears the cache, saves the changes and updates the database.
-    func followUser(did: Did, petname: Petname, preventOverwrite: Bool = false) async throws {
+    /// Associates the passed DID with the passed petname within the sphere, clears the cache,
+    /// saves the changes and updates the database.
+    func followUser(
+        did: Did,
+        petname: Petname,
+        preventOverwrite: Bool = false
+    ) async throws {
         if try await noosphere.identity() == did.id {
             throw AddressBookError.cannotFollowYourself
         }
@@ -194,7 +199,8 @@ actor AddressBookService {
     /// saves the changes and updates the database.
     nonisolated func followUserPublisher(
         did: Did,
-        petname: Petname
+        petname: Petname,
+        preventOverwrite: Bool = false
     ) -> AnyPublisher<Void, Error> {
         Future.detatched {
             try await self.followUser(did: did, petname: petname)

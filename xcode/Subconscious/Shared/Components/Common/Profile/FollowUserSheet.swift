@@ -60,7 +60,7 @@ struct FollowUserSheetModel: ModelProtocol {
             
         case .fetchPetnameCollisionStatus(let petname):
             let fx: Fx<FollowUserSheetAction> =
-                environment.addressBook.hasEntryForPetnameAsync(petname: petname)
+                environment.addressBook.hasEntryForPetnamePublisher(petname: petname)
                 .map { collision in
                     FollowUserSheetAction.populatePetnameCollisionStatus(petname, collision)
                 }
@@ -81,7 +81,7 @@ struct FollowUserSheetModel: ModelProtocol {
             
         case .attemptToFindUniquePetname(let petname):
             let fx: Fx<FollowUserSheetAction> =
-                environment.addressBook.findAvailablePetnameAsync(petname: petname)
+                environment.addressBook.findAvailablePetnamePublisher(petname: petname)
                 .map { petname in
                     FollowUserSheetAction.followUserForm(.petnameField(.setValue(input: petname.verbatim)))
                 }

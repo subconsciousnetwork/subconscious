@@ -166,7 +166,7 @@ struct UserProfileDetailModel: ModelProtocol {
             return FollowUserSheetCursor.update(
                 state: state,
                 action: action,
-                environment: FollowUserSheetEnvironment(addressBook: environment.data.addressBook)
+                environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
             )
             
         case .populate(let user, let statistics):
@@ -203,8 +203,8 @@ struct UserProfileDetailModel: ModelProtocol {
         // MARK: Following status
         case .fetchFollowingStatus(let did):
             let fx: Fx<UserProfileDetailAction> =
-                environment.data.addressBook
-                .isFollowingUserAsync(did: did)
+                environment.addressBook
+                .isFollowingUserPublisher(did: did)
                 .map { following in
                     UserProfileDetailAction.populateFollowingStatus(following)
                 }
@@ -234,8 +234,8 @@ struct UserProfileDetailModel: ModelProtocol {
             }
             
             let fx: Fx<UserProfileDetailAction> =
-                environment.data.addressBook
-                .followUserAsync(did: did, petname: petname, preventOverwrite: true)
+                environment.addressBook
+                .followUserPublisher(did: did, petname: petname, preventOverwrite: true)
                 .map({ _ in
                     UserProfileDetailAction.succeedFollow(did: did, petname: petname)
                 })
@@ -281,8 +281,8 @@ struct UserProfileDetailModel: ModelProtocol {
             }
             
             let fx: Fx<UserProfileDetailAction> =
-                environment.data.addressBook
-                .unfollowUserAsync(did: did)
+                environment.addressBook
+                .unfollowUserPublisher(did: did)
                 .map({ _ in
                     .succeedUnfollow(did: did, petname: petname)
                 })
