@@ -221,17 +221,34 @@ actor AddressBook<Sphere: SphereProtocol> {
         }
         .eraseToAnyPublisher()
     }
+    
+    func isFollowing(did: Did) async -> Bool {
+        do {
+            return try await listEntries(refetch: false)
+                .contains(where: { f in
+                    f.did == did
+                })
+        } catch {
+            AddressBookService.logger.warning("Failed to check following status.")
+            return false
+        }
+    }
 }
 
-actor AddressBookService<Sphere: SphereProtocol> {
-    private(set) var sphere: Sphere
+actor AddressBookService {
+    private(set) var noosphere: NoosphereService
     private(set) var database: DatabaseService
-    private(set) var addressBook: AddressBook<Sphere>
+    private(set) var addressBook: AddressBook<NoosphereService>
     
-    init(sphere: Sphere, database: DatabaseService) {
-        self.sphere = sphere
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "AddressBookService"
+    )
+    
+    init(noosphere: NoosphereService, database: DatabaseService) {
+        self.noosphere = noosphere
         self.database = database
-        self.addressBook = AddressBook(sphere: sphere)
+        self.addressBook = AddressBook(sphere: noosphere)
     }
     
     /// Get the full list of entries in the address book.
@@ -289,8 +306,8 @@ actor AddressBookService<Sphere: SphereProtocol> {
     
     /// Disassociates the passed Petname from any DID within the sphere, clears the cache, saves the changes and updates the database.
     func unfollowUser(petname: Petname) async throws {
-        try await unsetPetname(petname: petname)
-        let version = try await self.sphere.save()
+        try await self.addressBook.unsetPetname(petname: petname)
+        let version = try await self.noosphere.save()
         try database.writeMetadatadata(key: .sphereVersion, value: version)
         invalidateCache()
     }

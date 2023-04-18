@@ -217,7 +217,7 @@ struct UserProfileDetailModel: ModelProtocol {
                 
                 let fx: Fx<UserProfileDetailAction> =
                     environment.userProfile
-                    .getUserProfileAsync(petname: petname)
+                    .getUserProfilePublisher(petname: petname)
                     .map { content in
                         UserProfileDetailAction.populate(content)
                     }
@@ -230,7 +230,7 @@ struct UserProfileDetailModel: ModelProtocol {
             case .you:
                 let fx: Fx<UserProfileDetailAction> =
                     environment.userProfile
-                    .getOwnProfileAsync()
+                    .getOwnProfilePublisher()
                     .map { content in
                         UserProfileDetailAction.populate(content)
                     }

@@ -26,7 +26,7 @@ struct AddressBookEnvironment {
     var logger: Logger = logger
     var noosphere: NoosphereService
     var data: DataService
-    var addressBook: AddressBookService<NoosphereService>
+    var addressBook: AddressBookService
 }
 
 struct FollowUserFormCursor: CursorProtocol {

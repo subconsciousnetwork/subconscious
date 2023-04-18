@@ -43,7 +43,7 @@ actor DataService {
         category: "DataService"
     )
     
-    private var addressBook: AddressBookService<NoosphereService>
+    private var addressBook: AddressBookService
     private var noosphere: NoosphereService
     private var database: DatabaseService
     private var local: HeaderSubtextMemoStore
@@ -53,8 +53,7 @@ actor DataService {
         noosphere: NoosphereService,
         database: DatabaseService,
         local: HeaderSubtextMemoStore,
-        addressBook: AddressBookService<NoosphereService>,
-        userProfile: UserProfileService
+        addressBook: AddressBookService
     ) {
         self.database = database
         self.noosphere = noosphere

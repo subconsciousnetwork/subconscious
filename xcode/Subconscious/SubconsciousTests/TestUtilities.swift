@@ -69,12 +69,12 @@ struct TestUtilities {
         
         let local = HeaderSubtextMemoStore(store: files)
         let addressBook = AddressBookService(
-            sphere: noosphere,
+            noosphere: noosphere,
             database: database
         )
         
         let userProfile = UserProfileService(
-            sphere: noosphere,
+            noosphere: noosphere,
             database: database,
             addressBook: addressBook
         )
@@ -83,8 +83,7 @@ struct TestUtilities {
             noosphere: noosphere,
             database: database,
             local: local,
-            addressBook: addressBook,
-            userProfile: userProfile
+            addressBook: addressBook
         )
 
         return DataServiceEnvironment(
