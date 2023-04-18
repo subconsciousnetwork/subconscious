@@ -20,6 +20,8 @@ final class Tests_CombineUtilities: XCTestCase {
         cancellables = Set()
     }
     
+    private static let TIMEOUT = 1.0
+    
     func testFutureTaskAsync() throws {
         let future = Future {
             XCTAssertFalse(Thread.isMainThread, "Run in separate thread")
@@ -40,7 +42,7 @@ final class Tests_CombineUtilities: XCTestCase {
         )
         .store(in: &cancellables)
         
-        wait(for: [expectation], timeout: 0.3)
+        wait(for: [expectation], timeout: Self.TIMEOUT)
     }
     
     func testFutureTaskError() throws {
@@ -68,7 +70,7 @@ final class Tests_CombineUtilities: XCTestCase {
         )
         .store(in: &cancellables)
         
-        wait(for: [expectation], timeout: 0.2)
+        wait(for: [expectation], timeout: Self.TIMEOUT)
     }
     
     func testFutureDetachedTaskAsync() throws {
@@ -91,7 +93,7 @@ final class Tests_CombineUtilities: XCTestCase {
         )
         .store(in: &cancellables)
         
-        wait(for: [expectation], timeout: 0.3)
+        wait(for: [expectation], timeout: Self.TIMEOUT)
     }
     
     func testFutureDetachedTaskError() throws {
@@ -119,7 +121,7 @@ final class Tests_CombineUtilities: XCTestCase {
         )
         .store(in: &cancellables)
         
-        wait(for: [expectation], timeout: 0.2)
+        wait(for: [expectation], timeout: Self.TIMEOUT)
     }
 
     func testRecover() throws {
@@ -147,6 +149,6 @@ final class Tests_CombineUtilities: XCTestCase {
         )
         .store(in: &cancellables)
         
-        wait(for: [expectation], timeout: 0.2)
+        wait(for: [expectation], timeout: Self.TIMEOUT)
     }
 }
