@@ -7,11 +7,18 @@
 
 import SwiftUI
 
+enum UserProfileAction {
+    case requestFollow
+    case requestUnfollow
+    case editOwnProfile
+}
+
 struct UserProfileHeaderView: View {
     var user: UserProfile
     var statistics: UserProfileStatistics?
     
     var isFollowingUser: Bool
+    var action: (UserProfileAction) -> Void = { _ in }
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
@@ -29,23 +36,32 @@ struct UserProfileHeaderView: View {
                         Text("(you)")
                             .foregroundColor(.secondary)
                     }
-                    
                 }
                 
                 Spacer()
                 
-                // TODO: make this button do something
-                Button(action: {}, label: {
-                    if user.category == .you {
-                        Label("Edit Profile", systemImage: "pencil")
-                    } else {
-                        if isFollowingUser {
+                Button(
+                    action: {
+                        switch (user.category, isFollowingUser) {
+                        case (.you, _):
+                            action(.editOwnProfile)
+                        case (_, true):
+                            action(.requestUnfollow)
+                        case (_, false):
+                            action(.requestFollow)
+                        }
+                    },
+                    label: {
+                        switch (user.category, isFollowingUser) {
+                        case (.you, _):
+                            Label("Edit Profile", systemImage: "pencil")
+                        case (_, true):
                             Label("Following", systemImage: "person.fill.checkmark")
-                        } else {
+                        case (_, false):
                             Text("Follow")
                         }
                     }
-                })
+                )
                 .buttonStyle(GhostPillButtonStyle(size: .small))
                 .frame(maxWidth: 160)
             }

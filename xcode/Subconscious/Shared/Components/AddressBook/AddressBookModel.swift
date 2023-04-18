@@ -29,58 +29,24 @@ struct AddressBookEnvironment {
     var addressBook: AddressBookService
 }
 
-struct FollowUserFormModel: Equatable {
-    var did: FormField<String, Did> = FormField(value: "", validate: Self.validateDid)
-    var petname: FormField<String, Petname> = FormField(value: "", validate: Self.validatePetname)
-    
-    static func validateDid(key: String) -> Did? {
-        Did(key)
-    }
-
-    static func validatePetname(petname: String) -> Petname? {
-        Petname(petname)
-    }
-}
-
-struct PetnameFieldCursor: CursorProtocol {
-    typealias Model = AddressBookModel
-    typealias ViewModel = FormField<String, Petname>
-
-    static func get(state: Model) -> ViewModel {
-        state.followUserForm.petname
+struct FollowUserFormCursor: CursorProtocol {
+    static func get(state: AddressBookModel) -> FollowUserFormModel {
+        state.followUserForm
     }
     
-    static func set(state: Model, inner: ViewModel) -> Model {
+    static func set(state: AddressBookModel, inner: FollowUserFormModel) -> AddressBookModel {
         var model = state
-        model.followUserForm.petname = inner
+        model.followUserForm = inner
         return model
     }
     
-    static func tag(_ action: ViewModel.Action) -> Model.Action {
-        AddressBookAction.petnameField(action)
-    }
-}
-
-struct DidFieldCursor: CursorProtocol {
-    typealias Model = AddressBookModel
-    typealias ViewModel = FormField<String, Did>
-
-    static func get(state: Model) -> ViewModel {
-        state.followUserForm.did
-    }
-    
-    static func set(state: Model, inner: ViewModel) -> Model {
-        var model = state
-        model.followUserForm.did = inner
-        return model
-    }
-    
-    static func tag(_ action: ViewModel.Action) -> Model.Action {
-        AddressBookAction.didField(action)
+    static func tag(_ action: FollowUserFormAction) -> AddressBookAction {
+        AddressBookAction.followUserForm(action)
     }
 }
 
 enum AddressBookAction {
+    case followUserForm(FollowUserFormAction)
     case present(_ isPresented: Bool)
     
     case refreshDid
@@ -105,8 +71,6 @@ enum AddressBookAction {
     case succeedUnfollow(petname: Petname)
     
     case presentFollowUserForm(_ isPresented: Bool)
-    case didField(FormFieldAction<String>)
-    case petnameField(FormFieldAction<String>)
 
     case presentQRCodeScanner(_ isPresented: Bool)
     case qrCodeScanned(scannedContent: String)
@@ -199,24 +163,17 @@ struct AddressBookModel: ModelProtocol {
             return update(
                 state: model,
                 actions: [
-                    .didField(.reset),
-                    .petnameField(.reset)
+                    .followUserForm(.didField(.reset)),
+                    .followUserForm(.petnameField(.reset))
                 ],
                 environment: environment
             )
             
-        case .didField(let action):
-            return DidFieldCursor.update(
+        case .followUserForm(let action):
+            return FollowUserFormCursor.update(
                 state: state,
                 action: action,
-                environment: FormFieldEnvironment()
-            )
-            
-        case .petnameField(let action):
-            return PetnameFieldCursor.update(
-                state: state,
-                action: action,
-                environment: FormFieldEnvironment()
+                environment: ()
             )
             
         case .requestFollow:
@@ -224,8 +181,8 @@ struct AddressBookModel: ModelProtocol {
                 state: state,
                 actions: [
                     // Show errors on any untouched fields, hints at why you cannot submit
-                    .didField(.markAsTouched),
-                    .petnameField(.markAsTouched),
+                    .followUserForm(.didField(.markAsTouched)),
+                    .followUserForm(.petnameField(.markAsTouched)),
                     .attemptFollow
                 ],
                 environment: environment
@@ -341,8 +298,8 @@ struct AddressBookModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .didField(.markAsTouched),
-                    .didField(.setValue(input: content))
+                    .followUserForm(.didField(.markAsTouched)),
+                    .followUserForm(.didField(.setValue(input: content)))
                 ],
                 environment: environment
             )
@@ -351,9 +308,7 @@ struct AddressBookModel: ModelProtocol {
             var model = state
             model.failQRCodeScanErrorMessage = error
             return Update(state: model)
-            
         }
-        
     }
     
     static func present(
