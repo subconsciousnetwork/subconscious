@@ -167,8 +167,15 @@ struct FollowUserFormModel: ModelProtocol {
     typealias Action = FollowUserFormAction
     typealias Environment = ()
     
-    var did: FormField<String, Did> = FormField(value: "", validate: Self.validateDid)
-    var petname: FormField<String, Petname> = FormField(value: "", validate: Self.validatePetname)
+    var did: FormField<String, Did> = FormField(
+        value: "",
+        validate: Self.validateDid
+    )
+    
+    var petname: FormField<String, Petname> = FormField(
+        value: "",
+        validate: Self.validatePetname
+    )
     
     static func validateDid(key: String) -> Did? {
         Did(key)
@@ -178,12 +185,24 @@ struct FollowUserFormModel: ModelProtocol {
         Petname(petname)
     }
     
-    static func update(state: Self, action: Action, environment: Environment) -> Update<Self> {
+    static func update(
+        state: Self,
+        action: Action,
+        environment: Environment
+    ) -> Update<Self> {
         switch action {
         case .didField(let action):
-            return DidFieldCursor.update(state: state, action: action, environment: FormFieldEnvironment())
+            return DidFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
         case .petnameField(let action):
-            return PetnameFieldCursor.update(state: state, action: action, environment: FormFieldEnvironment())
+            return PetnameFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
         }
     }
 }

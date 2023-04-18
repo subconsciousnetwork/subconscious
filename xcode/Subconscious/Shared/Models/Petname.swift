@@ -90,7 +90,8 @@ public struct Petname:
             return Petname(formatting: verbatim + "-1")
         }
         
-        if let numberString = match.output.suffix, let number = Int(numberString) {
+        if let numberString = match.output.suffix,
+           let number = Int(numberString) {
             return Petname(formatting: "\(match.output.petname)-\(String(number + 1))")
         } else {
             return Petname(formatting: "\(match.output.petname)-1")
