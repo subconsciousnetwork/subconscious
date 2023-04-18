@@ -157,15 +157,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     private let noosphere: Noosphere
     public let sphere: OpaquePointer
     private let _identity: String
-    
-    private init(noosphere: Noosphere, sphere: OpaquePointer) throws {
-        self.noosphere = noosphere
-        self.sphere = sphere
-        let identity = try Self.fetchIdentityFromSphere(noosphere: noosphere.noosphere, sphere: sphere)
-        self._identity = identity
-        logger.debug("init with sphere reference: \(identity)")
-    }
-    
+
     init(noosphere: Noosphere, identity: String) throws {
         self.noosphere = noosphere
         self._identity = identity
@@ -180,18 +172,37 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         logger.debug("init with identity: \(identity)")
     }
     
-    private static nonisolated func fetchIdentityFromSphere(noosphere: OpaquePointer, sphere: OpaquePointer) throws -> String {
-        guard let sphereIdentity = try Noosphere.callWithError(
-            ns_sphere_identity,
-            noosphere,
-            sphere
-        ) else {
-            throw NoosphereError.nullPointer
+    private static func from(
+        noosphere: Noosphere,
+        sphere: OpaquePointer
+    ) async throws -> Self {
+        let identity =
+            try await Self.fetchIdentityFromSphere(
+                noosphere: noosphere.noosphere,
+                sphere: sphere
+            )
+            .value
+        
+        return try self.init(noosphere: noosphere, identity: identity)
+    }
+    
+    private static func fetchIdentityFromSphere(
+        noosphere: OpaquePointer,
+        sphere: OpaquePointer
+    ) throws -> Future<String, any Error> {
+        Future.detatched {
+            guard let sphereIdentity = try Noosphere.callWithError(
+                ns_sphere_identity,
+                noosphere,
+                sphere
+            ) else {
+                throw NoosphereError.nullPointer
+            }
+            defer {
+                ns_string_free(sphereIdentity)
+            }
+            return String.init(cString: sphereIdentity)
         }
-        defer {
-            ns_string_free(sphereIdentity)
-        }
-        return String.init(cString: sphereIdentity)
     }
     
     public func identity() throws -> String {
@@ -621,7 +632,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// `sphere().traverse(petname: "alice").traverse(petname: "bob").traverse(petname: "alice)` etc.
     ///
     /// - Returns a sphere
-    public func traverse(petname: Petname) throws -> Sphere {
+    public func traverse(petname: Petname) async throws -> Sphere {
         let sphere = try Noosphere.callWithError(
             ns_sphere_traverse_by_petname,
             noosphere.noosphere,
@@ -633,7 +644,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
             throw NoosphereError.foreignError("ns_sphere_traverse_by_petname failed to find sphere")
         }
         
-        return try Sphere(noosphere: noosphere, sphere: sphere)
+        return try await Sphere.from(noosphere: noosphere, sphere: sphere)
     }
     
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
