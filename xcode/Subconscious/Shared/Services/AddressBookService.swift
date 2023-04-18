@@ -39,6 +39,7 @@ extension AddressBookError: LocalizedError {
     }
 }
 
+/// An AddressBook can wrap any Sphere and provide a higher-level interface to manage petnames.
 actor AddressBook<Sphere: SphereProtocol> {
     private(set) var sphere: Sphere
     private var addressBook: [AddressBookEntry]?
@@ -48,7 +49,7 @@ actor AddressBook<Sphere: SphereProtocol> {
         self.addressBook = addressBook
     }
     
-    private func invalidateCache() {
+    func invalidateCache() {
         addressBook = nil
     }
     
@@ -96,23 +97,14 @@ actor AddressBook<Sphere: SphereProtocol> {
     /// This method is designed not to throw for a quick check.
     func hasEntryForPetname(petname: Petname) async -> Bool {
         do {
-            let _  = try await self.noosphere.getPetname(petname: petname)
+            let _  = try await self.sphere.getPetname(petname: petname)
             return true
         } catch {
-            Self.logger.error("An error occurred checking for \(petname.markup), returning false. Reason: \(error.localizedDescription)")
+            AddressBookService.logger.error("An error occurred checking for \(petname.markup), returning false. Reason: \(error.localizedDescription)")
             return false
         }
     }
-    
-    /// Is there a user with this petname in the AddressBook?
-    /// This method is designed not to throw for a quick check.
-    nonisolated func hasEntryForPetnamePublisher(petname: Petname) -> AnyPublisher<Bool, Never> {
-        Future.detached {
-            return await self.hasEntryForPetname(petname: petname)
-        }
-        .eraseToAnyPublisher()
-    }
-    
+
     /// Is this user in the AddressBook?
     func isFollowingUser(did: Did) async throws -> Bool {
         let entries = try await listEntries()
@@ -120,14 +112,6 @@ actor AddressBook<Sphere: SphereProtocol> {
         return entries.contains(where: { entry in
             entry.did == did
         })
-    }
-    
-    /// Is this user in the AddressBook?
-    nonisolated func isFollowingUserPublisher(did: Did) -> AnyPublisher<Bool, Error> {
-        Future.detached {
-            return try await self.isFollowingUser(did: did)
-        }
-        .eraseToAnyPublisher()
     }
     
     /// Iteratively add a numerical suffix to petnames until we find an available alias.
@@ -146,7 +130,7 @@ actor AddressBook<Sphere: SphereProtocol> {
             count += 1
             
             // Escape hatch, no infinite loops plz
-            if count > Self.MAX_ATTEMPTS_TO_INCREMENT_PETNAME {
+            if count > AddressBookService.MAX_ATTEMPTS_TO_INCREMENT_PETNAME {
                 throw AddressBookError.exhaustedUniquePetnameRange
             }
         }
@@ -154,21 +138,15 @@ actor AddressBook<Sphere: SphereProtocol> {
         return name
     }
     
-    /// Iteratively add a numerical suffix to petnames until we find an available alias.
-    /// This can fail if `MAX_ATTEMPTS_TO_INCREMENT_PETNAME` iterations occur without
-    /// finding a candidate.
-    nonisolated func findAvailablePetnamePublisher(petname: Petname) -> AnyPublisher<Petname, Error> {
-        Future.detached {
-            return try await self.findAvailablePetname(petname: petname)
-        }
-        .eraseToAnyPublisher()
+    func getPetname(petname: Petname) async throws -> Did? {
+        return try? await Did(self.sphere.getPetname(petname: petname))
     }
-    
+
     nonisolated func getPetnamePublisher(
         petname: Petname
-    ) -> AnyPublisher<Did?, Never> {
+    ) -> AnyPublisher<Did?, Error> {
         Future.detached(priority: .utility) {
-            try? await Did(self.noosphere.getPetname(petname: petname))
+            return try await self.getPetname(petname: petname)
         }
         .eraseToAnyPublisher()
     }
@@ -205,7 +183,7 @@ actor AddressBook<Sphere: SphereProtocol> {
     }
 
     func listPetnamesPublisher() -> AnyPublisher<[Petname], Error> {
-        Future.detatched(priority: .utility) {
+        Future.detached(priority: .utility) {
           return try await self.listPetnames()
         }
         .eraseToAnyPublisher()
@@ -216,7 +194,7 @@ actor AddressBook<Sphere: SphereProtocol> {
     }
       
     func getPetnameChangesPublisher(sinceCid: String) -> AnyPublisher<[Petname], Error> {
-        Future.detatched(priority: .utility) {
+        Future.detached(priority: .utility) {
             return try await self.getPetnameChanges(sinceCid: sinceCid)
         }
         .eraseToAnyPublisher()
@@ -235,10 +213,14 @@ actor AddressBook<Sphere: SphereProtocol> {
     }
 }
 
+/// AddressBookService wraps an AddressBook around NoosphereService and keeps
+/// the database in-sync with any follow / unfollows.
 actor AddressBookService {
-    private(set) var noosphere: NoosphereService
-    private(set) var database: DatabaseService
-    private(set) var addressBook: AddressBook<NoosphereService>
+    private var noosphere: NoosphereService
+    private var database: DatabaseService
+    private var addressBook: AddressBook<NoosphereService>
+    
+    static let MAX_ATTEMPTS_TO_INCREMENT_PETNAME = 99
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -270,7 +252,7 @@ actor AddressBookService {
     }
     
     /// Associates the passed DID with the passed petname within the sphere, clears the cache,
-    /// saves the changes and updates the database.
+    /// clears the cache, saves the changes and updates the database.
     func followUser(
         did: Did,
         petname: Petname,
@@ -280,7 +262,7 @@ actor AddressBookService {
             throw AddressBookError.cannotFollowYourself
         }
         
-        let hasEntry = await hasEntryForPetname(petname: petname)
+        let hasEntry = await self.addressBook.hasEntryForPetname(petname: petname)
         if preventOverwrite && hasEntry {
             throw AddressBookError.invalidAttemptToOverwitePetname
         }
@@ -288,11 +270,11 @@ actor AddressBookService {
         try await noosphere.setPetname(did: did.did, petname: petname)
         let version = try await noosphere.save()
         try database.writeMetadatadata(key: .sphereVersion, value: version)
-        invalidateCache()
+        await self.addressBook.invalidateCache()
     }
     
     /// Associates the passed DID with the passed petname within the sphere,
-    /// saves the changes and updates the database.
+    /// clears the cache, saves the changes and updates the database.
     nonisolated func followUserPublisher(
         did: Did,
         petname: Petname,
@@ -304,15 +286,17 @@ actor AddressBookService {
         .eraseToAnyPublisher()
     }
     
-    /// Disassociates the passed Petname from any DID within the sphere, clears the cache, saves the changes and updates the database.
+    /// Disassociates the passed Petname from any DID within the sphere,
+    /// clears the cache, saves the changes and updates the database.
     func unfollowUser(petname: Petname) async throws {
         try await self.addressBook.unsetPetname(petname: petname)
         let version = try await self.noosphere.save()
         try database.writeMetadatadata(key: .sphereVersion, value: version)
-        invalidateCache()
+        await self.addressBook.invalidateCache()
     }
     
-    /// Disassociates the passed DID from any petname(s) in the address book, clears the cache, saves the changes and updates the database.
+    /// Disassociates the passed DID from any petname(s) in the address book,
+    /// clears the cache, saves the changes and updates the database.
     /// Requires listing the contents of the address book.
     func unfollowUser(did: Did) async throws {
         let entries = try await listEntries()
@@ -347,6 +331,51 @@ actor AddressBookService {
     }
 
     func getPetname(petname: Petname) async throws -> Did? {
-        return try await Did(self.sphere.getPetname(petname: petname))
+        return try await Did(self.noosphere.getPetname(petname: petname))
+    }
+    
+    /// Is there a user with this petname in the AddressBook?
+    /// This method is designed not to throw for a quick check.
+    func hasEntryForPetname(petname: Petname) async -> Bool {
+        return await self.addressBook.hasEntryForPetname(petname: petname)
+    }
+    
+    /// Is there a user with this petname in the AddressBook?
+    /// This method is designed not to throw for a quick check.
+    nonisolated func hasEntryForPetnamePublisher(petname: Petname) -> AnyPublisher<Bool, Never> {
+        Future.detached {
+            return await self.addressBook.hasEntryForPetname(petname: petname)
+        }
+        .eraseToAnyPublisher()
+    }
+    
+    /// Iteratively add a numerical suffix to petnames until we find an available alias.
+    /// This can fail if `MAX_ATTEMPTS_TO_INCREMENT_PETNAME` iterations occur without
+    /// finding a candidate.
+    func findAvailablePetname(petname: Petname) async throws -> Petname {
+        return try await self.addressBook.findAvailablePetname(petname: petname)
+    }
+    
+    /// Iteratively add a numerical suffix to petnames until we find an available alias.
+    /// This can fail if `MAX_ATTEMPTS_TO_INCREMENT_PETNAME` iterations occur without
+    /// finding a candidate.
+    nonisolated func findAvailablePetnamePublisher(petname: Petname) -> AnyPublisher<Petname, Error> {
+        Future.detached {
+            return try await self.addressBook.findAvailablePetname(petname: petname)
+        }
+        .eraseToAnyPublisher()
+    }
+    
+    /// Is this user in the AddressBook?
+    func isFollowingUser(did: Did) async -> Bool {
+        return await self.addressBook.isFollowing(did: did)
+    }
+    
+    /// Is this user in the AddressBook?
+    nonisolated func isFollowingUserPublisher(did: Did) -> AnyPublisher<Bool, Error> {
+        Future.detached {
+            return try await self.addressBook.isFollowingUser(did: did)
+        }
+        .eraseToAnyPublisher()
     }
 }

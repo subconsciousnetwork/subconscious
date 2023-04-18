@@ -100,7 +100,7 @@ struct UserProfileDetailDescription: Hashable {
     var profile: UserProfileType
 }
 
-enum UserProfileDetailAction: Hashable {
+enum UserProfileDetailAction {
     case appear(UserProfileType)
     case populate(UserProfileContentPayload)
     case failedToPopulate(String)
@@ -184,11 +184,6 @@ struct UserProfileDetailModel: ModelProtocol {
     var spherePath: SpherePath = []
     
     var statistics: UserProfileStatistics? = nil
-    
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "UserProfileDetailModel"
-    )
 
     static func update(
         state: Self,
@@ -255,7 +250,7 @@ struct UserProfileDetailModel: ModelProtocol {
             return update(
                 state: model,
                 actions: [
-                    .fetchFollowingStatus(user.did)
+                    .fetchFollowingStatus(content.profile.did)
                 ],
                 environment: environment
             )

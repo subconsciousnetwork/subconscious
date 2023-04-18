@@ -36,9 +36,9 @@ struct UserProfileContentPayload: Equatable, Hashable {
 }
 
 class UserProfileService {
-    private(set) var noosphere: NoosphereService
-    private(set) var database: DatabaseService
-    private(set) var addressBook: AddressBookService
+    private var noosphere: NoosphereService
+    private var database: DatabaseService
+    private var addressBook: AddressBookService
     
     private let logger = Logger(
         subsystem: Config.default.rdns,
@@ -103,7 +103,7 @@ class UserProfileService {
     }
     
     func getOwnProfilePublisher() -> AnyPublisher<UserProfileContentPayload, Error> {
-        Future.detatched {
+        Future.detached {
             return try await self.getOwnProfile()
         }
         .eraseToAnyPublisher()
@@ -131,7 +131,7 @@ class UserProfileService {
                 category: noosphereIdentity == did.did ? .you : .human
             )
             
-            let isFollowingUser = await self.addressBook.addressBook.isFollowing(did: did)
+            let isFollowingUser = await self.addressBook.isFollowingUser(did: did)
             
             following.append(
                 StoryUser(
@@ -161,7 +161,7 @@ class UserProfileService {
         }
         
         let notes = try await sphere.list()
-        let isFollowing = await self.addressBook.addressBook.isFollowing(did: did)
+        let isFollowing = await self.addressBook.isFollowingUser(did: did)
         
         var entries: [EntryStub] = []
         
@@ -204,7 +204,7 @@ class UserProfileService {
     }
     
     func getUserProfilePublisher(petname: Petname) -> AnyPublisher<UserProfileContentPayload, Error> {
-        Future.detatched {
+        Future.detached {
             return try await self.getUserProfile(petname: petname)
         }
         .eraseToAnyPublisher()

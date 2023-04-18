@@ -175,22 +175,15 @@ final class Tests_DataService: XCTestCase {
                 sphereIdentity: sphereIdentity
             )
             let addressBook = AddressBookService(
-                sphere: noosphere,
+                noosphere: noosphere,
                 database: database
             )
-            
-            let userProfile = UserProfileService(
-                sphere: noosphere,
-                database: database,
-                addressBook: addressBook
-            )
-
+           
             let data = DataService(
                 noosphere: noosphere,
                 database: database,
                 local: local,
-                addressBook: addressBook,
-                userProfile: userProfile
+                addressBook: addressBook
             )
             
             versionX = try await noosphere.version()
@@ -223,22 +216,15 @@ final class Tests_DataService: XCTestCase {
             sphereIdentity: sphereIdentity
         )
         let addressBook = AddressBookService(
-            sphere: noosphere,
+            noosphere: noosphere,
             database: database
-        )
-        
-        let userProfile = UserProfileService(
-            sphere: noosphere,
-            database: database,
-            addressBook: addressBook
         )
 
         let data = DataService(
             noosphere: noosphere,
             database: database,
             local: local,
-            addressBook: addressBook,
-            userProfile: userProfile
+            addressBook: addressBook
         )
         let versionY = try await noosphere.version()
         

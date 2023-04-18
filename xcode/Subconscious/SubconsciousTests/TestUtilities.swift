@@ -73,12 +73,6 @@ struct TestUtilities {
             database: database
         )
         
-        let userProfile = UserProfileService(
-            noosphere: noosphere,
-            database: database,
-            addressBook: addressBook
-        )
-        
         let data = DataService(
             noosphere: noosphere,
             database: database,
