@@ -183,7 +183,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     }
 
     nonisolated public func identityPublisher() -> AnyPublisher<String, Error> {
-        Future.detatched {
+        Future.detached {
             self._identity
         }
         .eraseToAnyPublisher()
@@ -206,7 +206,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     
     /// Get current version of sphere as a publisher
     nonisolated public func versionPublisher() -> AnyPublisher<String, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.version()
         }
         .eraseToAnyPublisher()
@@ -241,7 +241,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         slashlink: Slashlink,
         name: String
     ) -> AnyPublisher<String?, Never> {
-        Future.detatched {
+        Future.detached {
             await self.readHeaderValueFirst(slashlink: slashlink, name: name)
         }
         .eraseToAnyPublisher()
@@ -277,7 +277,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     nonisolated public func getFileVersionPublisher(
         slashlink: Slashlink
     ) -> AnyPublisher<String?, Never> {
-        Future.detatched {
+        Future.detached {
             await self.getFileVersion(slashlink: slashlink)
         }
         .eraseToAnyPublisher()
@@ -305,7 +305,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     nonisolated public func readHeaderNamesPublisher(
         slashlink: Slashlink
     ) -> AnyPublisher<[String], Never> {
-        Future.detatched {
+        Future.detached {
             await self.readHeaderNames(slashlink: slashlink)
         }
         .eraseToAnyPublisher()
@@ -372,7 +372,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     nonisolated public func readPublisher(
         slashlink: Slashlink
     ) -> AnyPublisher<MemoData, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.read(slashlink: slashlink)
         }
         .eraseToAnyPublisher()
@@ -429,7 +429,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         additionalHeaders: [Header] = [],
         body: Data
     ) -> AnyPublisher<Void, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.write(
                 slug: slug,
                 contentType: contentType,
@@ -475,7 +475,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     nonisolated public func getPetnamePublisher(
         petname: Petname
     ) -> AnyPublisher<String, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.getPetname(petname: petname)
         }
         .eraseToAnyPublisher()
@@ -498,7 +498,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         did: String?,
         petname: Petname
     ) -> AnyPublisher<Void, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.setPetname(did: did, petname: petname)
         }
         .eraseToAnyPublisher()
@@ -529,7 +529,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     nonisolated public func resolvePetnamePublisher(
         petname: Petname
     ) -> AnyPublisher<String, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.resolvePetname(petname: petname)
         }
         .eraseToAnyPublisher()
@@ -558,7 +558,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// List all petnames in user's follows (address book)
     /// - Returns an a `AnyPublisher` for an array of `Petname`
     nonisolated public func listPetnamesPublisher() -> AnyPublisher<[Petname], Error> {
-        Future.detatched {
+        Future.detached {
             try await self.listPetnames()
         }
         .eraseToAnyPublisher()
@@ -593,7 +593,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     nonisolated public func getPetnameChangesPublisher(
         sinceCid: String
     ) -> AnyPublisher<[Petname], Error> {
-        Future.detatched {
+        Future.detached {
             try await self.getPetnameChanges(sinceCid: sinceCid)
         }
         .eraseToAnyPublisher()
@@ -628,7 +628,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     nonisolated public func traversePublisher(
         petname: Petname
     ) -> AnyPublisher<Sphere, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.traverse(petname: petname)
         }
         .eraseToAnyPublisher()
@@ -652,7 +652,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// This method is called on the write queue, and is asynchronous.
     /// - Returns a `AnyPublisher` for version CID string, or error.
     nonisolated public func savePublisher() -> AnyPublisher<String, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.save()
         }
         .eraseToAnyPublisher()
@@ -671,7 +671,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// Remove slug from sphere.
     /// - Returns a `AnyPublisher` for Void (success) or error.
     nonisolated public func removePublisher(slug: Slug) -> AnyPublisher<Void, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.remove(slug: slug)
         }
         .eraseToAnyPublisher()
@@ -697,7 +697,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// List all slugs in sphere.
     /// - Returns a `AnyPublisher` for an array of `Slug`, or error.
     nonisolated public func listPublisher() -> AnyPublisher<[Slug], Error> {
-        Future.detatched {
+        Future.detached {
             try await self.list()
         }
         .eraseToAnyPublisher()
@@ -726,7 +726,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// This method runs on the write queue and is asynchronous.
     /// - Returns a `AnyPublisher` CID string for the new sphere version.
     nonisolated public func syncPublisher() -> AnyPublisher<String, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.sync()
         }
         .eraseToAnyPublisher()
@@ -759,7 +759,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     nonisolated public func changesPublisher(
         _ since: String?
     ) -> AnyPublisher<[Slug], Error> {
-        Future.detatched {
+        Future.detached {
             try await self.changes(since)
         }
         .eraseToAnyPublisher()
