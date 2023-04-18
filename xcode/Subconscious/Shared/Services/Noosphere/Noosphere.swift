@@ -139,7 +139,7 @@ public actor Noosphere {
     nonisolated func createSpherePublisher(
         ownerKeyName: String
     ) -> AnyPublisher<SphereReceipt, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.createSphere(ownerKeyName: ownerKeyName)
         }
         .eraseToAnyPublisher()

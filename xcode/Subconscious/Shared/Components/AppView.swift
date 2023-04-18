@@ -754,7 +754,7 @@ struct AppModel: ModelProtocol {
         AppDefaults.standard.gatewayURL = gatewayURL
 
         // Reset gateway on environment
-        let fx: Fx<AppAction> = Future.detatched {
+        let fx: Fx<AppAction> = Future.detached {
             await environment.noosphere.resetGateway(url: url)
             return .succeedResetGatewayURL(url)
         }
@@ -780,7 +780,7 @@ struct AppModel: ModelProtocol {
     ) -> Update<AppModel> {
         let ownerKeyName = ownerKeyName ?? Config.default.noosphere.ownerKeyName
 
-        let fx: Fx<AppAction> = Future.detatched {
+        let fx: Fx<AppAction> = Future.detached {
             let receipt = try await environment.data.createSphere(
                 ownerKeyName: ownerKeyName
             )
@@ -903,7 +903,7 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let fx: Fx<AppAction> = Future.detatched {
+        let fx: Fx<AppAction> = Future.detached {
             await environment.noosphere.reset()
             return .succeedResetNoosphereService
         }

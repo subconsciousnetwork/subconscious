@@ -25,9 +25,9 @@ public extension Future where Failure == Never {
 }
 
 /// Create a Combine Future from an async closure that never fails.
-/// Async actions are run in a detatched task and fulfil the future's promise.
+/// Async actions are run in a detached task and fulfil the future's promise.
 public extension Future where Failure == Never {
-    static func detatched(
+    static func detached(
         priority: TaskPriority? = nil,
         perform: @escaping () async -> Output
     ) -> Self {
@@ -61,9 +61,9 @@ public extension Future where Failure == Error {
 }
 
 /// Create a Combine Future from an async throwing closure.
-/// Async actions are run in a detatched task and fulfil the future's promise.
+/// Async actions are run in a detached task and fulfil the future's promise.
 public extension Future where Failure == Error {
-    static func detatched(
+    static func detached(
         priority: TaskPriority? = nil,
         perform: @escaping () async throws -> Output
     ) -> Self {

@@ -86,7 +86,7 @@ actor DataService {
     
     /// Migrate database off main thread, returning a publisher
     nonisolated func migratePublisher() -> AnyPublisher<Int, Error> {
-        Future.detatched(priority: .utility) {
+        Future.detached(priority: .utility) {
             try await self.database.migrate()
         }
         .eraseToAnyPublisher()
@@ -94,7 +94,7 @@ actor DataService {
     
     /// Rebuild database and re-sync everything.
     nonisolated func rebuildPublisher() -> AnyPublisher<Int, Error> {
-        Future.detatched(priority: .utility) {
+        Future.detached(priority: .utility) {
             try await self.database.rebuild()
         }
         .eraseToAnyPublisher()
@@ -129,7 +129,7 @@ actor DataService {
     }
     
     nonisolated func syncSphereWithDatabasePublisher() -> AnyPublisher<String, Error> {
-        Future.detatched(priority: .utility) {
+        Future.detached(priority: .utility) {
             try await self.syncSphereWithDatabase()
         }
         .eraseToAnyPublisher()
@@ -196,7 +196,7 @@ actor DataService {
     }
     
     nonisolated func syncLocalWithDatabasePublisher() -> AnyPublisher<[FileFingerprintChange], Error> {
-        Future.detatched(priority: .utility) {
+        Future.detached(priority: .utility) {
             try await self.syncLocalWithDatabase()
         }
         .eraseToAnyPublisher()
@@ -270,7 +270,7 @@ actor DataService {
     nonisolated func writeEntryPublisher(
         _ entry: MemoEntry
     ) -> AnyPublisher<Void, Error> {
-        Future.detatched(priority: .utility) {
+        Future.detached(priority: .utility) {
             try await self.writeEntry(entry)
         }
         .eraseToAnyPublisher()
@@ -296,7 +296,7 @@ actor DataService {
     nonisolated func deleteMemoPublisher(
         _ address: MemoAddress
     ) -> AnyPublisher<Void, Error> {
-        Future.detatched(priority: .utility) {
+        Future.detached(priority: .utility) {
             try await self.deleteMemo(address)
         }
         .eraseToAnyPublisher()
@@ -329,7 +329,7 @@ actor DataService {
         from: MemoAddress,
         to: MemoAddress
     ) -> AnyPublisher<MoveReceipt, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.moveEntry(from: from, to: to)
         }
         .eraseToAnyPublisher()
@@ -362,14 +362,14 @@ actor DataService {
         parent: MemoAddress,
         child: MemoAddress
     ) -> AnyPublisher<Void, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.mergeEntry(parent: parent, child: child)
         }
         .eraseToAnyPublisher()
     }
     
     nonisolated func listRecentMemosPublisher() -> AnyPublisher<[EntryStub], Error> {
-        Future.detatched {
+        Future.detached {
             try await self.database.listRecentMemos()
         }
         .eraseToAnyPublisher()
@@ -381,7 +381,7 @@ actor DataService {
     
     /// Count all entries
     nonisolated func countMemosPublisher() -> AnyPublisher<Int, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.countMemos()
         }
         .eraseToAnyPublisher()
@@ -390,7 +390,7 @@ actor DataService {
     nonisolated func searchSuggestionsPublisher(
         query: String
     ) -> AnyPublisher<[Suggestion], Error> {
-        Future.detatched(priority: .userInitiated) {
+        Future.detached(priority: .userInitiated) {
             try await self.database.searchSuggestions(query: query)
         }
         .eraseToAnyPublisher()
@@ -403,7 +403,7 @@ actor DataService {
         omitting invalidSuggestions: Set<MemoAddress> = Set(),
         fallback: [LinkSuggestion] = []
     ) -> AnyPublisher<[LinkSuggestion], Error> {
-        Future.detatched(priority: .userInitiated) {
+        Future.detached(priority: .userInitiated) {
             await self.database.searchLinkSuggestions(
                 query: query,
                 omitting: invalidSuggestions,
@@ -417,7 +417,7 @@ actor DataService {
         query: String,
         current: MemoAddress
     ) -> AnyPublisher<[RenameSuggestion], Error> {
-        Future.detatched(priority: .userInitiated) {
+        Future.detached(priority: .userInitiated) {
             try await self.database.searchRenameSuggestions(
                 query: query,
                 current: current
@@ -430,7 +430,7 @@ actor DataService {
     nonisolated func createSearchHistoryItemPublisher(
         query: String
     ) -> AnyPublisher<String, Error> {
-        Future.detatched(priority: .utility) {
+        Future.detached(priority: .utility) {
             await self.database.createSearchHistoryItem(query: query)
         }
         .eraseToAnyPublisher()
@@ -472,7 +472,7 @@ actor DataService {
     nonisolated func findAddressInOursPublisher(
         slug: Slug
     ) -> AnyPublisher<MemoAddress?, Never> {
-        Future.detatched {
+        Future.detached {
             await self.findAddressInOurs(slug: slug)
         }
         .eraseToAnyPublisher()
@@ -506,7 +506,7 @@ actor DataService {
         _ text: String,
         audience: Audience
     ) -> AnyPublisher<MemoAddress?, Never> {
-        Future.detatched {
+        Future.detached {
             await self.findUniqueAddressFor(text, audience: audience)
         }
         .eraseToAnyPublisher()
@@ -584,7 +584,7 @@ actor DataService {
         address: MemoAddress,
         fallback: String
     ) -> AnyPublisher<MemoEditorDetailResponse, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.readMemoEditorDetail(
                 address: address,
                 fallback: fallback
@@ -628,7 +628,7 @@ actor DataService {
     nonisolated func readMemoDetailPublisher(
         address: MemoAddress
     ) -> AnyPublisher<MemoDetailResponse?, Never> {
-        Future.detatched {
+        Future.detached {
             await self.readMemoDetail(address: address)
         }
         .eraseToAnyPublisher()
@@ -644,7 +644,7 @@ actor DataService {
 
     /// Choose a random entry and publish slug
     nonisolated func readRandomEntryLinkPublisher() -> AnyPublisher<EntryLink, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.readRandomEntryLink()
         }
         .eraseToAnyPublisher()

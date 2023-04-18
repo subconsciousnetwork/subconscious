@@ -74,7 +74,7 @@ actor AddressBookService {
     nonisolated func listEntriesPublisher(
         refetch: Bool = false
     ) -> AnyPublisher<[AddressBookEntry], Error> {
-        Future.detatched {
+        Future.detached {
             try await self.listEntries(refetch: refetch)
         }
         .eraseToAnyPublisher()
@@ -96,7 +96,7 @@ actor AddressBookService {
         did: Did,
         petname: Petname
     ) -> AnyPublisher<Void, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.followUser(did: did, petname: petname)
         }
         .eraseToAnyPublisher()
@@ -113,7 +113,7 @@ actor AddressBookService {
     nonisolated func unfollowUserPublisher(
         petname: Petname
     ) -> AnyPublisher<Void, Error> {
-        Future.detatched {
+        Future.detached {
             try await self.unfollowUser(petname: petname)
         }
         .eraseToAnyPublisher()
@@ -122,7 +122,7 @@ actor AddressBookService {
     nonisolated func getPetnamePublisher(
         petname: Petname
     ) -> AnyPublisher<Did?, Never> {
-        Future.detatched(priority: .utility) {
+        Future.detached(priority: .utility) {
             try? await Did(self.noosphere.getPetname(petname: petname))
         }
         .eraseToAnyPublisher()
@@ -136,7 +136,7 @@ actor AddressBookService {
         did: Did,
         petname: Petname
     ) -> AnyPublisher<Void, Error> {
-        Future.detatched {
+        Future.detached {
           try await self.setPetname(did: did, petname: petname)
         }
         .eraseToAnyPublisher()
@@ -149,7 +149,7 @@ actor AddressBookService {
     nonisolated func unsetPetnamePublisher(
         petname: Petname
     ) -> AnyPublisher<Void, Error> {
-        Future.detatched(priority: .utility) {
+        Future.detached(priority: .utility) {
           try await self.unsetPetname(petname: petname)
         }
         .eraseToAnyPublisher()

@@ -71,8 +71,8 @@ final class Tests_CombineUtilities: XCTestCase {
         wait(for: [expectation], timeout: 0.2)
     }
     
-    func testFutureDetatchedTaskAsync() throws {
-        let future = Future.detatched {
+    func testFutureDetachedTaskAsync() throws {
+        let future = Future.detached {
             XCTAssertFalse(Thread.isMainThread, "Run in separate thread")
             return 10
         }
@@ -94,8 +94,8 @@ final class Tests_CombineUtilities: XCTestCase {
         wait(for: [expectation], timeout: 0.3)
     }
     
-    func testFutureDetatchedTaskError() throws {
-        let future: Future<Int, Error> = Future.detatched {
+    func testFutureDetachedTaskError() throws {
+        let future: Future<Int, Error> = Future.detached {
             throw TestError.code(10)
         }
         
@@ -123,7 +123,7 @@ final class Tests_CombineUtilities: XCTestCase {
     }
 
     func testRecover() throws {
-        let future: Future<Int, Error> = Future.detatched {
+        let future: Future<Int, Error> = Future.detached {
             throw TestError.code(10)
         }
         
