@@ -40,8 +40,8 @@ extension AddressBookError: LocalizedError {
 }
 
 actor AddressBookService {
-    private(set) var noosphere: NoosphereService
-    private(set) var database: DatabaseService
+    private var noosphere: NoosphereService
+    private var database: DatabaseService
     private var addressBook: [AddressBookEntry]?
     
     private static let MAX_ATTEMPTS_TO_INCREMENT_PETNAME = 99
