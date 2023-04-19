@@ -41,7 +41,7 @@ struct UserProfileView: View {
                                 author: user,
                                 entry: entry
                             ),
-                            action: { address, excerpt in onNavigateToNote(address) }
+                            action: { address, _ in onNavigateToNote(address) }
                         )
                     }
                 }
@@ -58,7 +58,7 @@ struct UserProfileView: View {
                                 author: user,
                                 entry: entry
                             ),
-                            action: { address, excerpt in onNavigateToNote(address) }
+                            action: { address, _ in onNavigateToNote(address) }
                         )
                     }
                 }
@@ -71,7 +71,7 @@ struct UserProfileView: View {
                 ForEach(state.following, id: \.user.did) { follow in
                     StoryUserView(
                         story: follow,
-                        action: { address, _ in onNavigateToUser(follow.user) },
+                        action: { _, _ in onNavigateToUser(follow.user) },
                         profileAction: onProfileAction
                     )
                 }
@@ -146,15 +146,24 @@ struct UserProfileView: View {
 }
 
 private extension View {
-    func unfollow(state: UserProfileDetailModel, send: @escaping (UserProfileDetailAction) -> Void) -> some View {
+    func unfollow(
+        state: UserProfileDetailModel,
+        send: @escaping (UserProfileDetailAction) -> Void
+    ) -> some View {
       self.modifier(UnfollowModifier(state: state, send: send))
     }
     
-    func follow(state: UserProfileDetailModel, send: @escaping (UserProfileDetailAction) -> Void) -> some View {
+    func follow(
+        state: UserProfileDetailModel,
+        send: @escaping (UserProfileDetailAction) -> Void
+    ) -> some View {
       self.modifier(FollowModifier(state: state, send: send))
     }
     
-    func metaSheet(state: UserProfileDetailModel, send: @escaping (UserProfileDetailAction) -> Void) -> some View {
+    func metaSheet(
+        state: UserProfileDetailModel,
+        send: @escaping (UserProfileDetailAction) -> Void
+    ) -> some View {
       self.modifier(MetaSheetModifier(state: state, send: send))
     }
 }

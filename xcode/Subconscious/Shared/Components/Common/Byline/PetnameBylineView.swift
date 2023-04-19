@@ -10,7 +10,7 @@ import SwiftUI
 /// Byline style for displaying a petname
 struct PetnameBylineView: View {
     var petname: Petname
-    var petnameColor = Color.accentColor
+    private(set) var petnameColor = Color.accentColor
     
     var body: some View {
         let parts = petname.markup.split(separator: ".")
@@ -21,7 +21,8 @@ struct PetnameBylineView: View {
             
             Text(first)
                 .foregroundColor(petnameColor)
-                .fixedSize(horizontal: true, vertical: false) // May need to come back to this
+                // Fixed size to ensure truncation trims path preferentially 
+                .fixedSize(horizontal: true, vertical: false)
                 .font(.callout)
                 .fontWeight(.medium)
                 .lineLimit(1)
