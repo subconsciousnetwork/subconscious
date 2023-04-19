@@ -207,36 +207,27 @@ struct UserProfileDetailModel: ModelProtocol {
         case .appear(let profile):
             var model = state
             
+            var fxRoot: AnyPublisher<UserProfileContentPayload, Error>
+            
             switch (profile) {
             case .other(let path):
                 model.traversalPath = path
-                
-                let fx: Fx<UserProfileDetailAction> =
-                    environment.userProfile
-                    .getUserProfilePublisher(petname: path)
-                    .map { content in
-                        UserProfileDetailAction.populate(content)
-                    }
-                    .catch { error in
-                        Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
-                    }
-                    .eraseToAnyPublisher()
-                
-                return Update(state: model, fx: fx)
+                fxRoot = environment.userProfile.getUserProfilePublisher(petname: path)
             case .you:
-                let fx: Fx<UserProfileDetailAction> =
-                    environment.userProfile
-                    .getOwnProfilePublisher()
-                    .map { content in
-                        UserProfileDetailAction.populate(content)
-                    }
-                    .catch { error in
-                        Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
-                    }
-                    .eraseToAnyPublisher()
-                
-                return Update(state: model, fx: fx)
+                fxRoot = environment.userProfile.getOwnProfilePublisher()
             }
+            
+            let fx: Fx<UserProfileDetailAction> =
+                fxRoot
+                .map { content in
+                    UserProfileDetailAction.populate(content)
+                }
+                .catch { error in
+                    Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: model, fx: fx)
             
         case .populate(let content):
             var model = state
