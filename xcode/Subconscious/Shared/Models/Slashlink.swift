@@ -120,6 +120,15 @@ extension Slashlink {
     func toSlug() -> Slug {
         self.slug
     }
+    
+    func relativeTo(petname: Petname) -> Slashlink {
+        guard let localPetname = self.petname else {
+            return Slashlink(petname: petname, slug: self.slug)
+        }
+        
+        let path = petname.concat(petname: localPetname)
+        return Slashlink(petname: path, slug: self.slug)
+    }
 }
 
 extension Petname {

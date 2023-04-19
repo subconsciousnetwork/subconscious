@@ -75,16 +75,37 @@ struct BylineLgView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             UserProfileHeaderView(
-                user: UserProfile(did: Did("did:key:123")!, petname: Petname("ben")!, pfp: "pfp-dog", bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.", category: .human),
+                user: UserProfile(
+                    did: Did("did:key:123")!,
+                    petname: Petname("ben")!,
+                    address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress(),
+                    pfp: "pfp-dog",
+                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
+                    category: .human
+                ),
                 isFollowingUser: false
             )
             UserProfileHeaderView(
-                user: UserProfile(did: Did("did:key:123")!, petname: Petname("ben")!, pfp: "pfp-dog", bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.", category: .geist),
+                user: UserProfile(
+                    did: Did("did:key:123")!,
+                    petname: Petname("ben")!,
+                    address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress(),
+                    pfp: "pfp-dog",
+                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
+                    category: .geist
+                ),
                 statistics: UserProfileStatistics(noteCount: 123, backlinkCount: 64, followingCount: 19),
                 isFollowingUser: true
             )
             UserProfileHeaderView(
-                user: UserProfile(did: Did("did:key:123")!, petname: Petname("ben")!, pfp: "pfp-dog", bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.", category: .you),
+                user: UserProfile(
+                    did: Did("did:key:123")!,
+                    petname: Petname("ben")!,
+                    address: Slashlink.yourProfile.toLocalMemoAddress(),
+                    pfp: "pfp-dog",
+                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
+                    category: .you
+                ),
                 isFollowingUser: false
             )
         }

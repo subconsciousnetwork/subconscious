@@ -59,15 +59,6 @@ extension MemoDetailDescription {
                 )
             )
         case .public(let slashlink):
-            if let petname = slashlink.petname {
-                return .viewer(
-                    MemoViewerDetailDescription(
-                        address: slashlink.toPublicMemoAddress(),
-                        traversalPath: petname
-                    )
-                )
-            }
-            
             return .viewer(
                 MemoViewerDetailDescription(
                     address: slashlink.toPublicMemoAddress()

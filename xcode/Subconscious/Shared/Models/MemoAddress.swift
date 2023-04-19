@@ -105,8 +105,21 @@ extension MemoAddress {
         }
     }
     
-    func isProfile() -> Bool {
-        return self.slug.isProfile()
+    var isProfile: Bool {
+        self.slug.isProfile()
+    }
+    
+    var isOurProfile: Bool {
+        self.isOurs && self.isProfile
+    }
+    
+    var petname: Petname? {
+        switch self {
+        case .local(_):
+            return .none
+        case .public(let slashlink):
+            return slashlink.petname
+        }
     }
 }
 

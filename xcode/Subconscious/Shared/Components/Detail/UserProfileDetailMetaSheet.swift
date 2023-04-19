@@ -99,24 +99,17 @@ struct UserProfileDetailMetaSheet: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                    if let user = profile.user {
-                        if let path = profile.traversalPath,
-                           let slashlink = Slashlink(petname: path) {
-                            SlashlinkBylineView(slashlink: slashlink).theme(
-                                petname: Color.primary,
-                                slug: Color.secondary
-                            )
-                        }
-                        
-                        if user.category == .you {
-                            SlashlinkBylineView(slashlink: Slashlink.yourProfile).theme(
-                                petname: Color.primary,
-                                slug: Color.secondary
-                            )
-                        }
+                    if let user = profile.user,
+                       let slashlink = user.address.toSlashlink() {
+                        SlashlinkBylineView(slashlink: slashlink).theme(
+                            petname: Color.primary,
+                            slug: Color.secondary
+                        )
                     }
                 }
+                
                 Spacer()
+                
                 CloseButtonView(action: { dismiss() })
             }
             .padding()
@@ -127,7 +120,10 @@ struct UserProfileDetailMetaSheet: View {
                 VStack(alignment: .center) {
                     if let user = profile.user {
                         MetaTableView {
-                            MetaTableItemShareLinkView(label: "Share Link", item: Slashlink(petname: user.petname).verbatimMarkup)
+                            MetaTableItemShareLinkView(
+                                label: "Share Link",
+                                item: user.address.toSlashlink().verbatimMarkup
+                            )
                             MetaTableItemShareLinkView(label: "Share DID", item: user.did.did)
                             // Add concepts such as "Block" or "Mute" here later?
                         }

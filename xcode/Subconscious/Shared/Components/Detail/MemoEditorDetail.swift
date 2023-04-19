@@ -40,7 +40,6 @@ struct MemoEditorDetailView: View {
         notify(
             .requestFindDetail(
                 slashlink: sub.slashlink,
-                traversalPath: description.traversalPath,
                 fallback: sub.fallback
             )
         )
@@ -176,7 +175,6 @@ struct MemoEditorDetailView: View {
             notify(
                 .requestFindDetail(
                     slashlink: link.slashlink,
-                    traversalPath: description.traversalPath,
                     fallback: link.fallback
                 )
             )
@@ -243,7 +241,6 @@ enum MemoEditorDetailNotification: Hashable {
     /// Request detail from any audience scope
     case requestFindDetail(
         slashlink: Slashlink,
-        traversalPath: TraversalPath,
         fallback: String
     )
     case requestDelete(MemoAddress?)
@@ -1986,7 +1983,6 @@ struct MemoEditorDetailDescription: Hashable {
     var fallback: String = ""
     /// Default audience to use when deriving a memo address
     var defaultAudience = Audience.local
-    var traversalPath: TraversalPath = .none
 }
 
 extension FileFingerprint {

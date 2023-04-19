@@ -68,10 +68,12 @@ extension Petname: DummyData {
 
 extension StoryUser: DummyData {
     static func dummyData() -> StoryUser {
-        StoryUser(
+        let petname = Petname.dummyData()
+        return StoryUser(
             user: UserProfile(
                 did: Did.dummyData(),
-                petname: Petname.dummyData(),
+                petname: petname,
+                address: Slashlink(petname: petname).toPublicMemoAddress(),
                 pfp: String.dummyProfilePicture(),
                 bio: String.dummyDataMedium(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
@@ -85,6 +87,7 @@ extension StoryUser: DummyData {
             user: UserProfile(
                 did: Did.dummyData(),
                 petname: petname,
+                address: Slashlink(petname: petname).toPublicMemoAddress(),
                 pfp: String.dummyProfilePicture(),
                 bio: String.dummyDataMedium(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
@@ -145,9 +148,11 @@ extension EntryStub: DummyData {
 
 extension UserProfile: DummyData {
     static func dummyData() -> UserProfile {
-        UserProfile(
+        let petname = Petname.dummyData()
+        return UserProfile(
             did: Did.dummyData(),
-            petname: Petname.dummyData(),
+            petname: petname,
+            address: Slashlink(petname: petname).toPublicMemoAddress(),
             pfp: String.dummyProfilePicture(),
             bio: String.dummyDataMedium(),
             category: .human

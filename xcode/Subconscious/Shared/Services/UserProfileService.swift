@@ -76,7 +76,7 @@ actor UserProfileService {
         let following = try await self.getFollowingList(
             sphere: self.noosphere,
             localAddressBook: AddressBook(sphere: self.noosphere),
-            traversalPath: .none
+            address: Slashlink.yourProfile.toLocalMemoAddress()
         )
         let notes = try await self.noosphere.list()
         
@@ -106,6 +106,7 @@ actor UserProfileService {
         let profile = UserProfile(
             did: did,
             petname: petname,
+            address: Slashlink.yourProfile.toLocalMemoAddress(),
             // TODO: replace with _profile_.json data
             pfp: "sub_logo",
             bio: "Wow, it's your own profile! With its own codepath!",
@@ -140,7 +141,7 @@ actor UserProfileService {
         let following: [StoryUser] = try await self.getFollowingList(
             sphere: sphere,
             localAddressBook: localAddressBook,
-            traversalPath: petname
+            address: Slashlink(petname: petname).toPublicMemoAddress()
         )
         
         // Detect your own profile and intercept
@@ -177,6 +178,7 @@ actor UserProfileService {
         let profile = UserProfile(
             did: did,
             petname: petname,
+            address: Slashlink(petname: petname).toPublicMemoAddress(),
             // TODO: replace with _profile_.json data
             pfp: "pfp-dog",
             bio: "Pretend this comes from _profile_.json",
@@ -210,7 +212,7 @@ actor UserProfileService {
     private func getFollowingList<Sphere: SphereProtocol>(
         sphere: Sphere,
         localAddressBook: AddressBook<Sphere>,
-        traversalPath: TraversalPath
+        address: MemoAddress
     ) async throws -> [StoryUser] {
         var following: [StoryUser] = []
         let petnames = try await sphere.listPetnames()
@@ -219,12 +221,13 @@ actor UserProfileService {
                 continue
             }
             
-            let petname = traversalPath.concat(petname: petname)
+            let petname = address.petname?.concat(petname: petname) ?? petname
             let noosphereIdentity = try await noosphere.identity()
             
             let user = UserProfile(
                 did: did,
                 petname: petname,
+                address: Slashlink(petname: petname).toPublicMemoAddress(),
                 // TODO: replace with _profile_.json data
                 pfp: String.dummyProfilePicture(),
                 bio: String.dummyDataMedium(),

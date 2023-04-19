@@ -67,6 +67,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         petname: Petname("ben.gordon.chris.bob")!,
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
                         pfp: "pfp-dog",
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                         category: .human
@@ -80,6 +81,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         petname: Petname("ben.gordon.chris.bob")!,
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
                         pfp: "pfp-dog",
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                         category: .human
@@ -93,6 +95,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         petname: Petname("ben.gordon.chris.bob")!,
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
                         pfp: "pfp-dog",
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                         category: .you

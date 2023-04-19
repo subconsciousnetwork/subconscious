@@ -32,7 +32,7 @@ struct MemoViewerDetailView: View {
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
                     editor: store.state.editor,
-                    traversalPath: description.traversalPath,
+                    address: description.address,
                     backlinks: store.state.backlinks,
                     send: store.send,
                     notify: notify
@@ -127,7 +127,7 @@ struct MemoViewerDetailLoadingView: View {
 struct MemoViewerDetailLoadedView: View {
     var title: String
     var editor: SubtextTextModel
-    var traversalPath: TraversalPath
+    var address: MemoAddress
     var backlinks: [EntryStub]
     var send: (MemoViewerDetailAction) -> Void
     var notify: (MemoViewerDetailNotification) -> Void
@@ -149,10 +149,19 @@ struct MemoViewerDetailLoadedView: View {
         guard let sub = url.toSubSlashlinkURL() else {
             return true
         }
+        
+        // Stitch the base address on to the tapped link
+        let slashlink = Func.run {
+            guard let basePetname = address.petname else {
+                return sub.slashlink
+            }
+            
+            return sub.slashlink.relativeTo(petname: basePetname)
+        }
+        
         notify(
             .requestFindDetail(
-                slashlink: sub.slashlink,
-                traversalPath: traversalPath,
+                slashlink: slashlink,
                 fallback: sub.fallback
             )
         )
@@ -203,7 +212,6 @@ enum MemoViewerDetailNotification: Hashable {
     /// Request detail from any audience scope
     case requestFindDetail(
         slashlink: Slashlink,
-        traversalPath: TraversalPath,
         fallback: String
     )
 }
@@ -212,7 +220,6 @@ enum MemoViewerDetailNotification: Hashable {
 /// detal's internal state.
 struct MemoViewerDetailDescription: Hashable {
     var address: MemoAddress
-    var traversalPath: TraversalPath = .none
 }
 
 // MARK: Actions
@@ -413,7 +420,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                 The soul unfolds itself, like a [[lotus]] of countless petals.
                 """
             ),
-            traversalPath: .none,
+            address: MemoAddress.local(Slug("truth-the-prophet")!),
             backlinks: [],
             send: { action in },
             notify: { action in }

@@ -146,6 +146,7 @@ enum UserCategory: Equatable, Codable, Hashable, CaseIterable {
 struct UserProfile: Equatable, Codable, Hashable {
     let did: Did
     let petname: Petname
+    let address: MemoAddress
     let pfp: String
     let bio: String
     let category: UserCategory
@@ -180,8 +181,6 @@ struct UserProfileDetailModel: ModelProtocol {
     var topEntries: [EntryStub] = []
     var following: [StoryUser] = []
 
-    var traversalPath: TraversalPath = .none
-    
     var statistics: UserProfileStatistics? = nil
 
     static func update(
@@ -203,13 +202,10 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
             )
         case .appear(let profile):
-            var model = state
-            
             var fxRoot: AnyPublisher<UserProfileContentPayload, Error>
             
             switch (profile) {
             case .other(let path):
-                model.traversalPath = path
                 fxRoot = environment.userProfile.getUserProfilePublisher(petname: path)
             case .you:
                 fxRoot = environment.userProfile.getOwnProfilePublisher()
@@ -225,7 +221,7 @@ struct UserProfileDetailModel: ModelProtocol {
                 }
                 .eraseToAnyPublisher()
             
-            return Update(state: model, fx: fx)
+            return Update(state: state, fx: fx)
             
         case .populate(let content):
             var model = state
