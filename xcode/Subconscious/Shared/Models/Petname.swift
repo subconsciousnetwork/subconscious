@@ -98,4 +98,10 @@ public struct Petname:
             return Petname(formatting: "\(match.output.petname)\(separator)1")
         }
     }
+    
+    /// Combines two petnames to build up a traversal path
+    /// i.e. `Petname("foo")!.concat(Petname("bar")` => `bar.foo`
+    public func concat(petname: Petname) -> Petname? {
+        return Petname(petnames: [petname, self])
+    }
 }

@@ -26,12 +26,8 @@ enum MemoDetailDescription: Hashable {
             switch (description.profile) {
             case .you:
                 return Slashlink(slug: Slashlink.profileSlug).toPublicMemoAddress()
-            case .other(_, let spherePath):
-                guard let petname = Petname(petnames: spherePath) else {
-                    return nil
-                }
-                
-                return Slashlink(petname: petname).toPublicMemoAddress()
+            case .other(let path):
+                return Slashlink(petname: path).toPublicMemoAddress()
             }
         }
     }
@@ -52,7 +48,7 @@ extension MemoDetailDescription {
                     address: slug.toLocalMemoAddress(),
                     fallback: fallback,
                     defaultAudience: .local,
-                    spherePath: []
+                    spherePath: .none
                 )
             )
         case .public(let slashlink) where slashlink.petname == nil:
@@ -61,7 +57,7 @@ extension MemoDetailDescription {
                     address: slashlink.toPublicMemoAddress(),
                     fallback: fallback,
                     defaultAudience: .public,
-                    spherePath: []
+                    spherePath: .none
                 )
             )
         case .public(let slashlink):
@@ -69,7 +65,7 @@ extension MemoDetailDescription {
                 return .viewer(
                     MemoViewerDetailDescription(
                         address: slashlink.toPublicMemoAddress(),
-                        spherePath: [petname]
+                        spherePath: petname
                     )
                 )
             }
@@ -77,7 +73,7 @@ extension MemoDetailDescription {
             return .viewer(
                 MemoViewerDetailDescription(
                     address: slashlink.toPublicMemoAddress(),
-                    spherePath: []
+                    spherePath: .none
                 )
             )
         case .none:
@@ -85,7 +81,7 @@ extension MemoDetailDescription {
                 MemoEditorDetailDescription(
                     fallback: fallback,
                     defaultAudience: defaultAudience,
-                    spherePath: []
+                    spherePath: .none
                 )
             )
         }

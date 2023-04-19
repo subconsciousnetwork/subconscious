@@ -248,7 +248,7 @@ struct MemoViewerDetailModel: ModelProtocol {
     var editor = SubtextTextModel(isEditable: false)
     var backlinks: [EntryStub] = []
     
-    var spherePath: SpherePath = []
+    var spherePath: SpherePath = .none
     
     // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
@@ -416,7 +416,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                 The soul unfolds itself, like a [[lotus]] of countless petals.
                 """
             ),
-            spherePath: [],
+            spherePath: .none,
             backlinks: [],
             send: { action in },
             notify: { action in }

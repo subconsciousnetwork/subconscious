@@ -198,7 +198,7 @@ extension NotebookAction {
                 MemoEditorDetailDescription(
                     address: address,
                     fallback: fallback,
-                    spherePath: []
+                    spherePath: .none
                 )
             )
         case let .createLocalMemo(slug, fallback):
@@ -207,7 +207,7 @@ extension NotebookAction {
                     address: slug?.toLocalMemoAddress(),
                     fallback: fallback,
                     defaultAudience: .local,
-                    spherePath: []
+                    spherePath: .none
                 )
             )
         case let .createPublicMemo(slug, fallback):
@@ -216,7 +216,7 @@ extension NotebookAction {
                     address: slug?.toPublicMemoAddress(),
                     fallback: fallback,
                     defaultAudience: .public,
-                    spherePath: []
+                    spherePath: .none
                 )
             )
         case .random:
@@ -889,7 +889,7 @@ struct NotebookModel: ModelProtocol {
                 MemoEditorDetailDescription(
                     address: address,
                     fallback: query,
-                    spherePath: []
+                    spherePath: .none
                 )
             )
         )
@@ -919,24 +919,17 @@ struct NotebookModel: ModelProtocol {
                 environment: environment
             )
         }
+        
         if AppDefaults.standard.isNoosphereEnabled {
-            // Need a UserProfileService that takes a DID -> UserProfile
-            // also retrieves posts, following, statistics etc.
-            // SpherePath should be lighter... (DID, Petname) pairs.
-            
-            // Realising that tapping on a link in a note goes WAY deeper than originally thought.
-            // If I am browsing @gordon's note and tap on his link to @cdata/lol
-            // I need to know I'm at `@cdata.gordon/lol` but this keeps going further!
-            
+            // Intercept profile visits and use the correct view
             if slashlink.slug.isProfile() {
-                let path = [petname] + spherePath
-                if let combined = Petname(petnames: path) {
+                if let combined = spherePath?.concat(petname: petname) {
                     return update(
                         state: state,
                         action: .pushDetail(
                             .profile(
                                 UserProfileDetailDescription(
-                                    profile: .other(combined, path)
+                                    profile: .other(combined)
                                 )
                             )
                         ),
@@ -953,7 +946,7 @@ struct NotebookModel: ModelProtocol {
                     .viewer(
                         MemoViewerDetailDescription(
                             address: slashlink.toPublicMemoAddress(),
-                            spherePath: [petname]
+                            spherePath: petname
                         )
                     )
                 ),
@@ -983,7 +976,7 @@ struct NotebookModel: ModelProtocol {
                     MemoEditorDetailDescription(
                         address: address ?? fallbackAddress,
                         fallback: fallback,
-                        spherePath: []
+                        spherePath: .none
                     )
                 )
             })
@@ -1004,7 +997,7 @@ struct NotebookModel: ModelProtocol {
                     MemoEditorDetailDescription(
                         address: link.address,
                         fallback: link.title,
-                        spherePath: []
+                        spherePath: .none
                     )
                 )
             })

@@ -38,13 +38,14 @@ struct UserProfileDetailView: View {
                     return UserProfileDetailDescription(
                         profile: .you
                     )
-                case (.other(_, let spherePath), _):
+                case (.other(let spherePath), _):
+                    let path = spherePath.concat(petname: user.petname) ?? user.petname
                     return UserProfileDetailDescription(
-                        profile: .other(user.petname, [user.petname] + spherePath)
+                        profile: .other(path)
                     )
                 case (.you, _):
                     return UserProfileDetailDescription(
-                        profile: .other(user.petname, [user.petname])
+                        profile: .other(user.petname)
                     )
                 }
             }
@@ -91,7 +92,7 @@ enum UserProfileDetailNotification: Hashable {
 
 enum UserProfileType: Hashable, Equatable {
     case you
-    case other(Petname, SpherePath)
+    case other(Petname)
 }
 
 /// A description of a user profile that can be used to set up the user
@@ -150,7 +151,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     let category: UserCategory
 }
 
-typealias SpherePath = [Petname]
+typealias SpherePath = Petname?
 
 // MARK: Model
 struct UserProfileDetailModel: ModelProtocol {
@@ -181,7 +182,7 @@ struct UserProfileDetailModel: ModelProtocol {
     var topEntries: [EntryStub] = []
     var following: [StoryUser] = []
 
-    var spherePath: SpherePath = []
+    var spherePath: SpherePath = .none
     
     var statistics: UserProfileStatistics? = nil
 
@@ -207,12 +208,12 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             
             switch (profile) {
-            case .other(let petname, let spherePath):
-                model.spherePath = spherePath
+            case .other(let path):
+                model.spherePath = path
                 
                 let fx: Fx<UserProfileDetailAction> =
                     environment.userProfile
-                    .getUserProfilePublisher(petname: petname)
+                    .getUserProfilePublisher(petname: path)
                     .map { content in
                         UserProfileDetailAction.populate(content)
                     }

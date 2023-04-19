@@ -2028,7 +2028,7 @@ struct Detail_Previews: PreviewProvider {
                 address: Slug(formatting: "Nothing is lost in the universe")!
                     .toPublicMemoAddress(),
                 fallback: "Nothing is lost in the universe",
-                spherePath: []
+                spherePath: .none
             ),
             notify: { action in }
         )

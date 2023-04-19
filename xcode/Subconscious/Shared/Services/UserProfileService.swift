@@ -55,7 +55,7 @@ class UserProfileService {
         let did = try await self.noosphere.identity()
         let petname = Petname(AppDefaults.standard.nickname ?? "???")!
         let sphere = try await self.noosphere.sphere()
-        let following = try await self.produceFollowingList(sphere: sphere, localAddressBook: AddressBook(sphere: sphere), basePath: [])
+        let following = try await self.produceFollowingList(sphere: sphere, localAddressBook: AddressBook(sphere: sphere), basePath: .none)
         let notes = try await self.noosphere.list()
         
         var entries: [EntryStub] = []
@@ -117,10 +117,7 @@ class UserProfileService {
                 continue
             }
             
-            guard let petname = Petname(petnames: [petname] + basePath) else {
-                continue
-            }
-            
+            let petname = basePath?.concat(petname: petname) ?? petname
             let noosphereIdentity = try await noosphere.identity()
             
             let user = UserProfile(
@@ -148,8 +145,7 @@ class UserProfileService {
         let sphere = try await self.noosphere.traverse(petname: petname)
         let identity = try await sphere.identity()
         let localAddressBook = AddressBook(sphere: sphere)
-        let basePath = [petname]
-        let following: [StoryUser] = try await self.produceFollowingList(sphere: sphere, localAddressBook: localAddressBook, basePath: basePath)
+        let following: [StoryUser] = try await self.produceFollowingList(sphere: sphere, localAddressBook: localAddressBook, basePath: petname)
         
         // Detect your own profile and intercept
         guard try await self.noosphere.identity() != identity else {
