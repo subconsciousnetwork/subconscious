@@ -27,9 +27,11 @@ struct SubtextView_Previews: PreviewProvider {
                 markup: """
                 # The Prophet, Kahlil Gibran
                 
-                People of Orphalese, the wind bids me leave you.
+                People of [[Orphalese]], the wind bids me leave you.
                 
                 Less hasty am I than the wind, yet I must go.
+                
+                http://example.com
                 
                 We [[wanderers]], ever seeking the lonelier way, begin no day where we have ended another day; and no sunrise finds us where sunset left us.
                 

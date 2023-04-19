@@ -24,8 +24,8 @@ struct SubSlashlinkLink {
     /// Create a Subconscious app-specific URL encoding entry title and slug
     func toURL() -> URL? {
         var components = URLComponents()
-        components.scheme = "sub"
-        components.host = "slashlink"
+        components.scheme = "https"
+        components.host = "link.subconscious.network"
         var query: [URLQueryItem] = []
         query.append(
             URLQueryItem(
@@ -49,7 +49,7 @@ struct SubSlashlinkLink {
 extension URL {
     /// Convert to internal `sub://slashlink` URL.
     func toSubSlashlinkURL() -> SubSlashlinkLink? {
-        guard self.scheme == "sub" && self.host == "slashlink" else {
+        guard self.scheme == "https" && self.host == "link.subconscious.network" else {
             return nil
         }
         guard let components = URLComponents(
@@ -75,6 +75,26 @@ extension URL {
             slashlink: slashlink,
             text: text
         )
+    }
+}
+
+extension Range where Bound == String.Index {
+    func within(
+        attributedString: AttributedString
+    ) -> Range<AttributedString.Index>? {
+        guard let lower = AttributedString.Index(
+            self.lowerBound,
+            within: attributedString
+        ) else {
+            return nil
+        }
+        guard let upper = AttributedString.Index(
+            self.upperBound,
+            within: attributedString
+        ) else {
+            return nil
+        }
+        return lower..<upper
     }
 }
 
@@ -113,11 +133,113 @@ struct SubtextAttributedStringRenderer {
     /// You can use this to produce strings which can be rendered in
     /// `Text` blocks.
     func render(_ string: String) -> AttributedString {
-        let nsAttributedString = NSMutableAttributedString(
-            string: string
-        )
-        renderAttributesOf(nsAttributedString)
-        return AttributedString(nsAttributedString)
+        let dom = Subtext(markup: string)
+
+        var markup = AttributedString(dom.base)
+        markup.font = .body
+        
+        for block in dom.blocks {
+            renderAttributesOf(attributedString: &markup, block: block)
+            for inline in block.inline {
+                renderAttributesOf(
+                    attributedString: &markup,
+                    inline: inline
+                )
+            }
+        }
+        
+        return markup
+    }
+
+    func renderAttributesOf(
+        attributedString: inout AttributedString,
+        block: Subtext.Block
+    ) {
+        switch block {
+        case .quote(let span, _):
+            guard let range = span.range.within(
+                attributedString: attributedString
+            ) else {
+                return
+            }
+            attributedString[range].font = .body.italic()
+        case .heading(let span):
+            guard let range = span.range.within(
+                attributedString: attributedString
+            ) else {
+                return
+            }
+            attributedString[range].font = .body.bold()
+        default:
+            return
+        }
+    }
+
+    func renderAttributesOf(
+        attributedString: inout AttributedString,
+        inline: Subtext.Inline
+    ) {
+        switch inline {
+        case .link(let link):
+            guard let range = link.span.range.within(
+                attributedString: attributedString
+            ) else {
+                return
+            }
+            attributedString[range].link = URL(
+                string: String(link.body())
+            )
+        case .bracketlink(let bracketlink):
+            guard let range = bracketlink.span.range.within(
+                attributedString: attributedString
+            ) else {
+                return
+            }
+            attributedString[range].link = URL(
+                string: String(bracketlink.body())
+            )
+        case .slashlink(let slashlink):
+            guard let range = slashlink.span.range.within(
+                attributedString: attributedString
+            ) else {
+                return
+            }
+            guard let url = slashlinkToURL(slashlink.description) else {
+                return
+            }
+            attributedString[range].link = url
+        case .wikilink(let wikilink):
+            guard let range = wikilink.span.range.within(
+                attributedString: attributedString
+            ) else {
+                return
+            }
+            guard let url = wikilinkToURL(wikilink.description) else {
+                return
+            }
+            attributedString[range].link = url
+        case .bold(let bold):
+            guard let range = bold.span.range.within(
+                attributedString: attributedString
+            ) else {
+                return
+            }
+            attributedString[range].font = .body.bold()
+        case .italic(let italic):
+            guard let range = italic.span.range.within(
+                attributedString: attributedString
+            ) else {
+                return
+            }
+            attributedString[range].font = .body.italic()
+        case .code(let code):
+            guard let range = code.span.range.within(
+                attributedString: attributedString
+            ) else {
+                return
+            }
+            attributedString[range].font = .body.monospaced()
+        }
     }
 
     /// Read markup in NSMutableAttributedString, and render as attributes.
