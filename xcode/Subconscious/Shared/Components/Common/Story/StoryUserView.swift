@@ -44,9 +44,8 @@ struct StoryUserView: View {
                     case (_, .you):
                         AppIcon.you
                             .foregroundColor(.secondary)
-                            .font(.callout)
                     case (_, _):
-                        Spacer()
+                        EmptyView()
                     }
                 }
                 
