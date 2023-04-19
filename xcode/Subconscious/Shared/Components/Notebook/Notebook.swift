@@ -919,19 +919,18 @@ struct NotebookModel: ModelProtocol {
         if AppDefaults.standard.isNoosphereEnabled {
             // Intercept profile visits and use the correct view
             if slashlink.slug.isProfile() {
-                if let combined = traversalPath?.concat(petname: petname) {
-                    return update(
-                        state: state,
-                        action: .pushDetail(
-                            .profile(
-                                UserProfileDetailDescription(
-                                    profile: .other(combined)
-                                )
+                let combined = traversalPath.concat(petname: petname)
+                return update(
+                    state: state,
+                    action: .pushDetail(
+                        .profile(
+                            UserProfileDetailDescription(
+                                profile: .other(combined)
                             )
-                        ),
-                        environment: environment
-                    )
-                }
+                        )
+                    ),
+                    environment: environment
+                )
             }
             
             // If Noosphere is enabled, and slashlink pointing to other sphere,

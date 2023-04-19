@@ -24,20 +24,35 @@ struct StoryUserView: View {
                 )
             }
         ) {
-            HStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: AppTheme.unit4) {
-                    UserProfileHeaderView(
-                        user: story.user,
-                        statistics: story.statistics,
-                        isFollowingUser: story.isFollowingUser,
-                        action: { action in
-                            self.profileAction(story.user, action)
-                        }
-                    )
+            VStack(alignment: .leading, spacing: AppTheme.unit3) {
+                HStack(alignment: .center, spacing: AppTheme.unit2) {
+                    ProfilePicSm(image: Image(story.user.pfp))
+                    
+                    switch (story.user.category) {
+                    case .human, .geist:
+                        PetnameBylineView(petname: story.user.petname)
+                    case .you:
+                        PetnameBylineView(petname: story.user.petname)
+                    }
+                    
+                    Spacer()
+                    
+                    switch (story.isFollowingUser, story.user.category) {
+                    case (true, _):
+                        AppIcon.following
+                            .foregroundColor(.secondary)
+                    case (_, .you):
+                        AppIcon.you
+                            .foregroundColor(.secondary)
+                            .font(.callout)
+                    case (_, _):
+                        Spacer()
+                    }
                 }
-                .padding()
-                Spacer()
+                
+                Text(verbatim: story.user.bio)
             }
+            .padding()
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
@@ -47,18 +62,46 @@ struct StoryUserView: View {
 
 struct StoryUserView_Previews: PreviewProvider {
     static var previews: some View {
-        StoryUserView(
-            story: StoryUser(
-                user: UserProfile(
-                    did: Did("did:key:123")!,
-                    petname: Petname("ben")!,
-                    pfp: "pfp-dog",
-                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
-                    category: .human
+        VStack {
+            StoryUserView(
+                story: StoryUser(
+                    user: UserProfile(
+                        did: Did("did:key:123")!,
+                        petname: Petname("ben.gordon.chris.bob")!,
+                        pfp: "pfp-dog",
+                        bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
+                        category: .human
+                    ),
+                    isFollowingUser: false
                 ),
-                isFollowingUser: false
-            ),
-            action: { link, fallback in }
-        )
+                action: { link, fallback in }
+            )
+            StoryUserView(
+                story: StoryUser(
+                    user: UserProfile(
+                        did: Did("did:key:123")!,
+                        petname: Petname("ben.gordon.chris.bob")!,
+                        pfp: "pfp-dog",
+                        bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
+                        category: .human
+                    ),
+                    isFollowingUser: true
+                ),
+                action: { link, fallback in }
+            )
+            StoryUserView(
+                story: StoryUser(
+                    user: UserProfile(
+                        did: Did("did:key:123")!,
+                        petname: Petname("ben.gordon.chris.bob")!,
+                        pfp: "pfp-dog",
+                        bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
+                        category: .you
+                    ),
+                    isFollowingUser: false
+                ),
+                action: { link, fallback in }
+            )
+        }
     }
 }

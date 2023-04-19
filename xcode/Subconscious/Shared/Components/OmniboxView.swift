@@ -12,11 +12,16 @@ struct OmniboxView: View {
     var defaultAudience: Audience
 
     private func icon() -> Image {
-        if address?.isProfile() ?? false {
-           return Image(systemName: "person.circle")
-        } else {
-           return Image(audience: address?.toAudience() ?? defaultAudience)
+        if let address = address {
+            if address.isProfile() {
+                return address.isOurs
+                    ? AppIcon.you
+                    : AppIcon.user
+            }
         }
+        
+        let audience = address?.toAudience() ?? defaultAudience
+        return Image(audience: audience)
     }
     
     var body: some View {
@@ -54,14 +59,15 @@ struct OmniboxSlashlinkView: View {
     
     var body: some View {
         HStack(spacing: 0) {
-            if let petname = slashlink.petname {
-                Text(verbatim: petname.verbatimMarkup).fontWeight(.medium)
-                
-                // Hide the slug if it's the profile view, just the username is cleaner
-                if !slashlink.slug.isProfile() {
-                    Text(verbatim: slashlink.slug.verbatimMarkup)
-                }
-            } else {
+            switch (slashlink.slug.isProfile(), slashlink.petname) {
+            case (true, .some(let petname)):
+                PetnameBylineView(petname: petname)
+            case (false, .some(let petname)):
+                PetnameBylineView(petname: petname)
+                Text(verbatim: slashlink.slug.verbatimMarkup)
+            case (true, .none):
+                Text(verbatim: "Your profile").foregroundColor(.secondary)
+            case (false, .none):
                 Text(verbatim: slashlink.slug.verbatim)
             }
         }
@@ -101,24 +107,30 @@ struct OmniboxView_Previews: PreviewProvider {
                 TappableOmniboxTestView()
             }
             Divider()
+            Group {
+                OmniboxView(
+                    address: .public(Slashlink("@here/red-mars")!),
+                    defaultAudience: .local
+                )
+                OmniboxView(
+                    address: .public(Slashlink("@here.now/red-mars-very-long-slug")!),
+                    defaultAudience: .local
+                )
+                OmniboxView(
+                    address: .public(Slashlink(petname: Petname("ksr")!)),
+                    defaultAudience: .local
+                )
+                OmniboxView(
+                    address: .public(Slashlink(petname: Petname("ksr.biz.gov")!)),
+                    defaultAudience: .local
+                )
+                OmniboxView(
+                    address: .public(Slashlink("/red-mars")!),
+                    defaultAudience: .local
+                )
+            }
             OmniboxView(
-                address: .public(Slashlink("@here/red-mars")!),
-                defaultAudience: .local
-            )
-            OmniboxView(
-                address: .public(Slashlink("@here/red-mars-very-long-slug")!),
-                defaultAudience: .local
-            )
-            OmniboxView(
-                address: .public(Slashlink(petname: Petname("ksr")!)),
-                defaultAudience: .local
-            )
-            OmniboxView(
-                address: .public(Slashlink("/red-mars")!),
-                defaultAudience: .local
-            )
-            OmniboxView(
-                address: .local(Slug("red-mars")!),
+                address: .local(Slug("_profile_")!),
                 defaultAudience: .local
             )
             OmniboxView(

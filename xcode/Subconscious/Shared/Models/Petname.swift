@@ -9,6 +9,12 @@ import Foundation
 
 public typealias TraversalPath = Petname?
 
+extension TraversalPath {
+    func concat(petname: Petname) -> Petname {
+        self?.concat(petname: petname) ?? petname
+    }
+}
+
 /// A type representing a valid petname (`@petname`)
 public struct Petname:
     Hashable,

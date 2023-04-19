@@ -8,11 +8,10 @@
 import os
 import Foundation
 import Combine
-// temp
-import SwiftUI
 
 enum UserProfileServiceError: Error {
     case invalidSphereIdentity
+    case missingPreferredPetname
     case other(String)
 }
 
@@ -20,9 +19,20 @@ extension UserProfileServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidSphereIdentity:
-            return String(localized: "Sphere identity is an invalid DID", comment: "UserProfileService error description")
+            return String(
+                localized: "Sphere identity is an invalid DID",
+                comment: "UserProfileService error description"
+            )
+        case .missingPreferredPetname:
+            return String(
+                localized: "Missing or invalid nickname for sphere owner",
+                comment: "UserProfileService error description"
+            )
         case .other(let msg):
-            return String(localized: "An unknown error occurred: \(msg)", comment: "Unknown UserProfileService error description")
+            return String(
+                localized: "An unknown error occurred: \(msg)",
+                comment: "Unknown UserProfileService error description"
+            )
         }
     }
 }
@@ -35,7 +45,7 @@ struct UserProfileContentPayload: Equatable, Hashable {
     var isFollowingUser: Bool
 }
 
-class UserProfileService {
+actor UserProfileService {
     private var noosphere: NoosphereService
     private var database: DatabaseService
     private var addressBook: AddressBookService
@@ -45,17 +55,30 @@ class UserProfileService {
         category: "UserProfileService"
     )
     
-    init(noosphere: NoosphereService, database: DatabaseService, addressBook: AddressBookService) {
+    init(
+        noosphere: NoosphereService,
+        database: DatabaseService,
+        addressBook: AddressBookService
+    ) {
         self.noosphere = noosphere
         self.database = database
         self.addressBook = addressBook
     }
     
+    /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
     func getOwnProfile() async throws -> UserProfileContentPayload {
+        guard let nickname = AppDefaults.standard.nickname,
+              let petname = Petname(nickname) else {
+                  throw UserProfileServiceError.missingPreferredPetname
+        }
+        
         let did = try await self.noosphere.identity()
-        let petname = Petname(AppDefaults.standard.nickname ?? "???")!
         let sphere = try await self.noosphere.sphere()
-        let following = try await self.produceFollowingList(sphere: sphere, localAddressBook: AddressBook(sphere: sphere), basePath: .none)
+        let following = try await self.getFollowingList(
+            sphere: sphere,
+            localAddressBook: AddressBook(sphere: sphere),
+            traversalPath: .none
+        )
         let notes = try await self.noosphere.list()
         
         var entries: [EntryStub] = []
@@ -70,7 +93,7 @@ class UserProfileService {
 
             entries.append(
                 EntryStub(
-                    address: Slashlink(petname: petname, slug: slug).toPublicMemoAddress(),
+                    address: Slashlink(slug: slug).toPublicMemoAddress(),
                     excerpt: memo.excerpt(),
                     modified: memo.modified
                 )
@@ -84,6 +107,7 @@ class UserProfileService {
         let profile = UserProfile(
             did: did,
             petname: petname,
+            // TODO: replace with _profile_.json data
             pfp: "sub_logo",
             bio: "Wow, it's your own profile! With its own codepath!",
             category: .you
@@ -102,50 +126,23 @@ class UserProfileService {
         )
     }
     
-    func getOwnProfilePublisher() -> AnyPublisher<UserProfileContentPayload, Error> {
+    nonisolated func getOwnProfilePublisher() -> AnyPublisher<UserProfileContentPayload, Error> {
         Future.detached {
             return try await self.getOwnProfile()
         }
         .eraseToAnyPublisher()
     }
     
-    private func produceFollowingList<Sphere: SphereProtocol>(sphere: Sphere, localAddressBook: AddressBook<Sphere>, basePath: TraversalPath) async throws -> [StoryUser] {
-        var following: [StoryUser] = []
-        let petnames = try await sphere.listPetnames()
-        for petname in petnames {
-            guard let did = try await localAddressBook.getPetname(petname: petname) else {
-                continue
-            }
-            
-            let petname = basePath?.concat(petname: petname) ?? petname
-            let noosphereIdentity = try await noosphere.identity()
-            
-            let user = UserProfile(
-                did: did,
-                petname: petname,
-                pfp: String.dummyProfilePicture(),
-                bio: String.dummyDataMedium(),
-                category: noosphereIdentity == did.did ? .you : .human
-            )
-            
-            let isFollowingUser = await self.addressBook.isFollowingUser(did: did)
-            
-            following.append(
-                StoryUser(
-                    user: user,
-                    isFollowingUser: isFollowingUser
-                )
-            )
-        }
-        
-        return following
-    }
-    
+    /// Retrieve all the content for the passed user's profile view, fetching their profile, notes and address book.
     func getUserProfile(petname: Petname) async throws -> UserProfileContentPayload {
         let sphere = try await self.noosphere.traverse(petname: petname)
         let identity = try await sphere.identity()
         let localAddressBook = AddressBook(sphere: sphere)
-        let following: [StoryUser] = try await self.produceFollowingList(sphere: sphere, localAddressBook: localAddressBook, basePath: petname)
+        let following: [StoryUser] = try await self.getFollowingList(
+            sphere: sphere,
+            localAddressBook: localAddressBook,
+            traversalPath: petname
+        )
         
         // Detect your own profile and intercept
         guard try await self.noosphere.identity() != identity else {
@@ -181,6 +178,7 @@ class UserProfileService {
         let profile = UserProfile(
             did: did,
             petname: petname,
+            // TODO: replace with _profile_.json data
             pfp: "pfp-dog",
             bio: "Pretend this comes from _profile_.json",
             category: .human
@@ -199,10 +197,51 @@ class UserProfileService {
         )
     }
     
-    func getUserProfilePublisher(petname: Petname) -> AnyPublisher<UserProfileContentPayload, Error> {
+    nonisolated func getUserProfilePublisher(
+        petname: Petname
+    ) -> AnyPublisher<UserProfileContentPayload, Error> {
         Future.detached {
             return try await self.getUserProfile(petname: petname)
         }
         .eraseToAnyPublisher()
+    }
+    
+    /// List all the users followed by the passed sphere.
+    /// Each user will be decorated with whether the current app user is following them.
+    private func getFollowingList<Sphere: SphereProtocol>(
+        sphere: Sphere,
+        localAddressBook: AddressBook<Sphere>,
+        traversalPath: TraversalPath
+    ) async throws -> [StoryUser] {
+        var following: [StoryUser] = []
+        let petnames = try await sphere.listPetnames()
+        for petname in petnames {
+            guard let did = try await localAddressBook.getPetname(petname: petname) else {
+                continue
+            }
+            
+            let petname = traversalPath.concat(petname: petname)
+            let noosphereIdentity = try await noosphere.identity()
+            
+            let user = UserProfile(
+                did: did,
+                petname: petname,
+                // TODO: replace with _profile_.json data
+                pfp: String.dummyProfilePicture(),
+                bio: String.dummyDataMedium(),
+                category: noosphereIdentity == did.did ? .you : .human
+            )
+            
+            let appUserIsFollowingListedUser = await self.addressBook.isFollowingUser(did: did)
+            
+            following.append(
+                StoryUser(
+                    user: user,
+                    isFollowingUser: appUserIsFollowingListedUser
+                )
+            )
+        }
+        
+        return following
     }
 }

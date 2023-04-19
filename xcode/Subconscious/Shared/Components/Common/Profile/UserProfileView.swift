@@ -112,8 +112,26 @@ struct UserProfileView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             if let user = state.user {
+                switch (user.category) {
+                case .human, .geist:
+                    DetailToolbarContent(
+                        address: Slashlink(petname: user.petname).toPublicMemoAddress(),
+                        defaultAudience: .public,
+                        onTapOmnibox: {
+                            send(.presentMetaSheet(true))
+                        }
+                    )
+                case .you:
+                    DetailToolbarContent(
+                        address: Slashlink(slug: Slashlink.profileSlug).toPublicMemoAddress(),
+                        defaultAudience: .public,
+                        onTapOmnibox: {
+                            send(.presentMetaSheet(true))
+                        }
+                    )
+                }
+            } else {
                 DetailToolbarContent(
-                    address: Slashlink(petname: user.petname).toPublicMemoAddress(),
                     defaultAudience: .public,
                     onTapOmnibox: {
                         send(.presentMetaSheet(true))

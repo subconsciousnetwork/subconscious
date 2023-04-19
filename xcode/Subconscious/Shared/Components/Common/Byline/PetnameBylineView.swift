@@ -22,7 +22,7 @@ struct PetnameBylineView: View {
             Text(first)
                 .foregroundColor(petnameColor)
                 .fixedSize(horizontal: true, vertical: false) // May need to come back to this
-                .font(.body)
+                .font(.callout)
                 .fontWeight(.medium)
                 .lineLimit(1)
             
@@ -30,7 +30,7 @@ struct PetnameBylineView: View {
                 // Particular structure to ensure truncation trims the path and never the name
                 Text(".\(rest)")
                     .foregroundColor(.secondary)
-                    .font(.caption)
+                    .font(.callout)
                     .fontWeight(.regular)
                     .lineLimit(1)
             }

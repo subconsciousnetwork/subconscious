@@ -24,20 +24,9 @@ struct UserProfileHeaderView: View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
                 ProfilePic(image: Image(user.pfp))
-                
-                VStack(alignment: .leading, spacing: AppTheme.unit) {
-                    switch (user.category) {
-                    case .human:
-                        PetnameBylineView(petname: user.petname)
-                    case .geist:
-                        PetnameBylineView(petname: user.petname)
-                    case .you:
-                        PetnameBylineView(petname: user.petname)
-                        Text("(you)")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
-                    }
-                }
+            
+                // TODO: when we have _profile_.json we should load the preferred petname from there
+                PetnameBylineView(petname: user.petname)
                 
                 Spacer()
                 
@@ -55,9 +44,9 @@ struct UserProfileHeaderView: View {
                     label: {
                         switch (user.category, isFollowingUser) {
                         case (.you, _):
-                            Label("Edit Profile", systemImage: "pencil")
+                            Label("Edit Profile", systemImage: AppIcon.editSystemName)
                         case (_, true):
-                            Label("Following", systemImage: "person.fill.checkmark")
+                            Label("Following", systemImage: AppIcon.followingSystemName)
                         case (_, false):
                             Text("Follow")
                         }
