@@ -46,16 +46,4 @@ struct Func {
     ) async throws -> T {
         try await perform()
     }
-    
-    /// Returns false if the wrapped call throws
-    static func succeeds(
-        _ execute: () throws -> Void
-    ) -> Bool {
-        do {
-            try execute()
-            return true
-        } catch {
-            return false
-        }
-    }
 }
