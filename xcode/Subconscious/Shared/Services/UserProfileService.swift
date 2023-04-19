@@ -116,7 +116,7 @@ actor UserProfileService {
             profile: profile,
             statistics: UserProfileStatistics(
                 noteCount: entries.count,
-                backlinkCount: -1,
+                backlinkCount: -1, // TODO: populate with real count
                 followingCount: following.count
             ),
             following: following,
@@ -187,7 +187,7 @@ actor UserProfileService {
             profile: profile,
             statistics: UserProfileStatistics(
                 noteCount: entries.count,
-                backlinkCount: -1,
+                backlinkCount: -1, // TODO: populate with real count
                 followingCount: following.count
             ),
             following: following,
