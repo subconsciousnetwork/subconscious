@@ -123,12 +123,7 @@ struct NotebookNavigationView: View {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(
                             action: {
-//                                let detail = UserProfileDetailDescription(
-//                                    profile: .other(Petname("flubbo")!, [Petname("flubbo")!])
-//                                )
-                                
                                 let detail = UserProfileDetailDescription(profile: .you)
-                                
                                 store.send(.pushDetail(.profile(detail)))
                             }
                         ) {
