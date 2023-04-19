@@ -103,6 +103,10 @@ struct Subtext: Hashable, Equatable, LosslessStringConvertible {
             String(span)
         }
 
+        func body() -> Substring {
+            span
+        }
+
         var url: URL? {
             URL(string: String(span))
         }
