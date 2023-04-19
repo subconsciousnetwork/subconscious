@@ -73,10 +73,9 @@ actor UserProfileService {
         }
         
         let did = try await self.noosphere.identity()
-        let sphere = try await self.noosphere.sphere()
         let following = try await self.getFollowingList(
-            sphere: sphere,
-            localAddressBook: AddressBook(sphere: sphere),
+            sphere: self.noosphere,
+            localAddressBook: AddressBook(sphere: self.noosphere),
             traversalPath: .none
         )
         let notes = try await self.noosphere.list()

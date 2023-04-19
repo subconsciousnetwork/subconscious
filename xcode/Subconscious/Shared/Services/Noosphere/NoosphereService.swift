@@ -136,7 +136,7 @@ actor NoosphereService:
     }
     
     /// Get or open default Sphere.
-    func sphere() throws -> Sphere {
+    private func sphere() throws -> Sphere {
         if let sphere = self._sphere {
             return sphere
         }
