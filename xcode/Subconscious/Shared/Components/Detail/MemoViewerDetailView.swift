@@ -32,7 +32,7 @@ struct MemoViewerDetailView: View {
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
                     editor: store.state.editor,
-                    traversalPath: store.state.traversalPath,
+                    traversalPath: description.traversalPath,
                     backlinks: store.state.backlinks,
                     send: store.send,
                     notify: notify
@@ -248,8 +248,6 @@ struct MemoViewerDetailModel: ModelProtocol {
     var editor = SubtextTextModel(isEditable: false)
     var backlinks: [EntryStub] = []
     
-    var traversalPath: TraversalPath = .none
-    
     // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
     var metaSheet = MemoViewerDetailMetaSheetModel()
@@ -304,7 +302,6 @@ struct MemoViewerDetailModel: ModelProtocol {
         var model = state
         model.loadingState = .loading
         model.address = description.address
-        model.traversalPath = description.traversalPath
         
         let fx: Fx<Action> = environment.data.readMemoDetailPublisher(
             address: description.address
