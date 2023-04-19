@@ -109,7 +109,7 @@ struct UserProfileDetailMetaSheet: View {
                         }
                         
                         if user.category == .you {
-                            SlashlinkBylineView(slashlink: Slashlink(slug: Slashlink.profileSlug)).theme(
+                            SlashlinkBylineView(slashlink: Slashlink.yourProfile).theme(
                                 petname: Color.primary,
                                 slug: Color.secondary
                             )

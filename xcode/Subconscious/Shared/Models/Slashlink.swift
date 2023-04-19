@@ -46,6 +46,7 @@ public struct Slashlink:
     public var id: String { description }
     
     static let profileSlug = Slug("_profile_")!
+    static let yourProfile = Slashlink(slug: Self.profileSlug)
     
     // The normalized markup form of the slashlink
     public var markup: String { description }
