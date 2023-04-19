@@ -151,8 +151,6 @@ struct UserProfile: Equatable, Codable, Hashable {
     let category: UserCategory
 }
 
-typealias TraversalPath = Petname?
-
 // MARK: Model
 struct UserProfileDetailModel: ModelProtocol {
     typealias Action = UserProfileDetailAction

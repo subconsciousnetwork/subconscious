@@ -7,6 +7,8 @@
 
 import Foundation
 
+public typealias TraversalPath = Petname?
+
 /// A type representing a valid petname (`@petname`)
 public struct Petname:
     Hashable,
@@ -98,6 +100,7 @@ public struct Petname:
             return Petname(formatting: "\(match.output.petname)\(separator)1")
         }
     }
+    
     
     /// Combines two petnames to build up a traversal path
     /// i.e. `Petname("foo")!.concat(Petname("bar")` => `bar.foo`
