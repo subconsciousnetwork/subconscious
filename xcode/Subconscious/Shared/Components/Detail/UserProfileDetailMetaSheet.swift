@@ -112,7 +112,7 @@ struct UserProfileDetailMetaSheet: View {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     if let user = profile.user,
-                       let petname = profile.spherePath,
+                       let petname = profile.traversalPath,
                        let slashlink = Slashlink(petname: petname) {
                         HStack {
                             Text(slashlink.markup)

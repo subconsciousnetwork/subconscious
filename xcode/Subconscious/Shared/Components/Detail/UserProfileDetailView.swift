@@ -38,8 +38,8 @@ struct UserProfileDetailView: View {
                     return UserProfileDetailDescription(
                         profile: .you
                     )
-                case (.other(let spherePath), _):
-                    let path = spherePath.concat(petname: user.petname) ?? user.petname
+                case (.other(let traversalPath), _):
+                    let path = traversalPath.concat(petname: user.petname) ?? user.petname
                     return UserProfileDetailDescription(
                         profile: .other(path)
                     )
@@ -151,7 +151,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     let category: UserCategory
 }
 
-typealias SpherePath = Petname?
+typealias TraversalPath = Petname?
 
 // MARK: Model
 struct UserProfileDetailModel: ModelProtocol {
@@ -182,7 +182,7 @@ struct UserProfileDetailModel: ModelProtocol {
     var topEntries: [EntryStub] = []
     var following: [StoryUser] = []
 
-    var spherePath: SpherePath = .none
+    var traversalPath: TraversalPath = .none
     
     var statistics: UserProfileStatistics? = nil
 
@@ -209,7 +209,7 @@ struct UserProfileDetailModel: ModelProtocol {
             
             switch (profile) {
             case .other(let path):
-                model.spherePath = path
+                model.traversalPath = path
                 
                 let fx: Fx<UserProfileDetailAction> =
                     environment.userProfile

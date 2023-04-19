@@ -109,7 +109,7 @@ class UserProfileService {
         .eraseToAnyPublisher()
     }
     
-    private func produceFollowingList<Sphere: SphereProtocol>(sphere: Sphere, localAddressBook: AddressBook<Sphere>, basePath: SpherePath) async throws -> [StoryUser] {
+    private func produceFollowingList<Sphere: SphereProtocol>(sphere: Sphere, localAddressBook: AddressBook<Sphere>, basePath: TraversalPath) async throws -> [StoryUser] {
         var following: [StoryUser] = []
         let petnames = try await sphere.listPetnames()
         for petname in petnames {

@@ -152,7 +152,7 @@ enum NotebookAction {
     /// request an editor detail.
     case findAndPushDetail(
         slashlink: Slashlink,
-        spherePath: SpherePath,
+        traversalPath: TraversalPath,
         fallback: String
     )
     
@@ -197,8 +197,7 @@ extension NotebookAction {
             return .pushDetail(
                 MemoEditorDetailDescription(
                     address: address,
-                    fallback: fallback,
-                    spherePath: .none
+                    fallback: fallback
                 )
             )
         case let .createLocalMemo(slug, fallback):
@@ -206,8 +205,7 @@ extension NotebookAction {
                 MemoEditorDetailDescription(
                     address: slug?.toLocalMemoAddress(),
                     fallback: fallback,
-                    defaultAudience: .local,
-                    spherePath: .none
+                    defaultAudience: .local
                 )
             )
         case let .createPublicMemo(slug, fallback):
@@ -215,8 +213,7 @@ extension NotebookAction {
                 MemoEditorDetailDescription(
                     address: slug?.toPublicMemoAddress(),
                     fallback: fallback,
-                    defaultAudience: .public,
-                    spherePath: .none
+                    defaultAudience: .public
                 )
             )
         case .random:
@@ -247,10 +244,10 @@ extension NotebookAction {
             return .deleteEntry(address)
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindDetail(slashlink, spherePath, fallback):
+        case let .requestFindDetail(slashlink, traversalPath, fallback):
             return .findAndPushDetail(
                 slashlink: slashlink,
-                spherePath: spherePath,
+                traversalPath: traversalPath,
                 fallback: fallback
             )
         case let .succeedMoveEntry(from, to):
@@ -268,10 +265,10 @@ extension NotebookAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindDetail(slashlink, spherePath, fallback):
+        case let .requestFindDetail(slashlink, traversalPath, fallback):
             return .findAndPushDetail(
                 slashlink: slashlink,
-                spherePath: spherePath,
+                traversalPath: traversalPath,
                 fallback: fallback
             )
         }
@@ -519,11 +516,11 @@ struct NotebookModel: ModelProtocol {
             var model = state
             model.details = details
             return Update(state: model)
-        case let .findAndPushDetail(slashlink, spherePath, fallback):
+        case let .findAndPushDetail(slashlink, traversalPath, fallback):
             return findAndPushDetail(
                 state: state,
                 environment: environment,
-                spherePath: spherePath,
+                traversalPath: traversalPath,
                 slashlink: slashlink,
                 fallback: fallback
             )
@@ -888,8 +885,7 @@ struct NotebookModel: ModelProtocol {
             NotebookAction.pushDetail(
                 MemoEditorDetailDescription(
                     address: address,
-                    fallback: query,
-                    spherePath: .none
+                    fallback: query
                 )
             )
         )
@@ -903,7 +899,7 @@ struct NotebookModel: ModelProtocol {
     static func findAndPushDetail(
         state: NotebookModel,
         environment: AppEnvironment,
-        spherePath: SpherePath,
+        traversalPath: TraversalPath,
         slashlink: Slashlink,
         fallback: String
     ) -> Update<NotebookModel> {
@@ -923,7 +919,7 @@ struct NotebookModel: ModelProtocol {
         if AppDefaults.standard.isNoosphereEnabled {
             // Intercept profile visits and use the correct view
             if slashlink.slug.isProfile() {
-                if let combined = spherePath?.concat(petname: petname) {
+                if let combined = traversalPath?.concat(petname: petname) {
                     return update(
                         state: state,
                         action: .pushDetail(
@@ -946,7 +942,7 @@ struct NotebookModel: ModelProtocol {
                     .viewer(
                         MemoViewerDetailDescription(
                             address: slashlink.toPublicMemoAddress(),
-                            spherePath: petname
+                            traversalPath: petname
                         )
                     )
                 ),
@@ -975,8 +971,7 @@ struct NotebookModel: ModelProtocol {
                 NotebookAction.pushDetail(
                     MemoEditorDetailDescription(
                         address: address ?? fallbackAddress,
-                        fallback: fallback,
-                        spherePath: .none
+                        fallback: fallback
                     )
                 )
             })
@@ -996,8 +991,7 @@ struct NotebookModel: ModelProtocol {
                 NotebookAction.pushDetail(
                     MemoEditorDetailDescription(
                         address: link.address,
-                        fallback: link.title,
-                        spherePath: .none
+                        fallback: link.title
                     )
                 )
             })

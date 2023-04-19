@@ -32,7 +32,7 @@ struct MemoViewerDetailView: View {
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
                     editor: store.state.editor,
-                    spherePath: store.state.spherePath,
+                    traversalPath: store.state.traversalPath,
                     backlinks: store.state.backlinks,
                     send: store.send,
                     notify: notify
@@ -127,7 +127,7 @@ struct MemoViewerDetailLoadingView: View {
 struct MemoViewerDetailLoadedView: View {
     var title: String
     var editor: SubtextTextModel
-    var spherePath: SpherePath
+    var traversalPath: TraversalPath
     var backlinks: [EntryStub]
     var send: (MemoViewerDetailAction) -> Void
     var notify: (MemoViewerDetailNotification) -> Void
@@ -152,7 +152,7 @@ struct MemoViewerDetailLoadedView: View {
         notify(
             .requestFindDetail(
                 slashlink: sub.slashlink,
-                spherePath: spherePath,
+                traversalPath: traversalPath,
                 fallback: sub.fallback
             )
         )
@@ -203,7 +203,7 @@ enum MemoViewerDetailNotification: Hashable {
     /// Request detail from any audience scope
     case requestFindDetail(
         slashlink: Slashlink,
-        spherePath: SpherePath,
+        traversalPath: TraversalPath,
         fallback: String
     )
 }
@@ -212,7 +212,7 @@ enum MemoViewerDetailNotification: Hashable {
 /// detal's internal state.
 struct MemoViewerDetailDescription: Hashable {
     var address: MemoAddress
-    var spherePath: SpherePath
+    var traversalPath: TraversalPath = .none
 }
 
 // MARK: Actions
@@ -248,7 +248,7 @@ struct MemoViewerDetailModel: ModelProtocol {
     var editor = SubtextTextModel(isEditable: false)
     var backlinks: [EntryStub] = []
     
-    var spherePath: SpherePath = .none
+    var traversalPath: TraversalPath = .none
     
     // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
@@ -304,7 +304,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         var model = state
         model.loadingState = .loading
         model.address = description.address
-        model.spherePath = description.spherePath
+        model.traversalPath = description.traversalPath
         
         let fx: Fx<Action> = environment.data.readMemoDetailPublisher(
             address: description.address
@@ -416,7 +416,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                 The soul unfolds itself, like a [[lotus]] of countless petals.
                 """
             ),
-            spherePath: .none,
+            traversalPath: .none,
             backlinks: [],
             send: { action in },
             notify: { action in }
