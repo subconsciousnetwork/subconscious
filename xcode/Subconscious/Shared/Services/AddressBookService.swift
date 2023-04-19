@@ -41,7 +41,7 @@ extension AddressBookError: LocalizedError {
 
 /// An AddressBook can wrap any Sphere and provide a higher-level interface to manage petnames.
 actor AddressBook<Sphere: SphereProtocol> {
-    private(set) var sphere: Sphere
+    private var sphere: Sphere
     private var addressBook: [AddressBookEntry]?
     
     init(sphere: Sphere, addressBook: [AddressBookEntry]? = nil) {
