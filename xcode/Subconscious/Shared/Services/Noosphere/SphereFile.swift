@@ -30,13 +30,13 @@ public actor SphereFile: SphereFileProtocol {
     
     init?(
         noosphere: Noosphere,
-        pointer: OpaquePointer?
+        file: OpaquePointer?
     ) {
-        guard let pointer = pointer else {
+        guard let file = file else {
             return nil
         }
         self.noosphere = noosphere
-        self.file = pointer
+        self.file = file
     }
     
     /// Get the base64-encoded CID v1 string for the memo that refers to the

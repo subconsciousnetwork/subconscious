@@ -240,7 +240,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
                 self.noosphere.noosphere,
                 sphere,
                 slashlink.description
-            ) { error, file in
+            ) { error, pointer in
                 if let message = Noosphere.readErrorMessage(error) {
                     continuation.resume(
                         throwing: NoosphereError.foreignError(message)
@@ -249,7 +249,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
                 }
                 guard let file = SphereFile(
                     noosphere: self.noosphere,
-                    pointer: file
+                    file: pointer
                 ) else {
                     continuation.resume(throwing: NoosphereError.nullPointer)
                     return
