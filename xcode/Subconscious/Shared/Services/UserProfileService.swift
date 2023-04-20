@@ -76,7 +76,7 @@ actor UserProfileService {
         let following = try await self.getFollowingList(
             sphere: self.noosphere,
             localAddressBook: AddressBook(sphere: self.noosphere),
-            address: Slashlink.ourProfile.toLocalMemoAddress()
+            address: Slashlink.ourProfile.toPublicMemoAddress()
         )
         let notes = try await self.noosphere.list()
         
@@ -106,7 +106,7 @@ actor UserProfileService {
         let profile = UserProfile(
             did: did,
             petname: petname,
-            address: Slashlink.ourProfile.toLocalMemoAddress(),
+            address: Slashlink.ourProfile.toPublicMemoAddress(),
             // TODO: replace with _profile_.json data
             pfp: "sub_logo",
             bio: "Wow, it's your own profile! With its own codepath!",
@@ -230,7 +230,7 @@ actor UserProfileService {
                 petname: petname,
                 address:
                     isOurs
-                    ? Slashlink.ourProfile.toLocalMemoAddress()
+                    ? Slashlink.ourProfile.toPublicMemoAddress()
                     : Slashlink(petname: petname).toPublicMemoAddress(),
                 // TODO: replace with _profile_.json data
                 pfp: String.dummyProfilePicture(),
