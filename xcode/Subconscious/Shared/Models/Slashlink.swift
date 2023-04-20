@@ -126,7 +126,7 @@ extension Slashlink {
             return Slashlink(petname: petname, slug: self.slug)
         }
         
-        let path = petname.concat(petname: localPetname)
+        let path = petname.append(petname: localPetname)
         return Slashlink(petname: path, slug: self.slug)
     }
 }

@@ -221,7 +221,7 @@ actor UserProfileService {
                 continue
             }
             
-            let petname = address.petname?.concat(petname: petname) ?? petname
+            let petname = address.petname?.append(petname: petname) ?? petname
             let noosphereIdentity = try await noosphere.identity()
             let isOurs = noosphereIdentity == did.did
             

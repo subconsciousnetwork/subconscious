@@ -101,8 +101,8 @@ public struct Petname:
     
     
     /// Combines two petnames to build up a traversal path
-    /// i.e. `Petname("foo")!.concat(Petname("bar")` => `bar.foo`
-    public func concat(petname: Petname) -> Petname? {
+    /// i.e. `Petname("foo")!.append(Petname("bar")` => `bar.foo`
+    public func append(petname: Petname) -> Petname? {
         return Petname(petnames: [petname, self])
     }
 }
