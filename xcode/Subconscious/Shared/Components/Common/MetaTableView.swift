@@ -24,6 +24,70 @@ struct MetaTableView<Rows: View>: View {
     }
 }
 
+struct MetaTableLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack {
+            configuration.icon.frame(
+                width: AppTheme.icon,
+                height: AppTheme.icon
+            )
+            Spacer()
+            configuration.title
+        }
+        .padding(RowButtonStyle.insets)
+    }
+}
+
+struct MetaTableMetadataLabelView: View {
+    var title: String
+    
+    var body: some View {
+        Label(title: {
+            Text(title)
+                .font(.callout.monospaced())
+        }, icon: {
+            Image(systemName: "key")
+        })
+        .labelStyle(MetaTableLabelStyle())
+        .foregroundColor(.secondary)
+    }
+}
+
+struct MetaTableItemShareLinkView: View {
+    var label: String
+    var item: String
+    
+    var body: some View {
+        ShareLink(item: item) {
+            Label(
+                label,
+                systemImage: "square.and.arrow.up"
+            )
+        }
+        .buttonStyle(RowButtonStyle())
+    }
+}
+
+struct MetaTableItemButtonView: View {
+    var label: String
+    var systemImage: String
+    var action: () -> Void
+    var role: ButtonRole? = nil
+    
+    var body: some View {
+        Button(
+            role: role,
+            action: action
+        ) {
+            Label(
+                label,
+                systemImage: systemImage
+            )
+        }
+        .buttonStyle(RowButtonStyle())
+    }
+}
+
 struct MetaTableRowButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
