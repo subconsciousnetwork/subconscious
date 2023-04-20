@@ -44,6 +44,12 @@ actor AddressBook<Sphere: SphereProtocol> {
     private var sphere: Sphere
     private var addressBook: [AddressBookEntry]?
     
+    /// Logger cannot be static because actor is generic
+    private let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "AddressBookService"
+    )
+    
     init(sphere: Sphere, addressBook: [AddressBookEntry]? = nil) {
         self.sphere = sphere
         self.addressBook = addressBook
@@ -100,7 +106,7 @@ actor AddressBook<Sphere: SphereProtocol> {
             let _  = try await self.sphere.getPetname(petname: petname)
             return true
         } catch {
-            AddressBookService.logger.error("An error occurred checking for \(petname.markup), returning false. Reason: \(error.localizedDescription)")
+            logger.error("An error occurred checking for \(petname.markup), returning false. Reason: \(error.localizedDescription)")
             return false
         }
     }
@@ -207,7 +213,7 @@ actor AddressBook<Sphere: SphereProtocol> {
                     f.did == did
                 })
         } catch {
-            AddressBookService.logger.warning("Failed to check following status.")
+            logger.warning("Failed to check following status.")
             return false
         }
     }
