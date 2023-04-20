@@ -234,7 +234,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     
     /// Open sphere file from a slashlink.
     /// - Returns a SphereFile
-    private func open(slashlink: Slashlink) async throws -> SphereFile {
+    func readFile(slashlink: Slashlink) async throws -> SphereFile {
         try await withCheckedThrowingContinuation { continuation in
             SwiftNoosphere.nsSphereContentRead(
                 self.noosphere.noosphere,
@@ -266,7 +266,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         slashlink: Slashlink,
         name: String
     ) async -> String? {
-        guard let file = try? await open(slashlink: slashlink) else {
+        guard let file = try? await readFile(slashlink: slashlink) else {
             return nil
         }
         return try? await file.readHeaderValueFirst(name: name)
@@ -288,7 +288,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// content of this sphere file.
     /// - Returns CID string, if any
     public func getFileVersion(slashlink: Slashlink) async -> String? {
-        guard let file = try? await open(slashlink: slashlink) else {
+        guard let file = try? await readFile(slashlink: slashlink) else {
             return nil
         }
         return try? await file.version()
@@ -309,7 +309,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// Read all header names for a given slashlink.
     /// - Returns array of header name strings.
     public func readHeaderNames(slashlink: Slashlink) async -> [String] {
-        guard let file = try? await open(slashlink: slashlink) else {
+        guard let file = try? await readFile(slashlink: slashlink) else {
             return []
         }
         guard let names = try? await file.readHeaderNames() else {
@@ -332,7 +332,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// Read the value of a memo from this, or another sphere
     /// - Returns: `MemoData`
     public func read(slashlink: Slashlink) async throws -> MemoData {
-        let file = try await open(slashlink: slashlink)
+        let file = try await readFile(slashlink: slashlink)
 
         guard let contentType = try? await file.readHeaderValueFirst(
             name: "Content-Type"
