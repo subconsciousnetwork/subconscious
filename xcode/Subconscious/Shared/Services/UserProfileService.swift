@@ -37,7 +37,7 @@ extension UserProfileServiceError: LocalizedError {
     }
 }
 
-struct UserProfileContentPayload: Equatable, Hashable {
+struct UserProfileContentResponse: Equatable, Hashable {
     var profile: UserProfile
     var statistics: UserProfileStatistics
     var following: [StoryUser]
@@ -66,7 +66,7 @@ actor UserProfileService {
     }
     
     /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
-    func getOwnProfile() async throws -> UserProfileContentPayload {
+    func requestOwnProfile() async throws -> UserProfileContentResponse {
         guard let nickname = AppDefaults.standard.nickname,
               let petname = Petname(nickname) else {
                   throw UserProfileServiceError.missingPreferredPetname
@@ -113,7 +113,7 @@ actor UserProfileService {
             category: .you
         )
         
-        return UserProfileContentPayload(
+        return UserProfileContentResponse(
             profile: profile,
             statistics: UserProfileStatistics(
                 noteCount: entries.count,
@@ -126,15 +126,15 @@ actor UserProfileService {
         )
     }
     
-    nonisolated func getOwnProfilePublisher() -> AnyPublisher<UserProfileContentPayload, Error> {
+    nonisolated func requestOwnProfilePublisher() -> AnyPublisher<UserProfileContentResponse, Error> {
         Future.detached {
-            return try await self.getOwnProfile()
+            try await self.requestOwnProfile()
         }
         .eraseToAnyPublisher()
     }
     
     /// Retrieve all the content for the passed user's profile view, fetching their profile, notes and address book.
-    func getUserProfile(petname: Petname) async throws -> UserProfileContentPayload {
+    func requestUserProfile(petname: Petname) async throws -> UserProfileContentResponse {
         let sphere = try await self.noosphere.traverse(petname: petname)
         let identity = try await sphere.identity()
         let localAddressBook = AddressBook(sphere: sphere)
@@ -146,7 +146,7 @@ actor UserProfileService {
         
         // Detect your own profile and intercept
         guard try await self.noosphere.identity() != identity else {
-            return try await getOwnProfile()
+            return try await requestOwnProfile()
         }
         
         guard let did = Did(identity) else {
@@ -185,7 +185,7 @@ actor UserProfileService {
             category: .human
         )
         
-        return UserProfileContentPayload(
+        return UserProfileContentResponse(
             profile: profile,
             statistics: UserProfileStatistics(
                 noteCount: entries.count,
@@ -198,11 +198,11 @@ actor UserProfileService {
         )
     }
     
-    nonisolated func getUserProfilePublisher(
+    nonisolated func requestUserProfilePublisher(
         petname: Petname
-    ) -> AnyPublisher<UserProfileContentPayload, Error> {
+    ) -> AnyPublisher<UserProfileContentResponse, Error> {
         Future.detached {
-            return try await self.getUserProfile(petname: petname)
+            try await self.requestUserProfile(petname: petname)
         }
         .eraseToAnyPublisher()
     }
@@ -238,12 +238,12 @@ actor UserProfileService {
                 category: isOurs ? .you : .human
             )
             
-            let appUserIsFollowingListedUser = await self.addressBook.isFollowingUser(did: did)
+            let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: did)
             
             following.append(
                 StoryUser(
                     user: user,
-                    isFollowingUser: appUserIsFollowingListedUser
+                    isFollowingUser: weAreFollowingListedUser
                 )
             )
         }
