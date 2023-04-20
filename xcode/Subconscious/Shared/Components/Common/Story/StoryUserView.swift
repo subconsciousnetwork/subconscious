@@ -39,10 +39,10 @@ struct StoryUserView: View {
                     
                     switch (story.isFollowingUser, story.user.category) {
                     case (true, _):
-                        AppIcon.following
+                        Image.from(appIcon: .following)
                             .foregroundColor(.secondary)
                     case (_, .you):
-                        AppIcon.you
+                        Image.from(appIcon: .you)
                             .foregroundColor(.secondary)
                     case (_, _):
                         EmptyView()

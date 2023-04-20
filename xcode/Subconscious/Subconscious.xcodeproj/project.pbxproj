@@ -10,6 +10,7 @@
 		B508956E29E7862A0048106B /* Tests_AddressBookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956D29E7862A0048106B /* Tests_AddressBookService.swift */; };
 		B508957029E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
 		B508957129E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
+		B51EEAA129F0C37B0055887B /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51EEAA029F0C37B0055887B /* AppIcon.swift */; };
 		B532F8C329B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */; };
 		B54187B829EF5CA00056E4A9 /* FollowUserFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54187B729EF5CA00056E4A9 /* FollowUserFormView.swift */; };
 		B54B922828E669D6003ACA1F /* MementoGeist.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54B922728E669D6003ACA1F /* MementoGeist.swift */; };
@@ -403,6 +404,7 @@
 /* Begin PBXFileReference section */
 		B508956D29E7862A0048106B /* Tests_AddressBookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_AddressBookService.swift; sourceTree = "<group>"; };
 		B508956F29E79BE70048106B /* UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileService.swift; sourceTree = "<group>"; };
+		B51EEAA029F0C37B0055887B /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeBlockLayoutFragment.swift; sourceTree = "<group>"; };
 		B54187B729EF5CA00056E4A9 /* FollowUserFormView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FollowUserFormView.swift; sourceTree = "<group>"; };
 		B54B922728E669D6003ACA1F /* MementoGeist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MementoGeist.swift; sourceTree = "<group>"; };
@@ -1071,6 +1073,7 @@
 		B8EB29F226F27794006E97C3 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				B51EEAA029F0C37B0055887B /* AppIcon.swift */,
 				B8109C2727A8879C00CD2B6D /* AppTheme.swift */,
 				B8EB29F626F27797006E97C3 /* Assets.xcassets */,
 				B8EB2A3826F27CD1006E97C3 /* Components */,
@@ -1596,6 +1599,7 @@
 				B5F6ADC929C02F4A00690DE4 /* AddressBookService.swift in Sources */,
 				B8879EAC26F944DA00A0B4FF /* MemoEditorDetail.swift in Sources */,
 				B8925B2F29C23017001F9503 /* MemoViewerDetailView.swift in Sources */,
+				B51EEAA129F0C37B0055887B /* AppIcon.swift in Sources */,
 				B8A1621429B2AB3A008322EB /* CloseButtonView.swift in Sources */,
 				B82C3A7626F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B85BF47827BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,

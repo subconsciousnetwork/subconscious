@@ -14,8 +14,8 @@ struct OmniboxView: View {
     private func icon() -> Image {
         if let address = address {
             return address.isOurProfile
-                ? AppIcon.you
-                : AppIcon.user
+            ? Image.from(appIcon: .you)
+            : Image.from(appIcon: .user)
         }
         
         let audience = address?.toAudience() ?? defaultAudience

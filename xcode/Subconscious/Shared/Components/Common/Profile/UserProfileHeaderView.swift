@@ -44,9 +44,9 @@ struct UserProfileHeaderView: View {
                     label: {
                         switch (user.category, isFollowingUser) {
                         case (.you, _):
-                            Label("Edit Profile", systemImage: AppIcon.editSystemName)
+                            Label("Edit Profile", systemImage: AppIcon.edit.systemName)
                         case (_, true):
-                            Label("Following", systemImage: AppIcon.followingSystemName)
+                            Label("Following", systemImage: AppIcon.following.systemName)
                         case (_, false):
                             Text("Follow")
                         }

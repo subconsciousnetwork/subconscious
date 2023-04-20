@@ -46,16 +46,6 @@ extension AppTheme {
         )
 }
 
-enum AppIcon {}
-
-extension AppIcon {
-    static let you = Image(systemName: "face.smiling.inverse")
-    static let followingSystemName = "person.fill.checkmark"
-    static let following = Image(systemName: followingSystemName)
-    static let editSystemName = "pencil"
-    static let user = Image(systemName: "person.circle")
-}
-
 //  MARK: UIFonts
 //  Note you can convert from UIFont to Font easily, but you can't yet convert
 //  from Font to UIFont. So, we define our fonts as UIFonts.
