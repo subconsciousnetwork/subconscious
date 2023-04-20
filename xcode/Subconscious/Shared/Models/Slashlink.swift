@@ -45,8 +45,7 @@ public struct Slashlink:
 
     public var id: String { description }
     
-    static let profileSlug = Slug("_profile_")!
-    static let ourProfile = Slashlink(slug: Self.profileSlug)
+    static let ourProfile = Slashlink(slug: Slug.profile)
     
     // The normalized markup form of the slashlink
     public var markup: String { description }
@@ -85,7 +84,7 @@ public struct Slashlink:
         case (.none, .some(let slug)):
             self.init(slug: slug)
         case (.some(let petname), .none):
-            self.init(petname: petname, slug: Self.profileSlug)
+            self.init(petname: petname, slug: Slug.profile)
         case (_, _):
             return nil
         }
@@ -93,7 +92,7 @@ public struct Slashlink:
     
     /// Convenience initializer that creates a link to `@user/_profile_`
     init(petname: Petname) {
-        self.init(petname: petname, slug: Self.profileSlug)
+        self.init(petname: petname, slug: Slug.profile)
     }
 }
 
@@ -112,7 +111,7 @@ extension Slug {
     }
     
     func isProfile() -> Bool {
-        self == Slashlink.profileSlug
+        self == Slug.profile
     }
 }
 
