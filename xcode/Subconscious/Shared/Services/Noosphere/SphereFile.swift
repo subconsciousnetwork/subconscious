@@ -118,7 +118,11 @@ actor SphereFile: SphereFileProtocol {
     }
     
     deinit {
-        // Free pointer if content was not read
+        // Free pointer if content was not read.
+        // Note that Noosphere frees the pointer automatically *IF* the
+        // content has been read. We use the `isConsumed` flag to track this
+        // state and manually free the pointer ourselves **ONLY IF* the
+        // content was not read.
         guard isConsumed else {
             ns_sphere_file_free(file)
             return
