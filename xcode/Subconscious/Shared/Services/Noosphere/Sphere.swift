@@ -269,7 +269,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         guard let file = try? await open(slashlink: slashlink) else {
             return nil
         }
-        return await file.readHeaderValueFirst(name: name)
+        return try? await file.readHeaderValueFirst(name: name)
     }
     
     /// Read first header value for memo at slashlink
@@ -291,7 +291,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         guard let file = try? await open(slashlink: slashlink) else {
             return nil
         }
-        return await file.version()
+        return try? await file.version()
     }
     
     /// Get the base64-encoded CID v1 string for the memo that refers to the
@@ -312,7 +312,10 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         guard let file = try? await open(slashlink: slashlink) else {
             return []
         }
-        return await file.readHeaderNames()
+        guard let names = try? await file.readHeaderNames() else {
+            return []
+        }
+        return names
     }
     
     /// Read all header names for a given slashlink.
@@ -331,22 +334,20 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     public func read(slashlink: Slashlink) async throws -> MemoData {
         let file = try await open(slashlink: slashlink)
 
-        guard let contentType = await file.readHeaderValueFirst(
+        guard let contentType = try? await file.readHeaderValueFirst(
             name: "Content-Type"
         ) else {
             throw SphereError.contentTypeMissing(slashlink.description)
         }
 
-        let body = try await file.readContents()
-
         var headers: [Header] = []
-        let headerNames = await file.readHeaderNames()
+        let headerNames = try await file.readHeaderNames()
         for name in headerNames {
             // Skip content type. We've already retreived it.
             guard name != "Content-Type" else {
                 continue
             }
-            guard let value = await file.readHeaderValueFirst(
+            guard let value = try await file.readHeaderValueFirst(
                 name: name
             ) else {
                 continue
@@ -354,10 +355,12 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
             headers.append(Header(name: name, value: value))
         }
         
+        let contents = try await file.consumeContents()
+
         return MemoData(
             contentType: contentType,
             additionalHeaders: headers,
-            body: body
+            body: contents
         )
     }
     
