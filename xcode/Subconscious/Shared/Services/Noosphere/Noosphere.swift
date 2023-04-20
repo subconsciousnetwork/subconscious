@@ -150,6 +150,41 @@ public actor Noosphere {
         logger.debug("deinit")
     }
     
+    /// Read a string from a pointer to a C string, freeing pointer.
+    /// - Returns string, or nil if pointer is not intialized.
+    static func readString(
+        _ pointer: UnsafeMutablePointer<CChar>?
+    ) -> String? {
+        guard let pointer = pointer else {
+            return nil
+        }
+        defer {
+            ns_string_free(pointer)
+        }
+        let message = String(cString: pointer)
+        return message
+    }
+
+    /// Read an error message from an error messsage pointer.
+    /// Frees error, if any.
+    /// - Returns error string, or nil if pointer is not intialized (no error)
+    static func readErrorMessage(_ error: OpaquePointer?) -> String? {
+        guard let error = error else {
+            return nil
+        }
+        defer {
+            ns_error_free(error)
+        }
+        guard let errorMessagePointer = ns_error_string(error) else {
+            return nil
+        }
+        defer {
+            ns_string_free(errorMessagePointer)
+        }
+        let message = String(cString: errorMessagePointer)
+        return message
+    }
+
     static func callWithError<Z>(
         _ perform: (UnsafeMutablePointer<OpaquePointer?>) -> Z
     ) throws -> Z {

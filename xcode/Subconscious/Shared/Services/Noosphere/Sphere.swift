@@ -13,8 +13,6 @@ import os
 /// Describes a Sphere.
 /// See `Sphere` for a concrete implementation.
 public protocol SphereProtocol {
-    associatedtype Memo
-    
     func identity() async throws -> String
     
     func version() async throws -> String
@@ -28,7 +26,7 @@ public protocol SphereProtocol {
     
     func readHeaderNames(slashlink: Slashlink) async -> [String]
     
-    func read(slashlink: Slashlink) async throws -> Memo
+    func read(slashlink: Slashlink) async throws -> MemoData
     
     func write(
         slug: Slug,
@@ -145,7 +143,6 @@ enum SphereError: Error, LocalizedError {
         }
     }
 }
-
 
 /// Sphere file system access.
 /// Provides sphere file system methods and manages lifetime of sphere pointer.
@@ -344,7 +341,51 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         }
         .eraseToAnyPublisher()
     }
-    
+
+    /// Asynchronously read data from a slashlink
+    private func open(slashlink: Slashlink) async throws -> SphereFile {
+        try await withCheckedThrowingContinuation { continuation in
+            SwiftNoosphere.nsSphereContentRead(
+                self.noosphere.noosphere,
+                sphere,
+                slashlink.description
+            ) { error, file in
+                if let message = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(message)
+                    )
+                    return
+                }
+                guard let file = SphereFile(file) else {
+                    continuation.resume(throwing: NoosphereError.nullPointer)
+                    return
+                }
+                continuation.resume(returning: file)
+                return
+            }
+        }
+    }
+
+    /// Asynchronously read data from a slashlink
+    private func readContents(slashlink: Slashlink) async throws -> Data {
+        let file = try await open(slashlink: slashlink)
+        return try await withCheckedThrowingContinuation { continuation in
+            nsSphereFileContentsRead(
+                self.noosphere.noosphere,
+                file.pointer
+            ) { error, contents in
+                if let message = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(message)
+                    )
+                    return
+                }
+                let data = Data(bytes: contents.ptr, count: contents.len)
+                continuation.resume(returning: data)
+            }
+            return
+        }
+    }
 
     /// Read the value of a memo from this, or another sphere
     /// - Returns: `MemoData`
@@ -738,19 +779,26 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// Sync sphere with gateway.
     /// Gateway must be configured when Noosphere was initialized.
     /// - Returns a CID string for the new sphere version.
-    public func sync() throws -> String {
-        let versionPointer = try Noosphere.callWithError(
-            ns_sphere_sync,
-            noosphere.noosphere,
-            _identity
-        )
-        guard let versionPointer = versionPointer else {
-            throw NoosphereError.nullPointer
+    public func sync() async throws -> String {
+        try await withCheckedThrowingContinuation { continuation in
+            nsSphereSync(
+                noosphere.noosphere,
+                self.sphere
+            ) { error, version in
+                if let error = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(error)
+                    )
+                    return
+                }
+                guard let version = Noosphere.readString(version) else {
+                    continuation.resume(throwing: NoosphereError.nullPointer)
+                    return
+                }
+                continuation.resume(returning: version)
+                return
+            }
         }
-        defer {
-            ns_string_free(versionPointer)
-        }
-        return String(cString: versionPointer)
     }
     
     /// Sync sphere with gateway.

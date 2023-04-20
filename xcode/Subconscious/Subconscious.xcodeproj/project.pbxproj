@@ -65,6 +65,7 @@
 		B81A535D27275138001A6268 /* Tape.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A535B27275138001A6268 /* Tape.swift */; };
 		B81A535F272751EE001A6268 /* Subtext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A535E272751EE001A6268 /* Subtext.swift */; };
 		B81A5360272751EE001A6268 /* Subtext.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81A535E272751EE001A6268 /* Subtext.swift */; };
+		B81D063B29F1821E00593BBA /* SphereFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81D063A29F1821E00593BBA /* SphereFile.swift */; };
 		B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81EACD727B724A000B3B8DC /* ThickDividerView.swift */; };
 		B81EACD927B724A000B3B8DC /* ThickDividerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81EACD727B724A000B3B8DC /* ThickDividerView.swift */; };
 		B822F18B27C9615600943C6B /* ObservableStore in Frameworks */ = {isa = PBXBuildFile; productRef = B822F18A27C9615600943C6B /* ObservableStore */; };
@@ -448,6 +449,7 @@
 		B81A1A6E29DF29BF00B4CD1C /* MemoViewerDetailMetaSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoViewerDetailMetaSheetView.swift; sourceTree = "<group>"; };
 		B81A535B27275138001A6268 /* Tape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tape.swift; sourceTree = "<group>"; };
 		B81A535E272751EE001A6268 /* Subtext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subtext.swift; sourceTree = "<group>"; };
+		B81D063A29F1821E00593BBA /* SphereFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SphereFile.swift; sourceTree = "<group>"; };
 		B81EACD727B724A000B3B8DC /* ThickDividerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThickDividerView.swift; sourceTree = "<group>"; };
 		B822F18C27C9C0AB00943C6B /* CountChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountChip.swift; sourceTree = "<group>"; };
 		B8249D9F27E2668500BCDFBA /* PinTrailingBottom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinTrailingBottom.swift; sourceTree = "<group>"; };
@@ -867,6 +869,7 @@
 				B87288DB299AB01800EF7E07 /* Noosphere.swift */,
 				B8E1BB7A296DEF3200B86E0E /* NoosphereService.swift */,
 				B87288DD299AB02400EF7E07 /* Sphere.swift */,
+				B81D063A29F1821E00593BBA /* SphereFile.swift */,
 			);
 			path = Noosphere;
 			sourceTree = "<group>";
@@ -1656,6 +1659,7 @@
 				B85DF78C29B660C60042D725 /* Prose.swift in Sources */,
 				B8EA3EE529159C5500B92C2E /* HeaderSubtextMemoStore.swift in Sources */,
 				B86DFF3127C06EBC002E57ED /* RenameSuggestion.swift in Sources */,
+				B81D063B29F1821E00593BBA /* SphereFile.swift in Sources */,
 				B88B1CE1298EAE730062CB7F /* PillButtonStyle.swift in Sources */,
 				B8AE34A7276A885300777FF0 /* TextViewRepresentable.swift in Sources */,
 				B8C0A1B4297C938000D59532 /* Error.swift in Sources */,
@@ -2327,8 +2331,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gordonbrander/ObservableStore";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.3.0;
+				kind = exactVersion;
+				version = 0.3.0;
 			};
 		};
 		B82C3A6D26F6B1C000833CC8 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
@@ -2360,7 +2364,7 @@
 			repositoryURL = "https://github.com/subconsciousnetwork/noosphere";
 			requirement = {
 				kind = revision;
-				revision = 6209e75b2f47349ce2518a0b05e00e8b657abc1a;
+				revision = 056dfa228b8fd05d0d5f821e6e6938b7386c40a5;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
