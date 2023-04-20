@@ -13,19 +13,22 @@ struct PetnameBylineView: View {
     private(set) var petnameColor = Color.accentColor
     
     var body: some View {
-        let parts = petname.markup.split(separator: ".")
+        let parts = petname.parts
 
         HStack(alignment: .lastTextBaseline, spacing: 0) {
             let first = parts[0]
-            let rest = parts[1...].joined(separator: ".")
             
-            Text(first)
+            Text(first.markup)
                 .foregroundColor(petnameColor)
                 // Fixed size to ensure truncation trims path preferentially 
                 .fixedSize(horizontal: true, vertical: false)
                 .font(.callout)
                 .fontWeight(.medium)
                 .lineLimit(1)
+            
+            let rest = parts[1...]
+                .map { p in p.description }
+                .joined(separator: ".")
             
             if rest.count > 0 {
                 // Particular structure to ensure truncation trims the path and never the name

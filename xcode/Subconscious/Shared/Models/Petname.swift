@@ -60,6 +60,12 @@ public struct Petname:
     public var verbatimMarkup: String {
         "@\(self.verbatim)"
     }
+    
+    public var parts: [Petname] {
+        verbatim
+            .split(separator: ".")
+            .compactMap { part in Petname(part.toString()) }
+    }
 
     public init?(_ description: String) {
         guard description.wholeMatch(of: Self.petnameRegex) != nil else {
@@ -98,7 +104,6 @@ public struct Petname:
             return Petname(formatting: "\(match.output.petname)\(separator)1")
         }
     }
-    
     
     /// Combines two petnames to build up a traversal path
     /// i.e. `Petname("foo")!.append(Petname("bar")` => `bar.foo`
