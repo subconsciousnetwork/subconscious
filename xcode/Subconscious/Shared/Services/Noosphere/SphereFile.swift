@@ -11,7 +11,7 @@ import SwiftNoosphere
 /// Describes a Sphere file.
 /// See `SphereFile` for a concrete implementation.
 public protocol SphereFileProtocol {
-    func version() async throws -> String?
+    func version() async throws -> String
     
     func readHeaderValueFirst(
         name: String
@@ -47,20 +47,20 @@ actor SphereFile: SphereFileProtocol {
     /// Get the base64-encoded CID v1 string for the memo that refers to the
     /// content of this sphere file.
     /// - Returns CID string, if any
-    public func version() throws -> String? {
+    public func version() throws -> String {
         guard !isConsumed else {
             throw SphereFileError.consumed
         }
-        guard let cid = try? Noosphere.callWithError(
+        guard let cid = try Noosphere.callWithError(
             ns_sphere_file_version_get,
             self.file
         ) else {
-            return nil
+            throw NoosphereError.nullPointer
         }
         defer {
             ns_string_free(cid)
         }
-        return String.init(cString: cid)
+        return String(cString: cid)
     }
     
     /// Read first header value for memo at slashlink
