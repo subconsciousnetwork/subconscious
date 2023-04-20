@@ -124,7 +124,7 @@ struct NotebookNavigationView: View {
                         Button(
                             action: {
                                 let detail = UserProfileDetailDescription(
-                                    address: Slashlink.yourProfile.toPublicMemoAddress()
+                                    address: Slashlink.ourProfile.toPublicMemoAddress()
                                 )
                                 store.send(.pushDetail(.profile(detail)))
                             }

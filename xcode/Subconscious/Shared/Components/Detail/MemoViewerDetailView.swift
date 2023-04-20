@@ -151,6 +151,9 @@ struct MemoViewerDetailLoadedView: View {
         }
         
         // Stitch the base address on to the tapped link
+        // this is needed in the viewer but not the editor
+        // because the editor is (currently) always pointed to
+        // our data.
         let slashlink = Func.run {
             guard let basePetname = address.petname else {
                 return sub.slashlink

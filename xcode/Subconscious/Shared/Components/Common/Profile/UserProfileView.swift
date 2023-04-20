@@ -123,7 +123,7 @@ struct UserProfileView: View {
                     )
                 case .you:
                     DetailToolbarContent(
-                        address: Slashlink.yourProfile.toPublicMemoAddress(),
+                        address: Slashlink.ourProfile.toPublicMemoAddress(),
                         defaultAudience: .public,
                         onTapOmnibox: {
                             send(.presentMetaSheet(true))

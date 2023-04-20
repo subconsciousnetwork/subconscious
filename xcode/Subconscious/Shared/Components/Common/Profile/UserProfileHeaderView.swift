@@ -101,7 +101,7 @@ struct BylineLgView_Previews: PreviewProvider {
                 user: UserProfile(
                     did: Did("did:key:123")!,
                     petname: Petname("ben")!,
-                    address: Slashlink.yourProfile.toLocalMemoAddress(),
+                    address: Slashlink.ourProfile.toLocalMemoAddress(),
                     pfp: "pfp-dog",
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
                     category: .you
