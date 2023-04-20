@@ -155,13 +155,35 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     public let sphere: OpaquePointer
     private let _identity: String
     
-    private init(noosphere: Noosphere, identity: String, sphere: OpaquePointer) throws {
+    /// Initialize a sphere from an already-created sphere pointer, retrieving
+    /// identity from Noosphere.
+    ///
+    /// This is a private initializer used in implementing traversal.
+    private init(
+        noosphere: Noosphere,
+        sphere: OpaquePointer?
+    ) throws {
+        guard let sphere = sphere else {
+            throw NoosphereError.nullPointer
+        }
+        guard let identityPointer = try Noosphere.callWithError(
+            ns_sphere_identity,
+            noosphere.noosphere,
+            sphere
+        ) else {
+            throw NoosphereError.nullPointer
+        }
+        defer {
+            ns_string_free(identityPointer)
+        }
+        let identity = String(cString: identityPointer)
         self.noosphere = noosphere
         self._identity = identity
         self.sphere = sphere
-        logger.debug("init with identity: \(identity)")
+        logger.debug("init from pointer with identity: \(identity)")
     }
 
+    /// Initializer
     init(noosphere: Noosphere, identity: String) throws {
         self.noosphere = noosphere
         self._identity = identity
@@ -174,39 +196,6 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         }
         self.sphere = fs
         logger.debug("init with identity: \(identity)")
-    }
-    
-    private static func from(
-        noosphere: Noosphere,
-        sphere: OpaquePointer
-    ) async throws -> Self {
-        let identity =
-            try await Self.fetchIdentityFromSphere(
-                noosphere: noosphere.noosphere,
-                sphere: sphere
-            )
-            .value
-        
-        return try self.init(noosphere: noosphere, identity: identity, sphere: sphere)
-    }
-    
-    private static func fetchIdentityFromSphere(
-        noosphere: OpaquePointer,
-        sphere: OpaquePointer
-    ) throws -> Future<String, any Error> {
-        Future.detached {
-            guard let sphereIdentity = try Noosphere.callWithError(
-                ns_sphere_identity,
-                noosphere,
-                sphere
-            ) else {
-                throw NoosphereError.nullPointer
-            }
-            defer {
-                ns_string_free(sphereIdentity)
-            }
-            return String.init(cString: sphereIdentity)
-        }
     }
     
     public func identity() throws -> String {
@@ -242,28 +231,45 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         }
         .eraseToAnyPublisher()
     }
+    
+    /// Open sphere file from a slashlink.
+    /// - Returns a SphereFile
+    private func open(slashlink: Slashlink) async throws -> SphereFile {
+        try await withCheckedThrowingContinuation { continuation in
+            SwiftNoosphere.nsSphereContentRead(
+                self.noosphere.noosphere,
+                sphere,
+                slashlink.description
+            ) { error, file in
+                if let message = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(message)
+                    )
+                    return
+                }
+                guard let file = SphereFile(
+                    noosphere: self.noosphere,
+                    pointer: file
+                ) else {
+                    continuation.resume(throwing: NoosphereError.nullPointer)
+                    return
+                }
+                continuation.resume(returning: file)
+                return
+            }
+        }
+    }
 
     /// Read first header value for memo at slashlink
     /// - Returns: value, if any
     public func readHeaderValueFirst(
         slashlink: Slashlink,
         name: String
-    ) -> String? {
-        guard let file = try? Noosphere.callWithError(
-            ns_sphere_content_read,
-            noosphere.noosphere,
-            sphere,
-            slashlink.description
-        ) else {
+    ) async -> String? {
+        guard let file = try? await open(slashlink: slashlink) else {
             return nil
         }
-        defer {
-            ns_sphere_file_free(file)
-        }
-        return Self.readFileHeaderValueFirst(
-            file: file,
-            name: name
-        )
+        return await file.readHeaderValueFirst(name: name)
     }
     
     /// Read first header value for memo at slashlink
@@ -281,25 +287,11 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     /// Get the base64-encoded CID v1 string for the memo that refers to the
     /// content of this sphere file.
     /// - Returns CID string, if any
-    public func getFileVersion(slashlink: Slashlink) -> String? {
-        guard let file = try? Noosphere.callWithError(
-            ns_sphere_content_read,
-            noosphere.noosphere,
-            sphere,
-            slashlink.description
-        ) else {
+    public func getFileVersion(slashlink: Slashlink) async -> String? {
+        guard let file = try? await open(slashlink: slashlink) else {
             return nil
         }
-        guard let cid = try? Noosphere.callWithError(
-            ns_sphere_file_version_get,
-            file
-        ) else {
-            return nil
-        }
-        defer {
-            ns_string_free(cid)
-        }
-        return String.init(cString: cid)
+        return await file.version()
     }
     
     /// Get the base64-encoded CID v1 string for the memo that refers to the
@@ -316,19 +308,11 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     
     /// Read all header names for a given slashlink.
     /// - Returns array of header name strings.
-    public func readHeaderNames(slashlink: Slashlink) -> [String] {
-        guard let file = try? Noosphere.callWithError(
-            ns_sphere_content_read,
-            noosphere.noosphere,
-            sphere,
-            slashlink.description
-        ) else {
+    public func readHeaderNames(slashlink: Slashlink) async -> [String] {
+        guard let file = try? await open(slashlink: slashlink) else {
             return []
         }
-        defer {
-            ns_sphere_file_free(file)
-        }
-        return Self.readFileHeaderNames(file: file)
+        return await file.readHeaderNames()
     }
     
     /// Read all header names for a given slashlink.
@@ -342,92 +326,27 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         .eraseToAnyPublisher()
     }
 
-    /// Asynchronously read data from a slashlink
-    private func open(slashlink: Slashlink) async throws -> SphereFile {
-        try await withCheckedThrowingContinuation { continuation in
-            SwiftNoosphere.nsSphereContentRead(
-                self.noosphere.noosphere,
-                sphere,
-                slashlink.description
-            ) { error, file in
-                if let message = Noosphere.readErrorMessage(error) {
-                    continuation.resume(
-                        throwing: NoosphereError.foreignError(message)
-                    )
-                    return
-                }
-                guard let file = SphereFile(file) else {
-                    continuation.resume(throwing: NoosphereError.nullPointer)
-                    return
-                }
-                continuation.resume(returning: file)
-                return
-            }
-        }
-    }
-
-    /// Asynchronously read data from a slashlink
-    private func readContents(slashlink: Slashlink) async throws -> Data {
-        let file = try await open(slashlink: slashlink)
-        return try await withCheckedThrowingContinuation { continuation in
-            nsSphereFileContentsRead(
-                self.noosphere.noosphere,
-                file.pointer
-            ) { error, contents in
-                if let message = Noosphere.readErrorMessage(error) {
-                    continuation.resume(
-                        throwing: NoosphereError.foreignError(message)
-                    )
-                    return
-                }
-                let data = Data(bytes: contents.ptr, count: contents.len)
-                continuation.resume(returning: data)
-            }
-            return
-        }
-    }
-
     /// Read the value of a memo from this, or another sphere
     /// - Returns: `MemoData`
-    public func read(slashlink: Slashlink) throws -> MemoData {
-        guard let file = try Noosphere.callWithError(
-            ns_sphere_content_read,
-            noosphere.noosphere,
-            sphere,
-            slashlink.markup
-        ) else {
-            throw SphereError.fileDoesNotExist(slashlink.description)
-        }
-        defer {
-            ns_sphere_file_free(file)
-        }
-        
-        guard let contentType = Self.readFileHeaderValueFirst(
-            file: file,
+    public func read(slashlink: Slashlink) async throws -> MemoData {
+        let file = try await open(slashlink: slashlink)
+
+        guard let contentType = await file.readHeaderValueFirst(
             name: "Content-Type"
         ) else {
             throw SphereError.contentTypeMissing(slashlink.description)
         }
-        
-        let bodyRaw = try Noosphere.callWithError(
-            ns_sphere_file_contents_read,
-            noosphere.noosphere,
-            file
-        )
-        defer {
-            ns_bytes_free(bodyRaw)
-        }
-        let body = Data(bytes: bodyRaw.ptr, count: bodyRaw.len)
-        
+
+        let body = try await file.readContents()
+
         var headers: [Header] = []
-        let headerNames = Self.readFileHeaderNames(file: file)
+        let headerNames = await file.readHeaderNames()
         for name in headerNames {
             // Skip content type. We've already retreived it.
             guard name != "Content-Type" else {
                 continue
             }
-            guard let value = Self.readFileHeaderValueFirst(
-                file: file,
+            guard let value = await file.readHeaderValueFirst(
                 name: name
             ) else {
                 continue
@@ -681,18 +600,37 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
     ///
     /// - Returns a sphere
     public func traverse(petname: Petname) async throws -> Sphere {
-        let sphere = try Noosphere.callWithError(
-            ns_sphere_traverse_by_petname,
-            noosphere.noosphere,
-            sphere,
-            petname.description
-        )
-        
-        guard let sphere = sphere else {
-            throw NoosphereError.foreignError("ns_sphere_traverse_by_petname failed to find sphere")
+        try await withCheckedThrowingContinuation { continuation in
+            nsSphereTraverseByPetname(
+                self.noosphere.noosphere,
+                self.sphere,
+                petname.markup
+            ) { error, pointer in
+                if let error = Noosphere.readErrorMessage(error) {
+                    continuation.resume(
+                        throwing: NoosphereError.foreignError(error)
+                    )
+                    return
+                }
+                guard let pointer = pointer else {
+                    continuation.resume(throwing: NoosphereError.nullPointer)
+                    return
+                }
+                do {
+                    let sphere = try Sphere(
+                        noosphere: self.noosphere,
+                        sphere: pointer
+                    )
+                    continuation.resume(
+                        returning: sphere
+                    )
+                    return
+                } catch {
+                    continuation.resume(throwing: error)
+                    return
+                }
+            }
         }
-        
-        return try await Sphere.from(noosphere: noosphere, sphere: sphere)
     }
     
     /// Attempt to retrieve the sphere of a recorded petname, this can be chained to walk
@@ -849,35 +787,6 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         ns_sphere_free(sphere)
         let identity = self._identity
         logger.debug("deinit with identity \(identity)")
-    }
-    
-    /// Read first header value for file pointer
-    static func readFileHeaderValueFirst(
-        file: OpaquePointer,
-        name: String
-    ) -> String? {
-        guard let valueRaw = ns_sphere_file_header_value_first(
-            file,
-            name
-        ) else {
-            return nil
-        }
-        defer {
-            ns_string_free(valueRaw)
-        }
-        return String(cString: valueRaw)
-    }
-
-    /// Get all header names for a given file pointer
-    static func readFileHeaderNames(
-        file: OpaquePointer
-    ) -> [String] {
-        let file_header_names = ns_sphere_file_header_names_read(file)
-        defer {
-            ns_string_array_free(file_header_names)
-        }
-
-        return file_header_names.toStringArray()
     }
 }
 

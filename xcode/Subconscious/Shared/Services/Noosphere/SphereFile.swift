@@ -15,9 +15,9 @@ public protocol SphereFileProtocol {
     
     func readHeaderValueFirst(
         name: String
-    ) async throws -> String?
+    ) async -> String?
     
-    func readHeaderNames() async throws -> [String]
+    func readHeaderNames() async -> [String]
     
     func readContents() async throws -> Data
 }
@@ -26,7 +26,7 @@ public protocol SphereFileProtocol {
 /// Will automatically free sphere file pointer when class de-initializes.
 public actor SphereFile: SphereFileProtocol {
     private let noosphere: Noosphere
-    let pointer: OpaquePointer
+    let file: OpaquePointer
     
     init?(
         noosphere: Noosphere,
@@ -36,7 +36,7 @@ public actor SphereFile: SphereFileProtocol {
             return nil
         }
         self.noosphere = noosphere
-        self.pointer = pointer
+        self.file = pointer
     }
     
     /// Get the base64-encoded CID v1 string for the memo that refers to the
@@ -45,7 +45,7 @@ public actor SphereFile: SphereFileProtocol {
     public func version() -> String? {
         guard let cid = try? Noosphere.callWithError(
             ns_sphere_file_version_get,
-            self.pointer
+            self.file
         ) else {
             return nil
         }
@@ -61,7 +61,7 @@ public actor SphereFile: SphereFileProtocol {
         name: String
     ) -> String? {
         guard let valueRaw = ns_sphere_file_header_value_first(
-            pointer,
+            file,
             name
         ) else {
             return nil
@@ -72,8 +72,8 @@ public actor SphereFile: SphereFileProtocol {
         return String(cString: valueRaw)
     }
     
-    public func readHeaderNames() async throws -> [String] {
-        let file_header_names = ns_sphere_file_header_names_read(self.pointer)
+    public func readHeaderNames() async -> [String] {
+        let file_header_names = ns_sphere_file_header_names_read(self.file)
         defer {
             ns_string_array_free(file_header_names)
         }
@@ -84,7 +84,7 @@ public actor SphereFile: SphereFileProtocol {
         try await withCheckedThrowingContinuation { continuation in
             nsSphereFileContentsRead(
                 self.noosphere.noosphere,
-                self.pointer
+                self.file
             ) { error, contents in
                 if let message = Noosphere.readErrorMessage(error) {
                     continuation.resume(
@@ -100,7 +100,7 @@ public actor SphereFile: SphereFileProtocol {
     }
     
     deinit {
-        ns_sphere_file_free(pointer)
+        ns_sphere_file_free(file)
     }
 }
 
