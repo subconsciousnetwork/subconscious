@@ -138,7 +138,7 @@ struct UserProfileDetailModel: ModelProtocol {
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
-        category: "UserProfileDetailModel"
+        category: "UserProfileDetail"
     )
     
     var loadingState = LoadingState.loading
