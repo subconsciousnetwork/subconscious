@@ -82,7 +82,7 @@ struct UserProfileDetailDescription: Hashable {
 
 enum UserProfileDetailAction {
     case appear(MemoAddress)
-    case populate(UserProfileContentPayload)
+    case populate(UserProfileContentResponse)
     case failedToPopulate(String)
     
     case tabIndexSelected(Int)
@@ -181,12 +181,12 @@ struct UserProfileDetailModel: ModelProtocol {
                 environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
             )
         case .appear(let address):
-            let fxRoot: AnyPublisher<UserProfileContentPayload, Error> =
+            let fxRoot: AnyPublisher<UserProfileContentResponse, Error> =
                 Func.run {
                     if let petname = address.petname {
-                        return environment.userProfile.getUserProfilePublisher(petname: petname)
+                        return environment.userProfile.requestUserProfilePublisher(petname: petname)
                     } else {
-                        return environment.userProfile.getOwnProfilePublisher()
+                        return environment.userProfile.requestOwnProfilePublisher()
                     }
                 }
             
