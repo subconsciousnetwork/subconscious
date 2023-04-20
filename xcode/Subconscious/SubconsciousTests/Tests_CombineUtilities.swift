@@ -20,7 +20,7 @@ final class Tests_CombineUtilities: XCTestCase {
         cancellables = Set()
     }
     
-    private static let TIMEOUT = 1.0
+    private static let timeout = 1.0
     
     func testFutureTaskAsync() throws {
         let future = Future {
@@ -42,7 +42,7 @@ final class Tests_CombineUtilities: XCTestCase {
         )
         .store(in: &cancellables)
         
-        wait(for: [expectation], timeout: Self.TIMEOUT)
+        wait(for: [expectation], timeout: Self.timeout)
     }
     
     func testFutureTaskError() throws {
@@ -70,7 +70,7 @@ final class Tests_CombineUtilities: XCTestCase {
         )
         .store(in: &cancellables)
         
-        wait(for: [expectation], timeout: Self.TIMEOUT)
+        wait(for: [expectation], timeout: Self.timeout)
     }
     
     func testFutureDetachedTaskAsync() throws {
@@ -93,7 +93,7 @@ final class Tests_CombineUtilities: XCTestCase {
         )
         .store(in: &cancellables)
         
-        wait(for: [expectation], timeout: Self.TIMEOUT)
+        wait(for: [expectation], timeout: Self.timeout)
     }
     
     func testFutureDetachedTaskError() throws {
@@ -121,7 +121,7 @@ final class Tests_CombineUtilities: XCTestCase {
         )
         .store(in: &cancellables)
         
-        wait(for: [expectation], timeout: Self.TIMEOUT)
+        wait(for: [expectation], timeout: Self.timeout)
     }
 
     func testRecover() throws {
@@ -149,6 +149,6 @@ final class Tests_CombineUtilities: XCTestCase {
         )
         .store(in: &cancellables)
         
-        wait(for: [expectation], timeout: Self.TIMEOUT)
+        wait(for: [expectation], timeout: Self.timeout)
     }
 }

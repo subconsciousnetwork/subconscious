@@ -115,7 +115,7 @@ actor AddressBook<Sphere: SphereProtocol> {
     }
     
     /// Iteratively add a numerical suffix to petnames until we find an available alias.
-    /// This can fail if `MAX_ATTEMPTS_TO_INCREMENT_PETNAME` iterations occur without
+    /// This can fail if `AddressBookService.maxAttemptsToIncrementPetName` iterations occur without
     /// finding a candidate.
     func findAvailablePetname(petname: Petname) async throws -> Petname {
         var name = petname
@@ -130,7 +130,7 @@ actor AddressBook<Sphere: SphereProtocol> {
             count += 1
             
             // Escape hatch, no infinite loops plz
-            if count > AddressBookService.MAX_ATTEMPTS_TO_INCREMENT_PETNAME {
+            if count > AddressBookService.maxAttemptsToIncrementPetName {
                 throw AddressBookError.exhaustedUniquePetnameRange
             }
         }
@@ -220,7 +220,9 @@ actor AddressBookService {
     private var database: DatabaseService
     private var addressBook: AddressBook<NoosphereService>
     
-    static let MAX_ATTEMPTS_TO_INCREMENT_PETNAME = 99
+    /// must be defined here not on `AddressBook` because
+    /// `AddressBook` is generic and cannot hold static properties
+    static let maxAttemptsToIncrementPetName = 99
     
     static let logger = Logger(
         subsystem: Config.default.rdns,
@@ -350,14 +352,14 @@ actor AddressBookService {
     }
     
     /// Iteratively add a numerical suffix to petnames until we find an available alias.
-    /// This can fail if `MAX_ATTEMPTS_TO_INCREMENT_PETNAME` iterations occur without
+    /// This can fail if `maxAttemptsToIncrementPetName` iterations occur without
     /// finding a candidate.
     func findAvailablePetname(petname: Petname) async throws -> Petname {
         return try await self.addressBook.findAvailablePetname(petname: petname)
     }
     
     /// Iteratively add a numerical suffix to petnames until we find an available alias.
-    /// This can fail if `MAX_ATTEMPTS_TO_INCREMENT_PETNAME` iterations occur without
+    /// This can fail if `maxAttemptsToIncrementPetName` iterations occur without
     /// finding a candidate.
     nonisolated func findAvailablePetnamePublisher(petname: Petname) -> AnyPublisher<Petname, Error> {
         Future.detached {
