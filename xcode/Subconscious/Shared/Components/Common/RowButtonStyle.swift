@@ -23,12 +23,7 @@ struct RowLabelStyle: LabelStyle {
 
 /// Underlays a fill on tap when active, much like a UITableView row.
 struct RowButtonStyle: ButtonStyle {
-    static var insets: EdgeInsets = EdgeInsets(
-        top: AppTheme.unit2,
-        leading: AppTheme.unit4,
-        bottom: AppTheme.unit2,
-        trailing: AppTheme.unit4
-    )
+    var insets: EdgeInsets = AppTheme.defaultRowButtonInsets
 
     func makeBody(configuration: Configuration) -> some View {
         HStack {
@@ -40,7 +35,7 @@ struct RowButtonStyle: ButtonStyle {
                     Color.primaryButtonText
                 )
         }
-        .padding(Self.insets)
+        .padding(insets)
         .frame(minHeight: AppTheme.minTouchSize)
         .contentShape(
             Rectangle()

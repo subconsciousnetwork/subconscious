@@ -36,6 +36,14 @@ extension AppTheme {
     static let cornerRadiusLg: Double = 16
     
     static let brandMark = Image("sub_logo")
+    
+    static let defaultRowButtonInsets =
+        EdgeInsets(
+            top: AppTheme.unit2,
+            leading: AppTheme.unit4,
+            bottom: AppTheme.unit2,
+            trailing: AppTheme.unit4
+        )
 }
 
 enum AppIcon {}

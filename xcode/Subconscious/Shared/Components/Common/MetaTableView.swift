@@ -25,6 +25,8 @@ struct MetaTableView<Rows: View>: View {
 }
 
 struct MetaTableLabelStyle: LabelStyle {
+    var insets: EdgeInsets = AppTheme.defaultRowButtonInsets
+    
     func makeBody(configuration: Configuration) -> some View {
         HStack {
             configuration.icon.frame(
@@ -34,7 +36,7 @@ struct MetaTableLabelStyle: LabelStyle {
             Spacer()
             configuration.title
         }
-        .padding(RowButtonStyle.insets)
+        .padding(insets)
     }
 }
 
