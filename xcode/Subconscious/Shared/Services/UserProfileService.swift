@@ -223,15 +223,19 @@ actor UserProfileService {
             
             let petname = address.petname?.concat(petname: petname) ?? petname
             let noosphereIdentity = try await noosphere.identity()
+            let isOurs = noosphereIdentity == did.did
             
             let user = UserProfile(
                 did: did,
                 petname: petname,
-                address: Slashlink(petname: petname).toPublicMemoAddress(),
+                address:
+                    isOurs
+                    ? Slashlink.yourProfile.toLocalMemoAddress()
+                    : Slashlink(petname: petname).toPublicMemoAddress(),
                 // TODO: replace with _profile_.json data
                 pfp: String.dummyProfilePicture(),
                 bio: String.dummyDataMedium(),
-                category: noosphereIdentity == did.did ? .you : .human
+                category: isOurs ? .you : .human
             )
             
             let appUserIsFollowingListedUser = await self.addressBook.isFollowingUser(did: did)

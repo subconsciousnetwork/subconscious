@@ -900,7 +900,7 @@ struct NotebookModel: ModelProtocol {
     ) -> Update<NotebookModel> {
         // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
         // to find in local or sphere content and then push editor detail.
-        guard let petname = slashlink.petname else {
+        guard slashlink.petname != nil else {
             return update(
                 state: state,
                 action: .findAndPushMemoEditorDetail(
@@ -914,13 +914,12 @@ struct NotebookModel: ModelProtocol {
         if AppDefaults.standard.isNoosphereEnabled {
             // Intercept profile visits and use the correct view
             if slashlink.slug.isProfile() {
-                let petname = slashlink.petname?.concat(petname: petname) ?? petname
                 return update(
                     state: state,
                     action: .pushDetail(
                         .profile(
                             UserProfileDetailDescription(
-                                profile: .other(petname)
+                                address: slashlink.toPublicMemoAddress()
                             )
                         )
                     ),

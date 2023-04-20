@@ -145,6 +145,7 @@ struct UserProfileView: View {
     }
 }
 
+// Only used _directly_ above
 private extension View {
     func unfollow(
         state: UserProfileDetailModel,

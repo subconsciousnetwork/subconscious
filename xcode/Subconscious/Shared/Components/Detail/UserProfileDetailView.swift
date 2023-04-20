@@ -32,23 +32,7 @@ struct UserProfileDetailView: View {
     
     func onNavigateToUser(user: UserProfile) {
         notify(.requestDetail(.profile(
-            Func.run {
-                switch (description.profile, user.category) {
-                case (_, .you):
-                    return UserProfileDetailDescription(
-                        profile: .you
-                    )
-                case (.other(let traversalPath), _):
-                    let path = traversalPath.concat(petname: user.petname) ?? user.petname
-                    return UserProfileDetailDescription(
-                        profile: .other(path)
-                    )
-                case (.you, _):
-                    return UserProfileDetailDescription(
-                        profile: .other(user.petname)
-                    )
-                }
-            }
+            UserProfileDetailDescription(address: user.address)
         )))
     }
     
@@ -77,7 +61,7 @@ struct UserProfileDetailView: View {
             // background for a while, and the content changed in another tab.
             store.send(
                 UserProfileDetailAction.appear(
-                    description.profile
+                    description.address
                 )
             )
         }
@@ -90,19 +74,14 @@ enum UserProfileDetailNotification: Hashable {
     case requestDetail(MemoDetailDescription)
 }
 
-enum UserProfileType: Hashable, Equatable {
-    case you
-    case other(Petname)
-}
-
 /// A description of a user profile that can be used to set up the user
 /// profile's internal state.
 struct UserProfileDetailDescription: Hashable {
-    var profile: UserProfileType
+    var address: MemoAddress
 }
 
 enum UserProfileDetailAction {
-    case appear(UserProfileType)
+    case appear(MemoAddress)
     case populate(UserProfileContentPayload)
     case failedToPopulate(String)
     
@@ -201,15 +180,15 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
             )
-        case .appear(let profile):
-            var fxRoot: AnyPublisher<UserProfileContentPayload, Error>
-            
-            switch (profile) {
-            case .other(let path):
-                fxRoot = environment.userProfile.getUserProfilePublisher(petname: path)
-            case .you:
-                fxRoot = environment.userProfile.getOwnProfilePublisher()
-            }
+        case .appear(let address):
+            let fxRoot: AnyPublisher<UserProfileContentPayload, Error> =
+                Func.run {
+                    if let petname = address.petname {
+                        return environment.userProfile.getUserProfilePublisher(petname: petname)
+                    } else {
+                        return environment.userProfile.getOwnProfilePublisher()
+                    }
+                }
             
             let fx: Fx<UserProfileDetailAction> =
                 fxRoot
