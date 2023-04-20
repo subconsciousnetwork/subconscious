@@ -152,7 +152,7 @@ actor AddressBook<Sphere: SphereProtocol> {
         petname: Petname
     ) -> AnyPublisher<Did?, Error> {
         Future.detached(priority: .utility) {
-            return try await self.getPetname(petname: petname)
+            try await self.getPetname(petname: petname)
         }
         .eraseToAnyPublisher()
     }
@@ -185,12 +185,12 @@ actor AddressBook<Sphere: SphereProtocol> {
     }
 
     func listPetnames() async throws -> [Petname] {
-        return try await sphere.listPetnames()
+        try await sphere.listPetnames()
     }
 
     func listPetnamesPublisher() -> AnyPublisher<[Petname], Error> {
         Future.detached(priority: .utility) {
-          return try await self.listPetnames()
+          try await self.listPetnames()
         }
         .eraseToAnyPublisher()
     }
@@ -201,7 +201,7 @@ actor AddressBook<Sphere: SphereProtocol> {
       
     func getPetnameChangesPublisher(sinceCid: String) -> AnyPublisher<[Petname], Error> {
         Future.detached(priority: .utility) {
-            return try await self.getPetnameChanges(sinceCid: sinceCid)
+            try await self.getPetnameChanges(sinceCid: sinceCid)
         }
         .eraseToAnyPublisher()
     }
@@ -339,20 +339,20 @@ actor AddressBookService {
     }
 
     func getPetname(petname: Petname) async throws -> Did? {
-        return try await Did(self.noosphere.getPetname(petname: petname))
+        try await Did(self.noosphere.getPetname(petname: petname))
     }
     
     /// Is there a user with this petname in the AddressBook?
     /// This method is designed not to throw for a quick check.
     func hasEntryForPetname(petname: Petname) async -> Bool {
-        return await self.addressBook.hasEntryForPetname(petname: petname)
+        await self.addressBook.hasEntryForPetname(petname: petname)
     }
     
     /// Is there a user with this petname in the AddressBook?
     /// This method is designed not to throw for a quick check.
     nonisolated func hasEntryForPetnamePublisher(petname: Petname) -> AnyPublisher<Bool, Never> {
         Future.detached {
-            return await self.addressBook.hasEntryForPetname(petname: petname)
+            await self.addressBook.hasEntryForPetname(petname: petname)
         }
         .eraseToAnyPublisher()
     }
@@ -361,7 +361,7 @@ actor AddressBookService {
     /// This can fail if `maxAttemptsToIncrementPetName` iterations occur without
     /// finding a candidate.
     func findAvailablePetname(petname: Petname) async throws -> Petname {
-        return try await self.addressBook.findAvailablePetname(petname: petname)
+        try await self.addressBook.findAvailablePetname(petname: petname)
     }
     
     /// Iteratively add a numerical suffix to petnames until we find an available alias.
@@ -369,20 +369,20 @@ actor AddressBookService {
     /// finding a candidate.
     nonisolated func findAvailablePetnamePublisher(petname: Petname) -> AnyPublisher<Petname, Error> {
         Future.detached {
-            return try await self.addressBook.findAvailablePetname(petname: petname)
+            try await self.addressBook.findAvailablePetname(petname: petname)
         }
         .eraseToAnyPublisher()
     }
     
     /// Is this user in the AddressBook?
     func isFollowingUser(did: Did) async -> Bool {
-        return await self.addressBook.isFollowing(did: did)
+        await self.addressBook.isFollowing(did: did)
     }
     
     /// Is this user in the AddressBook?
     nonisolated func isFollowingUserPublisher(did: Did) -> AnyPublisher<Bool, Error> {
         Future.detached {
-            return try await self.addressBook.isFollowingUser(did: did)
+            try await self.addressBook.isFollowingUser(did: did)
         }
         .eraseToAnyPublisher()
     }
