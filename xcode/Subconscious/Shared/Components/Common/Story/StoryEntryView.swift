@@ -23,10 +23,12 @@ struct StoryEntryView: View {
         ) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .lastTextBaseline, spacing: AppTheme.unit) {
-                    BylineSmView(
-                        pfp: Image(story.author.pfp),
-                        slashlink: story.entry.address.toSlashlink()
-                    )
+                    if let url = URL(string: story.author.pfp) {
+                        BylineSmView(
+                            pfp: url,
+                            slashlink: story.entry.address.toSlashlink()
+                        )
+                    }
                     Group {
                         Text(
                             NiceDateFormatter.shared.string(

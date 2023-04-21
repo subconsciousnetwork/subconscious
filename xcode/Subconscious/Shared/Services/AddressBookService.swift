@@ -77,7 +77,6 @@ actor AddressBook<Sphere: SphereProtocol> {
                 .unwrap()
             addressBook.append(
                 AddressBookEntry(
-                    pfp: AppTheme.brandMark,
                     petname: petname,
                     did: did
                 )

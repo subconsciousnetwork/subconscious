@@ -45,10 +45,17 @@ struct UserProfileContentResponse: Equatable, Hashable {
     var isFollowingUser: Bool
 }
 
+struct UserProfileEntry: Codable {
+    let preferredName: String?
+    let bio: String?
+    let profilePictureUrl: String?
+}
+
 actor UserProfileService {
     private var noosphere: NoosphereService
     private var database: DatabaseService
     private var addressBook: AddressBookService
+    private var jsonDecoder: JSONDecoder
     
     private let logger = Logger(
         subsystem: Config.default.rdns,
@@ -63,6 +70,49 @@ actor UserProfileService {
         self.noosphere = noosphere
         self.database = database
         self.addressBook = addressBook
+        
+        self.jsonDecoder = JSONDecoder()
+    }
+    
+    func readProfile(address: MemoAddress) async throws -> UserProfileEntry? {
+        do {
+            let data = try await noosphere.read(slashlink: address.toSlashlink())
+            
+            do {
+                let user = try jsonDecoder.decode(UserProfileEntry.self, from: data.body)
+                print("User: \(user)")
+                return user
+            } catch {
+                if let string = String(data: data.body, encoding: .utf8) {
+                    print("Error decoding user string: \(string), error: \(error)")
+                } else {
+                    print("Error decoding JSON: \(error)")
+                }
+                
+                return nil
+            }
+        } catch {
+            let jsonString = """
+            {
+                "preferredName": "ben",
+                "bio": "Wow, it's a profile!",
+                "profilePictureUrl": "https://i.guim.co.uk/img/media/20098ae982d6b3ba4d70ede3ef9b8f79ab1205ce/0_0_969_581/master/969.jpg?width=1200&height=900&quality=85&auto=format&fit=crop&s=a368f449b1cc1f37412c07a1bd901fb5"
+            }
+            """
+            
+            guard let jsonData = jsonString.data(using: .utf8) else {
+                return nil
+            }
+            
+            do {
+                let user = try jsonDecoder.decode(UserProfileEntry.self, from: jsonData)
+                print("User: \(user)")
+                return user
+            } catch {
+                print("Error decoding JSON: \(error)")
+                return nil
+            }
+        }
     }
     
     /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
@@ -103,13 +153,16 @@ actor UserProfileService {
             throw UserProfileServiceError.invalidSphereIdentity
         }
         
+        let address = Slashlink.ourProfile.toPublicMemoAddress()
+        let userProfileData = try await readProfile(address: address)
+        
         let profile = UserProfile(
             did: did,
-            petname: petname,
-            address: Slashlink.ourProfile.toPublicMemoAddress(),
-            // TODO: replace with _profile_.json data
-            pfp: "sub_logo",
-            bio: "Wow, it's your own profile! With its own codepath!",
+            petname: Petname(userProfileData?.preferredName ?? "") ?? petname,
+            preferredPetname: userProfileData?.preferredName,
+            address: address,
+            pfp: userProfileData?.profilePictureUrl ?? "sub_logo",
+            bio: userProfileData?.bio ?? "",
             category: .you
         )
         
@@ -175,13 +228,16 @@ actor UserProfileService {
             )
         }
         
+        let address = Slashlink(petname: petname).toPublicMemoAddress()
+        let userProfileData = try await readProfile(address: address)
+        
         let profile = UserProfile(
             did: did,
             petname: petname,
-            address: Slashlink(petname: petname).toPublicMemoAddress(),
-            // TODO: replace with _profile_.json data
-            pfp: "pfp-dog",
-            bio: "Pretend this comes from _profile_.json",
+            preferredPetname: userProfileData?.preferredName,
+            address: address,
+            pfp: userProfileData?.profilePictureUrl ?? "sub_logo",
+            bio: userProfileData?.bio ?? "",
             category: .human
         )
         
@@ -225,16 +281,19 @@ actor UserProfileService {
             let noosphereIdentity = try await noosphere.identity()
             let isOurs = noosphereIdentity == did.did
             
+            let address =
+                isOurs
+                ? Slashlink.ourProfile.toPublicMemoAddress()
+                : Slashlink(petname: petname).toPublicMemoAddress()
+            let userProfileData = try await readProfile(address: address)
+            
             let user = UserProfile(
                 did: did,
                 petname: petname,
-                address:
-                    isOurs
-                    ? Slashlink.ourProfile.toPublicMemoAddress()
-                    : Slashlink(petname: petname).toPublicMemoAddress(),
-                // TODO: replace with _profile_.json data
-                pfp: String.dummyProfilePicture(),
-                bio: String.dummyDataMedium(),
+                preferredPetname: userProfileData?.preferredName,
+                address: address,
+                pfp: userProfileData?.profilePictureUrl ?? "sub_logo",
+                bio: userProfileData?.bio ?? "",
                 category: isOurs ? .you : .human
             )
             

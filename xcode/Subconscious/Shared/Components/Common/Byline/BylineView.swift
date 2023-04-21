@@ -9,14 +9,14 @@ import SwiftUI
 
 /// Full-sized byline, suitable for using as header of story
 struct BylineView: View {
-    var pfp: Image
+    var pfp: URL
     var name: String
     var petname: String
     var slug: String
     
     var body: some View {
         HStack(spacing: AppTheme.unit3) {
-            ProfilePic(image: pfp)
+            ProfilePic(url: pfp)
             VStack(alignment: .leading) {
                 Text(verbatim: name)
                     .foregroundColor(.buttonText)
@@ -35,7 +35,7 @@ struct BylineView: View {
 struct BylineView_Previews: PreviewProvider {
     static var previews: some View {
         BylineView(
-            pfp: Image("pfp-dog"),
+            pfp: URL(string: "pfp-dog")!,
             name: "Dog",
             petname: "@name",
             slug: "/path"

@@ -8,20 +8,25 @@
 import SwiftUI
 
 struct ProfilePic: View {
-    var image: Image
+    var url: URL
     var body: some View {
+        AsyncImage(url: url) { image in
         image
             .resizable()
             .frame(width: 48, height: 48)
             .clipShape(Circle())
             .overlay(Circle().stroke(Color.separator, lineWidth: 0.5))
+        } placeholder: {
+            ProgressView()
+        }
+        
     }
 }
 
 struct ProfilePic_Previews: PreviewProvider {
     static var previews: some View {
         ProfilePic(
-            image: Image("pfp-dog")
+            url: URL(string: "pfp-dog")!
         )
     }
 }

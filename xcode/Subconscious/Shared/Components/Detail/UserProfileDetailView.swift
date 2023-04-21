@@ -125,6 +125,7 @@ enum UserCategory: Equatable, Codable, Hashable, CaseIterable {
 struct UserProfile: Equatable, Codable, Hashable {
     let did: Did
     let petname: Petname
+    let preferredPetname: String?
     let address: MemoAddress
     let pfp: String
     let bio: String

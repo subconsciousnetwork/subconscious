@@ -23,10 +23,11 @@ struct UserProfileHeaderView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
-                ProfilePic(image: Image(user.pfp))
+                if let url = URL(string: user.pfp) {
+                    ProfilePic(url: url)
+                }
             
-                // TODO: when we have _profile_.json we should load the preferred petname from there
-                PetnameBylineView(petname: user.petname)
+                PetnameBylineView(petname: Petname(user.preferredPetname ?? "") ?? user.petname)
                 
                 Spacer()
                 
@@ -78,6 +79,7 @@ struct BylineLgView_Previews: PreviewProvider {
                 user: UserProfile(
                     did: Did("did:key:123")!,
                     petname: Petname("ben")!,
+                    preferredPetname: nil,
                     address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress(),
                     pfp: "pfp-dog",
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
@@ -89,6 +91,7 @@ struct BylineLgView_Previews: PreviewProvider {
                 user: UserProfile(
                     did: Did("did:key:123")!,
                     petname: Petname("ben")!,
+                    preferredPetname: nil,
                     address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress(),
                     pfp: "pfp-dog",
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
@@ -101,6 +104,7 @@ struct BylineLgView_Previews: PreviewProvider {
                 user: UserProfile(
                     did: Did("did:key:123")!,
                     petname: Petname("ben")!,
+                    preferredPetname: nil,
                     address: Slashlink.ourProfile.toLocalMemoAddress(),
                     pfp: "pfp-dog",
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",

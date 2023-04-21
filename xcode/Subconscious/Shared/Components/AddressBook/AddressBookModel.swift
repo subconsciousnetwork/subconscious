@@ -12,7 +12,6 @@ import ObservableStore
 import Combine
 
 struct AddressBookEntry: Equatable {
-    var pfp: Image
     var petname: Petname
     var did: Did
 }
@@ -219,7 +218,7 @@ struct AddressBookModel: ModelProtocol {
             return Update(state: state, fx: fx)
             
         case .succeedFollow(did: let did, petname: let petname):
-            let entry = AddressBookEntry(pfp: Image("sub_logo"), petname: petname, did: did)
+            let entry = AddressBookEntry(petname: petname, did: did)
             
             var model = state
             model.isFollowUserFormPresented = false

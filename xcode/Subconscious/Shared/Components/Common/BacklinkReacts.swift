@@ -15,7 +15,7 @@ where
     Data.Element == Content
 {
     var data: Data
-    var content: (Content) -> Image
+    var content: (Content) -> URL
 
     var body: some View {
         HStack {
@@ -23,7 +23,7 @@ where
                 .foregroundColor(.secondary)
             HStack(spacing: -8) {
                 ForEach(data.prefix(6)) { element in
-                    ProfilePicSm(image: content(element))
+                    ProfilePicSm(url: content(element))
                 }
             }
             Text("\(data.count)")
@@ -47,7 +47,7 @@ struct BacklinkReacts_Previews: PreviewProvider {
                 Slug("h")!,
             ]
         ) { element in
-            Image("pfp-dog")
+            URL(string: "pfp-dog")!
         }
     }
 }

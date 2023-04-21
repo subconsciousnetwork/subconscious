@@ -28,7 +28,7 @@ struct StoryUserView: View {
         ) {
             VStack(alignment: .leading, spacing: AppTheme.unit3) {
                 HStack(alignment: .center, spacing: AppTheme.unit2) {
-                    ProfilePicSm(image: Image(story.user.pfp))
+                    ProfilePicSm(url: URL(string: story.user.pfp)!)
                     
                     switch (story.user.category) {
                     case .human, .geist:
@@ -69,6 +69,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         petname: Petname("ben.gordon.chris.bob")!,
+                        preferredPetname: nil,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
                         pfp: "pfp-dog",
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
@@ -83,6 +84,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         petname: Petname("ben.gordon.chris.bob")!,
+                        preferredPetname: nil,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
                         pfp: "pfp-dog",
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
@@ -97,6 +99,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         petname: Petname("ben.gordon.chris.bob")!,
+                        preferredPetname: nil,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
                         pfp: "pfp-dog",
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",

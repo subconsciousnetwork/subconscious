@@ -9,13 +9,11 @@ import SwiftUI
 
 /// Full-sized user card, intended for listing users
 struct AddressBookEntryView: View {
-    var pfp: Image
     var petname: Petname
     var did: Did
     
     var body: some View {
         HStack(spacing: AppTheme.unit3) {
-            ProfilePic(image: pfp)
             VStack(alignment: .leading, spacing: AppTheme.unit) {
                 PetnameBylineView(petname: petname)
                 Text(verbatim: did.did)
@@ -30,7 +28,6 @@ struct AddressBookEntryView: View {
 struct AddressBookEntryView_Previews: PreviewProvider {
     static var previews: some View {
         AddressBookEntryView(
-            pfp: Image("pfp-dog"),
             petname: Petname("name")!,
             did: Did("did:key:z6x")!
         )

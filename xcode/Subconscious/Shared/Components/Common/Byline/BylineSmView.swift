@@ -9,12 +9,12 @@ import SwiftUI
 
 /// Compact byline combines a small profile pic, username, and path
 struct BylineSmView: View {
-    var pfp: Image
+    var pfp: URL
     var slashlink: Slashlink
     
     var body: some View {
         HStack {
-            ProfilePicSm(image: pfp)
+            ProfilePicSm(url: pfp)
             SlashlinkBylineView(slashlink: slashlink)
         }
     }
@@ -23,7 +23,7 @@ struct BylineSmView: View {
 struct BylineSmView_Previews: PreviewProvider {
     static var previews: some View {
         BylineSmView(
-            pfp: Image("pfp-dog"),
+            pfp: URL(string: "pfp-dog")!,
             slashlink: Slashlink("@name/path")!
         )
     }
