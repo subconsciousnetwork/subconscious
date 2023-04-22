@@ -57,7 +57,7 @@ struct OmniboxSlashlinkView: View {
     
     var body: some View {
         HStack(spacing: 0) {
-            switch (slashlink.slug.isProfile(), slashlink.petname) {
+            switch (slashlink.slug.isProfile, slashlink.petname) {
             case (true, .some(let petname)):
                 PetnameBylineView(petname: petname)
             case (false, .some(let petname)):

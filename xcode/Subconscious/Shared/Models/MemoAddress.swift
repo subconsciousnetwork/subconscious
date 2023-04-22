@@ -106,7 +106,7 @@ extension MemoAddress {
     }
     
     var isProfile: Bool {
-        self.slug.isProfile()
+        self.slug.isProfile
     }
     
     var isOurProfile: Bool {

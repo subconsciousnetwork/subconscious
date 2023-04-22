@@ -109,10 +109,6 @@ extension Slug {
     func toSlashlink() -> Slashlink {
         Slashlink(slug: self)
     }
-    
-    func isProfile() -> Bool {
-        self == Slug.profile
-    }
 }
 
 extension Slashlink {

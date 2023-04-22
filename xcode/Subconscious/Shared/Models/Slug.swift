@@ -63,6 +63,10 @@ public struct Slug:
         "/\(verbatim)"
     }
     
+    public var isProfile: Bool {
+        self == Slug.profile
+    }
+    
     /// Losslessly create a slug from a string.
     /// This requires that the string already be formatted like a
     /// valid slug.

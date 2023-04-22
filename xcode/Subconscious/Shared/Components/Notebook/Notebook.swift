@@ -913,7 +913,7 @@ struct NotebookModel: ModelProtocol {
         
         if AppDefaults.standard.isNoosphereEnabled {
             // Intercept profile visits and use the correct view
-            guard !slashlink.slug.isProfile() else {
+            guard !slashlink.slug.isProfile else {
                 return update(
                     state: state,
                     action: .pushDetail(
