@@ -60,12 +60,6 @@ public struct Petname:
     public var verbatimMarkup: String {
         "@\(self.verbatim)"
     }
-    
-    public var parts: [Petname] {
-        verbatim
-            .split(separator: ".")
-            .compactMap { part in Petname(part.toString()) }
-    }
 
     public init?(_ description: String) {
         guard description.wholeMatch(of: Self.petnameRegex) != nil else {
@@ -86,6 +80,14 @@ public struct Petname:
     /// This will sanitize the string as best it can to create a valid petname.
     public init?(formatting string: String) {
         self.init(Self.format(string))
+    }
+    
+    /// Explode a petname path into the individual steps along the way, in written order.
+    /// i.e. `@foo.bar.baz` -> `[foo, bar, baz]`
+    public func parts() -> [Petname] {
+        verbatim
+            .split(separator: ".")
+            .compactMap { part in Petname(part.toString()) }
     }
     
     /// Return a new petname with a numerical suffix.

@@ -13,7 +13,7 @@ struct PetnameBylineView: View {
     private(set) var petnameColor = Color.accentColor
     
     var body: some View {
-        let parts = petname.parts
+        let parts = petname.parts()
 
         HStack(alignment: .lastTextBaseline, spacing: 0) {
             let first = parts[0]
