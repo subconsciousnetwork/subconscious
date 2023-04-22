@@ -82,6 +82,14 @@ public struct Petname:
         self.init(Self.format(string))
     }
     
+    /// Explode a petname path into the individual steps along the way, in written order.
+    /// i.e. `@foo.bar.baz` -> `[foo, bar, baz]`
+    public func parts() -> [Petname] {
+        verbatim
+            .split(separator: ".")
+            .compactMap { part in Petname(part.toString()) }
+    }
+    
     /// Return a new petname with a numerical suffix.
     /// A plain petname e.g. `ziggy` becomes `ziggy-1`
     /// But `ziggy-1` becomes `ziggy-2` etc.
@@ -97,5 +105,11 @@ public struct Petname:
         } else {
             return Petname(formatting: "\(match.output.petname)\(separator)1")
         }
+    }
+    
+    /// Combines two petnames to build up a traversal path
+    /// i.e. `Petname("foo")!.append(Petname("bar")` => `bar.foo`
+    public func append(petname: Petname) -> Petname? {
+        return Petname(petnames: [petname, self])
     }
 }

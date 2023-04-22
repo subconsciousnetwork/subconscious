@@ -26,7 +26,7 @@ struct UserProfileView: View {
     var send: (UserProfileDetailAction) -> Void
     
     let onNavigateToNote: (MemoAddress) -> Void
-    let onNavigateToUser: (MemoAddress) -> Void
+    let onNavigateToUser: (UserProfile) -> Void
     
     let onProfileAction: (UserProfile, UserProfileAction) -> Void
     
@@ -41,7 +41,7 @@ struct UserProfileView: View {
                                 author: user,
                                 entry: entry
                             ),
-                            action: { address, excerpt in onNavigateToNote(address) }
+                            action: { address, _ in onNavigateToNote(address) }
                         )
                     }
                 }
@@ -58,7 +58,7 @@ struct UserProfileView: View {
                                 author: user,
                                 entry: entry
                             ),
-                            action: { address, excerpt in onNavigateToNote(address) }
+                            action: { address, _ in onNavigateToNote(address) }
                         )
                     }
                 }
@@ -71,7 +71,7 @@ struct UserProfileView: View {
                 ForEach(state.following, id: \.user.did) { follow in
                     StoryUserView(
                         story: follow,
-                        action: { address, _ in onNavigateToUser(address) },
+                        action: { _, _ in onNavigateToUser(follow.user) },
                         profileAction: onProfileAction
                     )
                 }
@@ -79,34 +79,59 @@ struct UserProfileView: View {
         )
         
         VStack(alignment: .leading, spacing: 0) {
-            if let user = state.user {
-                UserProfileHeaderView(
-                    user: user,
-                    statistics: state.statistics,
-                    isFollowingUser: state.isFollowingUser,
-                    action: { action in
-                        onProfileAction(user, action)
+            switch (state.loadingState) {
+            case .loading:
+                ProgressView()
+            case .loaded:
+                if let user = state.user {
+                    UserProfileHeaderView(
+                        user: user,
+                        statistics: state.statistics,
+                        isFollowingUser: state.isFollowingUser,
+                        action: { action in
+                            onProfileAction(user, action)
+                        }
+                    )
+                    .padding(AppTheme.padding)
+                }
+                
+                TabbedThreeColumnView(
+                    columnA: columnRecent,
+                    columnB: columnTop,
+                    columnC: columnFollowing,
+                    selectedColumnIndex: state.selectedTabIndex,
+                    changeColumn: { index in
+                        send(.tabIndexSelected(index))
                     }
                 )
-                .padding(AppTheme.padding)
+            case .notFound:
+                Text("Not found")
             }
-            
-            TabbedThreeColumnView(
-                columnA: columnRecent,
-                columnB: columnTop,
-                columnC: columnFollowing,
-                selectedColumnIndex: state.selectedTabIndex,
-                changeColumn: { index in
-                    send(.tabIndexSelected(index))
-                }
-            )
         }
-        .navigationTitle(state.user?.petname.verbatim ?? "loading...")
+        .navigationTitle(state.user?.petname.verbatim ?? "")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             if let user = state.user {
+                switch (user.category) {
+                case .human, .geist:
+                    DetailToolbarContent(
+                        address: Slashlink(petname: user.petname).toPublicMemoAddress(),
+                        defaultAudience: .public,
+                        onTapOmnibox: {
+                            send(.presentMetaSheet(true))
+                        }
+                    )
+                case .you:
+                    DetailToolbarContent(
+                        address: Slashlink.ourProfile.toPublicMemoAddress(),
+                        defaultAudience: .public,
+                        onTapOmnibox: {
+                            send(.presentMetaSheet(true))
+                        }
+                    )
+                }
+            } else {
                 DetailToolbarContent(
-                    address: Slashlink(petname: user.petname).toPublicMemoAddress(),
                     defaultAudience: .public,
                     onTapOmnibox: {
                         send(.presentMetaSheet(true))
@@ -120,16 +145,26 @@ struct UserProfileView: View {
     }
 }
 
+// Only used _directly_ above
 private extension View {
-    func unfollow(state: UserProfileDetailModel, send: @escaping (UserProfileDetailAction) -> Void) -> some View {
+    func unfollow(
+        state: UserProfileDetailModel,
+        send: @escaping (UserProfileDetailAction) -> Void
+    ) -> some View {
       self.modifier(UnfollowModifier(state: state, send: send))
     }
     
-    func follow(state: UserProfileDetailModel, send: @escaping (UserProfileDetailAction) -> Void) -> some View {
+    func follow(
+        state: UserProfileDetailModel,
+        send: @escaping (UserProfileDetailAction) -> Void
+    ) -> some View {
       self.modifier(FollowModifier(state: state, send: send))
     }
     
-    func metaSheet(state: UserProfileDetailModel, send: @escaping (UserProfileDetailAction) -> Void) -> some View {
+    func metaSheet(
+        state: UserProfileDetailModel,
+        send: @escaping (UserProfileDetailAction) -> Void
+    ) -> some View {
       self.modifier(MetaSheetModifier(state: state, send: send))
     }
 }

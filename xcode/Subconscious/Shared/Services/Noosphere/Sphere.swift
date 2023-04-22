@@ -209,7 +209,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         .eraseToAnyPublisher()
     }
 
-    /// Get current version of sphere synchronously
+    /// Get current version of sphere
     public func version() throws -> String {
         guard let sphereVersionPointer = try Noosphere.callWithError(
             ns_sphere_version_get,

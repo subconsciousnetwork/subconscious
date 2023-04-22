@@ -17,6 +17,7 @@ public struct Slug:
     LosslessStringConvertible
 {
     private static let slugRegex = /([\w\d\-]+)(\/[\w\d\-]+)*/
+    public static let profile = Slug("_profile_")!
 
     public static func < (lhs: Slug, rhs: Slug) -> Bool {
         lhs.id < rhs.id
@@ -60,6 +61,10 @@ public struct Slug:
     
     public var verbatimMarkup: String {
         "/\(verbatim)"
+    }
+    
+    public var isProfile: Bool {
+        self == Slug.profile
     }
     
     /// Losslessly create a slug from a string.

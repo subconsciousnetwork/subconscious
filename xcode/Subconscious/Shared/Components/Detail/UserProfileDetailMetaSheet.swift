@@ -8,95 +8,19 @@
 import SwiftUI
 import ObservableStore
 
-struct MetaTableItemShareLinkView: View {
-    var label: String
-    var item: String
-    
-    var body: some View {
-        ShareLink(item: item) {
-            Label(
-                label,
-                systemImage: "square.and.arrow.up"
-            )
-        }
-        .buttonStyle(RowButtonStyle())
-    }
-}
-
-struct MetaTableItemButtonView: View {
-    var label: String
-    var systemImage: String
-    var action: () -> Void
-    var role: ButtonRole? = nil
-    
-    var body: some View {
-        Button(
-            role: role,
-            action: action
-        ) {
-            Label(
-                label,
-                systemImage: systemImage
-            )
-        }
-        .buttonStyle(RowButtonStyle())
-    }
-}
-
 struct UserProfileMetaSheetDetailsView: View {
     var user: UserProfile
-    var ipfsHash: String
-    var gatewayUrl: String
+    var qrCodeSize = 128.0
     
     var body: some View {
-        DidQrCodeView(did: user.did, color: Color.secondary)
-            .frame(maxWidth: 128)
+        DidQrCodeView(did: user.did, color: Color.gray)
+            .frame(maxWidth: qrCodeSize)
         
         Spacer(minLength: AppTheme.padding)
         
         MetaTableView {
-            Button(
-                action: {},
-                label: {
-                    Label(
-                        ipfsHash,
-                        systemImage: "number"
-                    )
-                    .labelStyle(RowLabelStyle())
-                }
-            )
-            .disabled(true)
-            .buttonStyle(RowButtonStyle())
-            
-            Button(
-                action: {},
-                label: {
-                    HStack {
-                        Text(user.did.did)
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Image(systemName: "key")
-                    }
-                }
-            )
-            .disabled(true)
-            .buttonStyle(RowButtonStyle())
-            
-            Button(
-                action: {},
-                label: {
-                    HStack {
-                        Text(gatewayUrl)
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Image(systemName: "network")
-                    }
-                }
-            )
-            .disabled(true)
-            .buttonStyle(RowButtonStyle())
+            MetaTableMetadataLabelView(title: user.did.did)
         }
-        
     }
 }
 
@@ -111,19 +35,17 @@ struct UserProfileDetailMetaSheet: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                    if let user = profile.user {
-                        HStack {
-                            Text("@\(user.petname.verbatim)")
-                                .foregroundColor(.secondary)
-                            if user.category == .you {
-                            Text("(you)")
-                                .foregroundColor(.secondary)
-                            }
-                        }
-                        .font(.callout)
+                    if let user = profile.user,
+                       let slashlink = user.address.toSlashlink() {
+                        SlashlinkBylineView(slashlink: slashlink).theme(
+                            petname: Color.primary,
+                            slug: Color.secondary
+                        )
                     }
                 }
+                
                 Spacer()
+                
                 CloseButtonView(action: { dismiss() })
             }
             .padding()
@@ -134,62 +56,17 @@ struct UserProfileDetailMetaSheet: View {
                 VStack(alignment: .center) {
                     if let user = profile.user {
                         MetaTableView {
+                            MetaTableItemShareLinkView(
+                                label: "Share Link",
+                                item: user.address.toSlashlink().verbatimMarkup
+                            )
                             MetaTableItemShareLinkView(label: "Share DID", item: user.did.did)
-                            
-                            // None of these actions make sense to apply to yourself
-                            if user.category != .you {
-                                if isFollowingUser {
-                                    MetaTableItemButtonView(
-                                        label: "Unfollow",
-                                        systemImage: "person.2.slash",
-                                        action: {
-                                            send(.requestUnfollow(petname: user.petname))
-                                        },
-                                        role: .destructive
-                                    )
-                                } else {
-                                    MetaTableItemButtonView(
-                                        label: "Follow",
-                                        systemImage: "person.badge.plus",
-                                        action: {
-                                            send(.requestFollow(did: user.did))
-                                        }
-                                    )
-                                }
-                                
-                                MetaTableItemButtonView(
-                                    label: "Block",
-                                    systemImage: "hand.raised",
-                                    action: {},
-                                    role: .destructive
-                                )
-                            }
-                            
+                            // Add concepts such as "Block" or "Mute" here later?
                         }
                         
-                        if Config.default.userProfileDetailsTable {
-                            if state.isDetailsTablePresented {
-                                Spacer(minLength: AppTheme.padding)
-                                
-                                UserProfileMetaSheetDetailsView(
-                                    user: user,
-                                    ipfsHash: "Qmf412jQZiuVUtdgnB36FXF",
-                                    gatewayUrl: "https://ben.subconscious.network"
-                                )
-                            }
-                            
-                            MetaTableView {
-                                MetaTableItemButtonView(
-                                    label: state.isDetailsTablePresented ? "Hide Details" : "Show Details",
-                                    systemImage: "tablecells",
-                                    action: {
-                                        withAnimation {
-                                            send(.presentDetailsTable(!state.isDetailsTablePresented))
-                                        }
-                                    }
-                                )
-                            }
-                        }
+                        UserProfileMetaSheetDetailsView(
+                            user: user
+                        )
                     }
                 }
                 .padding()

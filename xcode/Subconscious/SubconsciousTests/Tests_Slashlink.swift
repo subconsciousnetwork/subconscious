@@ -116,7 +116,7 @@ final class Tests_Slashlink: XCTestCase {
             XCTFail("Failed to parse slashlink")
             return
         }
-        XCTAssertEqual(slashlink.description, "@only-petname-points-to-profile/\(Slashlink.profileSlug.description)")
+        XCTAssertEqual(slashlink.description, "@only-petname-points-to-profile/\(Slug.profile.description)")
     }
     
     func testToPetname() throws {

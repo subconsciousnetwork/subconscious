@@ -32,6 +32,7 @@ struct MemoViewerDetailView: View {
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
                     editor: store.state.editor,
+                    address: description.address,
                     backlinks: store.state.backlinks,
                     send: store.send,
                     notify: notify
@@ -126,6 +127,7 @@ struct MemoViewerDetailLoadingView: View {
 struct MemoViewerDetailLoadedView: View {
     var title: String
     var editor: SubtextTextModel
+    var address: MemoAddress
     var backlinks: [EntryStub]
     var send: (MemoViewerDetailAction) -> Void
     var notify: (MemoViewerDetailNotification) -> Void
@@ -140,6 +142,34 @@ struct MemoViewerDetailLoadedView: View {
             )
         )
     }
+    
+    private func onLink(
+        url: URL
+    ) -> Bool {
+        guard let sub = url.toSubSlashlinkURL() else {
+            return true
+        }
+        
+        // Stitch the base address on to the tapped link
+        // this is needed in the viewer but not the editor
+        // because the editor is (currently) always pointed to
+        // our data.
+        let slashlink = Func.run {
+            guard let basePetname = address.petname else {
+                return sub.slashlink
+            }
+            
+            return sub.slashlink.relativeTo(petname: basePetname)
+        }
+        
+        notify(
+            .requestFindDetail(
+                slashlink: slashlink,
+                fallback: sub.fallback
+            )
+        )
+        return false
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -152,7 +182,7 @@ struct MemoViewerDetailLoadedView: View {
                             tag: MemoViewerDetailSubtextTextCursor.tag
                         ),
                         frame: geometry.frame(in: .local),
-                        onLink: { link in true }
+                        onLink: self.onLink
                     )
                     .insets(
                         EdgeInsets(
@@ -182,6 +212,11 @@ struct MemoViewerDetailLoadedView: View {
 /// lifecycle events that happened within our component.
 enum MemoViewerDetailNotification: Hashable {
     case requestDetail(_ description: MemoDetailDescription)
+    /// Request detail from any audience scope
+    case requestFindDetail(
+        slashlink: Slashlink,
+        fallback: String
+    )
 }
 
 /// A description of a memo detail that can be used to set up the memo
@@ -277,6 +312,7 @@ struct MemoViewerDetailModel: ModelProtocol {
         var model = state
         model.loadingState = .loading
         model.address = description.address
+        
         let fx: Fx<Action> = environment.data.readMemoDetailPublisher(
             address: description.address
         ).map({ response in
@@ -387,6 +423,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                 The soul unfolds itself, like a [[lotus]] of countless petals.
                 """
             ),
+            address: MemoAddress.local(Slug("truth-the-prophet")!),
             backlinks: [],
             send: { action in },
             notify: { action in }

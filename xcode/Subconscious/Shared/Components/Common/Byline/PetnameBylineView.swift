@@ -9,15 +9,36 @@ import SwiftUI
 
 /// Byline style for displaying a petname
 struct PetnameBylineView: View {
-    var petname: String
-    private var petnameColor = Color.accentColor
+    var petname: Petname
+    private(set) var petnameColor = Color.accentColor
     
     var body: some View {
-        Text(verbatim: "@\(petname)")
-            .font(.body)
-            .fontWeight(.medium)
-            .foregroundColor(petnameColor)
-            .lineLimit(1)
+        let parts = petname.parts()
+
+        HStack(alignment: .lastTextBaseline, spacing: 0) {
+            let first = parts[0]
+            
+            Text(first.markup)
+                .foregroundColor(petnameColor)
+                // Fixed size to ensure truncation trims path preferentially 
+                .fixedSize(horizontal: true, vertical: false)
+                .font(.callout)
+                .fontWeight(.medium)
+                .lineLimit(1)
+            
+            let rest = parts[1...]
+                .map { p in p.description }
+                .joined(separator: ".")
+            
+            if rest.count > 0 {
+                // Particular structure to ensure truncation trims the path and never the name
+                Text(".\(rest)")
+                    .foregroundColor(.secondary)
+                    .font(.callout)
+                    .fontWeight(.regular)
+                    .lineLimit(1)
+            }
+        }
     }
     
     func theme(
@@ -29,20 +50,19 @@ struct PetnameBylineView: View {
     }
 }
 
-extension PetnameBylineView {
-    init(
-        petname: Petname
-    ) {
-        self.init(
-            petname: petname.verbatim
-        )
-    }
-}
-
 struct PetnameBylineView_Previews: PreviewProvider {
     static var previews: some View {
-        PetnameBylineView(
-            petname: Petname("melville")!
-        )
+        VStack {
+            PetnameBylineView(
+                petname: Petname("melville")!
+            )
+            PetnameBylineView(
+                petname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])!
+            )
+            PetnameBylineView(
+                petname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])!
+            )
+            .frame(maxWidth: 128)
+        }
     }
 }

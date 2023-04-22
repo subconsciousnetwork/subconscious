@@ -30,8 +30,10 @@ struct UserProfileDetailView: View {
         notify(.requestDetail(.from(address: address, fallback: "")))
     }
     
-    func onNavigateToUser(address: MemoAddress) {
-        notify(.requestDetail(.profile(UserProfileDetailDescription(address: address))))
+    func onNavigateToUser(user: UserProfile) {
+        notify(.requestDetail(.profile(
+            UserProfileDetailDescription(address: user.address)
+        )))
     }
     
     func onProfileAction(user: UserProfile, action: UserProfileAction) {
@@ -57,7 +59,11 @@ struct UserProfileDetailView: View {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
-            store.send(UserProfileDetailAction.populate(UserProfile.dummyData(), UserProfileStatistics.dummyData()))
+            store.send(
+                UserProfileDetailAction.appear(
+                    description.address
+                )
+            )
         }
     }
 }
@@ -75,7 +81,10 @@ struct UserProfileDetailDescription: Hashable {
 }
 
 enum UserProfileDetailAction {
-    case populate(UserProfile, UserProfileStatistics?)
+    case appear(MemoAddress)
+    case populate(UserProfileContentResponse)
+    case failedToPopulate(String)
+    
     case tabIndexSelected(Int)
     
     case presentMetaSheet(Bool)
@@ -116,6 +125,7 @@ enum UserCategory: Equatable, Codable, Hashable, CaseIterable {
 struct UserProfile: Equatable, Codable, Hashable {
     let did: Did
     let petname: Petname
+    let address: MemoAddress
     let pfp: String
     let bio: String
     let category: UserCategory
@@ -125,6 +135,13 @@ struct UserProfile: Equatable, Codable, Hashable {
 struct UserProfileDetailModel: ModelProtocol {
     typealias Action = UserProfileDetailAction
     typealias Environment = AppEnvironment
+    
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "UserProfileDetail"
+    )
+    
+    var loadingState = LoadingState.loading
     
     var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
     var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
@@ -136,20 +153,15 @@ struct UserProfileDetailModel: ModelProtocol {
     var isFollowSheetPresented = false
     var isUnfollowConfirmationPresented = false
     
-    var user: UserProfile? = UserProfile.dummyData()
+    var user: UserProfile? = nil
     var isFollowingUser: Bool = false
     
     var recentEntries: [EntryStub] = []
     var topEntries: [EntryStub] = []
     var following: [StoryUser] = []
-    
+
     var statistics: UserProfileStatistics? = nil
-    
-    static let logger = Logger(
-        subsystem: Config.default.rdns,
-        category: "UserProfileDetailModel"
-    )
-    
+
     static func update(
         state: Self,
         action: Action,
@@ -168,22 +180,51 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
             )
+        case .appear(let address):
+            let fxRoot: AnyPublisher<UserProfileContentResponse, Error> =
+                Func.run {
+                    if let petname = address.petname {
+                        return environment.userProfile.requestUserProfilePublisher(petname: petname)
+                    } else {
+                        return environment.userProfile.requestOwnProfilePublisher()
+                    }
+                }
             
-        case .populate(let user, let statistics):
+            let fx: Fx<UserProfileDetailAction> =
+                fxRoot
+                .map { content in
+                    UserProfileDetailAction.populate(content)
+                }
+                .catch { error in
+                    Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+            
+        case .populate(let content):
             var model = state
-            model.user = user
-            model.statistics = statistics
-            model.recentEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
-            model.topEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
-            model.following = (1...10).map { _ in StoryUser.dummyData() }
+            model.user = content.profile
+            model.statistics = content.statistics
+            model.recentEntries = content.entries
+            model.topEntries = content.entries
+            model.following = content.following
+            model.isFollowingUser = content.isFollowingUser
+            model.loadingState = .loaded
             
             return update(
                 state: model,
                 actions: [
-                    .fetchFollowingStatus(user.did)
+                    .fetchFollowingStatus(content.profile.did)
                 ],
                 environment: environment
             )
+            
+        case .failedToPopulate(let error):
+            var model = state
+            model.loadingState = .notFound
+            logger.error("Failed to fetch profile: \(error)")
+            return Update(state: model)
             
         case .tabIndexSelected(let index):
             var model = state
