@@ -219,10 +219,10 @@ struct EditProfileSheet: View {
                         }
                         
                         let user = UserProfile(
-                            did: Did.dummyData(),
+                            did: user.did,
                             petname: petname,
                             preferredPetname: state.nicknameField.value,
-                            address: Slashlink.ourProfile.toPublicMemoAddress(),
+                            address: user.address,
                             pfp: pfp,
                             bio: state.bioField.validated ?? "",
                             category: .you
