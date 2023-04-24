@@ -43,7 +43,7 @@ struct UserProfileDetailView: View {
         case .requestUnfollow:
             store.send(.requestUnfollow)
         case .editOwnProfile:
-            Self.logger.warning("Editing profiles is not supported yet, doing nothing")
+            store.send(.presentEditProfile)
         }
     }
 
@@ -108,6 +108,10 @@ enum UserProfileDetailAction {
     case failUnfollow(error: String)
     case dismissFailUnfollowError
     case succeedUnfollow(did: Did, petname: Petname)
+    
+    case presentEditProfile
+    case succeedEditProfile
+    case failEditorProfile(error: String)
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -160,9 +164,9 @@ struct UserProfileDetailModel: ModelProtocol {
     var recentEntries: [EntryStub] = []
     var topEntries: [EntryStub] = []
     var following: [StoryUser] = []
-
+    
     var statistics: UserProfileStatistics? = nil
-
+    
     static func update(
         state: Self,
         action: Action,
@@ -183,16 +187,16 @@ struct UserProfileDetailModel: ModelProtocol {
             )
         case .appear(let address):
             let fxRoot: AnyPublisher<UserProfileContentResponse, Error> =
-                Func.run {
-                    if let petname = address.petname {
-                        return environment.userProfile.requestUserProfilePublisher(petname: petname)
-                    } else {
-                        return environment.userProfile.requestOwnProfilePublisher()
-                    }
+            Func.run {
+                if let petname = address.petname {
+                    return environment.userProfile.requestUserProfilePublisher(petname: petname)
+                } else {
+                    return environment.userProfile.requestOwnProfilePublisher()
                 }
+            }
             
             let fx: Fx<UserProfileDetailAction> =
-                fxRoot
+            fxRoot
                 .map { content in
                     UserProfileDetailAction.populate(content)
                 }
@@ -242,10 +246,10 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isFollowSheetPresented = presented
             return Update(state: model)
             
-        // MARK: Following status
+            // MARK: Following status
         case .fetchFollowingStatus(let did):
             let fx: Fx<UserProfileDetailAction> =
-                environment.addressBook
+            environment.addressBook
                 .isFollowingUserPublisher(did: did)
                 .map { following in
                     UserProfileDetailAction.populateFollowingStatus(following)
@@ -263,7 +267,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isFollowingUser = following
             return Update(state: model)
             
-        // MARK: Following
+            // MARK: Following
         case .requestFollow:
             return update(state: state, action: .presentFollowSheet(true), environment: environment)
             
@@ -276,7 +280,7 @@ struct UserProfileDetailModel: ModelProtocol {
             }
             
             let fx: Fx<UserProfileDetailAction> =
-                environment.addressBook
+            environment.addressBook
                 .followUserPublisher(did: did, petname: petname, preventOverwrite: true)
                 .map({ _ in
                     UserProfileDetailAction.succeedFollow(did: did, petname: petname)
@@ -308,7 +312,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.failFollowErrorMessage = nil
             return Update(state: model)
             
-        // MARK: Unfollowing
+            // MARK: Unfollowing
         case .presentUnfollowConfirmation(let presented):
             var model = state
             model.isUnfollowConfirmationPresented = presented
@@ -323,10 +327,10 @@ struct UserProfileDetailModel: ModelProtocol {
             }
             
             let fx: Fx<UserProfileDetailAction> =
-                environment.addressBook
+            environment.addressBook
                 .unfollowUserPublisher(did: did)
                 .map({ _ in
-                    .succeedUnfollow(did: did, petname: petname)
+                        .succeedUnfollow(did: did, petname: petname)
                 })
                 .catch({ error in
                     Just(
@@ -356,6 +360,39 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.failUnfollowErrorMessage = nil
             return Update(state: model)
+            
+        case .presentEditProfile:
+            let fx: Fx<UserProfileDetailAction> = Future.detached {
+                try await environment.userProfile
+                    .writeOurProfile(
+                        profile: UserProfileEntry(
+                            version: UserProfileEntry.currentVersion,
+                            preferredName: "ben3",
+                            bio: "Wassah! Again!",
+                            profilePictureUrl: "https://pbs.twimg.com/profile_images/1556521710106845184/SMF48Qbq_400x400.jpg"
+                        )
+                    )
+                
+                return UserProfileDetailAction.succeedEditProfile
+            }
+            .recover { error in
+                return UserProfileDetailAction.failEditorProfile(error: error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+            
+        case .succeedEditProfile:
+            logger.info("Edited")
+            guard let address = state.user?.address else {
+                return Update(state: state)
+            }
+            
+            return update(state: state, action: .appear(address), environment: environment)
+            
+        case .failEditorProfile(let error):
+            logger.error("Failed to edit: \(error)")
+            return Update(state: state)
         }
     }
 }

@@ -12,6 +12,8 @@ import Combine
 enum UserProfileServiceError: Error {
     case invalidSphereIdentity
     case missingPreferredPetname
+    case unexpectedProfileContentType(String)
+    case failedToDeserializeProfile(Error, String?)
     case other(String)
 }
 
@@ -28,6 +30,24 @@ extension UserProfileServiceError: LocalizedError {
                 localized: "Missing or invalid nickname for sphere owner",
                 comment: "UserProfileService error description"
             )
+        case .unexpectedProfileContentType(let contentType):
+            return String(
+                localized: "Unexpected content type \(contentType) encountered reading profile memo",
+                comment: "UserProfileService error description"
+            )
+        case .failedToDeserializeProfile(let error, let data):
+            switch data {
+            case .some(let data):
+                return String(
+                    localized: "Failed to deserialize string \"\(data)\": \(error.localizedDescription)",
+                    comment: "UserProfileService error description"
+                )
+            case .none:
+                return String(
+                    localized: "Failed to deserialize: \(error.localizedDescription)",
+                    comment: "UserProfileService error description"
+                )
+            }
         case .other(let msg):
             return String(
                 localized: "An unknown error occurred: \(msg)",
@@ -46,8 +66,12 @@ struct UserProfileContentResponse: Equatable, Hashable {
 }
 
 struct UserProfileEntry: Codable {
+    static let currentVersion = "0.0"
+    
+    let version: String
     let preferredName: String?
     let bio: String?
+    // TODO: should we store the pfp in a memo?
     let profilePictureUrl: String?
 }
 
@@ -56,11 +80,14 @@ actor UserProfileService {
     private var database: DatabaseService
     private var addressBook: AddressBookService
     private var jsonDecoder: JSONDecoder
+    private var jsonEncoder: JSONEncoder
     
     private let logger = Logger(
         subsystem: Config.default.rdns,
         category: "UserProfileService"
     )
+    
+    private static let profileContentType = "application/json"
     
     init(
         noosphere: NoosphereService,
@@ -72,46 +99,50 @@ actor UserProfileService {
         self.addressBook = addressBook
         
         self.jsonDecoder = JSONDecoder()
+        self.jsonEncoder = JSONEncoder()
+        // ensure keys are sorted on write to maintain content hash
+        self.jsonEncoder.outputFormatting = .sortedKeys
     }
     
-    func readProfile(address: MemoAddress) async throws -> UserProfileEntry? {
+    func writeOurProfile(profile: UserProfileEntry) async throws {
+        let data = try self.jsonEncoder.encode(profile)
+        
+        try await self.noosphere.write(
+            slug: Slug.profile,
+            contentType: Self.profileContentType,
+            additionalHeaders: [],
+            body: data
+        )
+        
+        _ = try await self.noosphere.sync()
+    }
+    
+    /// Attempt to read & deserialize a user `_profile_.json` at the given address.
+    /// Because profile data is optional and we expect it will not always be present
+    /// any errors are logged & handled and nil will be returned if reading fails.
+    func readProfile(address: MemoAddress) async -> UserProfileEntry? {
         do {
             let data = try await noosphere.read(slashlink: address.toSlashlink())
             
+            guard data.contentType == Self.profileContentType else {
+                throw UserProfileServiceError.unexpectedProfileContentType(data.contentType)
+            }
+            
             do {
-                let user = try jsonDecoder.decode(UserProfileEntry.self, from: data.body)
-                print("User: \(user)")
-                return user
+                return try jsonDecoder.decode(UserProfileEntry.self, from: data.body)
             } catch {
-                if let string = String(data: data.body, encoding: .utf8) {
-                    print("Error decoding user string: \(string), error: \(error)")
-                } else {
-                    print("Error decoding JSON: \(error)")
+                // catch errors so we can give more context if there was a formatting error
+                guard let string = String(data: data.body, encoding: .utf8) else {
+                    throw UserProfileServiceError.failedToDeserializeProfile(error, nil)
                 }
-                
-                return nil
+               
+                throw UserProfileServiceError.failedToDeserializeProfile(error, string)
             }
         } catch {
-            let jsonString = """
-            {
-                "preferredName": "ben",
-                "bio": "Wow, it's a profile!",
-                "profilePictureUrl": "https://i.guim.co.uk/img/media/20098ae982d6b3ba4d70ede3ef9b8f79ab1205ce/0_0_969_581/master/969.jpg?width=1200&height=900&quality=85&auto=format&fit=crop&s=a368f449b1cc1f37412c07a1bd901fb5"
-            }
-            """
-            
-            guard let jsonData = jsonString.data(using: .utf8) else {
-                return nil
-            }
-            
-            do {
-                let user = try jsonDecoder.decode(UserProfileEntry.self, from: jsonData)
-                print("User: \(user)")
-                return user
-            } catch {
-                print("Error decoding JSON: \(error)")
-                return nil
-            }
+            logger.warning(
+                "Failed to read profile at \(address): \(error.localizedDescription)"
+            )
+            return nil
         }
     }
     
@@ -154,7 +185,7 @@ actor UserProfileService {
         }
         
         let address = Slashlink.ourProfile.toPublicMemoAddress()
-        let userProfileData = try await readProfile(address: address)
+        let userProfileData = await readProfile(address: address)
         
         let profile = UserProfile(
             did: did,
@@ -229,7 +260,7 @@ actor UserProfileService {
         }
         
         let address = Slashlink(petname: petname).toPublicMemoAddress()
-        let userProfileData = try await readProfile(address: address)
+        let userProfileData = await readProfile(address: address)
         
         let profile = UserProfile(
             did: did,
@@ -285,7 +316,7 @@ actor UserProfileService {
                 isOurs
                 ? Slashlink.ourProfile.toPublicMemoAddress()
                 : Slashlink(petname: petname).toPublicMemoAddress()
-            let userProfileData = try await readProfile(address: address)
+            let userProfileData = await readProfile(address: address)
             
             let user = UserProfile(
                 did: did,
