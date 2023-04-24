@@ -87,7 +87,7 @@ actor UserProfileService {
         category: "UserProfileService"
     )
     
-    private static let profileContentType = "application/json"
+    private static let profileContentType = "application/vnd.subconscious.profile+json"
     
     init(
         noosphere: NoosphereService,
