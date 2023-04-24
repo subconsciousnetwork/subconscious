@@ -691,7 +691,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         .eraseToAnyPublisher()
     }
     
-    /// List all slugs in sphere
+    /// List all slugs in sphere excluding those prefixed with `_`
     /// - Returns an array of `Slug`
     public func list() throws -> [Slug] {
         let slugs = try Noosphere.callWithError(
@@ -703,8 +703,12 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
             ns_string_array_free(slugs)
         }
         
-        return try slugs.toStringArray().map({ string in
-            try Slug(string).unwrap(SphereError.parseError(string))
+        return try slugs.toStringArray().compactMap({ string in
+            guard !string.hasPrefix("_") else {
+                return nil
+            }
+            
+            return try Slug(string).unwrap(SphereError.parseError(string))
         })
     }
     
