@@ -607,7 +607,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
             nsSphereTraverseByPetname(
                 self.noosphere.noosphere,
                 self.sphere,
-                petname.markup
+                petname.verbatim
             ) { error, pointer in
                 if let error = Noosphere.readErrorMessage(error) {
                     continuation.resume(
