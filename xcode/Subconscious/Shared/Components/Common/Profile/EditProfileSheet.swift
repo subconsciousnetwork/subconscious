@@ -19,7 +19,7 @@ enum EditProfileSheetAction: Equatable {
 
 private struct NicknameFieldCursor: CursorProtocol {
     typealias Model = EditProfileSheetModel
-    typealias ViewModel = FormField<String, String>
+    typealias ViewModel = FormField<String, Petname>
 
     static func get(state: Model) -> ViewModel {
         state.nicknameField
@@ -74,14 +74,15 @@ private struct PfpUrlFieldCursor: CursorProtocol {
     }
 }
 
-struct EditProfileSheetEnvironment { }
+struct EditProfileSheetEnvironment {
+}
 
 struct EditProfileSheetModel: ModelProtocol {
     typealias Action = EditProfileSheetAction
     typealias Environment = EditProfileSheetEnvironment
     
-    var nicknameField: FormField<String, String> = FormField(value: "", validate: { x in x })
-    var bioField: FormField<String, String> = FormField(value: "", validate: { x in x })
+    var nicknameField: FormField<String, Petname> = FormField(value: "", validate: { x in Petname(x) })
+    var bioField: FormField<String, String> = FormField(value: "", validate: { x in x.count >= 280 ? nil : x })
     var pfpUrlField: FormField<String, URL> = FormField(value: "", validate: { x in URL(string: x) })
     
     static let logger = Logger(
@@ -97,7 +98,7 @@ struct EditProfileSheetModel: ModelProtocol {
                 actions: [
                     .nicknameField(.setValue(input: user?.preferredName ?? "")),
                     .bioField(.setValue(input: user?.bio ?? "")),
-                    .pfpUrlField(.setValue(input: user?.profilePictureUrl ?? ""))
+                    .pfpUrlField(.setValue(input: user?.profilePictureUrl ?? "")),
                 ],
                 environment: environment
             )
@@ -131,9 +132,111 @@ struct EditProfileSheet: View {
     var send: (EditProfileSheetAction) -> Void
     var user: UserProfile
     var onEditProfile: () -> Void
+    var onCancel: () -> Void
     
     var body: some View {
-        Text("test")
+        NavigationStack {
+            VStack {
+                Form {
+                    HStack(alignment: .firstTextBaseline) {
+                        Image(systemName: "at")
+                            .foregroundColor(.accentColor)
+                        ValidatedTextField(
+                            placeholder: "nickname",
+                            text: Binding(
+                                get: { state.nicknameField.value },
+                                send: send,
+                                tag: { v in .nicknameField(.setValue(input: v))}
+                            ),
+                            onFocusChanged: { focused in
+                                send(.nicknameField(.focusChange(focused: focused)))
+                            },
+                            caption: "How you would like to be known",
+                            hasError: state.nicknameField.hasError
+                        )
+                        .formField()
+                        .lineLimit(1)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                    }
+                    
+                    HStack(alignment: .firstTextBaseline) {
+                        Image(systemName: "photo")
+                            .foregroundColor(.accentColor)
+                        ValidatedTextField(
+                            placeholder: "http://example.org/pfp.jpg",
+                            text: Binding(
+                                get: { state.pfpUrlField.value },
+                                send: send,
+                                tag: { v in .pfpUrlField(.setValue(input: v))}
+                            ),
+                            onFocusChanged: { focused in
+                                send(.pfpUrlField(.focusChange(focused: focused)))
+                            },
+                            caption: "The image shown on your profile",
+                            hasError: !state.pfpUrlField.isValid && state.pfpUrlField.value.count > 0
+                        )
+                        .formField()
+                        .lineLimit(1)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                    }
+                    
+                    HStack(alignment: .firstTextBaseline) {
+                        Image(systemName: "text.quote")
+                            .foregroundColor(.accentColor)
+                        ValidatedTextField(
+                            placeholder: "I am a...",
+                            text: Binding(
+                                get: { state.bioField.value },
+                                send: send,
+                                tag: { v in .bioField(.setValue(input: v))}
+                            ),
+                            onFocusChanged: { focused in
+                                send(.bioField(.focusChange(focused: focused)))
+                            },
+                            caption: "A short description of yourself  (\(state.bioField.value.count)/280)",
+                            hasError: !state.bioField.isValid && state.bioField.value.count > 0,
+                            axis: .vertical
+                        )
+                        .formField()
+                        .lineLimit(3)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                    }
+                }
+                
+                VStack {
+                    if let petname = state.nicknameField.validated {
+                        let user = UserProfile(
+                            did: Did.dummyData(), petname: petname, preferredPetname: state.nicknameField.value, address: Slashlink.ourProfile.toPublicMemoAddress(), pfp: state.pfpUrlField.validated?.absoluteString ?? "", bio: state.bioField.validated ?? "", category: .you)
+                        
+                        let story = StoryUser(user: user, isFollowingUser: false)
+                        
+                        StoryUserView(story: story, action: { _, _ in })
+                    }
+                    
+                    Spacer()
+                }
+                .frame(maxHeight: .infinity)
+            }
+            .presentationDetents([.medium])
+            .navigationTitle("Edit Profile")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        onEditProfile()
+                    }
+                }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel", role: .cancel) {
+                        onCancel()
+                    }
+                }
+            }
+        }
+        
     }
 }
 

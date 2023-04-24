@@ -15,6 +15,7 @@ struct ValidatedTextField: View {
     var onFocusChanged: (Bool) -> Void = { _ in}
     var caption: String
     var hasError: Bool = false
+    var axis: Axis = .horizontal
     @FocusState var focused: Bool
     
     var backgroundColor = Color.background
@@ -31,7 +32,8 @@ struct ValidatedTextField: View {
             HStack {
                 TextField(
                     placeholder,
-                    text: $text
+                    text: $text,
+                    axis: axis
                 )
                 .focused($focused)
                 .overlay(alignment: .trailing) {

@@ -104,21 +104,21 @@ struct FollowUserView: View {
                         }
                     }
                 }
-            }
-            .navigationTitle("Follow User")
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        send(.requestFollow)
+                .navigationTitle("Follow User")
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") {
+                            send(.requestFollow)
+                        }
+                    }
+                    ToolbarItem(placement: .navigation) {
+                        Button("Cancel", role: .cancel) {
+                            send(.presentFollowUserForm(false))
+                        }
                     }
                 }
-                ToolbarItem(placement: .navigation) {
-                    Button("Cancel", role: .cancel) {
-                        send(.presentFollowUserForm(false))
-                    }
-                }
+                .navigationBarTitleDisplayMode(.inline)
             }
-            .navigationBarTitleDisplayMode(.inline)
             .alert(
                 isPresented: Binding(
                     get: { state.failFollowErrorMessage != nil },

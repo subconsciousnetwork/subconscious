@@ -299,6 +299,9 @@ private struct EditProfileSheetModifier: ViewModifier {
                         user: user,
                         onEditProfile: {
                             send(.requestEditProfile)
+                        },
+                        onCancel: {
+                            send(.presentEditProfile(false))
                         }
                     )
                 }

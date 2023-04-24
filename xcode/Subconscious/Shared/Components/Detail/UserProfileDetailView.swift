@@ -393,12 +393,22 @@ struct UserProfileDetailModel: ModelProtocol {
         case .presentEditProfile(let presented):
             var model = state
             model.isEditProfileSheetPresented = presented
-            return Update(state: model)
+            let profile = UserProfileEntry(
+                version: UserProfileEntry.currentVersion,
+                preferredName: state.user?.preferredPetname,
+                bio: state.user?.bio,
+                profilePictureUrl: state.user?.pfp
+            )
+            return update(
+                state: model,
+                action: .editProfileSheet(.populate(profile)),
+                environment: environment
+            )
             
         case .requestEditProfile:
             let profile = UserProfileEntry(
                 version: UserProfileEntry.currentVersion,
-                preferredName: state.editProfileSheet.nicknameField.validated,
+                preferredName: state.editProfileSheet.nicknameField.validated?.verbatim,
                 bio: state.editProfileSheet.bioField.validated,
                 profilePictureUrl: state.editProfileSheet.pfpUrlField.validated?.absoluteString
             )
