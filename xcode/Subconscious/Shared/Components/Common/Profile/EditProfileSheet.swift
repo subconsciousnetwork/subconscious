@@ -184,7 +184,7 @@ struct EditProfileSheet: View {
                         .disableAutocorrection(true)
                     }
                     
-                    HStack(alignment: .firstTextBaseline) {
+                    HStack(alignment: .top) {
                         Image(systemName: "text.quote")
                             .foregroundColor(.accentColor)
                         ValidatedTextField(
@@ -197,7 +197,7 @@ struct EditProfileSheet: View {
                             onFocusChanged: { focused in
                                 send(.bioField(.focusChange(focused: focused)))
                             },
-                            caption: "A short description of yourself  (\(state.bioField.value.count)/280)",
+                            caption: "A short description of yourself (\(state.bioField.value.count)/280)",
                             hasError: !state.bioField.isValid && state.bioField.value.count > 0,
                             axis: .vertical
                         )
