@@ -209,7 +209,12 @@ struct SubtextAttributedStringRenderer {
             }
             attributedString[range].link = url
         case .wikilink(let wikilink):
-            guard let range = wikilink.span.range.within(
+            guard let wikilinkRange = wikilink.span.range.within(
+                attributedString: attributedString
+            ) else {
+                return
+            }
+            guard let textRange = wikilink.text.range.within(
                 attributedString: attributedString
             ) else {
                 return
@@ -217,7 +222,9 @@ struct SubtextAttributedStringRenderer {
             guard let url = wikilinkToURL(wikilink.description) else {
                 return
             }
-            attributedString[range].link = url
+            attributedString[wikilinkRange].foregroundColor = .tertiaryLabel
+            attributedString[textRange].foregroundColor = .accentColor
+            attributedString[textRange].link = url
         case .bold(let bold):
             guard let range = bold.span.range.within(
                 attributedString: attributedString
