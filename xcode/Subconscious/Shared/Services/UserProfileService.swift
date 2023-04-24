@@ -65,7 +65,7 @@ struct UserProfileContentResponse: Equatable, Hashable {
     var isFollowingUser: Bool
 }
 
-struct UserProfileEntry: Codable {
+struct UserProfileEntry: Codable, Equatable {
     static let currentVersion = "0.0"
     
     let version: String

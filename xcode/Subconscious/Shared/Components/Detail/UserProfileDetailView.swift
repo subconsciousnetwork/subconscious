@@ -43,7 +43,7 @@ struct UserProfileDetailView: View {
         case .requestUnfollow:
             store.send(.requestUnfollow)
         case .editOwnProfile:
-            store.send(.presentEditProfile)
+            store.send(.presentEditProfile(true))
         }
     }
 
@@ -90,9 +90,11 @@ enum UserProfileDetailAction {
     case presentMetaSheet(Bool)
     case presentFollowSheet(Bool)
     case presentUnfollowConfirmation(Bool)
+    case presentEditProfile(Bool)
     
     case metaSheet(UserProfileDetailMetaSheetAction)
     case followUserSheet(FollowUserSheetAction)
+    case editProfileSheet(EditProfileSheetAction)
     
     case fetchFollowingStatus(Did)
     case populateFollowingStatus(Bool)
@@ -109,7 +111,7 @@ enum UserProfileDetailAction {
     case dismissFailUnfollowError
     case succeedUnfollow(did: Did, petname: Petname)
     
-    case presentEditProfile
+    case requestEditProfile
     case succeedEditProfile
     case failEditorProfile(error: String)
 }
@@ -136,6 +138,25 @@ struct UserProfile: Equatable, Codable, Hashable {
     let category: UserCategory
 }
 
+struct EditProfileSheetCursor: CursorProtocol {
+    typealias Model = UserProfileDetailModel
+    typealias ViewModel = EditProfileSheetModel
+    
+    static func get(state: Model) -> ViewModel {
+        state.editProfileSheet
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.editProfileSheet = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        .editProfileSheet(action)
+    }
+}
+
 // MARK: Model
 struct UserProfileDetailModel: ModelProtocol {
     typealias Action = UserProfileDetailAction
@@ -150,6 +171,7 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
     var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
+    var editProfileSheet: EditProfileSheetModel = EditProfileSheetModel()
     var failFollowErrorMessage: String?
     var failUnfollowErrorMessage: String?
     
@@ -157,6 +179,7 @@ struct UserProfileDetailModel: ModelProtocol {
     var isMetaSheetPresented = false
     var isFollowSheetPresented = false
     var isUnfollowConfirmationPresented = false
+    var isEditProfileSheetPresented = false
     
     var user: UserProfile? = nil
     var isFollowingUser: Bool = false
@@ -184,6 +207,12 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
+            )
+        case .editProfileSheet(let action):
+            return EditProfileSheetCursor.update(
+                state: state,
+                action: action,
+                environment: EditProfileSheetEnvironment()
             )
         case .appear(let address):
             let fxRoot: AnyPublisher<UserProfileContentResponse, Error> =
@@ -361,18 +390,21 @@ struct UserProfileDetailModel: ModelProtocol {
             model.failUnfollowErrorMessage = nil
             return Update(state: model)
             
-        case .presentEditProfile:
+        case .presentEditProfile(let presented):
+            var model = state
+            model.isEditProfileSheetPresented = presented
+            return Update(state: model)
+            
+        case .requestEditProfile:
+            let profile = UserProfileEntry(
+                version: UserProfileEntry.currentVersion,
+                preferredName: state.editProfileSheet.nicknameField.validated,
+                bio: state.editProfileSheet.bioField.validated,
+                profilePictureUrl: state.editProfileSheet.pfpUrlField.validated?.absoluteString
+            )
+            
             let fx: Fx<UserProfileDetailAction> = Future.detached {
-                try await environment.userProfile
-                    .writeOurProfile(
-                        profile: UserProfileEntry(
-                            version: UserProfileEntry.currentVersion,
-                            preferredName: "ben3",
-                            bio: "Wassah! Again!",
-                            profilePictureUrl: "https://pbs.twimg.com/profile_images/1556521710106845184/SMF48Qbq_400x400.jpg"
-                        )
-                    )
-                
+                try await environment.userProfile.writeOurProfile(profile: profile)
                 return UserProfileDetailAction.succeedEditProfile
             }
             .recover { error in
@@ -388,7 +420,10 @@ struct UserProfileDetailModel: ModelProtocol {
                 return Update(state: state)
             }
             
-            return update(state: state, action: .appear(address), environment: environment)
+            var model = state
+            model.isEditProfileSheetPresented = false
+            
+            return update(state: model, action: .appear(address), environment: environment)
             
         case .failEditorProfile(let error):
             logger.error("Failed to edit: \(error)")

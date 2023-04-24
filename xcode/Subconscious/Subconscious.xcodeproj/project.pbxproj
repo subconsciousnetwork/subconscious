@@ -29,6 +29,8 @@
 		B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = B57D63BF29B574C3008BBB62 /* CodeScanner */; };
 		B584813F29AC32410033F434 /* AddressBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584813E29AC32410033F434 /* AddressBookView.swift */; };
 		B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814129AC335B0033F434 /* AddressBookEntryView.swift */; };
+		B58862C829F612CE006C2EE4 /* EditProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58862C729F612CE006C2EE4 /* EditProfileSheet.swift */; };
+		B58862C929F612CE006C2EE4 /* EditProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58862C729F612CE006C2EE4 /* EditProfileSheet.swift */; };
 		B58A46AF29D3C62B00491E43 /* StoryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46AE29D3C62B00491E43 /* StoryEntryView.swift */; };
 		B58A46B129D3C6B300491E43 /* StoryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B029D3C6B300491E43 /* StoryEntry.swift */; };
 		B58A46B329D3CE6100491E43 /* StoryUserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46B229D3CE6100491E43 /* StoryUserView.swift */; };
@@ -423,6 +425,7 @@
 		B57D63BC29B56699008BBB62 /* AddressBookModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookModel.swift; sourceTree = "<group>"; };
 		B584813E29AC32410033F434 /* AddressBookView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookView.swift; sourceTree = "<group>"; };
 		B584814129AC335B0033F434 /* AddressBookEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookEntryView.swift; sourceTree = "<group>"; };
+		B58862C729F612CE006C2EE4 /* EditProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileSheet.swift; sourceTree = "<group>"; };
 		B58A46AE29D3C62B00491E43 /* StoryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryEntryView.swift; sourceTree = "<group>"; };
 		B58A46B029D3C6B300491E43 /* StoryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryEntry.swift; sourceTree = "<group>"; };
 		B58A46B229D3CE6100491E43 /* StoryUserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryUserView.swift; sourceTree = "<group>"; };
@@ -762,6 +765,7 @@
 				B58C73A629DBB3B500B00EA1 /* UserProfileView.swift */,
 				B58A46B629D3D09500491E43 /* UserProfileHeaderView.swift */,
 				B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */,
+				B58862C729F612CE006C2EE4 /* EditProfileSheet.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -1591,6 +1595,7 @@
 				B57C0AE929D2782C00D352E3 /* PetnameBylineView.swift in Sources */,
 				B8A617202971D3000054D410 /* Slashlink.swift in Sources */,
 				B81EACD827B724A000B3B8DC /* ThickDividerView.swift in Sources */,
+				B58862C829F612CE006C2EE4 /* EditProfileSheet.swift in Sources */,
 				B8D7F04227A4AE590042C7CF /* SuggestionViewModifier.swift in Sources */,
 				B58A46AF29D3C62B00491E43 /* StoryEntryView.swift in Sources */,
 				B8E00A2D299294A0003B40C1 /* UserDefaultsProperty.swift in Sources */,
@@ -1805,6 +1810,7 @@
 				B8D328B829A671DA00850A37 /* Transclude2View.swift in Sources */,
 				B8CE40E828D2707D00819064 /* QueryPromptGeist.swift in Sources */,
 				B8B6BCB629CCDDF6000DB410 /* ResourceStatus.swift in Sources */,
+				B58862C929F612CE006C2EE4 /* EditProfileSheet.swift in Sources */,
 				B84AD8EB2811C863006B3153 /* URLComponentsUtilities.swift in Sources */,
 				B8B4251328FDE7780081B8D5 /* Mapping.swift in Sources */,
 				B8DA32B629CB999500EA166E /* AppUpgradeView.swift in Sources */,

@@ -142,6 +142,7 @@ struct UserProfileView: View {
         .metaSheet(state: state, send: send)
         .follow(state: state, send: send)
         .unfollow(state: state, send: send)
+        .editProfile(state: state, send: send)
     }
 }
 
@@ -167,9 +168,16 @@ private extension View {
     ) -> some View {
       self.modifier(MetaSheetModifier(state: state, send: send))
     }
+    
+    func editProfile(
+        state: UserProfileDetailModel,
+        send: @escaping (UserProfileDetailAction) -> Void
+    ) -> some View {
+      self.modifier(EditProfileSheetModifier(state: state, send: send))
+    }
 }
 
-struct MetaSheetModifier: ViewModifier {
+private struct MetaSheetModifier: ViewModifier {
     let state: UserProfileDetailModel
     let send: (UserProfileDetailAction) -> Void
     
@@ -195,7 +203,7 @@ struct MetaSheetModifier: ViewModifier {
     }
 }
 
-struct FollowModifier: ViewModifier {
+private struct FollowModifier: ViewModifier {
     let state: UserProfileDetailModel
     let send: (UserProfileDetailAction) -> Void
     
@@ -230,7 +238,7 @@ struct FollowModifier: ViewModifier {
 }
 
 
-struct UnfollowModifier: ViewModifier {
+private struct UnfollowModifier: ViewModifier {
   let state: UserProfileDetailModel
   let send: (UserProfileDetailAction) -> Void
 
@@ -265,6 +273,37 @@ struct UnfollowModifier: ViewModifier {
           Text("You cannot undo this action")
       }
   }
+}
+
+
+private struct EditProfileSheetModifier: ViewModifier {
+    let state: UserProfileDetailModel
+    let send: (UserProfileDetailAction) -> Void
+    
+    func body(content: Content) -> some View {
+        content
+            .sheet(
+                isPresented: Binding(
+                    get: { state.isEditProfileSheetPresented },
+                    send: send,
+                    tag: UserProfileDetailAction.presentEditProfile
+                )
+            ) {
+                if let user = state.user {
+                    EditProfileSheet(
+                        state: state.editProfileSheet,
+                        send: Address.forward(
+                            send: send,
+                            tag: EditProfileSheetCursor.tag
+                        ),
+                        user: user,
+                        onEditProfile: {
+                            send(.requestEditProfile)
+                        }
+                    )
+                }
+            }
+    }
 }
 
 struct UserProfileView_Previews: PreviewProvider {
