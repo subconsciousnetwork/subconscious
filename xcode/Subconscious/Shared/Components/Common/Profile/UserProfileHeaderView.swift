@@ -58,7 +58,8 @@ struct UserProfileHeaderView: View {
             if let statistics = statistics {
                 HStack(spacing: AppTheme.unit2) {
                     ProfileStatisticView(label: "Notes", count: statistics.noteCount)
-                    ProfileStatisticView(label: "Backlinks", count: statistics.backlinkCount)
+                    // TODO: put this back when we have backlink count
+                    // ProfileStatisticView(label: "Backlinks", count: statistics.backlinkCount)
                     ProfileStatisticView(label: "Following", count: statistics.followingCount)
                 }
                 .font(.caption)
