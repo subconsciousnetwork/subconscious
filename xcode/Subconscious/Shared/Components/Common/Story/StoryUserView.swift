@@ -28,14 +28,8 @@ struct StoryUserView: View {
         ) {
             VStack(alignment: .leading, spacing: AppTheme.unit3) {
                 HStack(alignment: .center, spacing: AppTheme.unit2) {
-                    ProfilePicSm(url: URL(string: story.user.pfp)!)
-                    
-                    switch (story.user.category) {
-                    case .human, .geist:
-                        PetnameBylineView(petname: story.user.petname)
-                    case .you:
-                        PetnameBylineView(petname: story.user.petname)
-                    }
+                    ProfilePicSm(pfp: story.user.pfp)
+                    PetnameBylineView(petname: story.user.petname)
                     
                     Spacer()
                     
@@ -71,7 +65,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         petname: Petname("ben.gordon.chris.bob")!,
                         preferredPetname: nil,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
-                        pfp: "pfp-dog",
+                        pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                         category: .human
                     ),
@@ -86,7 +80,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         petname: Petname("ben.gordon.chris.bob")!,
                         preferredPetname: nil,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
-                        pfp: "pfp-dog",
+                        pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                         category: .human
                     ),
@@ -101,7 +95,7 @@ struct StoryUserView_Previews: PreviewProvider {
                         petname: Petname("ben.gordon.chris.bob")!,
                         preferredPetname: nil,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
-                        pfp: "pfp-dog",
+                        pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                         category: .you
                     ),

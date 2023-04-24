@@ -75,7 +75,7 @@ extension StoryUser: DummyData {
                 petname: petname,
                 preferredPetname: nil,
                 address: Slashlink(petname: petname).toPublicMemoAddress(),
-                pfp: String.dummyProfilePicture(),
+                pfp: .image(String.dummyProfilePicture()),
                 bio: String.dummyDataMedium(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
             ),
@@ -90,7 +90,7 @@ extension StoryUser: DummyData {
                 petname: petname,
                 preferredPetname: nil,
                 address: Slashlink(petname: petname).toPublicMemoAddress(),
-                pfp: String.dummyProfilePicture(),
+                pfp: .image(String.dummyProfilePicture()),
                 bio: String.dummyDataMedium(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
             ),
@@ -156,7 +156,7 @@ extension UserProfile: DummyData {
             petname: petname,
             preferredPetname: nil,
             address: Slashlink(petname: petname).toPublicMemoAddress(),
-            pfp: String.dummyProfilePicture(),
+            pfp: .image(String.dummyProfilePicture()),
             bio: String.dummyDataMedium(),
             category: .human
         )

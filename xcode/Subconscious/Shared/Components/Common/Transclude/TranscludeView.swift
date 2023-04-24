@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TranscludeView: View {
-    var pfp: URL
+    var pfp: ProfilePicVariant
     var slashlink: Slashlink
     var excerpt: String
 
@@ -34,7 +34,7 @@ struct TranscludeView: View {
 struct TranscludeView_Previews: PreviewProvider {
     static var previews: some View {
         TranscludeView(
-            pfp: URL(string: "pfp-dog")!,
+            pfp: .image("pfp-dog"),
             slashlink: Slashlink("@doge/thoughts")!,
             excerpt: "Thoughts of Doge. Food food park park park run run play run fetch ball run water shlorp shlorp shlorp dog bork bork bork home sleep sleep dream sleep"
         )

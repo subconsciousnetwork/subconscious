@@ -152,9 +152,7 @@ struct FollowUserSheet: View {
     
     var body: some View {
         VStack(alignment: .center, spacing: AppTheme.unit2) {
-            if let url = URL(string: user.pfp) {
-                ProfilePic(url: url)
-            }
+            ProfilePic(pfp: user.pfp)
             
             Text(user.did.did)
                 .font(.caption.monospaced())

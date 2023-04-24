@@ -134,7 +134,7 @@ struct UserProfile: Equatable, Codable, Hashable {
     let petname: Petname
     let preferredPetname: String?
     let address: MemoAddress
-    let pfp: String
+    let pfp: ProfilePicVariant
     let bio: String
     let category: UserCategory
 }
@@ -396,11 +396,21 @@ struct UserProfileDetailModel: ModelProtocol {
         case .presentEditProfile(let presented):
             var model = state
             model.isEditProfileSheetPresented = presented
+            
+            let pfp: URL? = Func.run {
+                switch (state.user?.pfp) {
+                case .some(.url(let url)):
+                    return url
+                case _:
+                    return nil
+                }
+            }
+            
             let profile = UserProfileEntry(
                 version: UserProfileEntry.currentVersion,
                 preferredName: state.user?.preferredPetname,
                 bio: state.user?.bio,
-                profilePictureUrl: state.user?.pfp
+                profilePictureUrl: pfp?.absoluteString
             )
             return update(
                 state: model,

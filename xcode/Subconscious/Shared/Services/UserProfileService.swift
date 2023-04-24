@@ -187,12 +187,21 @@ actor UserProfileService {
         let address = Slashlink.ourProfile.toPublicMemoAddress()
         let userProfileData = await readProfile(address: address)
         
+        let pfp: ProfilePicVariant = Func.run {
+            if let url = URL(string: userProfileData?.profilePictureUrl ?? "") {
+                return .url(url)
+            }
+            
+            return .none
+        }
+        
+        
         let profile = UserProfile(
             did: did,
             petname: Petname(userProfileData?.preferredName ?? "") ?? petname,
             preferredPetname: userProfileData?.preferredName,
             address: address,
-            pfp: userProfileData?.profilePictureUrl ?? "sub_logo",
+            pfp: pfp,
             bio: userProfileData?.bio ?? "",
             category: .you
         )
@@ -262,12 +271,20 @@ actor UserProfileService {
         let address = Slashlink(petname: petname).toPublicMemoAddress()
         let userProfileData = await readProfile(address: address)
         
+        let pfp: ProfilePicVariant = Func.run {
+            if let url = URL(string: userProfileData?.profilePictureUrl ?? "") {
+                return .url(url)
+            }
+            
+            return .none
+        }
+        
         let profile = UserProfile(
             did: did,
             petname: petname,
             preferredPetname: userProfileData?.preferredName,
             address: address,
-            pfp: userProfileData?.profilePictureUrl ?? "sub_logo",
+            pfp: pfp,
             bio: userProfileData?.bio ?? "",
             category: .human
         )
@@ -318,12 +335,20 @@ actor UserProfileService {
                 : Slashlink(petname: petname).toPublicMemoAddress()
             let userProfileData = await readProfile(address: address)
             
+            let pfp: ProfilePicVariant = Func.run {
+                if let url = URL(string: userProfileData?.profilePictureUrl ?? "") {
+                    return .url(url)
+                }
+                
+                return .none
+            }
+            
             let user = UserProfile(
                 did: did,
                 petname: petname,
                 preferredPetname: userProfileData?.preferredName,
                 address: address,
-                pfp: userProfileData?.profilePictureUrl ?? "sub_logo",
+                pfp: pfp,
                 bio: userProfileData?.bio ?? "",
                 category: isOurs ? .you : .human
             )

@@ -23,9 +23,7 @@ struct UserProfileHeaderView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
-                if let url = URL(string: user.pfp) {
-                    ProfilePic(url: url)
-                }
+                ProfilePic(pfp: user.pfp)
             
                 PetnameBylineView(petname: Petname(user.preferredPetname ?? "") ?? user.petname)
                 
@@ -81,7 +79,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     petname: Petname("ben")!,
                     preferredPetname: nil,
                     address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress(),
-                    pfp: "pfp-dog",
+                    pfp: .image("pfp-dog"),
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
                     category: .human
                 ),
@@ -93,7 +91,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     petname: Petname("ben")!,
                     preferredPetname: nil,
                     address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress(),
-                    pfp: "pfp-dog",
+                    pfp: .image("pfp-dog"),
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
                     category: .geist
                 ),
@@ -106,7 +104,7 @@ struct BylineLgView_Previews: PreviewProvider {
                     petname: Petname("ben")!,
                     preferredPetname: nil,
                     address: Slashlink.ourProfile.toLocalMemoAddress(),
-                    pfp: "pfp-dog",
+                    pfp: .image("pfp-dog"),
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
                     category: .you
                 ),

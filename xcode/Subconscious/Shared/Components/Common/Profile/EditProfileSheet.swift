@@ -210,8 +210,23 @@ struct EditProfileSheet: View {
                 
                 VStack {
                     if let petname = state.nicknameField.validated {
+                        let pfp: ProfilePicVariant = Func.run {
+                            if let url = state.pfpUrlField.validated {
+                                return .url(url)
+                            }
+                            
+                            return .none
+                        }
+                        
                         let user = UserProfile(
-                            did: Did.dummyData(), petname: petname, preferredPetname: state.nicknameField.value, address: Slashlink.ourProfile.toPublicMemoAddress(), pfp: state.pfpUrlField.validated?.absoluteString ?? "", bio: state.bioField.validated ?? "", category: .you)
+                            did: Did.dummyData(),
+                            petname: petname,
+                            preferredPetname: state.nicknameField.value,
+                            address: Slashlink.ourProfile.toPublicMemoAddress(),
+                            pfp: pfp,
+                            bio: state.bioField.validated ?? "",
+                            category: .you
+                        )
                         
                         let story = StoryUser(user: user, isFollowingUser: false)
                         
