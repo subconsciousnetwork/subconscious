@@ -238,6 +238,7 @@ struct SubtextAttributedStringRenderer {
             ) else {
                 return
             }
+            attributedString[range].backgroundColor = Color.secondaryBackground
             attributedString[range].font = .body.monospaced()
         }
     }

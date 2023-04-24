@@ -1234,6 +1234,7 @@
 				B8A41D502811F87C0096D2E7 /* SlashlinkBarView.swift */,
 				B85652182975B29800B7FCA0 /* Story */,
 				B86E943229AFD5680073929B /* SubtextTextViewRepresentable.swift */,
+				B82D145329EF157B009E21FF /* SubtextView.swift */,
 				B85DF78A29B65F0A0042D725 /* Suggestion */,
 				B57C0AEF29D280DC00D352E3 /* Tabs */,
 				B81EACD727B724A000B3B8DC /* ThickDividerView.swift */,
@@ -1241,7 +1242,6 @@
 				B85BF47427BB3D6E00F55730 /* ToolbarTitleGroupView.swift */,
 				B532F8C129B1750F00CE9256 /* Transclude */,
 				B8A41D4D2811E81E0096D2E7 /* WikilinkBarView.swift */,
-				B82D145329EF157B009E21FF /* SubtextView.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
