@@ -112,8 +112,9 @@ enum UserProfileDetailAction {
     case succeedUnfollow(did: Did, petname: Petname)
     
     case requestEditProfile
+    case failEditProfile(error: String)
+    case dismissEditProfileError
     case succeedEditProfile
-    case failEditorProfile(error: String)
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -174,6 +175,7 @@ struct UserProfileDetailModel: ModelProtocol {
     var editProfileSheet: EditProfileSheetModel = EditProfileSheetModel()
     var failFollowErrorMessage: String?
     var failUnfollowErrorMessage: String?
+    var failEditProfileMessage: String?
     
     var selectedTabIndex = 0
     var isMetaSheetPresented = false
@@ -390,6 +392,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.failUnfollowErrorMessage = nil
             return Update(state: model)
             
+        // MARK: Edit Profile
         case .presentEditProfile(let presented):
             var model = state
             model.isEditProfileSheetPresented = presented
@@ -418,14 +421,13 @@ struct UserProfileDetailModel: ModelProtocol {
                 return UserProfileDetailAction.succeedEditProfile
             }
             .recover { error in
-                return UserProfileDetailAction.failEditorProfile(error: error.localizedDescription)
+                return UserProfileDetailAction.failEditProfile(error: error.localizedDescription)
             }
             .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
             
         case .succeedEditProfile:
-            logger.info("Edited")
             guard let address = state.user?.address else {
                 return Update(state: state)
             }
@@ -435,9 +437,17 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return update(state: model, action: .appear(address), environment: environment)
             
-        case .failEditorProfile(let error):
-            logger.error("Failed to edit: \(error)")
-            return Update(state: state)
+        case .failEditProfile(let error):
+            var model = state
+            model.failEditProfileMessage = error
+            return Update(state: model)
+            
+        case .dismissEditProfileError:
+            var model = state
+            model.failEditProfileMessage = nil
+            return Update(state: model)
         }
+        
+        
     }
 }

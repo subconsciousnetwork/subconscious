@@ -131,8 +131,10 @@ struct EditProfileSheet: View {
     var state: EditProfileSheetModel
     var send: (EditProfileSheetAction) -> Void
     var user: UserProfile
+    var failEditProfileMessage: String?
     var onEditProfile: () -> Void
     var onCancel: () -> Void
+    var onDismissError: () -> Void
     
     var body: some View {
         NavigationStack {
@@ -220,7 +222,17 @@ struct EditProfileSheet: View {
                 }
                 .frame(maxHeight: .infinity)
             }
-            .presentationDetents([.medium])
+            .alert(
+                isPresented: Binding(
+                    get: { failEditProfileMessage != nil },
+                    set: { _ in onDismissError() }
+                )
+            ) {
+                Alert(
+                    title: Text("Failed to Save Profile"),
+                    message: Text(failEditProfileMessage ?? "An unknown error ocurred")
+                )
+            }
             .navigationTitle("Edit Profile")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -236,7 +248,6 @@ struct EditProfileSheet: View {
                 }
             }
         }
-        
     }
 }
 

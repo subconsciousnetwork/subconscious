@@ -297,11 +297,15 @@ private struct EditProfileSheetModifier: ViewModifier {
                             tag: EditProfileSheetCursor.tag
                         ),
                         user: user,
+                        failEditProfileMessage: state.failEditProfileMessage,
                         onEditProfile: {
                             send(.requestEditProfile)
                         },
                         onCancel: {
                             send(.presentEditProfile(false))
+                        },
+                        onDismissError: {
+                            send(.dismissEditProfileError)
                         }
                     )
                 }
