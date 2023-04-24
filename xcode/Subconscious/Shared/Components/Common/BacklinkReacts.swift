@@ -47,7 +47,7 @@ struct BacklinkReacts_Previews: PreviewProvider {
                 Slug("h")!,
             ]
         ) { element in
-                ProfilePicVariant.image("pfp-dog")
+            ProfilePicVariant.image("pfp-dog")
         }
     }
 }
