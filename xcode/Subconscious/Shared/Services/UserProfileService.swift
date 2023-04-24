@@ -69,9 +69,8 @@ struct UserProfileEntry: Codable, Equatable {
     static let currentVersion = "0.0"
     
     let version: String
-    let preferredName: String?
+    let nickname: String?
     let bio: String?
-    // TODO: should we store the pfp in a memo?
     let profilePictureUrl: String?
 }
 
@@ -149,7 +148,7 @@ actor UserProfileService {
     /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
     func requestOwnProfile() async throws -> UserProfileContentResponse {
         guard let nickname = AppDefaults.standard.nickname,
-              let petname = Petname(nickname) else {
+              let nickname = Petname(nickname) else {
                   throw UserProfileServiceError.missingPreferredPetname
         }
         
@@ -198,8 +197,8 @@ actor UserProfileService {
         
         let profile = UserProfile(
             did: did,
-            petname: Petname(userProfileData?.preferredName ?? "") ?? petname,
-            preferredPetname: userProfileData?.preferredName,
+            petname: Petname(userProfileData?.nickname ?? "") ?? nickname,
+            preferredPetname: userProfileData?.nickname,
             address: address,
             pfp: pfp,
             bio: userProfileData?.bio ?? "",
@@ -282,7 +281,7 @@ actor UserProfileService {
         let profile = UserProfile(
             did: did,
             petname: petname,
-            preferredPetname: userProfileData?.preferredName,
+            preferredPetname: userProfileData?.nickname,
             address: address,
             pfp: pfp,
             bio: userProfileData?.bio ?? "",
@@ -346,7 +345,7 @@ actor UserProfileService {
             let user = UserProfile(
                 did: did,
                 petname: petname,
-                preferredPetname: userProfileData?.preferredName,
+                preferredPetname: userProfileData?.nickname,
                 address: address,
                 pfp: pfp,
                 bio: userProfileData?.bio ?? "",

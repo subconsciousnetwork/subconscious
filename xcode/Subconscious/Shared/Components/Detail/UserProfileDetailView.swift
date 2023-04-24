@@ -408,7 +408,7 @@ struct UserProfileDetailModel: ModelProtocol {
             
             let profile = UserProfileEntry(
                 version: UserProfileEntry.currentVersion,
-                preferredName: state.user?.preferredPetname,
+                nickname: state.user?.preferredPetname,
                 bio: state.user?.bio,
                 profilePictureUrl: pfp?.absoluteString
             )
@@ -421,7 +421,7 @@ struct UserProfileDetailModel: ModelProtocol {
         case .requestEditProfile:
             let profile = UserProfileEntry(
                 version: UserProfileEntry.currentVersion,
-                preferredName: state.editProfileSheet.nicknameField.validated?.verbatim,
+                nickname: state.editProfileSheet.nicknameField.validated?.verbatim,
                 bio: state.editProfileSheet.bioField.validated,
                 profilePictureUrl: state.editProfileSheet.pfpUrlField.validated?.absoluteString
             )

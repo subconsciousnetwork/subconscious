@@ -96,7 +96,7 @@ struct EditProfileSheetModel: ModelProtocol {
             return update(
                 state: state,
                 actions: [
-                    .nicknameField(.setValue(input: user?.preferredName ?? "")),
+                    .nicknameField(.setValue(input: user?.nickname ?? "")),
                     .bioField(.setValue(input: user?.bio ?? "")),
                     .pfpUrlField(.setValue(input: user?.profilePictureUrl ?? "")),
                 ],
