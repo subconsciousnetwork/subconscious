@@ -41,7 +41,7 @@ struct MemoViewerDetailMetaSheetView: View {
                 VStack(spacing: AppTheme.unit4) {
                     MetaTableView {
                         MetaTableItemShareLinkView(
-                            label: "Copy link",
+                            label: "Share link",
                             item: state.shareableLink ?? ""
                         )
                         .disabled(state.shareableLink == nil)

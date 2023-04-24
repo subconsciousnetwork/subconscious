@@ -178,7 +178,7 @@ final class Tests_DataService: XCTestCase {
                 noosphere: noosphere,
                 database: database
             )
-
+           
             let data = DataService(
                 noosphere: noosphere,
                 database: database,

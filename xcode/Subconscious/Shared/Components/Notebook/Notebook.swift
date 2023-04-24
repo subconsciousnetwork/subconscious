@@ -263,6 +263,11 @@ extension NotebookAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
+        case let .requestFindDetail(slashlink, fallback):
+            return .findAndPushDetail(
+                slashlink: slashlink,
+                fallback: fallback
+            )
         }
     }
     
@@ -761,8 +766,7 @@ struct NotebookModel: ModelProtocol {
             case .viewer(var description):
                 description.address = to
                 return .viewer(description)
-            case .profile(var description):
-                description.address = to
+            case .profile(let description):
                 return .profile(description)
             }
         })
@@ -796,8 +800,7 @@ struct NotebookModel: ModelProtocol {
             case .viewer(var description):
                 description.address = parent
                 return .viewer(description)
-            case .profile(var description):
-                description.address = parent
+            case .profile(let description):
                 return .profile(description)
             }
         })
@@ -833,8 +836,7 @@ struct NotebookModel: ModelProtocol {
             case .viewer(var description):
                 description.address = receipt.to
                 return .viewer(description)
-            case .profile(var description):
-                description.address = receipt.to
+            case .profile(let description):
                 return .profile(description)
             }
         })
@@ -908,7 +910,23 @@ struct NotebookModel: ModelProtocol {
                 environment: environment
             )
         }
+        
         if AppDefaults.standard.isNoosphereEnabled {
+            // Intercept profile visits and use the correct view
+            guard !slashlink.slug.isProfile else {
+                return update(
+                    state: state,
+                    action: .pushDetail(
+                        .profile(
+                            UserProfileDetailDescription(
+                                address: slashlink.toPublicMemoAddress()
+                            )
+                        )
+                    ),
+                    environment: environment
+                )
+            }
+            
             // If Noosphere is enabled, and slashlink pointing to other sphere,
             // dispatch action for viewer.
             return update(

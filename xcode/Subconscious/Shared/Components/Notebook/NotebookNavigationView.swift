@@ -124,9 +124,8 @@ struct NotebookNavigationView: View {
                         Button(
                             action: {
                                 let detail = UserProfileDetailDescription(
-                                    address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress()
+                                    address: Slashlink.ourProfile.toPublicMemoAddress()
                                 )
-                                
                                 store.send(.pushDetail(.profile(detail)))
                             }
                         ) {

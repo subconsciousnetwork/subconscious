@@ -45,7 +45,7 @@ public struct Slashlink:
 
     public var id: String { description }
     
-    static let profileSlug = Slug("_profile_")!
+    static let ourProfile = Slashlink(slug: Slug.profile)
     
     // The normalized markup form of the slashlink
     public var markup: String { description }
@@ -84,15 +84,15 @@ public struct Slashlink:
         case (.none, .some(let slug)):
             self.init(slug: slug)
         case (.some(let petname), .none):
-            self.init(petname: petname, slug: Self.profileSlug)
+            self.init(petname: petname, slug: Slug.profile)
         case (_, _):
             return nil
         }
     }
     
     /// Convenience initializer that creates a link to `@user/_profile_`
-    init (petname: Petname) {
-        self.init(petname: petname, slug: Self.profileSlug)
+    init(petname: Petname) {
+        self.init(petname: petname, slug: Slug.profile)
     }
 }
 
@@ -109,15 +109,20 @@ extension Slug {
     func toSlashlink() -> Slashlink {
         Slashlink(slug: self)
     }
-    
-    func isProfile() -> Bool {
-        self == Slashlink.profileSlug
-    }
 }
 
 extension Slashlink {
     func toSlug() -> Slug {
         self.slug
+    }
+    
+    func relativeTo(petname: Petname) -> Slashlink {
+        guard let localPetname = self.petname else {
+            return Slashlink(petname: petname, slug: self.slug)
+        }
+        
+        let path = petname.append(petname: localPetname)
+        return Slashlink(petname: path, slug: self.slug)
     }
 }
 

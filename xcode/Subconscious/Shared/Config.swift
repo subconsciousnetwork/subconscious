@@ -18,12 +18,7 @@ struct Config: Equatable, Codable {
     var addByQRCode = true
     var userProfile: Bool {
         get {
-            AppDefaults.standard.isNoosphereEnabled && false
-        }
-    }
-    var userProfileDetailsTable: Bool {
-        get {
-            userProfile && false
+            AppDefaults.standard.isNoosphereEnabled
         }
     }
     

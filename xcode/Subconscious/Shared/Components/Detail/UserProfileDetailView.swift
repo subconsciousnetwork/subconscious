@@ -5,8 +5,10 @@
 //  Created by Ben Follington on 28/3/2023.
 //
 
+import os
 import SwiftUI
 import ObservableStore
+import Combine
 
 /// Display a user profile detail view.
 /// Used to browse users entries and list of petnames.
@@ -14,6 +16,11 @@ struct UserProfileDetailView: View {
     @StateObject private var store = Store(
         state: UserProfileDetailModel(),
         environment: AppEnvironment.default
+    )
+    
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "UserProfileDetailView"
     )
 
     var description: UserProfileDetailDescription
@@ -23,8 +30,21 @@ struct UserProfileDetailView: View {
         notify(.requestDetail(.from(address: address, fallback: "")))
     }
     
-    func onNavigateToUser(address: MemoAddress) {
-        notify(.requestDetail(.profile(UserProfileDetailDescription(address: address))))
+    func onNavigateToUser(user: UserProfile) {
+        notify(.requestDetail(.profile(
+            UserProfileDetailDescription(address: user.address)
+        )))
+    }
+    
+    func onProfileAction(user: UserProfile, action: UserProfileAction) {
+        switch (action) {
+        case .requestFollow:
+            store.send(.requestFollow)
+        case .requestUnfollow:
+            store.send(.requestUnfollow)
+        case .editOwnProfile:
+            Self.logger.warning("Editing profiles is not supported yet, doing nothing")
+        }
     }
 
     var body: some View {
@@ -32,13 +52,18 @@ struct UserProfileDetailView: View {
             state: store.state,
             send: store.send,
             onNavigateToNote: self.onNavigateToNote,
-            onNavigateToUser: self.onNavigateToUser
+            onNavigateToUser: self.onNavigateToUser,
+            onProfileAction: self.onProfileAction
         )
         .onAppear {
             // When an editor is presented, refresh if stale.
             // This covers the case where the editor might have been in the
             // background for a while, and the content changed in another tab.
-            store.send(UserProfileDetailAction.populate(UserProfile.dummyData(), UserProfileStatistics.dummyData()))
+            store.send(
+                UserProfileDetailAction.appear(
+                    description.address
+                )
+            )
         }
     }
 }
@@ -55,11 +80,34 @@ struct UserProfileDetailDescription: Hashable {
     var address: MemoAddress
 }
 
-enum UserProfileDetailAction: Hashable {
-    case populate(UserProfile, UserProfileStatistics?)
+enum UserProfileDetailAction {
+    case appear(MemoAddress)
+    case populate(UserProfileContentResponse)
+    case failedToPopulate(String)
+    
     case tabIndexSelected(Int)
+    
     case presentMetaSheet(Bool)
+    case presentFollowSheet(Bool)
+    case presentUnfollowConfirmation(Bool)
+    
     case metaSheet(UserProfileDetailMetaSheetAction)
+    case followUserSheet(FollowUserSheetAction)
+    
+    case fetchFollowingStatus(Did)
+    case populateFollowingStatus(Bool)
+    
+    case requestFollow
+    case attemptFollow
+    case failFollow(error: String)
+    case dismissFailFollowError
+    case succeedFollow(did: Did, petname: Petname)
+    
+    case requestUnfollow
+    case attemptUnfollow
+    case failUnfollow(error: String)
+    case dismissFailUnfollowError
+    case succeedUnfollow(did: Did, petname: Petname)
 }
 
 struct UserProfileStatistics: Equatable, Codable, Hashable {
@@ -77,27 +125,42 @@ enum UserCategory: Equatable, Codable, Hashable, CaseIterable {
 struct UserProfile: Equatable, Codable, Hashable {
     let did: Did
     let petname: Petname
+    let address: MemoAddress
     let pfp: String
     let bio: String
     let category: UserCategory
 }
 
+// MARK: Model
 struct UserProfileDetailModel: ModelProtocol {
     typealias Action = UserProfileDetailAction
     typealias Environment = AppEnvironment
     
+    static let logger = Logger(
+        subsystem: Config.default.rdns,
+        category: "UserProfileDetail"
+    )
+    
+    var loadingState = LoadingState.loading
+    
     var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
+    var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
+    var failFollowErrorMessage: String?
+    var failUnfollowErrorMessage: String?
+    
     var selectedTabIndex = 0
     var isMetaSheetPresented = false
+    var isFollowSheetPresented = false
+    var isUnfollowConfirmationPresented = false
     
-    var user: UserProfile? = UserProfile.dummyData()
-    var isFollowingUser: Bool = Bool.dummyData()
+    var user: UserProfile? = nil
+    var isFollowingUser: Bool = false
     
     var recentEntries: [EntryStub] = []
     var topEntries: [EntryStub] = []
     var following: [StoryUser] = []
-    
-    var statistics: UserProfileStatistics? = UserProfileStatistics.dummyData()
+
+    var statistics: UserProfileStatistics? = nil
 
     static func update(
         state: Self,
@@ -111,15 +174,56 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: environment
             )
-           
-        case .populate(let user, let statistics):
-            var model = state
-            model.user = user
-            model.statistics = statistics
-            model.recentEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
-            model.topEntries = (0...10).map { _ in EntryStub.dummyData(petname: user.petname) }
-            model.following = (1...10).map { _ in StoryUser.dummyData() }
+        case .followUserSheet(let action):
+            return FollowUserSheetCursor.update(
+                state: state,
+                action: action,
+                environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
+            )
+        case .appear(let address):
+            let fxRoot: AnyPublisher<UserProfileContentResponse, Error> =
+                Func.run {
+                    if let petname = address.petname {
+                        return environment.userProfile.requestUserProfilePublisher(petname: petname)
+                    } else {
+                        return environment.userProfile.requestOwnProfilePublisher()
+                    }
+                }
             
+            let fx: Fx<UserProfileDetailAction> =
+                fxRoot
+                .map { content in
+                    UserProfileDetailAction.populate(content)
+                }
+                .catch { error in
+                    Just(UserProfileDetailAction.failedToPopulate(error.localizedDescription))
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+            
+        case .populate(let content):
+            var model = state
+            model.user = content.profile
+            model.statistics = content.statistics
+            model.recentEntries = content.entries
+            model.topEntries = content.entries
+            model.following = content.following
+            model.isFollowingUser = content.isFollowingUser
+            model.loadingState = .loaded
+            
+            return update(
+                state: model,
+                actions: [
+                    .fetchFollowingStatus(content.profile.did)
+                ],
+                environment: environment
+            )
+            
+        case .failedToPopulate(let error):
+            var model = state
+            model.loadingState = .notFound
+            logger.error("Failed to fetch profile: \(error)")
             return Update(state: model)
             
         case .tabIndexSelected(let index):
@@ -130,6 +234,126 @@ struct UserProfileDetailModel: ModelProtocol {
         case .presentMetaSheet(let presented):
             var model = state
             model.isMetaSheetPresented = presented
+            return Update(state: model)
+            
+        case .presentFollowSheet(let presented):
+            var model = state
+            model.isFollowSheetPresented = presented
+            return Update(state: model)
+            
+        // MARK: Following status
+        case .fetchFollowingStatus(let did):
+            let fx: Fx<UserProfileDetailAction> =
+                environment.addressBook
+                .isFollowingUserPublisher(did: did)
+                .map { following in
+                    UserProfileDetailAction.populateFollowingStatus(following)
+                }
+                .catch { error in
+                    logger.error("Failed to fetch following status for \(did): \(error)")
+                    return Just(UserProfileDetailAction.populateFollowingStatus(false))
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+            
+        case .populateFollowingStatus(let following):
+            var model = state
+            model.isFollowingUser = following
+            return Update(state: model)
+            
+        // MARK: Following
+        case .requestFollow:
+            return update(state: state, action: .presentFollowSheet(true), environment: environment)
+            
+        case .attemptFollow:
+            guard let did = state.followUserSheet.followUserForm.did.validated else {
+                return Update(state: state)
+            }
+            guard let petname = state.followUserSheet.followUserForm.petname.validated else {
+                return Update(state: state)
+            }
+            
+            let fx: Fx<UserProfileDetailAction> =
+                environment.addressBook
+                .followUserPublisher(did: did, petname: petname, preventOverwrite: true)
+                .map({ _ in
+                    UserProfileDetailAction.succeedFollow(did: did, petname: petname)
+                })
+                .catch { error in
+                    Just(UserProfileDetailAction.failFollow(error: error.localizedDescription))
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+            
+        case .succeedFollow(let did, _):
+            return update(
+                state: state,
+                actions: [
+                    .presentFollowSheet(false),
+                    .fetchFollowingStatus(did)
+                ],
+                environment: environment
+            )
+            
+        case .failFollow(error: let error):
+            var model = state
+            model.failFollowErrorMessage = error
+            return Update(state: model)
+            
+        case .dismissFailFollowError:
+            var model = state
+            model.failFollowErrorMessage = nil
+            return Update(state: model)
+            
+        // MARK: Unfollowing
+        case .presentUnfollowConfirmation(let presented):
+            var model = state
+            model.isUnfollowConfirmationPresented = presented
+            return Update(state: model)
+            
+        case .requestUnfollow:
+            return update(state: state, action: .presentUnfollowConfirmation(true), environment: environment)
+            
+        case .attemptUnfollow:
+            guard let petname = state.user?.petname, let did = state.user?.did else {
+                return Update(state: state)
+            }
+            
+            let fx: Fx<UserProfileDetailAction> =
+                environment.addressBook
+                .unfollowUserPublisher(did: did)
+                .map({ _ in
+                    .succeedUnfollow(did: did, petname: petname)
+                })
+                .catch({ error in
+                    Just(
+                        .failUnfollow(error: error.localizedDescription)
+                    )
+                })
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+            
+        case .succeedUnfollow(let did, _):
+            return update(
+                state: state,
+                actions: [
+                    .presentUnfollowConfirmation(false),
+                    .fetchFollowingStatus(did)
+                ],
+                environment: environment
+            )
+            
+        case .failUnfollow(error: let error):
+            var model = state
+            model.failUnfollowErrorMessage = error
+            return Update(state: model)
+            
+        case .dismissFailUnfollowError:
+            var model = state
+            model.failUnfollowErrorMessage = nil
             return Update(state: model)
         }
     }

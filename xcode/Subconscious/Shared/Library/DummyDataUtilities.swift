@@ -68,10 +68,26 @@ extension Petname: DummyData {
 
 extension StoryUser: DummyData {
     static func dummyData() -> StoryUser {
+        let petname = Petname.dummyData()
+        return StoryUser(
+            user: UserProfile(
+                did: Did.dummyData(),
+                petname: petname,
+                address: Slashlink(petname: petname).toPublicMemoAddress(),
+                pfp: String.dummyProfilePicture(),
+                bio: String.dummyDataMedium(),
+                category: [UserCategory.human, UserCategory.geist].randomElement()!
+            ),
+            isFollowingUser: Bool.dummyData()
+        )
+    }
+    
+    static func dummyData(petname: Petname) -> StoryUser {
         StoryUser(
             user: UserProfile(
                 did: Did.dummyData(),
-                petname: Petname.dummyData(),
+                petname: petname,
+                address: Slashlink(petname: petname).toPublicMemoAddress(),
                 pfp: String.dummyProfilePicture(),
                 bio: String.dummyDataMedium(),
                 category: [UserCategory.human, UserCategory.geist].randomElement()!
@@ -119,13 +135,24 @@ extension EntryStub: DummyData {
         
         return EntryStub(address: address, excerpt: excerpt, modified: modified)
     }
+    
+    static func dummyData(petname: Petname, slug: Slug) -> EntryStub {
+        let slashlink = Slashlink(petname: petname, slug: slug)
+        let address = slashlink.toPublicMemoAddress()
+        let excerpt = String.dummyDataMedium()
+        let modified = Date().addingTimeInterval(TimeInterval(-86400 * Int.random(in: 0..<5)))
+        
+        return EntryStub(address: address, excerpt: excerpt, modified: modified)
+    }
 }
 
 extension UserProfile: DummyData {
     static func dummyData() -> UserProfile {
-        UserProfile(
+        let petname = Petname.dummyData()
+        return UserProfile(
             did: Did.dummyData(),
-            petname: Petname.dummyData(),
+            petname: petname,
+            address: Slashlink(petname: petname).toPublicMemoAddress(),
             pfp: String.dummyProfilePicture(),
             bio: String.dummyDataMedium(),
             category: .human

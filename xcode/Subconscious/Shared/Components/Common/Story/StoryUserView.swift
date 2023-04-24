@@ -11,6 +11,8 @@ import SwiftUI
 struct StoryUserView: View {
     var story: StoryUser
     var action: (MemoAddress, String) -> Void
+    
+    var profileAction: (UserProfile, UserProfileAction) -> Void = { _, _ in }
 
     var body: some View {
         Button(
@@ -22,17 +24,34 @@ struct StoryUserView: View {
                 )
             }
         ) {
-            HStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: AppTheme.unit4) {
-                    UserProfileHeaderView(
-                        user: story.user,
-                        statistics: story.statistics,
-                        isFollowingUser: story.isFollowingUser
-                    )
+            VStack(alignment: .leading, spacing: AppTheme.unit3) {
+                HStack(alignment: .center, spacing: AppTheme.unit2) {
+                    ProfilePicSm(image: Image(story.user.pfp))
+                    
+                    switch (story.user.category) {
+                    case .human, .geist:
+                        PetnameBylineView(petname: story.user.petname)
+                    case .you:
+                        PetnameBylineView(petname: story.user.petname)
+                    }
+                    
+                    Spacer()
+                    
+                    switch (story.isFollowingUser, story.user.category) {
+                    case (true, _):
+                        Image.from(appIcon: .following)
+                            .foregroundColor(.secondary)
+                    case (_, .you):
+                        Image.from(appIcon: .you)
+                            .foregroundColor(.secondary)
+                    case (_, _):
+                        EmptyView()
+                    }
                 }
-                .padding()
-                Spacer()
+                
+                Text(verbatim: story.user.bio)
             }
+            .padding()
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
@@ -42,18 +61,49 @@ struct StoryUserView: View {
 
 struct StoryUserView_Previews: PreviewProvider {
     static var previews: some View {
-        StoryUserView(
-            story: StoryUser(
-                user: UserProfile(
-                    did: Did("did:key:123")!,
-                    petname: Petname("ben")!,
-                    pfp: "pfp-dog",
-                    bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
-                    category: .human
+        VStack {
+            StoryUserView(
+                story: StoryUser(
+                    user: UserProfile(
+                        did: Did("did:key:123")!,
+                        petname: Petname("ben.gordon.chris.bob")!,
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
+                        pfp: "pfp-dog",
+                        bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
+                        category: .human
+                    ),
+                    isFollowingUser: false
                 ),
-                isFollowingUser: false
-            ),
-            action: { link, fallback in }
-        )
+                action: { link, fallback in }
+            )
+            StoryUserView(
+                story: StoryUser(
+                    user: UserProfile(
+                        did: Did("did:key:123")!,
+                        petname: Petname("ben.gordon.chris.bob")!,
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
+                        pfp: "pfp-dog",
+                        bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
+                        category: .human
+                    ),
+                    isFollowingUser: true
+                ),
+                action: { link, fallback in }
+            )
+            StoryUserView(
+                story: StoryUser(
+                    user: UserProfile(
+                        did: Did("did:key:123")!,
+                        petname: Petname("ben.gordon.chris.bob")!,
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
+                        pfp: "pfp-dog",
+                        bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
+                        category: .you
+                    ),
+                    isFollowingUser: false
+                ),
+                action: { link, fallback in }
+            )
+        }
     }
 }

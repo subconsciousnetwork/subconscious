@@ -17,6 +17,7 @@ public struct Petname:
     LosslessStringConvertible
 {
     private static let petnameRegex = /([\w\d\-]+)(\.[\w\d\-]+)*/
+    private static let numberedSuffixRegex = /^(?<petname>(.*?))(?<separator>-+)?(?<suffix>(\d+))?$/
     
     public static func < (lhs: Self, rhs: Self) -> Bool {
         lhs.id < rhs.id
@@ -80,5 +81,35 @@ public struct Petname:
     public init?(formatting string: String) {
         self.init(Self.format(string))
     }
+    
+    /// Explode a petname path into the individual steps along the way, in written order.
+    /// i.e. `@foo.bar.baz` -> `[foo, bar, baz]`
+    public func parts() -> [Petname] {
+        verbatim
+            .split(separator: ".")
+            .compactMap { part in Petname(part.toString()) }
+    }
+    
+    /// Return a new petname with a numerical suffix.
+    /// A plain petname e.g. `ziggy` becomes `ziggy-1`
+    /// But `ziggy-1` becomes `ziggy-2` etc.
+    public func increment() -> Petname? {
+        guard let match = description.wholeMatch(of: Self.numberedSuffixRegex),
+              let separator = match.output.separator else {
+            return Petname(formatting: verbatim + "-1")
+        }
+        
+        if let numberString = match.output.suffix,
+           let number = Int(numberString) {
+            return Petname(formatting: "\(match.output.petname)\(separator)\(String(number + 1))")
+        } else {
+            return Petname(formatting: "\(match.output.petname)\(separator)1")
+        }
+    }
+    
+    /// Combines two petnames to build up a traversal path
+    /// i.e. `Petname("foo")!.append(Petname("bar")` => `bar.foo`
+    public func append(petname: Petname) -> Petname? {
+        return Petname(petnames: [petname, self])
+    }
 }
-
