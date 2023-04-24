@@ -13,6 +13,7 @@ enum UserProfileServiceError: Error {
     case invalidSphereIdentity
     case missingPreferredPetname
     case unexpectedProfileContentType(String)
+    case unexpectedProfileSchemaVersion(String)
     case failedToDeserializeProfile(Error, String?)
     case other(String)
 }
@@ -33,6 +34,11 @@ extension UserProfileServiceError: LocalizedError {
         case .unexpectedProfileContentType(let contentType):
             return String(
                 localized: "Unexpected content type \(contentType) encountered reading profile memo",
+                comment: "UserProfileService error description"
+            )
+        case .unexpectedProfileSchemaVersion(let versionString):
+            return String(
+                localized: "Unexpected version string \"\(versionString)\" encountered reading profile",
                 comment: "UserProfileService error description"
             )
         case .failedToDeserializeProfile(let error, let data):
@@ -67,6 +73,13 @@ struct UserProfileContentResponse: Equatable, Hashable {
 
 struct UserProfileEntry: Codable, Equatable {
     static let currentVersion = "0.0"
+    
+    init(nickname: String?, bio: String?, profilePictureUrl: String?) {
+        self.version = Self.currentVersion
+        self.nickname = nickname
+        self.bio = bio
+        self.profilePictureUrl = profilePictureUrl
+    }
     
     let version: String
     let nickname: String?
@@ -128,7 +141,13 @@ actor UserProfileService {
             }
             
             do {
-                return try jsonDecoder.decode(UserProfileEntry.self, from: data.body)
+                let profile = try jsonDecoder.decode(UserProfileEntry.self, from: data.body)
+                
+                guard profile.version == UserProfileEntry.currentVersion else {
+                    throw UserProfileServiceError.unexpectedProfileSchemaVersion(profile.version)
+                }
+                
+                return profile
             } catch {
                 // catch errors so we can give more context if there was a formatting error
                 guard let string = String(data: data.body, encoding: .utf8) else {
