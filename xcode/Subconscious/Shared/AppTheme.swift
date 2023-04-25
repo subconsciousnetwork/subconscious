@@ -122,21 +122,39 @@ extension Color {
     static let brandBgBlack = Color(red: 35/255, green: 31/255, blue: 32/255, opacity: 1) // #231F20
     static let brandBgSlate = Color(red: 57/255, green: 50/255, blue: 84/255, opacity: 1) // #393254
     
-    // Eyeballed to match brandmark
-    static let brandDarkMarkGradient = [
-        Gradient.Stop(color: Color.brandMarkPink, location: 0),
-        Gradient.Stop(color: Color.brandMarkViolet, location: 0.50),
-        Gradient.Stop(color: Color.brandMarkViolet, location: 0.60),
-        Gradient.Stop(color: Color.brandMarkCyan, location: 0.95)
+    static let brandColorTrios = [
+        (Color.brandMarkPink, Color.brandMarkViolet, Color.brandMarkCyan),
+        (Color.brandMarkRed, Color.brandMarkPurple, Color.brandMarkViolet),
+        (Color.brandBgBlush, Color.brandMarkPurple, Color.brandMarkCyan),
+        (Color.brandMarkRed, Color.brandMarkViolet, Color.brandMarkCyan),
+        (Color.brandMarkRed, Color.brandMarkPurple, Color.brandMarkPink),
+        (Color.yellow, Color.orange, Color.brandMarkRed),
+        (Color.brandMarkPink, Color(red: 0.25, green: 0.478, blue: 1, opacity: 1), Color.brandMarkRed),
+        (Color.white, Color.brandBgBlush, Color.brandMarkPink),
+        (Color.brandMarkPink, Color(red: 0.25, green: 0.478, blue: 1, opacity: 1), Color.brandMarkCyan),
+        (Color.brandMarkCyan, Color(red: 0.25, green: 0.478, blue: 1, opacity: 1), Color.orange)
     ]
     
-    // Eyeballed to match brandmark
-    static let brandLightMarkGradient = [
-        Gradient.Stop(color: Color.brandMarkRed, location: 0),
-        Gradient.Stop(color: Color.brandMarkPurple, location: 0.50),
-        Gradient.Stop(color: Color.brandMarkPurple, location: 0.60),
-        Gradient.Stop(color: Color.brandMarkCyan, location: 0.95)
-    ]
+    static func brandGradient(a: Color, b: Color, c: Color) -> [Gradient.Stop] {
+        [
+            Gradient.Stop(color: a, location: 0),
+            Gradient.Stop(color: b, location: 0.50),
+            Gradient.Stop(color: b, location: 0.60),
+            Gradient.Stop(color: c, location: 0.95)
+        ]
+    }
+    
+    static let brandDarkMarkGradient = brandGradient(
+        a: Color.brandMarkPink,
+        b: Color.brandMarkViolet,
+        c: Color.brandMarkCyan
+    )
+    
+    static let brandLightMarkGradient = brandGradient(
+        a: Color.brandMarkRed,
+        b: Color.brandMarkPurple,
+        c: Color.brandMarkCyan
+    )
     
     static func brandGradient(_ colorScheme: ColorScheme) -> [Gradient.Stop] {
         colorScheme == .dark ? Color.brandDarkMarkGradient : Color.brandLightMarkGradient
