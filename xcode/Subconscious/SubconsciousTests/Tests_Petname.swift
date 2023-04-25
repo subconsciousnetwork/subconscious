@@ -22,6 +22,7 @@ class Tests_Petname: XCTestCase {
     }
     
     func testNotValid() throws {
+        XCTAssertNil(Petname(""))
         XCTAssertNil(Petname("@invalid-petname"))
         XCTAssertNil(Petname("invalid petname"))
         XCTAssertNil(Petname(" invalid-petname"))
