@@ -74,8 +74,7 @@ private struct PfpUrlFieldCursor: CursorProtocol {
     }
 }
 
-struct EditProfileSheetEnvironment {
-}
+typealias EditProfileSheetEnvironment = Void
 
 struct EditProfileSheetModel: ModelProtocol {
     typealias Action = EditProfileSheetAction
