@@ -79,6 +79,7 @@ struct FollowUserView: View {
     }
     
     var body: some View {
+        NavigationStack {
             VStack {
                 Form {
                     FollowUserFormView(
@@ -142,6 +143,7 @@ struct FollowUserView: View {
                     errorMessage: state.failQRCodeScanErrorMessage
                 )
             }
+        }
     }
 }
 
