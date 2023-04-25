@@ -18,7 +18,7 @@ extension AppIcon {
     var systemName: String {
         switch (self) {
         case .you:
-            return "face.smiling.inverse"
+            return "face.smiling"
         case .following:
             return "person.fill.checkmark"
         case .edit:
