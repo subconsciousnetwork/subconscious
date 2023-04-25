@@ -369,7 +369,10 @@ actor DataService {
     
     nonisolated func listRecentMemosPublisher() -> AnyPublisher<[EntryStub], Error> {
         Future.detached {
-            try await self.database.listRecentMemos()
+            let recent = try await self.database.listRecentMemos()
+            return recent.filter { entry in
+                entry.address.slug.isListable
+            }
         }
         .eraseToAnyPublisher()
     }
