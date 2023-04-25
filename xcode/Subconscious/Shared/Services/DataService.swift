@@ -78,7 +78,6 @@ actor DataService {
         // Instead, we return the receipt so that mnemonic can be displayed
         // and discarded.
         AppDefaults.standard.sphereIdentity = sphereReceipt.identity
-        AppDefaults.standard.ownerKeyName = ownerKeyName
         // Set sphere identity on NoosphereService
         await noosphere.resetSphere(sphereReceipt.identity)
         return sphereReceipt

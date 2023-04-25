@@ -120,7 +120,7 @@ enum AppAction: CustomLogStringConvertible {
     case succeedResetGatewayURL(_ url: URL)
 
     /// Create a new sphere given an owner key name
-    case createSphere(_ ownerKeyName: String?)
+    case createSphere
     case succeedCreateSphere(SphereReceipt)
     case failCreateSphere(_ message: String)
 
@@ -448,11 +448,10 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 url: url
             )
-        case let .createSphere(ownerKeyName):
+        case .createSphere:
             return createSphere(
                 state: state,
-                environment: environment,
-                ownerKeyName: ownerKeyName
+                environment: environment
             )
         case let .succeedCreateSphere(receipt):
             return succeedCreateSphere(
@@ -775,10 +774,11 @@ struct AppModel: ModelProtocol {
 
     static func createSphere(
         state: AppModel,
-        environment: AppEnvironment,
-        ownerKeyName: String?
+        environment: AppEnvironment
     ) -> Update<AppModel> {
-        let ownerKeyName = ownerKeyName ?? Config.default.noosphere.ownerKeyName
+        // We always use the default owner key name for the user's default
+        // sphere.
+        let ownerKeyName = Config.default.noosphere.ownerKeyName
 
         let fx: Fx<AppAction> = Future.detached {
             let receipt = try await environment.data.createSphere(
