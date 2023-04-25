@@ -17,7 +17,6 @@ struct SlashlinkBylineView: View {
         HStack(spacing: 0) {
             if let petname = slashlink.petname {
                 PetnameBylineView(petname: petname)
-                    .theme(petname: petnameColor)
             }
             Text(verbatim: slashlink.slug.verbatimMarkup)
                 .foregroundColor(slugColor)
