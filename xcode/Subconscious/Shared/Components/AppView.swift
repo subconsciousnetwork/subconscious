@@ -332,7 +332,7 @@ struct AppModel: ModelProtocol {
 
     var nickname = AppDefaults.standard.nickname
     var nicknameTextField = AppDefaults.standard.nickname ?? ""
-    var isNicknameTextFieldValid = true
+    var isNicknameTextFieldValid = false
 
     /// Default sphere identity
     var sphereIdentity = AppDefaults.standard.sphereIdentity
