@@ -93,6 +93,8 @@ struct AppView: View {
     }
 }
 
+typealias NicknameFormField = FormField<String, Petname>
+
 //  MARK: Action
 enum AppAction: CustomLogStringConvertible {
     /// Sent immediately upon store creation
@@ -101,6 +103,7 @@ enum AppAction: CustomLogStringConvertible {
     case recoveryPhrase(RecoveryPhraseAction)
     case addressBook(AddressBookAction)
     case appUpgrade(AppUpgradeAction)
+    case nicknameFormField(NicknameFormField.Action)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -112,7 +115,7 @@ enum AppAction: CustomLogStringConvertible {
     case setAppUpgraded(_ isUpgraded: Bool)
 
     /// Set sphere/user nickname
-    case setNicknameTextField(_ nickname: String)
+    case persistNicknameFormField(_ nickname: String)
 
     /// Set gateway URL
     case setGatewayURLTextField(_ gateway: String)
@@ -281,6 +284,30 @@ struct AppUpgradeCursor: CursorProtocol {
     }
 }
 
+struct NicknameFormFieldCursor: CursorProtocol {
+    typealias Model = AppModel
+    typealias ViewModel = NicknameFormField
+    
+    static func get(state: Model) -> ViewModel {
+        state.nicknameFormField
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.nicknameFormField = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        case .setValue(let input):
+            return .persistNicknameFormField(input)
+        default:
+            return .nicknameFormField(action)
+        }
+    }
+}
+
 enum AppDatabaseState {
     case initial
     case migrating
@@ -331,8 +358,10 @@ struct AppModel: ModelProtocol {
     }
 
     var nickname = AppDefaults.standard.nickname
-    var nicknameTextField = AppDefaults.standard.nickname ?? ""
-    var isNicknameTextFieldValid = false
+    var nicknameFormField = NicknameFormField(
+        value: AppDefaults.standard.nickname ?? "",
+        validate: { value in Petname(value) }
+    )
 
     /// Default sphere identity
     var sphereIdentity = AppDefaults.standard.sphereIdentity
@@ -407,6 +436,12 @@ struct AppModel: ModelProtocol {
                 action: action,
                 environment: ()
             )
+        case .nicknameFormField(let action):
+            return NicknameFormFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
         case .scenePhaseChange(let scenePhase):
             return scenePhaseChange(
                 state: state,
@@ -424,8 +459,8 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 isUpgraded: isUpgraded
             )
-        case let .setNicknameTextField(nickname):
-            return setNicknameTextField(
+        case let .persistNicknameFormField(nickname):
+            return persistNicknameFormField(
                 state: state,
                 environment: environment,
                 text: nickname
@@ -684,31 +719,20 @@ struct AppModel: ModelProtocol {
         return Update(state: model).animation(.default)
     }
     
-    static func setNicknameTextField(
+    static func persistNicknameFormField(
         state: AppModel,
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
-        guard let petname = Petname(formatting: text) else {
-            var model = state
-            model.nicknameTextField = text
-            model.isNicknameTextFieldValid = false
-            return Update(state: model)
+        if let validated = state.nicknameFormField.validated {
+            AppDefaults.standard.nickname = validated.description
+            logger.log("Nickname saved: \(validated)")
         }
-        guard petname.description == text else {
-            var model = state
-            model.nicknameTextField = text
-            model.isNicknameTextFieldValid = false
-            return Update(state: model)
-        }
-        logger.log("Nickname saved: \(petname.description)")
-        var model = state
-        model.nicknameTextField = text
-        model.nickname = petname.description
-        // Persist
-        AppDefaults.standard.nickname = petname.description
-        model.isNicknameTextFieldValid = true
-        return Update(state: model)
+        return update(
+            state: state,
+            action: .nicknameFormField(.setValue(input: text)),
+            environment: environment
+        )
     }
     
     static func setGatewayURLTextField(
