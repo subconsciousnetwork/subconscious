@@ -703,11 +703,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
             ns_string_array_free(slugs)
         }
         
-        return try slugs.toStringArray().compactMap({ string in
-            guard !string.hasPrefix("_") else {
-                return nil
-            }
-            
+        return try slugs.toStringArray().map({ string in
             return try Slug(string).unwrap(SphereError.parseError(string))
         })
     }

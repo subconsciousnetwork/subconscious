@@ -182,6 +182,10 @@ actor UserProfileService {
         var entries: [EntryStub] = []
         
         for slug in notes {
+            guard slug.isListable else {
+                continue
+            }
+            
             let slashlink = Slashlink(slug: slug)
             let memo = try await noosphere.read(slashlink: slashlink)
             
