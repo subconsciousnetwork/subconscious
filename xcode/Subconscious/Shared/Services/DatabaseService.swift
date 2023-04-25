@@ -25,7 +25,6 @@ struct DatabaseMigrationInfo: Hashable {
 enum DatabaseMetaKeys: String {
     case sphereIdentity = "sphere_identity"
     case sphereVersion = "sphere_version"
-    case ownerKeyName = "owner_key_name"
 }
 
 enum DatabaseServiceError: Error, LocalizedError {
