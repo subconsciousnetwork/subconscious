@@ -177,11 +177,12 @@ struct MemoViewerDetailLoadedView: View {
                 VStack {
                     VStack {
                         SubtextView(subtext: dom)
-                            .frame(
-                                minHeight: UIFont.appTextMono.lineHeight * 8
-                            )
+                        Spacer()
                     }
                     .padding()
+                    .frame(
+                        minHeight: UIFont.appTextMono.lineHeight * 8
+                    )
                     ThickDividerView()
                         .padding(.bottom, AppTheme.unit4)
                     BacklinksView(

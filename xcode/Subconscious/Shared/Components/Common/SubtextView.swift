@@ -17,6 +17,7 @@ struct SubtextView: View {
                 Text(Self.renderer.render(block.description))
             }
         }
+        .expandAlignedLeading()
     }
 }
 
