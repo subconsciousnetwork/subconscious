@@ -108,28 +108,17 @@ struct UserProfileView: View {
                 Text("Not found")
             }
         }
-        .navigationTitle(state.user?.petname.verbatim ?? "")
+        .navigationTitle(state.user?.nickname.verbatim ?? "")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             if let user = state.user {
-                switch (user.category) {
-                case .human, .geist:
-                    DetailToolbarContent(
-                        address: Slashlink(petname: user.petname).toPublicMemoAddress(),
-                        defaultAudience: .public,
-                        onTapOmnibox: {
-                            send(.presentMetaSheet(true))
-                        }
-                    )
-                case .you:
-                    DetailToolbarContent(
-                        address: Slashlink.ourProfile.toPublicMemoAddress(),
-                        defaultAudience: .public,
-                        onTapOmnibox: {
-                            send(.presentMetaSheet(true))
-                        }
-                    )
-                }
+                DetailToolbarContent(
+                    address: user.address,
+                    defaultAudience: .public,
+                    onTapOmnibox: {
+                        send(.presentMetaSheet(true))
+                    }
+                )
             } else {
                 DetailToolbarContent(
                     defaultAudience: .public,
@@ -264,7 +253,7 @@ private struct UnfollowModifier: ViewModifier {
               )
       ) {
           Button(
-              "Unfollow \(state.user?.petname.markup ?? "user")?",
+              "Unfollow \(state.user?.nickname.markup ?? "user")?",
               role: .destructive
           ) {
               send(.attemptUnfollow)

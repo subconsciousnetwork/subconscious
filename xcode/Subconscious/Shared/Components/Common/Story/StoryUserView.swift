@@ -20,8 +20,7 @@ struct StoryUserView: View {
         Button(
             action: {
                 action(
-                    Slashlink(petname: story.user.petname)
-                        .toPublicMemoAddress(),
+                    story.user.address,
                     story.user.bio
                 )
             }
@@ -29,7 +28,7 @@ struct StoryUserView: View {
             VStack(alignment: .leading, spacing: AppTheme.unit3) {
                 HStack(alignment: .center, spacing: AppTheme.unit2) {
                     ProfilePicSm(pfp: story.user.pfp)
-                    PetnameBylineView(petname: story.user.petname)
+                    PetnameBylineView(petname: story.user.nickname)
                     
                     Spacer()
                     
@@ -62,8 +61,7 @@ struct StoryUserView_Previews: PreviewProvider {
                 story: StoryUser(
                     user: UserProfile(
                         did: Did("did:key:123")!,
-                        petname: Petname("ben.gordon.chris.bob")!,
-                        preferredPetname: nil,
+                        nickname: Petname("ben.gordon.chris.bob")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
                         pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
@@ -77,8 +75,7 @@ struct StoryUserView_Previews: PreviewProvider {
                 story: StoryUser(
                     user: UserProfile(
                         did: Did("did:key:123")!,
-                        petname: Petname("ben.gordon.chris.bob")!,
-                        preferredPetname: nil,
+                        nickname: Petname("ben.gordon.chris.bob")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
                         pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
@@ -92,8 +89,7 @@ struct StoryUserView_Previews: PreviewProvider {
                 story: StoryUser(
                     user: UserProfile(
                         did: Did("did:key:123")!,
-                        petname: Petname("ben.gordon.chris.bob")!,
-                        preferredPetname: nil,
+                        nickname: Petname("ben.gordon.chris.bob")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
                         pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",

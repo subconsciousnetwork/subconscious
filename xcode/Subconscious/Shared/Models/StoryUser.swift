@@ -22,7 +22,7 @@ struct StoryUser:
 
     var description: String {
         """
-        \(String(describing: user.petname))
+        \(String(describing: user.nickname))
         Following? \(isFollowingUser)
         
         \(user.bio)

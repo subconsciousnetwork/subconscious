@@ -45,8 +45,8 @@ struct FollowUserSheetModel: ModelProtocol {
                 state: state,
                 actions: [
                     .followUserForm(.didField(.setValue(input: user.did.did))),
-                    .followUserForm(.petnameField(.setValue(input: user.petname.verbatim))),
-                    .fetchPetnameCollisionStatus(user.petname)
+                    .followUserForm(.petnameField(.setValue(input: user.nickname.verbatim))),
+                    .fetchPetnameCollisionStatus(user.nickname)
                 ],
                 environment: environment
             )

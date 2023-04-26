@@ -77,7 +77,7 @@ struct UserProfileDetailMetaSheet: View {
         .presentationDragIndicator(.hidden)
         .presentationDetents([.medium])
         .confirmationDialog(
-            "Are you sure you want to unfollow \(profile.user?.petname.verbatim ?? "unknown")",
+            "Are you sure you want to unfollow \(profile.user?.nickname.verbatim ?? "unknown")",
             isPresented: Binding(
                 get: { state.isDeleteConfirmationDialogPresented },
                 send: send,
@@ -88,14 +88,14 @@ struct UserProfileDetailMetaSheet: View {
             Button(
                 role: .destructive,
                 action: {
-                    guard let petname = profile.user?.petname else {
+                    guard let did = profile.user?.did else {
                         return
                     }
                     
-                    send(.requestUnfollow(petname: petname))
+                    send(.requestUnfollow(did: did))
                 }
             ) {
-                Text("Unfollow @\(profile.user?.petname.verbatim ?? "unknown")")
+                Text("Unfollow @\(profile.user?.nickname.verbatim ?? "unknown")")
             }
         }
     }
@@ -134,7 +134,7 @@ enum UserProfileDetailMetaSheetAction: Hashable {
     case requestFollow(did: Did)
     /// Request to unfollow this user
     /// Should be handled by parent component.
-    case requestUnfollow(petname: Petname)
+    case requestUnfollow(did: Did)
     
     case presentDetailsTable(Bool)
 }

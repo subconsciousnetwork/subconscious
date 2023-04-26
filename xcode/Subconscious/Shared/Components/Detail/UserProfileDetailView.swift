@@ -109,7 +109,7 @@ enum UserProfileDetailAction {
     case attemptUnfollow
     case failUnfollow(error: String)
     case dismissFailUnfollowError
-    case succeedUnfollow(did: Did, petname: Petname)
+    case succeedUnfollow(did: Did)
     
     case requestEditProfile
     case failEditProfile(error: String)
@@ -131,8 +131,7 @@ enum UserCategory: Equatable, Codable, Hashable, CaseIterable {
 
 struct UserProfile: Equatable, Codable, Hashable {
     let did: Did
-    let petname: Petname
-    let preferredPetname: String?
+    let nickname: Petname
     let address: MemoAddress
     let pfp: ProfilePicVariant
     let bio: String
@@ -353,7 +352,7 @@ struct UserProfileDetailModel: ModelProtocol {
             return update(state: state, action: .presentUnfollowConfirmation(true), environment: environment)
             
         case .attemptUnfollow:
-            guard let petname = state.user?.petname, let did = state.user?.did else {
+            guard let did = state.user?.did else {
                 return Update(state: state)
             }
             
@@ -361,18 +360,16 @@ struct UserProfileDetailModel: ModelProtocol {
             environment.addressBook
                 .unfollowUserPublisher(did: did)
                 .map({ _ in
-                        .succeedUnfollow(did: did, petname: petname)
+                    .succeedUnfollow(did: did)
                 })
-                .catch({ error in
-                    Just(
-                        .failUnfollow(error: error.localizedDescription)
-                    )
+                .recover({ error in
+                    .failUnfollow(error: error.localizedDescription)
                 })
                 .eraseToAnyPublisher()
             
             return Update(state: state, fx: fx)
             
-        case .succeedUnfollow(let did, _):
+        case .succeedUnfollow(let did):
             return update(
                 state: state,
                 actions: [
@@ -407,7 +404,7 @@ struct UserProfileDetailModel: ModelProtocol {
             }
             
             let profile = UserProfileEntry(
-                nickname: state.user?.preferredPetname,
+                nickname: state.user?.nickname.verbatim,
                 bio: state.user?.bio,
                 profilePictureUrl: pfp?.absoluteString
             )

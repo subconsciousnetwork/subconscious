@@ -26,7 +26,7 @@ struct UserProfileHeaderView: View {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
                 ProfilePic(pfp: user.pfp)
             
-                PetnameBylineView(petname: Petname(user.preferredPetname ?? "") ?? user.petname)
+                PetnameBylineView(petname: user.nickname)
                 
                 Spacer()
                 
@@ -82,8 +82,7 @@ struct BylineLgView_Previews: PreviewProvider {
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
-                    petname: Petname("ben")!,
-                    preferredPetname: nil,
+                    nickname: Petname("ben")!,
                     address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress(),
                     pfp: .image("pfp-dog"),
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
@@ -94,8 +93,7 @@ struct BylineLgView_Previews: PreviewProvider {
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
-                    petname: Petname("ben")!,
-                    preferredPetname: nil,
+                    nickname: Petname("ben")!,
                     address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress(),
                     pfp: .image("pfp-dog"),
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
@@ -107,8 +105,7 @@ struct BylineLgView_Previews: PreviewProvider {
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
-                    petname: Petname("ben")!,
-                    preferredPetname: nil,
+                    nickname: Petname("ben")!,
                     address: Slashlink.ourProfile.toLocalMemoAddress(),
                     pfp: .image("pfp-dog"),
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",

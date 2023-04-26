@@ -212,7 +212,7 @@ struct EditProfileSheet: View {
                         }
                     }
                     
-                    if let petname = state.nicknameField.validated {
+                    if let nickname = state.nicknameField.validated {
                         let pfp: ProfilePicVariant = Func.run {
                             if let url = state.pfpUrlField.validated {
                                 return .url(url)
@@ -223,8 +223,7 @@ struct EditProfileSheet: View {
                         
                         let user = UserProfile(
                             did: user.did,
-                            petname: petname,
-                            preferredPetname: state.nicknameField.value,
+                            nickname: nickname,
                             address: user.address,
                             pfp: pfp,
                             bio: state.bioField.validated ?? "",

@@ -116,31 +116,13 @@ actor UserProfileService {
         self.jsonEncoder.outputFormatting = .sortedKeys
     }
     
-    func writeOurProfile(profile: UserProfileEntry) async throws {
-        let data = try self.jsonEncoder.encode(profile)
-        
-        try await self.noosphere.write(
-            slug: Slug.profile,
-            contentType: Self.profileContentType,
-            additionalHeaders: [],
-            body: data
-        )
-        
-        let _ = try await self.noosphere.save()
-        
-        do {
-            _ = try await self.noosphere.sync()
-        } catch {
-            // Swallow this error in the event syncing fails
-            // Editing the profile still succeeded
-            logger.warning("Failed to sync after updating profile: \(error.localizedDescription)")
-        }
-    }
     
     /// Attempt to read & deserialize a user `_profile_.json` at the given address.
     /// Because profile data is optional and we expect it will not always be present
     /// any errors are logged & handled and nil will be returned if reading fails.
-    func readProfile(address: MemoAddress) async -> UserProfileEntry? {
+    private func readProfileMemo(
+        address: MemoAddress
+    ) async -> UserProfileEntry? {
         do {
             let data = try await noosphere.read(slashlink: address.toSlashlink())
             
@@ -172,51 +154,13 @@ actor UserProfileService {
         }
     }
     
-    /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
-    func requestOwnProfile() async throws -> UserProfileContentResponse {
-        guard let nickname = AppDefaults.standard.nickname,
-              let nickname = Petname(nickname) else {
-                  throw UserProfileServiceError.missingPreferredPetname
-        }
-        
-        let did = try await self.noosphere.identity()
-        let following = try await self.getFollowingList(
-            sphere: self.noosphere,
-            localAddressBook: AddressBook(sphere: self.noosphere),
-            address: Slashlink.ourProfile.toPublicMemoAddress()
-        )
-        let notes = try await self.noosphere.list()
-        
-        var entries: [EntryStub] = []
-        
-        for slug in notes {
-            guard !slug.isHidden else {
-                continue
-            }
-            
-            let slashlink = Slashlink(slug: slug)
-            let memo = try await noosphere.read(slashlink: slashlink)
-            
-            guard let memo = memo.toMemo() else {
-                continue
-            }
-
-            entries.append(
-                EntryStub(
-                    address: Slashlink(slug: slug).toPublicMemoAddress(),
-                    excerpt: memo.excerpt(),
-                    modified: memo.modified
-                )
-            )
-        }
-        
-        guard let did = Did(did) else {
-            throw UserProfileServiceError.invalidSphereIdentity
-        }
-        
-        let address = Slashlink.ourProfile.toPublicMemoAddress()
-        let userProfileData = await readProfile(address: address)
-        
+    /// Load the underlying `_profile_` for a user and construct a `UserProfile` from it.
+    private func loadProfile(
+        did: Did,
+        petname: Petname,
+        address: MemoAddress
+    ) async throws -> UserProfile {
+        let userProfileData = await self.readProfileMemo(address: address)
         let pfp: ProfilePicVariant = Func.run {
             if let url = URL(string: userProfileData?.profilePictureUrl ?? "") {
                 return .url(url)
@@ -225,63 +169,30 @@ actor UserProfileService {
             return .none
         }
         
-        
         let profile = UserProfile(
             did: did,
-            petname: Petname(userProfileData?.nickname ?? "") ?? nickname,
-            preferredPetname: userProfileData?.nickname,
+            nickname: Petname(userProfileData?.nickname ?? "") ?? petname,
             address: address,
             pfp: pfp,
             bio: userProfileData?.bio ?? "",
             category: .you
         )
         
-        return UserProfileContentResponse(
-            profile: profile,
-            statistics: UserProfileStatistics(
-                noteCount: entries.count,
-                backlinkCount: -1, // TODO: populate with real count
-                followingCount: following.count
-            ),
-            following: following,
-            entries: entries,
-            isFollowingUser: false
-        )
+        return profile
     }
     
-    nonisolated func requestOwnProfilePublisher() -> AnyPublisher<UserProfileContentResponse, Error> {
-        Future.detached {
-            try await self.requestOwnProfile()
-        }
-        .eraseToAnyPublisher()
-    }
-    
-    /// Retrieve all the content for the passed user's profile view, fetching their profile, notes and address book.
-    func requestUserProfile(petname: Petname) async throws -> UserProfileContentResponse {
-        let sphere = try await self.noosphere.traverse(petname: petname)
-        let identity = try await sphere.identity()
-        let localAddressBook = AddressBook(sphere: sphere)
-        let following: [StoryUser] = try await self.getFollowingList(
-            sphere: sphere,
-            localAddressBook: localAddressBook,
-            address: Slashlink(petname: petname).toPublicMemoAddress()
-        )
-        
-        // Detect your own profile and intercept
-        guard try await self.noosphere.identity() != identity else {
-            return try await requestOwnProfile()
-        }
-        
-        guard let did = Did(identity) else {
-            throw UserProfileServiceError.invalidSphereIdentity
-        }
-        
-        let notes = try await sphere.list()
-        let isFollowing = await self.addressBook.isFollowingUser(did: did)
-        
+    /// Takes a list of slugs and prepares an `EntryStub` for each, excluding hidden slugs.
+    private func loadEntries<Sphere: SphereProtocol>(
+        petname: Petname?,
+        slugs: [Slug],
+        sphere: Sphere
+    ) async throws -> [EntryStub] {
         var entries: [EntryStub] = []
-        
-        for slug in notes {
+        for slug in slugs {
+            guard !slug.isHidden else {
+                continue
+            }
+            
             let slashlink = Slashlink(slug: slug)
             let memo = try await sphere.read(slashlink: slashlink)
             
@@ -298,47 +209,7 @@ actor UserProfileService {
             )
         }
         
-        let address = Slashlink(petname: petname).toPublicMemoAddress()
-        let userProfileData = await readProfile(address: address)
-        
-        let pfp: ProfilePicVariant = Func.run {
-            if let url = URL(string: userProfileData?.profilePictureUrl ?? "") {
-                return .url(url)
-            }
-            
-            return .none
-        }
-        
-        let profile = UserProfile(
-            did: did,
-            petname: petname,
-            preferredPetname: userProfileData?.nickname,
-            address: address,
-            pfp: pfp,
-            bio: userProfileData?.bio ?? "",
-            category: .human
-        )
-        
-        return UserProfileContentResponse(
-            profile: profile,
-            statistics: UserProfileStatistics(
-                noteCount: entries.count,
-                backlinkCount: -1, // TODO: populate with real count
-                followingCount: following.count
-            ),
-            following: following,
-            entries: entries,
-            isFollowingUser: isFollowing
-        )
-    }
-    
-    nonisolated func requestUserProfilePublisher(
-        petname: Petname
-    ) -> AnyPublisher<UserProfileContentResponse, Error> {
-        Future.detached {
-            try await self.requestUserProfile(petname: petname)
-        }
-        .eraseToAnyPublisher()
+        return entries
     }
     
     /// List all the users followed by the passed sphere.
@@ -363,24 +234,11 @@ actor UserProfileService {
                 isOurs
                 ? Slashlink.ourProfile.toPublicMemoAddress()
                 : Slashlink(petname: petname).toPublicMemoAddress()
-            let userProfileData = await readProfile(address: address)
             
-            let pfp: ProfilePicVariant = Func.run {
-                if let url = URL(string: userProfileData?.profilePictureUrl ?? "") {
-                    return .url(url)
-                }
-                
-                return .none
-            }
-            
-            let user = UserProfile(
+            let user = try await self.loadProfile(
                 did: did,
                 petname: petname,
-                preferredPetname: userProfileData?.nickname,
-                address: address,
-                pfp: pfp,
-                bio: userProfileData?.bio ?? "",
-                category: isOurs ? .you : .human
+                address: address
             )
             
             let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: did)
@@ -395,4 +253,140 @@ actor UserProfileService {
         
         return following
     }
+    
+    /// Update our `_profile_` memo with the contents of the passed profile.
+    /// This will save the underlying sphere and attempt to sync.
+    func writeOurProfile(profile: UserProfileEntry) async throws {
+        let data = try self.jsonEncoder.encode(profile)
+        
+        try await self.noosphere.write(
+            slug: Slug.profile,
+            contentType: Self.profileContentType,
+            additionalHeaders: [],
+            body: data
+        )
+        
+        let _ = try await self.noosphere.save()
+        
+        do {
+            _ = try await self.noosphere.sync()
+        } catch {
+            // Swallow this error in the event syncing fails
+            // Editing the profile still succeeded
+            logger.warning("Failed to sync after updating profile: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
+    func requestOurProfile() async throws -> UserProfileContentResponse {
+        guard let nickname = AppDefaults.standard.nickname,
+              let nickname = Petname(nickname) else {
+                  throw UserProfileServiceError.missingPreferredPetname
+        }
+        
+        let address = Slashlink.ourProfile.toPublicMemoAddress()
+        let did = try await self.noosphere.identity()
+        let following = try await self.getFollowingList(
+            sphere: self.noosphere,
+            localAddressBook: AddressBook(sphere: self.noosphere),
+            address: address
+        )
+        let notes = try await self.noosphere.list()
+        let entries = try await self.loadEntries(
+            petname: nil,
+            slugs: notes,
+            sphere: self.noosphere
+        )
+        
+        guard let did = Did(did) else {
+            throw UserProfileServiceError.invalidSphereIdentity
+        }
+        
+        let profile = try await self.loadProfile(
+            did: did,
+            petname: nickname,
+            address: address
+        )
+        
+        return UserProfileContentResponse(
+            profile: profile,
+            statistics: UserProfileStatistics(
+                noteCount: entries.count,
+                backlinkCount: -1, // TODO: populate with real count
+                followingCount: following.count
+            ),
+            following: following,
+            entries: entries,
+            isFollowingUser: false
+        )
+    }
+    
+    nonisolated func requestOwnProfilePublisher(
+    ) -> AnyPublisher<UserProfileContentResponse, Error> {
+        Future.detached {
+            try await self.requestOurProfile()
+        }
+        .eraseToAnyPublisher()
+    }
+    
+    /// Retrieve all the content for the passed user's profile view, fetching their profile, notes and address book.
+    func requestUserProfile(
+        petname: Petname
+    ) async throws -> UserProfileContentResponse {
+        let address = Slashlink(petname: petname).toPublicMemoAddress()
+        
+        let sphere = try await self.noosphere.traverse(petname: petname)
+        let identity = try await sphere.identity()
+        let localAddressBook = AddressBook(sphere: sphere)
+        let following: [StoryUser] = try await self.getFollowingList(
+            sphere: sphere,
+            localAddressBook: localAddressBook,
+            address: address
+        )
+        
+        // Detect your own profile and intercept
+        guard try await self.noosphere.identity() != identity else {
+            return try await requestOurProfile()
+        }
+        
+        guard let did = Did(identity) else {
+            throw UserProfileServiceError.invalidSphereIdentity
+        }
+        
+        let notes = try await sphere.list()
+        let isFollowing = await self.addressBook.isFollowingUser(did: did)
+        let entries = try await self.loadEntries(
+            petname: petname,
+            slugs: notes,
+            sphere: sphere
+        )
+        
+        let profile = try await self.loadProfile(
+            did: did,
+            petname: petname,
+            address: address
+        )
+        
+        return UserProfileContentResponse(
+            profile: profile,
+            statistics: UserProfileStatistics(
+                noteCount: entries.count,
+                backlinkCount: -1, // TODO: populate with real count
+                followingCount: following.count
+            ),
+            following: following,
+            entries: entries,
+            isFollowingUser: isFollowing
+        )
+    }
+    
+    nonisolated func requestUserProfilePublisher(
+        petname: Petname
+    ) -> AnyPublisher<UserProfileContentResponse, Error> {
+        Future.detached {
+            try await self.requestUserProfile(petname: petname)
+        }
+        .eraseToAnyPublisher()
+    }
+   
 }
