@@ -704,7 +704,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         }
         
         return try slugs.toStringArray().map({ string in
-            return try Slug(string).unwrap(SphereError.parseError(string))
+            try Slug(string).unwrap(SphereError.parseError(string))
         })
     }
     
