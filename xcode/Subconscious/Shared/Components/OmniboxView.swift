@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct OmniboxView: View {
+    @Environment(\.colorScheme) var colorScheme
+    
     var address: MemoAddress?
     var defaultAudience: Audience
 
@@ -16,7 +18,7 @@ struct OmniboxView: View {
             return Image(audience: defaultAudience)
         }
         if address.isOurProfile {
-            return Image.from(appIcon: .you)
+            return Image.from(appIcon: .you(colorScheme))
         }
         if address.isProfile {
             return Image.from(appIcon: .user)

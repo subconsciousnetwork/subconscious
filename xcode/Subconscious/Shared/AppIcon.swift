@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum AppIcon {
-    case you
+    case you(ColorScheme)
     case following
     case edit
     case user
@@ -17,8 +17,8 @@ enum AppIcon {
 extension AppIcon {
     var systemName: String {
         switch (self) {
-        case .you:
-            return "face.smiling.inverse"
+        case .you(let colorScheme):
+            return colorScheme == .light ? "face.smiling" : "face.smiling.inverse"
         case .following:
             return "person.fill.checkmark"
         case .edit:
