@@ -78,7 +78,6 @@ actor DataService {
         // Instead, we return the receipt so that mnemonic can be displayed
         // and discarded.
         AppDefaults.standard.sphereIdentity = sphereReceipt.identity
-        AppDefaults.standard.ownerKeyName = ownerKeyName
         // Set sphere identity on NoosphereService
         await noosphere.resetSphere(sphereReceipt.identity)
         return sphereReceipt
@@ -482,8 +481,10 @@ actor DataService {
         _ text: String,
         audience: Audience
     ) async -> MemoAddress? {
+        let excerpt = Subtext.excerpt(markup: text, fallback: text)
+        
         // If we can't derive slug from text, exit early.
-        guard let slug = Slug(formatting: text) else {
+        guard let slug = Slug(formatting: excerpt) else {
             return nil
         }
         // If slug does not exist in any address space, return it.

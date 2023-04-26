@@ -15,9 +15,6 @@ struct AppDefaults {
     @UserDefaultsProperty(forKey: "isNoosphereEnabled")
     var isNoosphereEnabled = false
 
-    @UserDefaultsProperty(forKey: "ownerKeyName")
-    var ownerKeyName: String? = nil
-    
     /// The user/sphere nickname.
     @UserDefaultsProperty(forKey: "nickname")
     var nickname: String? = nil

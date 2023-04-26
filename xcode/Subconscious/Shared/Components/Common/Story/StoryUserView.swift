@@ -9,6 +9,8 @@ import SwiftUI
 
 /// Show a user card in a feed format
 struct StoryUserView: View {
+    @Environment(\.colorScheme) var colorScheme
+    
     var story: StoryUser
     var action: (MemoAddress, String) -> Void
     
@@ -42,7 +44,7 @@ struct StoryUserView: View {
                         Image.from(appIcon: .following)
                             .foregroundColor(.secondary)
                     case (_, .you):
-                        Image.from(appIcon: .you)
+                        Image.from(appIcon: .you(colorScheme))
                             .foregroundColor(.secondary)
                     case (_, _):
                         EmptyView()

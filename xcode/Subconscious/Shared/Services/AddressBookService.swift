@@ -256,7 +256,10 @@ actor AddressBookService {
     nonisolated func listEntriesPublisher(
         refetch: Bool = false
     ) -> AnyPublisher<[AddressBookEntry], Error> {
-        return self.listEntriesPublisher(refetch: refetch)
+        Future.detached {
+            try await self.addressBook.listEntries(refetch: refetch)
+        }
+        .eraseToAnyPublisher()    
     }
     
     /// Associates the passed DID with the passed petname within the sphere, clears the cache,
