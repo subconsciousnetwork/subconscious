@@ -11,7 +11,7 @@ import SwiftUI
 /// Used by `SubtextAttributedStringRenderer`.
 struct SubSlashlinkLink {
     static let schemeKey = "sub"
-    static let hostKey = "link"
+    static let hostKey = "slashlink"
     static let slashlinkKey = "slashlink"
     static let textKey = "text"
 
