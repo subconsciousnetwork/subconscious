@@ -19,7 +19,7 @@ class Tests_FormField: XCTestCase {
         return nil
     }
     
-    let environment = FormFieldEnvironment()
+    let environment: () = FormFieldEnvironment()
     
     func testDetectsFirstFocus() throws {
         let state = FormField(value: "", validate: Self.validateStringIsHello)

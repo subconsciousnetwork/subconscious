@@ -300,4 +300,50 @@ final class Tests_DataService: XCTestCase {
         let detail = await environment.data.readMemoDetail(address: addressA)
         XCTAssertNil(detail)
     }
+    
+    func testListRecentMemosExcludingHidden() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let environment = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        let memoA = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "Test content"
+        )
+        
+        let addressA = MemoAddress.public(Slashlink("/a")!)
+        try await environment.data.writeMemo(address: addressA, memo: memoA)
+        
+        let memoB = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "More content"
+        )
+        
+        let addressB = MemoAddress.public(Slashlink("/another/slug")!)
+        try await environment.data.writeMemo(address: addressB, memo: memoB)
+        
+        let memoC = Memo(
+            contentType: ContentType.subtext.rawValue,
+            created: Date.now,
+            modified: Date.now,
+            fileExtension: ContentType.subtext.fileExtension,
+            additionalHeaders: [],
+            body: "Even more content"
+        )
+        
+        let addressC = Slashlink.ourProfile.toPublicMemoAddress()
+        try await environment.data.writeMemo(address: addressC, memo: memoC)
+        
+        let list = try await environment.data.listRecentMemos()
+        
+        XCTAssertEqual(list.count, 2)
+        XCTAssertFalse(list.contains(where: { entry in entry.address.slug.isHidden }))
+    }
 }

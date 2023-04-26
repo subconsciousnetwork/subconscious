@@ -367,12 +367,16 @@ actor DataService {
         .eraseToAnyPublisher()
     }
     
+    func listRecentMemos() async throws -> [EntryStub] {
+        let recent = try self.database.listRecentMemos()
+        return recent.filter { entry in
+            !entry.address.slug.isHidden
+        }
+    }
+    
     nonisolated func listRecentMemosPublisher() -> AnyPublisher<[EntryStub], Error> {
         Future.detached {
-            let recent = try await self.database.listRecentMemos()
-            return recent.filter { entry in
-                !entry.address.slug.isHidden
-            }
+            return try await self.listRecentMemos()
         }
         .eraseToAnyPublisher()
     }

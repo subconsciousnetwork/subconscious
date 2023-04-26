@@ -30,8 +30,9 @@ struct TestUtilities {
         var noosphere: NoosphereService
         var local: HeaderSubtextMemoStore
         var addressBook: AddressBookService
+        var userProfile: UserProfileService
     }
-
+    
     /// Set up and return a data service instance
     static func createDataServiceEnvironment(
         tmp: URL
@@ -79,12 +80,19 @@ struct TestUtilities {
             local: local,
             addressBook: addressBook
         )
+        
+        let userProfile = UserProfileService(
+            noosphere: noosphere,
+            database: database,
+            addressBook: addressBook
+        )
 
         return DataServiceEnvironment(
             data: data,
             noosphere: noosphere,
             local: local,
-            addressBook: addressBook
+            addressBook: addressBook,
+            userProfile: userProfile
         )
     }
 }
