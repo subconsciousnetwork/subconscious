@@ -10,6 +10,11 @@ import SwiftUI
 /// A type that can be encoded and decoded to `sub://slashlink` URLs.
 /// Used by `SubtextAttributedStringRenderer`.
 struct SubSlashlinkLink {
+    static let schemeKey = "sub"
+    static let hostKey = "link"
+    static let slashlinkKey = "slashlink"
+    static let textKey = "text"
+
     /// Link address
     var slashlink: Slashlink
     /// Link text
@@ -24,19 +29,19 @@ struct SubSlashlinkLink {
     /// Create a Subconscious app-specific URL encoding entry title and slug
     func toURL() -> URL? {
         var components = URLComponents()
-        components.scheme = "https"
-        components.host = "link.subconscious.network"
+        components.scheme = Self.schemeKey
+        components.host = Self.hostKey
         var query: [URLQueryItem] = []
         query.append(
             URLQueryItem(
-                name: "slashlink",
+                name: Self.slashlinkKey,
                 value: slashlink.description
             )
         )
         if let text = text {
             query.append(
                 URLQueryItem(
-                    name: "text",
+                    name: Self.textKey,
                     value: text
                 )
             )
@@ -49,7 +54,10 @@ struct SubSlashlinkLink {
 extension URL {
     /// Convert to internal `sub://slashlink` URL.
     func toSubSlashlinkURL() -> SubSlashlinkLink? {
-        guard self.scheme == "https" && self.host == "link.subconscious.network" else {
+        guard
+            self.scheme == SubSlashlinkLink.schemeKey &&
+            self.host == SubSlashlinkLink.hostKey
+        else {
             return nil
         }
         guard let components = URLComponents(

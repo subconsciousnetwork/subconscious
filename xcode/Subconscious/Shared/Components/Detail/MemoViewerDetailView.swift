@@ -145,30 +145,17 @@ struct MemoViewerDetailLoadedView: View {
     
     private func onLink(
         url: URL
-    ) -> Bool {
-        guard let sub = url.toSubSlashlinkURL() else {
-            return true
+    ) -> OpenURLAction.Result {
+        guard let link = url.toSubSlashlinkURL() else {
+            return .systemAction
         }
-        
-        // Stitch the base address on to the tapped link
-        // this is needed in the viewer but not the editor
-        // because the editor is (currently) always pointed to
-        // our data.
-        let slashlink = Func.run {
-            guard let basePetname = address.petname else {
-                return sub.slashlink
-            }
-            
-            return sub.slashlink.relativeTo(petname: basePetname)
-        }
-        
         notify(
             .requestFindDetail(
-                slashlink: slashlink,
-                fallback: sub.fallback
+                slashlink: link.slashlink,
+                fallback: link.fallback
             )
         )
-        return false
+        return .handled
     }
 
     var body: some View {
@@ -176,7 +163,10 @@ struct MemoViewerDetailLoadedView: View {
             ScrollView {
                 VStack {
                     VStack {
-                        SubtextView(subtext: dom)
+                        SubtextView(subtext: dom).environment(
+                            \.openURL,
+                            OpenURLAction { url in self.onLink(url: url) }
+                        )
                         Spacer()
                     }
                     .padding()
@@ -225,6 +215,17 @@ enum MemoViewerDetailAction: Hashable {
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: MemoAddress) -> Self {
         .metaSheet(.setAddress(address))
+    }
+}
+
+extension MemoViewerDetailAction: CustomLogStringConvertible {
+    var logDescription: String {
+        switch self {
+        case .setDetail:
+            return "setDetail(...)"
+        default:
+            return String(describing: self)
+        }
     }
 }
 
