@@ -126,7 +126,15 @@ actor UserProfileService {
             body: data
         )
         
-        _ = try await self.noosphere.sync()
+        let _ = try await self.noosphere.save()
+        
+        do {
+            _ = try await self.noosphere.sync()
+        } catch {
+            // Swallow this error in the event syncing fails
+            // Editing the profile still succeeded
+            logger.warning("Failed to sync after updating profile: \(error.localizedDescription)")
+        }
     }
     
     /// Attempt to read & deserialize a user `_profile_.json` at the given address.
