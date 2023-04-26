@@ -47,10 +47,10 @@ final class Tests_App: XCTestCase {
         XCTAssertEqual(model.nicknameFormField.isValid, false, "Nickname form field is not valid to start")
         XCTAssertEqual(model.nicknameFormFieldValue, "", "Nickname form field is empty to start")
         XCTAssertEqual(model.isNicknameFormFieldValid, false, "Nickname form field is not valid to start")
-
+        
         let a = AppModel.update(
             state: model,
-            action: .setNicknameFormFieldValue("!INVALID"),
+            action: .setNickname("!INVALID"),
             environment: AppEnvironment()
         )
         XCTAssertEqual(a.state.nicknameFormField.value, "!INVALID", "Nickname form field is set")
@@ -58,10 +58,10 @@ final class Tests_App: XCTestCase {
         XCTAssertEqual(a.state.nicknameFormFieldValue, "!INVALID", "Nickname form field value set")
         XCTAssertEqual(a.state.isNicknameFormFieldValid, false, "Nickname form field is not valid")
         XCTAssertEqual(a.state.nickname, "", "Nickname is not saved, because form field value is not valid")
-
+        
         let b = AppModel.update(
             state: model,
-            action: .setNicknameFormFieldValue("valid"),
+            action: .setNickname("valid"),
             environment: AppEnvironment()
         )
         XCTAssertEqual(b.state.nicknameFormField.value, "valid", "Nickname form field is set")

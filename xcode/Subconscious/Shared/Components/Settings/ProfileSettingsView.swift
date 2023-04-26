@@ -19,7 +19,7 @@ struct ProfileSettingsView: View {
                     text: Binding(
                         get: { app.state.nicknameFormFieldValue },
                         send: app.send,
-                        tag: AppAction.setNicknameFormFieldValue
+                        tag: AppAction.setNickname
                     ),
                     caption: "Lowercase letters, numbers, and dashes only",
                     hasError: !app.state.isNicknameFormFieldValid
