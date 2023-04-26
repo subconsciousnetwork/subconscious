@@ -68,8 +68,8 @@ public struct Slug:
     }
     
     /// Excludes "internal" slugs like `Slug.profile`
-    public var isListable: Bool {
-        !verbatim.hasPrefix("_")
+    public var isHidden: Bool {
+        verbatim.hasPrefix("_")
     }
     
     /// Losslessly create a slug from a string.

@@ -371,7 +371,7 @@ actor DataService {
         Future.detached {
             let recent = try await self.database.listRecentMemos()
             return recent.filter { entry in
-                entry.address.slug.isListable
+                !entry.address.slug.isHidden
             }
         }
         .eraseToAnyPublisher()

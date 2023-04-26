@@ -190,7 +190,7 @@ actor UserProfileService {
         var entries: [EntryStub] = []
         
         for slug in notes {
-            guard slug.isListable else {
+            guard !slug.isHidden else {
                 continue
             }
             
