@@ -130,6 +130,7 @@ struct EditProfileSheet: View {
     var state: EditProfileSheetModel
     var send: (EditProfileSheetAction) -> Void
     var user: UserProfile
+    var statistics: UserProfileStatistics?
     var failEditProfileMessage: String?
     var onEditProfile: () -> Void
     var onCancel: () -> Void
@@ -139,75 +140,75 @@ struct EditProfileSheet: View {
         NavigationStack {
             VStack {
                 Form {
-                    HStack(alignment: .firstTextBaseline) {
-                        Image(systemName: "at")
-                            .foregroundColor(.accentColor)
-                        ValidatedTextField(
-                            placeholder: "nickname",
-                            text: Binding(
-                                get: { state.nicknameField.value },
-                                send: send,
-                                tag: { v in .nicknameField(.setValue(input: v))}
-                            ),
-                            onFocusChanged: { focused in
-                                send(.nicknameField(.focusChange(focused: focused)))
-                            },
-                            caption: "How you would like to be known",
-                            hasError: state.nicknameField.hasError
-                        )
-                        .formField()
-                        .lineLimit(1)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
+                    Section("Profile") {
+                        HStack(alignment: .firstTextBaseline) {
+                            Image(systemName: "at")
+                                .foregroundColor(.accentColor)
+                            ValidatedTextField(
+                                placeholder: "nickname",
+                                text: Binding(
+                                    get: { state.nicknameField.value },
+                                    send: send,
+                                    tag: { v in .nicknameField(.setValue(input: v))}
+                                ),
+                                onFocusChanged: { focused in
+                                    send(.nicknameField(.focusChange(focused: focused)))
+                                },
+                                caption: "How you would like to be known",
+                                hasError: state.nicknameField.hasError
+                            )
+                            .formField()
+                            .lineLimit(1)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                        }
+                        
+                        HStack(alignment: .firstTextBaseline) {
+                            Image(systemName: "photo")
+                                .foregroundColor(.accentColor)
+                            ValidatedTextField(
+                                placeholder: "http://example.org/pfp.jpg",
+                                text: Binding(
+                                    get: { state.pfpUrlField.value },
+                                    send: send,
+                                    tag: { v in .pfpUrlField(.setValue(input: v))}
+                                ),
+                                onFocusChanged: { focused in
+                                    send(.pfpUrlField(.focusChange(focused: focused)))
+                                },
+                                caption: "The image shown on your profile",
+                                hasError: !state.pfpUrlField.isValid && state.pfpUrlField.value.count > 0
+                            )
+                            .formField()
+                            .lineLimit(1)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                        }
+                        
+                        HStack(alignment: .top) {
+                            Image(systemName: "text.quote")
+                                .foregroundColor(.accentColor)
+                            ValidatedTextField(
+                                placeholder: "I am a...",
+                                text: Binding(
+                                    get: { state.bioField.value },
+                                    send: send,
+                                    tag: { v in .bioField(.setValue(input: v))}
+                                ),
+                                onFocusChanged: { focused in
+                                    send(.bioField(.focusChange(focused: focused)))
+                                },
+                                caption: "A short description of yourself (\(state.bioField.value.count)/280)",
+                                hasError: !state.bioField.isValid && state.bioField.value.count > 0,
+                                axis: .vertical
+                            )
+                            .formField()
+                            .lineLimit(3)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                        }
                     }
                     
-                    HStack(alignment: .firstTextBaseline) {
-                        Image(systemName: "photo")
-                            .foregroundColor(.accentColor)
-                        ValidatedTextField(
-                            placeholder: "http://example.org/pfp.jpg",
-                            text: Binding(
-                                get: { state.pfpUrlField.value },
-                                send: send,
-                                tag: { v in .pfpUrlField(.setValue(input: v))}
-                            ),
-                            onFocusChanged: { focused in
-                                send(.pfpUrlField(.focusChange(focused: focused)))
-                            },
-                            caption: "The image shown on your profile",
-                            hasError: !state.pfpUrlField.isValid && state.pfpUrlField.value.count > 0
-                        )
-                        .formField()
-                        .lineLimit(1)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
-                    }
-                    
-                    HStack(alignment: .top) {
-                        Image(systemName: "text.quote")
-                            .foregroundColor(.accentColor)
-                        ValidatedTextField(
-                            placeholder: "I am a...",
-                            text: Binding(
-                                get: { state.bioField.value },
-                                send: send,
-                                tag: { v in .bioField(.setValue(input: v))}
-                            ),
-                            onFocusChanged: { focused in
-                                send(.bioField(.focusChange(focused: focused)))
-                            },
-                            caption: "A short description of yourself (\(state.bioField.value.count)/280)",
-                            hasError: !state.bioField.isValid && state.bioField.value.count > 0,
-                            axis: .vertical
-                        )
-                        .formField()
-                        .lineLimit(3)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
-                    }
-                }
-                
-                VStack {
                     if let petname = state.nicknameField.validated {
                         let pfp: ProfilePicVariant = Func.run {
                             if let url = state.pfpUrlField.validated {
@@ -227,14 +228,16 @@ struct EditProfileSheet: View {
                             category: .you
                         )
                         
-                        let story = StoryUser(user: user, isFollowingUser: false)
-                        
-                        StoryUserView(story: story, action: { _, _ in })
+                        Section("Preview") {
+                            UserProfileHeaderView(
+                                user: user,
+                                statistics: statistics,
+                                isFollowingUser: false,
+                                hideActionButton: true
+                            )
+                        }
                     }
-                    
-                    Spacer()
                 }
-                .frame(maxHeight: .infinity)
             }
             .alert(
                 isPresented: Binding(

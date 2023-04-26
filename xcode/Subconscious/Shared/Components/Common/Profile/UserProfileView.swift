@@ -297,6 +297,7 @@ private struct EditProfileSheetModifier: ViewModifier {
                             tag: EditProfileSheetCursor.tag
                         ),
                         user: user,
+                        statistics: state.statistics,
                         failEditProfileMessage: state.failEditProfileMessage,
                         onEditProfile: {
                             send(.requestEditProfile)

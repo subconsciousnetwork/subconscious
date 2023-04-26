@@ -19,6 +19,7 @@ struct UserProfileHeaderView: View {
     
     var isFollowingUser: Bool
     var action: (UserProfileAction) -> Void = { _ in }
+    var hideActionButton: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
@@ -29,30 +30,32 @@ struct UserProfileHeaderView: View {
                 
                 Spacer()
                 
-                Button(
-                    action: {
-                        switch (user.category, isFollowingUser) {
-                        case (.you, _):
-                            action(.editOwnProfile)
-                        case (_, true):
-                            action(.requestUnfollow)
-                        case (_, false):
-                            action(.requestFollow)
+                if !hideActionButton {
+                    Button(
+                        action: {
+                            switch (user.category, isFollowingUser) {
+                            case (.you, _):
+                                action(.editOwnProfile)
+                            case (_, true):
+                                action(.requestUnfollow)
+                            case (_, false):
+                                action(.requestFollow)
+                            }
+                        },
+                        label: {
+                            switch (user.category, isFollowingUser) {
+                            case (.you, _):
+                                Label("Edit Profile", systemImage: AppIcon.edit.systemName)
+                            case (_, true):
+                                Label("Following", systemImage: AppIcon.following.systemName)
+                            case (_, false):
+                                Text("Follow")
+                            }
                         }
-                    },
-                    label: {
-                        switch (user.category, isFollowingUser) {
-                        case (.you, _):
-                            Label("Edit Profile", systemImage: AppIcon.edit.systemName)
-                        case (_, true):
-                            Label("Following", systemImage: AppIcon.following.systemName)
-                        case (_, false):
-                            Text("Follow")
-                        }
-                    }
-                )
-                .buttonStyle(GhostPillButtonStyle(size: .small))
-                .frame(maxWidth: 160)
+                    )
+                    .buttonStyle(GhostPillButtonStyle(size: .small))
+                    .frame(maxWidth: 160)
+                }
             }
             
             if let statistics = statistics {
@@ -66,7 +69,9 @@ struct UserProfileHeaderView: View {
                 .foregroundColor(.primary)
             }
             
-            Text(verbatim: user.bio)
+            if user.bio.count > 0 {
+                Text(verbatim: user.bio)
+            }
         }
     }
 }
