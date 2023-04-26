@@ -376,7 +376,7 @@ actor DataService {
     
     nonisolated func listRecentMemosPublisher() -> AnyPublisher<[EntryStub], Error> {
         Future.detached {
-            return try await self.listRecentMemos()
+            try await self.listRecentMemos()
         }
         .eraseToAnyPublisher()
     }
