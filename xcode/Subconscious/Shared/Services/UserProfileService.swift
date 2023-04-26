@@ -175,7 +175,7 @@ actor UserProfileService {
             address: address,
             pfp: pfp,
             bio: userProfileData?.bio ?? "",
-            category: .you
+            category: address.isOurProfile ? .you : .human
         )
         
         return profile
