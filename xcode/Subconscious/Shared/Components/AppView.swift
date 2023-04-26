@@ -115,7 +115,8 @@ enum AppAction: CustomLogStringConvertible {
     case setAppUpgraded(_ isUpgraded: Bool)
 
     /// Set sphere/user nickname
-    case persistNicknameFormField(_ nickname: String)
+    case setNicknameFormFieldValue(_ nickname: String)
+    case persistNicknameFormFieldValue(_ nickname: String)
 
     /// Set gateway URL
     case setGatewayURLTextField(_ gateway: String)
@@ -301,7 +302,7 @@ struct NicknameFormFieldCursor: CursorProtocol {
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
         case .setValue(let input):
-            return .persistNicknameFormField(input)
+            return .setNicknameFormFieldValue(input)
         default:
             return .nicknameFormField(action)
         }
@@ -325,18 +326,25 @@ enum GatewaySyncStatus: Equatable {
 //  MARK: Model
 struct AppModel: ModelProtocol {
     /// Is Noosphere enabled?
-    /// We assign UserDefault property to model property at startup.
+    ///
+    /// This property is updated at `.start` with the value stored in
+    /// `AppDefaults.standard.isNoosphereEnabled`.
+    ///
     /// This property is changed via `persistNoosphereEnabled`, which will
     /// update both the model property (triggering a view re-render)
     /// and persist the new value to UserDefaults.
-    var isNoosphereEnabled = AppDefaults.standard.isNoosphereEnabled
+    var isNoosphereEnabled = false
 
     /// Has first run completed?
+    ///
+    /// This property is updated at `.start` with the value stored in
+    /// `AppDefaults.standard.firstRunComplete`.
+    ///
     /// We assign UserDefault property to model property at startup.
     /// This property is changed via `persistFirstRunComplete`, which will
     /// update both the model property (triggering a view re-render)
     /// and persist the new value to UserDefaults.
-    var isFirstRunComplete = AppDefaults.standard.firstRunComplete
+    var isFirstRunComplete = false
 
     /// Should first run show?
     var shouldPresentFirstRun: Bool {
@@ -357,14 +365,25 @@ struct AppModel: ModelProtocol {
         sphereSyncStatus.isResolved
     }
 
-    var nickname = AppDefaults.standard.nickname
+    // User Nickname (preferred petname)
+    /// Validated nickname
+    var nickname = ""
+    /// Nickname form
     var nicknameFormField = NicknameFormField(
-        value: AppDefaults.standard.nickname ?? "",
+        value: "",
         validate: { value in Petname(value) }
     )
+    /// Expose read-only value for view
+    var nicknameFormFieldValue: String {
+        nicknameFormField.value
+    }
+    /// Expose read-only valid value for view
+    var isNicknameFormFieldValid: Bool {
+        nicknameFormField.isValid
+    }
 
     /// Default sphere identity
-    var sphereIdentity = AppDefaults.standard.sphereIdentity
+    var sphereIdentity: String?
     /// Default sphere version, if any.
     var sphereVersion: String?
     /// State for rendering mnemonic/recovery phrase UI.
@@ -384,8 +403,8 @@ struct AppModel: ModelProtocol {
     /// one-time long-running migration tasks at startup.
     var appUpgrade = AppUpgradeModel()
 
-    var gatewayURL = AppDefaults.standard.gatewayURL
-    var gatewayURLTextField = AppDefaults.standard.gatewayURL
+    var gatewayURL = ""
+    var gatewayURLTextField = ""
     var isGatewayURLTextFieldValid = true
     var lastGatewaySyncStatus = ResourceStatus.initial
     
@@ -459,8 +478,14 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 isUpgraded: isUpgraded
             )
-        case let .persistNicknameFormField(nickname):
-            return persistNicknameFormField(
+        case let .setNicknameFormFieldValue(nickname):
+            return setNicknameFormFieldValue(
+                state: state,
+                environment: environment,
+                text: nickname
+            )
+        case let .persistNicknameFormFieldValue(nickname):
+            return persistNicknameFormFieldValue(
                 state: state,
                 environment: environment,
                 text: nickname
@@ -661,7 +686,24 @@ struct AppModel: ModelProtocol {
         let fx: Fx<AppAction> = AppDefaults.standard.$isNoosphereEnabled
             .map(AppAction.notifyNoosphereEnabled)
             .eraseToAnyPublisher()
-        return Update(state: state, fx: fx)
+
+        var model = state
+
+        // Update model from app defaults
+        model.isNoosphereEnabled = AppDefaults.standard.isNoosphereEnabled
+        model.isFirstRunComplete = AppDefaults.standard.firstRunComplete
+        model.sphereIdentity = AppDefaults.standard.sphereIdentity
+        model.gatewayURL = AppDefaults.standard.gatewayURL
+        model.gatewayURLTextField = AppDefaults.standard.gatewayURL
+
+        let nickname = AppDefaults.standard.nickname ?? state.nickname
+        model.nickname = nickname
+
+        return update(
+            state: model,
+            action: .nicknameFormField(.setValue(input: nickname)),
+            environment: environment
+        ).mergeFx(fx)
     }
 
     /// Handle scene phase change
@@ -719,20 +761,38 @@ struct AppModel: ModelProtocol {
         return Update(state: model).animation(.default)
     }
     
-    static func persistNicknameFormField(
+    static func setNicknameFormFieldValue(
         state: AppModel,
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
+        /// First pass down setValue to form field,
+        /// then persist the nickname by reading the updated model.
+        return update(
+            state: state,
+            actions: [
+                .nicknameFormField(.setValue(input: text)),
+                .persistNicknameFormFieldValue(text)
+            ],
+            environment: environment
+        )
+    }
+
+    static func persistNicknameFormFieldValue(
+        state: AppModel,
+        environment: AppEnvironment,
+        text: String
+    ) -> Update<AppModel> {
+        // Persist any valid value...
         if let validated = state.nicknameFormField.validated {
             AppDefaults.standard.nickname = validated.description
             logger.log("Nickname saved: \(validated)")
+
+            var model = state
+            model.nickname = validated.description
+            return Update(state: model)
         }
-        return update(
-            state: state,
-            action: .nicknameFormField(.setValue(input: text)),
-            environment: environment
-        )
+        return Update(state: state)
     }
     
     static func setGatewayURLTextField(
