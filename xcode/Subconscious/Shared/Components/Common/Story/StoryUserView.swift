@@ -55,6 +55,7 @@ struct StoryUserView: View {
             }
             .padding()
             .background(Color.background)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity)

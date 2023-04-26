@@ -48,6 +48,7 @@ struct StoryEntryView: View {
                 .padding()
             }
             .background(Color.background)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
