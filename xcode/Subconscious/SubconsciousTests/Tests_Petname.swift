@@ -12,8 +12,8 @@ class Tests_Petname: XCTestCase {
     func testValid() throws {
         XCTAssertNotNil(Petname("bob"))
         XCTAssertNotNil(Petname("valid-petname"))
-        XCTAssertNotNil(Petname("PETNAME"))
-        XCTAssertNotNil(Petname("PET_NAME"))
+        XCTAssertNotNil(Petname("PETNAME"), "Case-insensitive")
+        XCTAssertNotNil(Petname("PET_NAME"), "Case-insensitive")
         XCTAssertNotNil(Petname("-_-"))
         XCTAssertNotNil(Petname("alice.bob"))
         XCTAssertNotNil(Petname("dan.charlie.bob.alice"))
