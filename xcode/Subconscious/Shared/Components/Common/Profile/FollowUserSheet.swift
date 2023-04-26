@@ -45,8 +45,8 @@ struct FollowUserSheetModel: ModelProtocol {
                 state: state,
                 actions: [
                     .followUserForm(.didField(.setValue(input: user.did.did))),
-                    .followUserForm(.petnameField(.setValue(input: user.petname.verbatim))),
-                    .fetchPetnameCollisionStatus(user.petname)
+                    .followUserForm(.petnameField(.setValue(input: user.nickname.verbatim))),
+                    .fetchPetnameCollisionStatus(user.nickname)
                 ],
                 environment: environment
             )
@@ -152,7 +152,7 @@ struct FollowUserSheet: View {
     
     var body: some View {
         VStack(alignment: .center, spacing: AppTheme.unit2) {
-            ProfilePic(image: Image(user.pfp))
+            ProfilePic(pfp: user.pfp)
             
             Text(user.did.did)
                 .font(.caption.monospaced())

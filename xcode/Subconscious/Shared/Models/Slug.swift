@@ -67,6 +67,11 @@ public struct Slug:
         self == Slug.profile
     }
     
+    /// Excludes "internal" slugs like `Slug.profile`
+    public var isHidden: Bool {
+        verbatim.hasPrefix("_")
+    }
+    
     /// Losslessly create a slug from a string.
     /// This requires that the string already be formatted like a
     /// valid slug.

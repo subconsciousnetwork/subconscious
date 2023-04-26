@@ -77,7 +77,6 @@ actor AddressBook<Sphere: SphereProtocol> {
                 .unwrap()
             addressBook.append(
                 AddressBookEntry(
-                    pfp: AppTheme.brandMark,
                     petname: petname,
                     did: did
                 )
@@ -259,7 +258,7 @@ actor AddressBookService {
         Future.detached {
             try await self.addressBook.listEntries(refetch: refetch)
         }
-        .eraseToAnyPublisher()    
+        .eraseToAnyPublisher()
     }
     
     /// Associates the passed DID with the passed petname within the sphere, clears the cache,

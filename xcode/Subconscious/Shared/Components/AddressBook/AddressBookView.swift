@@ -30,7 +30,6 @@ struct AddressBookView: View {
                         List {
                             ForEach(state.follows, id: \.did) { user in
                                 AddressBookEntryView(
-                                    pfp: user.pfp,
                                     petname: user.petname,
                                     did: user.did
                                 )
@@ -119,9 +118,9 @@ struct AddressBook_Previews: PreviewProvider {
         AddressBookView(
             state: AddressBookModel(
                 follows: [
-                    AddressBookEntry(pfp: Image("pfp-dog"), petname: Petname("ben")!, did: Did(  "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
-                    AddressBookEntry(pfp: Image("sub_logo"), petname: Petname("bob")!, did: Did("did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
-                    AddressBookEntry(pfp: Image("sub_logo"), petname: Petname("alice")!, did: Did("did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
+                    AddressBookEntry(petname: Petname("ben")!, did: Did(  "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
+                    AddressBookEntry(petname: Petname("bob")!, did: Did("did:key:z6MkmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
+                    AddressBookEntry(petname: Petname("alice")!, did: Did("did:key:z6MjmBJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
                 ],
                 isFollowUserFormPresented: false // Toggle to test sheet
             ),

@@ -24,7 +24,7 @@ struct StoryEntryView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .lastTextBaseline, spacing: AppTheme.unit) {
                     BylineSmView(
-                        pfp: Image(story.author.pfp),
+                        pfp: story.author.pfp,
                         slashlink: story.entry.address.toSlashlink()
                     )
                     Group {

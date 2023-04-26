@@ -20,22 +20,15 @@ struct StoryUserView: View {
         Button(
             action: {
                 action(
-                    Slashlink(petname: story.user.petname)
-                        .toPublicMemoAddress(),
+                    story.user.address,
                     story.user.bio
                 )
             }
         ) {
             VStack(alignment: .leading, spacing: AppTheme.unit3) {
                 HStack(alignment: .center, spacing: AppTheme.unit2) {
-                    ProfilePicSm(image: Image(story.user.pfp))
-                    
-                    switch (story.user.category) {
-                    case .human, .geist:
-                        PetnameBylineView(petname: story.user.petname)
-                    case .you:
-                        PetnameBylineView(petname: story.user.petname)
-                    }
+                    ProfilePicSm(pfp: story.user.pfp)
+                    PetnameBylineView(petname: story.user.nickname)
                     
                     Spacer()
                     
@@ -68,9 +61,9 @@ struct StoryUserView_Previews: PreviewProvider {
                 story: StoryUser(
                     user: UserProfile(
                         did: Did("did:key:123")!,
-                        petname: Petname("ben.gordon.chris.bob")!,
+                        nickname: Petname("ben.gordon.chris.bob")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
-                        pfp: "pfp-dog",
+                        pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                         category: .human
                     ),
@@ -82,9 +75,9 @@ struct StoryUserView_Previews: PreviewProvider {
                 story: StoryUser(
                     user: UserProfile(
                         did: Did("did:key:123")!,
-                        petname: Petname("ben.gordon.chris.bob")!,
+                        nickname: Petname("ben.gordon.chris.bob")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
-                        pfp: "pfp-dog",
+                        pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                         category: .human
                     ),
@@ -96,9 +89,9 @@ struct StoryUserView_Previews: PreviewProvider {
                 story: StoryUser(
                     user: UserProfile(
                         did: Did("did:key:123")!,
-                        petname: Petname("ben.gordon.chris.bob")!,
+                        nickname: Petname("ben.gordon.chris.bob")!,
                         address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
-                        pfp: "pfp-dog",
+                        pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                         category: .you
                     ),

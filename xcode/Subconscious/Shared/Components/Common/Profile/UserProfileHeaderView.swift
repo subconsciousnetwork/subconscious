@@ -19,54 +19,59 @@ struct UserProfileHeaderView: View {
     
     var isFollowingUser: Bool
     var action: (UserProfileAction) -> Void = { _ in }
+    var hideActionButton: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
-                ProfilePic(image: Image(user.pfp))
+                ProfilePic(pfp: user.pfp)
             
-                // TODO: when we have _profile_.json we should load the preferred petname from there
-                PetnameBylineView(petname: user.petname)
+                PetnameBylineView(petname: user.nickname)
                 
                 Spacer()
                 
-                Button(
-                    action: {
-                        switch (user.category, isFollowingUser) {
-                        case (.you, _):
-                            action(.editOwnProfile)
-                        case (_, true):
-                            action(.requestUnfollow)
-                        case (_, false):
-                            action(.requestFollow)
+                if !hideActionButton {
+                    Button(
+                        action: {
+                            switch (user.category, isFollowingUser) {
+                            case (.you, _):
+                                action(.editOwnProfile)
+                            case (_, true):
+                                action(.requestUnfollow)
+                            case (_, false):
+                                action(.requestFollow)
+                            }
+                        },
+                        label: {
+                            switch (user.category, isFollowingUser) {
+                            case (.you, _):
+                                Label("Edit Profile", systemImage: AppIcon.edit.systemName)
+                            case (_, true):
+                                Label("Following", systemImage: AppIcon.following.systemName)
+                            case (_, false):
+                                Text("Follow")
+                            }
                         }
-                    },
-                    label: {
-                        switch (user.category, isFollowingUser) {
-                        case (.you, _):
-                            Label("Edit Profile", systemImage: AppIcon.edit.systemName)
-                        case (_, true):
-                            Label("Following", systemImage: AppIcon.following.systemName)
-                        case (_, false):
-                            Text("Follow")
-                        }
-                    }
-                )
-                .buttonStyle(GhostPillButtonStyle(size: .small))
-                .frame(maxWidth: 160)
+                    )
+                    .buttonStyle(GhostPillButtonStyle(size: .small))
+                    .frame(maxWidth: 160)
+                }
             }
             
             if let statistics = statistics {
                 HStack(spacing: AppTheme.unit2) {
                     ProfileStatisticView(label: "Notes", count: statistics.noteCount)
-                    ProfileStatisticView(label: "Backlinks", count: statistics.backlinkCount)
+                    // TODO: put this back when we have backlink count
+                    // ProfileStatisticView(label: "Backlinks", count: statistics.backlinkCount)
                     ProfileStatisticView(label: "Following", count: statistics.followingCount)
                 }
                 .font(.caption)
                 .foregroundColor(.primary)
             }
             
-            Text(verbatim: user.bio)
+            if user.bio.count > 0 {
+                Text(verbatim: user.bio)
+            }
         }
     }
 }
@@ -77,9 +82,9 @@ struct BylineLgView_Previews: PreviewProvider {
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
-                    petname: Petname("ben")!,
+                    nickname: Petname("ben")!,
                     address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress(),
-                    pfp: "pfp-dog",
+                    pfp: .image("pfp-dog"),
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
                     category: .human
                 ),
@@ -88,9 +93,9 @@ struct BylineLgView_Previews: PreviewProvider {
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
-                    petname: Petname("ben")!,
+                    nickname: Petname("ben")!,
                     address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress(),
-                    pfp: "pfp-dog",
+                    pfp: .image("pfp-dog"),
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
                     category: .geist
                 ),
@@ -100,9 +105,9 @@ struct BylineLgView_Previews: PreviewProvider {
             UserProfileHeaderView(
                 user: UserProfile(
                     did: Did("did:key:123")!,
-                    petname: Petname("ben")!,
+                    nickname: Petname("ben")!,
                     address: Slashlink.ourProfile.toLocalMemoAddress(),
-                    pfp: "pfp-dog",
+                    pfp: .image("pfp-dog"),
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
                     category: .you
                 ),
