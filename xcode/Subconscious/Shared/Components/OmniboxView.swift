@@ -73,7 +73,7 @@ struct OmniboxSlashlinkView: View {
             case (true, .none):
                 Text(verbatim: "Your profile").foregroundColor(.secondary)
             case (false, .none):
-                Text(verbatim: slashlink.slug.markup)
+                Text(verbatim: slashlink.slug.description)
             }
         }
         .lineLimit(1)
