@@ -691,7 +691,7 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         .eraseToAnyPublisher()
     }
     
-    /// List all slugs in sphere excluding those prefixed with `_`
+    /// List all slugs in sphere
     /// - Returns an array of `Slug`
     public func list() throws -> [Slug] {
         let slugs = try Noosphere.callWithError(

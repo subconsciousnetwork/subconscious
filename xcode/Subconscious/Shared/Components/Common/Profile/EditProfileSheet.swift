@@ -199,7 +199,9 @@ struct EditProfileSheet: View {
                                 send(.pfpUrlField(.focusChange(focused: focused)))
                             },
                             caption: "The image shown on your profile",
-                            hasError: !state.pfpUrlField.isValid && state.pfpUrlField.value.count > 0
+                            hasError:
+                                !state.pfpUrlField.isValid &&
+                                state.pfpUrlField.value.count > 0
                         )
                         .formField()
                         .lineLimit(1)
@@ -211,7 +213,7 @@ struct EditProfileSheet: View {
                         Image(systemName: "text.quote")
                             .foregroundColor(.accentColor)
                         ValidatedTextField(
-                            placeholder: "I am a...",
+                            placeholder: "bio",
                             text: Binding(
                                 get: { state.bioField.value },
                                 send: send,
@@ -220,8 +222,11 @@ struct EditProfileSheet: View {
                             onFocusChanged: { focused in
                                 send(.bioField(.focusChange(focused: focused)))
                             },
-                            caption: "A short description of yourself (\(state.bioField.value.count)/280)",
-                            hasError: !state.bioField.isValid && state.bioField.value.count > 0,
+                            caption:
+                                "A short description of yourself (\(state.bioField.value.count)/280)",
+                            hasError:
+                                !state.bioField.isValid &&
+                                state.bioField.value.count > 0,
                             axis: .vertical
                         )
                         .formField()

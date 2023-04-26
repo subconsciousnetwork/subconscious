@@ -14,6 +14,7 @@ struct ProfilePicSmImage: View {
     var body: some View {
         image
             .resizable()
+            .aspectRatio(contentMode: .fill)
             .frame(width: 24, height: 24)
             .overlay(
                 Circle()
@@ -56,7 +57,7 @@ struct ProfilePicSm_Previews: PreviewProvider {
                 pfp: .none
             )
             ProfilePicSm(
-                pfp: .url(URL(string: "https://d2w9rnfcy7mm78.cloudfront.net/14547710/original_69c752e0010ef82be2792c16b1339663.gif?1641203279?bc=0")!)
+                pfp: .url(URL(string: "https://images.unsplash.com/photo-1577766729821-6003ae138e18")!)
             )
             ProfilePicSm(
                 pfp: .image("pfp-dog")

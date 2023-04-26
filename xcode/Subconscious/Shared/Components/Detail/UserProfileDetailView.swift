@@ -276,7 +276,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isFollowSheetPresented = presented
             return Update(state: model)
             
-            // MARK: Following status
+        // MARK: Following status
         case .fetchFollowingStatus(let did):
             let fx: Fx<UserProfileDetailAction> =
             environment.addressBook
@@ -297,7 +297,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isFollowingUser = following
             return Update(state: model)
             
-            // MARK: Following
+        // MARK: Following
         case .requestFollow:
             return update(state: state, action: .presentFollowSheet(true), environment: environment)
             
@@ -342,7 +342,7 @@ struct UserProfileDetailModel: ModelProtocol {
             model.failFollowErrorMessage = nil
             return Update(state: model)
             
-            // MARK: Unfollowing
+        // MARK: Unfollowing
         case .presentUnfollowConfirmation(let presented):
             var model = state
             model.isUnfollowConfirmationPresented = presented

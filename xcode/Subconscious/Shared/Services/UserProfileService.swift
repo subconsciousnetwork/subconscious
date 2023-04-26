@@ -33,12 +33,12 @@ extension UserProfileServiceError: LocalizedError {
             )
         case .unexpectedProfileContentType(let contentType):
             return String(
-                localized: "Unexpected content type \(contentType) encountered reading profile memo",
+                localized: "Unexpected content type \(contentType) found reading profile memo",
                 comment: "UserProfileService error description"
             )
         case .unexpectedProfileSchemaVersion(let versionString):
             return String(
-                localized: "Unexpected version string \"\(versionString)\" encountered reading profile",
+                localized: "Unexpected version string \"\(versionString)\" found reading profile",
                 comment: "UserProfileService error description"
             )
         case .failedToDeserializeProfile(let error, let data):
