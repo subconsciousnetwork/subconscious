@@ -8,18 +8,25 @@
 import SwiftUI
 
 struct OmniboxView: View {
+    @Environment(\.colorScheme) var colorScheme
+    
     var address: MemoAddress?
     var defaultAudience: Audience
 
     private func icon() -> Image {
-        if let address = address {
-            return address.isOurProfile
-            ? Image.from(appIcon: .you)
-            : Image.from(appIcon: .user)
+        guard let address = address else {
+            return Image(audience: defaultAudience)
         }
-        
-        let audience = address?.toAudience() ?? defaultAudience
-        return Image(audience: audience)
+        if address.isOurProfile {
+            return Image.from(appIcon: .you(colorScheme))
+        }
+        if address.isProfile {
+            return Image.from(appIcon: .user)
+        }
+        if address.isPublic() {
+            return Image(audience: .public)
+        }
+        return Image(audience: .local)
     }
     
     var body: some View {

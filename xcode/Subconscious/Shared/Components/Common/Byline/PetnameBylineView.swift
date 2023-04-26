@@ -19,11 +19,9 @@ struct PetnameBylineView: View {
             let first = parts[0]
             
             Text(first.markup)
-                .foregroundColor(petnameColor)
-                // Fixed size to ensure truncation trims path preferentially 
+                // Fixed size to ensure truncation trims path preferentially
                 .fixedSize(horizontal: true, vertical: false)
                 .font(.callout)
-                .fontWeight(.medium)
                 .lineLimit(1)
             
             let rest = parts[1...]
@@ -33,12 +31,12 @@ struct PetnameBylineView: View {
             if rest.count > 0 {
                 // Particular structure to ensure truncation trims the path and never the name
                 Text(".\(rest)")
-                    .foregroundColor(.secondary)
                     .font(.callout)
-                    .fontWeight(.regular)
                     .lineLimit(1)
             }
         }
+        .fontWeight(.medium)
+        .foregroundColor(petnameColor)
     }
     
     func theme(
