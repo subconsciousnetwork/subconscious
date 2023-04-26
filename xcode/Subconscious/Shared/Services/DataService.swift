@@ -481,8 +481,10 @@ actor DataService {
         _ text: String,
         audience: Audience
     ) async -> MemoAddress? {
+        let excerpt = Subtext.excerpt(markup: text, fallback: text)
+        
         // If we can't derive slug from text, exit early.
-        guard let slug = Slug(formatting: text) else {
+        guard let slug = Slug(formatting: excerpt) else {
             return nil
         }
         // If slug does not exist in any address space, return it.
