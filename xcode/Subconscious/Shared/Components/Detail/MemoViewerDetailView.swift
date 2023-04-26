@@ -31,7 +31,7 @@ struct MemoViewerDetailView: View {
             case .loaded:
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
-                    editor: store.state.editor,
+                    dom: store.state.dom,
                     address: description.address,
                     backlinks: store.state.backlinks,
                     send: store.send,
@@ -126,7 +126,7 @@ struct MemoViewerDetailLoadingView: View {
 
 struct MemoViewerDetailLoadedView: View {
     var title: String
-    var editor: SubtextTextModel
+    var dom: Subtext
     var address: MemoAddress
     var backlinks: [EntryStub]
     var send: (MemoViewerDetailAction) -> Void
@@ -175,26 +175,13 @@ struct MemoViewerDetailLoadedView: View {
         GeometryReader { geometry in
             ScrollView {
                 VStack {
-                    SubtextTextViewRepresentable(
-                        state: editor,
-                        send: Address.forward(
-                            send: send,
-                            tag: MemoViewerDetailSubtextTextCursor.tag
-                        ),
-                        frame: geometry.frame(in: .local),
-                        onLink: self.onLink
-                    )
-                    .insets(
-                        EdgeInsets(
-                            top: AppTheme.padding,
-                            leading: AppTheme.padding,
-                            bottom: AppTheme.padding,
-                            trailing: AppTheme.padding
-                        )
-                    )
-                    .frame(
-                        minHeight: UIFont.appTextMono.lineHeight * 8
-                    )
+                    VStack {
+                        SubtextView(subtext: dom)
+                            .frame(
+                                minHeight: UIFont.appTextMono.lineHeight * 8
+                            )
+                    }
+                    .padding()
                     ThickDividerView()
                         .padding(.bottom, AppTheme.unit4)
                     BacklinksView(
@@ -227,10 +214,10 @@ struct MemoViewerDetailDescription: Hashable {
 
 // MARK: Actions
 enum MemoViewerDetailAction: Hashable {
-    case editor(SubtextTextAction)
     case metaSheet(MemoViewerDetailMetaSheetAction)
     case appear(_ description: MemoViewerDetailDescription)
     case setDetail(_ detail: MemoDetailResponse?)
+    case setDom(Subtext)
     case failLoadDetail(_ message: String)
     case presentMetaSheet(_ isPresented: Bool)
     
@@ -255,7 +242,7 @@ struct MemoViewerDetailModel: ModelProtocol {
     var address: MemoAddress?
     var defaultAudience = Audience.local
     var title = ""
-    var editor = SubtextTextModel(isEditable: false)
+    var dom: Subtext = Subtext.empty
     var backlinks: [EntryStub] = []
     
     // Bottom sheet with meta info and actions for this memo
@@ -268,12 +255,6 @@ struct MemoViewerDetailModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         switch action {
-        case .editor(let action):
-            return MemoViewerDetailSubtextTextCursor.update(
-                state: state,
-                action: action,
-                environment: ()
-            )
         case .metaSheet(let action):
             return MemoViewerDetailMetaSheetCursor.update(
                 state: state,
@@ -291,6 +272,12 @@ struct MemoViewerDetailModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 response: response
+            )
+        case .setDom(let dom):
+            return setDom(
+                state: state,
+                environment: environment,
+                dom: dom
             )
         case .failLoadDetail(let message):
             logger.log("\(message)")
@@ -332,21 +319,36 @@ struct MemoViewerDetailModel: ModelProtocol {
         response: MemoDetailResponse?
     ) -> Update<Self> {
         var model = state
+        
         // If no response, then mark not found
         guard let response = response else {
             model.loadingState = .notFound
             return Update(state: model)
         }
+        
         model.loadingState = .loaded
         let memo = response.entry.contents
         model.address = response.entry.address
         model.title = memo.title()
         model.backlinks = response.backlinks
+        
+        let dom = memo.dom()
+        
         return update(
             state: model,
-            action: .editor(.setText(memo.body)),
+            action: .setDom(dom),
             environment: environment
         )
+    }
+    
+    static func setDom(
+        state: Self,
+        environment: Environment,
+        dom: Subtext
+    ) -> Update<Self> {
+        var model = state
+        model.dom = dom
+        return Update(state: model)
     }
     
     static func presentMetaSheet(
@@ -357,27 +359,6 @@ struct MemoViewerDetailModel: ModelProtocol {
         var model = state
         model.isMetaSheetPresented = isPresented
         return Update(state: model)
-    }
-}
-
-//  MARK: Cursors
-/// Editor cursor
-struct MemoViewerDetailSubtextTextCursor: CursorProtocol {
-    static func get(state: MemoViewerDetailModel) -> SubtextTextModel {
-        state.editor
-    }
-
-    static func set(
-        state: MemoViewerDetailModel,
-        inner: SubtextTextModel
-    ) -> MemoViewerDetailModel {
-        var model = state
-        model.editor = inner
-        return model
-    }
-
-    static func tag(_ action: SubtextTextAction) -> MemoViewerDetailAction {
-        return .editor(action)
     }
 }
 
@@ -410,8 +391,8 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
     static var previews: some View {
         MemoViewerDetailLoadedView(
             title: "Truth, The Prophet",
-            editor: SubtextTextModel(
-                text:"""
+            dom: Subtext(
+                markup:"""
                 Say not, "I have found _the_ truth," but rather, "I have found a truth."
 
                 Say not, "I have found the path of the soul." Say rather, "I have met the soul walking upon my path."
