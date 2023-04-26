@@ -115,8 +115,9 @@ enum AppAction: CustomLogStringConvertible {
     case setAppUpgraded(_ isUpgraded: Bool)
 
     /// Set sphere/user nickname
-    case setNicknameFormFieldValue(_ nickname: String)
-    case persistNicknameFormFieldValue(_ nickname: String)
+    /// Sets form field, and persists if needed.
+    case setNickname(_ nickname: String)
+    case persistNickname(_ nickname: String)
 
     /// Set gateway URL
     case setGatewayURLTextField(_ gateway: String)
@@ -143,6 +144,10 @@ enum AppAction: CustomLogStringConvertible {
 
     /// Set and persist first run complete state
     case persistFirstRunComplete(_ isComplete: Bool)
+    /// Set first run complete value on model.
+    /// This action does not persist the value. It is understood to have been
+    /// persisted already.
+    case notifyFirstRunComplete(_ isComplete: Bool)
 
     /// Reset Noosphere Service.
     /// This calls `Noosphere.reset` which resets memoized instances of
@@ -302,7 +307,7 @@ struct NicknameFormFieldCursor: CursorProtocol {
     static func tag(_ action: ViewModel.Action) -> Model.Action {
         switch action {
         case .setValue(let input):
-            return .setNicknameFormFieldValue(input)
+            return .setNickname(input)
         default:
             return .nicknameFormField(action)
         }
@@ -327,8 +332,8 @@ enum GatewaySyncStatus: Equatable {
 struct AppModel: ModelProtocol {
     /// Is Noosphere enabled?
     ///
-    /// This property is updated at `.start` with the value stored in
-    /// `AppDefaults.standard.isNoosphereEnabled`.
+    /// This property is updated at `.start` with the corresponding value
+    /// stored in `AppDefaults`.
     ///
     /// This property is changed via `persistNoosphereEnabled`, which will
     /// update both the model property (triggering a view re-render)
@@ -337,8 +342,8 @@ struct AppModel: ModelProtocol {
 
     /// Has first run completed?
     ///
-    /// This property is updated at `.start` with the value stored in
-    /// `AppDefaults.standard.firstRunComplete`.
+    /// This property is updated at `.start` with the corresponding value
+    /// stored in `AppDefaults`.
     ///
     /// We assign UserDefault property to model property at startup.
     /// This property is changed via `persistFirstRunComplete`, which will
@@ -365,10 +370,16 @@ struct AppModel: ModelProtocol {
         sphereSyncStatus.isResolved
     }
 
-    // User Nickname (preferred petname)
+    //  User Nickname (preferred petname)
     /// Validated nickname
+    ///
+    /// This property is updated at `.start` with the corresponding value
+    /// stored in `AppDefaults`.
     var nickname = ""
     /// Nickname form
+    ///
+    /// This property is updated at `.start` with the corresponding value
+    /// stored in `AppDefaults`.
     var nicknameFormField = NicknameFormField(
         value: "",
         validate: { value in Petname(value) }
@@ -383,6 +394,9 @@ struct AppModel: ModelProtocol {
     }
 
     /// Default sphere identity
+    ///
+    /// This property is updated at `.start` with the corresponding value
+    /// stored in `AppDefaults`.
     var sphereIdentity: String?
     /// Default sphere version, if any.
     var sphereVersion: String?
@@ -403,6 +417,10 @@ struct AppModel: ModelProtocol {
     /// one-time long-running migration tasks at startup.
     var appUpgrade = AppUpgradeModel()
 
+    /// Preferred Gateway URL.
+    ///
+    /// This property is updated at `.start` with the corresponding value
+    /// stored in `AppDefaults`.
     var gatewayURL = ""
     var gatewayURLTextField = ""
     var isGatewayURLTextFieldValid = true
@@ -478,14 +496,14 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 isUpgraded: isUpgraded
             )
-        case let .setNicknameFormFieldValue(nickname):
-            return setNicknameFormFieldValue(
+        case let .setNickname(nickname):
+            return setNickname(
                 state: state,
                 environment: environment,
                 text: nickname
             )
-        case let .persistNicknameFormFieldValue(nickname):
-            return persistNicknameFormFieldValue(
+        case let .persistNickname(nickname):
+            return persistNickname(
                 state: state,
                 environment: environment,
                 text: nickname
@@ -556,6 +574,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 isEnabled: isEnabled
+            )
+        case let .notifyFirstRunComplete(isComplete):
+            return notifyFirstRunComplete(
+                state: state,
+                environment: environment,
+                isComplete: isComplete
             )
         case let .persistFirstRunComplete(isComplete):
             return persistFirstRunComplete(
@@ -686,22 +710,29 @@ struct AppModel: ModelProtocol {
         let fx: Fx<AppAction> = AppDefaults.standard.$isNoosphereEnabled
             .map(AppAction.notifyNoosphereEnabled)
             .eraseToAnyPublisher()
-
+        
         var model = state
-
-        // Update model from app defaults
-        model.isNoosphereEnabled = AppDefaults.standard.isNoosphereEnabled
-        model.isFirstRunComplete = AppDefaults.standard.firstRunComplete
-        model.sphereIdentity = AppDefaults.standard.sphereIdentity
+        
         model.gatewayURL = AppDefaults.standard.gatewayURL
         model.gatewayURLTextField = AppDefaults.standard.gatewayURL
-
-        let nickname = AppDefaults.standard.nickname ?? state.nickname
-        model.nickname = nickname
-
+        
+        // Update model from app defaults
         return update(
             state: model,
-            action: .nicknameFormField(.setValue(input: nickname)),
+            actions: [
+                .notifyNoosphereEnabled(
+                    AppDefaults.standard.isNoosphereEnabled
+                ),
+                .setSphereIdentity(
+                    AppDefaults.standard.sphereIdentity
+                ),
+                .notifyFirstRunComplete(
+                    AppDefaults.standard.firstRunComplete
+                ),
+                .setNickname(
+                    AppDefaults.standard.nickname ?? state.nickname
+                ),
+            ],
             environment: environment
         ).mergeFx(fx)
     }
@@ -761,7 +792,7 @@ struct AppModel: ModelProtocol {
         return Update(state: model).animation(.default)
     }
     
-    static func setNicknameFormFieldValue(
+    static func setNickname(
         state: AppModel,
         environment: AppEnvironment,
         text: String
@@ -772,18 +803,18 @@ struct AppModel: ModelProtocol {
             state: state,
             actions: [
                 .nicknameFormField(.setValue(input: text)),
-                .persistNicknameFormFieldValue(text)
+                .persistNickname(text)
             ],
             environment: environment
         )
     }
 
-    static func persistNicknameFormFieldValue(
+    static func persistNickname(
         state: AppModel,
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
-        // Persist any valid value...
+        // Persist any valid value
         if let validated = state.nicknameFormField.validated {
             AppDefaults.standard.nickname = validated.description
             logger.log("Nickname saved: \(validated)")
@@ -792,6 +823,7 @@ struct AppModel: ModelProtocol {
             model.nickname = validated.description
             return Update(state: model)
         }
+        // Otherwise, just return state
         return Update(state: state)
     }
     
@@ -968,7 +1000,20 @@ struct AppModel: ModelProtocol {
         model.isNoosphereEnabled = isEnabled
         return Update(state: model)
     }
-
+    
+    /// Set first run complete state on model, but do not persist.
+    /// The value is understood to have been persisted already, or is being
+    /// reloaded from persisted state.
+    static func notifyFirstRunComplete(
+        state: AppModel,
+        environment: AppEnvironment,
+        isComplete: Bool
+    ) -> Update<AppModel> {
+        var model = state
+        model.isFirstRunComplete = isComplete
+        return Update(state: model)
+    }
+    
     /// Persist first run complete state
     static func persistFirstRunComplete(
         state: AppModel,
