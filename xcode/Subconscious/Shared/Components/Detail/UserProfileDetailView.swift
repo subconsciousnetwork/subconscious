@@ -91,10 +91,12 @@ enum UserProfileDetailAction {
     case presentFollowSheet(Bool)
     case presentUnfollowConfirmation(Bool)
     case presentEditProfile(Bool)
+    case presentFollowNewUserFormSheet(Bool)
     
     case metaSheet(UserProfileDetailMetaSheetAction)
     case followUserSheet(FollowUserSheetAction)
     case editProfileSheet(EditProfileSheetAction)
+    case followNewUserFormSheet(FollowNewUserFormSheetAction)
     
     case fetchFollowingStatus(Did)
     case populateFollowingStatus(Bool)
@@ -171,6 +173,7 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
     var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
+    var followNewUserFormSheet: FollowNewUserFormSheetModel = FollowNewUserFormSheetModel()
     var editProfileSheet: EditProfileSheetModel = EditProfileSheetModel()
     var failFollowErrorMessage: String?
     var failUnfollowErrorMessage: String?
@@ -179,6 +182,7 @@ struct UserProfileDetailModel: ModelProtocol {
     var selectedTabIndex = 0
     var isMetaSheetPresented = false
     var isFollowSheetPresented = false
+    var isFollowNewUserFormSheetPresented = false
     var isUnfollowConfirmationPresented = false
     var isEditProfileSheetPresented = false
     
@@ -208,6 +212,12 @@ struct UserProfileDetailModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
+            )
+        case .followNewUserFormSheet(let action):
+            return FollowNewUserFormSheetCursor.update(
+                state: state,
+                action: action,
+                environment: ()
             )
         case .editProfileSheet(let action):
             return EditProfileSheetCursor.update(
@@ -269,6 +279,11 @@ struct UserProfileDetailModel: ModelProtocol {
         case .presentMetaSheet(let presented):
             var model = state
             model.isMetaSheetPresented = presented
+            return Update(state: model)
+            
+        case .presentFollowNewUserFormSheet(let presented):
+            var model = state
+            model.isFollowNewUserFormSheetPresented = presented
             return Update(state: model)
             
         case .presentFollowSheet(let presented):

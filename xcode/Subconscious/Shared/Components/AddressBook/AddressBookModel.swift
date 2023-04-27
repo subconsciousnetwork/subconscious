@@ -28,7 +28,7 @@ struct AddressBookEnvironment {
     var addressBook: AddressBookService
 }
 
-struct FollowUserFormCursor: CursorProtocol {
+struct FollowUserFormCursor_old: CursorProtocol {
     static func get(state: AddressBookModel) -> FollowUserFormModel {
         state.followUserForm
     }
@@ -169,7 +169,7 @@ struct AddressBookModel: ModelProtocol {
             )
             
         case .followUserForm(let action):
-            return FollowUserFormCursor.update(
+            return FollowUserFormCursor_old.update(
                 state: state,
                 action: action,
                 environment: ()

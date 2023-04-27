@@ -79,7 +79,7 @@ struct AddressBookView: View {
                     tag: AddressBookAction.presentFollowUserForm
                 )
             ) {
-                FollowUserView(state: state, send: send)
+//                FollowUserView(state: state, send: send)
             }
             .alert(
                 isPresented: Binding(

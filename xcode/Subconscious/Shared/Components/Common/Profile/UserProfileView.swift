@@ -127,11 +127,42 @@ struct UserProfileView: View {
                     }
                 )
             }
+            
+            ToolbarItem(placement: .confirmationAction) {
+                Button(
+                    action: {
+                        send(.presentFollowNewUserFormSheet(true))
+                    },
+                    label: {
+                        Image(systemName: "person.badge.plus")
+                    }
+                )
+            }
         })
         .metaSheet(state: state, send: send)
         .follow(state: state, send: send)
         .unfollow(state: state, send: send)
         .editProfile(state: state, send: send)
+        .sheet(
+            isPresented: Binding(
+                get: { state.isFollowNewUserFormSheetPresented },
+                send: send,
+                tag: UserProfileDetailAction.presentFollowNewUserFormSheet
+            )
+        ) {
+            FollowNewUserFormSheetView(
+                state: state.followNewUserFormSheet,
+                send: Address.forward(
+                    send: send,
+                    tag: FollowNewUserFormSheetCursor.tag
+                ),
+                onAttemptFollow: {
+                    
+                },
+                onCancel: { send(.presentFollowNewUserFormSheet(false)) },
+                onDismissFailFollowError: { send(.dismissFailFollowError) }
+            )
+        }
     }
 }
 

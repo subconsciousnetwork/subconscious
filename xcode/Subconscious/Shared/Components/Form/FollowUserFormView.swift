@@ -9,6 +9,102 @@ import SwiftUI
 import ObservableStore
 import CodeScanner
 
+enum FollowNewUserFormSheetAction {
+    case form(FollowUserFormAction)
+    
+    case presentQRCodeScanner(_ isPresented: Bool)
+    case qrCodeScanned(scannedContent: String)
+    case qrCodeScanError(error: String)
+}
+
+typealias FollowNewUserFormSheetEnvironment = Void
+
+struct FollowNewUserFormSheetModel: ModelProtocol {
+    typealias Action = FollowNewUserFormSheetAction
+    typealias Environment = FollowNewUserFormSheetEnvironment
+    
+    var isQrCodeScannerPresented = false
+    
+    var form: FollowUserFormModel = FollowUserFormModel()
+    
+    var failFollowErrorMessage: String? = nil
+    var failQRCodeScanErrorMessage: String? = nil
+    
+    static func update(
+        state: Self,
+        action: Action,
+        environment: Environment
+    ) -> Update<Self> {
+        switch (action) {
+        case .form(let action):
+            return FollowUserFormCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+            
+        case .presentQRCodeScanner(let isPresented):
+            var model = state
+            model.failQRCodeScanErrorMessage = nil
+            model.isQrCodeScannerPresented = isPresented
+            return Update(state: model)
+            
+        case .qrCodeScanned(scannedContent: let content):
+            return update(
+                state: state,
+                actions: [
+                    .form(.didField(.markAsTouched)),
+                    .form(.didField(.setValue(input: content)))
+                ],
+                environment: environment
+            )
+            
+        case .qrCodeScanError(error: let error):
+            var model = state
+            model.failQRCodeScanErrorMessage = error
+            return Update(state: model)
+        }
+    }
+}
+
+struct FollowUserFormCursor: CursorProtocol {
+    typealias Model = FollowNewUserFormSheetModel
+    typealias ViewModel = FollowUserFormModel
+
+    static func get(state: Model) -> ViewModel {
+        state.form
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.form = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        .form(action)
+    }
+}
+
+struct FollowNewUserFormSheetCursor: CursorProtocol {
+    typealias Model = UserProfileDetailModel
+    typealias ViewModel = FollowNewUserFormSheetModel
+
+    static func get(state: Model) -> ViewModel {
+        state.followNewUserFormSheet
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.followNewUserFormSheet = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        .followNewUserFormSheet(action)
+    }
+}
+
 struct FollowUserFormView: View {
     var state: FollowUserFormModel
     var send: (FollowUserFormAction) -> Void
@@ -62,12 +158,17 @@ struct FollowUserFormView: View {
     }
 }
 
-struct FollowUserView: View {
-    var state: AddressBookModel
+struct FollowNewUserFormSheetView: View {
+    var state: FollowNewUserFormSheetModel
     var form: FollowUserFormModel {
-        get { state.followUserForm }
+        get { state.form }
     }
-    var send: (AddressBookAction) -> Void
+    var send: (FollowNewUserFormSheetAction) -> Void
+    
+    var onAttemptFollow: () -> Void
+    var onCancel: () -> Void
+    
+    var onDismissFailFollowError: () -> Void
     
     func onQRCodeScanResult(res: Result<ScanResult, ScanError>) {
         switch res {
@@ -83,8 +184,11 @@ struct FollowUserView: View {
             VStack {
                 Form {
                     FollowUserFormView(
-                        state: state.followUserForm,
-                        send: Address.forward(send: send, tag: FollowUserFormCursor.tag)
+                        state: form,
+                        send: Address.forward(
+                            send: send,
+                            tag: FollowUserFormCursor.tag
+                        )
                     )
                     
                     if Config.default.addByQRCode {
@@ -108,12 +212,12 @@ struct FollowUserView: View {
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Done") {
-                            send(.requestFollow)
+                            onAttemptFollow()
                         }
                     }
                     ToolbarItem(placement: .navigation) {
                         Button("Cancel", role: .cancel) {
-                            send(.presentFollowUserForm(false))
+                            onCancel()
                         }
                     }
                 }
@@ -122,7 +226,7 @@ struct FollowUserView: View {
             .alert(
                 isPresented: Binding(
                     get: { state.failFollowErrorMessage != nil },
-                    set: { _ in send(.dismissFailFollowError) }
+                    set: { _ in onDismissFailFollowError() }
                 )
             ) {
                 Alert(
@@ -134,7 +238,7 @@ struct FollowUserView: View {
                 isPresented: Binding(
                     get: { state.isQrCodeScannerPresented && Config.default.addByQRCode },
                     send: send,
-                    tag: AddressBookAction.presentQRCodeScanner
+                    tag: FollowNewUserFormSheetAction.presentQRCodeScanner
                 )
             ) {
                 FollowUserViaQRCodeView(
@@ -149,9 +253,12 @@ struct FollowUserView: View {
 
 struct FollowUserView_Previews: PreviewProvider {
     static var previews: some View {
-        FollowUserView(
-            state: AddressBookModel(),
-            send: { action in }
+        FollowNewUserFormSheetView(
+            state: FollowNewUserFormSheetModel(),
+            send: { action in },
+            onAttemptFollow: {},
+            onCancel: {},
+            onDismissFailFollowError: {}
         )
     }
 }
