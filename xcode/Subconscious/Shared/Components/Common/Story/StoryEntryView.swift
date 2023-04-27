@@ -47,9 +47,10 @@ struct StoryEntryView: View {
                 Text(story.entry.excerpt)
                 .padding()
             }
+            .background(Color.background)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(Color.background)
     }
 }
 

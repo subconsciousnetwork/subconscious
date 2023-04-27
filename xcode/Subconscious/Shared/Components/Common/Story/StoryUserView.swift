@@ -47,10 +47,11 @@ struct StoryUserView: View {
                 Text(verbatim: story.user.bio)
             }
             .padding()
+            .background(Color.background)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
-        .background(Color.background)
     }
 }
 
