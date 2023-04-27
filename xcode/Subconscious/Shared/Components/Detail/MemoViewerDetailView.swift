@@ -163,10 +163,13 @@ struct MemoViewerDetailLoadedView: View {
             ScrollView {
                 VStack {
                     VStack {
-                        SubtextView(subtext: dom).environment(
-                            \.openURL,
-                            OpenURLAction { url in self.onLink(url: url) }
-                        )
+                        SubtextView(
+                            subtext: dom
+                        ).textSelection(
+                            .enabled
+                        ).environment(\.openURL, OpenURLAction { url in
+                            self.onLink(url: url)
+                        })
                         Spacer()
                     }
                     .padding()
