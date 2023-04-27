@@ -220,28 +220,24 @@ actor UserProfileService {
         address: MemoAddress
     ) async throws -> [StoryUser] {
         var following: [StoryUser] = []
-        let petnames = try await sphere.listPetnames()
-        for petname in petnames {
-            guard let did = try await localAddressBook.getPetname(petname: petname) else {
-                continue
-            }
-            
-            let petname = address.petname?.append(petname: petname) ?? petname
+        let entries = try await localAddressBook.listEntries(refetch: true)
+        
+        for entry in entries {
             let noosphereIdentity = try await noosphere.identity()
-            let isOurs = noosphereIdentity == did.did
+            let isOurs = noosphereIdentity == entry.did.did
             
             let address =
                 isOurs
                 ? Slashlink.ourProfile.toPublicMemoAddress()
-                : Slashlink(petname: petname).toPublicMemoAddress()
+            : Slashlink(petname: entry.petname).toPublicMemoAddress()
             
             let user = try await self.loadProfile(
-                did: did,
-                petname: petname,
+                did: entry.did,
+                petname: entry.petname,
                 address: address
             )
             
-            let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: did)
+            let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
             
             following.append(
                 StoryUser(

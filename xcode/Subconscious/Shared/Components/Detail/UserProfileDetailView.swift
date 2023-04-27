@@ -102,7 +102,7 @@ enum UserProfileDetailAction {
     case populateFollowingStatus(Bool)
     
     case requestFollow
-    case attemptFollow
+    case attemptFollow(Did, Petname)
     case failFollow(error: String)
     case dismissFailFollowError
     case succeedFollow(did: Did, petname: Petname)
@@ -316,14 +316,7 @@ struct UserProfileDetailModel: ModelProtocol {
         case .requestFollow:
             return update(state: state, action: .presentFollowSheet(true), environment: environment)
             
-        case .attemptFollow:
-            guard let did = state.followUserSheet.followUserForm.did.validated else {
-                return Update(state: state)
-            }
-            guard let petname = state.followUserSheet.followUserForm.petname.validated else {
-                return Update(state: state)
-            }
-            
+        case .attemptFollow(let did, let petname):
             let fx: Fx<UserProfileDetailAction> =
             environment.addressBook
                 .followUserPublisher(did: did, petname: petname, preventOverwrite: true)
@@ -338,12 +331,24 @@ struct UserProfileDetailModel: ModelProtocol {
             return Update(state: state, fx: fx)
             
         case .succeedFollow(let did, _):
+            var actions: [UserProfileDetailAction] = [
+                .presentFollowSheet(false),
+                .presentFollowNewUserFormSheet(false),
+                .fetchFollowingStatus(did),
+            ]
+            
+            
+            // Refresh our profile  show the following list if we followed someone new
+            if let user = state.user {
+                if user.category == .you {
+                    actions.append(.appear(user.address))
+                    actions.append(.tabIndexSelected(2))
+                }
+            }
+            
             return update(
                 state: state,
-                actions: [
-                    .presentFollowSheet(false),
-                    .fetchFollowingStatus(did)
-                ],
+                actions: actions,
                 environment: environment
             )
             
@@ -466,6 +471,7 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.failEditProfileMessage = nil
             return Update(state: model)
+   
         }
         
         

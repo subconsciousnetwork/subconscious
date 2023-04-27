@@ -26,7 +26,11 @@ struct Config: Equatable, Codable {
     /// Only returns test data when Config.debug is enabled
     var fallbackSimulatorQrCodeScanResult: String {
         get {
-            debug ? "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7" : ""
+            #if targetEnvironment(simulator)
+            "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+            #else
+             ""
+            #endif
         }
     }
     var subconsciousGeistDid: Did = Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!

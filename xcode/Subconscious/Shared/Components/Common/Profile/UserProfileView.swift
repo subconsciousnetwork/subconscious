@@ -68,7 +68,7 @@ struct UserProfileView: View {
         let columnFollowing = TabbedColumnItem(
             label: "Following",
             view: Group {
-                ForEach(state.following, id: \.user.did) { follow in
+                ForEach(state.following, id: \.id) { follow in
                     StoryUserView(
                         story: follow,
                         action: { _, _ in onNavigateToUser(follow.user) },
@@ -157,7 +157,14 @@ struct UserProfileView: View {
                     tag: FollowNewUserFormSheetCursor.tag
                 ),
                 onAttemptFollow: {
+                    guard let did = state.followNewUserFormSheet.form.did.validated else {
+                        return
+                    }
+                    guard let petname = state.followNewUserFormSheet.form.petname.validated else {
+                        return
+                    }
                     
+                    send(.attemptFollow(did, petname))
                 },
                 onCancel: { send(.presentFollowNewUserFormSheet(false)) },
                 onDismissFailFollowError: { send(.dismissFailFollowError) }
@@ -245,7 +252,14 @@ private struct FollowModifier: ViewModifier {
                         ),
                         user: user,
                         onAttemptFollow: {
-                            send(.attemptFollow)
+                            guard let did = state.followUserSheet.followUserForm.did.validated else {
+                                return
+                            }
+                            guard let petname = state.followUserSheet.followUserForm.petname.validated else {
+                                return
+                            }
+                            
+                            send(.attemptFollow(did, petname))
                         },
                         failFollowError: state.failFollowErrorMessage,
                         onDismissError: {

@@ -82,6 +82,12 @@ actor AddressBook<Sphere: SphereProtocol> {
                 )
             )
         }
+        
+        // Maintain consitent order
+        addressBook.sort { a, b in
+            a.petname < b.petname
+        }
+        
         self.addressBook = addressBook
         return addressBook
     }
@@ -225,6 +231,12 @@ actor AddressBookService {
     private var database: DatabaseService
     private var addressBook: AddressBook<NoosphereService>
     
+    var localAddressBook: AddressBook<NoosphereService> {
+        get {
+            addressBook
+        }
+    }
+    
     /// must be defined here not on `AddressBook` because
     /// `AddressBook` is generic and cannot hold static properties
     static let maxAttemptsToIncrementPetName = 99
@@ -281,6 +293,12 @@ actor AddressBookService {
         let version = try await noosphere.save()
         try database.writeMetadatadata(key: .sphereVersion, value: version)
         await self.addressBook.invalidateCache()
+        
+        do {
+            let _ = try await self.noosphere.sync()
+        } catch {
+            Self.logger.error("Failed to sync after following user: \(error.localizedDescription)")
+        }
     }
     
     /// Associates the passed DID with the passed petname within the sphere,
