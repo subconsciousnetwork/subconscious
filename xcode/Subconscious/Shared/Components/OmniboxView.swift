@@ -69,11 +69,11 @@ struct OmniboxSlashlinkView: View {
                 PetnameBylineView(petname: petname)
             case (false, .some(let petname)):
                 PetnameBylineView(petname: petname)
-                Text(verbatim: slashlink.slug.verbatimMarkup)
+                Text(verbatim: slashlink.slug.markup)
             case (true, .none):
                 Text(verbatim: "Your profile").foregroundColor(.secondary)
             case (false, .none):
-                Text(verbatim: slashlink.slug.verbatim)
+                Text(verbatim: slashlink.slug.description)
             }
         }
         .lineLimit(1)
@@ -134,20 +134,30 @@ struct OmniboxView_Previews: PreviewProvider {
                     defaultAudience: .local
                 )
             }
-            OmniboxView(
-                address: .local(Slug("_profile_")!),
-                defaultAudience: .local
-            )
-            OmniboxView(
-                address: .local(Slug("red-mars")!),
-                defaultAudience: .local
-            )
-            OmniboxView(
-                defaultAudience: .local
-            )
-            OmniboxView(
-                defaultAudience: .public
-            )
+            Group {
+                OmniboxView(
+                    address: .local(Slug("_profile_")!),
+                    defaultAudience: .local
+                )
+                OmniboxView(
+                    address: .local(Slug("red-mars")!),
+                    defaultAudience: .local
+                )
+                OmniboxView(
+                    address: .local(Slug("BLUE-mars")!),
+                    defaultAudience: .local
+                )
+                OmniboxView(
+                    address: .public(Slashlink("@KSR.scifi/GREEN-mars")!),
+                    defaultAudience: .local
+                )
+                OmniboxView(
+                    defaultAudience: .local
+                )
+                OmniboxView(
+                    defaultAudience: .public
+                )
+            }
         }
     }
 }
