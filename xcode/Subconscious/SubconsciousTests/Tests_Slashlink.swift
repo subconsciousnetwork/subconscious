@@ -110,7 +110,7 @@ final class Tests_Slashlink: XCTestCase {
         XCTAssertNil(Slashlink("@bork//invalid-slashlink"))
         XCTAssertNil(Slashlink("@bork/invalid//deep/slashlink"))
     }
-
+    
     func testPetnameOnlyImplicitlyPointsToProfile() throws {
         guard let slashlink = Slashlink("@only-petname-points-to-profile") else {
             XCTFail("Failed to parse slashlink")
@@ -142,7 +142,7 @@ final class Tests_Slashlink: XCTestCase {
         let slashlink = Slashlink(petname: petname, slug: slug)
         XCTAssertEqual(slashlink.description, "@foo/bar-baz")
     }
-
+    
     func testsInitFromPetnameAndSlugCaps() throws {
         guard let petname = Petname("FOO") else {
             XCTFail("Could not create petname")
@@ -158,7 +158,7 @@ final class Tests_Slashlink: XCTestCase {
         XCTAssertEqual(slashlink.petname?.verbatim, "FOO")
         XCTAssertEqual(slashlink.slug.verbatim, "BAR-baz")
     }
-
+    
     func testsInitFromSlug() throws {
         guard let slug = Slug("bar-baz") else {
             XCTFail("Could not create slug")
@@ -167,7 +167,7 @@ final class Tests_Slashlink: XCTestCase {
         let slashlink = Slashlink(slug: slug)
         XCTAssertEqual(slashlink.description, "/bar-baz")
     }
-
+    
     func testToSlug() throws {
         let a = Slashlink("@foo/bar-baz")
         XCTAssertEqual(a?.toSlug(), Slug("bar-baz"))
@@ -177,5 +177,13 @@ final class Tests_Slashlink: XCTestCase {
         
         let c = Slashlink("/BAR-baz")
         XCTAssertEqual(c?.toSlug(), Slug("BAR-baz"))
+    }
+    
+    func testToSlashlink() throws {
+        let a = Slug("foo")!.toSlashlink()
+        XCTAssertEqual(a, Slashlink("/foo")!)
+
+        let b = Slug("foo")!.toSlashlink(relativeTo: Petname("bar"))
+        XCTAssertEqual(b, Slashlink("@bar/foo")!)
     }
 }

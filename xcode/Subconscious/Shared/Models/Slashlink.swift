@@ -106,8 +106,15 @@ extension Slug {
 }
 
 extension Slug {
-    func toSlashlink() -> Slashlink {
-        Slashlink(slug: self)
+    /// Transform slug into slashlink
+    /// - Parameters:
+    ///   - petname: the petname for the sphere this slug belongs to (if any)
+    /// - Returns: slashlink
+    func toSlashlink(relativeTo petname: Petname? = nil) -> Slashlink {
+        Slashlink(
+            petname: petname,
+            slug: self
+        )
     }
 }
 
