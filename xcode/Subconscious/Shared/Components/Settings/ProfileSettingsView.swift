@@ -17,12 +17,12 @@ struct ProfileSettingsView: View {
                 ValidatedTextField(
                     placeholder: "nickname",
                     text: Binding(
-                        get: { app.state.nicknameTextField },
+                        get: { app.state.nicknameFormFieldValue },
                         send: app.send,
-                        tag: AppAction.setNicknameTextField
+                        tag: AppAction.setNickname
                     ),
                     caption: "Lowercase letters, numbers, and dashes only",
-                    hasError: !app.state.isNicknameTextFieldValid
+                    hasError: !app.state.isNicknameFormFieldValid
                 )
                 .formField()
                 .disableAutocorrection(true)

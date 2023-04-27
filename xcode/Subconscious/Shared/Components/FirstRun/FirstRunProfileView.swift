@@ -19,12 +19,12 @@ struct FirstRunProfileView: View {
                     ValidatedTextField(
                         placeholder: "nickname",
                         text: Binding(
-                            get: { app.state.nicknameTextField },
+                            get: { app.state.nicknameFormFieldValue },
                             send: app.send,
-                            tag: AppAction.setNicknameTextField
+                            tag: AppAction.setNickname
                         ),
                         caption: "Lowercase letters, numbers and dashes only.",
-                        hasError: !app.state.isNicknameTextFieldValid
+                        hasError: !app.state.isNicknameFormFieldValid
                     )
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
@@ -43,7 +43,7 @@ struct FirstRunProfileView: View {
                 .simultaneousGesture(TapGesture().onEnded {
                     app.send(.createSphere)
                 })
-                .disabled(!app.state.isNicknameTextFieldValid)
+                .disabled(!app.state.isNicknameFormFieldValid)
             }
             .padding()
             .navigationTitle("Your Profile")
