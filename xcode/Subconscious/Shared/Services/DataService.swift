@@ -133,7 +133,34 @@ actor DataService {
         }
         .eraseToAnyPublisher()
     }
-    
+
+    /// Sync the contents of a specific sphere to the database
+    func syncSphereWithDatabase(petname: Petname) async throws -> String {
+        let sphere = try await noosphere.traverse(petname: petname)
+        let identity = try await sphere.identity()
+        let version = try await sphere.version()
+        let changes = try await sphere.changes(version)
+        for change in changes {
+            let slashlink = change.toSlashlink(relativeTo: petname)
+            let address = slashlink.toPublicMemoAddress()
+            // If memo does exist, write it to database
+            if let memo = try? await noosphere.read(
+                slashlink: slashlink
+            ).toMemo() {
+                try database.writeMemo(
+                    address,
+                    memo: memo
+                )
+            }
+            // If memo does not exist, that means change was a remove
+            else {
+                try database.removeMemo(address)
+            }
+        }
+        // TODO: write to database
+        return version
+    }
+
     /// Sync file system with database.
     /// Note file system is source-of-truth (leader).
     /// Syncing will never delete files on the file system.
