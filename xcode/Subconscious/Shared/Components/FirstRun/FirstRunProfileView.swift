@@ -43,7 +43,7 @@ struct FirstRunProfileView: View {
                 .simultaneousGesture(TapGesture().onEnded {
                     app.send(.createSphere)
                 })
-                .disabled(!app.state.nicknameFormField.isValid)
+                .disabled(!app.state.isNicknameFormFieldValid)
             }
             .padding()
             .navigationTitle("Your Profile")
