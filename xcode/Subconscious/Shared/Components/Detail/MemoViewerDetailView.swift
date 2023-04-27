@@ -149,6 +149,20 @@ struct MemoViewerDetailLoadedView: View {
         guard let link = url.toSubSlashlinkURL() else {
             return .systemAction
         }
+        
+        // Stitch the base address on to the tapped link, making any
+        // bare slashlinks relative to the sphere they belong to.
+        //
+        // this is needed in the viewer but not the editor
+        // because the editor is (currently) always pointed to
+        // our data.
+        let slashlink = Func.run {
+            guard let basePetname = address.petname else {
+                return link.slashlink
+            }
+            return link.slashlink.relativeTo(petname: basePetname)
+        }
+        
         notify(
             .requestFindDetail(
                 slashlink: link.slashlink,
