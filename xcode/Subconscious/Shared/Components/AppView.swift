@@ -1174,10 +1174,11 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment
     ) -> Update<AppModel> {
         do {
-            let sphereIdentity = try environment.database
-                .readMetadata(key: .sphereIdentity)
-            let sphereVersion = try environment.database
-                .readMetadata(key: .sphereVersion)
+            let sphereIdentity = try state.sphereIdentity.unwrap()
+            let did = try Did(sphereIdentity).unwrap()
+            let sphereVersion = try environment.database.readSphereSyncInfo(
+                sphereIdentity: did
+            ).unwrap()
             logger.log("Database last-known sphere state: \(sphereIdentity) @ \(sphereVersion)")
         } catch {
             logger.log("Database last-known sphere state: unknown")

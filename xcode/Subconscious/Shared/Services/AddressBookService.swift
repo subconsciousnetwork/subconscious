@@ -73,8 +73,7 @@ actor AddressBook<Sphere: SphereProtocol> {
         var addressBook: [AddressBookEntry] = []
         let petnames = try await sphere.listPetnames()
         for petname in petnames {
-            let did = try await Did(sphere.getPetname(petname: petname))
-                .unwrap()
+            let did = try await sphere.getPetname(petname: petname)
             addressBook.append(
                 AddressBookEntry(
                     petname: petname,
@@ -144,7 +143,7 @@ actor AddressBook<Sphere: SphereProtocol> {
     }
     
     func getPetname(petname: Petname) async throws -> Did? {
-        return try? await Did(self.sphere.getPetname(petname: petname))
+        return try? await self.sphere.getPetname(petname: petname)
     }
 
     nonisolated func getPetnamePublisher(
@@ -157,7 +156,7 @@ actor AddressBook<Sphere: SphereProtocol> {
     }
 
     func setPetname(did: Did, petname: Petname) async throws {
-        try await sphere.setPetname(did: did.did, petname: petname)
+        try await sphere.setPetname(did: did, petname: petname)
     }
 
     nonisolated func setPetnamePublisher(
@@ -194,13 +193,13 @@ actor AddressBook<Sphere: SphereProtocol> {
         .eraseToAnyPublisher()
     }
 
-    func getPetnameChanges(sinceCid: String) async throws -> [Petname] {
-        return try await sphere.getPetnameChanges(sinceCid: sinceCid)
+    func getPetnameChanges(since cid: Cid) async throws -> [Petname] {
+        return try await sphere.getPetnameChanges(since: cid)
     }
       
-    func getPetnameChangesPublisher(sinceCid: String) -> AnyPublisher<[Petname], Error> {
+    func getPetnameChangesPublisher(since cid: Cid) -> AnyPublisher<[Petname], Error> {
         Future.detached(priority: .utility) {
-            try await self.getPetnameChanges(sinceCid: sinceCid)
+            try await self.getPetnameChanges(since: cid)
         }
         .eraseToAnyPublisher()
     }
@@ -268,7 +267,8 @@ actor AddressBookService {
         petname: Petname,
         preventOverwrite: Bool = false
     ) async throws {
-        if try await noosphere.identity() == did.id {
+        let ourIdentity = try await noosphere.identity()
+        if ourIdentity.id == did.id {
             throw AddressBookError.cannotFollowYourself
         }
         
@@ -277,9 +277,12 @@ actor AddressBookService {
             throw AddressBookError.invalidAttemptToOverwitePetname
         }
         
-        try await noosphere.setPetname(did: did.did, petname: petname)
+        try await noosphere.setPetname(did: did, petname: petname)
         let version = try await noosphere.save()
-        try database.writeMetadatadata(key: .sphereVersion, value: version)
+        try database.writeSphereSyncInfo(
+            sphereIdentity: ourIdentity,
+            version: version
+        )
         await self.addressBook.invalidateCache()
     }
     
@@ -299,9 +302,13 @@ actor AddressBookService {
     /// Disassociates the passed Petname from any DID within the sphere,
     /// clears the cache, saves the changes and updates the database.
     func unfollowUser(petname: Petname) async throws {
+        let ourIdentity = try await noosphere.identity()
         try await self.addressBook.unsetPetname(petname: petname)
         let version = try await self.noosphere.save()
-        try database.writeMetadatadata(key: .sphereVersion, value: version)
+        try database.writeSphereSyncInfo(
+            sphereIdentity: ourIdentity,
+            version: version
+        )
         await self.addressBook.invalidateCache()
     }
     
@@ -341,7 +348,7 @@ actor AddressBookService {
     }
 
     func getPetname(petname: Petname) async throws -> Did? {
-        try await Did(self.noosphere.getPetname(petname: petname))
+        try await self.noosphere.getPetname(petname: petname)
     }
     
     /// Is there a user with this petname in the AddressBook?

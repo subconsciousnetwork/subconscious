@@ -102,8 +102,8 @@ actor DataService {
     func syncSphereWithDatabase() async throws -> String {
         let identity = try await noosphere.identity()
         let version = try await noosphere.version()
-        let since = try? database.readMetadata(key: .sphereVersion)
-        let changes = try await noosphere.changes(since)
+        let since = try? database.readSphereSyncInfo(sphereIdentity: identity)
+        let changes = try await noosphere.changes(since: since)
         for change in changes {
             let address = change.toPublicMemoAddress()
             let slashlink = address.toSlashlink()
@@ -122,8 +122,10 @@ actor DataService {
                 try database.removeMemo(address)
             }
         }
-        try database.writeMetadatadata(key: .sphereIdentity, value: identity)
-        try database.writeMetadatadata(key: .sphereVersion, value: version)
+        try database.writeSphereSyncInfo(
+            sphereIdentity: identity,
+            version: version
+        )
         return version
     }
     
@@ -139,7 +141,8 @@ actor DataService {
         let sphere = try await noosphere.traverse(petname: petname)
         let identity = try await sphere.identity()
         let version = try await sphere.version()
-        let changes = try await sphere.changes(version)
+        // TODO: must be since last known database-recorded version.
+        let changes = try await sphere.changes(since: version)
         for change in changes {
             let slashlink = change.toSlashlink(relativeTo: petname)
             let address = slashlink.toPublicMemoAddress()
@@ -266,10 +269,11 @@ actor DataService {
                 address,
                 memo: memo
             )
+            let identity = try await noosphere.identity()
             // Write new sphere version to database
-            try database.writeMetadatadata(
-                key: .sphereVersion,
-                value: version
+            try database.writeSphereSyncInfo(
+                sphereIdentity: identity,
+                version: version
             )
             return
         case .local(let slug):
@@ -313,7 +317,12 @@ actor DataService {
             try await noosphere.remove(slug: slashlink.slug)
             let version = try await noosphere.save()
             try database.removeMemo(address)
-            try database.writeMetadatadata(key: .sphereVersion, value: version)
+            let identity = try await noosphere.identity()
+            // Write new sphere version to database
+            try database.writeSphereSyncInfo(
+                sphereIdentity: identity,
+                version: version
+            )
             return
         }
     }

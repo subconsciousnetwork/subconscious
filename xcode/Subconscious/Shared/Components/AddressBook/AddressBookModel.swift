@@ -110,8 +110,7 @@ struct AddressBookModel: ModelProtocol {
             let fx: Fx<AddressBookAction> = environment.noosphere
                 .identityPublisher()
                 .tryMap({ identity in
-                    let did = try Did(identity).unwrap()
-                    return AddressBookAction.succeedRefreshDid(did)
+                    return AddressBookAction.succeedRefreshDid(identity)
                 })
                 .recover({error in
                     AddressBookAction.failRefreshDid(error.localizedDescription)

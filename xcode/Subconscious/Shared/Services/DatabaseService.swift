@@ -22,11 +22,6 @@ struct DatabaseMigrationInfo: Hashable {
     var didRebuild: Bool
 }
 
-enum DatabaseMetaKeys: String {
-    case sphereIdentity = "sphere_identity"
-    case sphereVersion = "sphere_version"
-}
-
 enum DatabaseServiceError: Error, LocalizedError {
     case invalidStateTransition(
         from: DatabaseServiceState,
@@ -114,48 +109,35 @@ final class DatabaseService {
         }
     }
 
-    /// Read database metadata from string key
-    func readMetadata(key: String) throws -> String {
+    /// Geven a sphere did, read the last known version that the database has
+    /// synced to (if any).
+    func readSphereSyncInfo(sphereIdentity: Did) throws -> String? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         let rows = try database.execute(
-            sql: "SELECT value FROM database_metadata WHERE key = ?",
-            parameters: [.text(key)]
+            sql: "SELECT version FROM sphere_sync_info WHERE did = ?",
+            parameters: [.text(sphereIdentity.description)]
         )
-        guard let version = rows.first?.col(0)?.toString() else {
-            throw DatabaseServiceError.notFound(
-                "No value found for key \(key)"
-            )
-        }
+        let version = rows.first?.col(0)?.toString()
         return version
     }
 
-    /// Read metadata from type-safe metadata key
-    func readMetadata(key: DatabaseMetaKeys) throws -> String {
-        try readMetadata(key: key.rawValue)
-    }
-
     /// Write database metadata at string key
-    func writeMetadatadata(key: String, value: String) throws {
+    func writeSphereSyncInfo(sphereIdentity: Did, version: String) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         try database.execute(
             sql: """
-            INSERT OR REPLACE INTO database_metadata (
-                key,
-                value
+            INSERT OR REPLACE INTO sphere_sync_info (
+                did,
+                version
             )
             VALUES (?, ?)
             """,
-            parameters: [.text(key), .text(value)]
+            parameters: [.text(sphereIdentity.description), .text(version)]
         )
-    }
-
-    /// Write database metadata at type-safe metadata key
-    func writeMetadatadata(key: DatabaseMetaKeys, value: String) throws {
-        try writeMetadatadata(key: key.rawValue, value: value)
     }
 
     /// Write entry syncronously
@@ -793,19 +775,14 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-03-24T19:17:00")!,
+            version: Int.from(iso8601String: "2023-04-27T13:00:00")!,
             sql: """
             /*
-            Key-value metadata related to the database.
-            Note that database is not source of truth, and may be deleted
-            and rebuilt. Metadata stored in this table should be about the
-            database and expected to exist only for the lifetime of the
-            database. Anything that needs to be persisted more permanently
-            should be persisted via other mechanisms.
+            A table that tracks sphere->database sync info.
             */
-            CREATE TABLE database_metadata (
-                key TEXT PRIMARY KEY,
-                value TEXT NOT NULL
+            CREATE TABLE sphere_sync_info (
+                did TEXT PRIMARY KEY,
+                version TEXT NOT NULL
             );
             
             /* History of user search queries */

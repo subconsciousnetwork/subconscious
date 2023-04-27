@@ -10,7 +10,6 @@ import Foundation
 import Combine
 
 enum UserProfileServiceError: Error {
-    case invalidSphereIdentity
     case missingPreferredPetname
     case unexpectedProfileContentType(String)
     case unexpectedProfileSchemaVersion(String)
@@ -21,11 +20,6 @@ enum UserProfileServiceError: Error {
 extension UserProfileServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
-        case .invalidSphereIdentity:
-            return String(
-                localized: "Sphere identity is an invalid DID",
-                comment: "UserProfileService error description"
-            )
         case .missingPreferredPetname:
             return String(
                 localized: "Missing or invalid nickname for sphere owner",
@@ -222,13 +216,15 @@ actor UserProfileService {
         var following: [StoryUser] = []
         let petnames = try await sphere.listPetnames()
         for petname in petnames {
-            guard let did = try await localAddressBook.getPetname(petname: petname) else {
+            guard let did = try await localAddressBook.getPetname(
+                petname: petname
+            ) else {
                 continue
             }
             
             let petname = address.petname?.append(petname: petname) ?? petname
             let noosphereIdentity = try await noosphere.identity()
-            let isOurs = noosphereIdentity == did.did
+            let isOurs = noosphereIdentity.id == did.id
             
             let address =
                 isOurs
@@ -298,10 +294,6 @@ actor UserProfileService {
             sphere: self.noosphere
         )
         
-        guard let did = Did(did) else {
-            throw UserProfileServiceError.invalidSphereIdentity
-        }
-        
         let profile = try await self.loadProfile(
             did: did,
             petname: nickname,
@@ -349,12 +341,8 @@ actor UserProfileService {
             return try await requestOurProfile()
         }
         
-        guard let did = Did(identity) else {
-            throw UserProfileServiceError.invalidSphereIdentity
-        }
-        
         let notes = try await sphere.list()
-        let isFollowing = await self.addressBook.isFollowingUser(did: did)
+        let isFollowing = await self.addressBook.isFollowingUser(did: identity)
         let entries = try await self.loadEntries(
             petname: petname,
             slugs: notes,
@@ -362,7 +350,7 @@ actor UserProfileService {
         )
         
         let profile = try await self.loadProfile(
-            did: did,
+            did: identity,
             petname: petname,
             address: address
         )

@@ -161,35 +161,35 @@ actor NoosphereService:
         .eraseToAnyPublisher()
     }
 
-    func identity() async throws -> String {
+    func identity() async throws -> Did {
         try await self.sphere().identity()
     }
 
-    nonisolated func identityPublisher() -> AnyPublisher<String, Error> {
+    nonisolated func identityPublisher() -> AnyPublisher<Did, Error> {
         self.spherePublisher().flatMap({ sphere in
             sphere.identityPublisher()
         })
         .eraseToAnyPublisher()
     }
 
-    func version() async throws -> String {
+    func version() async throws -> Cid {
         try await self.sphere().version()
     }
     
-    nonisolated func versionPublisher() -> AnyPublisher<String, Error> {
+    nonisolated func versionPublisher() -> AnyPublisher<Cid, Error> {
         self.spherePublisher().flatMap({ sphere in
             sphere.versionPublisher()
         })
         .eraseToAnyPublisher()
     }
     
-    func getFileVersion(slashlink: Slashlink) async -> String? {
+    func getFileVersion(slashlink: Slashlink) async -> Cid? {
         try? await self.sphere().getFileVersion(slashlink: slashlink)
     }
     
     nonisolated func getFileVersionPublisher(
         slashlink: Slashlink
-    ) -> AnyPublisher<String?, Never> {
+    ) -> AnyPublisher<Cid?, Never> {
         self.spherePublisher().flatMap({ sphere in
             sphere.getFileVersionPublisher(slashlink: slashlink)
         }).catch({ error in
@@ -293,11 +293,11 @@ actor NoosphereService:
         }).eraseToAnyPublisher()
     }
     
-    @discardableResult func save() async throws -> String {
+    @discardableResult func save() async throws -> Cid {
         try await self.sphere().save()
     }
     
-    nonisolated func savePublisher() -> AnyPublisher<String, Error> {
+    nonisolated func savePublisher() -> AnyPublisher<Cid, Error> {
         self.spherePublisher().flatMap({ sphere in
             sphere.savePublisher()
         })
@@ -315,49 +315,49 @@ actor NoosphereService:
         .eraseToAnyPublisher()
     }
     
-    func sync() async throws -> String {
+    func sync() async throws -> Cid {
         try await self.sphere().sync()
     }
     
-    nonisolated func syncPublisher() -> AnyPublisher<String, Error> {
+    nonisolated func syncPublisher() -> AnyPublisher<Cid, Error> {
         self.spherePublisher().flatMap({ sphere in
             sphere.syncPublisher()
         })
         .eraseToAnyPublisher()
     }
     
-    func changes(_ since: String?) async throws -> [Slug] {
-        try await self.sphere().changes(since)
+    func changes(since cid: String?) async throws -> [Slug] {
+        try await self.sphere().changes(since: cid)
     }
     
     nonisolated func changesPublisher(
-        _ since: String?
+        since cid: String?
     ) -> AnyPublisher<[Slug], Error> {
         self.spherePublisher().flatMap({ sphere in
-            sphere.changesPublisher(since)
+            sphere.changesPublisher(since: cid)
         })
         .eraseToAnyPublisher()
     }
     
-    func getPetname(petname: Petname) async throws -> String {
+    func getPetname(petname: Petname) async throws -> Did {
         try await self.sphere().getPetname(petname: petname)
     }
     
     nonisolated func getPetnamePublisher(
         petname: Petname
-    ) -> AnyPublisher<String, Error> {
+    ) -> AnyPublisher<Did, Error> {
         self.spherePublisher().flatMap({ sphere in
             sphere.getPetnamePublisher(petname: petname)
         })
         .eraseToAnyPublisher()
     }
     
-    func setPetname(did: String?, petname: Petname) async throws {
+    func setPetname(did: Did?, petname: Petname) async throws {
         try await self.sphere().setPetname(did: did, petname: petname)
     }
     
     nonisolated func setPetnamePublisher(
-        did: String?,
+        did: Did?,
         petname: Petname
     ) -> AnyPublisher<Void, Error> {
         self.spherePublisher().flatMap({ sphere in
@@ -366,13 +366,13 @@ actor NoosphereService:
         .eraseToAnyPublisher()
     }
     
-    func resolvePetname(petname: Petname) async throws -> String {
+    func resolvePetname(petname: Petname) async throws -> Cid {
         try await self.sphere().resolvePetname(petname: petname)
     }
     
     nonisolated func resolvePetnamePublisher(
         petname: Petname
-    ) -> AnyPublisher<String, Error> {
+    ) -> AnyPublisher<Cid, Error> {
         self.spherePublisher().flatMap({ sphere in
             sphere.resolvePetnamePublisher(petname: petname)
         })
@@ -390,15 +390,15 @@ actor NoosphereService:
         .eraseToAnyPublisher()
     }
     
-    func getPetnameChanges(sinceCid: String) async throws -> [Petname] {
-        try await self.sphere().getPetnameChanges(sinceCid: sinceCid)
+    func getPetnameChanges(since cid: Cid) async throws -> [Petname] {
+        try await self.sphere().getPetnameChanges(since: cid)
     }
     
     nonisolated func getPetnameChangesPublisher(
-        sinceCid: String
+        since cid: String
     ) -> AnyPublisher<[Petname], Error> {
         self.spherePublisher().flatMap({ sphere in
-            sphere.getPetnameChangesPublisher(sinceCid: sinceCid)
+            sphere.getPetnameChangesPublisher(since: cid)
         })
         .eraseToAnyPublisher()
     }
