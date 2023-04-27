@@ -141,8 +141,8 @@ actor DataService {
         let sphere = try await noosphere.traverse(petname: petname)
         let identity = try await sphere.identity()
         let version = try await sphere.version()
-        // TODO: must be since last known database-recorded version.
-        let changes = try await sphere.changes(since: version)
+        let since = try database.readSphereSyncInfo(sphereIdentity: identity)
+        let changes = try await sphere.changes(since: since)
         for change in changes {
             let slashlink = change.toSlashlink(relativeTo: petname)
             let address = slashlink.toPublicMemoAddress()
@@ -160,7 +160,10 @@ actor DataService {
                 try database.removeMemo(address)
             }
         }
-        // TODO: write to database
+        try database.writeSphereSyncInfo(
+            sphereIdentity: identity,
+            version: version
+        )
         return version
     }
 
