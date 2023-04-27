@@ -226,7 +226,7 @@ final class Tests_Sphere: XCTestCase {
         )
         let b = try await sphere.save()
         
-        let changesB = try await sphere.changes(a)
+        let changesB = try await sphere.changes(since: a)
         XCTAssertEqual(changesB.count, 2)
         XCTAssertTrue(changesB.contains(Slug("bar")!))
         XCTAssertTrue(changesB.contains(Slug("baz")!))
@@ -239,7 +239,7 @@ final class Tests_Sphere: XCTestCase {
         )
         _ = try await sphere.save()
         
-        let changesC = try await sphere.changes(b)
+        let changesC = try await sphere.changes(since: b)
         XCTAssertEqual(changesC.count, 1)
         XCTAssertTrue(changesC.contains(Slug("bing")!))
         XCTAssertFalse(changesC.contains(Slug("baz")!))
