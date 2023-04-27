@@ -119,22 +119,23 @@ struct UserProfileView: View {
                         send(.presentMetaSheet(true))
                     }
                 )
+                if user.category == .you {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(
+                            action: {
+                                send(.presentFollowNewUserFormSheet(true))
+                            },
+                            label: {
+                                Image(systemName: "person.badge.plus")
+                            }
+                        )
+                    }
+                }
             } else {
                 DetailToolbarContent(
                     defaultAudience: .public,
                     onTapOmnibox: {
                         send(.presentMetaSheet(true))
-                    }
-                )
-            }
-            
-            ToolbarItem(placement: .confirmationAction) {
-                Button(
-                    action: {
-                        send(.presentFollowNewUserFormSheet(true))
-                    },
-                    label: {
-                        Image(systemName: "person.badge.plus")
                     }
                 )
             }
@@ -243,30 +244,27 @@ private struct FollowModifier: ViewModifier {
                     tag: UserProfileDetailAction.presentFollowSheet
                 )
             ) {
-                if let user = state.user {
-                    FollowUserSheet(
-                        state: state.followUserSheet,
-                        send: Address.forward(
-                            send: send,
-                            tag: FollowUserSheetCursor.tag
-                        ),
-                        user: user,
-                        onAttemptFollow: {
-                            guard let did = state.followUserSheet.followUserForm.did.validated else {
-                                return
-                            }
-                            guard let petname = state.followUserSheet.followUserForm.petname.validated else {
-                                return
-                            }
-                            
-                            send(.attemptFollow(did, petname))
-                        },
-                        failFollowError: state.failFollowErrorMessage,
-                        onDismissError: {
-                            send(.dismissFailFollowError)
+                FollowUserSheet(
+                    state: state.followUserSheet,
+                    send: Address.forward(
+                        send: send,
+                        tag: FollowUserSheetCursor.tag
+                    ),
+                    onAttemptFollow: {
+                        guard let did = state.followUserSheet.followUserForm.did.validated else {
+                            return
                         }
-                    )
-                }
+                        guard let petname = state.followUserSheet.followUserForm.petname.validated else {
+                            return
+                        }
+                        
+                        send(.attemptFollow(did, petname))
+                    },
+                    failFollowError: state.failFollowErrorMessage,
+                    onDismissError: {
+                        send(.dismissFailFollowError)
+                    }
+                )
             }
     }
 }
@@ -298,7 +296,7 @@ private struct UnfollowModifier: ViewModifier {
               )
       ) {
           Button(
-              "Unfollow \(state.user?.nickname.markup ?? "user")?",
+              "Unfollow \(state.unfollowCandidate?.nickname.markup ?? "user")?",
               role: .destructive
           ) {
               send(.attemptUnfollow)

@@ -73,8 +73,10 @@ actor AddressBook<Sphere: SphereProtocol> {
         var addressBook: [AddressBookEntry] = []
         let petnames = try await sphere.listPetnames()
         for petname in petnames {
-            let did = try await Did(sphere.getPetname(petname: petname))
-                .unwrap()
+            guard let did = try await Did(sphere.getPetname(petname: petname)) else {
+                continue
+            }
+            
             addressBook.append(
                 AddressBookEntry(
                     petname: petname,

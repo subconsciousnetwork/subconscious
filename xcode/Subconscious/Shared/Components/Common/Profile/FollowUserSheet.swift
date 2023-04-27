@@ -28,6 +28,7 @@ struct FollowUserSheetModel: ModelProtocol {
     typealias Action = FollowUserSheetAction
     typealias Environment = FollowUserSheetEnvironment
     
+    var user: UserProfile? = nil
     var followUserForm: FollowUserFormModel = FollowUserFormModel()
     var isPetnamePresentInAddressBook: Bool = false
     
@@ -41,8 +42,10 @@ struct FollowUserSheetModel: ModelProtocol {
     static func update(state: Self, action: Action, environment: Environment) -> Update<Self> {
         switch action {
         case .populate(let user):
+            var model = state
+            model.user = user
             return update(
-                state: state,
+                state: model,
                 actions: [
                     .followUserForm(.didField(.setValue(input: user.did.did))),
                     .followUserForm(.petnameField(.setValue(input: user.nickname.verbatim))),
@@ -143,7 +146,6 @@ struct FollowUserSheetFormCursor: CursorProtocol {
 struct FollowUserSheet: View {
     var state: FollowUserSheetModel
     var send: (FollowUserSheetAction) -> Void
-    var user: UserProfile
     
     var onAttemptFollow: () -> Void
     
@@ -152,14 +154,16 @@ struct FollowUserSheet: View {
     
     var body: some View {
         VStack(alignment: .center, spacing: AppTheme.unit2) {
-            ProfilePic(pfp: user.pfp)
-            
-            Text(user.did.did)
-                .font(.caption.monospaced())
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.leading)
-            
-            Spacer()
+            if let user = state.user {
+                ProfilePic(pfp: user.pfp)
+                
+                Text(user.did.did)
+                    .font(.caption.monospaced())
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.leading)
+                
+                Spacer()
+            }
             
             ValidatedTextField(
                 placeholder: "petname",
@@ -198,9 +202,6 @@ struct FollowUserSheet: View {
         }
         .padding(AppTheme.padding)
         .presentationDetents([.fraction(0.33)])
-        .onAppear {
-            send(.populate(user))
-        }
         .alert(
             isPresented: Binding(
                 get: { failFollowError != nil },

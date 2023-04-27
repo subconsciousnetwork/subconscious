@@ -39,9 +39,9 @@ struct UserProfileDetailView: View {
     func onProfileAction(user: UserProfile, action: UserProfileAction) {
         switch (action) {
         case .requestFollow:
-            store.send(.requestFollow)
+            store.send(.requestFollow(user))
         case .requestUnfollow:
-            store.send(.requestUnfollow)
+            store.send(.requestUnfollow(user))
         case .editOwnProfile:
             store.send(.presentEditProfile(true))
         }
@@ -101,13 +101,13 @@ enum UserProfileDetailAction {
     case fetchFollowingStatus(Did)
     case populateFollowingStatus(Bool)
     
-    case requestFollow
+    case requestFollow(UserProfile)
     case attemptFollow(Did, Petname)
     case failFollow(error: String)
     case dismissFailFollowError
     case succeedFollow(did: Did, petname: Petname)
     
-    case requestUnfollow
+    case requestUnfollow(UserProfile)
     case attemptUnfollow
     case failUnfollow(error: String)
     case dismissFailUnfollowError
@@ -194,6 +194,8 @@ struct UserProfileDetailModel: ModelProtocol {
     var following: [StoryUser] = []
     
     var statistics: UserProfileStatistics? = nil
+    
+    var unfollowCandidate: UserProfile? = nil
     
     static func update(
         state: Self,
@@ -313,8 +315,15 @@ struct UserProfileDetailModel: ModelProtocol {
             return Update(state: model)
             
         // MARK: Following
-        case .requestFollow:
-            return update(state: state, action: .presentFollowSheet(true), environment: environment)
+        case .requestFollow(let user):
+            return update(
+                state: state,
+                actions: [
+                    .presentFollowSheet(true),
+                    .followUserSheet(.populate(user))
+                ],
+                environment: environment
+            )
             
         case .attemptFollow(let did, let petname):
             let fx: Fx<UserProfileDetailAction> =
@@ -330,18 +339,17 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return Update(state: state, fx: fx)
             
-        case .succeedFollow(let did, _):
+        case .succeedFollow(_, _):
             var actions: [UserProfileDetailAction] = [
                 .presentFollowSheet(false),
-                .presentFollowNewUserFormSheet(false),
-                .fetchFollowingStatus(did),
+                .presentFollowNewUserFormSheet(false)
             ]
-            
             
             // Refresh our profile  show the following list if we followed someone new
             if let user = state.user {
+                actions.append(.appear(user.address))
+                
                 if user.category == .you {
-                    actions.append(.appear(user.address))
                     actions.append(.tabIndexSelected(2))
                 }
             }
@@ -368,11 +376,18 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isUnfollowConfirmationPresented = presented
             return Update(state: model)
             
-        case .requestUnfollow:
-            return update(state: state, action: .presentUnfollowConfirmation(true), environment: environment)
+        case .requestUnfollow(let user):
+            var model = state
+            model.unfollowCandidate = user
+            
+            return update(
+                state: model,
+                action: .presentUnfollowConfirmation(true),
+                environment: environment
+            )
             
         case .attemptUnfollow:
-            guard let did = state.user?.did else {
+            guard let did = state.unfollowCandidate?.did else {
                 return Update(state: state)
             }
             
@@ -389,13 +404,23 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return Update(state: state, fx: fx)
             
-        case .succeedUnfollow(let did):
+        case .succeedUnfollow(_):
+            var actions: [UserProfileDetailAction] = [
+                .presentUnfollowConfirmation(false)
+            ]
+            
+            // Refresh our profile show the following list if we unfollowed someone
+            if let user = state.user {
+                actions.append(.appear(user.address))
+                
+                if user.category == .you {
+                    actions.append(.tabIndexSelected(2))
+                }
+            }
+            
             return update(
                 state: state,
-                actions: [
-                    .presentUnfollowConfirmation(false),
-                    .fetchFollowingStatus(did)
-                ],
+                actions: actions,
                 environment: environment
             )
             
