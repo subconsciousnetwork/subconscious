@@ -166,7 +166,7 @@ actor UserProfileService {
                 return .url(url)
             }
             
-            return .none
+            return .none(did)
         }
         
         let profile = UserProfile(
