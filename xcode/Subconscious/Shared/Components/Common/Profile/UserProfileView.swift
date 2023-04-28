@@ -35,7 +35,7 @@ struct UserProfileView: View {
             label: "Recent",
             view: Group {
                 if let user = state.user {
-                    ForEach(state.recentEntries, id: \.id) { entry in
+                    ForEach(state.recentEntries) { entry in
                         StoryEntryView(
                             story: StoryEntry(
                                 author: user,
@@ -52,7 +52,7 @@ struct UserProfileView: View {
             label: "Top",
             view: Group {
                 if let user = state.user {
-                    ForEach(state.topEntries, id: \.id) { entry in
+                    ForEach(state.topEntries) { entry in
                         StoryEntryView(
                             story: StoryEntry(
                                 author: user,
@@ -68,7 +68,7 @@ struct UserProfileView: View {
         let columnFollowing = TabbedColumnItem(
             label: "Following",
             view: Group {
-                ForEach(state.following, id: \.id) { follow in
+                ForEach(state.following) { follow in
                     StoryUserView(
                         story: follow,
                         action: { _, _ in onNavigateToUser(follow.user) },
