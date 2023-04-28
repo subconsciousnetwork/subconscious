@@ -11,8 +11,8 @@ import SwiftUI
 /// without having to deal with firing both tap targets at once.
 private struct RectangleCroppedTopRightCorner: Shape {
     static let margin: CGSize = CGSize(
-        width: AppTheme.minTouchSize + AppTheme.padding,
-        height: AppTheme.minTouchSize + AppTheme.padding
+        width: AppTheme.minTouchSize + AppTheme.tightPadding,
+        height: AppTheme.minTouchSize + AppTheme.tightPadding
     )
     
     func path(in rect: CGRect) -> Path {
@@ -87,15 +87,17 @@ struct StoryUserView: View {
                     },
                     label: {
                         Image(systemName: "ellipsis")
-                            .frame(width: 32, height: 32)
+                            .frame(width: AppTheme.minTouchSize, height: AppTheme.minTouchSize)
                             .background(.background)
                     }
                 )
             }
             
-            Text(verbatim: story.user.bio)
+            if story.user.bio.count > 0 {
+                Text(verbatim: story.user.bio)
+            }
         }
-        .padding()
+        .padding(AppTheme.tightPadding)
         .contentShape(.interaction, RectangleCroppedTopRightCorner())
         .onTapGesture {
             action(
