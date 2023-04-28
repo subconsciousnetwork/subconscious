@@ -195,6 +195,10 @@ enum AppAction: CustomLogStringConvertible {
     case syncLocalFilesWithDatabase
     case succeedSyncLocalFilesWithDatabase([FileFingerprintChange])
     case failSyncLocalFilesWithDatabase(String)
+    
+    case followDefaultGeist
+    case succeedFollowDefaultGeist
+    case failFollowDefaultGeist(String)
 
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
@@ -689,6 +693,16 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
+        case .followDefaultGeist:
+            return followDefaultGeist(
+                state: state,
+                environment: environment
+            )
+        case .succeedFollowDefaultGeist:
+            return Update(state: state)
+        case .failFollowDefaultGeist(let error):
+            logger.error("Failed to follow default geist: \(error)")
+            return Update(state: state)
         }
     }
 
@@ -919,7 +933,8 @@ struct AppModel: ModelProtocol {
             state: state,
             actions: [
                 .setSphereIdentity(receipt.identity),
-                .setRecoveryPhrase(receipt.mnemonic)
+                .setRecoveryPhrase(receipt.mnemonic),
+                .followDefaultGeist
             ],
             environment: environment
         )
@@ -1374,6 +1389,26 @@ struct AppModel: ModelProtocol {
         var model = state
         model.isSettingsSheetPresented = isPresented
         return Update(state: model)
+    }
+    
+    static func followDefaultGeist(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = environment.addressBook
+            .followUserPublisher(
+                did: Config.default.subconsciousGeistDid,
+                petname: Config.default.subconsciousGeistPetname
+            )
+            .map {
+                AppAction.succeedFollowDefaultGeist
+            }
+            .recover { error in
+                AppAction.failFollowDefaultGeist(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
     }
 }
 
