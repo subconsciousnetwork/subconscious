@@ -11,15 +11,17 @@ public struct Did : Hashable, Identifiable, Codable {
     public let did: String
     public var id: String { did }
     
-    // Approximate, based on https://www.w3.org/TR/did-core/#did-syntax
-    private static let regex = /^(did:[a-z0-9]{3}:[a-zA-Z0-9-_\.%:]+)$/
+    // Approximate, based on
+    // https://www.w3.org/TR/did-core/#did-syntax
+    // https://w3c-ccg.github.io/did-method-key/
+    private static let regex = /did:key:[a-zA-Z0-9]+/
     
     public init?(did: String) {
         guard let did = try? Self.regex.wholeMatch(in: did) else {
             return nil
         }
         
-        self.did = String(did.1)
+        self.did = String(did.0)
     }
 }
 

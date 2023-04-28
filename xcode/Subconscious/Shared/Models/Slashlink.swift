@@ -16,7 +16,7 @@ public struct Slashlink:
     Codable,
     LosslessStringConvertible
 {
-    private static let slashlinkRegex = /(\@(?<petname>(?:[\w\d\-]+)(?:\.[\w\d\-]+)*))?(\/(?<slug>(?:[\w\d\-]+)(?:\/[\w\d\-]+)*))?/
+    private static let slashlinkRegex = /(?:(?<did>(?:did:key:[a-zA-Z0-9]+))|(?<petname>@[\w\-]+(?:\.[\w\-]+)*))?(?<slug>\/[\w\-]+(?:\/[\w\-]+)*)?/
     
     public static func < (lhs: Slashlink, rhs: Slashlink) -> Bool {
         lhs.id < rhs.id
@@ -31,9 +31,9 @@ public struct Slashlink:
     
     public var description: String {
         guard let peer = peer else {
-            return "/\(slug.description)"
+            return slug.markup
         }
-        return "@\(peer.description)/\(slug.description)"
+        return "\(peer.markup)\(slug.markup)"
     }
 
     public var verbatim: String {
@@ -68,26 +68,44 @@ public struct Slashlink:
             return nil
         }
         
-        // There are four cases: peer-only, slug-only, peer+slug and empty.
-        // All are valid constructions except for empty.
-        // Petname-only will use `profileSlug` as the slug.
         let slug = match.slug.map({ substring in
-            Slug(uncheckedRawString: substring.toString()
-        )})
-        let peer = match.petname.map({ substring in
-            Peer.petname(
-                Petname(uncheckedRawString: substring.toString())
-            )
+            // Drop leading `/`
+            let slug = substring.dropFirst()
+            return Slug(uncheckedRawString: slug.description)
+        })
+        let petname = match.petname.map({ substring in
+            // Drop leading `@`
+            let petname = substring.dropFirst()
+            return Petname(uncheckedRawString: petname.description)
+        })
+        let did = match.did.map({ substring in
+            Did(uncheckedRawString: substring.description)
         })
         
-        switch (peer, slug) {
-        case (.some(let peer), .some(let slug)):
-            self.init(peer: peer, slug: slug)
-        case (.none, .some(let slug)):
+        // There are several valid cases:
+        //
+        // - did + slug
+        // - did
+        // - petname + slug
+        // - petname
+        // - slug
+        //
+        // All are valid constructions except for empty.
+        //
+        // Petname-only will use `Slug.profile` as the slug when no slug is
+        // provided.
+        switch (did, petname, slug) {
+        case let (.some(did), .none, .some(slug)):
+            self.init(peer: .did(did), slug: slug)
+        case let (.some(did), .none, .none):
+            self.init(peer: .did(did), slug: Slug.profile)
+        case let (.none, .some(petname), .some(slug)):
+            self.init(peer: .petname(petname), slug: slug)
+        case let (.none, .some(petname), .none):
+            self.init(peer: .petname(petname), slug: Slug.profile)
+        case (.none, .none, .some(let slug)):
             self.init(slug: slug)
-        case (.some(let peer), .none):
-            self.init(peer: peer, slug: Slug.profile)
-        case (_, _):
+        default:
             return nil
         }
     }
@@ -178,6 +196,14 @@ extension Petname {
     fileprivate init(uncheckedRawString string: String) {
         self.description = string.lowercased()
         self.verbatim = string
+    }
+}
+
+extension Did {
+    /// An optimized constructor that is only called by
+    /// `Slashlink.init`
+    fileprivate init(uncheckedRawString string: String) {
+        self.did = string
     }
 }
 

@@ -30,6 +30,16 @@ public enum Peer: Hashable, Codable, CustomStringConvertible {
         }
     }
     
+    /// Get markup form of peer (Either DID or petname)
+    public var markup: String {
+        switch self {
+        case .did(let did):
+            return did.description
+        case .petname(let petname):
+            return petname.markup
+        }
+    }
+
     /// An absolute peer is a peer that is a did.
     /// A "relative" peer is a peer that is a petname.
     var isAbsolute: Bool {
