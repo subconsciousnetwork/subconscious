@@ -226,10 +226,9 @@ actor UserProfileService {
             let noosphereIdentity = try await noosphere.identity()
             let isOurs = noosphereIdentity == entry.did.did
             
-            let address =
-                isOurs
+            let address = isOurs
                 ? Slashlink.ourProfile.toPublicMemoAddress()
-            : Slashlink(petname: entry.petname).toPublicMemoAddress()
+                : Slashlink(petname: entry.petname).toPublicMemoAddress()
             
             let user = try await self.loadProfile(
                 did: entry.did,
