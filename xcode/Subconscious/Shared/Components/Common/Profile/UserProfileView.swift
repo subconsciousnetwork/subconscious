@@ -144,34 +144,7 @@ struct UserProfileView: View {
         .follow(state: state, send: send)
         .unfollow(state: state, send: send)
         .editProfile(state: state, send: send)
-        .sheet(
-            isPresented: Binding(
-                get: { state.isFollowNewUserFormSheetPresented },
-                send: send,
-                tag: UserProfileDetailAction.presentFollowNewUserFormSheet
-            )
-        ) {
-            FollowNewUserFormSheetView(
-                state: state.followNewUserFormSheet,
-                send: Address.forward(
-                    send: send,
-                    tag: FollowNewUserFormSheetCursor.tag
-                ),
-                did: state.user?.did,
-                onAttemptFollow: {
-                    guard let did = state.followNewUserFormSheet.form.did.validated else {
-                        return
-                    }
-                    guard let petname = state.followNewUserFormSheet.form.petname.validated else {
-                        return
-                    }
-                    
-                    send(.attemptFollow(did, petname))
-                },
-                onCancel: { send(.presentFollowNewUserFormSheet(false)) },
-                onDismissFailFollowError: { send(.dismissFailFollowError) }
-            )
-        }
+        .followNewUser(state: state, send: send)
     }
 }
 
@@ -203,6 +176,13 @@ private extension View {
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
       self.modifier(EditProfileSheetModifier(state: state, send: send))
+    }
+    
+    func followNewUser(
+        state: UserProfileDetailModel,
+        send: @escaping (UserProfileDetailAction) -> Void
+    ) -> some View {
+      self.modifier(FollowNewUserSheetModifier(state: state, send: send))
     }
 }
 
@@ -252,10 +232,11 @@ private struct FollowModifier: ViewModifier {
                         tag: FollowUserSheetCursor.tag
                     ),
                     onAttemptFollow: {
-                        guard let did = state.followUserSheet.followUserForm.did.validated else {
+                        let form = state.followUserSheet.followUserForm
+                        guard let did = form.did.validated else {
                             return
                         }
-                        guard let petname = state.followUserSheet.followUserForm.petname.validated else {
+                        guard let petname = form.petname.validated else {
                             return
                         }
                         
@@ -343,6 +324,44 @@ private struct EditProfileSheetModifier: ViewModifier {
                         }
                     )
                 }
+            }
+    }
+}
+
+private struct FollowNewUserSheetModifier: ViewModifier {
+    let state: UserProfileDetailModel
+    let send: (UserProfileDetailAction) -> Void
+    
+    func body(content: Content) -> some View {
+        content
+            .sheet(
+                isPresented: Binding(
+                    get: { state.isFollowNewUserFormSheetPresented },
+                    send: send,
+                    tag: UserProfileDetailAction.presentFollowNewUserFormSheet
+                )
+            ) {
+                FollowNewUserFormSheetView(
+                    state: state.followNewUserFormSheet,
+                    send: Address.forward(
+                        send: send,
+                        tag: FollowNewUserFormSheetCursor.tag
+                    ),
+                    did: state.user?.did,
+                    onAttemptFollow: {
+                        let form = state.followNewUserFormSheet.form
+                        guard let did = form.did.validated else {
+                            return
+                        }
+                        guard let petname = form.petname.validated else {
+                            return
+                        }
+                        
+                        send(.attemptFollow(did, petname))
+                    },
+                    onCancel: { send(.presentFollowNewUserFormSheet(false)) },
+                    onDismissFailFollowError: { send(.dismissFailFollowError) }
+                )
             }
     }
 }
