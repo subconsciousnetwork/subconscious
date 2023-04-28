@@ -9,155 +9,6 @@ import SwiftUI
 import ObservableStore
 import CodeScanner
 
-enum FollowNewUserFormSheetAction {
-    case form(FollowUserFormAction)
-    
-    case presentQRCodeScanner(_ isPresented: Bool)
-    case qrCodeScanned(scannedContent: String)
-    case qrCodeScanError(error: String)
-}
-
-typealias FollowNewUserFormSheetEnvironment = Void
-
-struct FollowNewUserFormSheetModel: ModelProtocol {
-    typealias Action = FollowNewUserFormSheetAction
-    typealias Environment = FollowNewUserFormSheetEnvironment
-    
-    var isQrCodeScannerPresented = false
-    
-    var form: FollowUserFormModel = FollowUserFormModel()
-    
-    var failFollowErrorMessage: String? = nil
-    var failQRCodeScanErrorMessage: String? = nil
-    
-    static func update(
-        state: Self,
-        action: Action,
-        environment: Environment
-    ) -> Update<Self> {
-        switch (action) {
-        case .form(let action):
-            return FollowUserFormCursor.update(
-                state: state,
-                action: action,
-                environment: environment
-            )
-            
-        case .presentQRCodeScanner(let isPresented):
-            var model = state
-            model.failQRCodeScanErrorMessage = nil
-            model.isQrCodeScannerPresented = isPresented
-            return Update(state: model)
-            
-        case .qrCodeScanned(scannedContent: let content):
-            return update(
-                state: state,
-                actions: [
-                    .form(.didField(.markAsTouched)),
-                    .form(.didField(.setValue(input: content)))
-                ],
-                environment: environment
-            )
-            
-        case .qrCodeScanError(error: let error):
-            var model = state
-            model.failQRCodeScanErrorMessage = error
-            return Update(state: model)
-        }
-    }
-}
-
-struct FollowUserFormCursor: CursorProtocol {
-    typealias Model = FollowNewUserFormSheetModel
-    typealias ViewModel = FollowUserFormModel
-
-    static func get(state: Model) -> ViewModel {
-        state.form
-    }
-    
-    static func set(state: Model, inner: ViewModel) -> Model {
-        var model = state
-        model.form = inner
-        return model
-    }
-    
-    static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .form(action)
-    }
-}
-
-struct FollowNewUserFormSheetCursor: CursorProtocol {
-    typealias Model = UserProfileDetailModel
-    typealias ViewModel = FollowNewUserFormSheetModel
-
-    static func get(state: Model) -> ViewModel {
-        state.followNewUserFormSheet
-    }
-    
-    static func set(state: Model, inner: ViewModel) -> Model {
-        var model = state
-        model.followNewUserFormSheet = inner
-        return model
-    }
-    
-    static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .followNewUserFormSheet(action)
-    }
-}
-
-struct FollowUserFormView: View {
-    var state: FollowUserFormModel
-    var send: (FollowUserFormAction) -> Void
-    
-    var body: some View {
-        Section(header: Text("User To Follow")) {
-            HStack(alignment: .top) {
-                Image(systemName: "key")
-                    .foregroundColor(.accentColor)
-                ValidatedTextField(
-                    placeholder: "DID",
-                    text: Binding(
-                        get: { state.did.value },
-                        send: send,
-                        tag: { v in .didField(.setValue(input: v))}
-                    ),
-                    onFocusChanged: { focused in
-                        send(.didField(.focusChange(focused: focused)))
-                    },
-                    caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
-                    hasError: state.did.hasError
-                )
-                .formField()
-                .lineLimit(1)
-                .textInputAutocapitalization(.never)
-                .disableAutocorrection(true)
-            }
-            
-            HStack(alignment: .top) {
-                Image(systemName: "at")
-                    .foregroundColor(.accentColor)
-                ValidatedTextField(
-                    placeholder: "Petname",
-                    text: Binding(
-                        get: { state.petname.value },
-                        send: send,
-                        tag: { v in .petnameField(.setValue(input: v))}
-                    ),
-                    onFocusChanged: { focused in
-                        send(.petnameField(.focusChange(focused: focused)))
-                    },
-                    caption: "Lowercase letters, numbers and dashes only.",
-                    hasError: state.petname.hasError
-                )
-                .formField()
-                .lineLimit(1)
-                .textInputAutocapitalization(.never)
-                .disableAutocorrection(true)
-            }
-        }
-    }
-}
-
 struct FollowNewUserFormSheetView: View {
     var state: FollowNewUserFormSheetModel
     var form: FollowUserFormModel {
@@ -263,7 +114,7 @@ struct FollowNewUserFormSheetView: View {
     }
 }
 
-struct FollowUserView_Previews: PreviewProvider {
+struct FollowNewUserFormSheetView_Previews: PreviewProvider {
     static var previews: some View {
         FollowNewUserFormSheetView(
             state: FollowNewUserFormSheetModel(),
@@ -273,6 +124,161 @@ struct FollowUserView_Previews: PreviewProvider {
             onCancel: {},
             onDismissFailFollowError: {}
         )
+    }
+}
+
+// MARK: Actions
+enum FollowNewUserFormSheetAction {
+    case form(FollowUserFormAction)
+    
+    case presentQRCodeScanner(_ isPresented: Bool)
+    case qrCodeScanned(scannedContent: String)
+    case qrCodeScanError(error: String)
+}
+
+typealias FollowNewUserFormSheetEnvironment = Void
+
+// MARK: Model
+struct FollowNewUserFormSheetModel: ModelProtocol {
+    typealias Action = FollowNewUserFormSheetAction
+    typealias Environment = FollowNewUserFormSheetEnvironment
+    
+    var isQrCodeScannerPresented = false
+    
+    var form: FollowUserFormModel = FollowUserFormModel()
+    
+    var failFollowErrorMessage: String? = nil
+    var failQRCodeScanErrorMessage: String? = nil
+    
+    static func update(
+        state: Self,
+        action: Action,
+        environment: Environment
+    ) -> Update<Self> {
+        switch (action) {
+        case .form(let action):
+            return FollowUserFormCursor.update(
+                state: state,
+                action: action,
+                environment: environment
+            )
+            
+        case .presentQRCodeScanner(let isPresented):
+            var model = state
+            model.failQRCodeScanErrorMessage = nil
+            model.isQrCodeScannerPresented = isPresented
+            return Update(state: model)
+            
+        case .qrCodeScanned(scannedContent: let content):
+            return update(
+                state: state,
+                actions: [
+                    .form(.didField(.markAsTouched)),
+                    .form(.didField(.setValue(input: content)))
+                ],
+                environment: environment
+            )
+            
+        case .qrCodeScanError(error: let error):
+            var model = state
+            model.failQRCodeScanErrorMessage = error
+            return Update(state: model)
+        }
+    }
+}
+
+// MARK: Cursors
+
+struct FollowUserFormCursor: CursorProtocol {
+    typealias Model = FollowNewUserFormSheetModel
+    typealias ViewModel = FollowUserFormModel
+
+    static func get(state: Model) -> ViewModel {
+        state.form
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.form = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        .form(action)
+    }
+}
+
+struct FollowNewUserFormSheetCursor: CursorProtocol {
+    typealias Model = UserProfileDetailModel
+    typealias ViewModel = FollowNewUserFormSheetModel
+
+    static func get(state: Model) -> ViewModel {
+        state.followNewUserFormSheet
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.followNewUserFormSheet = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        .followNewUserFormSheet(action)
+    }
+}
+
+
+// MARK: Inner FollowUserForm
+struct FollowUserFormView: View {
+    var state: FollowUserFormModel
+    var send: (FollowUserFormAction) -> Void
+    
+    var body: some View {
+        Section(header: Text("User To Follow")) {
+            HStack(alignment: .top) {
+                Image(systemName: "key")
+                    .foregroundColor(.accentColor)
+                ValidatedTextField(
+                    placeholder: "DID",
+                    text: Binding(
+                        get: { state.did.value },
+                        send: send,
+                        tag: { v in .didField(.setValue(input: v))}
+                    ),
+                    onFocusChanged: { focused in
+                        send(.didField(.focusChange(focused: focused)))
+                    },
+                    caption: "e.g. did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7",
+                    hasError: state.did.hasError
+                )
+                .formField()
+                .lineLimit(1)
+                .textInputAutocapitalization(.never)
+                .disableAutocorrection(true)
+            }
+            
+            HStack(alignment: .top) {
+                Image(systemName: "at")
+                    .foregroundColor(.accentColor)
+                ValidatedTextField(
+                    placeholder: "Petname",
+                    text: Binding(
+                        get: { state.petname.value },
+                        send: send,
+                        tag: { v in .petnameField(.setValue(input: v))}
+                    ),
+                    onFocusChanged: { focused in
+                        send(.petnameField(.focusChange(focused: focused)))
+                    },
+                    caption: "Lowercase letters, numbers and dashes only.",
+                    hasError: state.petname.hasError
+                )
+                .formField()
+                .lineLimit(1)
+                .textInputAutocapitalization(.never)
+                .disableAutocorrection(true)
+            }
+        }
     }
 }
 
