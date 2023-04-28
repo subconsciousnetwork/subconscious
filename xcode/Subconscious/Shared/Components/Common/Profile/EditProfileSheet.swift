@@ -159,6 +159,26 @@ struct EditProfileSheet: View {
     var onCancel: () -> Void
     var onDismissError: () -> Void
     
+    func makePreview(nickname: Petname) -> UserProfile {
+        let pfp: ProfilePicVariant = Func.run {
+            let did = user.did
+            if let url = state.pfpUrlField.validated {
+                return ProfilePicVariant.url(url)
+            }
+            
+            return ProfilePicVariant.none(did)
+        }
+        
+        return UserProfile(
+            did: user.did,
+            nickname: nickname,
+            address: user.address,
+            pfp: pfp,
+            bio: state.bioField.validated ?? "",
+            category: .you
+        )
+    }
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -237,26 +257,11 @@ struct EditProfileSheet: View {
                 }
                 
                 if let nickname = state.nicknameField.validated {
-                    let pfp: ProfilePicVariant = Func.run {
-                        if let url = state.pfpUrlField.validated {
-                            return .url(url)
-                        }
-                        
-                        return .none
-                    }
-                    
-                    let user = UserProfile(
-                        did: user.did,
-                        nickname: nickname,
-                        address: user.address,
-                        pfp: pfp,
-                        bio: state.bioField.validated ?? "",
-                        category: .you
-                    )
+                    let preview = makePreview(nickname: nickname)
                     
                     Section("Preview") {
                         UserProfileHeaderView(
-                            user: user,
+                            user: preview,
                             statistics: statistics,
                             isFollowingUser: false,
                             hideActionButton: true

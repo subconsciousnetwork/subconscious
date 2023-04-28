@@ -49,6 +49,8 @@
 		B5CA448A29D6A1C7002FD83C /* DummyDataUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */; };
 		B5CFC7FE29E5403900178631 /* FollowUserSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */; };
 		B5CFC7FF29E5403900178631 /* FollowUserSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */; };
+		B5D769CB29F770440015385A /* GenerativeProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D769CA29F770440015385A /* GenerativeProfilePic.swift */; };
+		B5D769CC29F770440015385A /* GenerativeProfilePic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D769CA29F770440015385A /* GenerativeProfilePic.swift */; };
 		B5D8D2FF29AF1DBB0011D820 /* Test_Did.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5D8D2FE29AF1DBB0011D820 /* Test_Did.swift */; };
 		B5F6ADC929C02F4A00690DE4 /* AddressBookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F6ADC829C02F4A00690DE4 /* AddressBookService.swift */; };
 		B5F6ADCC29C1323900690DE4 /* Tests_FormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F6ADCB29C1323900690DE4 /* Tests_FormField.swift */; };
@@ -444,6 +446,7 @@
 		B59D556229BBFF56007915E2 /* FormField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormField.swift; sourceTree = "<group>"; };
 		B5CA448829D6A1C7002FD83C /* DummyDataUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DummyDataUtilities.swift; sourceTree = "<group>"; };
 		B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUserSheet.swift; sourceTree = "<group>"; };
+		B5D769CA29F770440015385A /* GenerativeProfilePic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerativeProfilePic.swift; sourceTree = "<group>"; };
 		B5D8D2FE29AF1DBB0011D820 /* Test_Did.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Test_Did.swift; sourceTree = "<group>"; };
 		B5D8D30029AF1F9B0011D820 /* Did.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Did.swift; sourceTree = "<group>"; };
 		B5F6ADC829C02F4A00690DE4 /* AddressBookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookService.swift; sourceTree = "<group>"; };
@@ -771,6 +774,7 @@
 				B58A46B629D3D09500491E43 /* UserProfileHeaderView.swift */,
 				B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */,
 				B58862C729F612CE006C2EE4 /* EditProfileSheet.swift */,
+				B5D769CA29F770440015385A /* GenerativeProfilePic.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -1582,6 +1586,7 @@
 				B8A1621829B39337008322EB /* ExpandAlignedLeadingViewModifier.swift in Sources */,
 				B8109C2827A8879C00CD2B6D /* AppTheme.swift in Sources */,
 				B8D7F03F27A4AD130042C7CF /* SuggestionLabelView.swift in Sources */,
+				B5D769CB29F770440015385A /* GenerativeProfilePic.swift in Sources */,
 				B8B4D7EE27EA8AA000633B5F /* DragHandleView.swift in Sources */,
 				B58FE48A28DED93F00E000CC /* ComboGeist.swift in Sources */,
 				B8A59D6628B690B20010DB2F /* FeedService.swift in Sources */,
@@ -1787,6 +1792,7 @@
 				B5CA448A29D6A1C7002FD83C /* DummyDataUtilities.swift in Sources */,
 				B8CBAFAA299580E50079107E /* StoreProtocol.swift in Sources */,
 				B8AE34CC276C195E00777FF0 /* LinkSuggestionLabelView.swift in Sources */,
+				B5D769CC29F770440015385A /* GenerativeProfilePic.swift in Sources */,
 				B8545F0E2970577600BC4EA1 /* BacklinkReacts.swift in Sources */,
 				B800ABE9297DE7D20024D1FD /* DataService.swift in Sources */,
 				B8249DA427E2753800BCDFBA /* ViewUtilities.swift in Sources */,
