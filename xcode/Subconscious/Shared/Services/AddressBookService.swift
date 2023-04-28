@@ -88,7 +88,7 @@ actor AddressBook<Sphere: SphereProtocol> {
             )
         }
         
-        // Maintain consitent order
+        // Maintain consistent order
         addressBook.sort { a, b in
             a.petname < b.petname
         }
