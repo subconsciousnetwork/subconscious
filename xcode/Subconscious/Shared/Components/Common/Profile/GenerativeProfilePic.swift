@@ -53,21 +53,20 @@ struct GenerativeProfilePicParams {
         "✦",
         "✷",
         "☾",
-        "♦︎",
+        "♦︎"
     ]
     
     private static let colorOptions = [
         Color.blue,
         Color.gray,
         Color.cyan,
-//        Color.orange,
         Color.brandMarkViolet,
-        Color.brandMarkPurple,
+        Color.brandMarkPurple
     ]
     
     private static let blendModeOptions = [
         BlendMode.colorDodge,
-        BlendMode.colorBurn,
+        BlendMode.colorBurn
     ]
 }
 
