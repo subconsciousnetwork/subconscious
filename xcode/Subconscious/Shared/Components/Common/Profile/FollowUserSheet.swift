@@ -39,7 +39,12 @@ struct FollowUserSheetModel: ModelProtocol {
         category: "FollowUserSheetModel"
     )
     
-    static func update(state: Self, action: Action, environment: Environment) -> Update<Self> {
+    static func update(
+        state: Self,
+        action: Action,
+        environment: Environment
+    ) -> Update<Self> {
+        
         switch action {
         case .populate(let user):
             var model = state
@@ -77,7 +82,11 @@ struct FollowUserSheetModel: ModelProtocol {
             
             if collision {
                 model.petnameFieldCaption = "You already follow a \(petname.markup)"
-                return update(state: model, actions: [.attemptToFindUniquePetname(petname)], environment: environment)
+                return update(
+                    state: model,
+                    actions: [.attemptToFindUniquePetname(petname)],
+                    environment: environment
+                )
             }
             
             return Update(state: model)
@@ -86,7 +95,9 @@ struct FollowUserSheetModel: ModelProtocol {
             let fx: Fx<FollowUserSheetAction> =
                 environment.addressBook.findAvailablePetnamePublisher(petname: petname)
                 .map { petname in
-                    FollowUserSheetAction.followUserForm(.petnameField(.setValue(input: petname.verbatim)))
+                    FollowUserSheetAction.followUserForm(
+                        .petnameField(.setValue(input: petname.verbatim))
+                    )
                 }
                 .catch { error in
                     Just(FollowUserSheetAction.failToFindUniquePetname)
@@ -119,7 +130,7 @@ struct FollowUserSheetCursor: CursorProtocol {
         return model
     }
     
-    static func tag(_ action: FollowUserSheetAction) -> UserProfileDetailAction {
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
         .followUserSheet(action)
     }
 }
@@ -128,17 +139,17 @@ struct FollowUserSheetFormCursor: CursorProtocol {
     typealias Model = FollowUserSheetModel
     typealias ViewModel = FollowUserFormModel
     
-    static func get(state: FollowUserSheetModel) -> FollowUserFormModel {
+    static func get(state: Model) -> ViewModel {
         state.followUserForm
     }
     
-    static func set(state: FollowUserSheetModel, inner: FollowUserFormModel) -> FollowUserSheetModel {
+    static func set(state: Model, inner: ViewModel) -> Model {
         var model = state
         model.followUserForm = inner
         return model
     }
     
-    static func tag(_ action: FollowUserFormAction) -> FollowUserSheetAction {
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
         .followUserForm(action)
     }
 }
