@@ -61,7 +61,8 @@ struct UserProfileDetailView: View {
             // background for a while, and the content changed in another tab.
             store.send(
                 UserProfileDetailAction.appear(
-                    description.address
+                    description.address,
+                    description.initialTabIndex
                 )
             )
         }
@@ -78,10 +79,12 @@ enum UserProfileDetailNotification: Hashable {
 /// profile's internal state.
 struct UserProfileDetailDescription: Hashable {
     var address: MemoAddress
+    var initialTabIndex: Int = UserProfileDetailModel.recentEntriesTabIndex
 }
 
 enum UserProfileDetailAction {
-    case appear(MemoAddress)
+    case appear(MemoAddress, Int)
+    case refresh
     case populate(UserProfileContentResponse)
     case failedToPopulate(String)
     
@@ -105,13 +108,13 @@ enum UserProfileDetailAction {
     case attemptFollow(Did, Petname)
     case failFollow(error: String)
     case dismissFailFollowError
-    case succeedFollow(did: Did, petname: Petname)
+    case succeedFollow
     
     case requestUnfollow(UserProfile)
     case attemptUnfollow
     case failUnfollow(error: String)
     case dismissFailUnfollowError
-    case succeedUnfollow(did: Did)
+    case succeedUnfollow
     
     case requestEditProfile
     case failEditProfile(error: String)
@@ -169,6 +172,11 @@ struct UserProfileDetailModel: ModelProtocol {
         category: "UserProfileDetail"
     )
     
+    // MARK: Tab Indices
+    static let recentEntriesTabIndex: Int = 0
+    static let topEntriesTabIndex: Int = 1
+    static let followingTabIndex: Int = 2
+    
     var loadingState = LoadingState.loading
     
     var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
@@ -179,7 +187,17 @@ struct UserProfileDetailModel: ModelProtocol {
     var failUnfollowErrorMessage: String?
     var failEditProfileMessage: String?
     
-    var selectedTabIndex = 0
+    // This view can be invoked with an initial tab focused
+    // but if the user has changed the tab we should remember that across profile refreshes
+    private var initialTabIndex: Int = Self.recentEntriesTabIndex
+    private var selectedTabIndex: Int? = nil
+    
+    var currentTabIndex: Int {
+        get {
+            selectedTabIndex ?? initialTabIndex
+        }
+    }
+    
     var isMetaSheetPresented = false
     var isFollowSheetPresented = false
     var isFollowNewUserFormSheetPresented = false
@@ -203,6 +221,7 @@ struct UserProfileDetailModel: ModelProtocol {
         environment: Environment
     ) -> Update<Self> {
         switch action {
+        // MARK: Submodels
         case .metaSheet(let action):
             return UserProfileDetailMetaSheetCursor.update(
                 state: state,
@@ -227,7 +246,23 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: EditProfileSheetEnvironment()
             )
-        case .appear(let address):
+            
+        // MARK: Lifecycle
+        case .refresh:
+            guard let user = state.user else {
+                return Update(state: state)
+            }
+            
+            return update(
+                state: state,
+                action: .appear(user.address, state.initialTabIndex),
+                environment: environment
+            )
+            
+        case .appear(let address, let initialTabIndex):
+            var model = state
+            model.initialTabIndex = initialTabIndex
+            
             let fxRoot: AnyPublisher<UserProfileContentResponse, Error> =
             Func.run {
                 if let petname = address.petname {
@@ -247,7 +282,7 @@ struct UserProfileDetailModel: ModelProtocol {
                 }
                 .eraseToAnyPublisher()
             
-            return Update(state: state, fx: fx)
+            return Update(state: model, fx: fx)
             
         case .populate(let content):
             var model = state
@@ -276,11 +311,14 @@ struct UserProfileDetailModel: ModelProtocol {
         case .tabIndexSelected(let index):
             var model = state
             model.selectedTabIndex = index
+            
             return Update(state: model)
             
+        // MARK: Presentation
         case .presentMetaSheet(let presented):
             var model = state
             model.isMetaSheetPresented = presented
+            
             return Update(state: model)
             
         case .presentFollowNewUserFormSheet(let presented):
@@ -330,7 +368,7 @@ struct UserProfileDetailModel: ModelProtocol {
             environment.addressBook
                 .followUserPublisher(did: did, petname: petname, preventOverwrite: true)
                 .map({ _ in
-                    UserProfileDetailAction.succeedFollow(did: did, petname: petname)
+                    UserProfileDetailAction.succeedFollow
                 })
                 .catch { error in
                     Just(UserProfileDetailAction.failFollow(error: error.localizedDescription))
@@ -339,18 +377,18 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return Update(state: state, fx: fx)
             
-        case .succeedFollow(_, _):
+        case .succeedFollow:
             var actions: [UserProfileDetailAction] = [
                 .presentFollowSheet(false),
-                .presentFollowNewUserFormSheet(false)
+                .presentFollowNewUserFormSheet(false),
+                .refresh
             ]
             
-            // Refresh our profile  show the following list if we followed someone new
+            // Refresh our profile & show the following list if we followed someone new
+            // This matters if we used the manual "Follow User" form
             if let user = state.user {
-                actions.append(.appear(user.address))
-                
                 if user.category == .you {
-                    actions.append(.tabIndexSelected(2))
+                    actions.append(.tabIndexSelected(Self.followingTabIndex))
                 }
             }
             
@@ -395,7 +433,7 @@ struct UserProfileDetailModel: ModelProtocol {
             environment.addressBook
                 .unfollowUserPublisher(did: did)
                 .map({ _ in
-                    .succeedUnfollow(did: did)
+                    .succeedUnfollow
                 })
                 .recover({ error in
                     .failUnfollow(error: error.localizedDescription)
@@ -404,23 +442,13 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return Update(state: state, fx: fx)
             
-        case .succeedUnfollow(_):
-            var actions: [UserProfileDetailAction] = [
-                .presentUnfollowConfirmation(false)
-            ]
-            
-            // Refresh our profile show the following list if we unfollowed someone
-            if let user = state.user {
-                actions.append(.appear(user.address))
-                
-                if user.category == .you {
-                    actions.append(.tabIndexSelected(2))
-                }
-            }
-            
+        case .succeedUnfollow:
             return update(
                 state: state,
-                actions: actions,
+                actions: [
+                    .presentUnfollowConfirmation(false),
+                    .refresh
+                ],
                 environment: environment
             )
             
@@ -478,14 +506,14 @@ struct UserProfileDetailModel: ModelProtocol {
             return Update(state: state, fx: fx)
             
         case .succeedEditProfile:
-            guard let address = state.user?.address else {
-                return Update(state: state)
-            }
-            
             var model = state
             model.isEditProfileSheetPresented = false
             
-            return update(state: model, action: .appear(address), environment: environment)
+            return update(
+                state: model,
+                action: .refresh,
+                environment: environment
+            )
             
         case .failEditProfile(let error):
             var model = state
@@ -498,7 +526,5 @@ struct UserProfileDetailModel: ModelProtocol {
             return Update(state: model)
    
         }
-        
-        
     }
 }

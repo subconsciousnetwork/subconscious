@@ -99,7 +99,7 @@ struct UserProfileView: View {
                     columnA: columnRecent,
                     columnB: columnTop,
                     columnC: columnFollowing,
-                    selectedColumnIndex: state.selectedTabIndex,
+                    selectedColumnIndex: state.currentTabIndex,
                     changeColumn: { index in
                         send(.tabIndexSelected(index))
                     }
@@ -349,7 +349,7 @@ private struct EditProfileSheetModifier: ViewModifier {
 struct UserProfileView_Previews: PreviewProvider {
     static var previews: some View {
         UserProfileView(
-            state: UserProfileDetailModel(isFollowSheetPresented: true),
+            state: UserProfileDetailModel(),
             send: { _ in },
             onNavigateToNote: { _ in print("navigate to note") },
             onNavigateToUser: { _ in print("navigate to user") },

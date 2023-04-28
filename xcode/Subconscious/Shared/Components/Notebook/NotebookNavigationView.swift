@@ -124,7 +124,11 @@ struct NotebookNavigationView: View {
                         Button(
                             action: {
                                 let detail = UserProfileDetailDescription(
-                                    address: Slashlink.ourProfile.toPublicMemoAddress()
+                                    address: Slashlink.ourProfile.toPublicMemoAddress(),
+                                    // Focus following list by default
+                                    // We can already see our recent notes in our notebook so no
+                                    // point showing it again
+                                    initialTabIndex: UserProfileDetailModel.followingTabIndex
                                 )
                                 store.send(.pushDetail(.profile(detail)))
                             }
