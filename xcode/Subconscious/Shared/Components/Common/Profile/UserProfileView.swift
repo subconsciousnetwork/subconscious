@@ -157,6 +157,7 @@ struct UserProfileView: View {
                     send: send,
                     tag: FollowNewUserFormSheetCursor.tag
                 ),
+                did: state.user?.did,
                 onAttemptFollow: {
                     guard let did = state.followNewUserFormSheet.form.did.validated else {
                         return

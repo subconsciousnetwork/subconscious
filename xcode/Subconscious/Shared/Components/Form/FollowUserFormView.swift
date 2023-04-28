@@ -165,6 +165,8 @@ struct FollowNewUserFormSheetView: View {
     }
     var send: (FollowNewUserFormSheetAction) -> Void
     
+    var did: Did?
+    
     var onAttemptFollow: () -> Void
     var onCancel: () -> Void
     
@@ -205,6 +207,16 @@ struct FollowNewUserFormSheetView: View {
                                     .foregroundColor(.accentColor)
                                 }
                             )
+                        }
+                        
+                        if let did = did {
+                            Section(header: Text("Your QR Code")) {
+                                VStack {
+                                    DidQrCodeView(did: did, color: Color.gray)
+                                        .frame(maxWidth: 256)
+                                    DidView(did: did)
+                                }
+                            }
                         }
                     }
                 }
@@ -256,6 +268,7 @@ struct FollowUserView_Previews: PreviewProvider {
         FollowNewUserFormSheetView(
             state: FollowNewUserFormSheetModel(),
             send: { action in },
+            did: Did("did:key:123")!,
             onAttemptFollow: {},
             onCancel: {},
             onDismissFailFollowError: {}
