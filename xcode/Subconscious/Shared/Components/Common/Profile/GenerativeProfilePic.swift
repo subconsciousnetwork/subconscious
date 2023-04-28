@@ -17,6 +17,45 @@ struct GenerativeProfilePicParams {
     var blendMode: BlendMode
     var color: Color
     var gradient: [Gradient.Stop]
+    
+    private static let gradientOptions = [
+        (Color.brandMarkPink, Color.brandMarkViolet, Color.brandMarkCyan),
+        (Color.brandMarkRed, Color.brandMarkPurple, Color.brandMarkViolet),
+        (Color.brandBgBlush, Color.brandMarkPurple, Color.brandMarkCyan),
+        (Color.brandMarkRed, Color.brandMarkViolet, Color.brandMarkCyan),
+        (Color.brandMarkRed, Color.brandMarkPurple, Color.brandMarkPink),
+        (Color.yellow, Color.orange, Color.brandMarkRed),
+        (Color.brandMarkPink, Color(red: 0.25, green: 0.478, blue: 1, opacity: 1), Color.brandMarkRed),
+        (Color.white, Color.brandBgBlush, Color.brandMarkPink),
+        (Color.brandMarkPink, Color(red: 0.25, green: 0.478, blue: 1, opacity: 1), Color.brandMarkCyan),
+        (Color.brandMarkCyan, Color(red: 0.25, green: 0.478, blue: 1, opacity: 1), Color.orange)
+    ]
+    
+    private static let sigilOptions = [
+        "✶",
+        "✴︎",
+        "✸",
+        "✺",
+        "✦",
+        "✷",
+        "☾",
+        "♦︎",
+        "♢",
+    ]
+    
+    private static let colorOptions = [
+        Color.blue,
+        Color.gray,
+        Color.cyan,
+//        Color.orange,
+        Color.brandMarkViolet,
+        Color.brandMarkPurple,
+    ]
+    
+    private static let blendModeOptions = [
+        BlendMode.colorDodge,
+        BlendMode.colorBurn,
+    ]
 }
 
 extension GenerativeProfilePicParams {
@@ -24,40 +63,22 @@ extension GenerativeProfilePicParams {
         var rng = RandomNumberGeneratorWithSeed(seed: did.hashValue)
         
         self.sigil =
-            [
-                "✶",
-                "✴︎",
-                "✸",
-                "✺",
-                "✦",
-                "✷",
-                "☾",
-                "♦︎",
-                "♢",
-            ]
-            .randomElement(using: &rng) ?? ""
+            Self.sigilOptions.randomElement(using: &rng)
+                ?? ""
         
         self.color =
-            [
-                Color.blue,
-                Color.gray,
-                Color.cyan,
-                Color.orange,
-                Color.brandMarkViolet,
-                Color.brandMarkPurple,
-            ]
-            .randomElement(using: &rng) ?? Color.clear
+            Self.colorOptions.randomElement(using: &rng)
+                ?? Color.clear
         
-        let (a, b, c) = Color.brandColorTrios.randomElement(using: &rng) ?? (Color.clear, Color.clear, Color.clear)
+        let (a, b, c) =
+            Self.gradientOptions.randomElement(using: &rng)
+                ?? (Color.clear, Color.clear, Color.clear)
         
-        self.gradient =  Color.brandGradient(a: a, b: b, c: c)
+        self.gradient = Color.brandGradient(a: a, b: b, c: c)
         
         self.blendMode =
-            [
-                BlendMode.colorDodge,
-                BlendMode.colorBurn,
-            ]
-            .randomElement(using: &rng) ?? BlendMode.normal
+            Self.blendModeOptions.randomElement(using: &rng)
+                ?? BlendMode.normal
     }
 }
 
@@ -83,7 +104,7 @@ struct GenerativeProfilePic: View {
                     .shadow(
                         // Eyeballed from brandmark
                         .inner(
-                            color: Color.brandInnerShadow(.dark).opacity(0.5),
+                            color: Color.brandInnerShadow(.light).opacity(0.5),
                             radius: 5,
                             x: 0,
                             y: 0

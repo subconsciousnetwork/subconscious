@@ -27,7 +27,7 @@ struct StoryUserView: View {
         ) {
             VStack(alignment: .leading, spacing: AppTheme.unit3) {
                 HStack(alignment: .center, spacing: AppTheme.unit2) {
-                    ProfilePicSm(pfp: story.user.pfp)
+                    ProfilePic(pfp: story.user.pfp)
                     PetnameBylineView(petname: story.user.nickname)
                     
                     Spacer()
