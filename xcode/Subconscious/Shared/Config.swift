@@ -22,11 +22,21 @@ struct Config: Equatable, Codable {
         }
     }
     
+    #if targetEnvironment(simulator)
+    /// Are we currently running in the iOS simlator (aka dev mode)
+    private static let isSimulator = true
+    #else
+    /// Are we currently running in the iOS simlator (aka dev mode)
+    private static let isSimulator = false
+    #endif
+    
     /// What value should the DID QR code scanner return in the simulator?
     /// Only returns test data when Config.debug is enabled
     var fallbackSimulatorQrCodeScanResult: String {
         get {
-            debug ? "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7" : ""
+            Self.isSimulator
+                ? "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"
+                : ""
         }
     }
     var subconsciousGeistDid: Did = Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
