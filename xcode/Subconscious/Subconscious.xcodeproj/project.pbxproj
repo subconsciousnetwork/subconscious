@@ -26,10 +26,7 @@
 		B57C0AF529D2865600D352E3 /* UserProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AF429D2865600D352E3 /* UserProfileDetailView.swift */; };
 		B57C0AF729D29A8F00D352E3 /* TabbedThreeColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C0AF629D29A8F00D352E3 /* TabbedThreeColumnView.swift */; };
 		B57D63BB29B1CA8B008BBB62 /* DidView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BA29B1CA8B008BBB62 /* DidView.swift */; };
-		B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57D63BC29B56699008BBB62 /* AddressBookModel.swift */; };
 		B57D63C029B574C3008BBB62 /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = B57D63BF29B574C3008BBB62 /* CodeScanner */; };
-		B584813F29AC32410033F434 /* AddressBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584813E29AC32410033F434 /* AddressBookView.swift */; };
-		B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B584814129AC335B0033F434 /* AddressBookEntryView.swift */; };
 		B58862C829F612CE006C2EE4 /* EditProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58862C729F612CE006C2EE4 /* EditProfileSheet.swift */; };
 		B58862C929F612CE006C2EE4 /* EditProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58862C729F612CE006C2EE4 /* EditProfileSheet.swift */; };
 		B58A46AF29D3C62B00491E43 /* StoryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A46AE29D3C62B00491E43 /* StoryEntryView.swift */; };
@@ -428,9 +425,6 @@
 		B57C0AF429D2865600D352E3 /* UserProfileDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileDetailView.swift; sourceTree = "<group>"; };
 		B57C0AF629D29A8F00D352E3 /* TabbedThreeColumnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabbedThreeColumnView.swift; sourceTree = "<group>"; };
 		B57D63BA29B1CA8B008BBB62 /* DidView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DidView.swift; sourceTree = "<group>"; };
-		B57D63BC29B56699008BBB62 /* AddressBookModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressBookModel.swift; sourceTree = "<group>"; };
-		B584813E29AC32410033F434 /* AddressBookView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookView.swift; sourceTree = "<group>"; };
-		B584814129AC335B0033F434 /* AddressBookEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressBookEntryView.swift; sourceTree = "<group>"; };
 		B58862C729F612CE006C2EE4 /* EditProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileSheet.swift; sourceTree = "<group>"; };
 		B58A46AE29D3C62B00491E43 /* StoryEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryEntryView.swift; sourceTree = "<group>"; };
 		B58A46B029D3C6B300491E43 /* StoryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryEntry.swift; sourceTree = "<group>"; };
@@ -755,9 +749,6 @@
 		B584814029AC32550033F434 /* AddressBook */ = {
 			isa = PBXGroup;
 			children = (
-				B57D63BC29B56699008BBB62 /* AddressBookModel.swift */,
-				B584814129AC335B0033F434 /* AddressBookEntryView.swift */,
-				B584813E29AC32410033F434 /* AddressBookView.swift */,
 				B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */,
 				B569971529B6A0DF003204FC /* DidQrCodeView.swift */,
 			);
@@ -1557,7 +1548,6 @@
 				B8EF986E29034ADF0029363D /* Pathlike.swift in Sources */,
 				B82C3A6526F5796300833CC8 /* OptionalUtilities.swift in Sources */,
 				B8B54F3B271F6C8400B9B507 /* EntryLink.swift in Sources */,
-				B584813F29AC32410033F434 /* AddressBookView.swift in Sources */,
 				B8E00A302992DAA9003B40C1 /* ProfileSettingsView.swift in Sources */,
 				B85652222975F16B00B7FCA0 /* BylineView.swift in Sources */,
 				B8B3EE732979DEE900779B7F /* FirstRunView.swift in Sources */,
@@ -1629,7 +1619,6 @@
 				B82C3A7626F6B5BF00833CC8 /* StringUtilities.swift in Sources */,
 				B85BF47827BC2B4700F55730 /* DetailToolbarContent.swift in Sources */,
 				B8CBAFA42994491B0079107E /* MenuButtonView.swift in Sources */,
-				B584814229AC335B0033F434 /* AddressBookEntryView.swift in Sources */,
 				B57C0AF729D29A8F00D352E3 /* TabbedThreeColumnView.swift in Sources */,
 				B57C0AEE29D280BB00D352E3 /* ThreeColumnView.swift in Sources */,
 				B8133AEB29B8FD1300B38760 /* SubtextAttributedStringRenderer.swift in Sources */,
@@ -1644,7 +1633,6 @@
 				B5CFC7FE29E5403900178631 /* FollowUserSheet.swift in Sources */,
 				B8DEBF252798EF6A007CB528 /* RenameSearchView.swift in Sources */,
 				B58A46B529D3CE9700491E43 /* StoryUser.swift in Sources */,
-				B57D63BD29B56699008BBB62 /* AddressBookModel.swift in Sources */,
 				B8B3EE7D297B1A1000779B7F /* ViewDebugUtilities.swift in Sources */,
 				B826B27527B5D95F003D3C03 /* SaveState.swift in Sources */,
 				B82C3A5626F529EF00833CC8 /* CombineUtilities.swift in Sources */,

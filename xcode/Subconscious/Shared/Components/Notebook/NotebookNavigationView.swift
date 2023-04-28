@@ -108,17 +108,6 @@ struct NotebookNavigationView: View {
                         Image(systemName: "gearshape")
                     }
                 }
-                if AppDefaults.standard.isNoosphereEnabled {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button(
-                            action: {
-                                app.send(.presentAddressBook(true))
-                            }
-                        ) {
-                            Image(systemName: "person.2")
-                        }
-                    }
-                }
                 if Config.default.userProfile {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(

@@ -8,8 +8,11 @@
 import os
 import Foundation
 import Combine
-// temp
-import SwiftUI
+
+struct AddressBookEntry: Equatable {
+    var petname: Petname
+    var did: Did
+}
 
 enum AddressBookError: Error {
     case cannotFollowYourself
