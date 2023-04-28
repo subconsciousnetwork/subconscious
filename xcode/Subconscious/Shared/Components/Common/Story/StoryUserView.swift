@@ -7,10 +7,12 @@
 
 import SwiftUI
 
+/// Adjusts the hit mask of a view to exclude the top-right corner so we can add buttons there
+/// without having to deal with firing both tap targets at once.
 private struct RectangleCroppedTopRightCorner: Shape {
     static let margin: CGSize = CGSize(
-        width: 44 + AppTheme.padding,
-        height: 44 + AppTheme.padding
+        width: AppTheme.minTouchSize + AppTheme.padding,
+        height: AppTheme.minTouchSize + AppTheme.padding
     )
     
     func path(in rect: CGRect) -> Path {
