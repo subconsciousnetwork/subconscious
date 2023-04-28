@@ -118,7 +118,7 @@ struct GenerativeProfilePic: View {
                 )
             
             Text(params.sigil)
-                .font(.system(size: size-2, weight: .heavy))
+                .font(.system(size: size * 0.8, weight: .heavy))
                 .frame(width: size, height: size)
                 .foregroundColor(Color.brandBgSlate)
                 .blendMode(.darken)
@@ -126,7 +126,7 @@ struct GenerativeProfilePic: View {
                 .blur(radius: 3.0)
             
             Text(params.sigil)
-                .font(.system(size: size-2, weight: .heavy))
+                .font(.system(size: size * 0.8, weight: .heavy))
                 .frame(width: size, height: size)
                 .foregroundColor(params.color)
                 .blendMode(params.blendMode)
