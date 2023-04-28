@@ -117,8 +117,13 @@ extension MemoAddress {
         switch self {
         case .local(_):
             return .none
-        case .public(let slashlink):
-            return slashlink.peer
+        case let .public(slashlink):
+            switch slashlink.peer {
+            case .petname(let petname):
+                return petname
+            default:
+                return nil
+            }
         }
     }
 }

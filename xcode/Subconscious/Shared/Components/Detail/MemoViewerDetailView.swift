@@ -158,8 +158,12 @@ struct MemoViewerDetailLoadedView: View {
             guard let basePetname = address.petname else {
                 return sub.slashlink
             }
-            
-            return sub.slashlink.relativeTo(petname: basePetname)
+            guard let slashlink = sub.slashlink.relativeTo(
+                petname: basePetname
+            ) else {
+                return sub.slashlink
+            }
+            return slashlink
         }
         
         notify(

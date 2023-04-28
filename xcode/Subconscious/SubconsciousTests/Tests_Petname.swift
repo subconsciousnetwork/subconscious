@@ -50,12 +50,12 @@ class Tests_Petname: XCTestCase {
         let a = Petname("Baháʼí")
         XCTAssertEqual(a?.description, "baháʼí")
         XCTAssertEqual(a?.verbatim, "Baháʼí")
-
+        
         let b = Petname("Fédération-Aéronautique-Internationale")
         XCTAssertEqual(b?.description, "fédération-aéronautique-internationale")
         XCTAssertEqual(b?.verbatim, "Fédération-Aéronautique-Internationale")
     }
-
+    
     func testIdentifiable() throws {
         let a = Petname("VALID-petname")
         let b = Petname("vaLId-petname")
@@ -189,5 +189,13 @@ class Tests_Petname: XCTestCase {
             next?.description,
             "ben-10000"
         )
+    }
+    
+    func testAppend() throws {
+        let alice = Petname("alice")!
+        let bob = Petname("BOB")!
+        let path = alice.append(petname: bob)
+        XCTAssertEqual(path.description, "bob.alice")
+        XCTAssertEqual(path.verbatim, "BOB.alice")
     }
 }

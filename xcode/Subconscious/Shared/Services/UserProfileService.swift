@@ -196,7 +196,10 @@ actor UserProfileService {
 
             entries.append(
                 EntryStub(
-                    address: Slashlink(petname: petname, slug: slug).toPublicMemoAddress(),
+                    address: Slashlink(
+                        petname: petname,
+                        slug: slug
+                    ).toPublicMemoAddress(),
                     excerpt: memo.excerpt(),
                     modified: memo.modified
                 )

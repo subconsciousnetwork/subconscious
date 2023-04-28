@@ -26,21 +26,21 @@ public struct Slashlink:
         lhs.id == rhs.id
     }
     
-    let peer: Petname?
+    let peer: Peer?
     let slug: Slug
     
     public var description: String {
-        guard let petname = peer else {
+        guard let peer = peer else {
             return "/\(slug.description)"
         }
-        return "@\(petname.description)/\(slug.description)"
+        return "@\(peer.description)/\(slug.description)"
     }
 
     public var verbatim: String {
-        guard let petname = peer else {
+        guard let peer = peer else {
             return "/\(slug.verbatim)"
         }
-        return "@\(petname.verbatim)/\(slug.verbatim)"
+        return "@\(peer.verbatim)/\(slug.verbatim)"
     }
 
     public var id: String { description }
@@ -54,10 +54,10 @@ public struct Slashlink:
     public var verbatimMarkup: String { verbatim }
 
     public init(
-        petname: Petname? = nil,
+        peer: Peer? = nil,
         slug: Slug
     ) {
-        self.peer = petname
+        self.peer = peer
         self.slug = slug
     }
     
@@ -74,25 +74,39 @@ public struct Slashlink:
         let slug = match.slug.map({ substring in
             Slug(uncheckedRawString: substring.toString()
         )})
-        let petname = match.petname.map({ substring in
-            Petname(uncheckedRawString: substring.toString())
+        let peer = match.petname.map({ substring in
+            Peer.petname(
+                Petname(uncheckedRawString: substring.toString())
+            )
         })
         
-        switch (petname, slug) {
-        case (.some(let petname), .some(let slug)):
-            self.init(petname: petname, slug: slug)
+        switch (peer, slug) {
+        case (.some(let peer), .some(let slug)):
+            self.init(peer: peer, slug: slug)
         case (.none, .some(let slug)):
             self.init(slug: slug)
-        case (.some(let petname), .none):
-            self.init(petname: petname, slug: Slug.profile)
+        case (.some(let peer), .none):
+            self.init(peer: peer, slug: Slug.profile)
         case (_, _):
             return nil
         }
     }
     
+    /// Convenience initializer that lets you create a relative slashlink
+    /// from a petname and slug.
+    init(petname: Petname?, slug: Slug) {
+        self.init(
+            peer: petname.map({ petname in Peer.petname(petname) }),
+            slug: slug
+        )
+    }
+
     /// Convenience initializer that creates a link to `@user/_profile_`
     init(petname: Petname) {
-        self.init(petname: petname, slug: Slug.profile)
+        self.init(
+            peer: Peer.petname(petname),
+            slug: Slug.profile
+        )
     }
 }
 
@@ -119,17 +133,42 @@ extension Slug {
 }
 
 extension Slashlink {
+    /// Is slashlink absolute?
+    /// - An absolute slashlink is a slashlink with a did peer.
+    /// - A relative slashlink is a slashlink with a petname peer, or no peer.
+    var isAbsolute: Bool {
+        peer?.isAbsolute ?? false
+    }
+
     func toSlug() -> Slug {
         self.slug
     }
     
-    func relativeTo(petname: Petname) -> Slashlink {
-        guard let localPetname = self.peer else {
+    /// Given a relative petname, re-root the petname relative to
+    /// another petname.
+    ///
+    /// If this slashlink is absolute (a did slashlink) the function returns
+    /// nil.
+    func relativeTo(petname: Petname) -> Slashlink? {
+        switch self.peer {
+        case .petname(let localPetname):
+            let path = petname.append(petname: localPetname)
+            return Slashlink(petname: path, slug: self.slug)
+        case .none:
             return Slashlink(petname: petname, slug: self.slug)
+        default:
+            return nil
         }
-        
-        let path = petname.append(petname: localPetname)
-        return Slashlink(petname: path, slug: self.slug)
+    }
+    
+    /// Get petname from slashlink (if any)
+    func toPetname() -> Petname? {
+        switch self.peer {
+        case .petname(let petname):
+            return petname
+        default:
+            return nil
+        }
     }
 }
 
@@ -139,12 +178,6 @@ extension Petname {
     fileprivate init(uncheckedRawString string: String) {
         self.description = string.lowercased()
         self.verbatim = string
-    }
-}
-
-extension Slashlink {
-    func toPetname() -> Petname? {
-        self.peer
     }
 }
 

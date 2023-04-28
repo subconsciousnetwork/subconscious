@@ -15,7 +15,7 @@ struct SlashlinkBylineView: View {
     
     var body: some View {
         HStack(spacing: 0) {
-            if let petname = slashlink.peer {
+            if let petname = slashlink.toPetname() {
                 PetnameBylineView(petname: petname)
                     .theme(petname: petnameColor)
             }

@@ -55,10 +55,10 @@ struct PetnameBylineView_Previews: PreviewProvider {
                 petname: Petname("melville")!
             )
             PetnameBylineView(
-                petname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])!
+                petname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])
             )
             PetnameBylineView(
-                petname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])!
+                petname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])
             )
             .frame(maxWidth: 128)
         }

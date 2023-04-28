@@ -65,11 +65,21 @@ struct OmniboxSlashlinkView: View {
     var body: some View {
         HStack(spacing: 0) {
             switch (slashlink.slug.isProfile, slashlink.peer) {
-            case (true, .some(let petname)):
+            case (true, .petname(let petname)):
                 PetnameBylineView(petname: petname)
-            case (false, .some(let petname)):
-                PetnameBylineView(petname: petname)
-                Text(verbatim: slashlink.slug.markup)
+            case (false, .petname(let petname)):
+                HStack(spacing: 0) {
+                    PetnameBylineView(petname: petname)
+                    Text(verbatim: slashlink.slug.markup)
+                }
+            case (true, .did(let did)):
+                Text(verbatim: did.description).foregroundColor(.secondary)
+            case (false, .did(let did)):
+                HStack(spacing: 0) {
+                    Text(verbatim: did.description)
+                    Text(verbatim: slashlink.slug.markup)
+                }
+                .foregroundColor(.secondary)
             case (true, .none):
                 Text(verbatim: "Your profile").foregroundColor(.secondary)
             case (false, .none):
