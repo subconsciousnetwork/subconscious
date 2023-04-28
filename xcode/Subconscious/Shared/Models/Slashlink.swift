@@ -38,9 +38,9 @@ public struct Slashlink:
 
     public var verbatim: String {
         guard let peer = peer else {
-            return "/\(slug.verbatim)"
+            return "\(slug.verbatimMarkup)"
         }
-        return "@\(peer.verbatim)/\(slug.verbatim)"
+        return "\(peer.markup)\(slug.verbatimMarkup)"
     }
 
     public var id: String { description }
