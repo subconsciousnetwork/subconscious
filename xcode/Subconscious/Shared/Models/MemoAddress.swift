@@ -40,7 +40,7 @@ extension MemoAddress: LosslessStringConvertible, Identifiable, Comparable {
                 return nil
             }
             // Local addresses must not include petnames
-            guard slashlink.petname == nil else {
+            guard slashlink.peer == nil else {
                 return nil
             }
             self = .local(slashlink.toSlug())
@@ -76,7 +76,7 @@ extension MemoAddress {
         switch self {
         case .local:
             return true
-        case .public(let slashlink) where slashlink.petname == nil:
+        case .public(let slashlink) where slashlink.peer == nil:
             return true
         case .public:
             return false
@@ -118,7 +118,7 @@ extension MemoAddress {
         case .local(_):
             return .none
         case .public(let slashlink):
-            return slashlink.petname
+            return slashlink.peer
         }
     }
 }

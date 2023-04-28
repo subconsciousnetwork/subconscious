@@ -26,18 +26,18 @@ public struct Slashlink:
         lhs.id == rhs.id
     }
     
-    let petname: Petname?
+    let peer: Petname?
     let slug: Slug
     
     public var description: String {
-        guard let petname = petname else {
+        guard let petname = peer else {
             return "/\(slug.description)"
         }
         return "@\(petname.description)/\(slug.description)"
     }
 
     public var verbatim: String {
-        guard let petname = petname else {
+        guard let petname = peer else {
             return "/\(slug.verbatim)"
         }
         return "@\(petname.verbatim)/\(slug.verbatim)"
@@ -57,7 +57,7 @@ public struct Slashlink:
         petname: Petname? = nil,
         slug: Slug
     ) {
-        self.petname = petname
+        self.peer = petname
         self.slug = slug
     }
     
@@ -68,7 +68,7 @@ public struct Slashlink:
             return nil
         }
         
-        // There are four cases: petname-only, slug-only, petname+slug and empty.
+        // There are four cases: peer-only, slug-only, peer+slug and empty.
         // All are valid constructions except for empty.
         // Petname-only will use `profileSlug` as the slug.
         let slug = match.slug.map({ substring in
@@ -108,7 +108,7 @@ extension Slug {
 extension Slug {
     /// Transform slug into slashlink
     /// - Parameters:
-    ///   - petname: the petname for the sphere this slug belongs to (if any)
+    ///   - peer: the peer for the sphere this slug belongs to (if any)
     /// - Returns: slashlink
     func toSlashlink(relativeTo petname: Petname? = nil) -> Slashlink {
         Slashlink(
@@ -124,7 +124,7 @@ extension Slashlink {
     }
     
     func relativeTo(petname: Petname) -> Slashlink {
-        guard let localPetname = self.petname else {
+        guard let localPetname = self.peer else {
             return Slashlink(petname: petname, slug: self.slug)
         }
         
@@ -144,7 +144,7 @@ extension Petname {
 
 extension Slashlink {
     func toPetname() -> Petname? {
-        self.petname
+        self.peer
     }
 }
 

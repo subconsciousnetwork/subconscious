@@ -900,7 +900,7 @@ struct NotebookModel: ModelProtocol {
     ) -> Update<NotebookModel> {
         // If slashlink pointing to our sphere, dispatch findAndPushEditDetail
         // to find in local or sphere content and then push editor detail.
-        guard slashlink.petname != nil else {
+        guard slashlink.peer != nil else {
             return update(
                 state: state,
                 action: .findAndPushMemoEditorDetail(

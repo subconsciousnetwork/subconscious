@@ -63,7 +63,7 @@ final class Tests_Slashlink: XCTestCase {
         }
         XCTAssertEqual(slashlink.description, "/valid-slashlink")
         XCTAssertEqual(slashlink.slug.description, "valid-slashlink")
-        XCTAssertNil(slashlink.petname)
+        XCTAssertNil(slashlink.peer)
     }
     
     func testFull() throws {
@@ -72,7 +72,7 @@ final class Tests_Slashlink: XCTestCase {
             return
         }
         XCTAssertEqual(slashlink.description, "@valid-petname/valid-slashlink")
-        XCTAssertEqual(slashlink.petname?.description, "valid-petname")
+        XCTAssertEqual(slashlink.peer?.description, "valid-petname")
         XCTAssertEqual(slashlink.slug.description, "valid-slashlink")
     }
     
@@ -82,7 +82,7 @@ final class Tests_Slashlink: XCTestCase {
             return
         }
         XCTAssertEqual(slashlink.description, "@ⴙvalid-petname/valid-slashlink")
-        XCTAssertEqual(slashlink.petname?.description, "ⴙvalid-petname")
+        XCTAssertEqual(slashlink.peer?.description, "ⴙvalid-petname")
         XCTAssertEqual(slashlink.slug.description, "valid-slashlink")
     }
     
@@ -93,7 +93,7 @@ final class Tests_Slashlink: XCTestCase {
         }
         XCTAssertEqual(slashlink.description, "@valid-petname/valid-slashlink")
         XCTAssertEqual(slashlink.verbatim, "@VALID-PETNAME/valid-slashlink")
-        XCTAssertEqual(slashlink.petname?.verbatim, "VALID-PETNAME")
+        XCTAssertEqual(slashlink.peer?.verbatim, "VALID-PETNAME")
         XCTAssertEqual(slashlink.slug.description, "valid-slashlink")
     }
     
@@ -155,7 +155,7 @@ final class Tests_Slashlink: XCTestCase {
         let slashlink = Slashlink(petname: petname, slug: slug)
         XCTAssertEqual(slashlink.description, "@foo/bar-baz")
         XCTAssertEqual(slashlink.verbatim, "@FOO/BAR-baz")
-        XCTAssertEqual(slashlink.petname?.verbatim, "FOO")
+        XCTAssertEqual(slashlink.peer?.verbatim, "FOO")
         XCTAssertEqual(slashlink.slug.verbatim, "BAR-baz")
     }
     
