@@ -6,10 +6,24 @@
 //
 
 import SwiftUI
+import GameplayKit
 
 struct RandomNumberGeneratorWithSeed: RandomNumberGenerator {
-    init(seed: Int) { srand48(seed) }
-    func next() -> UInt64 { return UInt64(drand48() * Double(UInt64.max)) }
+    private let randomSource: GKARC4RandomSource
+
+    init(seed: String) {
+        let data = Data(seed.utf8)
+        self.randomSource = GKARC4RandomSource(seed: data)
+        
+        // To improve the quality of the random numbers, it's recommended to drop the first N values
+        randomSource.dropValues(1024)
+    }
+
+    mutating func next() -> UInt64 {
+        let highBits = UInt64(bitPattern: Int64(randomSource.nextInt()))
+        let lowBits = UInt64(bitPattern: Int64(randomSource.nextInt()))
+        return highBits << 32 | lowBits
+    }
 }
 
 struct GenerativeProfilePicParams {
@@ -40,7 +54,6 @@ struct GenerativeProfilePicParams {
         "✷",
         "☾",
         "♦︎",
-        "♢",
     ]
     
     private static let colorOptions = [
@@ -60,7 +73,7 @@ struct GenerativeProfilePicParams {
 
 extension GenerativeProfilePicParams {
     init(did: Did) {
-        var rng = RandomNumberGeneratorWithSeed(seed: did.hashValue)
+        var rng = RandomNumberGeneratorWithSeed(seed: did.did)
         
         self.sigil =
             Self.sigilOptions.randomElement(using: &rng)
