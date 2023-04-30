@@ -165,7 +165,7 @@ struct MemoViewerDetailLoadedView: View {
         
         notify(
             .requestFindDetail(
-                slashlink: link.slashlink,
+                slashlink: slashlink,
                 fallback: link.fallback
             )
         )
