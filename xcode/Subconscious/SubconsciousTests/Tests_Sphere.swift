@@ -450,7 +450,7 @@ final class Tests_Sphere: XCTestCase {
     
     func testWritesThenCloseThenReopenWithVars() async throws {
         let base = UUID()
-
+        
         let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
             .path()
         
@@ -461,20 +461,20 @@ final class Tests_Sphere: XCTestCase {
             globalStoragePath: globalStoragePath,
             sphereStoragePath: sphereStoragePath
         )
-
+        
         let sphereReceipt = try await noosphere.createSphere(
             ownerKeyName: "bob"
         )
         
         let sphereIdentity = sphereReceipt.identity
-
+        
         var sphere = try Sphere(
             noosphere: noosphere,
             identity: sphereReceipt.identity
         )
-
+        
         let versionA0 = try await sphere.version()
-
+        
         let body = try "Test content".toData().unwrap()
         let contentType = "text/subtext"
         try await sphere.write(
@@ -482,9 +482,9 @@ final class Tests_Sphere: XCTestCase {
             contentType: contentType,
             body: body
         )
-
+        
         let versionA1 = try await sphere.save()
-
+        
         try await sphere.write(
             slug: Slug("b")!,
             contentType: contentType,
@@ -496,13 +496,13 @@ final class Tests_Sphere: XCTestCase {
             body: body
         )
         let versionA2 = try await sphere.save()
-
+        
         let versionAN = try await sphere.version()
-
+        
         XCTAssertNotEqual(versionA0, versionAN)
         XCTAssertNotEqual(versionA1, versionAN)
         XCTAssertEqual(versionA2, versionAN)
-
+        
         // Overwrite var with new instance
         noosphere = try Noosphere(
             globalStoragePath: globalStoragePath,
@@ -514,7 +514,82 @@ final class Tests_Sphere: XCTestCase {
             identity: sphereIdentity
         )
         let versionB0 = try await sphere.version()
-
+        
         XCTAssertEqual(versionB0, versionAN)
+    }
+    
+    func testPetnameRoundtrip() async throws {
+        let base = UUID()
+        
+        let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
+            .path()
+        
+        let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
+            .path()
+        
+        let noosphere = try Noosphere(
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath
+        )
+        
+        let sphereReceipt = try await noosphere.createSphere(
+            ownerKeyName: "bob"
+        )
+        
+        let sphere = try Sphere(
+            noosphere: noosphere,
+            identity: sphereReceipt.identity
+        )
+        
+        let bobKey = Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
+        let bobName = Petname("bob")!
+        
+        try await sphere.setPetname(did: bobKey, petname: bobName)
+        try await sphere.save()
+        
+        let bobKey2 = try await sphere.getPetname(petname: bobName)
+        XCTAssertEqual(bobKey2, bobKey, "Got back petname")
+    }
+    
+    func testResolve() async throws {
+        let base = UUID()
+        
+        let globalStoragePath = try createTmpDir(path: "\(base)/noosphere")
+            .path()
+        
+        let sphereStoragePath = try createTmpDir(path: "\(base)/sphere")
+            .path()
+        
+        let noosphere = try Noosphere(
+            globalStoragePath: globalStoragePath,
+            sphereStoragePath: sphereStoragePath
+        )
+        
+        let sphereReceipt = try await noosphere.createSphere(
+            ownerKeyName: "bob"
+        )
+                
+        let sphere = try Sphere(
+            noosphere: noosphere,
+            identity: sphereReceipt.identity
+        )
+        
+        let bobKey = Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
+        let bobName = Petname("bob")!
+
+        try await sphere.setPetname(did: bobKey, petname: bobName)
+        try await sphere.save()
+
+        let slug = Slug("foo")!
+
+        let relBob = Slashlink(
+            peer: .petname(bobName),
+            slug: slug
+        )
+        
+        let absBob = try await sphere.resolve(slashlink: relBob)
+
+        XCTAssertEqual(absBob.peer, Peer.did(bobKey), "Peer part is a did")
+        XCTAssertEqual(absBob.slug, slug, "Slug remains unchanged")
     }
 }

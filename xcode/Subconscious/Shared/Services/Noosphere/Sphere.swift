@@ -65,6 +65,24 @@ public protocol SphereProtocol {
     func traverse(petname: Petname) async throws -> Sphere
 }
 
+extension SphereProtocol {
+    /// Resolve a relative slashlink, making it an absolute slashlink.
+    /// - Returns Slashlink with did peer
+    func resolve(slashlink: Slashlink) async throws -> Slashlink {
+        // If peer is already absolute, return
+        guard case let .petname(petname) = slashlink.peer else {
+            return slashlink
+        }
+        // Get did for petname
+        let did = try await self.getPetname(petname: petname)
+        // Return new slashlink with did root
+        return Slashlink(
+            peer: .did(did),
+            slug: slashlink.slug
+        )
+    }
+}
+
 /// Describes a Sphere using a Combine Publisher-based API.
 /// See `Sphere` for concrete implementation.
 public protocol SpherePublisherProtocol {
@@ -515,8 +533,15 @@ public actor Sphere: SphereProtocol, SpherePublisherProtocol {
         .eraseToAnyPublisher()
     }
     
-    /// Resolve DID for petname
-    /// - Returns DID string
+    /// Resolve a configured petname.
+    ///
+    /// Uses the sphere identity that the petname is assigned to and determining
+    /// a link - a CID - that is associated with it. The returned
+    /// link is a UTF-8, base64-encoded CIDv1 string that may be used to resolve
+    /// data from the IPFS content space. Note that this call will produce an error
+    /// if no address has been assigned to the given petname.
+    ///
+    /// - Returns a `Cid`
     public func resolvePetname(petname: Petname) throws -> Cid {
         let cid = try Noosphere.callWithError(
             ns_sphere_petname_resolve,
