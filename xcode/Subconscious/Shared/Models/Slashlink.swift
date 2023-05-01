@@ -40,7 +40,7 @@ public struct Slashlink:
         guard let peer = peer else {
             return "\(slug.verbatimMarkup)"
         }
-        return "\(peer.markup)\(slug.verbatimMarkup)"
+        return "\(peer.verbatimMarkup)\(slug.verbatimMarkup)"
     }
 
     public var id: String { description }

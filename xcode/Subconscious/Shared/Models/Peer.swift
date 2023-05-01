@@ -39,7 +39,18 @@ public enum Peer: Hashable, Codable, CustomStringConvertible {
             return petname.markup
         }
     }
-
+    
+    /// Get verbatim markup for peer.
+    /// May be used in the editor to preserve casing information.
+    public var verbatimMarkup: String {
+        switch self {
+        case .did(let did):
+            return did.description
+        case .petname(let petname):
+            return petname.verbatimMarkup
+        }
+    }
+    
     /// An absolute peer is a peer that is a did.
     /// A "relative" peer is a peer that is a petname.
     var isAbsolute: Bool {
