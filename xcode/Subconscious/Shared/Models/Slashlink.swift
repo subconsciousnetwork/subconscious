@@ -16,7 +16,7 @@ public struct Slashlink:
     Codable,
     LosslessStringConvertible
 {
-    private static let slashlinkRegex = /(?:(?<did>(?:did:key:[a-zA-Z0-9]+))|(?<petname>@[\w\-]+(?:\.[\w\-]+)*))?(?<slug>\/[\w\-]+(?:\/[\w\-]+)*)?/
+    private static let slashlinkRegex = /(?:(?<did>(?:did:[a-z0-9]+:[a-zA-Z0-9_\-\.\%]+))|(?<petname>@[\w\-]+(?:\.[\w\-]+)*))?(?<slug>\/[\w\-]+(?:\/[\w\-]+)*)?/
     
     public static func < (lhs: Slashlink, rhs: Slashlink) -> Bool {
         lhs.id < rhs.id

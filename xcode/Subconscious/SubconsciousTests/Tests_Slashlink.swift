@@ -182,7 +182,7 @@ final class Tests_Slashlink: XCTestCase {
     func testToSlashlink() throws {
         let a = Slug("foo")!.toSlashlink()
         XCTAssertEqual(a, Slashlink("/foo")!)
-
+        
         let b = Slug("foo")!.toSlashlink(relativeTo: Petname("bar"))
         XCTAssertEqual(b, Slashlink("@bar/foo")!)
     }
@@ -190,14 +190,52 @@ final class Tests_Slashlink: XCTestCase {
     func testIsAbsolute() throws {
         let rel = Slashlink(slug: Slug("foo")!)
         XCTAssertFalse(rel.isAbsolute, "Slug-only slashlink is relative")
-
+        
         let rel2 = Slashlink(petname: Petname("bob")!, slug: Slug("foo")!)
         XCTAssertFalse(rel2.isAbsolute, "Petname slashlink is relative")
-
+        
         let abs = Slashlink(
             peer: Peer.did(Did(did: "did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!),
             slug: Slug("foo")!
         )
         XCTAssertTrue(abs.isAbsolute, "Did slashlink is absolute")
+    }
+    
+    func testSlashlinkDidLosslessStringConvertible() throws {
+        let slashlink = Slashlink("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
+        XCTAssertEqual(
+            slashlink?.peer,
+            Peer.did(Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
+        )
+    }
+    
+    func testSlashlinkDidLosslessStringConvertiblePath() throws {
+        let slashlink = Slashlink("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7/foo/bar")
+        XCTAssertEqual(
+            slashlink?.peer,
+            Peer.did(Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
+        )
+        XCTAssertEqual(
+            slashlink?.slug,
+            Slug("foo/bar")!
+        )
+    }
+    
+    func testSlashlinkDidLosslessStringConvertibleUnicodePath() throws {
+        let slashlink = Slashlink("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7/fÒÒ/unicode-chars")
+        XCTAssertEqual(
+            slashlink?.peer,
+            Peer.did(Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!)
+        )
+        XCTAssertEqual(
+            slashlink?.slug,
+            Slug("fÒÒ/unicode-chars")!
+        )
+    }
+    
+    func testSlashlinkDidLosslessStringConvertibleNotValid() throws {
+        XCTAssertNil(Slashlink("did:%%%:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"))
+        XCTAssertNil(Slashlink("did:key:😈"))
+        XCTAssertNil(Slashlink("did:key:ùùùùùù"))
     }
 }

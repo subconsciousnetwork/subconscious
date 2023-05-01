@@ -14,7 +14,7 @@ public struct Did : Hashable, Identifiable, Codable {
     // Approximate, based on
     // https://www.w3.org/TR/did-core/#did-syntax
     // https://w3c-ccg.github.io/did-method-key/
-    private static let regex = /did:key:[a-zA-Z0-9]+/
+    private static let regex = /did:[a-z0-9]+:[a-zA-Z0-9_\-\.\%]+/
     
     public init?(did: String) {
         guard let did = try? Self.regex.wholeMatch(in: did) else {

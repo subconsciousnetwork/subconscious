@@ -1,5 +1,5 @@
 //
-//  Test_Did.swift
+//  Tests_Did.swift
 //  SubconsciousTests
 //
 //  Created by Ben Follington on 2023-03-01
@@ -8,12 +8,17 @@
 import XCTest
 @testable import Subconscious
 
-class Test_Did: XCTestCase {
+class Tests_Did: XCTestCase {
     func testValidDid() throws {
         let did = Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
         XCTAssertNotNil(did)
     }
     
+    func testValidDid2() throws {
+        let did = Did("did:web:example.com")
+        XCTAssertNotNil(did)
+    }
+
     func testEmptyDid() throws {
         let did = Did("")
         XCTAssertNil(did)
