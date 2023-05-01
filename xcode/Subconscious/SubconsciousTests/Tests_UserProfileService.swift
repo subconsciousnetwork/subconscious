@@ -68,8 +68,10 @@ final class Tests_UserProfileService: XCTestCase {
         
         AppDefaults.standard.nickname = "test"
         
-        let _ = try await data.addressBook.followUser(did: Did("did:key:123")!, petname: Petname("ronald")!)
-        let localAddressBook = await data.addressBook.localAddressBook
+        let _ = try await data.addressBook.followUser(
+            did: Did("did:key:123")!,
+            petname: Petname("ronald")!
+        )
         
         let did = try await data.noosphere.identity()
         guard let did = Did(did) else {

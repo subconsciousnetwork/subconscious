@@ -38,7 +38,7 @@ struct MemoEditorDetailView: View {
             return true
         }
         notify(
-            .requestFindDetail(
+            .requestFindLinkDetail(
                 link: sub
             )
         )
@@ -172,7 +172,7 @@ struct MemoEditorDetailView: View {
                 return .systemAction
             }
             notify(
-                .requestFindDetail(
+                .requestFindLinkDetail(
                     link: link
                 )
             )
@@ -237,7 +237,7 @@ enum MemoEditorDetailNotification: Hashable {
     /// Request specific detail
     case requestDetail(MemoDetailDescription)
     /// Request detail from any audience scope
-    case requestFindDetail(
+    case requestFindLinkDetail(
         link: SubSlashlinkLink
     )
     case requestDelete(MemoAddress?)

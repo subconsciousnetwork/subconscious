@@ -243,7 +243,7 @@ extension NotebookAction {
             return .deleteEntry(address)
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindDetail(link):
+        case let .requestFindLinkDetail(link):
             return .findAndPushDetail(
                 address: Slashlink.ourProfile.toPublicMemoAddress(),
                 link: link
@@ -263,8 +263,7 @@ extension NotebookAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindDetail(address, link):
-            
+        case let .requestFindLinkDetail(address, link):
             return .findAndPushDetail(
                 address: address,
                 link: link

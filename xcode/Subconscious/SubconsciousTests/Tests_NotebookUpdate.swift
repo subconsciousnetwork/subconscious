@@ -78,7 +78,7 @@ class Tests_NotebookUpdate: XCTestCase {
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
         
-        let action = MemoViewerDetailNotification.requestFindDetail(
+        let action = MemoViewerDetailNotification.requestFindLinkDetail(
             address: Slashlink(petname: Petname("origin")!).toPublicMemoAddress(),
             link: link
         )
@@ -106,7 +106,7 @@ class Tests_NotebookUpdate: XCTestCase {
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
         
-        let action = MemoEditorDetailNotification.requestFindDetail(
+        let action = MemoEditorDetailNotification.requestFindLinkDetail(
             link: link
         )
         

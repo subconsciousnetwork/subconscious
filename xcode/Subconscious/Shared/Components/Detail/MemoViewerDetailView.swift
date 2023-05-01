@@ -151,7 +151,7 @@ struct MemoViewerDetailLoadedView: View {
         }
         
         notify(
-            .requestFindDetail(
+            .requestFindLinkDetail(
                 address: address,
                 link: link
             )
@@ -195,7 +195,7 @@ struct MemoViewerDetailLoadedView: View {
 enum MemoViewerDetailNotification: Hashable {
     case requestDetail(_ description: MemoDetailDescription)
     /// Request detail from any audience scope
-    case requestFindDetail(
+    case requestFindLinkDetail(
         address: MemoAddress,
         link: SubSlashlinkLink
     )
