@@ -237,5 +237,6 @@ final class Tests_Slashlink: XCTestCase {
         XCTAssertNil(Slashlink("did:%%%:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7"))
         XCTAssertNil(Slashlink("did:key:😈"))
         XCTAssertNil(Slashlink("did:key:ùùùùùù"))
+        XCTAssertNil(Slashlink("did:KEY:abc123"))
     }
 }
