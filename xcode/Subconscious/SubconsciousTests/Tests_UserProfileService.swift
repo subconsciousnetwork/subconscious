@@ -71,9 +71,14 @@ final class Tests_UserProfileService: XCTestCase {
         let _ = try await data.addressBook.followUser(did: Did("did:key:123")!, petname: Petname("ronald")!)
         let localAddressBook = await data.addressBook.localAddressBook
         
+        let did = try await data.noosphere.identity()
+        guard let did = Did(did) else {
+            XCTFail("Invalid identity")
+            return
+        }
+        
         let following = try await data.userProfile.getFollowingList(
-            sphere: data.noosphere,
-            localAddressBook: localAddressBook,
+            identity: did,
             address: Slashlink(petname: Petname("bob.alice")!).toPublicMemoAddress()
         )
         
