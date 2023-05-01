@@ -1383,6 +1383,8 @@ struct AppEnvironment {
     var addressBook: AddressBookService
     var userProfile: UserProfileService
     
+    var gatewayProvisioningService: GatewayProvisioningService
+    
     var pasteboard = UIPasteboard.general
     
     /// Create a long polling publisher that never completes
@@ -1461,6 +1463,7 @@ struct AppEnvironment {
         )
         
         self.feed = FeedService()
+        self.gatewayProvisioningService = GatewayProvisioningService()
     }
 }
 

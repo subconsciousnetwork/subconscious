@@ -41,6 +41,8 @@ struct Config: Equatable, Codable {
     }
     var subconsciousGeistDid: Did = Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")!
     var subconsciousGeistPetname: Petname = Petname("subconscious")!
+    
+    var cloudCtlUrl: URL = URL(string: "https://cloudctl.sphere.test.subconscious.cloud")!
 
     /// Standard interval at which to run long-polling services
     var pollingInterval: Double = 15
