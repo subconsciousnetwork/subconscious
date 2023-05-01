@@ -143,42 +143,19 @@ struct MemoViewerDetailLoadedView: View {
         )
     }
     
-    public static func requestFindDetail(
-        address: MemoAddress,
-        url: URL
-    ) -> MemoViewerDetailNotification? {
-        guard let link = url.toSubSlashlinkURL() else {
-            return nil
-        }
-        
-        // Stitch the base address on to the tapped link, making any
-        // bare slashlinks relative to the sphere they belong to.
-        //
-        // this is needed in the viewer but not the editor
-        // because the editor is (currently) always pointed to
-        // our data.
-        let slashlink = Func.run {
-            guard let basePetname = address.petname else {
-                return link.slashlink
-            }
-            
-            return link.slashlink.relativeTo(petname: basePetname)
-        }
-        
-        return .requestFindDetail(
-            slashlink: slashlink,
-            fallback: link.fallback
-        )
-    }
-    
     private func onLink(
         url: URL
     ) -> OpenURLAction.Result {
-        guard let action = Self.requestFindDetail(address: address, url: url ) else {
+        guard let link = url.toSubSlashlinkURL() else {
             return .systemAction
         }
         
-        notify(action)
+        notify(
+            .requestFindDetail(
+                address: address,
+                link: link
+            )
+        )
         return .handled
     }
 
@@ -219,8 +196,8 @@ enum MemoViewerDetailNotification: Hashable {
     case requestDetail(_ description: MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindDetail(
-        slashlink: Slashlink,
-        fallback: String
+        address: MemoAddress,
+        link: SubSlashlinkLink
     )
 }
 

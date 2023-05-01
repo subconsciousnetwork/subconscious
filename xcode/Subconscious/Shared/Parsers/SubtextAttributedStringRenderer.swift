@@ -9,7 +9,7 @@ import SwiftUI
 
 /// A type that can be encoded and decoded to `sub://slashlink` URLs.
 /// Used by `SubtextAttributedStringRenderer`.
-struct SubSlashlinkLink {
+struct SubSlashlinkLink: Equatable, Hashable {
     static let schemeKey = "sub"
     static let hostKey = "slashlink"
     static let slashlinkKey = "slashlink"
