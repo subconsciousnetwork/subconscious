@@ -143,11 +143,12 @@ struct MemoViewerDetailLoadedView: View {
         )
     }
     
-    private func onLink(
+    public static func requestFindDetail(
+        address: MemoAddress,
         url: URL
-    ) -> OpenURLAction.Result {
+    ) -> MemoViewerDetailNotification? {
         guard let link = url.toSubSlashlinkURL() else {
-            return .systemAction
+            return nil
         }
         
         // Stitch the base address on to the tapped link, making any
@@ -160,15 +161,24 @@ struct MemoViewerDetailLoadedView: View {
             guard let basePetname = address.petname else {
                 return link.slashlink
             }
+            
             return link.slashlink.relativeTo(petname: basePetname)
         }
         
-        notify(
-            .requestFindDetail(
-                slashlink: slashlink,
-                fallback: link.fallback
-            )
+        return .requestFindDetail(
+            slashlink: slashlink,
+            fallback: link.fallback
         )
+    }
+    
+    private func onLink(
+        url: URL
+    ) -> OpenURLAction.Result {
+        guard let action = Self.requestFindDetail(address: address, url: url ) else {
+            return .systemAction
+        }
+        
+        notify(action)
         return .handled
     }
 

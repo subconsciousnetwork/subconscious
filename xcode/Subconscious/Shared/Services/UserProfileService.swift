@@ -214,7 +214,7 @@ actor UserProfileService {
     
     /// List all the users followed by the passed sphere.
     /// Each user will be decorated with whether the current app user is following them.
-    private func getFollowingList<Sphere: SphereProtocol>(
+    func getFollowingList<Sphere: SphereProtocol>(
         sphere: Sphere,
         localAddressBook: AddressBook<Sphere>,
         address: MemoAddress
