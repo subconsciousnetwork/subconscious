@@ -4,6 +4,9 @@
 //
 //  Created by Gordon Brander on 5/1/23.
 //
+//  Extends Did to include a the non-standard `did:subconscious:local`.
+//  We keep the extension here so that Did is not complected with this
+//  app-specific nonstandard concept.
 
 extension Did {
     /// A non-standard did we use to represent the local file system.
@@ -19,6 +22,18 @@ extension Slashlink {
             return did == Did.local
         default:
             return false
+        }
+    }
+
+    /// Get audience from slashlink
+    func toAudience() -> Audience {
+        switch self.peer {
+        case .did(let did):
+            return did == Did.local ? .local : .public
+        case .petname:
+            return .public
+        case .none:
+            return .public
         }
     }
 }
