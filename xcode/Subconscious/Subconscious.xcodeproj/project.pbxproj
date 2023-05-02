@@ -759,9 +759,7 @@
 			isa = PBXGroup;
 			children = (
 				B569971529B6A0DF003204FC /* DidQrCodeView.swift */,
-				B58862C729F612CE006C2EE4 /* EditProfileSheet.swift */,
 				B54187B729EF5CA00056E4A9 /* FollowUserFormSheet.swift */,
-				B5CFC7FD29E5403900178631 /* FollowUserSheet.swift */,
 				B569971429B6A0DF003204FC /* FollowUserViaQRCodeView.swift */,
 				B85EC45F296F099700558761 /* ProfilePic.swift */,
 				B85EC465296F0D0A00558761 /* ProfilePicMd.swift */,

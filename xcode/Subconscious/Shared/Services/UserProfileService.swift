@@ -214,25 +214,34 @@ actor UserProfileService {
     
     /// List all the users followed by the passed sphere.
     /// Each user will be decorated with whether the current app user is following them.
-    private func getFollowingList<Sphere: SphereProtocol>(
-        sphere: Sphere,
-        localAddressBook: AddressBook<Sphere>,
+    func getFollowingList(
+        identity: Did,
         address: MemoAddress
     ) async throws -> [StoryUser] {
         var following: [StoryUser] = []
+        let sphere = try await self.noosphere.sphere(did: identity)
+        let localAddressBook = AddressBook(sphere: sphere)
+        
         let entries = try await localAddressBook.listEntries(refetch: true)
         
         for entry in entries {
             let noosphereIdentity = try await noosphere.identity()
             let isOurs = noosphereIdentity == entry.did.did
             
+            let slashlink = Func.run {
+                guard let basePetname = address.petname else {
+                    return Slashlink(petname: entry.petname)
+                }
+                return Slashlink(petname: entry.petname).relativeTo(petname: basePetname)
+            }
+            
             let address = isOurs
                 ? Slashlink.ourProfile.toPublicMemoAddress()
-                : Slashlink(petname: entry.petname).toPublicMemoAddress()
+                : slashlink.toPublicMemoAddress()
             
             let user = try await self.loadProfile(
                 did: entry.did,
-                petname: entry.petname,
+                petname: address.petname ?? entry.petname,
                 address: address
             )
             
@@ -281,9 +290,12 @@ actor UserProfileService {
         
         let address = Slashlink.ourProfile.toPublicMemoAddress()
         let did = try await self.noosphere.identity()
+        guard let did = Did(did) else {
+            throw UserProfileServiceError.invalidSphereIdentity
+        }
+        
         let following = try await self.getFollowingList(
-            sphere: self.noosphere,
-            localAddressBook: AddressBook(sphere: self.noosphere),
+            identity: did,
             address: address
         )
         let notes = try await self.noosphere.list()
@@ -293,9 +305,6 @@ actor UserProfileService {
             sphere: self.noosphere
         )
         
-        guard let did = Did(did) else {
-            throw UserProfileServiceError.invalidSphereIdentity
-        }
         
         let profile = try await self.loadProfile(
             did: did,
@@ -332,12 +341,6 @@ actor UserProfileService {
         
         let sphere = try await self.noosphere.traverse(petname: petname)
         let identity = try await sphere.identity()
-        let localAddressBook = AddressBook(sphere: sphere)
-        let following: [StoryUser] = try await self.getFollowingList(
-            sphere: sphere,
-            localAddressBook: localAddressBook,
-            address: address
-        )
         
         // Detect your own profile and intercept
         guard try await self.noosphere.identity() != identity else {
@@ -347,6 +350,13 @@ actor UserProfileService {
         guard let did = Did(identity) else {
             throw UserProfileServiceError.invalidSphereIdentity
         }
+        
+        let localAddressBook = AddressBook(sphere: sphere)
+        
+        let following: [StoryUser] = try await self.getFollowingList(
+            identity: did,
+            address: address
+        )
         
         let notes = try await sphere.list()
         let isFollowing = await self.addressBook.isFollowingUser(did: did)
