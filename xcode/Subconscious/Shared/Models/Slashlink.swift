@@ -162,12 +162,12 @@ extension Slashlink {
         self.slug
     }
     
-    /// Given a relative petname, re-root the petname relative to
+    /// Given a relative petname, re-base the petname relative to
     /// another petname.
     ///
     /// If this slashlink is absolute (a did slashlink) the function returns
     /// the slashlink unchanged.
-    func appendRootIfNeeded(petname: Petname) -> Slashlink {
+    func rebaseIfNeeded(petname: Petname) -> Slashlink {
         switch self.peer {
         case .did:
             return self

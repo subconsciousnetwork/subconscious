@@ -239,4 +239,18 @@ final class Tests_Slashlink: XCTestCase {
         XCTAssertNil(Slashlink("did:key:ùùùùùù"))
         XCTAssertNil(Slashlink("did:KEY:abc123"))
     }
+    
+    func testRebaseIfNeededPetname() throws {
+        let alice = Petname("alice")!
+        let bob = Slashlink("@bob/foo")!
+        let aliceBobFoo = bob.rebaseIfNeeded(petname: alice)
+        XCTAssertEqual(aliceBobFoo, Slashlink("@bob.alice/foo")!)
+    }
+    
+    func testRebaseIfNeededDid() throws {
+        let alice = Petname("alice")!
+        let didSlashlink = Slashlink("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7/foo")!
+        let stillDidSlashlink = didSlashlink.rebaseIfNeeded(petname: alice)
+        XCTAssertEqual(stillDidSlashlink, didSlashlink)
+    }
 }

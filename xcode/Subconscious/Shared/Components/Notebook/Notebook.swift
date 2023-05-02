@@ -523,7 +523,7 @@ struct NotebookModel: ModelProtocol {
                 guard let basePetname = address.petname else {
                     return link.slashlink
                 }
-                return link.slashlink.appendRootIfNeeded(petname: basePetname)
+                return link.slashlink.rebaseIfNeeded(petname: basePetname)
             }
             
             return findAndPushDetail(

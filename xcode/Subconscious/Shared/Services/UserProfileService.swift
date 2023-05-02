@@ -230,7 +230,7 @@ actor UserProfileService {
                 guard let basePetname = address.petname else {
                     return Slashlink(petname: entry.petname)
                 }
-                return Slashlink(petname: entry.petname).appendRootIfNeeded(petname: basePetname)
+                return Slashlink(petname: entry.petname).rebaseIfNeeded(petname: basePetname)
             }
             
             let address = isOurs
