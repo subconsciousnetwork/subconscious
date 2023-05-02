@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 import os
 
 struct ProvisionGatewayRequest: Codable {
@@ -25,6 +26,19 @@ struct ProvisionGatewayResponse: Codable {
 enum GatewayProvisioningServiceError: Error {
     case failedToProvisionGateway(String)
 }
+
+extension GatewayProvisioningServiceError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .failedToProvisionGateway(let contentType):
+            return String(
+                localized: "Failed to provision gateway: \(contentType)",
+                comment: "GatewayProvisioningService error description"
+            )
+        }
+    }
+}
+
 
 actor GatewayProvisioningService {
     private static let provisionGatewayEndpoint =
@@ -82,6 +96,16 @@ actor GatewayProvisioningService {
         }
         
         return try self.jsonDecoder.decode(ProvisionGatewayResponse.self, from: data)
+    }
+    
+    nonisolated func provisionGatewayPublisher(
+        inviteCode: String,
+        sphere: Did
+    ) -> AnyPublisher<ProvisionGatewayResponse, Error> {
+        Future.detached {
+            try await self.provisionGateway(inviteCode: inviteCode, sphere: sphere)
+        }
+        .eraseToAnyPublisher()
     }
 }
 

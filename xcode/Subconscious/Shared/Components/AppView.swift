@@ -183,6 +183,10 @@ enum AppAction: CustomLogStringConvertible {
     case followDefaultGeist
     case succeedFollowDefaultGeist
     case failFollowDefaultGeist(String)
+    
+    case provisionGateway
+    case succeedProvisionGateway(URL)
+    case failProvisionGateway(String)
 
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
@@ -654,6 +658,32 @@ struct AppModel: ModelProtocol {
         case .failFollowDefaultGeist(let error):
             logger.error("Failed to follow default geist: \(error)")
             return Update(state: state)
+        case .provisionGateway:
+            guard let did = state.sphereIdentity,
+                  let did = Did(did) else {
+                return Update(state: state)
+            }
+            
+            let fx: Fx<AppAction> =
+                environment.gatewayProvisioningService
+                // TODO: populate inviteCode field
+                .provisionGatewayPublisher(inviteCode: "", sphere: did)
+                .map { res in
+                    .succeedProvisionGateway(res.gateway_url)
+                }
+                .recover { error in
+                    .failProvisionGateway(error.localizedDescription)
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedProvisionGateway(let url):
+            var model = state
+            model.gatewayURL = url.absoluteString
+            return Update(state: model)
+        case .failProvisionGateway(let error):
+            logger.error("Failed to provision gateway: \(error)")
+            return Update(state: state)
         }
     }
 
@@ -885,7 +915,8 @@ struct AppModel: ModelProtocol {
             actions: [
                 .setSphereIdentity(receipt.identity),
                 .setRecoveryPhrase(receipt.mnemonic),
-                .followDefaultGeist
+                .followDefaultGeist,
+                .provisionGateway
             ],
             environment: environment
         )
@@ -990,6 +1021,7 @@ struct AppModel: ModelProtocol {
         AppDefaults.standard.firstRunComplete = isComplete
         var model = state
         model.isFirstRunComplete = isComplete
+        
         return Update(state: model).animation(.default)
     }
 
