@@ -25,7 +25,7 @@ struct UserProfileView: View {
     var state: UserProfileDetailModel
     var send: (UserProfileDetailAction) -> Void
     
-    let onNavigateToNote: (MemoAddress) -> Void
+    let onNavigateToNote: (Slashlink) -> Void
     let onNavigateToUser: (UserProfile) -> Void
     
     let onProfileAction: (UserProfile, UserProfileAction) -> Void

@@ -157,6 +157,28 @@ extension Slashlink {
     var isAbsolute: Bool {
         peer?.isAbsolute ?? false
     }
+    
+    var isProfile: Bool {
+        slug.isProfile
+    }
+    
+    var isOurProfile: Bool {
+        self == Self.ourProfile
+    }
+
+    /// Get the petname associated with this slashlink (if any).
+    /// Note that this will return nil if the slashlink has a did peer.
+    /// - Returns the petname associated with the slashlink, if any.
+    var petname: Petname? {
+        switch self.peer {
+        case .petname(let petname):
+            return petname
+        case .did:
+            return nil
+        case .none:
+            return nil
+        }
+    }
 
     func toSlug() -> Slug {
         self.slug
@@ -204,6 +226,14 @@ extension Did {
     /// `Slashlink.init`
     fileprivate init(uncheckedRawString string: String) {
         self.did = string
+    }
+}
+
+extension String {
+    /// Convert a string to a slashlink
+    /// - Returns Slashlink for valid slashlink string, or nil
+    func toSlashlink() -> Slashlink? {
+        Slashlink(self)
     }
 }
 

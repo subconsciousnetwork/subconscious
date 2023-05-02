@@ -43,7 +43,7 @@ struct SuggestionLabelView: View, Equatable {
                             verbatim: !title.isEmpty ? title : empty
                         ),
                         subtitle: Text(
-                            verbatim: address.toSlashlink().description
+                            verbatim: address.description
                         )
                     )
                 },
@@ -112,7 +112,7 @@ struct SuggestionLabelView_Previews: PreviewProvider {
             )
             SuggestionLabelView(
                 suggestion: .memo(
-                    address: MemoAddress.local(
+                    address: Slashlink.local(
                         Slug("the-lee-shore")!
                     ),
                     fallback: "The Lee Shore"
@@ -120,11 +120,9 @@ struct SuggestionLabelView_Previews: PreviewProvider {
             )
             SuggestionLabelView(
                 suggestion: .memo(
-                    address: MemoAddress.public(
-                        Slashlink(
-                            "@here/the-lee-shore"
-                        )!
-                    ),
+                    address: Slashlink(
+                        "@here/the-lee-shore"
+                    )!,
                     fallback: "The Lee Shore"
                 )
             )

@@ -10,7 +10,7 @@ import SwiftUI
 /// A story is a single update within the FeedView
 struct StoryComboView: View {
     var story: StoryCombo
-    var action: (MemoAddress, String) -> Void
+    var action: (Slashlink, String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -76,7 +76,7 @@ struct StoryComboView_Previews: PreviewProvider {
                 prompt: "How are these similar?",
                 entryA: EntryStub(
                     MemoEntry(
-                        address: Slug("meme")!.toLocalMemoAddress(),
+                        address: Slug("meme")!.toLocalSlashlink(),
                         contents: Memo(
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,
@@ -93,7 +93,7 @@ struct StoryComboView_Previews: PreviewProvider {
                 ),
                 entryB: EntryStub(
                     MemoEntry(
-                        address: Slug("meme")!.toLocalMemoAddress(),
+                        address: Slug("meme")!.toLocalSlashlink(),
                         contents: Memo(
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,

@@ -84,7 +84,7 @@ class Tests_Search: XCTestCase {
             state: state,
             action: .activateSuggestion(
                 Suggestion.memo(
-                    address: MemoAddress.local(
+                    address: Slashlink.local(
                         Slug("red-and-orange-and-purple")!
                     )
                 )

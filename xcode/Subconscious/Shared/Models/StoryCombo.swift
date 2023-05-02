@@ -41,7 +41,7 @@ extension MemoEntry {
             return nil
         }
         let link = EntryLink(
-            address: MemoAddress.local(slug),
+            address: Slashlink.local(slug),
             title: title
         )
 

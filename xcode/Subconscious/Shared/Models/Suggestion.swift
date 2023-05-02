@@ -8,7 +8,7 @@
 import Foundation
 
 enum Suggestion: Hashable {
-    case memo(address: MemoAddress, fallback: String = "")
+    case memo(address: Slashlink, fallback: String = "")
     case createLocalMemo(slug: Slug? = nil, fallback: String = "")
     case createPublicMemo(slug: Slug? = nil, fallback: String = "")
     case random
@@ -26,14 +26,14 @@ enum Suggestion: Hashable {
         }
     }
 
-    var address: MemoAddress? {
+    var address: Slashlink? {
         switch self {
         case .memo(let address, _):
             return address
         case let .createLocalMemo(slug, _):
-            return slug?.toLocalMemoAddress()
+            return slug?.toLocalSlashlink()
         case let .createPublicMemo(slug, _):
-            return slug?.toPublicMemoAddress()
+            return slug?.toSlashlink()
         case .random:
             return nil
         }

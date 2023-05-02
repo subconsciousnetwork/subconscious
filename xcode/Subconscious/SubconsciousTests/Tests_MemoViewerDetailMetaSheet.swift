@@ -16,7 +16,7 @@ final class Tests_MemoViewerDetailMetaSheet: XCTestCase {
             address: nil
         )
         
-        let address = MemoAddress("public::@bob/foo")
+        let address = Slashlink("@bob/foo")
         let update = MemoViewerDetailMetaSheetModel.update(
             state: state,
             action: .setAddress(address),

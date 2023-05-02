@@ -11,7 +11,7 @@ import SwiftUI
 struct EntryListView: View {
     var entries: [EntryStub]?
     var onEntryPress: (EntryStub) -> Void
-    var onEntryDelete: (MemoAddress) -> Void
+    var onEntryDelete: (Slashlink) -> Void
     var onRefresh: () -> Void
 
     var body: some View {

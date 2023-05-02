@@ -28,9 +28,9 @@ class Tests_NotebookUpdate: XCTestCase {
     }
 
     func testDeleteEntry() throws {
-        let a = Slug(formatting: "A")!.toPublicMemoAddress()
-        let b = Slug(formatting: "B")!.toLocalMemoAddress()
-        let c = Slug(formatting: "C")!.toLocalMemoAddress()
+        let a = Slug(formatting: "A")!.toSlashlink()
+        let b = Slug(formatting: "B")!.toLocalSlashlink()
+        let c = Slug(formatting: "C")!.toLocalSlashlink()
         let state = NotebookModel(
             recent: [
                 EntryStub(
@@ -80,7 +80,7 @@ class Tests_NotebookUpdate: XCTestCase {
         let link = SubSlashlinkLink(slashlink: slashlink)
         
         let action = MemoViewerDetailNotification.requestFindLinkDetail(
-            address: Slashlink(petname: Petname("origin")!).toPublicMemoAddress(),
+            address: Slashlink(petname: Petname("origin")!),
             link: link
         )
         

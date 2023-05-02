@@ -10,7 +10,7 @@ import SwiftUI
 struct OmniboxView: View {
     @Environment(\.colorScheme) var colorScheme
     
-    var address: MemoAddress?
+    var address: Slashlink?
     var defaultAudience: Audience
 
     private func icon() -> Image {
@@ -23,10 +23,10 @@ struct OmniboxView: View {
         if address.isProfile {
             return Image.from(appIcon: .user)
         }
-        if address.isPublic() {
-            return Image(audience: .public)
+        if address.isLocal {
+            return Image(audience: .local)
         }
-        return Image(audience: .local)
+        return Image(audience: .public)
     }
     
     var body: some View {
@@ -36,7 +36,7 @@ struct OmniboxView: View {
                 .frame(width: 17, height: 17)
             
             Spacer(minLength: AppTheme.unit)
-            if let slashlink = address?.toSlashlink() {
+            if let slashlink = address {
                 OmniboxSlashlinkView(slashlink: slashlink)
             } else {
                 Text("Untitled")
@@ -92,17 +92,17 @@ struct OmniboxSlashlinkView: View {
 
 struct OmniboxView_Previews: PreviewProvider {
     struct TappableOmniboxTestView: View {
-        var addresses: [MemoAddress] = [
-            MemoAddress.public(Slashlink("@ksr/red-mars")!),
-            MemoAddress.public(Slashlink("@ksr/green-mars")!),
-            MemoAddress.public(Slashlink("@ksr/blue-mars")!),
-            MemoAddress.public(Slashlink(petname: Petname("ksr")!)),
-            MemoAddress.local(Slug("mars")!),
-            MemoAddress.local(Slug("a-very-long-note-title-that-goes-on-and-on")!),
-            MemoAddress.public(Slashlink("@ksr/a-very-long-note-title-that-goes-on-and-on")!)
+        var addresses: [Slashlink] = [
+            Slashlink("@ksr/red-mars")!,
+            Slashlink("@ksr/green-mars")!,
+            Slashlink("@ksr/blue-mars")!,
+            Slashlink(petname: Petname("ksr")!),
+            Slashlink.local(Slug("/mars")!),
+            Slashlink.local(Slug("a-very-long-note-title-that-goes-on-and-on")!),
+            Slashlink("@ksr/a-very-long-note-title-that-goes-on-and-on")!
         ]
         
-        @State private var address: MemoAddress? = nil
+        @State private var address: Slashlink? = nil
         var defaultAudience = Audience.local
 
         var body: some View {
@@ -124,41 +124,41 @@ struct OmniboxView_Previews: PreviewProvider {
             Divider()
             Group {
                 OmniboxView(
-                    address: .public(Slashlink("@here/red-mars")!),
+                    address: Slashlink("@here/red-mars")!,
                     defaultAudience: .local
                 )
                 OmniboxView(
-                    address: .public(Slashlink("@here.now/red-mars-very-long-slug")!),
+                    address: Slashlink("@here.now/red-mars-very-long-slug")!,
                     defaultAudience: .local
                 )
                 OmniboxView(
-                    address: .public(Slashlink(petname: Petname("ksr")!)),
+                    address: Slashlink(petname: Petname("ksr")!),
                     defaultAudience: .local
                 )
                 OmniboxView(
-                    address: .public(Slashlink(petname: Petname("ksr.biz.gov")!)),
+                    address: Slashlink(petname: Petname("ksr.biz.gov")!),
                     defaultAudience: .local
                 )
                 OmniboxView(
-                    address: .public(Slashlink("/red-mars")!),
+                    address: Slashlink("/red-mars")!,
                     defaultAudience: .local
                 )
             }
             Group {
                 OmniboxView(
-                    address: .local(Slug("_profile_")!),
+                    address: Slashlink(slug: Slug("_profile_")!),
                     defaultAudience: .local
                 )
                 OmniboxView(
-                    address: .local(Slug("red-mars")!),
+                    address: Slashlink.local(Slug("red-mars")!),
                     defaultAudience: .local
                 )
                 OmniboxView(
-                    address: .local(Slug("BLUE-mars")!),
+                    address: Slashlink.local(Slug("BLUE-mars")!),
                     defaultAudience: .local
                 )
                 OmniboxView(
-                    address: .public(Slashlink("@KSR.scifi/GREEN-mars")!),
+                    address: Slashlink("@KSR.scifi/GREEN-mars")!,
                     defaultAudience: .local
                 )
                 OmniboxView(

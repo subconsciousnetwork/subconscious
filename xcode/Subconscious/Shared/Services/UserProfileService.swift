@@ -116,10 +116,10 @@ actor UserProfileService {
     /// Because profile data is optional and we expect it will not always be present
     /// any errors are logged & handled and nil will be returned if reading fails.
     private func readProfileMemo(
-        address: MemoAddress
+        address: Slashlink
     ) async -> UserProfileEntry? {
         do {
-            let data = try await noosphere.read(slashlink: address.toSlashlink())
+            let data = try await noosphere.read(slashlink: address)
             
             guard data.contentType == Self.profileContentType else {
                 throw UserProfileServiceError.unexpectedProfileContentType(data.contentType)
@@ -153,7 +153,7 @@ actor UserProfileService {
     private func loadProfile(
         did: Did,
         petname: Petname,
-        address: MemoAddress
+        address: Slashlink
     ) async throws -> UserProfile {
         let userProfileData = await self.readProfileMemo(address: address)
         let pfp: ProfilePicVariant = Func.run {
@@ -200,7 +200,7 @@ actor UserProfileService {
                     address: Slashlink(
                         petname: petname,
                         slug: slug
-                    ).toPublicMemoAddress(),
+                    ),
                     excerpt: memo.excerpt(),
                     modified: memo.modified
                 )
@@ -214,7 +214,7 @@ actor UserProfileService {
     /// Each user will be decorated with whether the current app user is following them.
     func getFollowingList(
         identity: Did,
-        address: MemoAddress
+        address: Slashlink
     ) async throws -> [StoryUser] {
         var following: [StoryUser] = []
         let sphere = try await self.noosphere.sphere(did: identity)
@@ -227,15 +227,15 @@ actor UserProfileService {
             let isOurs = noosphereIdentity == entry.did
             
             let slashlink = Func.run {
-                guard let basePetname = address.petname else {
+                guard case let .petname(basePetname) = address.peer else {
                     return Slashlink(petname: entry.petname)
                 }
                 return Slashlink(petname: entry.petname).rebaseIfNeeded(petname: basePetname)
             }
             
             let address = isOurs
-                ? Slashlink.ourProfile.toPublicMemoAddress()
-                : slashlink.toPublicMemoAddress()
+                ? Slashlink.ourProfile
+                : slashlink
             
             let user = try await self.loadProfile(
                 did: entry.did,
@@ -286,7 +286,7 @@ actor UserProfileService {
                   throw UserProfileServiceError.missingPreferredPetname
         }
         
-        let address = Slashlink.ourProfile.toPublicMemoAddress()
+        let address = Slashlink.ourProfile
         let did = try await self.noosphere.identity()
         
         let following = try await self.getFollowingList(
@@ -344,7 +344,7 @@ actor UserProfileService {
     func requestUserProfile(
         petname: Petname
     ) async throws -> UserProfileContentResponse {
-        let address = Slashlink(petname: petname).toPublicMemoAddress()
+        let address = Slashlink(petname: petname)
         
         let sphere = try await self.noosphere.traverse(petname: petname)
         let identity = try await sphere.identity()

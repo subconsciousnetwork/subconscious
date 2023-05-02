@@ -10,25 +10,13 @@ import XCTest
 
 class Tests_DatabaseService: XCTestCase {
     func testCollateRenameSuggestionsMove() throws {
-        let current = MemoAddress.public(
-            Slashlink("/ye-three-unsurrendered-spires-of-mine")!
-        )
-        let query = MemoAddress.public(
-            Slashlink("/the-whale-the-whale")!
-        )
+        let current = Slashlink("/ye-three-unsurrendered-spires-of-mine")!
+        let query = Slashlink("/the-whale-the-whale")!
         let results = [
             current,
-            MemoAddress.public(
-                Slashlink(
-                    "/oh-all-ye-sweet-powers-of-air-now-hug-me-close"
-                )!
-            ),
-            MemoAddress.public(
-                Slashlink("/stubbs-own-unwinking-eye")!
-            ),
-            MemoAddress.public(
-                Slashlink("/pole-pointed-prow")!
-            ),
+            Slashlink("/oh-all-ye-sweet-powers-of-air-now-hug-me-close")!,
+            Slashlink("/stubbs-own-unwinking-eye")!,
+            Slashlink("/pole-pointed-prow")!,
         ]
         let suggestions = DatabaseService.collateRenameSuggestions(
             current: current,
@@ -53,33 +41,17 @@ class Tests_DatabaseService: XCTestCase {
     }
 
     func testCollateRenameSuggestionsMerge() throws {
-        let current = MemoAddress.public(
-            Slashlink("/ye-three-unsurrendered-spires-of-mine")!
-        )
-        let query = MemoAddress.public(
-            Slashlink("/the-whale-the-whale")!
-        )
+        let current = Slashlink("/ye-three-unsurrendered-spires-of-mine")!
+        let query = Slashlink("/the-whale-the-whale")!
         let suggestions = DatabaseService.collateRenameSuggestions(
             current: current,
             query: query,
             results: [
-                MemoAddress.public(
-                    Slashlink("/ye-three-unsurrendered-spires-of-mine")!
-                ),
-                MemoAddress.public(
-                    Slashlink("/the-whale-the-whale")!
-                ),
-                MemoAddress.public(
-                    Slashlink(
-                        "/oh-all-ye-sweet-powers-of-air-now-hug-me-close"
-                    )!
-                ),
-                MemoAddress.public(
-                    Slashlink("/stubbs-own-unwinking-eye")!
-                ),
-                MemoAddress.public(
-                    Slashlink("/pole-pointed-prow")!
-                ),
+                Slashlink("/ye-three-unsurrendered-spires-of-mine")!,
+                Slashlink("/the-whale-the-whale")!,
+                Slashlink("/oh-all-ye-sweet-powers-of-air-now-hug-me-close")!,
+                Slashlink("/stubbs-own-unwinking-eye")!,
+                Slashlink("/pole-pointed-prow")!,
             ]
         )
         guard case let .merge(parent, child) = suggestions[0] else {

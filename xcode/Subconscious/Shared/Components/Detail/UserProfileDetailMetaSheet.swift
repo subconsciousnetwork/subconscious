@@ -37,7 +37,7 @@ struct UserProfileDetailMetaSheet: View {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     if let user = profile.user {
                         SlashlinkBylineView(
-                            slashlink: user.address.toSlashlink()
+                            slashlink: user.address
                         ).theme(
                             petname: Color.primary,
                             slug: Color.secondary
@@ -59,7 +59,7 @@ struct UserProfileDetailMetaSheet: View {
                         MetaTableView {
                             MetaTableItemShareLinkView(
                                 label: "Share Link",
-                                item: user.address.toSlashlink().verbatimMarkup
+                                item: user.address.verbatimMarkup
                             )
                             MetaTableItemShareLinkView(label: "Share DID", item: user.did.did)
                             // Add concepts such as "Block" or "Mute" here later?

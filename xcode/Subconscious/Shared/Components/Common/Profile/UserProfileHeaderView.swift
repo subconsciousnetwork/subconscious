@@ -83,7 +83,7 @@ struct BylineLgView_Previews: PreviewProvider {
                 user: UserProfile(
                     did: Did("did:key:123")!,
                     nickname: Petname("ben")!,
-                    address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress(),
+                    address: Slashlink(petname: Petname("ben")!),
                     pfp: .image("pfp-dog"),
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
                     category: .human
@@ -94,7 +94,7 @@ struct BylineLgView_Previews: PreviewProvider {
                 user: UserProfile(
                     did: Did("did:key:123")!,
                     nickname: Petname("ben")!,
-                    address: Slashlink(petname: Petname("ben")!).toPublicMemoAddress(),
+                    address: Slashlink(petname: Petname("ben")!),
                     pfp: .image("pfp-dog"),
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
                     category: .geist
@@ -106,7 +106,7 @@ struct BylineLgView_Previews: PreviewProvider {
                 user: UserProfile(
                     did: Did("did:key:123")!,
                     nickname: Petname("ben")!,
-                    address: Slashlink.ourProfile.toLocalMemoAddress(),
+                    address: Slashlink.ourProfile,
                     pfp: .image("pfp-dog"),
                     bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber in a traddlewaddle.",
                     category: .you

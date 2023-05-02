@@ -11,7 +11,7 @@ import Foundation
 struct Entry<T>: Hashable, Identifiable
 where T: Hashable
 {
-    var address: MemoAddress
+    var address: Slashlink
     var id: String { address.description }
     var contents: T
 }

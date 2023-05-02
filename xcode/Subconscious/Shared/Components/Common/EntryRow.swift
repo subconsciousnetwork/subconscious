@@ -48,19 +48,19 @@ struct EntryRow_Previews: PreviewProvider {
         VStack {
             EntryRow(
                 entry: EntryStub(
-                    address: Slug(formatting: "Anything that can be derived should be derived")!
-                        .toLocalMemoAddress(),
+                    address: Slashlink(
+                        peer: Peer.did(Did.local),
+                        slug: Slug(formatting: "Anything that can be derived should be derived")!
+                    ),
                     excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
                     modified: Date.now
                 )
             )
             EntryRow(
                 entry: EntryStub(
-                    address: MemoAddress.public(
-                        Slashlink(
-                            "@here/anything-that-can-be-derived-should-be-derived"
-                        )!
-                    ),
+                    address: Slashlink(
+                        "@here/anything-that-can-be-derived-should-be-derived"
+                    )!,
                     excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
                     modified: Date.now
                 )

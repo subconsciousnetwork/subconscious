@@ -18,13 +18,13 @@ struct EntryLink:
     Codable
 {
     /// Address for link
-    let address: MemoAddress
+    let address: Slashlink
     /// Actual title of link
     let title: String
     /// Linkable title that is always formattable to slug
     let linkableTitle: String
     
-    init(address: MemoAddress, title: String) {
+    init(address: Slashlink, title: String) {
         self.address = address
         let title = Self.sanitizeTitle(title)
         self.title = title
@@ -38,12 +38,12 @@ struct EntryLink:
     
     /// Construct an EntryLink from a slug.
     /// Title is generated using `slug.toTitle()`.
-    init(address: MemoAddress, title: String? = nil) {
+    init(address: Slashlink, title: String? = nil) {
         let title = title ?? address.slug.toTitle()
         self.init(address: address, title: title)
     }
     
-    var id: MemoAddress { address }
+    var id: Slashlink { address }
     var description: String { linkableTitle }
     
     static func sanitizeTitle(_ text: String) -> String {
@@ -54,5 +54,11 @@ struct EntryLink:
                 with: " ",
                 options: .regularExpression
             )
+    }
+}
+
+extension Slashlink {
+    func toEntryLink(title: String? = nil) -> EntryLink {
+        EntryLink(address: self, title: title)
     }
 }

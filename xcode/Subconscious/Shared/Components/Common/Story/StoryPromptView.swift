@@ -10,7 +10,7 @@ import SwiftUI
 /// A story is a single update within the FeedView
 struct StoryPromptView: View {
     var story: StoryPrompt
-    var action: (MemoAddress, String) -> Void
+    var action: (Slashlink, String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -38,7 +38,7 @@ struct StoryPromptView: View {
                     label: {
                         TranscludeView(
                             pfp: .image("pfp-dog"),
-                            slashlink: story.entry.address.toSlashlink(),
+                            slashlink: story.entry.address,
                             excerpt: story.entry.excerpt
                         )
                     }
@@ -74,9 +74,7 @@ struct StoryPromptView_Previews: PreviewProvider {
             story: StoryPrompt(
                 entry: EntryStub(
                     MemoEntry(
-                        address: MemoAddress.public(
-                            Slashlink("@here/meme")!
-                        ),
+                        address: Slashlink("@here/meme")!,
                         contents: Memo(
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,

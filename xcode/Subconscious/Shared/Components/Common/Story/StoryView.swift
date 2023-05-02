@@ -10,7 +10,7 @@ import SwiftUI
 /// Wrapper view for various types of story view
 struct StoryView: View {
     var story: Story
-    var action: (MemoAddress, String) -> Void
+    var action: (Slashlink, String) -> Void
 
     var body: some View {
         switch story {

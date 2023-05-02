@@ -59,7 +59,7 @@ struct RenameSearchView: View {
 
 enum RenameSearchAction: Hashable {
     /// Set the memo for which this rename sheet is being invoked.
-    case setSubject(_ address: MemoAddress?)
+    case setSubject(_ address: Slashlink?)
     /// Set the query string for the search input field
     case setQuery(_ query: String)
     case refreshRenameSuggestions
@@ -69,7 +69,7 @@ enum RenameSearchAction: Hashable {
 }
 
 struct RenameSearchModel: ModelProtocol {
-    var subject: MemoAddress? = nil
+    var subject: Slashlink? = nil
     var query = ""
     /// Suggestions for renaming note.
     var renameSuggestions: [RenameSuggestion] = []
@@ -122,7 +122,7 @@ struct RenameSearchModel: ModelProtocol {
     static func setSubject(
         state: RenameSearchModel,
         environment: AppEnvironment,
-        subject: MemoAddress?
+        subject: Slashlink?
     ) -> Update<RenameSearchModel> {
         var model = state
         model.subject = subject
@@ -199,25 +199,18 @@ struct RenameSearchView_Previews: PreviewProvider {
         .sheet(isPresented: .constant(true)) {
             RenameSearchView(
                 state: RenameSearchModel(
-                    subject: MemoAddress.local(
-                        Slug("loomings")!
+                    subject: Slashlink(
+                        peer: Peer.did(Did.local),
+                        slug: Slug("/loomings")!
                     ),
                     renameSuggestions: [
                         .move(
-                            from: MemoAddress.public(
-                                Slashlink("@here/loomings")!
-                            ),
-                            to: MemoAddress.public(
-                                Slashlink("@here/the-lee-shore")!
-                            )
+                            from: Slashlink("@here/loomings")!,
+                            to: Slashlink("@here/the-lee-shore")!
                         ),
                         .merge(
-                            parent: MemoAddress.public(
-                                Slashlink("@here/breakfast")!
-                            ),
-                            child: MemoAddress.public(
-                                Slashlink("@here/the-street")!
-                            )
+                            parent: Slashlink("@here/breakfast")!,
+                            child: Slashlink("@here/the-street")!
                         )
                     ]
                 ),

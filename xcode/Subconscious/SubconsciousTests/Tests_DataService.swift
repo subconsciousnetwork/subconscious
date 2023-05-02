@@ -22,7 +22,7 @@ final class Tests_DataService: XCTestCase {
             tmp: tmp
         )
         
-        let address = Slug(formatting: "Test")!.toPublicMemoAddress()
+        let address = Slashlink("/test")!
         let memoIn = Memo(
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
@@ -48,7 +48,7 @@ final class Tests_DataService: XCTestCase {
             tmp: tmp
         )
         
-        let address = Slug(formatting: "Test")!.toPublicMemoAddress()
+        let address = Slashlink("/test")!
         
         let memo = try? await environment.data.readMemo(address: address)
         XCTAssertNil(memo)
@@ -60,7 +60,7 @@ final class Tests_DataService: XCTestCase {
             tmp: tmp
         )
         
-        let address = Slug(formatting: "Test")!.toPublicMemoAddress()
+        let address = Slashlink("/test")!
         let memoIn = Memo(
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
@@ -90,7 +90,7 @@ final class Tests_DataService: XCTestCase {
             tmp: tmp
         )
         
-        let address = Slug(formatting: "Test")!.toPublicMemoAddress()
+        let address = Slashlink("/test")!
         let memo = Memo(
             contentType: ContentType.subtext.rawValue,
             created: Date.now,
@@ -188,9 +188,9 @@ final class Tests_DataService: XCTestCase {
             
             versionX = try await noosphere.version()
             
-            let addressA = Slug(formatting: "a")!.toPublicMemoAddress()
-            let addressB = Slug(formatting: "b")!.toPublicMemoAddress()
-            let addressC = Slug(formatting: "c")!.toPublicMemoAddress()
+            let addressA = Slashlink("/a")!
+            let addressB = Slashlink("/b")!
+            let addressC = Slashlink("/c")!
             
             let memo = Memo(
                 contentType: ContentType.subtext.rawValue,
@@ -234,11 +234,11 @@ final class Tests_DataService: XCTestCase {
         // HEAD is at last version
         XCTAssertEqual(versionY, versionC)
         
-        let addressB = Slug(formatting: "b")!.toPublicMemoAddress()
+        let addressB = Slashlink("/b")!
         let memoB = try await data.readMemo(address: addressB)
         XCTAssertEqual(memoB.body, "Test content")
         
-        let addressC = Slug(formatting: "c")!.toPublicMemoAddress()
+        let addressC = Slashlink("/c")!
         let memoC = try await data.readMemo(address: addressC)
         XCTAssertEqual(memoC.body, "Test content")
     }
@@ -259,12 +259,12 @@ final class Tests_DataService: XCTestCase {
         )
         
         let title = "A"
-        let addressA = Slug(formatting: title)!.toPublicMemoAddress()
+        let addressA = Slug(formatting: title)!.toSlashlink()
         try await environment.data.writeMemo(address: addressA, memo: memo)
         
         let addressA2 = await environment.data
             .findUniqueAddressFor(title, audience: .local)
-        XCTAssertEqual(addressA2?.description, "local::/a-2")
+        XCTAssertEqual(addressA2?.description, "did:subconscious:local/a-2")
     }
     
     func testReadMemoDetail() async throws {
@@ -280,7 +280,7 @@ final class Tests_DataService: XCTestCase {
             body: "Test content"
         )
         
-        let addressA = MemoAddress.public(Slashlink("/a")!)
+        let addressA = Slashlink("/a")!
         try await environment.data.writeMemo(address: addressA, memo: memo)
         
         let detail = await environment.data.readMemoDetail(address: addressA)
@@ -295,7 +295,7 @@ final class Tests_DataService: XCTestCase {
             tmp: tmp
         )
         
-        let addressA = MemoAddress.public(Slashlink("/a")!)
+        let addressA = Slashlink("/a")!
 
         let detail = await environment.data.readMemoDetail(address: addressA)
         XCTAssertNil(detail)
@@ -314,7 +314,7 @@ final class Tests_DataService: XCTestCase {
             body: "Test content"
         )
         
-        let addressA = MemoAddress.public(Slashlink("/a")!)
+        let addressA = Slashlink("/a")!
         try await environment.data.writeMemo(address: addressA, memo: memoA)
         
         let memoB = Memo(
@@ -326,7 +326,7 @@ final class Tests_DataService: XCTestCase {
             body: "More content"
         )
         
-        let addressB = MemoAddress.public(Slashlink("/another/slug")!)
+        let addressB = Slashlink("/another/slug")!
         try await environment.data.writeMemo(address: addressB, memo: memoB)
         
         let memoC = Memo(
@@ -338,7 +338,7 @@ final class Tests_DataService: XCTestCase {
             body: "Even more content"
         )
         
-        let addressC = Slashlink.ourProfile.toPublicMemoAddress()
+        let addressC = Slashlink.ourProfile
         try await environment.data.writeMemo(address: addressC, memo: memoC)
         
         let list = try await environment.data.listRecentMemos()

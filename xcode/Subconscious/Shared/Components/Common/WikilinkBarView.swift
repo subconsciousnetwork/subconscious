@@ -35,15 +35,11 @@ struct EntryLinkSuggestionBarView_Previews: PreviewProvider {
         WikilinkBarView(
             links: [
                 EntryLink(
-                    address: MemoAddress.public(
-                        Slashlink("@here/loomings")!
-                    ),
+                    address: Slashlink("@here/loomings")!,
                     title: "Loomings"
                 ),
                 EntryLink(
-                    address: MemoAddress.public(
-                        Slashlink("@here/the-lee-shore")!
-                    ),
+                    address: Slashlink("@here/the-lee-shore")!,
                     title: "The Lee Shore"
                 )
             ],

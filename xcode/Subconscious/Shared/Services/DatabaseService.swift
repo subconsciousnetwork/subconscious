@@ -142,7 +142,7 @@ final class DatabaseService {
 
     /// Write entry syncronously
     func writeMemo(
-        _ address: MemoAddress,
+        _ address: Slashlink,
         memo: Memo,
         size: Int? = nil
     ) throws {
@@ -150,7 +150,7 @@ final class DatabaseService {
             throw DatabaseServiceError.notReady
         }
 
-        if address.isLocal() && size == nil {
+        if address.isLocal && size == nil {
             throw DatabaseServiceError.sizeMissingForLocal
         }
         try database.execute(
@@ -207,7 +207,7 @@ final class DatabaseService {
     }
     
     /// Delete entry from database
-    func removeMemo(_ address: MemoAddress) throws {
+    func removeMemo(_ address: Slashlink) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -255,7 +255,7 @@ final class DatabaseService {
         )
         return results.compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -309,7 +309,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let title = row.col(1)?.toString()
             else {
                 return nil
@@ -375,7 +375,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let excerpt = row.col(1)?.toString()
             else {
                 return  nil
@@ -412,20 +412,22 @@ final class DatabaseService {
     ///
     /// - Returns an array of RenameSuggestion
     static func collateRenameSuggestions(
-        current: MemoAddress,
-        query: MemoAddress,
-        results: [MemoAddress]
+        current: Slashlink,
+        query: Slashlink?,
+        results: [Slashlink]
     ) -> [RenameSuggestion] {
         var suggestions: OrderedDictionary<Slug, RenameSuggestion> = [:]
         // First append result for literal query
-        if query.slug != current.slug {
-            suggestions.updateValue(
-                .move(
-                    from: current,
-                    to: query
-                ),
-                forKey: query.slug
-            )
+        if let query = query {
+            if query.slug != current.slug {
+                suggestions.updateValue(
+                    .move(
+                        from: current,
+                        to: query
+                    ),
+                    forKey: query.slug
+                )
+            }
         }
 
         // Then append results from existing entries, potentially overwriting
@@ -449,7 +451,7 @@ final class DatabaseService {
     /// for renaming the note.
     func searchRenameSuggestions(
         query: String,
-        current: MemoAddress
+        current: Slashlink
     ) throws -> [RenameSuggestion] {
         guard self.state == .ready else {
             return []
@@ -461,20 +463,11 @@ final class DatabaseService {
         // Create a suggestion for the literal query that has same
         // audience as current.
         let queryAddress = Func.run({
-            switch current {
-            case .public(let slashlink):
-                return MemoAddress.public(
-                    Slashlink(
-                        petname: slashlink.toPetname(),
-                        slug: slug
-                    )
-                )
-            case .local:
-                return MemoAddress.local(slug)
-            }
+            let audience = current.toAudience()
+            return Slug(formatting: query)?.toSlashlink(audience: audience)
         })
         
-        let results: [MemoAddress] = try database
+        let results: [Slashlink] = try database
             .execute(
                 sql: """
                 SELECT id
@@ -488,7 +481,7 @@ final class DatabaseService {
                 ]
             )
             .compactMap({ row in
-                row.col(0)?.toString()?.toMemoAddress()
+                row.col(0)?.toString()?.toSlashlink()
             })
         
         return Self.collateRenameSuggestions(
@@ -502,7 +495,7 @@ final class DatabaseService {
     /// A whitespace query string will fetch zero-query suggestions.
     func searchLinkSuggestions(
         query: String,
-        omitting invalidSuggestions: Set<MemoAddress> = Set(),
+        omitting invalidSuggestions: Set<Slashlink> = Set(),
         fallback: [LinkSuggestion] = []
     ) -> [LinkSuggestion] {
         guard self.state == .ready else {
@@ -518,7 +511,7 @@ final class DatabaseService {
         // Append literal
         if
             let literal = query.toSlug()?
-                .toLocalMemoAddress()
+                .toLocalSlashlink()
                 .toEntryLink(title: query)
         {
             suggestions[literal.address.slug] = .new(literal)
@@ -540,7 +533,7 @@ final class DatabaseService {
         }
         let entries: [EntryLink] = results.compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let title = row.col(1)?.toString()
             else {
                 return nil
@@ -620,7 +613,7 @@ final class DatabaseService {
         
         return results.compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -657,7 +650,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -688,7 +681,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -725,7 +718,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -756,7 +749,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let title = row.col(1)?.toString()
             else {
                 return nil

@@ -112,24 +112,24 @@ enum NotebookAction {
     case listRecentFailure(String)
     
     // Delete entries
-    case confirmDelete(MemoAddress?)
+    case confirmDelete(Slashlink?)
     case setConfirmDeleteShowing(Bool)
     /// Stage an entry deletion immediately before requesting.
     /// We do this for swipe-to-delete, where we must remove the entry
     /// from the list before requesting delete for the animation to work.
-    case stageDeleteEntry(MemoAddress)
+    case stageDeleteEntry(Slashlink)
     /// Delete entry identified by slug.
-    case deleteEntry(MemoAddress?)
+    case deleteEntry(Slashlink?)
     case failDeleteEntry(String)
-    case succeedDeleteEntry(MemoAddress)
+    case succeedDeleteEntry(Slashlink)
     
     /// Entry was saved
-    case succeedSaveEntry(slug: MemoAddress, modified: Date)
+    case succeedSaveEntry(slug: Slashlink, modified: Date)
     
     /// Move entry succeeded. Lifecycle action.
-    case succeedMoveEntry(from: MemoAddress, to: MemoAddress)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
     /// Merge entry succeeded. Lifecycle action.
-    case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     
     /// Audience was changed for address
     case succeedUpdateAudience(MoveReceipt)
@@ -151,7 +151,7 @@ enum NotebookAction {
     /// If slashlink does not have a peer part, this will
     /// request an editor detail.
     case findAndPushDetail(
-        address: MemoAddress,
+        address: Slashlink,
         link: SubSlashlinkLink
     )
     
@@ -202,7 +202,7 @@ extension NotebookAction {
         case let .createLocalMemo(slug, fallback):
             return .pushDetail(
                 MemoEditorDetailDescription(
-                    address: slug?.toLocalMemoAddress(),
+                    address: slug?.toLocalSlashlink(),
                     fallback: fallback,
                     defaultAudience: .local
                 )
@@ -210,7 +210,7 @@ extension NotebookAction {
         case let .createPublicMemo(slug, fallback):
             return .pushDetail(
                 MemoEditorDetailDescription(
-                    address: slug?.toPublicMemoAddress(),
+                    address: slug?.toSlashlink(),
                     fallback: fallback,
                     defaultAudience: .public
                 )
@@ -245,7 +245,7 @@ extension NotebookAction {
             return .pushDetail(detail)
         case let .requestFindLinkDetail(link):
             return .findAndPushDetail(
-                address: Slashlink.ourProfile.toPublicMemoAddress(),
+                address: Slashlink.ourProfile,
                 link: link
             )
         case let .succeedMoveEntry(from, to):
@@ -340,7 +340,7 @@ struct NotebookModel: ModelProtocol {
     
     //  Note deletion action sheet
     /// Delete confirmation action sheet
-    var entryToDelete: MemoAddress? = nil
+    var entryToDelete: Slashlink? = nil
     /// Delete confirmation action sheet
     var isConfirmDeleteShowing = false
     
@@ -520,7 +520,7 @@ struct NotebookModel: ModelProtocol {
             // This is needed in the viewer but address will always based
             // on our sphere in the editor case.
             let slashlink: Slashlink = Func.run {
-                guard let basePetname = address.petname else {
+                guard case let .petname(basePetname) = address.peer else {
                     return link.slashlink
                 }
                 return link.slashlink.rebaseIfNeeded(petname: basePetname)
@@ -681,7 +681,7 @@ struct NotebookModel: ModelProtocol {
     static func stageDeleteEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        address: MemoAddress
+        address: Slashlink
     ) -> Update<NotebookModel> {
         var model = state
         
@@ -716,7 +716,7 @@ struct NotebookModel: ModelProtocol {
     static func deleteEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        address: MemoAddress?
+        address: Slashlink?
     ) -> Update<NotebookModel> {
         guard let address = address else {
             logger.log(
@@ -742,7 +742,7 @@ struct NotebookModel: ModelProtocol {
     static func succeedDeleteEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        address: MemoAddress
+        address: Slashlink
     ) -> Update<NotebookModel> {
         logger.log("Deleted entry: \(address)")
         var model = state
@@ -761,8 +761,8 @@ struct NotebookModel: ModelProtocol {
     static func succeedMoveEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        from: MemoAddress,
-        to: MemoAddress
+        from: Slashlink,
+        to: Slashlink
     ) -> Update<NotebookModel> {
         var model = state
 
@@ -795,8 +795,8 @@ struct NotebookModel: ModelProtocol {
     static func succeedMergeEntry(
         state: NotebookModel,
         environment: AppEnvironment,
-        parent: MemoAddress,
-        child: MemoAddress
+        parent: Slashlink,
+        child: Slashlink
     ) -> Update<NotebookModel> {
         var model = state
 
@@ -880,7 +880,7 @@ struct NotebookModel: ModelProtocol {
         // Derive slug. If we can't (e.g. invalid query such as empty string),
         // just hide the search HUD and do nothing.
         guard
-            let address = Slug(formatting: query)?.toLocalMemoAddress()
+            let address = Slug(formatting: query)?.toLocalSlashlink()
         else {
             logger.log(
                 "Query could not be converted to link: \(query)"
@@ -931,7 +931,7 @@ struct NotebookModel: ModelProtocol {
                     action: .pushDetail(
                         .profile(
                             UserProfileDetailDescription(
-                                address: slashlink.toPublicMemoAddress()
+                                address: slashlink
                             )
                         )
                     ),
@@ -946,7 +946,7 @@ struct NotebookModel: ModelProtocol {
                 action: .pushDetail(
                     .viewer(
                         MemoViewerDetailDescription(
-                            address: slashlink.toPublicMemoAddress()
+                            address: slashlink
                         )
                     )
                 ),
@@ -968,7 +968,7 @@ struct NotebookModel: ModelProtocol {
         slug: Slug,
         fallback: String
     ) -> Update<NotebookModel> {
-        let fallbackAddress = slug.toLocalMemoAddress()
+        let fallbackAddress = slug.toLocalSlashlink()
         let fx: Fx<NotebookAction> = environment.data
             .findAddressInOursPublisher(slug: slug)
             .map({ address in

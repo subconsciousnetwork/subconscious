@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Toolbar for detail view
 struct DetailToolbarContent: ToolbarContent {
-    var address: MemoAddress?
+    var address: Slashlink?
     var defaultAudience: Audience
     var onTapOmnibox: () -> Void
 

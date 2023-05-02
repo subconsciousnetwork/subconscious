@@ -48,11 +48,9 @@ struct LinkSuggestionLabel_Previews: PreviewProvider {
         LinkSuggestionLabelView(
             suggestion: .new(
                 EntryLink(
-                    address: MemoAddress.public(
-                        Slashlink(
-                            "@here/a-muse-is-more-interesting-than-an-oracle"
-                        )!
-                    ),
+                    address: Slashlink(
+                        "@here/a-muse-is-more-interesting-than-an-oracle"
+                    )!,
                     title: "A muse is more interesting than an oracle"
                 )
             )

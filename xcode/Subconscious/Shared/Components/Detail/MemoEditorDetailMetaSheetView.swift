@@ -18,7 +18,7 @@ struct MemoEditorDetailMetaSheetView: View {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     HStack {
-                        if let slashlink = state.address?.toSlashlink() {
+                        if let slashlink = state.address {
                             SlashlinkBylineView(slashlink: slashlink).theme(
                                 petname: Color.primary,
                                 slug: Color.secondary
@@ -118,9 +118,9 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     /// Tagged actions for rename search sheet
     case renameSearch(RenameSearchAction)
     case presentRenameSheet(_ isPresented: Bool)
-    case presentRenameSheetFor(_ address: MemoAddress?)
+    case presentRenameSheetFor(_ address: Slashlink?)
     case selectRenameSuggestion(RenameSuggestion)
-    case setAddress(_ address: MemoAddress?)
+    case setAddress(_ address: Slashlink?)
     case setDefaultAudience(_ audience: Audience)
     /// Requests that audience be updated.
     /// Should be handled by parent component.
@@ -132,13 +132,13 @@ enum MemoEditorDetailMetaSheetAction: Hashable {
     case presentDeleteConfirmationDialog(Bool)
     /// Request this address be deleted.
     /// Should be handled by parent component.
-    case requestDelete(MemoAddress?)
+    case requestDelete(Slashlink?)
 
     static var refreshRenameSuggestions: Self {
         .renameSearch(.refreshRenameSuggestions)
     }
     
-    static func setRenameSearchSubject(_ address: MemoAddress?) -> Self {
+    static func setRenameSearchSubject(_ address: Slashlink?) -> Self {
         .renameSearch(.setSubject(address))
     }
 }
@@ -147,7 +147,7 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     typealias Action = MemoEditorDetailMetaSheetAction
     typealias Environment = AppEnvironment
     
-    var address: MemoAddress?
+    var address: Slashlink?
     var defaultAudience = Audience.local
     var audience: Audience {
         address?.toAudience() ?? defaultAudience
@@ -260,7 +260,7 @@ struct MemoEditorDetailMetaSheetModel: ModelProtocol {
     static func setAddress(
         state: Self,
         environment: Environment,
-        address: MemoAddress?
+        address: Slashlink?
     ) -> Update<Self> {
         var model = state
         model.address = address
@@ -321,7 +321,7 @@ struct MemoEditorDetailActionBottomSheetView_Previews: PreviewProvider {
         .sheet(isPresented: .constant(true)) {
             MemoEditorDetailMetaSheetView(
                 state: MemoEditorDetailMetaSheetModel(
-                    address: MemoAddress.local(Slug("the-whale-the-whale")!)
+                    address: Slashlink.local(Slug("the-whale-the-whale")!)
                 ),
                 send: { action in }
             )
