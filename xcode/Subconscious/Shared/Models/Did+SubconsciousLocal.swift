@@ -10,7 +10,7 @@
 
 extension Did {
     /// A non-standard did we use to represent the local file system.
-    static let local = Did("did:subconscious:local")
+    static let local = Did("did:subconscious:local")!
 }
 
 extension Slashlink {
