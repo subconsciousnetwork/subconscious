@@ -5,8 +5,7 @@
 //  Created by Gordon Brander on 5/1/23.
 //
 
-import Foundation
-
 extension Did {
+    /// A non-standard did we use to represent the local file system.
     static let local = Did("did:subconscious:local")
 }
