@@ -74,6 +74,7 @@ class Tests_NotebookUpdate: XCTestCase {
     
     func testViewerSlashlinkConstruction() throws {
         let model = NotebookModel()
+        AppDefaults.standard.isNoosphereEnabled = true
         
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
@@ -102,6 +103,7 @@ class Tests_NotebookUpdate: XCTestCase {
     
     func testEditorSlashlinkConstruction() throws {
         let model = NotebookModel()
+        AppDefaults.standard.isNoosphereEnabled = true
         
         let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
         let link = SubSlashlinkLink(slashlink: slashlink)
