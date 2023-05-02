@@ -66,8 +66,9 @@ extension UserProfileServiceError: LocalizedError {
 struct UserProfileContentResponse: Equatable, Hashable {
     var profile: UserProfile
     var statistics: UserProfileStatistics
+    var recentEntries: [EntryStub]
+    var topEntries: [EntryStub]
     var following: [StoryUser]
-    var entries: [EntryStub]
     var isFollowingUser: Bool
 }
 
@@ -304,6 +305,8 @@ actor UserProfileService {
             slugs: notes,
             sphere: self.noosphere
         )
+        let topEntries = entries
+        let recentEntries = recentEntries(entries: entries)
         
         
         let profile = try await self.loadProfile(
@@ -319,8 +322,9 @@ actor UserProfileService {
                 backlinkCount: -1, // TODO: populate with real count
                 followingCount: following.count
             ),
+            recentEntries: recentEntries,
+            topEntries: topEntries,
             following: following,
-            entries: entries,
             isFollowingUser: false
         )
     }
@@ -331,6 +335,16 @@ actor UserProfileService {
             try await self.requestOurProfile()
         }
         .eraseToAnyPublisher()
+    }
+    
+    /// Produce a reverse-chronological list of the entries passed in
+    private func recentEntries(entries: [EntryStub]) -> [EntryStub] {
+        var recentEntries = entries
+        recentEntries.sort(by: { a, b in
+            a.modified > b.modified
+        })
+        
+        return recentEntries
     }
     
     /// Retrieve all the content for the passed user's profile view, fetching their profile, notes and address book.
@@ -366,6 +380,9 @@ actor UserProfileService {
             sphere: sphere
         )
         
+        let topEntries = entries
+        let recentEntries = recentEntries(entries: entries)
+        
         let profile = try await self.loadProfile(
             did: did,
             petname: petname,
@@ -379,8 +396,9 @@ actor UserProfileService {
                 backlinkCount: -1, // TODO: populate with real count
                 followingCount: following.count
             ),
+            recentEntries: recentEntries,
+            topEntries: topEntries,
             following: following,
-            entries: entries,
             isFollowingUser: isFollowing
         )
     }

@@ -52,9 +52,9 @@ final class Tests_UserProfileService: XCTestCase {
         let profile = try await data.userProfile.requestOurProfile()
         
         XCTAssertEqual(profile.profile.nickname, Petname("alice")!)
-        XCTAssertEqual(profile.entries.count, 1)
+        XCTAssertEqual(profile.recentEntries.count, 1)
         // No hidden entries on profile
-        XCTAssertFalse(profile.entries.contains(where: { entry in entry.address.slug.isHidden }))
+        XCTAssertFalse(profile.recentEntries.contains(where: { entry in entry.address.slug.isHidden }))
         
         XCTAssertEqual(profile.following.count, 1)
         if let petname = profile.following.first?.user.address.petname {

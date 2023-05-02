@@ -288,8 +288,8 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.user = content.profile
             model.statistics = content.statistics
-            model.recentEntries = content.entries
-            model.topEntries = content.entries
+            model.recentEntries = content.recentEntries
+            model.topEntries = content.topEntries
             model.following = content.following
             model.isFollowingUser = content.isFollowingUser
             model.loadingState = .loaded
