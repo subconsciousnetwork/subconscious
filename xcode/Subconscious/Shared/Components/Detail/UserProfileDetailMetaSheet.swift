@@ -10,7 +10,7 @@ import ObservableStore
 
 struct UserProfileMetaSheetDetailsView: View {
     var user: UserProfile
-    var qrCodeSize = 128.0
+    var qrCodeSize = 240.0
     
     var body: some View {
         DidQrCodeView(did: user.did, color: Color.gray)

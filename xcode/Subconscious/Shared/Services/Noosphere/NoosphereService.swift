@@ -407,6 +407,10 @@ actor NoosphereService:
         try await self.sphere().traverse(petname: petname)
     }
     
+    func sphere(did: Did) async throws -> Sphere {
+        try Sphere(noosphere: self.noosphere(), identity: did.did)
+    }
+    
     nonisolated func traversePublisher(
         petname: Petname
     ) -> AnyPublisher<Sphere, Error> {

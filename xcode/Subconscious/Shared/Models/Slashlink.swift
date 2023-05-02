@@ -166,16 +166,16 @@ extension Slashlink {
     /// another petname.
     ///
     /// If this slashlink is absolute (a did slashlink) the function returns
-    /// nil.
-    func relativeTo(petname: Petname) -> Slashlink? {
+    /// the slashlink unchanged.
+    func appendRootIfNeeded(petname: Petname) -> Slashlink {
         switch self.peer {
+        case .did:
+            return self
         case .petname(let localPetname):
             let path = petname.append(petname: localPetname)
             return Slashlink(petname: path, slug: self.slug)
         case .none:
             return Slashlink(petname: petname, slug: self.slug)
-        default:
-            return nil
         }
     }
     

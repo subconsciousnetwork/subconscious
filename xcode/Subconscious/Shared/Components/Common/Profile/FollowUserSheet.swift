@@ -28,6 +28,7 @@ struct FollowUserSheetModel: ModelProtocol {
     typealias Action = FollowUserSheetAction
     typealias Environment = FollowUserSheetEnvironment
     
+    var user: UserProfile? = nil
     var followUserForm: FollowUserFormModel = FollowUserFormModel()
     var isPetnamePresentInAddressBook: Bool = false
     
@@ -38,11 +39,18 @@ struct FollowUserSheetModel: ModelProtocol {
         category: "FollowUserSheetModel"
     )
     
-    static func update(state: Self, action: Action, environment: Environment) -> Update<Self> {
+    static func update(
+        state: Self,
+        action: Action,
+        environment: Environment
+    ) -> Update<Self> {
+        
         switch action {
         case .populate(let user):
+            var model = state
+            model.user = user
             return update(
-                state: state,
+                state: model,
                 actions: [
                     .followUserForm(.didField(.setValue(input: user.did.did))),
                     .followUserForm(.petnameField(.setValue(input: user.nickname.verbatim))),
@@ -74,7 +82,11 @@ struct FollowUserSheetModel: ModelProtocol {
             
             if collision {
                 model.petnameFieldCaption = "You already follow a \(petname.markup)"
-                return update(state: model, actions: [.attemptToFindUniquePetname(petname)], environment: environment)
+                return update(
+                    state: model,
+                    actions: [.attemptToFindUniquePetname(petname)],
+                    environment: environment
+                )
             }
             
             return Update(state: model)
@@ -83,7 +95,9 @@ struct FollowUserSheetModel: ModelProtocol {
             let fx: Fx<FollowUserSheetAction> =
                 environment.addressBook.findAvailablePetnamePublisher(petname: petname)
                 .map { petname in
-                    FollowUserSheetAction.followUserForm(.petnameField(.setValue(input: petname.verbatim)))
+                    FollowUserSheetAction.followUserForm(
+                        .petnameField(.setValue(input: petname.verbatim))
+                    )
                 }
                 .catch { error in
                     Just(FollowUserSheetAction.failToFindUniquePetname)
@@ -116,7 +130,7 @@ struct FollowUserSheetCursor: CursorProtocol {
         return model
     }
     
-    static func tag(_ action: FollowUserSheetAction) -> UserProfileDetailAction {
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
         .followUserSheet(action)
     }
 }
@@ -125,17 +139,17 @@ struct FollowUserSheetFormCursor: CursorProtocol {
     typealias Model = FollowUserSheetModel
     typealias ViewModel = FollowUserFormModel
     
-    static func get(state: FollowUserSheetModel) -> FollowUserFormModel {
+    static func get(state: Model) -> ViewModel {
         state.followUserForm
     }
     
-    static func set(state: FollowUserSheetModel, inner: FollowUserFormModel) -> FollowUserSheetModel {
+    static func set(state: Model, inner: ViewModel) -> Model {
         var model = state
         model.followUserForm = inner
         return model
     }
     
-    static func tag(_ action: FollowUserFormAction) -> FollowUserSheetAction {
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
         .followUserForm(action)
     }
 }
@@ -143,7 +157,6 @@ struct FollowUserSheetFormCursor: CursorProtocol {
 struct FollowUserSheet: View {
     var state: FollowUserSheetModel
     var send: (FollowUserSheetAction) -> Void
-    var user: UserProfile
     
     var onAttemptFollow: () -> Void
     
@@ -152,14 +165,16 @@ struct FollowUserSheet: View {
     
     var body: some View {
         VStack(alignment: .center, spacing: AppTheme.unit2) {
-            ProfilePic(pfp: user.pfp)
-            
-            Text(user.did.did)
-                .font(.caption.monospaced())
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.leading)
-            
-            Spacer()
+            if let user = state.user {
+                ProfilePic(pfp: user.pfp)
+                
+                Text(user.did.did)
+                    .font(.caption.monospaced())
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.leading)
+                
+                Spacer()
+            }
             
             ValidatedTextField(
                 placeholder: "petname",
@@ -198,9 +213,6 @@ struct FollowUserSheet: View {
         }
         .padding(AppTheme.padding)
         .presentationDetents([.fraction(0.33)])
-        .onAppear {
-            send(.populate(user))
-        }
         .alert(
             isPresented: Binding(
                 get: { failFollowError != nil },

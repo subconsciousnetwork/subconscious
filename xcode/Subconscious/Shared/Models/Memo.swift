@@ -70,6 +70,13 @@ struct Memo: Hashable, CustomStringConvertible {
         }
     }
     
+    /// Parses body to Subtext
+    /// It currently treats all content types as Subtext. We may wish to do
+    /// something smarter in future.
+    func dom() -> Subtext {
+        Subtext(markup: body)
+    }
+
     /// Read slugs referenced in memo body
     func slugs() -> Set<Slug> {
         switch ContentType(rawValue: contentType) {

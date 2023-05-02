@@ -7,6 +7,29 @@
 
 import SwiftUI
 
+/// Adjusts the hit mask of a view to exclude the top-right corner so we can add buttons there
+/// without having to deal with firing both tap targets at once.
+private struct RectangleCroppedTopRightCorner: Shape {
+    static let margin: CGSize = CGSize(
+        width: AppTheme.minTouchSize + AppTheme.tightPadding,
+        height: AppTheme.minTouchSize + AppTheme.tightPadding
+    )
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX - Self.margin.width, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX - Self.margin.width, y: rect.minY + Self.margin.height))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + Self.margin.height))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.closeSubpath()
+
+        return path
+    }
+}
+
 /// Show a user card in a feed format
 struct StoryUserView: View {
     @Environment(\.colorScheme) var colorScheme
@@ -15,43 +38,74 @@ struct StoryUserView: View {
     var action: (MemoAddress, String) -> Void
     
     var profileAction: (UserProfile, UserProfileAction) -> Void = { _, _ in }
-
+    
     var body: some View {
-        Button(
-            action: {
-                action(
-                    story.user.address,
-                    story.user.bio
-                )
-            }
-        ) {
-            VStack(alignment: .leading, spacing: AppTheme.unit3) {
-                HStack(alignment: .center, spacing: AppTheme.unit2) {
-                    ProfilePicSm(pfp: story.user.pfp)
-                    PetnameBylineView(petname: story.user.nickname)
-                    
-                    Spacer()
-                    
-                    switch (story.isFollowingUser, story.user.category) {
-                    case (true, _):
-                        Image.from(appIcon: .following)
-                            .foregroundColor(.secondary)
-                    case (_, .you):
-                        Image.from(appIcon: .you(colorScheme))
-                            .foregroundColor(.secondary)
-                    case (_, _):
-                        EmptyView()
-                    }
+        VStack(alignment: .leading, spacing: AppTheme.unit3) {
+            HStack(alignment: .center, spacing: AppTheme.unit2) {
+                ProfilePicSm(pfp: story.user.pfp)
+                PetnameBylineView(petname: story.user.nickname)
+                
+                Spacer()
+                
+                switch (story.isFollowingUser, story.user.category) {
+                case (true, _):
+                    Image.from(appIcon: .following)
+                        .foregroundColor(.secondary)
+                case (_, .you):
+                    Image.from(appIcon: .you(colorScheme))
+                        .foregroundColor(.secondary)
+                case (_, _):
+                    EmptyView()
                 }
                 
+                Menu(
+                    content: {
+                        if story.isFollowingUser {
+                            Button(
+                                action: {
+                                    profileAction(story.user, .requestUnfollow)
+                                }
+                            ) {
+                                Label(
+                                    title: { Text("Unfollow \(story.user.nickname.markup)") },
+                                    icon: { Image(systemName: "person.fill.xmark") }
+                                )
+                            }
+                        } else {
+                            Button(
+                                action: {
+                                    profileAction(story.user, .requestFollow)
+                                }
+                            ) {
+                                Label(
+                                    title: { Text("Follow \(story.user.nickname.markup)") },
+                                    icon: { Image(systemName: "person.badge.plus") }
+                                )
+                            }
+                        }
+                       
+                    },
+                    label: {
+                        Image(systemName: "ellipsis")
+                            .frame(width: AppTheme.minTouchSize, height: AppTheme.minTouchSize)
+                            .background(.background)
+                    }
+                )
+            }
+            
+            if story.user.bio.count > 0 {
                 Text(verbatim: story.user.bio)
             }
-            .padding()
-            .background(Color.background)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
+        .padding(AppTheme.tightPadding)
+        .contentShape(.interaction, RectangleCroppedTopRightCorner())
+        .onTapGesture {
+            action(
+                story.user.address,
+                story.user.bio
+            )
+        }
+        .background(.background)
     }
 }
 

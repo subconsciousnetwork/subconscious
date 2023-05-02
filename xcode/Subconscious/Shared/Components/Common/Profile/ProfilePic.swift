@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum ProfilePicVariant: Equatable, Codable, Hashable {
-    case none
+    case none(Did)
     case url(URL)
     case image(String)
 }
@@ -30,8 +30,11 @@ struct ProfilePic: View {
     var pfp: ProfilePicVariant
     var body: some View {
         switch pfp {
-        case .none:
-            ProfilePicImage(image: Image("sub_logo"))
+        case .none(let did):
+            GenerativeProfilePic(did: did)
+                .frame(width: 48, height: 48)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.separator, lineWidth: 0.5))
         case .url(let url):
             AsyncImage(url: url) { image in
                 ProfilePicImage(image: image)
@@ -51,7 +54,7 @@ struct ProfilePic_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             ProfilePic(
-                pfp: .none
+                pfp: .none(Did.dummyData())
             )
             ProfilePic(
                 pfp: .url(URL(string: "https://images.unsplash.com/photo-1577766729821-6003ae138e18")!)

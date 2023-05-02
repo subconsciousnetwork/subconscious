@@ -61,21 +61,6 @@ struct AppView: View {
         ) {
             SettingsView(app: store)
         }
-        .sheet(
-            isPresented: Binding(
-                get: { store.state.addressBook.isPresented },
-                send: store.send,
-                tag: AppAction.presentAddressBook
-            )
-        ) {
-            AddressBookView(
-                state: store.state.addressBook,
-                send: Address.forward(
-                    send: store.send,
-                    tag: AppAddressBookCursor.tag
-                )
-            )
-        }
         .onAppear {
             store.send(.appear)
         }
@@ -101,7 +86,6 @@ enum AppAction: CustomLogStringConvertible {
     case start
 
     case recoveryPhrase(RecoveryPhraseAction)
-    case addressBook(AddressBookAction)
     case appUpgrade(AppUpgradeAction)
     case nicknameFormField(NicknameFormField.Action)
 
@@ -195,13 +179,13 @@ enum AppAction: CustomLogStringConvertible {
     case syncLocalFilesWithDatabase
     case succeedSyncLocalFilesWithDatabase([FileFingerprintChange])
     case failSyncLocalFilesWithDatabase(String)
+    
+    case followDefaultGeist
+    case succeedFollowDefaultGeist
+    case failFollowDefaultGeist(String)
 
     /// Set settings sheet presented?
     case presentSettingsSheet(_ isPresented: Bool)
-    
-    static func presentAddressBook(_ isPresented: Bool) -> AppAction {
-        .addressBook(.present(isPresented))
-    }
     
     /// Set recovery phrase on recovery phrase component
     static func setRecoveryPhrase(_ phrase: String) -> AppAction {
@@ -244,25 +228,6 @@ struct AppRecoveryPhraseCursor: CursorProtocol {
     
     static func tag(_ action: RecoveryPhraseAction) -> AppAction {
         .recoveryPhrase(action)
-    }
-}
-
-struct AppAddressBookCursor: CursorProtocol {
-    typealias Model = AppModel
-    typealias ViewModel = AddressBookModel
-
-    static func get(state: Model) -> ViewModel {
-        state.addressBook
-    }
-    
-    static func set(state: Model, inner: ViewModel) -> Model {
-        var model = state
-        model.addressBook = inner
-        return model
-    }
-    
-    static func tag(_ action: ViewModel.Action) -> Model.Action {
-        .addressBook(action)
     }
 }
 
@@ -404,10 +369,6 @@ struct AppModel: ModelProtocol {
     /// Not persisted.
     var recoveryPhrase = RecoveryPhraseModel()
     
-    /// Holds the state of the petname directory
-    /// Will be persisted to and read from the underlying sphere
-    var addressBook = AddressBookModel()
-    
     /// Is app in progress of upgrading?
     /// Toggled to true when database is rebuilt from scratch.
     /// Remains true until first file sync completes.
@@ -460,12 +421,6 @@ struct AppModel: ModelProtocol {
                 state: state,
                 action: action,
                 environment: environment.recoveryPhrase
-            )
-        case .addressBook(let action):
-            return AppAddressBookCursor.update(
-                state: state,
-                action: action,
-                environment: AddressBookEnvironment(environment)
             )
         case .appUpgrade(let action):
             return AppUpgradeCursor.update(
@@ -689,6 +644,16 @@ struct AppModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
+        case .followDefaultGeist:
+            return followDefaultGeist(
+                state: state,
+                environment: environment
+            )
+        case .succeedFollowDefaultGeist:
+            return Update(state: state)
+        case .failFollowDefaultGeist(let error):
+            logger.error("Failed to follow default geist: \(error)")
+            return Update(state: state)
         }
     }
 
@@ -919,7 +884,8 @@ struct AppModel: ModelProtocol {
             state: state,
             actions: [
                 .setSphereIdentity(receipt.identity),
-                .setRecoveryPhrase(receipt.mnemonic)
+                .setRecoveryPhrase(receipt.mnemonic),
+                .followDefaultGeist
             ],
             environment: environment
         )
@@ -1376,6 +1342,26 @@ struct AppModel: ModelProtocol {
         model.isSettingsSheetPresented = isPresented
         return Update(state: model)
     }
+    
+    static func followDefaultGeist(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        let fx: Fx<AppAction> = environment.addressBook
+            .followUserPublisher(
+                did: Config.default.subconsciousGeistDid,
+                petname: Config.default.subconsciousGeistPetname
+            )
+            .map {
+                AppAction.succeedFollowDefaultGeist
+            }
+            .recover { error in
+                AppAction.failFollowDefaultGeist(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+        
+        return Update(state: state, fx: fx)
+    }
 }
 
 //  MARK: Environment
@@ -1478,12 +1464,3 @@ struct AppEnvironment {
     }
 }
 
-extension AddressBookEnvironment {
-    init(_ environment: AppEnvironment) {
-        self.init(
-            noosphere: environment.noosphere,
-            data: environment.data,
-            addressBook: environment.addressBook
-        )
-    }
-}

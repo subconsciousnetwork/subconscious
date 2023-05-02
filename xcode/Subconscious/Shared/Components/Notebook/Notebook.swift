@@ -151,8 +151,8 @@ enum NotebookAction {
     /// If slashlink does not have a peer part, this will
     /// request an editor detail.
     case findAndPushDetail(
-        slashlink: Slashlink,
-        fallback: String
+        address: MemoAddress,
+        link: SubSlashlinkLink
     )
     
     /// Find a detail for content that belongs to us.
@@ -243,10 +243,10 @@ extension NotebookAction {
             return .deleteEntry(address)
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindDetail(slashlink, fallback):
+        case let .requestFindLinkDetail(link):
             return .findAndPushDetail(
-                slashlink: slashlink,
-                fallback: fallback
+                address: Slashlink.ourProfile.toPublicMemoAddress(),
+                link: link
             )
         case let .succeedMoveEntry(from, to):
             return .succeedMoveEntry(from: from, to: to)
@@ -263,10 +263,10 @@ extension NotebookAction {
         switch action {
         case let .requestDetail(detail):
             return .pushDetail(detail)
-        case let .requestFindDetail(slashlink, fallback):
+        case let .requestFindLinkDetail(address, link):
             return .findAndPushDetail(
-                slashlink: slashlink,
-                fallback: fallback
+                address: address,
+                link: link
             )
         }
     }
@@ -513,12 +513,24 @@ struct NotebookModel: ModelProtocol {
             var model = state
             model.details = details
             return Update(state: model)
-        case let .findAndPushDetail(slashlink, fallback):
+        case let .findAndPushDetail(address, link):
+            // Stitch the base address on to the tapped link, making any
+            // bare slashlinks relative to the sphere they belong to.
+            //
+            // This is needed in the viewer but address will always based
+            // on our sphere in the editor case.
+            let slashlink: Slashlink = Func.run {
+                guard let basePetname = address.petname else {
+                    return link.slashlink
+                }
+                return link.slashlink.appendRootIfNeeded(petname: basePetname)
+            }
+            
             return findAndPushDetail(
                 state: state,
                 environment: environment,
                 slashlink: slashlink,
-                fallback: fallback
+                fallback: link.fallback
             )
         case let .findAndPushMemoEditorDetail(slug, fallback):
             return findAndPushMemoEditorDetail(

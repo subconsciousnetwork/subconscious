@@ -71,4 +71,61 @@ class Tests_NotebookUpdate: XCTestCase {
             "Slug C moved up because slug B was removed"
         )
     }
+    
+    func testViewerSlashlinkConstruction() throws {
+        let model = NotebookModel()
+        AppDefaults.standard.isNoosphereEnabled = true
+        
+        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
+        let link = SubSlashlinkLink(slashlink: slashlink)
+        
+        let action = MemoViewerDetailNotification.requestFindLinkDetail(
+            address: Slashlink(petname: Petname("origin")!).toPublicMemoAddress(),
+            link: link
+        )
+        
+        let newAction = NotebookAction.tag(action)
+        let update = NotebookModel.update(
+            state: model,
+            action: newAction,
+            environment: environment
+        )
+        
+        if let detail = update.state.details.first?.address,
+           let petname = detail.petname {
+            XCTAssertEqual(petname, Petname("bob.alice.origin")!)
+            XCTAssertEqual(detail.slug, Slug("hello")!)
+        } else {
+            XCTFail("No detail")
+            return
+        }
+    }
+    
+    func testEditorSlashlinkConstruction() throws {
+        let model = NotebookModel()
+        AppDefaults.standard.isNoosphereEnabled = true
+        
+        let slashlink = Slashlink(petname: Petname("bob.alice")!, slug: Slug("hello")!)
+        let link = SubSlashlinkLink(slashlink: slashlink)
+        
+        let action = MemoEditorDetailNotification.requestFindLinkDetail(
+            link: link
+        )
+        
+        let newAction = NotebookAction.tag(action)
+        let update = NotebookModel.update(
+            state: model,
+            action: newAction,
+            environment: environment
+        )
+        
+        if let detail = update.state.details.first?.address,
+           let petname = detail.petname {
+            XCTAssertEqual(petname, Petname("bob.alice")!)
+            XCTAssertEqual(detail.slug, Slug("hello")!)
+        } else {
+            XCTFail("No detail")
+            return
+        }
+    }
 }

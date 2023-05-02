@@ -8,8 +8,11 @@
 import os
 import Foundation
 import Combine
-// temp
-import SwiftUI
+
+struct AddressBookEntry: Equatable {
+    var petname: Petname
+    var did: Did
+}
 
 enum AddressBookError: Error {
     case cannotFollowYourself
@@ -74,6 +77,7 @@ actor AddressBook<Sphere: SphereProtocol> {
         let petnames = try await sphere.listPetnames()
         for petname in petnames {
             let did = try await sphere.getPetname(petname: petname)
+            
             addressBook.append(
                 AddressBookEntry(
                     petname: petname,
@@ -81,6 +85,12 @@ actor AddressBook<Sphere: SphereProtocol> {
                 )
             )
         }
+        
+        // Maintain consistent order
+        addressBook.sort { a, b in
+            a.petname < b.petname
+        }
+        
         self.addressBook = addressBook
         return addressBook
     }
@@ -224,6 +234,12 @@ actor AddressBookService {
     private var database: DatabaseService
     private var addressBook: AddressBook<NoosphereService>
     
+    var localAddressBook: AddressBook<NoosphereService> {
+        get {
+            addressBook
+        }
+    }
+    
     /// must be defined here not on `AddressBook` because
     /// `AddressBook` is generic and cannot hold static properties
     static let maxAttemptsToIncrementPetName = 99
@@ -284,6 +300,12 @@ actor AddressBookService {
             version: version
         )
         await self.addressBook.invalidateCache()
+        
+        do {
+            let _ = try await self.noosphere.sync()
+        } catch {
+            Self.logger.error("Failed to sync after following user: \(error.localizedDescription)")
+        }
     }
     
     /// Associates the passed DID with the passed petname within the sphere,

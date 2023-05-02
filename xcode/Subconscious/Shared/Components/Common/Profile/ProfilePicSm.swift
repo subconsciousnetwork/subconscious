@@ -18,7 +18,7 @@ struct ProfilePicSmImage: View {
             .frame(width: 24, height: 24)
             .overlay(
                 Circle()
-                    .stroke(border, lineWidth: 1)
+                    .stroke(Color.separator, lineWidth: 1)
             )
             .clipShape(Circle())
     }
@@ -30,8 +30,11 @@ struct ProfilePicSm: View {
 
     var body: some View {
         switch pfp {
-        case .none:
-            ProfilePicSmImage(image: Image("sub_logo"), border: border)
+        case .none(let did):
+            GenerativeProfilePic(did: did, size: 24)
+                .frame(width: 24, height: 24)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.separator, lineWidth: 1))
         case .url(let url):
             AsyncImage(url: url) { image in
                 ProfilePicSmImage(image: image, border: border)
@@ -54,7 +57,7 @@ struct ProfilePicSm_Previews: PreviewProvider {
     static var previews: some View {
         HStack {
             ProfilePicSm(
-                pfp: .none
+                pfp: .none(Did.dummyData())
             )
             ProfilePicSm(
                 pfp: .url(URL(string: "https://images.unsplash.com/photo-1577766729821-6003ae138e18")!)

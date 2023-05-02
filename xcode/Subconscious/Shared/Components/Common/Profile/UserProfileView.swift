@@ -35,7 +35,7 @@ struct UserProfileView: View {
             label: "Recent",
             view: Group {
                 if let user = state.user {
-                    ForEach(state.recentEntries, id: \.id) { entry in
+                    ForEach(state.recentEntries) { entry in
                         StoryEntryView(
                             story: StoryEntry(
                                 author: user,
@@ -52,7 +52,7 @@ struct UserProfileView: View {
             label: "Top",
             view: Group {
                 if let user = state.user {
-                    ForEach(state.topEntries, id: \.id) { entry in
+                    ForEach(state.topEntries) { entry in
                         StoryEntryView(
                             story: StoryEntry(
                                 author: user,
@@ -68,7 +68,7 @@ struct UserProfileView: View {
         let columnFollowing = TabbedColumnItem(
             label: "Following",
             view: Group {
-                ForEach(state.following, id: \.user.did) { follow in
+                ForEach(state.following) { follow in
                     StoryUserView(
                         story: follow,
                         action: { _, _ in onNavigateToUser(follow.user) },
@@ -99,7 +99,7 @@ struct UserProfileView: View {
                     columnA: columnRecent,
                     columnB: columnTop,
                     columnC: columnFollowing,
-                    selectedColumnIndex: state.selectedTabIndex,
+                    selectedColumnIndex: state.currentTabIndex,
                     changeColumn: { index in
                         send(.tabIndexSelected(index))
                     }
@@ -119,6 +119,18 @@ struct UserProfileView: View {
                         send(.presentMetaSheet(true))
                     }
                 )
+                if user.category == .you {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(
+                            action: {
+                                send(.presentFollowNewUserFormSheet(true))
+                            },
+                            label: {
+                                Image(systemName: "person.badge.plus")
+                            }
+                        )
+                    }
+                }
             } else {
                 DetailToolbarContent(
                     defaultAudience: .public,
@@ -132,6 +144,7 @@ struct UserProfileView: View {
         .follow(state: state, send: send)
         .unfollow(state: state, send: send)
         .editProfile(state: state, send: send)
+        .followNewUser(state: state, send: send)
     }
 }
 
@@ -163,6 +176,13 @@ private extension View {
         send: @escaping (UserProfileDetailAction) -> Void
     ) -> some View {
       self.modifier(EditProfileSheetModifier(state: state, send: send))
+    }
+    
+    func followNewUser(
+        state: UserProfileDetailModel,
+        send: @escaping (UserProfileDetailAction) -> Void
+    ) -> some View {
+      self.modifier(FollowNewUserSheetModifier(state: state, send: send))
     }
 }
 
@@ -205,23 +225,28 @@ private struct FollowModifier: ViewModifier {
                     tag: UserProfileDetailAction.presentFollowSheet
                 )
             ) {
-                if let user = state.user {
-                    FollowUserSheet(
-                        state: state.followUserSheet,
-                        send: Address.forward(
-                            send: send,
-                            tag: FollowUserSheetCursor.tag
-                        ),
-                        user: user,
-                        onAttemptFollow: {
-                            send(.attemptFollow)
-                        },
-                        failFollowError: state.failFollowErrorMessage,
-                        onDismissError: {
-                            send(.dismissFailFollowError)
+                FollowUserSheet(
+                    state: state.followUserSheet,
+                    send: Address.forward(
+                        send: send,
+                        tag: FollowUserSheetCursor.tag
+                    ),
+                    onAttemptFollow: {
+                        let form = state.followUserSheet.followUserForm
+                        guard let did = form.did.validated else {
+                            return
                         }
-                    )
-                }
+                        guard let petname = form.petname.validated else {
+                            return
+                        }
+                        
+                        send(.attemptFollow(did, petname))
+                    },
+                    failFollowError: state.failFollowErrorMessage,
+                    onDismissError: {
+                        send(.dismissFailFollowError)
+                    }
+                )
             }
     }
 }
@@ -253,7 +278,7 @@ private struct UnfollowModifier: ViewModifier {
               )
       ) {
           Button(
-              "Unfollow \(state.user?.nickname.markup ?? "user")?",
+              "Unfollow \(state.unfollowCandidate?.nickname.markup ?? "user")?",
               role: .destructive
           ) {
               send(.attemptUnfollow)
@@ -303,10 +328,48 @@ private struct EditProfileSheetModifier: ViewModifier {
     }
 }
 
+private struct FollowNewUserSheetModifier: ViewModifier {
+    let state: UserProfileDetailModel
+    let send: (UserProfileDetailAction) -> Void
+    
+    func body(content: Content) -> some View {
+        content
+            .sheet(
+                isPresented: Binding(
+                    get: { state.isFollowNewUserFormSheetPresented },
+                    send: send,
+                    tag: UserProfileDetailAction.presentFollowNewUserFormSheet
+                )
+            ) {
+                FollowNewUserFormSheetView(
+                    state: state.followNewUserFormSheet,
+                    send: Address.forward(
+                        send: send,
+                        tag: FollowNewUserFormSheetCursor.tag
+                    ),
+                    did: state.user?.did,
+                    onAttemptFollow: {
+                        let form = state.followNewUserFormSheet.form
+                        guard let did = form.did.validated else {
+                            return
+                        }
+                        guard let petname = form.petname.validated else {
+                            return
+                        }
+                        
+                        send(.attemptFollow(did, petname))
+                    },
+                    onCancel: { send(.presentFollowNewUserFormSheet(false)) },
+                    onDismissFailFollowError: { send(.dismissFailFollowError) }
+                )
+            }
+    }
+}
+
 struct UserProfileView_Previews: PreviewProvider {
     static var previews: some View {
         UserProfileView(
-            state: UserProfileDetailModel(isFollowSheetPresented: true),
+            state: UserProfileDetailModel(),
             send: { _ in },
             onNavigateToNote: { _ in print("navigate to note") },
             onNavigateToUser: { _ in print("navigate to user") },

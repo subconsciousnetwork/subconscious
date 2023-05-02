@@ -39,13 +39,13 @@ struct StoryEntryView: View {
                     .font(.caption)
                     Spacer()
                 }
-                .padding()
+                .padding(AppTheme.tightPadding)
                 .frame(height: AppTheme.unit * 11)
                 
                 Divider()
                 
                 Text(story.entry.excerpt)
-                .padding()
+                    .padding(AppTheme.tightPadding)
             }
             .background(Color.background)
             .contentShape(Rectangle())

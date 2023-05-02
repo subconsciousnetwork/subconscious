@@ -38,9 +38,8 @@ struct MemoEditorDetailView: View {
             return true
         }
         notify(
-            .requestFindDetail(
-                slashlink: sub.slashlink,
-                fallback: sub.fallback
+            .requestFindLinkDetail(
+                link: sub
             )
         )
         return false
@@ -173,9 +172,8 @@ struct MemoEditorDetailView: View {
                 return .systemAction
             }
             notify(
-                .requestFindDetail(
-                    slashlink: link.slashlink,
-                    fallback: link.fallback
+                .requestFindLinkDetail(
+                    link: link
                 )
             )
             return .handled
@@ -239,9 +237,8 @@ enum MemoEditorDetailNotification: Hashable {
     /// Request specific detail
     case requestDetail(MemoDetailDescription)
     /// Request detail from any audience scope
-    case requestFindDetail(
-        slashlink: Slashlink,
-        fallback: String
+    case requestFindLinkDetail(
+        link: SubSlashlinkLink
     )
     case requestDelete(MemoAddress?)
     case succeedMoveEntry(from: MemoAddress, to: MemoAddress)

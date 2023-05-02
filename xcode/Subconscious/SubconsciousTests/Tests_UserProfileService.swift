@@ -47,11 +47,43 @@ final class Tests_UserProfileService: XCTestCase {
             )
         )
         
+        let _ = try await data.addressBook.followUser(did: Did("did:key:123")!, petname: Petname("ronald")!)
+        
         let profile = try await data.userProfile.requestOurProfile()
         
         XCTAssertEqual(profile.profile.nickname, Petname("alice")!)
-        XCTAssertEqual(profile.entries.count, 1)
+        XCTAssertEqual(profile.recentEntries.count, 1)
         // No hidden entries on profile
-        XCTAssertFalse(profile.entries.contains(where: { entry in entry.address.slug.isHidden }))
+        XCTAssertFalse(profile.recentEntries.contains(where: { entry in entry.address.slug.isHidden }))
+        
+        XCTAssertEqual(profile.following.count, 1)
+        if let petname = profile.following.first?.user.address.petname {
+            XCTAssertEqual(petname, Petname("ronald"))
+        }
+    }
+    
+    func testFollowingListAddresses() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+        let data = try await TestUtilities.createDataServiceEnvironment(tmp: tmp)
+        
+        AppDefaults.standard.nickname = "test"
+        
+        let _ = try await data.addressBook.followUser(
+            did: Did("did:key:123")!,
+            petname: Petname("ronald")!
+        )
+        
+        let did = try await data.noosphere.identity()
+        
+        let following = try await data.userProfile.getFollowingList(
+            identity: did,
+            address: Slashlink(petname: Petname("bob.alice")!).toPublicMemoAddress()
+        )
+        
+        if let petname = following.first?.user.address.petname {
+            XCTAssertEqual(petname, Petname("ronald.bob.alice")!)
+        } else {
+            XCTFail("No followed users")
+        }
     }
 }

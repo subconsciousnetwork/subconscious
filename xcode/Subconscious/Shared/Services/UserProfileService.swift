@@ -60,8 +60,9 @@ extension UserProfileServiceError: LocalizedError {
 struct UserProfileContentResponse: Equatable, Hashable {
     var profile: UserProfile
     var statistics: UserProfileStatistics
+    var recentEntries: [EntryStub]
+    var topEntries: [EntryStub]
     var following: [StoryUser]
-    var entries: [EntryStub]
     var isFollowingUser: Bool
 }
 
@@ -160,7 +161,7 @@ actor UserProfileService {
                 return .url(url)
             }
             
-            return .none
+            return .none(did)
         }
         
         let profile = UserProfile(
@@ -211,36 +212,38 @@ actor UserProfileService {
     
     /// List all the users followed by the passed sphere.
     /// Each user will be decorated with whether the current app user is following them.
-    private func getFollowingList<Sphere: SphereProtocol>(
-        sphere: Sphere,
-        localAddressBook: AddressBook<Sphere>,
+    func getFollowingList(
+        identity: Did,
         address: MemoAddress
     ) async throws -> [StoryUser] {
         var following: [StoryUser] = []
-        let petnames = try await sphere.listPetnames()
-        for petname in petnames {
-            guard let did = try await localAddressBook.getPetname(
-                petname: petname
-            ) else {
-                continue
+        let sphere = try await self.noosphere.sphere(did: identity)
+        let localAddressBook = AddressBook(sphere: sphere)
+        
+        let entries = try await localAddressBook.listEntries(refetch: true)
+        
+        for entry in entries {
+            let noosphereIdentity = try await noosphere.identity()
+            let isOurs = noosphereIdentity == entry.did
+            
+            let slashlink = Func.run {
+                guard let basePetname = address.petname else {
+                    return Slashlink(petname: entry.petname)
+                }
+                return Slashlink(petname: entry.petname).appendRootIfNeeded(petname: basePetname)
             }
             
-            let petname = address.petname?.append(petname: petname) ?? petname
-            let noosphereIdentity = try await noosphere.identity()
-            let isOurs = noosphereIdentity.id == did.id
-            
-            let address =
-                isOurs
+            let address = isOurs
                 ? Slashlink.ourProfile.toPublicMemoAddress()
-                : Slashlink(petname: petname).toPublicMemoAddress()
+                : slashlink.toPublicMemoAddress()
             
             let user = try await self.loadProfile(
-                did: did,
-                petname: petname,
+                did: entry.did,
+                petname: address.petname ?? entry.petname,
                 address: address
             )
             
-            let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: did)
+            let weAreFollowingListedUser = await self.addressBook.isFollowingUser(did: entry.did)
             
             following.append(
                 StoryUser(
@@ -285,9 +288,9 @@ actor UserProfileService {
         
         let address = Slashlink.ourProfile.toPublicMemoAddress()
         let did = try await self.noosphere.identity()
+        
         let following = try await self.getFollowingList(
-            sphere: self.noosphere,
-            localAddressBook: AddressBook(sphere: self.noosphere),
+            identity: did,
             address: address
         )
         let notes = try await self.noosphere.list()
@@ -296,6 +299,8 @@ actor UserProfileService {
             slugs: notes,
             sphere: self.noosphere
         )
+        let topEntries = entries
+        let recentEntries = recentEntries(entries: entries)
         
         let profile = try await self.loadProfile(
             did: did,
@@ -310,8 +315,9 @@ actor UserProfileService {
                 backlinkCount: -1, // TODO: populate with real count
                 followingCount: following.count
             ),
+            recentEntries: recentEntries,
+            topEntries: topEntries,
             following: following,
-            entries: entries,
             isFollowingUser: false
         )
     }
@@ -324,6 +330,16 @@ actor UserProfileService {
         .eraseToAnyPublisher()
     }
     
+    /// Produce a reverse-chronological list of the entries passed in
+    private func recentEntries(entries: [EntryStub]) -> [EntryStub] {
+        var recentEntries = entries
+        recentEntries.sort(by: { a, b in
+            a.modified > b.modified
+        })
+        
+        return recentEntries
+    }
+    
     /// Retrieve all the content for the passed user's profile view, fetching their profile, notes and address book.
     func requestUserProfile(
         petname: Petname
@@ -332,17 +348,18 @@ actor UserProfileService {
         
         let sphere = try await self.noosphere.traverse(petname: petname)
         let identity = try await sphere.identity()
-        let localAddressBook = AddressBook(sphere: sphere)
-        let following: [StoryUser] = try await self.getFollowingList(
-            sphere: sphere,
-            localAddressBook: localAddressBook,
-            address: address
-        )
         
         // Detect your own profile and intercept
         guard try await self.noosphere.identity() != identity else {
             return try await requestOurProfile()
         }
+        
+        let localAddressBook = AddressBook(sphere: sphere)
+        
+        let following: [StoryUser] = try await self.getFollowingList(
+            identity: identity,
+            address: address
+        )
         
         let notes = try await sphere.list()
         let isFollowing = await self.addressBook.isFollowingUser(did: identity)
@@ -351,6 +368,9 @@ actor UserProfileService {
             slugs: notes,
             sphere: sphere
         )
+        
+        let topEntries = entries
+        let recentEntries = recentEntries(entries: entries)
         
         let profile = try await self.loadProfile(
             did: identity,
@@ -365,8 +385,9 @@ actor UserProfileService {
                 backlinkCount: -1, // TODO: populate with real count
                 followingCount: following.count
             ),
+            recentEntries: recentEntries,
+            topEntries: topEntries,
             following: following,
-            entries: entries,
             isFollowingUser: isFollowing
         )
     }

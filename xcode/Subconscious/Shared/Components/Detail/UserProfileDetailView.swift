@@ -39,9 +39,9 @@ struct UserProfileDetailView: View {
     func onProfileAction(user: UserProfile, action: UserProfileAction) {
         switch (action) {
         case .requestFollow:
-            store.send(.requestFollow)
+            store.send(.requestFollow(user))
         case .requestUnfollow:
-            store.send(.requestUnfollow)
+            store.send(.requestUnfollow(user))
         case .editOwnProfile:
             store.send(.presentEditProfile(true))
         }
@@ -61,7 +61,8 @@ struct UserProfileDetailView: View {
             // background for a while, and the content changed in another tab.
             store.send(
                 UserProfileDetailAction.appear(
-                    description.address
+                    description.address,
+                    description.initialTabIndex
                 )
             )
         }
@@ -78,10 +79,12 @@ enum UserProfileDetailNotification: Hashable {
 /// profile's internal state.
 struct UserProfileDetailDescription: Hashable {
     var address: MemoAddress
+    var initialTabIndex: Int = UserProfileDetailModel.recentEntriesTabIndex
 }
 
 enum UserProfileDetailAction {
-    case appear(MemoAddress)
+    case appear(MemoAddress, Int)
+    case refresh
     case populate(UserProfileContentResponse)
     case failedToPopulate(String)
     
@@ -91,25 +94,27 @@ enum UserProfileDetailAction {
     case presentFollowSheet(Bool)
     case presentUnfollowConfirmation(Bool)
     case presentEditProfile(Bool)
+    case presentFollowNewUserFormSheet(Bool)
     
     case metaSheet(UserProfileDetailMetaSheetAction)
     case followUserSheet(FollowUserSheetAction)
     case editProfileSheet(EditProfileSheetAction)
+    case followNewUserFormSheet(FollowNewUserFormSheetAction)
     
     case fetchFollowingStatus(Did)
     case populateFollowingStatus(Bool)
     
-    case requestFollow
-    case attemptFollow
+    case requestFollow(UserProfile)
+    case attemptFollow(Did, Petname)
     case failFollow(error: String)
     case dismissFailFollowError
-    case succeedFollow(did: Did, petname: Petname)
+    case succeedFollow
     
-    case requestUnfollow
+    case requestUnfollow(UserProfile)
     case attemptUnfollow
     case failUnfollow(error: String)
     case dismissFailUnfollowError
-    case succeedUnfollow(did: Did)
+    case succeedUnfollow
     
     case requestEditProfile
     case failEditProfile(error: String)
@@ -167,18 +172,35 @@ struct UserProfileDetailModel: ModelProtocol {
         category: "UserProfileDetail"
     )
     
+    // MARK: Tab Indices
+    static let recentEntriesTabIndex: Int = 0
+    static let topEntriesTabIndex: Int = 1
+    static let followingTabIndex: Int = 2
+    
     var loadingState = LoadingState.loading
     
     var metaSheet: UserProfileDetailMetaSheetModel = UserProfileDetailMetaSheetModel()
     var followUserSheet: FollowUserSheetModel = FollowUserSheetModel()
+    var followNewUserFormSheet: FollowNewUserFormSheetModel = FollowNewUserFormSheetModel()
     var editProfileSheet: EditProfileSheetModel = EditProfileSheetModel()
     var failFollowErrorMessage: String?
     var failUnfollowErrorMessage: String?
     var failEditProfileMessage: String?
     
-    var selectedTabIndex = 0
+    // This view can be invoked with an initial tab focused
+    // but if the user has changed the tab we should remember that across profile refreshes
+    private var initialTabIndex: Int = Self.recentEntriesTabIndex
+    private var selectedTabIndex: Int? = nil
+    
+    var currentTabIndex: Int {
+        get {
+            selectedTabIndex ?? initialTabIndex
+        }
+    }
+    
     var isMetaSheetPresented = false
     var isFollowSheetPresented = false
+    var isFollowNewUserFormSheetPresented = false
     var isUnfollowConfirmationPresented = false
     var isEditProfileSheetPresented = false
     
@@ -191,12 +213,15 @@ struct UserProfileDetailModel: ModelProtocol {
     
     var statistics: UserProfileStatistics? = nil
     
+    var unfollowCandidate: UserProfile? = nil
+    
     static func update(
         state: Self,
         action: Action,
         environment: Environment
     ) -> Update<Self> {
         switch action {
+        // MARK: Submodels
         case .metaSheet(let action):
             return UserProfileDetailMetaSheetCursor.update(
                 state: state,
@@ -209,13 +234,35 @@ struct UserProfileDetailModel: ModelProtocol {
                 action: action,
                 environment: FollowUserSheetEnvironment(addressBook: environment.addressBook)
             )
+        case .followNewUserFormSheet(let action):
+            return FollowNewUserFormSheetCursor.update(
+                state: state,
+                action: action,
+                environment: ()
+            )
         case .editProfileSheet(let action):
             return EditProfileSheetCursor.update(
                 state: state,
                 action: action,
                 environment: EditProfileSheetEnvironment()
             )
-        case .appear(let address):
+            
+        // MARK: Lifecycle
+        case .refresh:
+            guard let user = state.user else {
+                return Update(state: state)
+            }
+            
+            return update(
+                state: state,
+                action: .appear(user.address, state.initialTabIndex),
+                environment: environment
+            )
+            
+        case .appear(let address, let initialTabIndex):
+            var model = state
+            model.initialTabIndex = initialTabIndex
+            
             let fxRoot: AnyPublisher<UserProfileContentResponse, Error> =
             Func.run {
                 if let petname = address.petname {
@@ -235,14 +282,14 @@ struct UserProfileDetailModel: ModelProtocol {
                 }
                 .eraseToAnyPublisher()
             
-            return Update(state: state, fx: fx)
+            return Update(state: model, fx: fx)
             
         case .populate(let content):
             var model = state
             model.user = content.profile
             model.statistics = content.statistics
-            model.recentEntries = content.entries
-            model.topEntries = content.entries
+            model.recentEntries = content.recentEntries
+            model.topEntries = content.topEntries
             model.following = content.following
             model.isFollowingUser = content.isFollowingUser
             model.loadingState = .loaded
@@ -264,11 +311,19 @@ struct UserProfileDetailModel: ModelProtocol {
         case .tabIndexSelected(let index):
             var model = state
             model.selectedTabIndex = index
+            
             return Update(state: model)
             
+        // MARK: Presentation
         case .presentMetaSheet(let presented):
             var model = state
             model.isMetaSheetPresented = presented
+            
+            return Update(state: model)
+            
+        case .presentFollowNewUserFormSheet(let presented):
+            var model = state
+            model.isFollowNewUserFormSheetPresented = presented
             return Update(state: model)
             
         case .presentFollowSheet(let presented):
@@ -298,22 +353,22 @@ struct UserProfileDetailModel: ModelProtocol {
             return Update(state: model)
             
         // MARK: Following
-        case .requestFollow:
-            return update(state: state, action: .presentFollowSheet(true), environment: environment)
+        case .requestFollow(let user):
+            return update(
+                state: state,
+                actions: [
+                    .presentFollowSheet(true),
+                    .followUserSheet(.populate(user))
+                ],
+                environment: environment
+            )
             
-        case .attemptFollow:
-            guard let did = state.followUserSheet.followUserForm.did.validated else {
-                return Update(state: state)
-            }
-            guard let petname = state.followUserSheet.followUserForm.petname.validated else {
-                return Update(state: state)
-            }
-            
+        case .attemptFollow(let did, let petname):
             let fx: Fx<UserProfileDetailAction> =
             environment.addressBook
                 .followUserPublisher(did: did, petname: petname, preventOverwrite: true)
                 .map({ _ in
-                    UserProfileDetailAction.succeedFollow(did: did, petname: petname)
+                    UserProfileDetailAction.succeedFollow
                 })
                 .catch { error in
                     Just(UserProfileDetailAction.failFollow(error: error.localizedDescription))
@@ -322,13 +377,24 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return Update(state: state, fx: fx)
             
-        case .succeedFollow(let did, _):
+        case .succeedFollow:
+            var actions: [UserProfileDetailAction] = [
+                .presentFollowSheet(false),
+                .presentFollowNewUserFormSheet(false),
+                .refresh
+            ]
+            
+            // Refresh our profile & show the following list if we followed someone new
+            // This matters if we used the manual "Follow User" form
+            if let user = state.user {
+                if user.category == .you {
+                    actions.append(.tabIndexSelected(Self.followingTabIndex))
+                }
+            }
+            
             return update(
                 state: state,
-                actions: [
-                    .presentFollowSheet(false),
-                    .fetchFollowingStatus(did)
-                ],
+                actions: actions,
                 environment: environment
             )
             
@@ -348,11 +414,18 @@ struct UserProfileDetailModel: ModelProtocol {
             model.isUnfollowConfirmationPresented = presented
             return Update(state: model)
             
-        case .requestUnfollow:
-            return update(state: state, action: .presentUnfollowConfirmation(true), environment: environment)
+        case .requestUnfollow(let user):
+            var model = state
+            model.unfollowCandidate = user
+            
+            return update(
+                state: model,
+                action: .presentUnfollowConfirmation(true),
+                environment: environment
+            )
             
         case .attemptUnfollow:
-            guard let did = state.user?.did else {
+            guard let did = state.unfollowCandidate?.did else {
                 return Update(state: state)
             }
             
@@ -360,7 +433,7 @@ struct UserProfileDetailModel: ModelProtocol {
             environment.addressBook
                 .unfollowUserPublisher(did: did)
                 .map({ _ in
-                    .succeedUnfollow(did: did)
+                    .succeedUnfollow
                 })
                 .recover({ error in
                     .failUnfollow(error: error.localizedDescription)
@@ -369,12 +442,12 @@ struct UserProfileDetailModel: ModelProtocol {
             
             return Update(state: state, fx: fx)
             
-        case .succeedUnfollow(let did):
+        case .succeedUnfollow:
             return update(
                 state: state,
                 actions: [
                     .presentUnfollowConfirmation(false),
-                    .fetchFollowingStatus(did)
+                    .refresh
                 ],
                 environment: environment
             )
@@ -433,14 +506,14 @@ struct UserProfileDetailModel: ModelProtocol {
             return Update(state: state, fx: fx)
             
         case .succeedEditProfile:
-            guard let address = state.user?.address else {
-                return Update(state: state)
-            }
-            
             var model = state
             model.isEditProfileSheetPresented = false
             
-            return update(state: model, action: .appear(address), environment: environment)
+            return update(
+                state: model,
+                action: .refresh,
+                environment: environment
+            )
             
         case .failEditProfile(let error):
             var model = state
@@ -451,8 +524,7 @@ struct UserProfileDetailModel: ModelProtocol {
             var model = state
             model.failEditProfileMessage = nil
             return Update(state: model)
+   
         }
-        
-        
     }
 }
