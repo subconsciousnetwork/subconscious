@@ -430,6 +430,21 @@ final class SQLite3Database {
             }
         }
 
+        /// Create a transaction savepoint
+        public func savepoint(_ savepoint: String) throws {
+            try executescript(sql: "SAVEPOINT \(savepoint);")
+        }
+
+        /// Release a transaction savepoint
+        public func release(_ savepoint: String) throws {
+            try executescript(sql: "RELEASE SAVEPOINT \(savepoint);")
+        }
+
+        /// Rollback to a transaction savepoint
+        public func rollback(_ savepoint: String) throws {
+            try executescript(sql: "ROLLBACK TO SAVEPOINT \(savepoint);")
+        }
+
         /// Private method to prepare an SQL statement before executing it.
         ///
         /// - Parameters:
@@ -753,6 +768,27 @@ final class SQLite3Database {
     public func getUserVersion() throws -> Int {
         try queue.sync {
             try self.open().getUserVersion()
+        }
+    }
+
+    /// Create a transaction savepoint
+    public func savepoint(_ savepoint: String) throws {
+        try queue.sync {
+            try self.open().savepoint(savepoint)
+        }
+    }
+
+    /// Release a transaction savepoint
+    public func release(_ savepoint: String) throws {
+        try queue.sync {
+            try self.open().release(savepoint)
+        }
+    }
+
+    /// Rollback to a transaction savepoint
+    public func rollback(_ savepoint: String) throws {
+        try queue.sync {
+            try self.open().rollback(savepoint)
         }
     }
 
