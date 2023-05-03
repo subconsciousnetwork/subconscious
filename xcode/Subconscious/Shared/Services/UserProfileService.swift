@@ -67,7 +67,6 @@ struct UserProfileContentResponse: Equatable, Hashable {
     var profile: UserProfile
     var statistics: UserProfileStatistics
     var recentEntries: [EntryStub]
-    var topEntries: [EntryStub]
     var following: [StoryUser]
     var isFollowingUser: Bool
 }
@@ -305,7 +304,6 @@ actor UserProfileService {
             slugs: notes,
             sphere: self.noosphere
         )
-        let topEntries = entries
         let recentEntries = recentEntries(entries: entries)
         
         
@@ -323,7 +321,6 @@ actor UserProfileService {
                 followingCount: following.count
             ),
             recentEntries: recentEntries,
-            topEntries: topEntries,
             following: following,
             isFollowingUser: false
         )
@@ -380,7 +377,6 @@ actor UserProfileService {
             sphere: sphere
         )
         
-        let topEntries = entries
         let recentEntries = recentEntries(entries: entries)
         
         let profile = try await self.loadProfile(
@@ -397,7 +393,6 @@ actor UserProfileService {
                 followingCount: following.count
             ),
             recentEntries: recentEntries,
-            topEntries: topEntries,
             following: following,
             isFollowingUser: isFollowing
         )

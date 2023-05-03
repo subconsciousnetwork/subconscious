@@ -50,19 +50,15 @@ struct UserProfileView: View {
         
         let columnTop = TabbedColumnItem(
             label: "Top",
-            view: Group {
-                if let user = state.user {
-                    ForEach(state.topEntries) { entry in
-                        StoryEntryView(
-                            story: StoryEntry(
-                                author: user,
-                                entry: entry
-                            ),
-                            action: { address, _ in onNavigateToNote(address) }
-                        )
-                    }
+            view: VStack(spacing: AppTheme.unit * 2) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 48))
+                    Text("Coming Soon...")
                 }
-            }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .foregroundColor(Color.secondary)
+                .background(Color.background)
         )
          
         let columnFollowing = TabbedColumnItem(

@@ -208,7 +208,6 @@ struct UserProfileDetailModel: ModelProtocol {
     var isFollowingUser: Bool = false
     
     var recentEntries: [EntryStub] = []
-    var topEntries: [EntryStub] = []
     var following: [StoryUser] = []
     
     var statistics: UserProfileStatistics? = nil
@@ -289,7 +288,6 @@ struct UserProfileDetailModel: ModelProtocol {
             model.user = content.profile
             model.statistics = content.statistics
             model.recentEntries = content.recentEntries
-            model.topEntries = content.topEntries
             model.following = content.following
             model.isFollowingUser = content.isFollowingUser
             model.loadingState = .loaded
