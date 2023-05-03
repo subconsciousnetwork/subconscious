@@ -28,6 +28,7 @@ enum DatabaseServiceError: Error, LocalizedError {
         to: DatabaseServiceState
     )
     case notReady
+    case slashlinkMustBeAbsolute
     case pathNotInFilePath
     case randomEntryFailed
     case notFound(String)
@@ -39,6 +40,8 @@ enum DatabaseServiceError: Error, LocalizedError {
             return "Invalid state transition \(from) -> \(to)"
         case .notReady:
             return "Database not ready"
+        case .slashlinkMustBeAbsolute:
+            return "Slashlink must be absolute"
         case .pathNotInFilePath:
             return "Path not in file path"
         case .randomEntryFailed:
@@ -52,10 +55,6 @@ enum DatabaseServiceError: Error, LocalizedError {
 }
 
 final class DatabaseService {
-    /// String used for identifying content with no sphere identity
-    /// i.e. local content
-    static let noSphereIdentityKey = "none"
-
     /// Publishes the current state of the database.
     /// Subscribe to be notified when database changes state.
     @Published private(set) var state: DatabaseServiceState
@@ -109,6 +108,18 @@ final class DatabaseService {
         }
     }
 
+    func savepoint(_ savepoint: String) throws {
+        try self.database.savepoint(savepoint)
+    }
+
+    func release(_ savepoint: String) throws {
+        try self.database.release(savepoint)
+    }
+
+    func rollback(_ savepoint: String) throws {
+        try self.database.rollback(savepoint)
+    }
+
     /// Geven a sphere did, read the last known version that the database has
     /// synced to (if any).
     func readSphereSyncInfo(sphereIdentity: Did) throws -> String? {
@@ -142,14 +153,13 @@ final class DatabaseService {
 
     /// Write entry syncronously
     func writeMemo(
-        _ address: Slashlink,
+        address: Link,
         memo: Memo,
         size: Int? = nil
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-
         if address.isLocal && size == nil {
             throw DatabaseServiceError.sizeMissingForLocal
         }
@@ -157,8 +167,8 @@ final class DatabaseService {
             sql: """
             INSERT INTO memo (
                 id,
+                did,
                 slug,
-                audience,
                 content_type,
                 created,
                 modified,
@@ -188,9 +198,9 @@ final class DatabaseService {
                 size=excluded.size
             """,
             parameters: [
-                .text(address.description),
+                .text(address.id),
+                .text(address.did.description),
                 .text(address.slug.description),
-                .text(address.toAudience().rawValue),
                 .text(memo.contentType),
                 .date(memo.created),
                 .date(memo.modified),
@@ -207,7 +217,7 @@ final class DatabaseService {
     }
     
     /// Delete entry from database
-    func removeMemo(_ address: Slashlink) throws {
+    func removeMemo(_ address: Link) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -216,7 +226,7 @@ final class DatabaseService {
             DELETE FROM memo WHERE id = ?
             """,
             parameters: [
-                .text(address.description)
+                .text(address.id)
             ]
         )
     }
@@ -588,24 +598,23 @@ final class DatabaseService {
         return query
     }
     
-    func readEntryBacklinks(slug: Slug) -> [EntryStub] {
+    func readEntryBacklinks(address: Link) throws -> [EntryStub] {
         guard self.state == .ready else {
-            return []
+            throw DatabaseServiceError.notReady
         }
-
         // Get backlinks.
         // Use content indexed in database, even though it might be stale.
         guard let results = try? database.execute(
             sql: """
             SELECT id, modified, excerpt
             FROM memo_search
-            WHERE slug != ? AND memo_search.description MATCH ?
+            WHERE id != ? AND memo_search.description MATCH ?
             ORDER BY rank
             LIMIT 200
             """,
             parameters: [
-                .text(slug.description),
-                .queryFTS5(slug.description)
+                .text(address.id),
+                .queryFTS5(address.slug.description)
             ]
         ) else {
             return []
@@ -613,7 +622,7 @@ final class DatabaseService {
         
         return results.compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toSlashlink(),
+                let address = row.col(0)?.toString()?.toLink()?.toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -768,7 +777,7 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-04-27T13:00:00")!,
+            version: Int.from(iso8601String: "2023-05-03T11:05:00")!,
             sql: """
             /*
             A table that tracks sphere->database sync info.
@@ -788,8 +797,8 @@ extension Config {
             /* Memo table contains the content of any plain-text memo */
             CREATE TABLE memo (
                 id TEXT PRIMARY KEY,
+                did TEXT NOT NULL,
                 slug TEXT NOT NULL,
-                audience TEXT NOT NULL,
                 content_type TEXT NOT NULL,
                 created TEXT NOT NULL,
                 modified TEXT NOT NULL,
@@ -811,8 +820,8 @@ extension Config {
             
             CREATE VIRTUAL TABLE memo_search USING fts5(
                 id,
+                did UNINDEXED,
                 slug,
-                audience UNINDEXED,
                 content_type UNINDEXED,
                 created UNINDEXED,
                 modified UNINDEXED,
@@ -847,8 +856,8 @@ extension Config {
                 INSERT INTO memo_search (
                     rowid,
                     id,
+                    did,
                     slug,
-                    audience,
                     content_type,
                     created,
                     modified,
@@ -864,8 +873,8 @@ extension Config {
                 VALUES (
                     new.rowid,
                     new.id,
+                    new.did,
                     new.slug,
-                    new.audience,
                     new.content_type,
                     new.created,
                     new.modified,
@@ -883,8 +892,8 @@ extension Config {
                 INSERT INTO memo_search (
                     rowid,
                     id,
+                    did,
                     slug,
-                    audience,
                     content_type,
                     created,
                     modified,
@@ -900,8 +909,8 @@ extension Config {
                 VALUES (
                     new.rowid,
                     new.id,
+                    new.did,
                     new.slug,
-                    new.audience,
                     new.content_type,
                     new.created,
                     new.modified,

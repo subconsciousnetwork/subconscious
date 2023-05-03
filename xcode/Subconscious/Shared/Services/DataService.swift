@@ -104,27 +104,39 @@ actor DataService {
         let version = try await noosphere.version()
         let since = try? database.readSphereSyncInfo(sphereIdentity: identity)
         let changes = try await noosphere.changes(since: since)
-        for change in changes {
-            let address = change.toSlashlink()
-            // If memo does exist, write it to database
-            // Sphere content is always public right now
-            if let memo = try? await noosphere.read(
-                slashlink: address
-            ).toMemo() {
-                try database.writeMemo(
-                    address,
-                    memo: memo
+        let savepoint = "sync"
+        try database.savepoint(savepoint)
+        do {
+            for change in changes {
+                let address = Slashlink(
+                    peer: Peer.did(identity),
+                    slug: change
                 )
+                // If memo does exist, write it to database
+                // Sphere content is always public right now
+                if let memo = try? await noosphere
+                    .read(slashlink: address)
+                    .toMemo()
+                {
+                    try database.writeMemo(
+                        address: address.toLink().unwrap(),
+                        memo: memo
+                    )
+                }
+                // If memo does not exist, that means change was a remove
+                else {
+                    try database.removeMemo(address.toLink().unwrap())
+                }
             }
-            // If memo does not exist, that means change was a remove
-            else {
-                try database.removeMemo(address)
-            }
+            try database.writeSphereSyncInfo(
+                sphereIdentity: identity,
+                version: version
+            )
+            try database.release(savepoint)
+        } catch {
+            try database.rollback(savepoint)
+            throw error
         }
-        try database.writeSphereSyncInfo(
-            sphereIdentity: identity,
-            version: version
-        )
         return version
     }
     
@@ -142,26 +154,39 @@ actor DataService {
         let version = try await sphere.version()
         let since = try database.readSphereSyncInfo(sphereIdentity: identity)
         let changes = try await sphere.changes(since: since)
-        for change in changes {
-            let address = change.toSlashlink(relativeTo: petname)
-            // If memo does exist, write it to database
-            if let memo = try? await noosphere.read(
-                slashlink: address
-            ).toMemo() {
-                try database.writeMemo(
-                    address,
-                    memo: memo
+        let savepoint = "sync"
+        try database.savepoint(savepoint)
+        do {
+            for change in changes {
+                let address = Slashlink(
+                    peer: Peer.did(identity),
+                    slug: change
                 )
+                // If memo does exist, write it to database
+                if let memo = try? await noosphere
+                    .read(slashlink: address)
+                    .toMemo()
+                {
+                    try database.writeMemo(
+                        address: address.toLink().unwrap(),
+                        memo: memo
+                    )
+                }
+                // If memo does not exist, that means change was a remove
+                else {
+                    try database.removeMemo(address.toLink().unwrap())
+                }
             }
-            // If memo does not exist, that means change was a remove
-            else {
-                try database.removeMemo(address)
-            }
+            try database.writeSphereSyncInfo(
+                sphereIdentity: identity,
+                version: version
+            )
+            try database.release(savepoint)
+        } catch {
+            try database.rollback(savepoint)
+            throw error
         }
-        try database.writeSphereSyncInfo(
-            sphereIdentity: identity,
-            version: version
-        )
+
         return version
     }
 
@@ -186,36 +211,35 @@ actor DataService {
         let changes = FileSync.calcChanges(
             left: left,
             right: right
-        )
-            .filter({ change in
-                switch change {
-                case .same:
-                    return false
-                default:
-                    return true
-                }
-            })
-        for change in changes {
+        ).filter({ change in
             switch change {
-                // .leftOnly = create.
-                // .leftNewer = update.
-                // .rightNewer = Follower shouldn't be ahead.
-                //               Leader wins.
-                // .conflict. Leader wins.
+            case .same:
+                return false
+            default:
+                return true
+            }
+        })
+        for change in changes {
+            // .leftOnly = create.
+            // .leftNewer = update.
+            // .rightNewer = Follower shouldn't be ahead.
+            //               Leader wins.
+            // .conflict. Leader wins.
+            switch change {
             case .leftOnly(let left), .leftNewer(let left, _), .rightNewer(let left, _), .conflict(let left, _):
                 var memo = try local.read(left.slug).unwrap()
                 // Read info from file system and set modified time
                 let info = try local.info(left.slug).unwrap()
                 memo.modified = info.modified
                 try database.writeMemo(
-                    left.slug.toLocalSlashlink(),
+                    address: left.slug.toLocalLink().unwrap(),
                     memo: memo,
                     size: info.size
                 )
                 // .rightOnly = delete. Remove from search index
             case .rightOnly(let right):
                 try database.removeMemo(
-                    right.slug.toLocalSlashlink()
+                    right.slug.toLocalLink().unwrap()
                 )
                 // .same = no change. Do nothing.
             case .same:
@@ -252,6 +276,8 @@ actor DataService {
     ) async throws {
         var memo = memo
         memo.modified = Date.now
+        // Get absolute slashlink
+        let address = try await noosphere.resolve(slashlink: address)
         guard !address.isLocal else {
             try local.write(address.slug, value: memo)
             // Read modified/size from file system directly after writing.
@@ -261,7 +287,7 @@ actor DataService {
             let info = try local.info(address.slug).unwrap()
             memo.modified = info.modified
             try database.writeMemo(
-                address,
+                address: address.toLink().unwrap(),
                 memo: memo,
                 size: info.size
             )
@@ -278,7 +304,7 @@ actor DataService {
         let version = try await noosphere.save()
         // Write to database
         try database.writeMemo(
-            address,
+            address: address.toLink().unwrap(),
             memo: memo
         )
         let identity = try await noosphere.identity()
@@ -305,14 +331,16 @@ actor DataService {
     
     /// Delete entry from file system and database
     func deleteMemo(_ address: Slashlink) async throws {
+        // Get absolute address
+        let address = try await noosphere.resolve(slashlink: address)
         guard !address.isLocal else {
             try local.remove(address.slug)
-            try database.removeMemo(address)
+            try database.removeMemo(address.toLink().unwrap())
             return
         }
         try await noosphere.remove(slug: address.slug)
         let version = try await noosphere.save()
-        try database.removeMemo(address)
+        try database.removeMemo(address.toLink().unwrap())
         let identity = try await noosphere.identity()
         // Write new sphere version to database
         try database.writeSphereSyncInfo(
@@ -337,6 +365,8 @@ actor DataService {
         from: Slashlink,
         to: Slashlink
     ) async throws -> MoveReceipt {
+        let from = try await noosphere.resolve(slashlink: from)
+        let to = try await noosphere.resolve(slashlink: to)
         guard from != to else {
             throw DataServiceError.fileExists(to.description)
         }
@@ -577,11 +607,14 @@ actor DataService {
                 "Cannot edit memo `\(address)"
             )
         }
+        let address = try await noosphere.resolve(slashlink: address)
         // Read memo from local or sphere.
         let memo = try? await readMemo(address: address)
         
-        let backlinks = database.readEntryBacklinks(slug: address.slug)
-
+        let backlinks = try database.readEntryBacklinks(
+            address: address.toLink().unwrap()
+        )
+        
         guard let memo = memo else {
             logger.log(
                 "Memo does not exist at \(address). Returning new draft."
@@ -595,7 +628,7 @@ actor DataService {
                 backlinks: backlinks
             )
         }
-
+        
         return MemoEditorDetailResponse(
             saveState: .saved,
             entry: Entry(
@@ -628,6 +661,12 @@ actor DataService {
     func readMemoDetail(
         address: Slashlink
     ) async -> MemoDetailResponse? {
+        guard let address = try? await noosphere.resolve(
+            slashlink: address
+        ) else {
+            return nil
+        }
+
         // Read memo from local or sphere.
         let memo = try? await readMemo(address: address)
 
@@ -635,7 +674,11 @@ actor DataService {
             return nil
         }
 
-        let backlinks = database.readEntryBacklinks(slug: address.slug)
+        guard let backlinks = try? database.readEntryBacklinks(
+            address: address.toLink().unwrap()
+        ) else {
+            return nil
+        }
 
         return MemoDetailResponse(
             entry: MemoEntry(
