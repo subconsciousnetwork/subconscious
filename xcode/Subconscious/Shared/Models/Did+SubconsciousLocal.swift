@@ -98,6 +98,18 @@ extension Slug {
             return Slashlink(slug: self)
         }
     }
+    
+    /// Create an absolute `Link` from a slug to a local file.
+    func toLocalLink() -> Link? {
+        Link(did: Did.local, slug: self)
+    }
+}
+
+extension Link {
+    /// Is link to a local file?
+    var isLocal: Bool {
+        did == Did.local
+    }
 }
 
 extension Image {
