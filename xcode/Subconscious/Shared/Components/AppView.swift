@@ -78,6 +78,7 @@ struct AppView: View {
     }
 }
 
+typealias InviteCodeFormField = FormField<String, InviteCode>
 typealias NicknameFormField = FormField<String, Petname>
 
 //  MARK: Action
@@ -88,6 +89,7 @@ enum AppAction: CustomLogStringConvertible {
     case recoveryPhrase(RecoveryPhraseAction)
     case appUpgrade(AppUpgradeAction)
     case nicknameFormField(NicknameFormField.Action)
+    case inviteCodeFormField(InviteCodeFormField.Action)
 
     /// Scene phase events
     /// See https://developer.apple.com/documentation/swiftui/scenephase
@@ -102,6 +104,8 @@ enum AppAction: CustomLogStringConvertible {
     /// Sets form field, and persists if needed.
     case setNickname(_ nickname: String)
     case persistNickname(_ nickname: String)
+    
+    case setInviteCode(_ inviteCode: String)
 
     /// Set gateway URL
     case setGatewayURLTextField(_ gateway: String)
@@ -185,7 +189,7 @@ enum AppAction: CustomLogStringConvertible {
     case failFollowDefaultGeist(String)
     
     case provisionGateway
-    case succeedProvisionGateway(URL)
+    case succeedProvisionGateway(String)
     case failProvisionGateway(String)
 
     /// Set settings sheet presented?
@@ -283,6 +287,30 @@ struct NicknameFormFieldCursor: CursorProtocol {
     }
 }
 
+struct InviteCodeFormFieldCursor: CursorProtocol {
+    typealias Model = AppModel
+    typealias ViewModel = InviteCodeFormField
+    
+    static func get(state: Model) -> ViewModel {
+        state.inviteCodeFormField
+    }
+    
+    static func set(state: Model, inner: ViewModel) -> Model {
+        var model = state
+        model.inviteCodeFormField = inner
+        return model
+    }
+    
+    static func tag(_ action: ViewModel.Action) -> Model.Action {
+        switch action {
+        case .setValue(let input):
+            return .setInviteCode(input)
+        default:
+            return .nicknameFormField(action)
+        }
+    }
+}
+
 enum AppDatabaseState {
     case initial
     case migrating
@@ -361,6 +389,11 @@ struct AppModel: ModelProtocol {
     var isNicknameFormFieldValid: Bool {
         nicknameFormField.isValid
     }
+    
+    var inviteCodeFormField = InviteCodeFormField(
+        value: "",
+        validate: { value in InviteCode(value) }
+    )
 
     /// Default sphere identity
     ///
@@ -438,6 +471,12 @@ struct AppModel: ModelProtocol {
                 action: action,
                 environment: FormFieldEnvironment()
             )
+        case .inviteCodeFormField(let action):
+            return InviteCodeFormFieldCursor.update(
+                state: state,
+                action: action,
+                environment: FormFieldEnvironment()
+            )
         case .scenePhaseChange(let scenePhase):
             return scenePhaseChange(
                 state: state,
@@ -466,6 +505,12 @@ struct AppModel: ModelProtocol {
                 state: state,
                 environment: environment,
                 text: nickname
+            )
+        case let .setInviteCode(inviteCode):
+            return setInviteCode(
+                state: state,
+                environment: environment,
+                text: inviteCode
             )
         case let .setGatewayURLTextField(text):
             return setGatewayURLTextField(
@@ -666,8 +711,10 @@ struct AppModel: ModelProtocol {
             
             let fx: Fx<AppAction> =
                 environment.gatewayProvisioningService
-                // TODO: populate inviteCode field
-                .provisionGatewayPublisher(inviteCode: "", sphere: did)
+                .provisionGatewayPublisher(
+                    inviteCode: state.inviteCodeFormField.value,
+                    sphere: did
+                )
                 .map { res in
                     .succeedProvisionGateway(res.gateway_url)
                 }
@@ -679,7 +726,7 @@ struct AppModel: ModelProtocol {
             return Update(state: state, fx: fx)
         case .succeedProvisionGateway(let url):
             var model = state
-            model.gatewayURL = url.absoluteString
+            model.gatewayURL = url
             return Update(state: model)
         case .failProvisionGateway(let error):
             logger.error("Failed to provision gateway: \(error)")
@@ -820,6 +867,22 @@ struct AppModel: ModelProtocol {
         }
         // Otherwise, just return state
         return Update(state: state)
+    }
+    
+    static func setInviteCode(
+        state: AppModel,
+        environment: AppEnvironment,
+        text: String
+    ) -> Update<AppModel> {
+        /// First pass down setValue to form field,
+        /// then persist the nickname by reading the updated model.
+        return update(
+            state: state,
+            actions: [
+                .inviteCodeFormField(.setValue(input: text)),
+            ],
+            environment: environment
+        )
     }
     
     static func setGatewayURLTextField(

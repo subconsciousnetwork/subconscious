@@ -19,8 +19,8 @@ struct ProvisionGatewayErrorResponse: Codable {
 }
 
 struct ProvisionGatewayResponse: Codable {
-    var gateway_url: URL
-    var gateway_did: Did
+    var gateway_url: String
+    var gateway_did: String
 }
 
 enum GatewayProvisioningServiceError: Error {
