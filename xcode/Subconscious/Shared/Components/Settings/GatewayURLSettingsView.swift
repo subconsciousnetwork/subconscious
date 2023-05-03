@@ -8,6 +8,64 @@
 import SwiftUI
 import ObservableStore
 
+struct GatewayProvisionLabel: View {
+    var status: ResourceStatus
+    @State var spin = false
+    
+    func label(status: ResourceStatus) -> String {
+        switch status {
+        case .initial:
+            return "Provision Gateway"
+        case .pending:
+            return "Provisioning..."
+        case .failed:
+            return "Provisioning Failed"
+        case .succeeded:
+            return "Gateway Created"
+        }
+    }
+    
+    private func labelColor(status: ResourceStatus) -> Color {
+        switch status {
+        case .failed:
+            return .red
+        default:
+            return .accentColor
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Label(title: {
+                Text(label(status: status))
+                    .foregroundColor(labelColor(status: status))
+            }, icon: {
+                switch (status) {
+                case .initial:
+                    Image(systemName: "icloud.and.arrow.up")
+                        .foregroundColor(.secondary)
+                case .pending:
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundColor(.accentColor)
+                        .rotationEffect(.degrees(spin ? 360 : 0))
+                        .animation(Animation.linear
+                            .repeatForever(autoreverses: false)
+                            .speed(0.4), value: spin)
+                        .onAppear() {
+                            self.spin = true
+                        }
+                case .succeeded:
+                    Image(systemName: "checkmark.icloud")
+                        .foregroundColor(.secondary)
+                case .failed:
+                    Image(systemName: "exclamationmark.icloud")
+                        .foregroundColor(.red)
+                }
+            })
+        }
+    }
+}
+
 struct GatewayURLSettingsView: View {
     @ObservedObject var app: Store<AppModel>
 
@@ -55,13 +113,8 @@ struct GatewayURLSettingsView: View {
                             app.send(.provisionGateway)
                         },
                         label: {
-                            Label(
-                                title: {
-                                    Text("Provision Gateway")
-                                },
-                                icon: {
-                                    Image(systemName: "icloud.and.arrow.up")
-                                }
+                            GatewayProvisionLabel(
+                                status: app.state.gatewayProvisioningStatus
                             )
                         }
                     )

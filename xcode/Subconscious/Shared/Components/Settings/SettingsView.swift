@@ -82,18 +82,20 @@ struct SettingsView: View {
                             label: {
                                 LabeledContent(
                                     "Nickname",
-                                    value: app.state.nickname ?? ""
+                                    value: app.state.nickname
                                 )
                                 .lineLimit(1)
                                 .textSelection(.enabled)
                             }
                         )
+                        
                         LabeledContent(
                             "Sphere",
                             value: app.state.sphereIdentity ?? unknown
                         )
                         .lineLimit(1)
                         .textSelection(.enabled)
+                        
                         LabeledContent(
                             "Version",
                             value: app.state.sphereVersion ?? unknown
@@ -115,6 +117,7 @@ struct SettingsView: View {
                                     .lineLimit(1)
                                 }
                             )
+                            
                             Button(
                                 action: {
                                     app.send(.syncSphereWithGateway)

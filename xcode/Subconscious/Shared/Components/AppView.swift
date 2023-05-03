@@ -718,14 +718,22 @@ struct AppModel: ModelProtocol {
                 }
                 .eraseToAnyPublisher()
             
-            return Update(state: state, fx: fx)
+            var model = state
+            model.gatewayProvisioningStatus = .pending
+            
+            return Update(state: model, fx: fx)
+            
         case .succeedProvisionGateway(let url):
             var model = state
             model.gatewayURL = url
+            model.gatewayProvisioningStatus = .succeeded
             return Update(state: model)
+            
         case .failProvisionGateway(let error):
             logger.error("Failed to provision gateway: \(error)")
-            return Update(state: state)
+            var model = state
+            model.gatewayProvisioningStatus = .failed(error)
+            return Update(state: model)
         }
     }
 
