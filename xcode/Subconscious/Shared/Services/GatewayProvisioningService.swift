@@ -60,7 +60,7 @@ actor GatewayProvisioningService {
     }
     
     func provisionGateway(
-        inviteCode: String,
+        inviteCode: InviteCode,
         sphere: Did
     ) async throws -> ProvisionGatewayResponse {
         
@@ -68,7 +68,10 @@ actor GatewayProvisioningService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body = ProvisionGatewayRequest(invite_code: inviteCode, sphere: sphere.description)
+        let body = ProvisionGatewayRequest(
+            invite_code: inviteCode.description,
+            sphere: sphere.description
+        )
         request.httpBody = try jsonEncoder.encode(body)
         
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -99,7 +102,7 @@ actor GatewayProvisioningService {
     }
     
     nonisolated func provisionGatewayPublisher(
-        inviteCode: String,
+        inviteCode: InviteCode,
         sphere: Did
     ) -> AnyPublisher<ProvisionGatewayResponse, Error> {
         Future.detached {

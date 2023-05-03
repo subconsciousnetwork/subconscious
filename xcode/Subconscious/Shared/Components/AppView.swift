@@ -318,13 +318,6 @@ enum AppDatabaseState {
     case ready
 }
 
-enum GatewaySyncStatus: Equatable {
-    case initial
-    case inProgress
-    case success
-    case failure(String)
-}
-
 //  MARK: Model
 struct AppModel: ModelProtocol {
     /// Is Noosphere enabled?
@@ -394,6 +387,7 @@ struct AppModel: ModelProtocol {
         value: "",
         validate: { value in InviteCode(value) }
     )
+    var gatewayProvisioningStatus = ResourceStatus.initial
 
     /// Default sphere identity
     ///
@@ -705,14 +699,15 @@ struct AppModel: ModelProtocol {
             return Update(state: state)
         case .provisionGateway:
             guard let did = state.sphereIdentity,
-                  let did = Did(did) else {
+                  let did = Did(did),
+                  let inviteCode = state.inviteCodeFormField.validated else {
                 return Update(state: state)
             }
             
             let fx: Fx<AppAction> =
                 environment.gatewayProvisioningService
                 .provisionGatewayPublisher(
-                    inviteCode: state.inviteCodeFormField.value,
+                    inviteCode: inviteCode,
                     sphere: did
                 )
                 .map { res in
