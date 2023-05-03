@@ -150,12 +150,33 @@ extension Slug {
 
 extension Slashlink {
     /// Is slashlink absolute?
-    /// - An absolute slashlink is a slashlink with a did peer.
-    /// - A relative slashlink is a slashlink with a petname peer, or no peer.
+    /// - An absolute slashlink is a slashlink with a did peer or no peer
+    /// - A relative slashlink is a slashlink with a petname peer.
     var isAbsolute: Bool {
-        peer?.isAbsolute ?? false
+        switch peer {
+        case .did:
+            return true
+        default:
+            return false
+        }
     }
     
+    /// If this slashlink is absolute, gets the absolute identifier
+    /// as a string.
+    ///
+    /// The absolute identifier is a stable address for this content
+    /// (DID which does not change, rather than petname, which may change).
+    ///
+    /// - Returns a string or nil if slashlink is not absolute
+    var absoluteIdentifier: String? {
+        switch self.peer {
+        case .did:
+            return self.markup
+        default:
+            return nil
+        }
+    }
+
     static let ourProfile = Slashlink(slug: Slug.profile)
 
     var isProfile: Bool {
@@ -201,6 +222,19 @@ extension Slashlink {
         }
     }
     
+    /// "Relativize" a slashlink relative to some base did.
+    /// If did is the base did, returns a relative slashlink without a peer.
+    /// Otherwise, returns the original slashlink unchanged.
+    /// - Returns Slashlink
+    func relativizeIfNeeded(did base: Did) -> Slashlink {
+        switch self.peer {
+        case .did(let did) where did == base:
+            return Slashlink(slug: self.slug)
+        default:
+            return self
+        }
+    }
+
     /// Get petname from slashlink (if any)
     func toPetname() -> Petname? {
         switch self.peer {

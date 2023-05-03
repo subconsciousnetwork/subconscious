@@ -69,17 +69,24 @@ extension SphereProtocol {
     /// Resolve a relative slashlink, making it an absolute slashlink.
     /// - Returns Slashlink with did peer
     func resolve(slashlink: Slashlink) async throws -> Slashlink {
-        // If peer is already absolute, return
-        guard case let .petname(petname) = slashlink.peer else {
+        switch slashlink.peer {
+        case .did:
             return slashlink
+        case .petname(let petname):
+            // Get did for petname
+            let did = try await self.getPetname(petname: petname)
+            // Return new slashlink with did root
+            return Slashlink(
+                peer: .did(did),
+                slug: slashlink.slug
+            )
+        case .none:
+            let identity = try await self.identity()
+            return Slashlink(
+                peer: Peer.did(identity),
+                slug: slashlink.slug
+            )
         }
-        // Get did for petname
-        let did = try await self.getPetname(petname: petname)
-        // Return new slashlink with did root
-        return Slashlink(
-            peer: .did(did),
-            slug: slashlink.slug
-        )
     }
 }
 
