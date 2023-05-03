@@ -16,7 +16,7 @@ public struct Slashlink:
     Codable,
     LosslessStringConvertible
 {
-    private static let slashlinkRegex = /(?:(?<did>(?:did:[a-z0-9]+:[a-zA-Z0-9_\-\.\%]+))|(?<petname>@[\w\-]+(?:\.[\w\-]+)*))?(?<slug>\/[\w\-]+(?:\/[\w\-]+)*)?/
+    private static let slashlinkRegex = /(?:(?<did>did:[a-z0-9]+:[a-zA-Z0-9_\-\.\%]+)|(?<petname>@[\w\-]+(?:\.[\w\-]+)*))?(?<slug>\/[\w\-]+(?:\/[\w\-]+)*)?/
     
     public static func < (lhs: Slashlink, rhs: Slashlink) -> Bool {
         lhs.id < rhs.id
@@ -161,22 +161,6 @@ extension Slashlink {
         }
     }
     
-    /// If this slashlink is absolute, gets the absolute identifier
-    /// as a string.
-    ///
-    /// The absolute identifier is a stable address for this content
-    /// (DID which does not change, rather than petname, which may change).
-    ///
-    /// - Returns a string or nil if slashlink is not absolute
-    var absoluteIdentifier: String? {
-        switch self.peer {
-        case .did:
-            return self.markup
-        default:
-            return nil
-        }
-    }
-
     static let ourProfile = Slashlink(slug: Slug.profile)
 
     var isProfile: Bool {
