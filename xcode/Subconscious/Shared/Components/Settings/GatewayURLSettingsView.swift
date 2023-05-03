@@ -119,8 +119,8 @@ struct GatewayURLSettingsView: View {
                         }
                     )
                     .disabled(
-                        !app.state.inviteCodeFormField.isValid
-                        || app.state.gatewayProvisioningStatus == .pending
+                        !app.state.inviteCodeFormField.isValid ||
+                        app.state.gatewayProvisioningStatus == .pending
                     )
                 },
                 header: {
