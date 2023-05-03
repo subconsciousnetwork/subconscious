@@ -120,7 +120,7 @@ struct GatewayURLSettingsView: View {
                     )
                     .disabled(
                         !app.state.inviteCodeFormField.isValid
-                        || app.state.lastGatewaySyncStatus == .pending
+                        || app.state.gatewayProvisioningStatus == .pending
                     )
                 },
                 header: {
