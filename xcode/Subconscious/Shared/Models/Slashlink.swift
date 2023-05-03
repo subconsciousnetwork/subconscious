@@ -45,8 +45,6 @@ public struct Slashlink:
 
     public var id: String { description }
     
-    static let ourProfile = Slashlink(slug: Slug.profile)
-    
     // The normalized markup form of the slashlink
     public var markup: String { description }
 
@@ -158,6 +156,8 @@ extension Slashlink {
         peer?.isAbsolute ?? false
     }
     
+    static let ourProfile = Slashlink(slug: Slug.profile)
+
     var isProfile: Bool {
         slug.isProfile
     }
