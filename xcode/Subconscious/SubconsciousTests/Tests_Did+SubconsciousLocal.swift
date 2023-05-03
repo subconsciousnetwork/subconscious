@@ -80,6 +80,12 @@ final class Tests_Did_SubconsciousLocal: XCTestCase {
         XCTAssertEqual(slashlink.peer, Peer.did(Did.local))
     }
     
+    func testSlugToLocalLink() throws {
+        let foo = Slug("foo")!
+        let link = foo.toLocalLink()
+        XCTAssertEqual(link?.did, Did.local)
+    }
+
     func testToSlashlinkAudience() throws {
         let foo = Slug("foo")!
         let localSlashlink = foo.toSlashlink(audience: .local)
