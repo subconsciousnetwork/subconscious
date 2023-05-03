@@ -34,7 +34,7 @@ struct FirstRunView: View {
                         send: app.send,
                         tag: AppAction.setInviteCode
                     ),
-                    caption: "Don't have a code? Join the waitlist",
+                    caption: "Look for this in your welcome email.",
                     hasError: app.state.inviteCodeFormField.hasError
                 )
                 .textFieldStyle(.roundedBorder)
@@ -55,6 +55,26 @@ struct FirstRunView: View {
                 )
                 .buttonStyle(PillButtonStyle())
                 .disabled(!app.state.inviteCodeFormField.isValid)
+                    
+                // MARK: Use Offline
+                VStack(spacing: AppTheme.unit) {
+                    Text("No invite code?")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    NavigationLink(
+                        destination: {
+                            FirstRunProfileView(
+                                app: app
+                            )
+                        },
+                        label: {
+                            
+                            Text("Use offline")
+                                .font(.caption)
+                        }
+                    )
+                }
             }
             .navigationTitle("Welcome")
             .navigationBarTitleDisplayMode(.inline)
