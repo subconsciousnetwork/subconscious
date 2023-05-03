@@ -35,42 +35,33 @@ struct GatewaySyncLabel: View {
     }
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
+        VStack(alignment: .leading) {
+            Label(title: {
                 Text(label(status: status))
                     .foregroundColor(labelColor(status: status))
-                
-                if case .failed(let message) = status {
-                    Text("\(message)")
-                        .font(.caption2)
+            }, icon: {
+                switch (status) {
+                case .initial:
+                    Image(systemName: "arrow.triangle.2.circlepath")
                         .foregroundColor(.secondary)
+                case .pending:
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .foregroundColor(.accentColor)
+                        .rotationEffect(.degrees(spin ? 360 : 0))
+                        .animation(Animation.linear
+                            .repeatForever(autoreverses: false)
+                            .speed(0.4), value: spin)
+                        .onAppear() {
+                            self.spin = true
+                        }
+                case .succeeded:
+                    Image(systemName: "checkmark.circle")
+                        .foregroundColor(.secondary)
+                case .failed:
+                    Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
+                        .foregroundColor(.red)
                 }
-            }
-            
-            Spacer()
-            
-            switch (status) {
-            case .initial:
-                Image(systemName: "arrow.triangle.2.circlepath")
-                    .foregroundColor(.secondary)
-            case .pending:
-                Image(systemName: "arrow.triangle.2.circlepath")
-                    .foregroundColor(.accentColor)
-                    .rotationEffect(.degrees(spin ? 360 : 0))
-                    .animation(Animation.linear
-                        .repeatForever(autoreverses: false)
-                        .speed(0.4), value: spin)
-                    .onAppear() {
-                        self.spin = true
-                    }
-            case .succeeded:
-                Image(systemName: "checkmark.circle")
-                    .foregroundColor(.secondary)
-            case .failed:
-                Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
-                    .foregroundColor(.red)
-            }
-            
+            })
         }
     }
 }
@@ -110,31 +101,42 @@ struct SettingsView: View {
                         .lineLimit(1)
                         .textSelection(.enabled)
                     }
-
-                    Section(header: Text("Gateway")) {
-                        NavigationLink(
-                            destination: {
-                                GatewayURLSettingsView(app: app)
-                            },
-                            label: {
-                                LabeledContent(
-                                    "Gateway",
-                                    value: app.state.gatewayURL
-                                )
-                                .lineLimit(1)
+                    Section(
+                        content: {
+                            NavigationLink(
+                                destination: {
+                                    GatewayURLSettingsView(app: app)
+                                },
+                                label: {
+                                    LabeledContent(
+                                        "Gateway",
+                                        value: app.state.gatewayURL
+                                    )
+                                    .lineLimit(1)
+                                }
+                            )
+                            Button(
+                                action: {
+                                    app.send(.syncSphereWithGateway)
+                                },
+                                label: {
+                                    GatewaySyncLabel(
+                                        status: app.state.lastGatewaySyncStatus
+                                    )
+                                }
+                            )
+                            .disabled(app.state.gatewayURL.count == 0)
+                        }, header: {
+                            Text("Gateway")
+                        }, footer: {
+                            switch (app.state.lastGatewaySyncStatus) {
+                            case let .failed(message):
+                                Text(message)
+                            default:
+                                EmptyView()
                             }
-                        )
-                        Button(
-                            action: {
-                                app.send(.syncSphereWithGateway)
-                            },
-                            label: {
-                                GatewaySyncLabel(
-                                    status: app.state.lastGatewaySyncStatus
-                                )
-                            }
-                        )
-                    }
+                        }
+                    )
                 }
                 Section {
                     NavigationLink("Developer Settings") {
