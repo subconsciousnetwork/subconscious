@@ -697,43 +697,24 @@ struct AppModel: ModelProtocol {
         case .failFollowDefaultGeist(let error):
             logger.error("Failed to follow default geist: \(error)")
             return Update(state: state)
+            
         case .provisionGateway:
-            guard let did = state.sphereIdentity,
-                  let did = Did(did),
-                  let inviteCode = state.inviteCodeFormField.validated else {
-                return Update(state: state)
-            }
-            
-            let fx: Fx<AppAction> =
-                environment.gatewayProvisioningService
-                .provisionGatewayPublisher(
-                    inviteCode: inviteCode,
-                    sphere: did
-                )
-                .map { res in
-                    .succeedProvisionGateway(res.gateway_url)
-                }
-                .recover { error in
-                    .failProvisionGateway(error.localizedDescription)
-                }
-                .eraseToAnyPublisher()
-            
-            var model = state
-            model.gatewayProvisioningStatus = .pending
-            
-            return Update(state: model, fx: fx)
-            
+            return provisionGateway(
+                state: state,
+                environment: environment
+            )
         case .succeedProvisionGateway(let url):
-            var model = state
-            model.gatewayURL = url
-            model.gatewayProvisioningStatus = .succeeded
-            return Update(state: model)
-            
+            return succeedProvisionGateway(
+                state: state,
+                environment: environment,
+                url: url
+            )
         case .failProvisionGateway(let error):
-            logger.error("Failed to provision gateway: \(error)")
-            var model = state
-            model.gatewayProvisioningStatus = .failed(error)
-            return Update(state: model)
+            return failProvisionGateway(
+                state: state,
+                environment: environment,
+                error: error
+            )
         }
     }
 
@@ -1459,6 +1440,58 @@ struct AppModel: ModelProtocol {
             .eraseToAnyPublisher()
         
         return Update(state: state, fx: fx)
+    }
+    
+    static func provisionGateway(
+        state: AppModel,
+        environment: AppEnvironment
+    ) -> Update<AppModel> {
+        guard let did = state.sphereIdentity,
+              let did = Did(did),
+              let inviteCode = state.inviteCodeFormField.validated else {
+            return Update(state: state)
+        }
+        
+        let fx: Fx<AppAction> =
+            environment.gatewayProvisioningService
+            .provisionGatewayPublisher(
+                inviteCode: inviteCode,
+                sphere: did
+            )
+            .map { res in
+                .succeedProvisionGateway(res.gateway_url)
+            }
+            .recover { error in
+                .failProvisionGateway(error.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+        
+        var model = state
+        model.gatewayProvisioningStatus = .pending
+        
+        return Update(state: model, fx: fx)
+    }
+    
+    static func succeedProvisionGateway(
+        state: AppModel,
+        environment: AppEnvironment,
+        url: String
+    ) -> Update<AppModel> {
+        var model = state
+        model.gatewayURL = url
+        model.gatewayProvisioningStatus = .succeeded
+        return Update(state: model)
+    }
+    
+    static func failProvisionGateway(
+        state: AppModel,
+        environment: AppEnvironment,
+        error: String
+    ) -> Update<AppModel> {
+        logger.error("Failed to provision gateway: \(error)")
+        var model = state
+        model.gatewayProvisioningStatus = .failed(error)
+        return Update(state: model)
     }
 }
 
