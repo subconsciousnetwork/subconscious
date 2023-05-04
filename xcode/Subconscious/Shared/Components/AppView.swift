@@ -30,7 +30,7 @@ struct AppView: View {
                 }
             }
             .zIndex(0)
-            if (!store.state.isAppUpgraded) {
+            if !store.state.isAppUpgraded {
                 AppUpgradeView(
                     state: store.state.appUpgrade,
                     send: Address.forward(
@@ -43,7 +43,7 @@ struct AppView: View {
                 )
                 .zIndex(2)
             }
-            if (store.state.shouldPresentFirstRun) {
+            if store.state.shouldPresentFirstRun {
                 FirstRunView(app: store)
                     .animation(
                         .default,
@@ -81,7 +81,7 @@ struct AppView: View {
 typealias InviteCodeFormField = FormField<String, InviteCode>
 typealias NicknameFormField = FormField<String, Petname>
 
-//  MARK: Action
+// MARK: Action
 enum AppAction: CustomLogStringConvertible {
     /// Sent immediately upon store creation
     case start
@@ -221,7 +221,7 @@ enum AppAction: CustomLogStringConvertible {
     }
 }
 
-//  MARK: Cursors
+// MARK: Cursors
 
 struct AppRecoveryPhraseCursor: CursorProtocol {
     static func get(state: AppModel) -> RecoveryPhraseModel {
@@ -318,7 +318,7 @@ enum AppDatabaseState {
     case ready
 }
 
-//  MARK: Model
+// MARK: Model
 struct AppModel: ModelProtocol {
     /// Is Noosphere enabled?
     ///
@@ -434,7 +434,7 @@ struct AppModel: ModelProtocol {
         category: "app"
     )
     
-    //  MARK: Update
+    // MARK: Update
     /// Main update function
     static func update(
         state: AppModel,
@@ -757,7 +757,7 @@ struct AppModel: ModelProtocol {
                 ),
                 .setNickname(
                     AppDefaults.standard.nickname ?? state.nickname
-                ),
+                )
             ],
             environment: environment
         ).mergeFx(fx)
@@ -863,7 +863,7 @@ struct AppModel: ModelProtocol {
         return update(
             state: state,
             actions: [
-                .inviteCodeFormField(.setValue(input: text)),
+                .inviteCodeFormField(.setValue(input: text))
             ],
             environment: environment
         )
@@ -1495,7 +1495,7 @@ struct AppModel: ModelProtocol {
     }
 }
 
-//  MARK: Environment
+// MARK: Environment
 /// A place for constants and services
 struct AppEnvironment {
     /// Default environment constant

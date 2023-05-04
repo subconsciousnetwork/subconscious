@@ -40,7 +40,7 @@ struct GatewayProvisionLabel: View {
                 Text(label(status: status))
                     .foregroundColor(labelColor(status: status))
             }, icon: {
-                switch (status) {
+                switch status {
                 case .initial:
                     Image(systemName: "icloud.and.arrow.up")
                         .foregroundColor(.secondary)
@@ -127,7 +127,7 @@ struct GatewayURLSettingsView: View {
                     Text("Provision Gateway")
                 },
                 footer: {
-                    switch (app.state.gatewayProvisioningStatus) {
+                    switch app.state.gatewayProvisioningStatus {
                     case let .failed(message):
                         Text(message)
                     default:

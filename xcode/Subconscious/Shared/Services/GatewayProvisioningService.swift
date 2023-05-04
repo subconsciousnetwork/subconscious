@@ -39,7 +39,6 @@ extension GatewayProvisioningServiceError: LocalizedError {
     }
 }
 
-
 actor GatewayProvisioningService {
     private static let provisionGatewayEndpoint =
         Config.default.cloudCtlUrl.appending(

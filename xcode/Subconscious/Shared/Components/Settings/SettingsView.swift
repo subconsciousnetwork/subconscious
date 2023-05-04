@@ -40,7 +40,7 @@ struct GatewaySyncLabel: View {
                 Text(label(status: status))
                     .foregroundColor(labelColor(status: status))
             }, icon: {
-                switch (status) {
+                switch status {
                 case .initial:
                     Image(systemName: "arrow.triangle.2.circlepath")
                         .foregroundColor(.secondary)
@@ -132,7 +132,7 @@ struct SettingsView: View {
                         }, header: {
                             Text("Gateway")
                         }, footer: {
-                            switch (app.state.lastGatewaySyncStatus) {
+                            switch app.state.lastGatewaySyncStatus {
                             case let .failed(message):
                                 Text(message)
                             default:
