@@ -183,8 +183,8 @@ final class DatabaseService {
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
+                did=excluded.did,
                 slug=excluded.slug,
-                audience=excluded.audience,
                 content_type=excluded.content_type,
                 created=excluded.created,
                 modified=excluded.modified,
@@ -777,7 +777,7 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-05-03T11:05:00")!,
+            version: Int.from(iso8601String: "2023-05-04T09:13:00")!,
             sql: """
             /*
             A table that tracks sphere->database sync info.
