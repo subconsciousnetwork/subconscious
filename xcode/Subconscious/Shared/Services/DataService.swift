@@ -446,7 +446,8 @@ actor DataService {
     }
     
     func listRecentMemos() async throws -> [EntryStub] {
-        let recent = try self.database.listRecentMemos()
+        let identity = try await noosphere.identity()
+        let recent = try self.database.listRecentMemos(identity: identity)
         return recent.filter { entry in
             !entry.address.slug.isHidden
         }
@@ -502,7 +503,9 @@ actor DataService {
         current: Slashlink
     ) -> AnyPublisher<[RenameSuggestion], Error> {
         Future.detached(priority: .userInitiated) {
-            try await self.database.searchRenameSuggestions(
+            let identity = try await self.noosphere.identity()
+            return try await self.database.searchRenameSuggestions(
+                identity: identity,
                 query: query,
                 current: current
             )

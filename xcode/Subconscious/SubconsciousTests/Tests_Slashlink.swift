@@ -201,6 +201,33 @@ final class Tests_Slashlink: XCTestCase {
         XCTAssertTrue(abs.isAbsolute, "Did slashlink is absolute")
     }
     
+    func testRelativeTo() throws {
+        let did = try Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
+            .unwrap()
+        let slug = try Slug("foo")
+            .unwrap()
+        let slashlink = Slashlink(
+            peer: Peer.did(did),
+            slug: slug
+        )
+        let relative = try slashlink.relativeTo(did: did)
+            .unwrap()
+        XCTAssertNil(relative.peer)
+        XCTAssertEqual(relative.slug, slug)
+    }
+
+    func testRelativeToNoDid() throws {
+        let did = try Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
+            .unwrap()
+        let slug = try Slug("foo")
+            .unwrap()
+        let slashlink = Slashlink(
+            slug: slug
+        )
+        let relative = slashlink.relativeTo(did: did)
+        XCTAssertNil(relative, "Does not relativize already relative slug")
+    }
+
     func testSlashlinkDidLosslessStringConvertible() throws {
         let slashlink = Slashlink("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
         XCTAssertEqual(

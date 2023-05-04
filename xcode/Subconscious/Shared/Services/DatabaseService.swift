@@ -250,7 +250,7 @@ final class DatabaseService {
     }
     
     /// List recent entries
-    func listRecentMemos() throws -> [EntryStub] {
+    func listRecentMemos(identity: Did) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
 
@@ -258,14 +258,18 @@ final class DatabaseService {
         let results = try database.execute(
             sql: """
             SELECT id, modified, excerpt
-            FROM memo
+            FROM memo WHERE (did = ? OR did = ?)
             ORDER BY modified DESC
             LIMIT 1000
-            """
+            """,
+            parameters: [
+                .text(identity.description),
+                .text(Did.local.description)
+            ]
         )
         return results.compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toSlashlink(),
+                let address = row.col(0)?.toString()?.toLink()?.toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -319,7 +323,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toSlashlink(),
+                let address = row.col(0)?.toString()?.toLink()?.toSlashlink(),
                 let title = row.col(1)?.toString()
             else {
                 return nil
@@ -385,7 +389,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toSlashlink(),
+                let address = row.col(0)?.toString()?.toLink()?.toSlashlink(),
                 let excerpt = row.col(1)?.toString()
             else {
                 return  nil
@@ -460,6 +464,7 @@ final class DatabaseService {
     /// Given a query and a `current` slug, produce an array of suggestions
     /// for renaming the note.
     func searchRenameSuggestions(
+        identity: Did,
         query: String,
         current: Slashlink
     ) throws -> [RenameSuggestion] {
@@ -479,12 +484,14 @@ final class DatabaseService {
                 sql: """
                 SELECT id
                 FROM memo_search
-                WHERE memo_search MATCH ?
+                WHERE memo_search MATCH ? AND (did = ? OR did = ?)
                 ORDER BY rank
                 LIMIT 25
                 """,
                 parameters: [
-                    .prefixQueryFTS5(query)
+                    .prefixQueryFTS5(query),
+                    .text(identity.description),
+                    .text(Did.local.description)
                 ]
             )
             .compactMap({ row in
