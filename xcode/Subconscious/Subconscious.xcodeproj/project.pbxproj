@@ -1315,8 +1315,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B8EB2A2926F27797006E97C3 /* Build configuration list for PBXNativeTarget "Subconscious (iOS)" */;
 			buildPhases = (
-				B8EB29F726F27797006E97C3 /* Sources */,
 				B5F83B092A034A43005C80B3 /* ShellScript */,
+				B8EB29F726F27797006E97C3 /* Sources */,
 				B8EB29F826F27797006E97C3 /* Frameworks */,
 				B8EB29F926F27797006E97C3 /* Resources */,
 			);
