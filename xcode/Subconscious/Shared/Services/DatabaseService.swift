@@ -153,14 +153,14 @@ final class DatabaseService {
 
     /// Write entry syncronously
     func writeMemo(
-        address: Link,
+        link: Link,
         memo: Memo,
         size: Int? = nil
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-        if address.isLocal && size == nil {
+        if link.isLocal && size == nil {
             throw DatabaseServiceError.sizeMissingForLocal
         }
         try database.execute(
@@ -198,9 +198,9 @@ final class DatabaseService {
                 size=excluded.size
             """,
             parameters: [
-                .text(address.id),
-                .text(address.did.description),
-                .text(address.slug.description),
+                .text(link.id),
+                .text(link.did.description),
+                .text(link.slug.description),
                 .text(memo.contentType),
                 .date(memo.created),
                 .date(memo.modified),
@@ -217,7 +217,7 @@ final class DatabaseService {
     }
     
     /// Delete entry from database
-    func removeMemo(_ address: Link) throws {
+    func removeMemo(_ link: Link) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -226,7 +226,7 @@ final class DatabaseService {
             DELETE FROM memo WHERE id = ?
             """,
             parameters: [
-                .text(address.id)
+                .text(link.id)
             ]
         )
     }
@@ -466,10 +466,7 @@ final class DatabaseService {
         guard self.state == .ready else {
             return []
         }
-        guard let slug = query.toSlug() else {
-            return []
-        }
-
+        
         // Create a suggestion for the literal query that has same
         // audience as current.
         let queryAddress = Func.run({
@@ -598,7 +595,7 @@ final class DatabaseService {
         return query
     }
     
-    func readEntryBacklinks(address: Link) throws -> [EntryStub] {
+    func readEntryBacklinks(link: Link) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -613,8 +610,8 @@ final class DatabaseService {
             LIMIT 200
             """,
             parameters: [
-                .text(address.id),
-                .queryFTS5(address.slug.description)
+                .text(link.id),
+                .queryFTS5(link.slug.description)
             ]
         ) else {
             return []
