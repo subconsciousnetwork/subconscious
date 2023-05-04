@@ -12,7 +12,7 @@ enum DataServiceError: Error, LocalizedError {
     case fileExists(String)
     case defaultSphereNotFound
     case sphereExists(_ sphereIdentity: String)
-    case permissionsError(String)
+    case cannotEditSphere(Did)
     case cannotWriteToSphere(Did)
     
     var errorDescription: String? {
@@ -23,8 +23,8 @@ enum DataServiceError: Error, LocalizedError {
             return "Default sphere not found"
         case let .sphereExists(sphereIdentity):
             return "Sphere exists: \(sphereIdentity)"
-        case let .permissionsError(message):
-            return "Permissions error: \(message)"
+        case let .cannotEditSphere(did):
+            return "Cannot edit sphere \(did)"
         case .cannotWriteToSphere(let did):
             return "Cannot write to sphere \(did)"
         }
@@ -618,18 +618,19 @@ actor DataService {
         address: Slashlink,
         fallback: String
     ) async throws -> MemoEditorDetailResponse {
-        // We do not allow editing 3p memos. Throw.
-        if !address.isOurs {
-            throw DataServiceError.permissionsError(
-                "Cannot edit memo `\(address)"
-            )
+        let identity = try await noosphere.identity()
+        let link = try await noosphere.resolveLink(slashlink: address)
+        
+        // We do not allow editing 3p memos.
+        guard link.did.isLocal || link.did == identity else {
+            throw DataServiceError.cannotEditSphere(link.did)
         }
-        let address = try await noosphere.resolve(slashlink: address)
+        
         // Read memo from local or sphere.
         let memo = try? await readMemo(address: address)
         
         let backlinks = try database.readEntryBacklinks(
-            link: address.toLink().unwrap()
+            link: link
         )
         
         guard let memo = memo else {
