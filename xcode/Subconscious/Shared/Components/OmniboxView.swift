@@ -64,25 +64,28 @@ struct OmniboxSlashlinkView: View {
     
     var body: some View {
         HStack(spacing: 0) {
-            switch (slashlink.slug.isProfile, slashlink.peer) {
-            case (true, .petname(let petname)):
+            switch slashlink.peer {
+            case let .petname(petname) where slashlink.isProfile:
                 PetnameBylineView(petname: petname)
-            case (false, .petname(let petname)):
+            case let .petname(petname):
                 HStack(spacing: 0) {
                     PetnameBylineView(petname: petname)
                     Text(verbatim: slashlink.slug.markup)
                 }
-            case (true, .did(let did)):
-                Text(verbatim: did.description).foregroundColor(.secondary)
-            case (false, .did(let did)):
+            case let .did(did) where slashlink.isProfile:
+                Text(verbatim: did.description)
+                    .fontWeight(.medium)
+            case let .did(did) where did.isLocal:
+                Text(verbatim: slashlink.slug.description)
+            case let .did(did):
                 HStack(spacing: 0) {
                     Text(verbatim: did.description)
+                        .fontWeight(.medium)
                     Text(verbatim: slashlink.slug.markup)
                 }
-                .foregroundColor(.secondary)
-            case (true, .none):
-                Text(verbatim: "Your profile").foregroundColor(.secondary)
-            case (false, .none):
+            case .none where slashlink.isProfile:
+                Text("Your profile").foregroundColor(.secondary)
+            case .none:
                 Text(verbatim: slashlink.slug.description)
             }
         }
@@ -97,7 +100,7 @@ struct OmniboxView_Previews: PreviewProvider {
             Slashlink("@ksr/green-mars")!,
             Slashlink("@ksr/blue-mars")!,
             Slashlink(petname: Petname("ksr")!),
-            Slashlink.local(Slug("/mars")!),
+            Slashlink.local(Slug("mars")!),
             Slashlink.local(Slug("a-very-long-note-title-that-goes-on-and-on")!),
             Slashlink("@ksr/a-very-long-note-title-that-goes-on-and-on")!
         ]
@@ -159,6 +162,18 @@ struct OmniboxView_Previews: PreviewProvider {
                 )
                 OmniboxView(
                     address: Slashlink("@KSR.scifi/GREEN-mars")!,
+                    defaultAudience: .local
+                )
+                OmniboxView(
+                    address: Slashlink("did:key:abc123/GREEN-mars")!,
+                    defaultAudience: .local
+                )
+                OmniboxView(
+                    address: Slashlink("did:key:abc123")!,
+                    defaultAudience: .local
+                )
+                OmniboxView(
+                    address: Slashlink("/_profile_")!,
                     defaultAudience: .local
                 )
                 OmniboxView(
