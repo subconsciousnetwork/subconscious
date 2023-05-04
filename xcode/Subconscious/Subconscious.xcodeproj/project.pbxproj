@@ -227,6 +227,8 @@
 		B8925B2D29C0FD91001F9503 /* MemoDetailResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8925B2C29C0FD91001F9503 /* MemoDetailResponse.swift */; };
 		B8925B2F29C23017001F9503 /* MemoViewerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8925B2E29C23017001F9503 /* MemoViewerDetailView.swift */; };
 		B8925B3129C2320D001F9503 /* MemoDetailDescription.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8925B3029C2320D001F9503 /* MemoDetailDescription.swift */; };
+		B8937A572A03EA440032A1AF /* Sphere+Link.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8937A562A03EA440032A1AF /* Sphere+Link.swift */; };
+		B8937A592A03EA640032A1AF /* Tests_Sphere+Link.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8937A582A03EA640032A1AF /* Tests_Sphere+Link.swift */; };
 		B89966C728B6EE2300DF1F8C /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89966C628B6EE2300DF1F8C /* Notebook.swift */; };
 		B89966C828B6EE2300DF1F8C /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89966C628B6EE2300DF1F8C /* Notebook.swift */; };
 		B89E30772911B51A00A4721F /* Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89E30762911B51A00A4721F /* Migration.swift */; };
@@ -565,6 +567,8 @@
 		B8925B2C29C0FD91001F9503 /* MemoDetailResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoDetailResponse.swift; sourceTree = "<group>"; };
 		B8925B2E29C23017001F9503 /* MemoViewerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoViewerDetailView.swift; sourceTree = "<group>"; };
 		B8925B3029C2320D001F9503 /* MemoDetailDescription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoDetailDescription.swift; sourceTree = "<group>"; };
+		B8937A562A03EA440032A1AF /* Sphere+Link.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sphere+Link.swift"; sourceTree = "<group>"; };
+		B8937A582A03EA640032A1AF /* Tests_Sphere+Link.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tests_Sphere+Link.swift"; sourceTree = "<group>"; };
 		B89966C628B6EE2300DF1F8C /* Notebook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notebook.swift; sourceTree = "<group>"; };
 		B89E30762911B51A00A4721F /* Migration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Migration.swift; sourceTree = "<group>"; };
 		B89E307C2911D7F900A4721F /* IntUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntUtilities.swift; sourceTree = "<group>"; };
@@ -794,6 +798,7 @@
 				B5F6ADCB29C1323900690DE4 /* Tests_FormField.swift */,
 				B8925B2A29C0FA43001F9503 /* Tests_Func.swift */,
 				B831BDBB2825A4E700C4CE92 /* Tests_Header.swift */,
+				B8CAA6CC2A02FF9B00F4A0F6 /* Tests_Link.swift */,
 				B809AFF328D8E7BC00D0589A /* Tests_MarkupText.swift */,
 				B80CC804299D14C900C4D7C0 /* Tests_Memo.swift */,
 				B88A76D629E0AA44005F3422 /* Tests_MemoViewerDetailMetaSheet.swift */,
@@ -811,6 +816,7 @@
 				B8A617212971E4860054D410 /* Tests_Slashlink.swift */,
 				B80057F327DC35BE002C0129 /* Tests_Slug.swift */,
 				B8F27EE32970CD8F00A33E78 /* Tests_Sphere.swift */,
+				B8937A582A03EA640032A1AF /* Tests_Sphere+Link.swift */,
 				B81D063C29F1C1E400593BBA /* Tests_SphereFile.swift */,
 				B80CC806299D4DF000C4D7C0 /* Tests_SQLite3Database.swift */,
 				B84AD8E0280F7A19006B3153 /* Tests_StringUtilities.swift */,
@@ -822,7 +828,6 @@
 				B8E62AE729D61E69008F7E74 /* Tests_UserDefaultProperty.swift */,
 				B5432B8229F8BAED003BBB23 /* Tests_UserProfileService.swift */,
 				B5908BEA29DAB05B00225B1A /* TestUtilities.swift */,
-				B8CAA6CC2A02FF9B00F4A0F6 /* Tests_Link.swift */,
 			);
 			path = SubconsciousTests;
 			sourceTree = "<group>";
@@ -879,6 +884,7 @@
 				B87288DB299AB01800EF7E07 /* Noosphere.swift */,
 				B8E1BB7A296DEF3200B86E0E /* NoosphereService.swift */,
 				B87288DD299AB02400EF7E07 /* Sphere.swift */,
+				B8937A562A03EA440032A1AF /* Sphere+Link.swift */,
 				B81D063A29F1821E00593BBA /* SphereFile.swift */,
 			);
 			path = Noosphere;
@@ -1514,6 +1520,7 @@
 				B831BDBC2825A4E700C4CE92 /* Tests_Header.swift in Sources */,
 				B85D5E3F28BE4B4600EE0078 /* Tests_FeedUpdate.swift in Sources */,
 				B8E2B02729AD053D004A78B3 /* Tests_Petname.swift in Sources */,
+				B8937A592A03EA640032A1AF /* Tests_Sphere+Link.swift in Sources */,
 				B80057EB27DC355E002C0129 /* SubconsciousTests.swift in Sources */,
 				B81D063D29F1C1E400593BBA /* Tests_SphereFile.swift in Sources */,
 				B884565329D2102D00DBCD39 /* Tests_App.swift in Sources */,
@@ -1536,6 +1543,7 @@
 				B82FD4562730A62C002CB641 /* EntryRow.swift in Sources */,
 				B8C7E8BE2809F19500E439DC /* Markup.swift in Sources */,
 				B8CA8F2828909FBA005F8802 /* StoryPromptView.swift in Sources */,
+				B8937A572A03EA440032A1AF /* Sphere+Link.swift in Sources */,
 				B88A76D429E09B51005F3422 /* PasteboardService.swift in Sources */,
 				B831BDB92825A28A00C4CE92 /* Header.swift in Sources */,
 				B8AE34C2276BD77C00777FF0 /* SuggestionLabelStyle.swift in Sources */,
