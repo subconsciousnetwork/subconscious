@@ -13,6 +13,11 @@ import SwiftUI
 extension Did {
     /// A non-standard did we use to represent the local file system.
     static let local = Did("did:subconscious:local")!
+    
+    /// Is this DID a local did?
+    var isLocal: Bool {
+        self == Self.local
+    }
 }
 
 extension Slashlink {

@@ -9,7 +9,11 @@ import XCTest
 @testable import Subconscious
 
 final class Tests_Did_SubconsciousLocal: XCTestCase {
-    func testIsLocal() throws {
+    func testDidIsLocal() throws {
+        XCTAssertTrue(Did.local.isLocal)
+    }
+    
+    func testSlashlinkIsLocal() throws {
         let a = Slashlink(
             peer: .did(Did.local),
             slug: Slug("foo")!
