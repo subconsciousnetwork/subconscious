@@ -1,0 +1,11 @@
+disabled_rules:
+  - file_length
+  - trailing_whitespace
+  - identifier_name
+  - type_body_length
+  - function_body_length
+  - type_name
+  - todo
+  - redundant_optional_initialization
+
+line_length: 100
