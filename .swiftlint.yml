@@ -1,13 +1,19 @@
-disabled_rules:
-  - file_length
-  - trailing_whitespace
-  - identifier_name
-  - type_body_length
-  - function_body_length
-  - type_name
-  - todo
-  - redundant_optional_initialization
-  - cyclomatic_complexity
-  - force_try
+only_rules:
+  - line_length
+  - vertical_whitespace
+  - redundant_discardable_let
+  - unused_closure_parameter
+  - mark
+  - implicit_getter
+  - trailing_comma
+  - orphaned_doc_comment
+  - control_statement
+  - multiple_closures_with_trailing_closure
+  - opening_brace
+  - empty_enum_arguments
+  - for_where
+  - redundant_string_enum_value
+  - colon
+  - syntactic_sugar
 
 line_length: 100
