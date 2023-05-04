@@ -16,8 +16,6 @@ jobs:
             set-safe-directory: '/github/workspace'
       - name: Fetch PR's target branch
         run: git fetch --no-tags --prune --depth=1 origin ${{ github.base_ref }}
-      - name: Fix permissions
-        run: sudo chown -R "$(whoami)" /github/workspace
       - name: GitHub Action for SwiftLint
         uses: norio-nomura/action-swiftlint@master
         with:
