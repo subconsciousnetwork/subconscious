@@ -1,17 +1,11 @@
 on:
-  workflow_dispatch:
-  push:
-    branches: [main]
-  pull_request:
-
-name: SwiftLint
-
-on:
   pull_request:
     paths:
       - '.github/workflows/swiftlint.yml'
       - '.swiftlint.yml'
       - '**/*.swift'
+
+name: SwiftLint
 
 jobs:
   SwiftLint:
