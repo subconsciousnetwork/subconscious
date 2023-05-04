@@ -20,5 +20,7 @@ jobs:
         run: sudo chown -R "$(whoami)" /github/workspace
       - name: GitHub Action for SwiftLint
         uses: norio-nomura/action-swiftlint@master
+        with:
+          args: --force-exclude
         env:
           DIFF_BASE: ${{ github.base_ref }}
