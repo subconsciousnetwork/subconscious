@@ -1316,6 +1316,7 @@
 			buildConfigurationList = B8EB2A2926F27797006E97C3 /* Build configuration list for PBXNativeTarget "Subconscious (iOS)" */;
 			buildPhases = (
 				B8EB29F726F27797006E97C3 /* Sources */,
+				B5F83B092A034A43005C80B3 /* ShellScript */,
 				B8EB29F826F27797006E97C3 /* Frameworks */,
 				B8EB29F926F27797006E97C3 /* Resources */,
 			);
@@ -1517,6 +1518,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B5F83B092A034A43005C80B3 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [[ \"$(uname -m)\" == arm64 ]]; then\n    export PATH=\"/opt/homebrew/bin:$PATH\"\nfi\n\nif which swiftlint >/dev/null; then\n  cd ../..\n  swiftlint\nelse\n  echo \"warning: could not locate swiftlint\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B80057E427DC355E002C0129 /* Sources */ = {
