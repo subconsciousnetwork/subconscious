@@ -351,23 +351,27 @@ actor DataService {
     
     /// Delete entry from file system and database
     func deleteMemo(_ address: Slashlink) async throws {
-        // Get absolute address
-        let address = try await noosphere.resolve(slashlink: address)
-        guard !address.isLocal else {
-            try local.remove(address.slug)
-            try database.removeMemo(address.toLink().unwrap())
-            return
-        }
-        try await noosphere.remove(slug: address.slug)
-        let version = try await noosphere.save()
-        try database.removeMemo(address.toLink().unwrap())
         let identity = try await noosphere.identity()
-        // Write new sphere version to database
-        try database.writeSphereSyncInfo(
-            sphereIdentity: identity,
-            version: version
-        )
-        return
+        // Get absolute address
+        let link = try await noosphere.resolveLink(slashlink: address)
+        switch link.did {
+        case Did.local:
+            try local.remove(address.slug)
+            try database.removeMemo(link)
+            return
+        case identity:
+            try await noosphere.remove(slug: address.slug)
+            let version = try await noosphere.save()
+            try database.removeMemo(link)
+            // Write new sphere version to database
+            try database.writeSphereSyncInfo(
+                sphereIdentity: identity,
+                version: version
+            )
+            return
+        default:
+            throw DataServiceError.cannotWriteToSphere(link.did)
+        }
     }
     
     /// Delete entry from file system and database
