@@ -60,6 +60,12 @@ struct SlashlinkDisplayView_Previews: PreviewProvider {
             SlashlinkDisplayView(
                 slashlink: Slashlink("did:key:abc123")!
             )
+            SlashlinkDisplayView(
+                slashlink: Slashlink("did:subconscious:local/foo")!
+            )
+            SlashlinkDisplayView(
+                slashlink: Slashlink("did:subconscious:local")!
+            )
         }
     }
 }
