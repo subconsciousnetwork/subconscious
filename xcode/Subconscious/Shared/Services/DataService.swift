@@ -476,7 +476,11 @@ actor DataService {
         query: String
     ) -> AnyPublisher<[Suggestion], Error> {
         Future.detached(priority: .userInitiated) {
-            try await self.database.searchSuggestions(query: query)
+            let identity = try await self.noosphere.identity()
+            return try await self.database.searchSuggestions(
+                identity: identity,
+                query: query
+            )
         }
         .eraseToAnyPublisher()
     }

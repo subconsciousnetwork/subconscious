@@ -309,7 +309,9 @@ final class DatabaseService {
         })
     }
 
-    private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
+    private func searchSuggestionsForZeroQuery(
+        identity: Did
+    ) throws -> [Suggestion] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -323,7 +325,11 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toLink()?.toSlashlink(),
+                let address = row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: identity),
                 let title = row.col(1)?.toString()
             else {
                 return nil
@@ -361,6 +367,7 @@ final class DatabaseService {
     }
     
     private func searchSuggestionsForQuery(
+        identity: Did,
         query: String
     ) throws -> [Suggestion] {
         guard self.state == .ready else {
@@ -389,7 +396,11 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toLink()?.toSlashlink(),
+                let address = row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: identity),
                 let excerpt = row.col(1)?.toString()
             else {
                 return  nil
@@ -403,15 +414,21 @@ final class DatabaseService {
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchSuggestions(
+        identity: Did,
         query: String
     ) throws -> [Suggestion] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         if query.isWhitespace {
-            return try searchSuggestionsForZeroQuery()
+            return try searchSuggestionsForZeroQuery(
+                identity: identity
+            )
         } else {
-            return try searchSuggestionsForQuery(query: query)
+            return try searchSuggestionsForQuery(
+                identity: identity,
+                query: query
+            )
         }
     }
     
