@@ -9,6 +9,25 @@ import SwiftUI
 
 struct FirstRunView: View {
     @ObservedObject var app: Store<AppModel>
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var bgGradient: LinearGradient {
+        switch colorScheme {
+        case .dark:
+            return Color.bgGradientDark
+        default:
+            return Color.bgGradientLight
+        }
+    }
+
+    private var shadow: Color {
+        switch colorScheme {
+        case .dark:
+            return .brandBgPurple
+        default:
+            return .brandMarkPurple
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -16,7 +35,9 @@ struct FirstRunView: View {
                 Spacer()
                 Image("sub_logo")
                     .resizable()
-                    .frame(width: 128, height: 128)
+                    .frame(width: 180, height: 180)
+                    .shadow(color: shadow, radius: 72)
+                Spacer()
                 VStack(alignment: .leading, spacing: AppTheme.unit3) {
                     Text("Welcome to the Subconscious Beta.")
                     
@@ -76,11 +97,11 @@ struct FirstRunView: View {
                     )
                 }
             }
-            .navigationTitle("Welcome")
+            .navigationTitle("Welcome to Subconscious")
             .navigationBarTitleDisplayMode(.inline)
             .padding()
+            .background(bgGradient)
         }
-        .background(.background)
     }
 }
 

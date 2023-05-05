@@ -10,6 +10,25 @@ import ObservableStore
 
 struct FirstRunProfileView: View {
     @ObservedObject var app: Store<AppModel>
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var bgGradient: LinearGradient {
+        switch colorScheme {
+        case .dark:
+            return Color.bgGradientDark
+        default:
+            return Color.bgGradientLight
+        }
+    }
+
+    private var shadow: Color {
+        switch colorScheme {
+        case .dark:
+            return .brandBgPurple
+        default:
+            return .brandMarkPurple
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -29,6 +48,7 @@ struct FirstRunProfileView: View {
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
+                    .shadow(color: shadow, radius: 72)
                 }
                 Spacer()
                 NavigationLink(
@@ -48,6 +68,7 @@ struct FirstRunProfileView: View {
             .padding()
             .navigationTitle("Your Profile")
             .navigationBarTitleDisplayMode(.inline)
+            .background(bgGradient)
         }
     }
 }

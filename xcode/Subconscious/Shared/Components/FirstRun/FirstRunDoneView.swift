@@ -9,6 +9,25 @@ import SwiftUI
 
 struct FirstRunDoneView: View {
     @ObservedObject var app: Store<AppModel>
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var bgGradient: LinearGradient {
+        switch colorScheme {
+        case .dark:
+            return Color.bgGradientDark
+        default:
+            return Color.bgGradientLight
+        }
+    }
+
+    private var shadow: Color {
+        switch colorScheme {
+        case .dark:
+            return .brandBgPurple
+        default:
+            return .brandMarkPurple
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -27,12 +46,13 @@ struct FirstRunDoneView: View {
                         app.send(.persistFirstRunComplete(true))
                     }
                 ) {
-                    Text("Continue")
+                    Text("Begin")
                 }
                 .buttonStyle(PillButtonStyle())
                 .disabled(app.state.sphereIdentity == nil)
             }
             .padding()
+            .background(bgGradient)
         }
     }
 }

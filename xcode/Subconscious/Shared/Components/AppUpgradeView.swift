@@ -11,27 +11,12 @@ import ObservableStore
 
 /// Displays information to the user when app migration / rebuild happening.
 struct AppUpgradeView: View {
-    private let bgGradientLight = LinearGradient(
-        gradient: Gradient(
-            colors: [.brandBgTan, .brandBgGrey, .brandBgBlush]
-        ),
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-    private let bgGradientDark = LinearGradient(
-        gradient: Gradient(
-            colors: [.brandBgBlack, .brandBgSlate, .brandBgPurple]
-        ),
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-
     private var bgGradient: LinearGradient {
         switch colorScheme {
         case .dark:
-            return bgGradientDark
+            return Color.bgGradientDark
         default:
-            return bgGradientLight
+            return Color.bgGradientLight
         }
     }
 

@@ -9,14 +9,33 @@ import SwiftUI
 
 struct FirstRunCreateSphereView: View {
     @ObservedObject var app: Store<AppModel>
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var bgGradient: LinearGradient {
+        switch colorScheme {
+        case .dark:
+            return Color.bgGradientDark
+        default:
+            return Color.bgGradientLight
+        }
+    }
+
+    private var shadow: Color {
+        switch colorScheme {
+        case .dark:
+            return .brandBgPurple
+        default:
+            return .brandMarkPurple
+        }
+    }
 
     var body: some View {
         NavigationStack {
             VStack {
                 Spacer()
-                VStack(alignment: .center, spacing: AppTheme.unit4) {
-                    Text("Recovery Phrase")
-                        .font(.headline)
+                VStack(alignment: .center, spacing: AppTheme.padding * 2) {
+                    Text("This is your secret recovery phrase. You can use it to recover your data if you lose access.")
+                        .foregroundColor(.secondary)
                     RecoveryPhraseView(
                         state: app.state.recoveryPhrase,
                         send: Address.forward(
@@ -24,10 +43,10 @@ struct FirstRunCreateSphereView: View {
                             tag: AppRecoveryPhraseCursor.tag
                         )
                     )
+                    .shadow(color: shadow, radius: 72)
+                    
                     VStack(alignment: .leading, spacing: AppTheme.unit2) {
-                        Text("This is your secret recovery phrase. You can use it to recover your data if you lose access.")
-                            .foregroundColor(.secondary)
-                        Text("This is for your eyes only. We don't store it. Write it down or add it to your password manager. Keep it secret, keep it safe.")
+                        Text("It's for your eyes only. We don't store it. Write it down or add it to your password manager. Keep it secret, keep it safe.")
                             .foregroundColor(.secondary)
                     }
                 }
@@ -43,6 +62,7 @@ struct FirstRunCreateSphereView: View {
                 .buttonStyle(PillButtonStyle())
             }
             .padding()
+            .background(bgGradient)
         }
         .navigationTitle("Recovery Phrase")
         .navigationBarTitleDisplayMode(.inline)
