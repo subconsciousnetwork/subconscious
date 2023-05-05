@@ -14,38 +14,41 @@ struct SlashlinkDisplayView: View {
     var slugColor = Color.accentColor
     
     var body: some View {
-        switch slashlink.peer {
-        case let .petname(petname) where slashlink.isProfile:
-            PetnameView(petname: petname)
-                .foregroundColor(baseColor)
-                .fontWeight(.medium)
-        case let .petname(petname):
-            HStack(spacing: 0) {
+        HStack(spacing: 0) {
+            switch slashlink.peer {
+            case let .petname(petname) where slashlink.isProfile:
                 PetnameView(petname: petname)
                     .foregroundColor(baseColor)
                     .fontWeight(.medium)
-                Text(verbatim: slashlink.slug.markup)
-                    .foregroundColor(slugColor)
-            }
-        case let .did(did) where slashlink.isProfile:
-            Text(verbatim: did.description)
-                .foregroundColor(baseColor)
-                .fontWeight(.medium)
-        case let .did(did) where did.isLocal:
-            Text(verbatim: slashlink.slug.description)
-                .foregroundColor(slugColor)
-        case let .did(did):
-            HStack(spacing: 0) {
+            case let .petname(petname):
+                HStack(spacing: 0) {
+                    PetnameView(petname: petname)
+                        .foregroundColor(baseColor)
+                        .fontWeight(.medium)
+                    Text(verbatim: slashlink.slug.markup)
+                        .foregroundColor(slugColor)
+                }
+            case let .did(did) where slashlink.isProfile:
                 Text(verbatim: did.description)
                     .foregroundColor(baseColor)
                     .fontWeight(.medium)
-                Text(verbatim: slashlink.slug.markup)
+            case let .did(did) where did.isLocal:
+                Text(verbatim: slashlink.slug.description)
+                    .foregroundColor(slugColor)
+            case let .did(did):
+                HStack(spacing: 0) {
+                    Text(verbatim: did.description)
+                        .foregroundColor(baseColor)
+                        .fontWeight(.medium)
+                    Text(verbatim: slashlink.slug.markup)
+                        .foregroundColor(slugColor)
+                }
+            case .none:
+                Text(verbatim: slashlink.slug.description)
                     .foregroundColor(slugColor)
             }
-        case .none:
-            Text(verbatim: slashlink.slug.description)
-                .foregroundColor(slugColor)
         }
+        .lineLimit(1)
     }
     
     func theme(
