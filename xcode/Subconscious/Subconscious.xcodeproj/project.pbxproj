@@ -11,6 +11,8 @@
 		B508956E29E7862A0048106B /* Tests_AddressBookService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956D29E7862A0048106B /* Tests_AddressBookService.swift */; };
 		B508957029E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
 		B508957129E79BE70048106B /* UserProfileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B508956F29E79BE70048106B /* UserProfileService.swift */; };
+		B50B045B2A04B61000AA584B /* TranscludeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B045A2A04B61000AA584B /* TranscludeService.swift */; };
+		B50B045C2A04B61000AA584B /* TranscludeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B045A2A04B61000AA584B /* TranscludeService.swift */; };
 		B51EEAA129F0C37B0055887B /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51EEAA029F0C37B0055887B /* AppIcon.swift */; };
 		B5293B892A426645001C4DA7 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5293B882A426645001C4DA7 /* Sentry.swift */; };
 		B5293B8A2A426645001C4DA7 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5293B882A426645001C4DA7 /* Sentry.swift */; };
@@ -451,6 +453,7 @@
 /* Begin PBXFileReference section */
 		B508956D29E7862A0048106B /* Tests_AddressBookService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_AddressBookService.swift; sourceTree = "<group>"; };
 		B508956F29E79BE70048106B /* UserProfileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileService.swift; sourceTree = "<group>"; };
+		B50B045A2A04B61000AA584B /* TranscludeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeService.swift; sourceTree = "<group>"; };
 		B51EEAA029F0C37B0055887B /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		B5293B882A426645001C4DA7 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
 		B532F8C229B1752E00CE9256 /* TranscludeBlockLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscludeBlockLayoutFragment.swift; sourceTree = "<group>"; };
@@ -1009,6 +1012,7 @@
 				B8CBAFA8299580E50079107E /* StoreProtocol.swift */,
 				B508956F29E79BE70048106B /* UserProfileService.swift */,
 				B5CA129F29FF732A00860E9E /* GatewayProvisioningService.swift */,
+				B50B045A2A04B61000AA584B /* TranscludeService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -1758,6 +1762,7 @@
 				B8CBAFA42994491B0079107E /* MenuButtonView.swift in Sources */,
 				B57C0AF729D29A8F00D352E3 /* TabbedThreeColumnView.swift in Sources */,
 				B57C0AEE29D280BB00D352E3 /* ThreeColumnView.swift in Sources */,
+				B50B045B2A04B61000AA584B /* TranscludeService.swift in Sources */,
 				B8133AEB29B8FD1300B38760 /* SubtextAttributedStringRenderer.swift in Sources */,
 				B85EC460296F099700558761 /* ProfilePic.swift in Sources */,
 				B57C0AF529D2865600D352E3 /* UserProfileDetailView.swift in Sources */,
@@ -1987,6 +1992,7 @@
 				B8EC568A26F4204F00AC64E5 /* SQLite3Database.swift in Sources */,
 				B8B4251928FDE8AA0081B8D5 /* MemoData.swift in Sources */,
 				B8A59D6A28B692900010DB2F /* StoryPrompt.swift in Sources */,
+				B50B045C2A04B61000AA584B /* TranscludeService.swift in Sources */,
 				B5CFC7FF29E5403900178631 /* FollowUserSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -10,11 +10,25 @@ import SwiftUI
 struct SubtextView: View {
     private static var renderer = SubtextAttributedStringRenderer()
     var subtext: Subtext
+    var transcludes: Dictionary<Slashlink, EntryStub>
+    var onViewTransclude: (Slashlink) -> Void
 
     var body: some View {
         VStack(alignment: .leading) {
             ForEach(subtext.blocks, id: \.self) { block in
-                Text(Self.renderer.render(block.description))
+                if let link = block
+                        .slashlinks
+                        .get(0)?
+                        .toSlashlink(),
+                   let entry = transcludes[link] {
+                    Transclude2View(
+                        address: entry.address,
+                        excerpt: entry.excerpt,
+                        action: { onViewTransclude(link) }
+                    )
+                } else {
+                    Text(Self.renderer.render(block.description))
+                }
             }
         }
         .expandAlignedLeading()
@@ -51,7 +65,11 @@ struct SubtextView_Previews: PreviewProvider {
                     
                     Yea, I shall return with the tide,
                     """
-                )
+                ),
+                transcludes: [
+                    Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(address: Slashlink("/wanderer-your-footsteps-are-the-road")!.toPublicMemoAddress(), excerpt: "hello world", modified: Date.now)
+                ],
+                onViewTransclude: { _ in }
             )
         }
     }

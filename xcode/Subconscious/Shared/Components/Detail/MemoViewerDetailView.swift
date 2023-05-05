@@ -35,6 +35,7 @@ struct MemoViewerDetailView: View {
                 MemoViewerDetailLoadedView(
                     title: store.state.title,
                     dom: store.state.dom,
+                    transcludes: store.state.transcludes,
                     address: description.address,
                     backlinks: store.state.backlinks,
                     send: store.send,
@@ -127,6 +128,7 @@ struct MemoViewerDetailLoadingView: View {
 struct MemoViewerDetailLoadedView: View {
     var title: String
     var dom: Subtext
+    var transcludes: [Slashlink: EntryStub]
     var address: Slashlink
     var backlinks: [EntryStub]
     var send: (MemoViewerDetailAction) -> Void
@@ -158,6 +160,17 @@ struct MemoViewerDetailLoadedView: View {
         )
         return .handled
     }
+    
+    private func onViewTransclude(
+        address: Slashlink
+    ) {
+        if address.isOurs {
+            notify(.requestDetail(.editor(MemoEditorDetailDescription(address: address))))
+        } else {
+            notify(.requestDetail(.viewer(MemoViewerDetailDescription(address: address))))
+        }
+    }
+    
 
     var body: some View {
         GeometryReader { geometry in
@@ -165,7 +178,9 @@ struct MemoViewerDetailLoadedView: View {
                 VStack {
                     VStack {
                         SubtextView(
-                            subtext: dom
+                            subtext: dom,
+                            transcludes: transcludes,
+                            onViewTransclude: self.onViewTransclude
                         ).textSelection(
                             .enabled
                         ).environment(\.openURL, OpenURLAction { url in
@@ -216,6 +231,10 @@ enum MemoViewerDetailAction: Hashable {
     case failLoadDetail(_ message: String)
     case presentMetaSheet(_ isPresented: Bool)
     
+    case fetchTranscludes
+    case succeedFetchTranscludes(Dictionary<Slashlink, EntryStub>)
+    case failFetchTranscludes(_ error: String)
+    
     /// Synonym for `.metaSheet(.setAddress(_))`
     static func setMetaSheetAddress(_ address: Slashlink) -> Self {
         .metaSheet(.setAddress(address))
@@ -254,6 +273,9 @@ struct MemoViewerDetailModel: ModelProtocol {
     // Bottom sheet with meta info and actions for this memo
     var isMetaSheetPresented = false
     var metaSheet = MemoViewerDetailMetaSheetModel()
+    
+    /// Transclude block preview cache
+    var transcludes: Dictionary<Slashlink, EntryStub> = Dictionary()
     
     static func update(
         state: Self,
@@ -294,6 +316,32 @@ struct MemoViewerDetailModel: ModelProtocol {
                 environment: environment,
                 isPresented: isPresented
             )
+            
+        case .fetchTranscludes:
+            let links = state.dom.slashlinks
+                .map { value in value.toSlashlink() }
+                .compactMap { value in value }
+            
+            let fx: Fx<MemoViewerDetailAction> =
+                environment.transclude
+                .fetchTranscludesPublisher(slashlinks: links)
+                .map { entries in
+                    MemoViewerDetailAction.succeedFetchTranscludes(entries)
+                }
+                .recover { error in
+                    MemoViewerDetailAction.failFetchTranscludes(error.localizedDescription)
+                }
+                .eraseToAnyPublisher()
+            
+            return Update(state: state, fx: fx)
+        case .succeedFetchTranscludes(let transcludes):
+            var model = state
+            model.transcludes = transcludes
+            return Update(state: model)
+            
+        case .failFetchTranscludes(let error):
+            logger.error("Failed to fetch transcludes: \(error)")
+            return Update(state: state)
         }
     }
     
@@ -314,7 +362,10 @@ struct MemoViewerDetailModel: ModelProtocol {
         return update(
             state: model,
             // Set meta sheet address as well
-            action: .setMetaSheetAddress(description.address),
+            actions: [
+                .setMetaSheetAddress(description.address),
+                .fetchTranscludes
+            ],
             environment: environment
         ).mergeFx(fx)
     }
@@ -403,13 +454,22 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
 
                 Say not, "I have found the path of the soul." Say rather, "I have met the soul walking upon my path."
 
-                For the soul walks upon all paths. /infinity-paths
+                For the soul walks upon all paths.
+                
+                /infinity-paths
 
                 The soul walks not upon a line, neither does it grow like a reed.
 
                 The soul unfolds itself, like a [[lotus]] of countless petals.
                 """
             ),
+            transcludes: [
+                Slashlink("/infinity-paths")!: EntryStub(
+                    address: Slashlink("/infinity-paths")!.toPublicMemoAddress(),
+                    excerpt: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\"",
+                    modified: Date.now
+                )
+            ],
             address: Slashlink(slug: Slug("truth-the-prophet")!),
             backlinks: [],
             send: { action in },
