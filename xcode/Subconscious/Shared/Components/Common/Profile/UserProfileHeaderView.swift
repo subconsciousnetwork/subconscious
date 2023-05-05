@@ -27,6 +27,8 @@ struct UserProfileHeaderView: View {
                 ProfilePic(pfp: user.pfp)
             
                 PetnameBylineView(petname: user.nickname)
+                    .fontWeight(.medium)
+                    .foregroundColor(.accentColor)
                 
                 Spacer()
                 

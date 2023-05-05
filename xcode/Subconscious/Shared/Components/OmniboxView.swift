@@ -67,9 +67,11 @@ struct OmniboxSlashlinkView: View {
             switch slashlink.peer {
             case let .petname(petname) where slashlink.isProfile:
                 PetnameBylineView(petname: petname)
+                    .fontWeight(.medium)
             case let .petname(petname):
                 HStack(spacing: 0) {
                     PetnameBylineView(petname: petname)
+                        .fontWeight(.medium)
                     Text(verbatim: slashlink.slug.markup)
                 }
             case let .did(did) where slashlink.isProfile:
