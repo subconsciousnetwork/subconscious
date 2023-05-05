@@ -262,9 +262,12 @@ actor DataService {
         guard !address.isLocal else {
             return try local.read(address.slug).unwrap()
         }
-        return try await noosphere.read(slashlink: address)
-            .toMemo()
-            .unwrap()
+        let identity = try await noosphere.identity()
+        return try await noosphere.read(
+            slashlink: address.relativizeIfNeeded(did: identity)
+        )
+        .toMemo()
+        .unwrap()
     }
     
     private func writeLocalMemo(
