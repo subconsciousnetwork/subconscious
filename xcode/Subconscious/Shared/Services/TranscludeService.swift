@@ -15,20 +15,24 @@ actor TranscludeService {
         self.database = database
     }
     
-    func fetchTranscludes(slashlinks: [Slashlink]) async throws -> Dictionary<Slashlink, EntryStub> {
+    func fetchTranscludes(
+        slashlinks: [Slashlink]
+    ) async throws -> [Slashlink: EntryStub] {
         let entries = try database.listEntriesForSlashlinks(slashlinks: slashlinks)
         
-        var dict = Dictionary<Slashlink, EntryStub>()
-        for entry in entries {
-            dict[entry.address.toSlashlink()] = entry
-        }
-        
-        return dict
+        return
+            Dictionary(
+                entries.map { entry in
+                    (entry.address.toSlashlink(), entry)
+                },
+                uniquingKeysWith: { a, b in a}
+            )
     }
+
     
     nonisolated func fetchTranscludesPublisher(
         slashlinks: [Slashlink]
-    ) -> AnyPublisher<Dictionary<Slashlink, EntryStub>, Error> {
+    ) -> AnyPublisher<[Slashlink: EntryStub], Error> {
         Future.detached(priority: .utility) {
             try await self.fetchTranscludes(slashlinks: slashlinks)
         }

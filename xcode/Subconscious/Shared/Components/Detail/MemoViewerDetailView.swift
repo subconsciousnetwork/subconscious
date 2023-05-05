@@ -232,7 +232,7 @@ enum MemoViewerDetailAction: Hashable {
     case presentMetaSheet(_ isPresented: Bool)
     
     case fetchTranscludes
-    case succeedFetchTranscludes(Dictionary<Slashlink, EntryStub>)
+    case succeedFetchTranscludes([Slashlink: EntryStub])
     case failFetchTranscludes(_ error: String)
     
     /// Synonym for `.metaSheet(.setAddress(_))`
@@ -275,7 +275,7 @@ struct MemoViewerDetailModel: ModelProtocol {
     var metaSheet = MemoViewerDetailMetaSheetModel()
     
     /// Transclude block preview cache
-    var transcludes: Dictionary<Slashlink, EntryStub> = Dictionary()
+    var transcludes: [Slashlink: EntryStub] = [:]
     
     static func update(
         state: Self,
