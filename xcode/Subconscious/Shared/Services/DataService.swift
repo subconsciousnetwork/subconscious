@@ -382,8 +382,9 @@ actor DataService {
         from: Slashlink,
         to: Slashlink
     ) async throws -> MoveReceipt {
-        let from = try await noosphere.resolve(slashlink: from)
-        let to = try await noosphere.resolve(slashlink: to)
+        let identity = try await noosphere.identity()
+        let from = from.relativizeIfNeeded(did: identity)
+        let to = to.relativizeIfNeeded(did: identity)
         guard from != to else {
             throw DataServiceError.fileExists(to.description)
         }
