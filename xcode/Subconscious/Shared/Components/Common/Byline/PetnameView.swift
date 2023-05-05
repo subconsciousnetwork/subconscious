@@ -1,5 +1,5 @@
 //
-//  PetnameBylineView.swift
+//  PetnameView.swift
 //  Subconscious (iOS)
 //
 //  Created by Ben Follington on 28/3/2023.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Byline style for displaying a petname
-struct PetnameBylineView: View {
+struct PetnameView: View {
     var petname: Petname
     
     var body: some View {
@@ -35,16 +35,16 @@ struct PetnameBylineView: View {
     }
 }
 
-struct PetnameBylineView_Previews: PreviewProvider {
+struct PetnameView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            PetnameBylineView(
+            PetnameView(
                 petname: Petname("melville")!
             )
-            PetnameBylineView(
+            PetnameView(
                 petname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])
             )
-            PetnameBylineView(
+            PetnameView(
                 petname: Petname(petnames: [Petname("melville")!, Petname("bobby")!, Petname("tables")!])
             )
             .frame(maxWidth: 128)

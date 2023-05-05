@@ -26,7 +26,7 @@ struct UserProfileHeaderView: View {
             HStack(alignment: .center, spacing: AppTheme.unit3) {
                 ProfilePic(pfp: user.pfp)
             
-                PetnameBylineView(petname: user.nickname)
+                PetnameView(petname: user.nickname)
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
                 

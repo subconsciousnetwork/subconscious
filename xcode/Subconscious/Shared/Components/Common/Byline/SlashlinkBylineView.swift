@@ -16,7 +16,7 @@ struct SlashlinkBylineView: View {
     var body: some View {
         HStack(spacing: 0) {
             if let petname = slashlink.toPetname() {
-                PetnameBylineView(petname: petname)
+                PetnameView(petname: petname)
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
             }

@@ -22,7 +22,7 @@ struct EntryRow: View, Equatable {
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.toAudience())
                     .font(.system(size: 12))
-                Text(entry.address.slug.description)
+                Text(entry.address.description)
 
                 Spacer()
 

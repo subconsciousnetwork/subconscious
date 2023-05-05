@@ -43,7 +43,7 @@ struct StoryUserView: View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
             HStack(alignment: .center, spacing: AppTheme.unit2) {
                 ProfilePicSm(pfp: story.user.pfp)
-                PetnameBylineView(petname: story.user.nickname)
+                PetnameView(petname: story.user.nickname)
                     .fontWeight(.medium)
                     .foregroundColor(.accentColor)
                 
