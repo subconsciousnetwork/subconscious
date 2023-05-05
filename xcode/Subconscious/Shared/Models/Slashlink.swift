@@ -208,14 +208,14 @@ extension Slashlink {
     
     /// "Relativize" a slashlink relative to some base did.
     /// If did is the base did, returns a relative slashlink without a peer.
-    /// Otherwise, returns nil.
+    /// Otherwise, returns slashlink unchanged.
     /// - Returns Slashlink
-    func relativeTo(did base: Did) -> Slashlink? {
+    func relativizeIfNeeded(did base: Did) -> Slashlink {
         switch self.peer {
         case .did(let did) where did == base:
             return Slashlink(slug: self.slug)
         default:
-            return nil
+            return self
         }
     }
 

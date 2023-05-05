@@ -201,7 +201,7 @@ final class Tests_Slashlink: XCTestCase {
         XCTAssertTrue(abs.isAbsolute, "Did slashlink is absolute")
     }
     
-    func testRelativeTo() throws {
+    func testRelativizeIfNeeded() throws {
         let did = try Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
             .unwrap()
         let slug = try Slug("foo")
@@ -210,22 +210,47 @@ final class Tests_Slashlink: XCTestCase {
             peer: Peer.did(did),
             slug: slug
         )
-        let relative = try slashlink.relativeTo(did: did)
-            .unwrap()
+        let relative = slashlink.relativizeIfNeeded(did: did)
         XCTAssertNil(relative.peer)
         XCTAssertEqual(relative.slug, slug)
     }
 
-    func testRelativeToNoDid() throws {
+    func testRelativizeIfNeededOtherDid() throws {
         let did = try Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
+            .unwrap()
+        let did2 = try Did("did:key:abc123")
             .unwrap()
         let slug = try Slug("foo")
             .unwrap()
         let slashlink = Slashlink(
+            peer: Peer.did(did2),
             slug: slug
         )
-        let relative = slashlink.relativeTo(did: did)
-        XCTAssertNil(relative, "Does not relativize already relative slug")
+        let relative = slashlink.relativizeIfNeeded(did: did)
+        XCTAssertEqual(
+            relative.peer,
+            Peer.did(did2),
+            "Does not relativize when did is other sphere"
+        )
+    }
+
+    func testRelativizeIfNeededPetname() throws {
+        let did = try Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
+            .unwrap()
+        let petname = try Petname("bob")
+            .unwrap()
+        let slug = try Slug("foo")
+            .unwrap()
+        let slashlink = Slashlink(
+            peer: Peer.petname(petname),
+            slug: slug
+        )
+        let relative = slashlink.relativizeIfNeeded(did: did)
+        XCTAssertEqual(
+            relative.peer,
+            Peer.petname(petname),
+            "Does not relativize when peer is petname (already relative)"
+        )
     }
 
     func testSlashlinkDidLosslessStringConvertible() throws {
