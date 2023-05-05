@@ -21,16 +21,22 @@ final class Tests_Did_SubconsciousLocal: XCTestCase {
         XCTAssertTrue(a.isLocal)
         
         let b = Slashlink(
+            peer: .did(Did.local),
+            slug: Slug.profile
+        )
+        XCTAssertTrue(b.isLocal)
+
+        let c = Slashlink(
             peer: .petname(Petname("alice")!),
             slug: Slug("foo")!
         )
-        XCTAssertFalse(b.isLocal)
+        XCTAssertFalse(c.isLocal)
         
-        let c = Slashlink(
+        let d = Slashlink(
             peer: .did(Did("did:key:abc123")!),
             slug: Slug("foo")!
         )
-        XCTAssertFalse(c.isLocal)
+        XCTAssertFalse(d.isLocal)
     }
     
     func testToAudience() throws {
