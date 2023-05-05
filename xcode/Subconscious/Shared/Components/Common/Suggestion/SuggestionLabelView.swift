@@ -35,23 +35,6 @@ struct SuggestionLabelView: View, Equatable {
 
     var body: some View {
         switch suggestion {
-        case let .memo(address, title) where address.isLocal:
-            // Do not show full did address for local content
-            Label(
-                title: {
-                    TitleGroupView(
-                        title: Text(
-                            verbatim: !title.isEmpty ? title : empty
-                        ),
-                        subtitle: Text(
-                            verbatim: address.slug.markup
-                        )
-                    )
-                },
-                icon: {
-                    Image(address)
-                }
-            )
         case let .memo(address, title):
             Label(
                 title: {
@@ -59,9 +42,7 @@ struct SuggestionLabelView: View, Equatable {
                         title: Text(
                             verbatim: !title.isEmpty ? title : empty
                         ),
-                        subtitle: Text(
-                            verbatim: address.description
-                        )
+                        subtitle: SlashlinkDisplayView(slashlink: address)
                     )
                 },
                 icon: {
@@ -138,7 +119,31 @@ struct SuggestionLabelView_Previews: PreviewProvider {
             SuggestionLabelView(
                 suggestion: .memo(
                     address: Slashlink(
-                        "@here/the-lee-shore"
+                        "/the-lee-shore"
+                    )!,
+                    fallback: "The Lee Shore"
+                )
+            )
+            SuggestionLabelView(
+                suggestion: .memo(
+                    address: Slashlink(
+                        "@bob/the-lee-shore"
+                    )!,
+                    fallback: "The Lee Shore"
+                )
+            )
+            SuggestionLabelView(
+                suggestion: .memo(
+                    address: Slashlink(
+                        "@carol.bob/the-lee-shore"
+                    )!,
+                    fallback: "The Lee Shore"
+                )
+            )
+            SuggestionLabelView(
+                suggestion: .memo(
+                    address: Slashlink(
+                        "did:key:abc123/the-lee-shore"
                     )!,
                     fallback: "The Lee Shore"
                 )
