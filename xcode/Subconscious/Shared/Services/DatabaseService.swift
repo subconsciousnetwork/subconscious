@@ -250,7 +250,7 @@ final class DatabaseService {
     }
     
     /// List recent entries
-    func listRecentMemos(identity: Did) throws -> [EntryStub] {
+    func listRecentMemos(owner: Did) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
 
@@ -263,7 +263,7 @@ final class DatabaseService {
             LIMIT 1000
             """,
             parameters: [
-                .text(identity.description),
+                .text(owner.description),
                 .text(Did.local.description)
             ]
         )
@@ -273,7 +273,7 @@ final class DatabaseService {
                     .toString()?
                     .toLink()?
                     .toSlashlink()?
-                    .relativizeIfNeeded(did: identity),
+                    .relativizeIfNeeded(did: owner),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -314,7 +314,7 @@ final class DatabaseService {
     }
 
     private func searchSuggestionsForZeroQuery(
-        identity: Did
+        owner: Did
     ) throws -> [Suggestion] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
@@ -333,7 +333,7 @@ final class DatabaseService {
                     .toString()?
                     .toLink()?
                     .toSlashlink()?
-                    .relativizeIfNeeded(did: identity),
+                    .relativizeIfNeeded(did: owner),
                 let title = row.col(1)?.toString()
             else {
                 return nil
@@ -371,7 +371,7 @@ final class DatabaseService {
     }
     
     private func searchSuggestionsForQuery(
-        identity: Did,
+        owner: Did,
         query: String
     ) throws -> [Suggestion] {
         guard self.state == .ready else {
@@ -404,7 +404,7 @@ final class DatabaseService {
                     .toString()?
                     .toLink()?
                     .toSlashlink()?
-                    .relativizeIfNeeded(did: identity),
+                    .relativizeIfNeeded(did: owner),
                 let excerpt = row.col(1)?.toString()
             else {
                 return  nil
@@ -418,7 +418,7 @@ final class DatabaseService {
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchSuggestions(
-        identity: Did,
+        owner: Did,
         query: String
     ) throws -> [Suggestion] {
         guard self.state == .ready else {
@@ -426,11 +426,11 @@ final class DatabaseService {
         }
         if query.isWhitespace {
             return try searchSuggestionsForZeroQuery(
-                identity: identity
+                owner: owner
             )
         } else {
             return try searchSuggestionsForQuery(
-                identity: identity,
+                owner: owner,
                 query: query
             )
         }
@@ -485,7 +485,7 @@ final class DatabaseService {
     /// Given a query and a `current` slug, produce an array of suggestions
     /// for renaming the note.
     func searchRenameSuggestions(
-        identity: Did,
+        owner: Did,
         query: String,
         current: Slashlink
     ) throws -> [RenameSuggestion] {
@@ -511,7 +511,7 @@ final class DatabaseService {
                 """,
                 parameters: [
                     .prefixQueryFTS5(query),
-                    .text(identity.description),
+                    .text(owner.description),
                     .text(Did.local.description)
                 ]
             )
@@ -623,7 +623,10 @@ final class DatabaseService {
         return query
     }
     
-    func readEntryBacklinks(link: Link) throws -> [EntryStub] {
+    func readEntryBacklinks(
+        owner: Did,
+        link: Link
+    ) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -654,7 +657,7 @@ final class DatabaseService {
                 return nil
             }
             return EntryStub(
-                address: address,
+                address: address.relativizeIfNeeded(did: owner),
                 excerpt: excerpt,
                 modified: modified
             )

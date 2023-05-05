@@ -455,7 +455,7 @@ actor DataService {
     
     func listRecentMemos() async throws -> [EntryStub] {
         let identity = try await noosphere.identity()
-        let recent = try self.database.listRecentMemos(identity: identity)
+        let recent = try self.database.listRecentMemos(owner: identity)
         return recent.filter { entry in
             !entry.address.slug.isHidden
         }
@@ -486,7 +486,7 @@ actor DataService {
         Future.detached(priority: .userInitiated) {
             let identity = try await self.noosphere.identity()
             return try await self.database.searchSuggestions(
-                identity: identity,
+                owner: identity,
                 query: query
             )
         }
@@ -517,7 +517,7 @@ actor DataService {
         Future.detached(priority: .userInitiated) {
             let identity = try await self.noosphere.identity()
             return try await self.database.searchRenameSuggestions(
-                identity: identity,
+                owner: identity,
                 query: query,
                 current: current
             )
@@ -645,6 +645,7 @@ actor DataService {
         let memo = try? await readMemo(address: address)
         
         let backlinks = try database.readEntryBacklinks(
+            owner: identity,
             link: link
         )
         
@@ -694,6 +695,10 @@ actor DataService {
     func readMemoDetail(
         address: Slashlink
     ) async -> MemoDetailResponse? {
+        guard let identity = try? await noosphere.identity() else {
+            return nil
+        }
+        
         guard let link = try? await noosphere.resolveLink(
             slashlink: address
         ) else {
@@ -708,6 +713,7 @@ actor DataService {
         }
         
         guard let backlinks = try? database.readEntryBacklinks(
+            owner: identity,
             link: link
         ) else {
             return nil
