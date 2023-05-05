@@ -22,7 +22,7 @@ struct EntryRow: View, Equatable {
             HStack(spacing: AppTheme.unit) {
                 Image(audience: entry.address.toAudience())
                     .font(.system(size: 12))
-                Text(entry.address.description)
+                SlashlinkDisplayView(slashlink: entry.address)
 
                 Spacer()
 
@@ -60,6 +60,24 @@ struct EntryRow_Previews: PreviewProvider {
                 entry: EntryStub(
                     address: Slashlink(
                         "@here/anything-that-can-be-derived-should-be-derived"
+                    )!,
+                    excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
+                    modified: Date.now
+                )
+            )
+            EntryRow(
+                entry: EntryStub(
+                    address: Slashlink(
+                        "did:key:abc123/anything-that-can-be-derived-should-be-derived"
+                    )!,
+                    excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
+                    modified: Date.now
+                )
+            )
+            EntryRow(
+                entry: EntryStub(
+                    address: Slashlink(
+                        "did:subconscious:local/anything-that-can-be-derived-should-be-derived"
                     )!,
                     excerpt: "Anything that can be derived should be derived. Insight from Rich Hickey. Practical example: all information in Git is derived. At Git's core, it is simply a linked list of annotated diffs. All commands are derived via diff/patch/apply.",
                     modified: Date.now

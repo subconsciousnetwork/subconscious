@@ -269,7 +269,11 @@ final class DatabaseService {
         )
         return results.compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toLink()?.toSlashlink(),
+                let address = row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: identity),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
