@@ -34,10 +34,11 @@ struct FirstRunDoneView: View {
             VStack {
                 Spacer()
                 VStack(spacing: AppTheme.unit3) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 96))
-                        .foregroundColor(.accentColor)
-                    Text("All set!")
+                    Image("ns_logo")
+                        .resizable()
+                        .frame(width: 180, height: 180)
+                        .shadow(color: shadow, radius: 72)
+                    Text("Your sphere is ready!")
                         .foregroundColor(.secondary)
                 }
                 Spacer()
