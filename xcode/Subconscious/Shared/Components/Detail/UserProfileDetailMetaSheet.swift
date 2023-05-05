@@ -36,10 +36,10 @@ struct UserProfileDetailMetaSheet: View {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     if let user = profile.user {
-                        SlashlinkBylineView(
+                        SlashlinkDisplayView(
                             slashlink: user.address
                         ).theme(
-                            petname: Color.primary,
+                            base: Color.primary,
                             slug: Color.secondary
                         )
                     }

@@ -22,8 +22,8 @@ struct Transclude2View: View {
                 VStack(alignment: .leading, spacing: AppTheme.unit) {
                     Text(excerpt)
                         .lineLimit(5)
-                    SlashlinkBylineView(slashlink: address)
-                        .theme(petname: Color.secondary)
+                    SlashlinkDisplayView(slashlink: address)
+                        .theme(base: .secondary, slug: .secondary)
                 }
             }
         )
@@ -46,7 +46,17 @@ struct Transclude2View_Previews: PreviewProvider {
             )
             Transclude2View(
                 address: Slashlink("/loomings")!,
-                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation.",
+                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely",
+                action: { }
+            )
+            Transclude2View(
+                address: Slashlink("did:subconscious:local/loomings")!,
+                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely",
+                action: { }
+            )
+            Transclude2View(
+                address: Slashlink("did:key:abc123/loomings")!,
+                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely",
                 action: { }
             )
         }

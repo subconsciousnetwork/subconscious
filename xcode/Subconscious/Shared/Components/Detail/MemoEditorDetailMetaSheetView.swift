@@ -19,8 +19,8 @@ struct MemoEditorDetailMetaSheetView: View {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     HStack {
                         if let slashlink = state.address {
-                            SlashlinkBylineView(slashlink: slashlink).theme(
-                                petname: Color.primary,
+                            SlashlinkDisplayView(slashlink: slashlink).theme(
+                                base: Color.primary,
                                 slug: Color.secondary
                             )
                         } else {

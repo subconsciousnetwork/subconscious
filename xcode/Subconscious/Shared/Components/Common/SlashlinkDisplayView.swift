@@ -10,32 +10,52 @@ import SwiftUI
 /// A view for slashlinks, optimized for compact display
 struct SlashlinkDisplayView: View {
     var slashlink: Slashlink
+    var baseColor = Color.accentColor
+    var slugColor = Color.accentColor
     
     var body: some View {
         switch slashlink.peer {
         case let .petname(petname) where slashlink.isProfile:
             PetnameView(petname: petname)
+                .foregroundColor(baseColor)
                 .fontWeight(.medium)
         case let .petname(petname):
             HStack(spacing: 0) {
                 PetnameView(petname: petname)
+                    .foregroundColor(baseColor)
                     .fontWeight(.medium)
                 Text(verbatim: slashlink.slug.markup)
+                    .foregroundColor(slugColor)
             }
         case let .did(did) where slashlink.isProfile:
             Text(verbatim: did.description)
+                .foregroundColor(baseColor)
                 .fontWeight(.medium)
         case let .did(did) where did.isLocal:
             Text(verbatim: slashlink.slug.description)
+                .foregroundColor(slugColor)
         case let .did(did):
             HStack(spacing: 0) {
                 Text(verbatim: did.description)
+                    .foregroundColor(baseColor)
                     .fontWeight(.medium)
                 Text(verbatim: slashlink.slug.markup)
+                    .foregroundColor(slugColor)
             }
         case .none:
             Text(verbatim: slashlink.slug.description)
+                .foregroundColor(slugColor)
         }
+    }
+    
+    func theme(
+        base baseColor: Color = Color.accentColor,
+        slug slugColor: Color = Color.accentColor
+    ) -> Self {
+        var this = self
+        this.baseColor = baseColor
+        this.slugColor = slugColor
+        return this
     }
 }
 
@@ -45,6 +65,9 @@ struct SlashlinkDisplayView_Previews: PreviewProvider {
             SlashlinkDisplayView(
                 slashlink: Slashlink("/foo")!
             )
+            SlashlinkDisplayView(
+                slashlink: Slashlink("/foo")!
+            ).foregroundColor(.accentColor)
             SlashlinkDisplayView(
                 slashlink: Slashlink("/foo/bar")!
             )

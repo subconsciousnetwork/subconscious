@@ -43,6 +43,7 @@ struct SuggestionLabelView: View, Equatable {
                             verbatim: !title.isEmpty ? title : empty
                         ),
                         subtitle: SlashlinkDisplayView(slashlink: address)
+                            .theme(base: .secondary, slug: .secondary)
                     )
                 },
                 icon: {

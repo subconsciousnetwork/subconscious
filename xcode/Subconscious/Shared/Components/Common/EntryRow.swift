@@ -23,6 +23,7 @@ struct EntryRow: View, Equatable {
                 Image(audience: entry.address.toAudience())
                     .font(.system(size: 12))
                 SlashlinkDisplayView(slashlink: entry.address)
+                    .theme(base: .secondary, slug: .secondary)
 
                 Spacer()
 
