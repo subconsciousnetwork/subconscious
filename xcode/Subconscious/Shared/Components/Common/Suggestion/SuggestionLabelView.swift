@@ -35,6 +35,23 @@ struct SuggestionLabelView: View, Equatable {
 
     var body: some View {
         switch suggestion {
+        case let .memo(address, title) where address.isLocal:
+            // Do not show full did address for local content
+            Label(
+                title: {
+                    TitleGroupView(
+                        title: Text(
+                            verbatim: !title.isEmpty ? title : empty
+                        ),
+                        subtitle: Text(
+                            verbatim: address.slug.markup
+                        )
+                    )
+                },
+                icon: {
+                    Image(address)
+                }
+            )
         case let .memo(address, title):
             Label(
                 title: {
