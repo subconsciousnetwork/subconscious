@@ -294,8 +294,13 @@ final class DatabaseService {
         }
         return try database.execute(
             sql: """
-            SELECT slug, modified, size FROM memo WHERE audience = 'local'
-            """
+            SELECT slug, modified, size
+            FROM memo
+            WHERE did = ?
+            """,
+            parameters: [
+                .text(Did.local.description)
+            ]
         )
         .compactMap({ row in
             if
