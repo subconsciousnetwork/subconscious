@@ -73,15 +73,12 @@ final class Tests_UserProfileService: XCTestCase {
             petname: Petname("ronald")!
         )
         
-        let did = try await data.noosphere.identity()
-        
         let following = try await data.userProfile.getFollowingList(
-            identity: did,
-            address: Slashlink(petname: Petname("bob.alice")!)
+            address: Slashlink.ourProfile
         )
         
         if let petname = following.first?.user.address.petname {
-            XCTAssertEqual(petname, Petname("ronald.bob.alice")!)
+            XCTAssertEqual(petname, Petname("ronald")!)
         } else {
             XCTFail("No followed users")
         }
