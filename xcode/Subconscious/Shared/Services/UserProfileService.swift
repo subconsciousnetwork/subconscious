@@ -210,7 +210,7 @@ actor UserProfileService {
     }
     
     /// Produce a reverse-chronological list of the entries passed in
-    private func recentEntries(entries: [EntryStub]) -> [EntryStub] {
+    private func sortEntriesByModified(entries: [EntryStub]) -> [EntryStub] {
         var recentEntries = entries
         recentEntries.sort(by: { a, b in
             a.modified > b.modified
@@ -306,7 +306,7 @@ actor UserProfileService {
             slugs: notes
         )
         let topEntries = entries
-        let recentEntries = recentEntries(entries: entries)
+        let recentEntries = sortEntriesByModified(entries: entries)
         
         let profile = try await self.loadProfileFromMemo(
             did: did,
