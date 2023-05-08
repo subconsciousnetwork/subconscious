@@ -293,6 +293,10 @@ actor DataService {
         link: Link,
         memo: Memo
     ) async throws {
+        let identity = try await noosphere.identity()
+        guard link.did == identity else {
+            throw DataServiceError.cannotEditSphere(link.did)
+        }
         // Get absolute slashlink
         let body = try memo.body.toData().unwrap()
         try await noosphere.write(
@@ -307,7 +311,6 @@ actor DataService {
             link: link,
             memo: memo
         )
-        let identity = try await noosphere.identity()
         // Write new sphere version to database
         try database.writeSphereSyncInfo(
             sphereIdentity: identity,
@@ -321,18 +324,15 @@ actor DataService {
         address: Slashlink,
         memo: Memo
     ) async throws {
-        let identity = try await noosphere.identity()
         let link = try await noosphere.resolveLink(slashlink: address)
         var memo = memo
         memo.modified = Date.now
-
+        
         switch link.did {
         case Did.local:
             return try await writeLocalMemo(link: link, memo: memo)
-        case identity:
-            return try await writeSphereMemo(link: link, memo: memo)
         default:
-            throw DataServiceError.cannotWriteToSphere(link.did)
+            return try await writeSphereMemo(link: link, memo: memo)
         }
     }
     
@@ -484,7 +484,7 @@ actor DataService {
         query: String
     ) -> AnyPublisher<[Suggestion], Error> {
         Future.detached(priority: .userInitiated) {
-            let identity = try await self.noosphere.identity()
+            let identity = try? await self.noosphere.identity()
             return try await self.database.searchSuggestions(
                 owner: identity,
                 query: query
@@ -515,7 +515,7 @@ actor DataService {
         current: Slashlink
     ) -> AnyPublisher<[RenameSuggestion], Error> {
         Future.detached(priority: .userInitiated) {
-            let identity = try await self.noosphere.identity()
+            let identity = try? await self.noosphere.identity()
             return try await self.database.searchRenameSuggestions(
                 owner: identity,
                 query: query,
@@ -633,7 +633,7 @@ actor DataService {
         address: Slashlink,
         fallback: String
     ) async throws -> MemoEditorDetailResponse {
-        let identity = try await noosphere.identity()
+        let identity = try? await noosphere.identity()
         let link = try await noosphere.resolveLink(slashlink: address)
         
         // We do not allow editing 3p memos.
