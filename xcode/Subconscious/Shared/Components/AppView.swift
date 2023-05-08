@@ -732,9 +732,6 @@ struct AppModel: ModelProtocol {
             "Sphere ID: \(sphereIdentity)"
         )
         logger.debug(
-            "Sphere ID: \(sphereIdentity)"
-        )
-        logger.debug(
             "Noosphere enabled? \(AppDefaults.standard.isNoosphereEnabled)"
         )
         return update(
