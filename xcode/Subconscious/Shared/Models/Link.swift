@@ -8,6 +8,20 @@
 import Foundation
 
 /// An absolute link that can be used as an identifier, as well as a locator.
+///
+/// This type is used in cases where we need a stable identifier for sphere
+/// content (such as in the database). A `Slashlink` can be resolved to a
+/// `Link` using methods in the `Sphere` actor.
+///
+/// Default to using `Slashlink`, not `Link`. It is preferred to use
+/// `Slashlink` for all cases where you require a *locator*. Slashlink contains
+/// more useful user-facing information, such as the chain of petnames that
+/// got you there.
+///
+/// > If we ever show a DID to a user we have failed. https://spritely.institute/static/papers/petnames.html
+///
+///  Use `Link` only when requiring a stable *identifier*, such as when
+///  indexing database content.
 struct Link: Hashable, Identifiable, LosslessStringConvertible {
     /// Regular expression for parsing links.
     /// Links have similar structure to did slashlink, but did part and slug part are both non-optional.
