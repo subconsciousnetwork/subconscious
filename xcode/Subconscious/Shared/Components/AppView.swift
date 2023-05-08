@@ -1490,7 +1490,7 @@ struct AppModel: ModelProtocol {
         let fx: Fx<AppAction> = environment.gatewayProvisioningService
             .waitForGatewayProvisioningPublisher(
                 gatewayId: gatewayId,
-                maxAttempts: 5
+                maxAttempts: 20 // 210 seconds with linear backoff
             )
             .map { url in
                 guard let url = url else {

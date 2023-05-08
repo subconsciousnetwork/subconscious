@@ -168,13 +168,13 @@ actor GatewayProvisioningService {
             return url
         } catch {
             let attempts = attempts + 1
-            guard attempts >= maxAttempts else {
+            guard attempts < maxAttempts else {
                 return nil
             }
             
             Self.logger.log("Waiting... Attempts=\(attempts)")
             
-            sleep(UInt32(attempts * 1000))
+            sleep(UInt32(attempts))
             
             return try await self.waitForGatewayProvisioning(
                 gatewayId: gatewayId,
