@@ -151,7 +151,7 @@ actor UserProfileService {
     /// Load the underlying `_profile_` for a user and construct a `UserProfile` from it.
     private func loadProfileFromMemo(
         did: Did,
-        petname: Petname,
+        fallbackPetname: Petname,
         address: Slashlink
     ) async throws -> UserProfile {
         let userProfileData = await self.readProfileMemo(address: address)
@@ -165,7 +165,7 @@ actor UserProfileService {
         
         let profile = UserProfile(
             did: did,
-            nickname: Petname(userProfileData?.nickname ?? "") ?? petname,
+            nickname: Petname(userProfileData?.nickname ?? "") ?? fallbackPetname,
             address: address,
             pfp: pfp,
             bio: userProfileData?.bio ?? "",
@@ -248,7 +248,7 @@ actor UserProfileService {
             
             let user = try await self.loadProfileFromMemo(
                 did: entry.did,
-                petname: address.petname ?? entry.petname,
+                fallbackPetname: address.petname ?? entry.petname,
                 address: address
             )
             
@@ -310,7 +310,7 @@ actor UserProfileService {
         
         let profile = try await self.loadProfileFromMemo(
             did: did,
-            petname: fallbackPetname,
+            fallbackPetname: fallbackPetname,
             address: address
         )
         
