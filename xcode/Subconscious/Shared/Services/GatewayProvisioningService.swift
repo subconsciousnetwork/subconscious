@@ -32,6 +32,7 @@ enum GatewayProvisioningServiceError: Error {
     case failedToProvisionGateway(String)
     case failedToCheckGatewayProvisioningStatus(String)
     case gatewayIsNotReady
+    case invalidStatusResponse(ProvisionGatewayStatusResponse)
 }
 
 extension GatewayProvisioningServiceError: LocalizedError {
@@ -50,6 +51,16 @@ extension GatewayProvisioningServiceError: LocalizedError {
         case .gatewayIsNotReady:
             return String(
                 localized: "Gateway is not provisioned yet",
+                comment: "GatewayProvisioningService error description"
+            )
+        case .invalidStatusResponse(let res):
+            return String(
+                localized: """
+                    Invalid status response. \
+                    (status=\(res.status), \
+                    did=\(res.did ?? "<none>"), \
+                    url=\(res.url ?? "<none>"))
+                    """,
                 comment: "GatewayProvisioningService error description"
             )
         }
@@ -81,7 +92,6 @@ actor GatewayProvisioningService {
     ) async throws -> ProvisionGatewayResponse {
         
         var request = URLRequest(url: Self.provisionGatewayEndpoint)
-        Self.logger.log("POST to \(Self.provisionGatewayEndpoint)")
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
@@ -96,10 +106,6 @@ actor GatewayProvisioningService {
             throw GatewayProvisioningServiceError.failedToProvisionGateway(
                 "Could not read response"
             )
-        }
-        
-        if let s = String(data: data, encoding: .utf8) {
-            Self.logger.log("res: \(s)")
         }
         
         guard response.success else {
@@ -119,7 +125,10 @@ actor GatewayProvisioningService {
             }
         }
         
-        return try self.jsonDecoder.decode(ProvisionGatewayResponse.self, from: data)
+        return try self.jsonDecoder.decode(
+            ProvisionGatewayResponse.self,
+            from: data
+        )
     }
     
     private func checkGatewayProvisioningStatus(
@@ -127,7 +136,6 @@ actor GatewayProvisioningService {
     ) async throws -> ProvisionGatewayStatusResponse {
         var request = URLRequest(url: Self.provisionGatewayEndpoint.appending(path: gatewayId))
         request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
@@ -143,7 +151,10 @@ actor GatewayProvisioningService {
             )
         }
         
-        return try self.jsonDecoder.decode(ProvisionGatewayStatusResponse.self, from: data)
+        return try self.jsonDecoder.decode(
+            ProvisionGatewayStatusResponse.self,
+            from: data
+        )
     }
     
     func waitForGatewayProvisioning(
@@ -154,15 +165,16 @@ actor GatewayProvisioningService {
         do {
             let res = try await self.checkGatewayProvisioningStatus(gatewayId: gatewayId)
             
-            guard res.status == "Active" else {
+            guard res.status.lowercased() == "active" else {
                 throw GatewayProvisioningServiceError.gatewayIsNotReady
             }
             
+            // Validate response payload
             guard let did = res.did,
-                  let did = Did(did),
+                  let _ = Did(did),
                   let url = res.url,
                   let url = URL(string: url) else {
-                throw GatewayProvisioningServiceError.gatewayIsNotReady
+                throw GatewayProvisioningServiceError.invalidStatusResponse(res)
             }
             
             return url
@@ -172,7 +184,10 @@ actor GatewayProvisioningService {
                 return nil
             }
             
-            Self.logger.log("Waiting... Attempts=\(attempts)")
+            Self.logger.log("""
+            Waiting to re-check provisioning status, \
+            attempt \(attempts) of \(maxAttempts)
+            """)
             
             sleep(UInt32(attempts))
             
