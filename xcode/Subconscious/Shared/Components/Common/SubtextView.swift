@@ -27,6 +27,10 @@ struct SubtextView: View {
                         
                         return transcludes[slashlink]
                     }
+                    .filter { entry in
+                        // Avoid empty transclude blocks
+                        entry.excerpt.count > 0
+                    }
                 
                 if entries.count > 0 {
                     ForEach(entries, id: \.self) { entry in
@@ -77,8 +81,8 @@ struct SubtextView_Previews: PreviewProvider {
                     """
                 ),
                 transcludes: [
-                    Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(address: Slashlink("/wanderer-your-footsteps-are-the-road")!, excerpt: "hello world", modified: Date.now),
-                    Slashlink("/voice")!: EntryStub(address: Slashlink("/voice")!, excerpt: "hello world", modified: Date.now),
+                    Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(address: Slashlink("/wanderer-your-footsteps-are-the-road")!, excerpt: "hello mother", modified: Date.now),
+                    Slashlink("/voice")!: EntryStub(address: Slashlink("/voice")!, excerpt: "hello father", modified: Date.now),
                     Slashlink("/memory")!: EntryStub(address: Slashlink("/memory")!, excerpt: "hello world", modified: Date.now)
                 ],
                 onViewTransclude: { _ in }
