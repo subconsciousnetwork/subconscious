@@ -417,11 +417,11 @@ actor NoosphereService:
         switch (address.peer) {
         case .none:
             return try self.sphere()
-        case .some(.did(let did)) where did == identity:
+        case .did(let did) where did == identity:
             return try self.sphere()
-        case .some(.petname(let petname)):
+        case .petname(let petname):
             return try await self.traverse(petname: petname)
-        case _:
+        default:
             throw NoosphereServiceError.cannotFindSphereForUnknownIdentity
         }
     }
