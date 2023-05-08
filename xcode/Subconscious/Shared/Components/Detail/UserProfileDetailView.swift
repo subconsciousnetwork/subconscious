@@ -26,7 +26,7 @@ struct UserProfileDetailView: View {
     var description: UserProfileDetailDescription
     var notify: (UserProfileDetailNotification) -> Void
     
-    func onNavigateToNote(address: MemoAddress) {
+    func onNavigateToNote(address: Slashlink) {
         notify(.requestDetail(.from(address: address, fallback: "")))
     }
     
@@ -78,12 +78,12 @@ enum UserProfileDetailNotification: Hashable {
 /// A description of a user profile that can be used to set up the user
 /// profile's internal state.
 struct UserProfileDetailDescription: Hashable {
-    var address: MemoAddress
+    var address: Slashlink
     var initialTabIndex: Int = UserProfileDetailModel.recentEntriesTabIndex
 }
 
 enum UserProfileDetailAction {
-    case appear(MemoAddress, Int)
+    case appear(Slashlink, Int)
     case refresh
     case populate(UserProfileContentResponse)
     case failedToPopulate(String)
@@ -137,7 +137,7 @@ enum UserCategory: Equatable, Codable, Hashable, CaseIterable {
 struct UserProfile: Equatable, Codable, Hashable {
     let did: Did
     let nickname: Petname
-    let address: MemoAddress
+    let address: Slashlink
     let pfp: ProfilePicVariant
     let bio: String
     let category: UserCategory
@@ -264,7 +264,7 @@ struct UserProfileDetailModel: ModelProtocol {
             
             let fxRoot: AnyPublisher<UserProfileContentResponse, Error> =
             Func.run {
-                if let petname = address.petname {
+                if let petname = address.toPetname() {
                     return environment.userProfile.requestUserProfilePublisher(petname: petname)
                 } else {
                     return environment.userProfile.requestOwnProfilePublisher()

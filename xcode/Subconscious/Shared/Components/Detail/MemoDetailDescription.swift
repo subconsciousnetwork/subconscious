@@ -16,7 +16,7 @@ enum MemoDetailDescription: Hashable {
     
     /// Get address for description, if any.
     /// - Returns MemoAddress or nil
-    var address: MemoAddress? {
+    var address: Slashlink? {
         switch self {
         case .editor(let description):
             return description.address
@@ -32,34 +32,11 @@ extension MemoDetailDescription {
     /// Create a detail description from an address and additional data.
     /// Returns the best Memo Detail type for data provided.
     static func from(
-        address: MemoAddress?,
+        address: Slashlink?,
         fallback: String,
         defaultAudience: Audience = .local
     ) -> Self {
-        switch address {
-        case .local(let slug):
-            return .editor(
-                MemoEditorDetailDescription(
-                    address: slug.toLocalMemoAddress(),
-                    fallback: fallback,
-                    defaultAudience: .local
-                )
-            )
-        case .public(let slashlink) where slashlink.petname == nil:
-            return .editor(
-                MemoEditorDetailDescription(
-                    address: slashlink.toPublicMemoAddress(),
-                    fallback: fallback,
-                    defaultAudience: .public
-                )
-            )
-        case .public(let slashlink):
-            return .viewer(
-                MemoViewerDetailDescription(
-                    address: slashlink.toPublicMemoAddress()
-                )
-            )
-        case .none:
+        guard let address = address else {
             return .editor(
                 MemoEditorDetailDescription(
                     fallback: fallback,
@@ -67,5 +44,17 @@ extension MemoDetailDescription {
                 )
             )
         }
+        guard address.isOurs else {
+            return .viewer(
+                MemoViewerDetailDescription(address: address)
+            )
+        }
+        return .editor(
+            MemoEditorDetailDescription(
+                address: address,
+                fallback: fallback,
+                defaultAudience: .public
+            )
+        )
     }
 }

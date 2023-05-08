@@ -35,7 +35,7 @@ struct StoryUserView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var story: StoryUser
-    var action: (MemoAddress, String) -> Void
+    var action: (Slashlink, String) -> Void
     
     var profileAction: (UserProfile, UserProfileAction) -> Void = { _, _ in }
     
@@ -43,7 +43,9 @@ struct StoryUserView: View {
         VStack(alignment: .leading, spacing: AppTheme.unit3) {
             HStack(alignment: .center, spacing: AppTheme.unit2) {
                 ProfilePicSm(pfp: story.user.pfp)
-                PetnameBylineView(petname: story.user.nickname)
+                PetnameView(petname: story.user.nickname)
+                    .fontWeight(.medium)
+                    .foregroundColor(.accentColor)
                 
                 Spacer()
                 
@@ -117,7 +119,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname("ben.gordon.chris.bob")!,
-                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                         category: .human
@@ -131,7 +133,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname("ben.gordon.chris.bob")!,
-                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                         category: .human
@@ -145,7 +147,7 @@ struct StoryUserView_Previews: PreviewProvider {
                     user: UserProfile(
                         did: Did("did:key:123")!,
                         nickname: Petname("ben.gordon.chris.bob")!,
-                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!).toPublicMemoAddress(),
+                        address: Slashlink(petname: Petname("ben.gordon.chris.bob")!),
                         pfp: .image("pfp-dog"),
                         bio: "Ploofy snooflewhumps burbled, outflonking the zibber-zabber.",
                         category: .you

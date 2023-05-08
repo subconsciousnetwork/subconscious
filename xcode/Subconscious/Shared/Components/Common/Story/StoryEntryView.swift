@@ -10,7 +10,7 @@ import SwiftUI
 /// Show an excerpt of an entry in a feed
 struct StoryEntryView: View {
     var story: StoryEntry
-    var action: (MemoAddress, String) -> Void
+    var action: (Slashlink, String) -> Void
 
     var body: some View {
         Button(
@@ -25,7 +25,7 @@ struct StoryEntryView: View {
                 HStack(alignment: .lastTextBaseline, spacing: AppTheme.unit) {
                     BylineSmView(
                         pfp: story.author.pfp,
-                        slashlink: story.entry.address.toSlashlink()
+                        slashlink: story.entry.address
                     )
                     Group {
                         Text(
@@ -61,9 +61,7 @@ struct StoryPlainView_Previews: PreviewProvider {
                 author: UserProfile.dummyData(),
                 entry: EntryStub(
                     MemoEntry(
-                        address: MemoAddress.public(
-                            Slashlink("@here/meme")!
-                        ),
+                        address: Slashlink("@here/meme")!,
                         contents: Memo(
                             contentType: ContentType.subtext.rawValue,
                             created: Date.now,

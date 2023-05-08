@@ -10,7 +10,6 @@ import Foundation
 import Combine
 
 enum UserProfileServiceError: Error {
-    case invalidSphereIdentity
     case missingPreferredPetname
     case unexpectedProfileContentType(String)
     case unexpectedProfileSchemaVersion(String)
@@ -21,11 +20,6 @@ enum UserProfileServiceError: Error {
 extension UserProfileServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
-        case .invalidSphereIdentity:
-            return String(
-                localized: "Sphere identity is an invalid DID",
-                comment: "UserProfileService error description"
-            )
         case .missingPreferredPetname:
             return String(
                 localized: "Missing or invalid nickname for sphere owner",
@@ -121,10 +115,10 @@ actor UserProfileService {
     /// Because profile data is optional and we expect it will not always be present
     /// any errors are logged & handled and nil will be returned if reading fails.
     private func readProfileMemo(
-        address: MemoAddress
+        address: Slashlink
     ) async -> UserProfileEntry? {
         do {
-            let data = try await noosphere.read(slashlink: address.toSlashlink())
+            let data = try await noosphere.read(slashlink: address)
             
             guard data.contentType == Self.profileContentType else {
                 throw UserProfileServiceError.unexpectedProfileContentType(data.contentType)
@@ -158,7 +152,7 @@ actor UserProfileService {
     private func loadProfile(
         did: Did,
         petname: Petname,
-        address: MemoAddress
+        address: Slashlink
     ) async throws -> UserProfile {
         let userProfileData = await self.readProfileMemo(address: address)
         let pfp: ProfilePicVariant = Func.run {
@@ -202,7 +196,10 @@ actor UserProfileService {
 
             entries.append(
                 EntryStub(
-                    address: Slashlink(petname: petname, slug: slug).toPublicMemoAddress(),
+                    address: Slashlink(
+                        petname: petname,
+                        slug: slug
+                    ),
                     excerpt: memo.excerpt(),
                     modified: memo.modified
                 )
@@ -216,7 +213,7 @@ actor UserProfileService {
     /// Each user will be decorated with whether the current app user is following them.
     func getFollowingList(
         identity: Did,
-        address: MemoAddress
+        address: Slashlink
     ) async throws -> [StoryUser] {
         var following: [StoryUser] = []
         let sphere = try await self.noosphere.sphere(did: identity)
@@ -226,18 +223,18 @@ actor UserProfileService {
         
         for entry in entries {
             let noosphereIdentity = try await noosphere.identity()
-            let isOurs = noosphereIdentity == entry.did.did
+            let isOurs = noosphereIdentity == entry.did
             
             let slashlink = Func.run {
-                guard let basePetname = address.petname else {
+                guard case let .petname(basePetname) = address.peer else {
                     return Slashlink(petname: entry.petname)
                 }
-                return Slashlink(petname: entry.petname).relativeTo(petname: basePetname)
+                return Slashlink(petname: entry.petname).rebaseIfNeeded(petname: basePetname)
             }
             
             let address = isOurs
-                ? Slashlink.ourProfile.toPublicMemoAddress()
-                : slashlink.toPublicMemoAddress()
+                ? Slashlink.ourProfile
+                : slashlink
             
             let user = try await self.loadProfile(
                 did: entry.did,
@@ -288,11 +285,8 @@ actor UserProfileService {
                   throw UserProfileServiceError.missingPreferredPetname
         }
         
-        let address = Slashlink.ourProfile.toPublicMemoAddress()
+        let address = Slashlink.ourProfile
         let did = try await self.noosphere.identity()
-        guard let did = Did(did) else {
-            throw UserProfileServiceError.invalidSphereIdentity
-        }
         
         let following = try await self.getFollowingList(
             identity: did,
@@ -305,7 +299,6 @@ actor UserProfileService {
             sphere: self.noosphere
         )
         let recentEntries = recentEntries(entries: entries)
-        
         
         let profile = try await self.loadProfile(
             did: did,
@@ -348,7 +341,7 @@ actor UserProfileService {
     func requestUserProfile(
         petname: Petname
     ) async throws -> UserProfileContentResponse {
-        let address = Slashlink(petname: petname).toPublicMemoAddress()
+        let address = Slashlink(petname: petname)
         
         let sphere = try await self.noosphere.traverse(petname: petname)
         let identity = try await sphere.identity()
@@ -358,19 +351,15 @@ actor UserProfileService {
             return try await requestOurProfile()
         }
         
-        guard let did = Did(identity) else {
-            throw UserProfileServiceError.invalidSphereIdentity
-        }
-        
         let localAddressBook = AddressBook(sphere: sphere)
         
         let following: [StoryUser] = try await self.getFollowingList(
-            identity: did,
+            identity: identity,
             address: address
         )
         
         let notes = try await sphere.list()
-        let isFollowing = await self.addressBook.isFollowingUser(did: did)
+        let isFollowing = await self.addressBook.isFollowingUser(did: identity)
         let entries = try await self.loadEntries(
             petname: petname,
             slugs: notes,
@@ -380,7 +369,7 @@ actor UserProfileService {
         let recentEntries = recentEntries(entries: entries)
         
         let profile = try await self.loadProfile(
-            did: did,
+            did: identity,
             petname: petname,
             address: address
         )

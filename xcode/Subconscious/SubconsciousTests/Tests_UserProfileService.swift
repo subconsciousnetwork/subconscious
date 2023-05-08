@@ -24,7 +24,7 @@ final class Tests_UserProfileService: XCTestCase {
             body: "More content"
         )
         
-        let addressA = Slashlink(slug: Slug("hello")!).toPublicMemoAddress()
+        let addressA = Slashlink(slug: Slug("hello")!)
         try await data.data.writeMemo(address: addressA, memo: memoA)
         
         let memoC = Memo(
@@ -36,7 +36,7 @@ final class Tests_UserProfileService: XCTestCase {
             body: "Even more content"
         )
         
-        let addressC = Slashlink.ourProfile.toPublicMemoAddress()
+        let addressC = Slashlink.ourProfile
         try await data.data.writeMemo(address: addressC, memo: memoC)
         
         try await data.userProfile.writeOurProfile(
@@ -74,14 +74,10 @@ final class Tests_UserProfileService: XCTestCase {
         )
         
         let did = try await data.noosphere.identity()
-        guard let did = Did(did) else {
-            XCTFail("Invalid identity")
-            return
-        }
         
         let following = try await data.userProfile.getFollowingList(
             identity: did,
-            address: Slashlink(petname: Petname("bob.alice")!).toPublicMemoAddress()
+            address: Slashlink(petname: Petname("bob.alice")!)
         )
         
         if let petname = following.first?.user.address.petname {

@@ -16,7 +16,7 @@ public struct Slashlink:
     Codable,
     LosslessStringConvertible
 {
-    private static let slashlinkRegex = /(\@(?<petname>(?:[\w\d\-]+)(?:\.[\w\d\-]+)*))?(\/(?<slug>(?:[\w\d\-]+)(?:\/[\w\d\-]+)*))?/
+    private static let slashlinkRegex = /(?:(?<did>did:[a-z0-9]+:[a-zA-Z0-9_\-\.\%]+)|(?<petname>@[\w\-]+(?:\.[\w\-]+)*))?(?<slug>\/[\w\-]+(?:\/[\w\-]+)*)?/
     
     public static func < (lhs: Slashlink, rhs: Slashlink) -> Bool {
         lhs.id < rhs.id
@@ -26,26 +26,24 @@ public struct Slashlink:
         lhs.id == rhs.id
     }
     
-    let petname: Petname?
+    let peer: Peer?
     let slug: Slug
     
     public var description: String {
-        guard let petname = petname else {
-            return "/\(slug.description)"
+        guard let peer = peer else {
+            return slug.markup
         }
-        return "@\(petname.description)/\(slug.description)"
+        return "\(peer.markup)\(slug.markup)"
     }
 
     public var verbatim: String {
-        guard let petname = petname else {
-            return "/\(slug.verbatim)"
+        guard let peer = peer else {
+            return "\(slug.verbatimMarkup)"
         }
-        return "@\(petname.verbatim)/\(slug.verbatim)"
+        return "\(peer.verbatimMarkup)\(slug.verbatimMarkup)"
     }
 
     public var id: String { description }
-    
-    static let ourProfile = Slashlink(slug: Slug.profile)
     
     // The normalized markup form of the slashlink
     public var markup: String { description }
@@ -54,10 +52,10 @@ public struct Slashlink:
     public var verbatimMarkup: String { verbatim }
 
     public init(
-        petname: Petname? = nil,
+        peer: Peer? = nil,
         slug: Slug
     ) {
-        self.petname = petname
+        self.peer = peer
         self.slug = slug
     }
     
@@ -68,31 +66,63 @@ public struct Slashlink:
             return nil
         }
         
-        // There are four cases: petname-only, slug-only, petname+slug and empty.
-        // All are valid constructions except for empty.
-        // Petname-only will use `profileSlug` as the slug.
         let slug = match.slug.map({ substring in
-            Slug(uncheckedRawString: substring.toString()
-        )})
+            // Drop leading `/`
+            let slug = substring.dropFirst()
+            return Slug(uncheckedRawString: slug.description)
+        })
         let petname = match.petname.map({ substring in
-            Petname(uncheckedRawString: substring.toString())
+            // Drop leading `@`
+            let petname = substring.dropFirst()
+            return Petname(uncheckedRawString: petname.description)
+        })
+        let did = match.did.map({ substring in
+            Did(uncheckedRawString: substring.description)
         })
         
-        switch (petname, slug) {
-        case (.some(let petname), .some(let slug)):
-            self.init(petname: petname, slug: slug)
-        case (.none, .some(let slug)):
+        // There are several valid cases:
+        //
+        // - did + slug
+        // - did
+        // - petname + slug
+        // - petname
+        // - slug
+        //
+        // All are valid constructions except for empty.
+        //
+        // Petname-only will use `Slug.profile` as the slug when no slug is
+        // provided.
+        switch (did, petname, slug) {
+        case let (.some(did), .none, .some(slug)):
+            self.init(peer: .did(did), slug: slug)
+        case let (.some(did), .none, .none):
+            self.init(peer: .did(did), slug: Slug.profile)
+        case let (.none, .some(petname), .some(slug)):
+            self.init(peer: .petname(petname), slug: slug)
+        case let (.none, .some(petname), .none):
+            self.init(peer: .petname(petname), slug: Slug.profile)
+        case (.none, .none, .some(let slug)):
             self.init(slug: slug)
-        case (.some(let petname), .none):
-            self.init(petname: petname, slug: Slug.profile)
-        case (_, _):
+        default:
             return nil
         }
     }
     
+    /// Convenience initializer that lets you create a relative slashlink
+    /// from a petname and slug.
+    init(petname: Petname?, slug: Slug) {
+        self.init(
+            peer: petname.map({ petname in Peer.petname(petname) }),
+            slug: slug
+        )
+    }
+
     /// Convenience initializer that creates a link to `@user/_profile_`
     init(petname: Petname) {
-        self.init(petname: petname, slug: Slug.profile)
+        self.init(
+            peer: Peer.petname(petname),
+            slug: Slug.profile
+        )
     }
 }
 
@@ -106,23 +136,97 @@ extension Slug {
 }
 
 extension Slug {
-    func toSlashlink() -> Slashlink {
-        Slashlink(slug: self)
+    /// Transform slug into slashlink
+    /// - Parameters:
+    ///   - peer: the peer for the sphere this slug belongs to (if any)
+    /// - Returns: slashlink
+    func toSlashlink(relativeTo petname: Petname? = nil) -> Slashlink {
+        Slashlink(
+            petname: petname,
+            slug: self
+        )
     }
 }
 
 extension Slashlink {
+    /// Is slashlink absolute?
+    /// - An absolute slashlink is a slashlink with a did peer or no peer
+    /// - A relative slashlink is a slashlink with a petname peer.
+    var isAbsolute: Bool {
+        switch peer {
+        case .did:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    static let ourProfile = Slashlink(slug: Slug.profile)
+
+    var isProfile: Bool {
+        slug.isProfile
+    }
+    
+    var isOurProfile: Bool {
+        self == Self.ourProfile
+    }
+
+    /// Get the petname associated with this slashlink (if any).
+    /// Note that this will return nil if the slashlink has a did peer.
+    /// - Returns the petname associated with the slashlink, if any.
+    var petname: Petname? {
+        switch self.peer {
+        case .petname(let petname):
+            return petname
+        case .did:
+            return nil
+        case .none:
+            return nil
+        }
+    }
+
     func toSlug() -> Slug {
         self.slug
     }
     
-    func relativeTo(petname: Petname) -> Slashlink {
-        guard let localPetname = self.petname else {
+    /// Given a relative petname, re-base the petname relative to
+    /// another petname.
+    ///
+    /// If this slashlink is absolute (a did slashlink) the function returns
+    /// the slashlink unchanged.
+    func rebaseIfNeeded(petname: Petname) -> Slashlink {
+        switch self.peer {
+        case .did:
+            return self
+        case .petname(let localPetname):
+            let path = petname.append(petname: localPetname)
+            return Slashlink(petname: path, slug: self.slug)
+        case .none:
             return Slashlink(petname: petname, slug: self.slug)
         }
-        
-        let path = petname.append(petname: localPetname)
-        return Slashlink(petname: path, slug: self.slug)
+    }
+    
+    /// "Relativize" a slashlink relative to some base did.
+    /// If did is the base did, returns a relative slashlink without a peer.
+    /// Otherwise, returns slashlink unchanged.
+    /// - Returns Slashlink
+    func relativizeIfNeeded(did base: Did) -> Slashlink {
+        switch self.peer {
+        case .did(let did) where did == base:
+            return Slashlink(slug: self.slug)
+        default:
+            return self
+        }
+    }
+
+    /// Get petname from slashlink (if any)
+    func toPetname() -> Petname? {
+        switch self.peer {
+        case .petname(let petname):
+            return petname
+        default:
+            return nil
+        }
     }
 }
 
@@ -135,9 +239,19 @@ extension Petname {
     }
 }
 
-extension Slashlink {
-    func toPetname() -> Petname? {
-        self.petname
+extension Did {
+    /// An optimized constructor that is only called by
+    /// `Slashlink.init`
+    fileprivate init(uncheckedRawString string: String) {
+        self.did = string
+    }
+}
+
+extension String {
+    /// Convert a string to a slashlink
+    /// - Returns Slashlink for valid slashlink string, or nil
+    func toSlashlink() -> Slashlink? {
+        Slashlink(self)
     }
 }
 

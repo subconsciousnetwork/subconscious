@@ -127,7 +127,7 @@ struct MemoViewerDetailLoadingView: View {
 struct MemoViewerDetailLoadedView: View {
     var title: String
     var dom: Subtext
-    var address: MemoAddress
+    var address: Slashlink
     var backlinks: [EntryStub]
     var send: (MemoViewerDetailAction) -> Void
     var notify: (MemoViewerDetailNotification) -> Void
@@ -196,7 +196,7 @@ enum MemoViewerDetailNotification: Hashable {
     case requestDetail(_ description: MemoDetailDescription)
     /// Request detail from any audience scope
     case requestFindLinkDetail(
-        address: MemoAddress,
+        address: Slashlink,
         link: SubSlashlinkLink
     )
 }
@@ -204,7 +204,7 @@ enum MemoViewerDetailNotification: Hashable {
 /// A description of a memo detail that can be used to set up the memo
 /// detal's internal state.
 struct MemoViewerDetailDescription: Hashable {
-    var address: MemoAddress
+    var address: Slashlink
 }
 
 // MARK: Actions
@@ -217,7 +217,7 @@ enum MemoViewerDetailAction: Hashable {
     case presentMetaSheet(_ isPresented: Bool)
     
     /// Synonym for `.metaSheet(.setAddress(_))`
-    static func setMetaSheetAddress(_ address: MemoAddress) -> Self {
+    static func setMetaSheetAddress(_ address: Slashlink) -> Self {
         .metaSheet(.setAddress(address))
     }
 }
@@ -245,7 +245,7 @@ struct MemoViewerDetailModel: ModelProtocol {
     
     var loadingState = LoadingState.loading
     
-    var address: MemoAddress?
+    var address: Slashlink?
     var defaultAudience = Audience.local
     var title = ""
     var dom: Subtext = Subtext.empty
@@ -410,7 +410,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
                 The soul unfolds itself, like a [[lotus]] of countless petals.
                 """
             ),
-            address: MemoAddress.local(Slug("truth-the-prophet")!),
+            address: Slashlink(slug: Slug("truth-the-prophet")!),
             backlinks: [],
             send: { action in },
             notify: { action in }
@@ -419,12 +419,12 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
         MemoViewerDetailNotFoundView(
             backlinks: [
                 EntryStub(
-                    address: MemoAddress("public::@bob/bar")!,
+                    address: Slashlink("@bob/bar")!,
                     excerpt: "The hidden well-spring of your soul must needs rise and run murmuring to the sea; And the treasure of your infinite depths would be revealed to your eyes. But let there be no scales to weigh your unknown treasure; And seek not the depths of your knowledge with staff or sounding line. For self is a sea boundless and measureless.",
                     modified: Date.now
                 ),
                 EntryStub(
-                    address: MemoAddress("public::@bob/baz")!,
+                    address: Slashlink("@bob/baz")!,
                     excerpt: "Think you the spirit is a still pool which you can trouble with a staff? Oftentimes in denying yourself pleasure you do but store the desire in the recesses of your being. Who knows but that which seems omitted today, waits for tomorrow?",
                     modified: Date.now
                 )

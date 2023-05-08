@@ -35,15 +35,11 @@ struct SlashlinkBarView_Previews: PreviewProvider {
         SlashlinkBarView(
             links: [
                 EntryLink(
-                    address: MemoAddress.public(
-                        Slashlink("@here/loomings/test")!
-                    ),
+                    address: Slashlink("@here/loomings/test")!,
                     title: "Loomings"
                 ),
                 EntryLink(
-                    address: MemoAddress.public(
-                        Slashlink("@here/the-lee-shore")!
-                    ),
+                    address: Slashlink("@here/the-lee-shore")!,
                     title: "The Lee Shore"
                 )
             ],

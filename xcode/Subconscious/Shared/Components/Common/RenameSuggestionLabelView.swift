@@ -22,6 +22,7 @@ struct RenameSuggestionLabelView: View, Equatable {
                 },
                 icon: {
                     Image(systemName: "square.and.arrow.down.on.square")
+                        .frame(width: AppTheme.icon, height: AppTheme.icon)
                 }
             )
         case let .move(_, to):
@@ -34,6 +35,7 @@ struct RenameSuggestionLabelView: View, Equatable {
                 },
                 icon: {
                     Image(systemName: "pencil")
+                        .frame(width: AppTheme.icon, height: AppTheme.icon)
                 }
             )
         }
@@ -42,15 +44,31 @@ struct RenameSuggestionLabelView: View, Equatable {
 
 struct RenameSuggestionLabel_Previews: PreviewProvider {
     static var previews: some View {
-        RenameSuggestionLabelView(
-            suggestion: .move(
-                from: MemoAddress.public(
-                    Slashlink("@here/loomings")!
-                ),
-                to: MemoAddress.public(
-                    Slashlink("@here/the-lee-shore")!
+        VStack {
+            RenameSuggestionLabelView(
+                suggestion: .move(
+                    from: Slashlink("@here/loomings")!,
+                    to: Slashlink("@here/the-lee-shore")!
                 )
             )
-        )
+            RenameSuggestionLabelView(
+                suggestion: .merge(
+                    parent: Slashlink("/loomings")!,
+                    child: Slashlink("/the-lee-shore")!
+                )
+            )
+            RenameSuggestionLabelView(
+                suggestion: .move(
+                    from: Slashlink("did:key:abc123/loomings")!,
+                    to: Slashlink("did:key:abc123/the-lee-shore")!
+                )
+            )
+            RenameSuggestionLabelView(
+                suggestion: .merge(
+                    parent: Slashlink("did:subconscious:local/loomings")!,
+                    child: Slashlink("did:subconscious:local/the-lee-shore")!
+                )
+            )
+        }
     }
 }

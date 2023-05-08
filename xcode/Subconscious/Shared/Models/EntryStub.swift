@@ -16,11 +16,11 @@ struct EntryStub:
     CustomDebugStringConvertible,
     Codable
 {
-    let address: MemoAddress
+    let address: Slashlink
     let excerpt: String
     let modified: Date
 
-    var id: MemoAddress { address }
+    var id: Slashlink { address }
     var debugDescription: String {
         "Subconscious.EntryStub(\(address))"
     }

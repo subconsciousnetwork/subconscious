@@ -60,7 +60,7 @@ public struct Petname:
     public var verbatimMarkup: String {
         "@\(self.verbatim)"
     }
-
+    
     public init?(_ description: String) {
         guard description.wholeMatch(of: Self.petnameRegex) != nil else {
             return nil
@@ -71,9 +71,12 @@ public struct Petname:
     
     /// Join a list of petnames into a dotted string, i.e. [foo, bar, baz] -> foo.bar.baz
     /// Names are joined in order of their appearance in `petnames`
-    public init?(petnames: [Petname]) {
-        let petnamePath = petnames.map({ s in s.verbatim }).joined(separator: ".")
-        self.init(petnamePath)
+    public init(petnames: [Petname]) {
+        let petnamePath = petnames
+            .map({ s in s.verbatim })
+            .joined(separator: ".")
+        self.description = petnamePath.lowercased()
+        self.verbatim = petnamePath
     }
     
     /// Convert a string into a petname.
@@ -108,8 +111,8 @@ public struct Petname:
     }
     
     /// Combines two petnames to build up a traversal path
-    /// i.e. `Petname("foo")!.append(Petname("bar")` => `bar.foo`
-    public func append(petname: Petname) -> Petname? {
+    /// i.e. `Petname("foo")!.append(petname: Petname("bar")!)` -> `bar.foo`
+    public func append(petname: Petname) -> Petname {
         return Petname(petnames: [petname, self])
     }
 }

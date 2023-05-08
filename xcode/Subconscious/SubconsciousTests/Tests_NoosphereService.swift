@@ -42,23 +42,25 @@ final class Tests_NoosphereService: XCTestCase {
         let aliceReceipt = try await noosphere.createSphere(ownerKeyName: "alice")
         
         let bob = Petname("bob")!
+        let bobDid = Did(bobReceipt.identity)!
         let alice = Petname("alice")!
+        let aliceDid = Did(aliceReceipt.identity)!
 
         // Put bob in alice's address book
         await noosphere.resetSphere(aliceReceipt.identity)
-        try await noosphere.setPetname(did: bobReceipt.identity, petname: bob)
+        try await noosphere.setPetname(did: bobDid, petname: bob)
         try await noosphere.save()
         
-        let bobDid = try await noosphere.getPetname(petname: bob)
-        XCTAssertEqual(bobDid, bobReceipt.identity)
+        let bobDid2 = try await noosphere.getPetname(petname: bob)
+        XCTAssertEqual(bobDid2, bobDid)
         
         // Put alice in bob's address book & set bob as default sphere
         await noosphere.resetSphere(bobReceipt.identity)
-        try await noosphere.setPetname(did: aliceReceipt.identity, petname: alice)
+        try await noosphere.setPetname(did: aliceDid, petname: alice)
         try await noosphere.save()
         
-        let aliceDid = try await noosphere.getPetname(petname: alice)
-        XCTAssertEqual(aliceDid, aliceReceipt.identity)
+        let aliceDid2 = try await noosphere.getPetname(petname: alice)
+        XCTAssertEqual(aliceDid2, aliceDid)
         
         _ = try await noosphere.sync()
         // This should loop back around to bob
@@ -70,7 +72,7 @@ final class Tests_NoosphereService: XCTestCase {
         await noosphere.reset()
         
         let sphereIdentity = try await destinationSphere.identity()
-        XCTAssertEqual(sphereIdentity, bobReceipt.identity)
+        XCTAssertEqual(sphereIdentity, bobDid)
     }
     
     func testNoosphereReset() async throws {

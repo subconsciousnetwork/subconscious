@@ -7,26 +7,28 @@
 
 import Foundation
 
-struct Did : Hashable, Identifiable, Codable {
-    let did: String
-    var id: String { did }
+public struct Did : Hashable, Identifiable, Codable {
+    public let did: String
+    public var id: String { did }
     
-    // Approximate, based on https://www.w3.org/TR/did-core/#did-syntax
-    static let regex = /^(did:[a-z0-9]{3}:[a-zA-Z0-9-_\.%:]+)$/
+    // Approximate, based on
+    // https://www.w3.org/TR/did-core/#did-syntax
+    // https://w3c-ccg.github.io/did-method-key/
+    private static let regex = /did:[a-z0-9]+:[a-zA-Z0-9_\-\.\%]+/
     
-    init?(did: String) {
+    public init?(did: String) {
         guard let did = try? Self.regex.wholeMatch(in: did) else {
             return nil
         }
         
-        self.did = String(did.1)
+        self.did = String(did.0)
     }
 }
 
 extension Did: LosslessStringConvertible {
-    var description: String { did }
+    public var description: String { did }
     
-    init?(_ description: String) {
+    public init?(_ description: String) {
         self.init(did: description)
     }
 }

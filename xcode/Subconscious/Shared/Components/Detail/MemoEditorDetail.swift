@@ -240,10 +240,10 @@ enum MemoEditorDetailNotification: Hashable {
     case requestFindLinkDetail(
         link: SubSlashlinkLink
     )
-    case requestDelete(MemoAddress?)
-    case succeedMoveEntry(from: MemoAddress, to: MemoAddress)
-    case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)
-    case succeedSaveEntry(address: MemoAddress, modified: Date)
+    case requestDelete(Slashlink?)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
+    case succeedSaveEntry(address: Slashlink, modified: Date)
     case succeedUpdateAudience(_ receipt: MoveReceipt)
 }
 
@@ -290,7 +290,7 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     /// Load detail, using a last-write-wins strategy for replacement
     /// if detail is already loaded.
     case loadDetail(
-        address: MemoAddress,
+        address: Slashlink,
         fallback: String,
         autofocus: Bool
     )
@@ -324,9 +324,9 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     /// Forwards down meta sheet requestDelete, which hides sheet.
     /// Then, after a delay for the bottom sheet animation, sends a
     /// forwardRequestDelete, which is relayed to DetailOuterAction.
-    case requestDelete(_ address: MemoAddress?)
+    case requestDelete(_ address: Slashlink?)
     /// Action relayed as RequestDelete to DetailOuterAction.
-    case forwardRequestDelete(_ address: MemoAddress?)
+    case forwardRequestDelete(_ address: Slashlink?)
 
     /// Finish with editing focus
     case doneEditing
@@ -337,13 +337,13 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
 
     //  Give memo an address if it doesn't have one
     case requestAssignAddress
-    case assignAddress(MemoAddress?)
+    case assignAddress(Slashlink?)
 
     /// Save an entry at a particular snapshot value
     case save(MemoEntry?)
     case succeedSave(MemoEntry)
     case failSave(
-        address: MemoAddress,
+        address: Slashlink,
         message: String
     )
 
@@ -363,15 +363,15 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
     /// Intercepted rename action
     case selectRenameSuggestion(RenameSuggestion)
     /// Move an entry from one location to another
-    case moveEntry(from: MemoAddress, to: MemoAddress)
+    case moveEntry(from: Slashlink, to: Slashlink)
     /// Move entry succeeded. Lifecycle action.
-    case succeedMoveEntry(from: MemoAddress, to: MemoAddress)
+    case succeedMoveEntry(from: Slashlink, to: Slashlink)
     /// Move entry failed. Lifecycle action.
     case failMoveEntry(String)
     /// Merge entries
-    case mergeEntry(parent: MemoAddress, child: MemoAddress)
+    case mergeEntry(parent: Slashlink, child: Slashlink)
     /// Merge entry succeeded. Lifecycle action.
-    case succeedMergeEntry(parent: MemoAddress, child: MemoAddress)
+    case succeedMergeEntry(parent: Slashlink, child: Slashlink)
     /// Merge entry failed. Lifecycle action.
     case failMergeEntry(String)
 
@@ -423,7 +423,7 @@ enum MemoEditorDetailAction: Hashable, CustomLogStringConvertible {
         .metaSheet(.refreshRenameSuggestions)
     }
 
-    static func setMetaSheetAddress(_ address: MemoAddress?) -> Self {
+    static func setMetaSheetAddress(_ address: Slashlink?) -> Self {
         .metaSheet(.setAddress(address))
     }
 
@@ -541,7 +541,7 @@ struct DetailMetaSheetCursor: CursorProtocol {
 
 //  MARK: Model
 struct MemoEditorDetailModel: ModelProtocol {
-    var address: MemoAddress?
+    var address: Slashlink?
     var defaultAudience = Audience.local
     var audience: Audience {
         address?.toAudience() ?? defaultAudience
@@ -1140,7 +1140,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func loadDetail(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        address: MemoAddress,
+        address: Slashlink,
         fallback: String,
         autofocus: Bool
     ) -> Update<MemoEditorDetailModel> {
@@ -1452,7 +1452,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func requestDelete(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        address: MemoAddress?
+        address: Slashlink?
     ) -> Update<MemoEditorDetailModel> {
         let delay = Duration.sheet
         
@@ -1526,7 +1526,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func assignAddress(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        address: MemoAddress?
+        address: Slashlink?
     ) -> Update<MemoEditorDetailModel> {
         guard let address = address else {
             logger.log("Did not get unique address for note. Doing nothing.")
@@ -1617,7 +1617,7 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func failSave(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        address: MemoAddress,
+        address: Slashlink,
         message: String
     ) -> Update<MemoEditorDetailModel> {
         //  TODO: show user a "try again" banner
@@ -1659,7 +1659,7 @@ struct MemoEditorDetailModel: ModelProtocol {
         model.linkSearchText = text
         
         // Omit current slug from results
-        var omitting: Set<MemoAddress> = Set()
+        var omitting: Set<Slashlink> = Set()
         if let address = state.address {
             omitting.insert(address)
         }
@@ -1763,8 +1763,8 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func moveEntry(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        from: MemoAddress,
-        to: MemoAddress
+        from: Slashlink,
+        to: Slashlink
     ) -> Update<MemoEditorDetailModel> {
         let fx: Fx<MemoEditorDetailAction> = environment.data.moveEntryPublisher(
             from: from,
@@ -1793,8 +1793,8 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func succeedMoveEntry(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        from: MemoAddress,
-        to: MemoAddress
+        from: Slashlink,
+        to: Slashlink
     ) -> Update<MemoEditorDetailModel> {
         guard state.address == from else {
             logger.warning(
@@ -1838,8 +1838,8 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func mergeEntry(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        parent: MemoAddress,
-        child: MemoAddress
+        parent: Slashlink,
+        child: Slashlink
     ) -> Update<MemoEditorDetailModel> {
         let fx: Fx<MemoEditorDetailAction> = environment.data.mergeEntryPublisher(
             parent: parent,
@@ -1859,8 +1859,8 @@ struct MemoEditorDetailModel: ModelProtocol {
     static func succeedMergeEntry(
         state: MemoEditorDetailModel,
         environment: AppEnvironment,
-        parent: MemoAddress,
-        child: MemoAddress
+        parent: Slashlink,
+        child: Slashlink
     ) -> Update<MemoEditorDetailModel> {
         var model = state
         model.address = parent
@@ -1976,7 +1976,7 @@ struct MemoEditorDetailModel: ModelProtocol {
 //  MARK: Outer Model
 /// A description of a detail suitible for pushing onto a navigation stack
 struct MemoEditorDetailDescription: Hashable {
-    var address: MemoAddress?
+    var address: Slashlink?
     var fallback: String = ""
     /// Default audience to use when deriving a memo address
     var defaultAudience = Audience.local
@@ -2018,8 +2018,7 @@ struct Detail_Previews: PreviewProvider {
     static var previews: some View {
         MemoEditorDetailView(
             description: MemoEditorDetailDescription(
-                address: Slug(formatting: "Nothing is lost in the universe")!
-                    .toPublicMemoAddress(),
+                address: Slashlink("/nothing-is-lost-in-the-universe")!,
                 fallback: "Nothing is lost in the universe"
             ),
             notify: { action in }

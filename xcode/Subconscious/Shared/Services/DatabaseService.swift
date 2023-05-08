@@ -22,17 +22,13 @@ struct DatabaseMigrationInfo: Hashable {
     var didRebuild: Bool
 }
 
-enum DatabaseMetaKeys: String {
-    case sphereIdentity = "sphere_identity"
-    case sphereVersion = "sphere_version"
-}
-
 enum DatabaseServiceError: Error, LocalizedError {
     case invalidStateTransition(
         from: DatabaseServiceState,
         to: DatabaseServiceState
     )
     case notReady
+    case slashlinkMustBeAbsolute
     case pathNotInFilePath
     case randomEntryFailed
     case notFound(String)
@@ -44,6 +40,8 @@ enum DatabaseServiceError: Error, LocalizedError {
             return "Invalid state transition \(from) -> \(to)"
         case .notReady:
             return "Database not ready"
+        case .slashlinkMustBeAbsolute:
+            return "Slashlink must be absolute"
         case .pathNotInFilePath:
             return "Path not in file path"
         case .randomEntryFailed:
@@ -57,10 +55,6 @@ enum DatabaseServiceError: Error, LocalizedError {
 }
 
 final class DatabaseService {
-    /// String used for identifying content with no sphere identity
-    /// i.e. local content
-    static let noSphereIdentityKey = "none"
-
     /// Publishes the current state of the database.
     /// Subscribe to be notified when database changes state.
     @Published private(set) var state: DatabaseServiceState
@@ -114,69 +108,67 @@ final class DatabaseService {
         }
     }
 
-    /// Read database metadata from string key
-    func readMetadata(key: String) throws -> String {
+    func savepoint(_ savepoint: String) throws {
+        try self.database.savepoint(savepoint)
+    }
+
+    func release(_ savepoint: String) throws {
+        try self.database.release(savepoint)
+    }
+
+    func rollback(_ savepoint: String) throws {
+        try self.database.rollback(savepoint)
+    }
+
+    /// Geven a sphere did, read the last known version that the database has
+    /// synced to (if any).
+    func readSphereSyncInfo(sphereIdentity: Did) throws -> String? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         let rows = try database.execute(
-            sql: "SELECT value FROM database_metadata WHERE key = ?",
-            parameters: [.text(key)]
+            sql: "SELECT version FROM sphere_sync_info WHERE did = ?",
+            parameters: [.text(sphereIdentity.description)]
         )
-        guard let version = rows.first?.col(0)?.toString() else {
-            throw DatabaseServiceError.notFound(
-                "No value found for key \(key)"
-            )
-        }
+        let version = rows.first?.col(0)?.toString()
         return version
     }
 
-    /// Read metadata from type-safe metadata key
-    func readMetadata(key: DatabaseMetaKeys) throws -> String {
-        try readMetadata(key: key.rawValue)
-    }
-
     /// Write database metadata at string key
-    func writeMetadatadata(key: String, value: String) throws {
+    func writeSphereSyncInfo(sphereIdentity: Did, version: String) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         try database.execute(
             sql: """
-            INSERT OR REPLACE INTO database_metadata (
-                key,
-                value
+            INSERT OR REPLACE INTO sphere_sync_info (
+                did,
+                version
             )
             VALUES (?, ?)
             """,
-            parameters: [.text(key), .text(value)]
+            parameters: [.text(sphereIdentity.description), .text(version)]
         )
-    }
-
-    /// Write database metadata at type-safe metadata key
-    func writeMetadatadata(key: DatabaseMetaKeys, value: String) throws {
-        try writeMetadatadata(key: key.rawValue, value: value)
     }
 
     /// Write entry syncronously
     func writeMemo(
-        _ address: MemoAddress,
+        link: Link,
         memo: Memo,
         size: Int? = nil
     ) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-
-        if address.isLocal() && size == nil {
+        if link.isLocal && size == nil {
             throw DatabaseServiceError.sizeMissingForLocal
         }
         try database.execute(
             sql: """
             INSERT INTO memo (
                 id,
+                did,
                 slug,
-                audience,
                 content_type,
                 created,
                 modified,
@@ -191,8 +183,8 @@ final class DatabaseService {
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
+                did=excluded.did,
                 slug=excluded.slug,
-                audience=excluded.audience,
                 content_type=excluded.content_type,
                 created=excluded.created,
                 modified=excluded.modified,
@@ -206,9 +198,9 @@ final class DatabaseService {
                 size=excluded.size
             """,
             parameters: [
-                .text(address.description),
-                .text(address.slug.description),
-                .text(address.toAudience().rawValue),
+                .text(link.id),
+                .text(link.did.description),
+                .text(link.slug.description),
                 .text(memo.contentType),
                 .date(memo.created),
                 .date(memo.modified),
@@ -225,7 +217,7 @@ final class DatabaseService {
     }
     
     /// Delete entry from database
-    func removeMemo(_ address: MemoAddress) throws {
+    func removeMemo(_ link: Link) throws {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -234,7 +226,7 @@ final class DatabaseService {
             DELETE FROM memo WHERE id = ?
             """,
             parameters: [
-                .text(address.description)
+                .text(link.id)
             ]
         )
     }
@@ -258,7 +250,7 @@ final class DatabaseService {
     }
     
     /// List recent entries
-    func listRecentMemos() throws -> [EntryStub] {
+    func listRecentMemos(owner: Did) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
 
@@ -266,14 +258,22 @@ final class DatabaseService {
         let results = try database.execute(
             sql: """
             SELECT id, modified, excerpt
-            FROM memo
+            FROM memo WHERE (did = ? OR did = ?)
             ORDER BY modified DESC
             LIMIT 1000
-            """
+            """,
+            parameters: [
+                .text(owner.description),
+                .text(Did.local.description)
+            ]
         )
         return results.compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: owner),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -294,8 +294,13 @@ final class DatabaseService {
         }
         return try database.execute(
             sql: """
-            SELECT slug, modified, size FROM memo WHERE audience = 'local'
-            """
+            SELECT slug, modified, size
+            FROM memo
+            WHERE did = ?
+            """,
+            parameters: [
+                .text(Did.local.description)
+            ]
         )
         .compactMap({ row in
             if
@@ -313,7 +318,9 @@ final class DatabaseService {
         })
     }
 
-    private func searchSuggestionsForZeroQuery() throws -> [Suggestion] {
+    private func searchSuggestionsForZeroQuery(
+        owner: Did
+    ) throws -> [Suggestion] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
@@ -327,7 +334,11 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: owner),
                 let title = row.col(1)?.toString()
             else {
                 return nil
@@ -365,6 +376,7 @@ final class DatabaseService {
     }
     
     private func searchSuggestionsForQuery(
+        owner: Did,
         query: String
     ) throws -> [Suggestion] {
         guard self.state == .ready else {
@@ -393,7 +405,11 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: owner),
                 let excerpt = row.col(1)?.toString()
             else {
                 return  nil
@@ -407,15 +423,21 @@ final class DatabaseService {
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchSuggestions(
+        owner: Did,
         query: String
     ) throws -> [Suggestion] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
         if query.isWhitespace {
-            return try searchSuggestionsForZeroQuery()
+            return try searchSuggestionsForZeroQuery(
+                owner: owner
+            )
         } else {
-            return try searchSuggestionsForQuery(query: query)
+            return try searchSuggestionsForQuery(
+                owner: owner,
+                query: query
+            )
         }
     }
     
@@ -430,20 +452,22 @@ final class DatabaseService {
     ///
     /// - Returns an array of RenameSuggestion
     static func collateRenameSuggestions(
-        current: MemoAddress,
-        query: MemoAddress,
-        results: [MemoAddress]
+        current: Slashlink,
+        query: Slashlink?,
+        results: [Slashlink]
     ) -> [RenameSuggestion] {
         var suggestions: OrderedDictionary<Slug, RenameSuggestion> = [:]
         // First append result for literal query
-        if query.slug != current.slug {
-            suggestions.updateValue(
-                .move(
-                    from: current,
-                    to: query
-                ),
-                forKey: query.slug
-            )
+        if let query = query {
+            if query.slug != current.slug {
+                suggestions.updateValue(
+                    .move(
+                        from: current,
+                        to: query
+                    ),
+                    forKey: query.slug
+                )
+            }
         }
 
         // Then append results from existing entries, potentially overwriting
@@ -466,47 +490,38 @@ final class DatabaseService {
     /// Given a query and a `current` slug, produce an array of suggestions
     /// for renaming the note.
     func searchRenameSuggestions(
+        owner: Did,
         query: String,
-        current: MemoAddress
+        current: Slashlink
     ) throws -> [RenameSuggestion] {
         guard self.state == .ready else {
             return []
         }
-        guard let slug = query.toSlug() else {
-            return []
-        }
-
+        
         // Create a suggestion for the literal query that has same
         // audience as current.
         let queryAddress = Func.run({
-            switch current {
-            case .public(let slashlink):
-                return MemoAddress.public(
-                    Slashlink(
-                        petname: slashlink.toPetname(),
-                        slug: slug
-                    )
-                )
-            case .local:
-                return MemoAddress.local(slug)
-            }
+            let audience = current.toAudience()
+            return Slug(formatting: query)?.toSlashlink(audience: audience)
         })
         
-        let results: [MemoAddress] = try database
+        let results: [Slashlink] = try database
             .execute(
                 sql: """
                 SELECT id
                 FROM memo_search
-                WHERE memo_search MATCH ?
+                WHERE memo_search MATCH ? AND (did = ? OR did = ?)
                 ORDER BY rank
                 LIMIT 25
                 """,
                 parameters: [
-                    .prefixQueryFTS5(query)
+                    .prefixQueryFTS5(query),
+                    .text(owner.description),
+                    .text(Did.local.description)
                 ]
             )
             .compactMap({ row in
-                row.col(0)?.toString()?.toMemoAddress()
+                row.col(0)?.toString()?.toSlashlink()
             })
         
         return Self.collateRenameSuggestions(
@@ -520,7 +535,7 @@ final class DatabaseService {
     /// A whitespace query string will fetch zero-query suggestions.
     func searchLinkSuggestions(
         query: String,
-        omitting invalidSuggestions: Set<MemoAddress> = Set(),
+        omitting invalidSuggestions: Set<Slashlink> = Set(),
         fallback: [LinkSuggestion] = []
     ) -> [LinkSuggestion] {
         guard self.state == .ready else {
@@ -536,7 +551,7 @@ final class DatabaseService {
         // Append literal
         if
             let literal = query.toSlug()?
-                .toLocalMemoAddress()
+                .toLocalSlashlink()
                 .toEntryLink(title: query)
         {
             suggestions[literal.address.slug] = .new(literal)
@@ -558,7 +573,7 @@ final class DatabaseService {
         }
         let entries: [EntryLink] = results.compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let title = row.col(1)?.toString()
             else {
                 return nil
@@ -613,24 +628,26 @@ final class DatabaseService {
         return query
     }
     
-    func readEntryBacklinks(slug: Slug) -> [EntryStub] {
+    func readEntryBacklinks(
+        owner: Did,
+        link: Link
+    ) throws -> [EntryStub] {
         guard self.state == .ready else {
-            return []
+            throw DatabaseServiceError.notReady
         }
-
         // Get backlinks.
         // Use content indexed in database, even though it might be stale.
         guard let results = try? database.execute(
             sql: """
             SELECT id, modified, excerpt
             FROM memo_search
-            WHERE slug != ? AND memo_search.description MATCH ?
+            WHERE id != ? AND memo_search.description MATCH ?
             ORDER BY rank
             LIMIT 200
             """,
             parameters: [
-                .text(slug.description),
-                .queryFTS5(slug.description)
+                .text(link.id),
+                .queryFTS5(link.slug.description)
             ]
         ) else {
             return []
@@ -638,14 +655,14 @@ final class DatabaseService {
         
         return results.compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toLink()?.toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
                 return nil
             }
             return EntryStub(
-                address: address,
+                address: address.relativizeIfNeeded(did: owner),
                 excerpt: excerpt,
                 modified: modified
             )
@@ -675,7 +692,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -706,7 +723,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -743,7 +760,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {
@@ -774,7 +791,7 @@ final class DatabaseService {
         )
         .compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let title = row.col(1)?.toString()
             else {
                 return nil
@@ -793,19 +810,14 @@ final class DatabaseService {
 extension Config {
     static let migrations = Migrations([
         SQLMigration(
-            version: Int.from(iso8601String: "2023-03-24T19:17:00")!,
+            version: Int.from(iso8601String: "2023-05-04T09:13:00")!,
             sql: """
             /*
-            Key-value metadata related to the database.
-            Note that database is not source of truth, and may be deleted
-            and rebuilt. Metadata stored in this table should be about the
-            database and expected to exist only for the lifetime of the
-            database. Anything that needs to be persisted more permanently
-            should be persisted via other mechanisms.
+            A table that tracks sphere->database sync info.
             */
-            CREATE TABLE database_metadata (
-                key TEXT PRIMARY KEY,
-                value TEXT NOT NULL
+            CREATE TABLE sphere_sync_info (
+                did TEXT PRIMARY KEY,
+                version TEXT NOT NULL
             );
             
             /* History of user search queries */
@@ -818,8 +830,8 @@ extension Config {
             /* Memo table contains the content of any plain-text memo */
             CREATE TABLE memo (
                 id TEXT PRIMARY KEY,
+                did TEXT NOT NULL,
                 slug TEXT NOT NULL,
-                audience TEXT NOT NULL,
                 content_type TEXT NOT NULL,
                 created TEXT NOT NULL,
                 modified TEXT NOT NULL,
@@ -841,8 +853,8 @@ extension Config {
             
             CREATE VIRTUAL TABLE memo_search USING fts5(
                 id,
+                did UNINDEXED,
                 slug,
-                audience UNINDEXED,
                 content_type UNINDEXED,
                 created UNINDEXED,
                 modified UNINDEXED,
@@ -877,8 +889,8 @@ extension Config {
                 INSERT INTO memo_search (
                     rowid,
                     id,
+                    did,
                     slug,
-                    audience,
                     content_type,
                     created,
                     modified,
@@ -894,8 +906,8 @@ extension Config {
                 VALUES (
                     new.rowid,
                     new.id,
+                    new.did,
                     new.slug,
-                    new.audience,
                     new.content_type,
                     new.created,
                     new.modified,
@@ -913,8 +925,8 @@ extension Config {
                 INSERT INTO memo_search (
                     rowid,
                     id,
+                    did,
                     slug,
-                    audience,
                     content_type,
                     created,
                     modified,
@@ -930,8 +942,8 @@ extension Config {
                 VALUES (
                     new.rowid,
                     new.id,
+                    new.did,
                     new.slug,
-                    new.audience,
                     new.content_type,
                     new.created,
                     new.modified,

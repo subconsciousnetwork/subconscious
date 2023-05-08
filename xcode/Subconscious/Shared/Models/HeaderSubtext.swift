@@ -10,13 +10,18 @@ import Foundation
 struct HeaderSubtext: Hashable, CustomStringConvertible {
     var headers = Headers()
     var body: String
-
+    
     var description: String {
         "\(headers.toHeaderString())\(body)"
     }
-
+    
     func toMarkup() -> String {
         self.description
+    }
+
+    /// Calculate size of text, including inlined headers
+    func size() -> Int? {
+        description.toData(encoding: .utf8)?.count
     }
 }
 

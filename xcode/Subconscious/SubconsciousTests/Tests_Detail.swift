@@ -18,7 +18,7 @@ class Tests_Detail: XCTestCase {
         let modified = Date.now
         
         let entry = MemoEntry(
-            address: Slug(formatting: "example")!.toPublicMemoAddress(),
+            address: Slashlink("/example")!,
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -77,7 +77,7 @@ class Tests_Detail: XCTestCase {
         )
         
         let entry = MemoEntry(
-            address: Slug(formatting: "example")!.toPublicMemoAddress(),
+            address: Slashlink("/example")!,
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -113,7 +113,7 @@ class Tests_Detail: XCTestCase {
         let state = MemoEditorDetailModel()
         
         let entry = MemoEntry(
-            address: Slug(formatting: "example")!.toPublicMemoAddress(),
+            address: Slashlink("/example")!,
             contents: Memo(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -146,7 +146,7 @@ class Tests_Detail: XCTestCase {
     
     func testAutosave() throws {
         let state = MemoEditorDetailModel(
-            address: Slug(formatting: "example")!.toPublicMemoAddress(),
+            address: Slashlink("/example")!,
             saveState: .unsaved
         )
         let update = MemoEditorDetailModel.update(
@@ -163,7 +163,7 @@ class Tests_Detail: XCTestCase {
     
     func testSaveAlreadySaved() throws {
         let state = MemoEditorDetailModel(
-            address: Slug(formatting: "example")!.toPublicMemoAddress(),
+            address: Slashlink("/example")!,
             saveState: .saved
         )
         let update = MemoEditorDetailModel.update(
@@ -180,7 +180,7 @@ class Tests_Detail: XCTestCase {
     
     func testEditorSnapshotModified() throws {
         let state = MemoEditorDetailModel(
-            address: Slug(formatting: "example")!.toPublicMemoAddress(),
+            address: Slashlink("/example")!,
             saveState: .saved
         )
         guard let entry = state.snapshotEntry() else {
@@ -195,8 +195,8 @@ class Tests_Detail: XCTestCase {
     }
     
     func testSucceedMoveEntry() throws {
-        let from = MemoAddress.public(Slashlink("/loomings")!)
-        let to = MemoAddress.public(Slashlink("/the-lee-tide")!)
+        let from = Slashlink("/loomings")!
+        let to = Slashlink("/the-lee-tide")!
 
         let state = MemoEditorDetailModel(
             address: from,
@@ -224,7 +224,7 @@ class Tests_Detail: XCTestCase {
     
     func testSucceedMoveEntryMismatch() throws {
         let state = MemoEditorDetailModel(
-            address: Slug(formatting: "loomings")!.toPublicMemoAddress(),
+            address: Slashlink("/loomings")!,
             headers: WellKnownHeaders(
                 contentType: ContentType.subtext.rawValue,
                 created: Date.now,
@@ -235,20 +235,20 @@ class Tests_Detail: XCTestCase {
         let update = MemoEditorDetailModel.update(
             state: state,
             action: .succeedMoveEntry(
-                from: MemoAddress.public(Slashlink("/the-white-whale")!),
-                to: MemoAddress.public(Slashlink("/the-lee-tide")!)
+                from: Slashlink("/the-white-whale")!,
+                to: Slashlink("/the-lee-tide")!
             ),
             environment: environment
         )
         XCTAssertEqual(
             update.state.address,
-            Slug(formatting: "loomings")!.toPublicMemoAddress(),
+            Slashlink("/loomings")!,
             "Does not change address, because addresses don't match"
         )
     }
     
     func testSucceedMergeEntry() throws {
-        let address = Slug(formatting: "loomings")!.toPublicMemoAddress()
+        let address = Slashlink("/loomings")!
         let state = MemoEditorDetailModel(
             address: address,
             headers: WellKnownHeaders(
@@ -259,7 +259,7 @@ class Tests_Detail: XCTestCase {
             )
         )
 
-        let parent = MemoAddress.public(Slashlink("/the-lee-tide")!)
+        let parent = Slashlink("/the-lee-tide")!
 
         let update = MemoEditorDetailModel.update(
             state: state,

@@ -20,9 +20,9 @@ struct MemoViewerDetailMetaSheetView: View {
             HStack {
                 VStack(alignment: .leading, spacing: AppTheme.unit2) {
                     HStack {
-                        if let slashlink = state.address?.toSlashlink() {
-                            SlashlinkBylineView(slashlink: slashlink).theme(
-                                petname: Color.primary,
+                        if let slashlink = state.address {
+                            SlashlinkDisplayView(slashlink: slashlink).theme(
+                                base: Color.primary,
                                 slug: Color.secondary
                             )
                         } else {
@@ -56,7 +56,7 @@ struct MemoViewerDetailMetaSheetView: View {
 }
 
 enum MemoViewerDetailMetaSheetAction: Hashable {
-    case setAddress(_ address: MemoAddress?)
+    case setAddress(_ address: Slashlink?)
     case requestDismiss
 }
 
@@ -69,7 +69,7 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         category: "MemoViewerDetailMetaSheet"
     )
     
-    var address: MemoAddress?
+    var address: Slashlink?
     var memoVersion: String?
     var noteVersion: String?
     var authorKey: String?
@@ -78,13 +78,7 @@ struct MemoViewerDetailMetaSheetModel: ModelProtocol {
         guard let address = address else {
             return nil
         }
-        
-        switch address {
-        case .local(let slug):
-            return slug.markup
-        case .public(let slashlink):
-            return slashlink.markup
-        }
+        return address.markup
     }
     
     static func update(
@@ -111,7 +105,7 @@ struct MemoViewerDetailMetaSheetView_Previews: PreviewProvider {
         .sheet(isPresented: .constant(true)) {
             MemoViewerDetailMetaSheetView(
                 state: MemoViewerDetailMetaSheetModel(
-                    address: MemoAddress("public::@bob/foo")!
+                    address: Slashlink("@bob/foo")!
                 ),
                 send: { action in }
             )

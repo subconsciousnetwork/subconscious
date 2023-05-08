@@ -20,7 +20,7 @@ class Tests_EntryLink: XCTestCase {
 
     func testSanitizesTitle() throws {
         let link = EntryLink(
-            address: MemoAddress.local(Slug(formatting: "rand-corporation")!),
+            address: Slashlink.local(Slug(formatting: "rand-corporation")!),
             title: "  RAND\nCorporation    "
         )
         XCTAssertEqual(
@@ -32,7 +32,7 @@ class Tests_EntryLink: XCTestCase {
 
     func testSanitizesLinkableTitle() throws {
         let link = EntryLink(
-            address: MemoAddress.local(Slug(formatting: "rand-corporation")!),
+            address: Slashlink.local(Slug(formatting: "rand-corporation")!),
             title: "  RAND\nCorporation    "
         )
         XCTAssertEqual(
@@ -54,7 +54,7 @@ class Tests_EntryLink: XCTestCase {
 
     func testSanitizesNonLinkableTitle() throws {
         let link = EntryLink(
-            address: MemoAddress.local(Slug(formatting: "something")!),
+            address: Slashlink.local(Slug(formatting: "something")!),
             title: "  Something else    "
         )
         XCTAssertEqual(
@@ -75,7 +75,7 @@ class Tests_EntryLink: XCTestCase {
         let stringDate = "2022-10-10 10:45:35"
 
         let link = EntryLink(
-            address: MemoAddress.local(Slug(formatting: stringDate)!),
+            address: Slashlink.local(Slug(formatting: stringDate)!),
             title: stringDate
         )
 
@@ -85,7 +85,7 @@ class Tests_EntryLink: XCTestCase {
 
     func testSlugOnlyEntryLinkToLinkableTitle() throws {
         guard
-            let address = Slug(formatting: "rand")?.toPublicMemoAddress()
+            let address = Slug(formatting: "rand")?.toSlashlink()
         else {
             XCTFail("Expected slug")
             return

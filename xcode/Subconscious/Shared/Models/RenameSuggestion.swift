@@ -14,9 +14,9 @@ enum RenameSuggestion:
     CustomStringConvertible
 {
     /// Move entry from one location to another, also updating title
-    case move(from: MemoAddress, to: MemoAddress)
+    case move(from: Slashlink, to: Slashlink)
     /// Merge child into parent
-    case merge(parent: MemoAddress, child: MemoAddress)
+    case merge(parent: Slashlink, child: Slashlink)
 
     var id: String {
         switch self {

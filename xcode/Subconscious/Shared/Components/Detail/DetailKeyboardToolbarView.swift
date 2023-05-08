@@ -89,9 +89,8 @@ struct KeyboardToolbarView_Previews: PreviewProvider {
             suggestions: [
                 .entry(
                     EntryLink(
-                        address: MemoAddress.local(
-                            Slug("an-organism-is-a-living-system")!
-                        ),
+                        address: Slug("an-organism-is-a-living-system")!
+                            .toLocalSlashlink(),
                         title: "An organism is a living system"
                     )
                 )

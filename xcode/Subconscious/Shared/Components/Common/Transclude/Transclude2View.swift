@@ -11,7 +11,7 @@ import SwiftUI
 /// We'll replace uses of Transclude2View with TranscludeView once we integrate
 /// pfps throughout the app.
 struct Transclude2View: View {
-    var address: MemoAddress
+    var address: Slashlink
     var excerpt: String
     var action: () -> Void
 
@@ -22,8 +22,8 @@ struct Transclude2View: View {
                 VStack(alignment: .leading, spacing: AppTheme.unit) {
                     Text(excerpt)
                         .lineLimit(5)
-                    SlashlinkBylineView(slashlink: address.toSlashlink())
-                        .theme(petname: Color.secondary)
+                    SlashlinkDisplayView(slashlink: address)
+                        .theme(base: .secondary, slug: .secondary)
                 }
             }
         )
@@ -35,18 +35,28 @@ struct Transclude2View_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             Transclude2View(
-                address: MemoAddress.public(Slashlink("/short")!),
+                address: Slashlink("/short")!,
                 excerpt: "Short.",
                 action: { }
             )
             Transclude2View(
-                address: MemoAddress.public(Slashlink("@gordon/loomings")!),
+                address: Slashlink("@gordon/loomings")!,
                 excerpt: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation.",
                 action: { }
             )
             Transclude2View(
-                address: MemoAddress.public(Slashlink("/loomings")!),
-                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely- having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world. It is a way I have of driving off the spleen and regulating the circulation.",
+                address: Slashlink("/loomings")!,
+                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely",
+                action: { }
+            )
+            Transclude2View(
+                address: Slashlink("did:subconscious:local/loomings")!,
+                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely",
+                action: { }
+            )
+            Transclude2View(
+                address: Slashlink("did:key:abc123/loomings")!,
+                excerpt: "Call me Ishmael. Some years ago- never mind how long precisely",
                 action: { }
             )
         }

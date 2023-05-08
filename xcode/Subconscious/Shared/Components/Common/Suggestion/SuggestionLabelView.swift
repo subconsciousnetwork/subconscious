@@ -42,9 +42,8 @@ struct SuggestionLabelView: View, Equatable {
                         title: Text(
                             verbatim: !title.isEmpty ? title : empty
                         ),
-                        subtitle: Text(
-                            verbatim: address.toSlashlink().description
-                        )
+                        subtitle: SlashlinkDisplayView(slashlink: address)
+                            .theme(base: .secondary, slug: .secondary)
                     )
                 },
                 icon: {
@@ -112,7 +111,7 @@ struct SuggestionLabelView_Previews: PreviewProvider {
             )
             SuggestionLabelView(
                 suggestion: .memo(
-                    address: MemoAddress.local(
+                    address: Slashlink.local(
                         Slug("the-lee-shore")!
                     ),
                     fallback: "The Lee Shore"
@@ -120,11 +119,33 @@ struct SuggestionLabelView_Previews: PreviewProvider {
             )
             SuggestionLabelView(
                 suggestion: .memo(
-                    address: MemoAddress.public(
-                        Slashlink(
-                            "@here/the-lee-shore"
-                        )!
-                    ),
+                    address: Slashlink(
+                        "/the-lee-shore"
+                    )!,
+                    fallback: "The Lee Shore"
+                )
+            )
+            SuggestionLabelView(
+                suggestion: .memo(
+                    address: Slashlink(
+                        "@bob/the-lee-shore"
+                    )!,
+                    fallback: "The Lee Shore"
+                )
+            )
+            SuggestionLabelView(
+                suggestion: .memo(
+                    address: Slashlink(
+                        "@carol.bob/the-lee-shore"
+                    )!,
+                    fallback: "The Lee Shore"
+                )
+            )
+            SuggestionLabelView(
+                suggestion: .memo(
+                    address: Slashlink(
+                        "did:key:abc123/the-lee-shore"
+                    )!,
                     fallback: "The Lee Shore"
                 )
             )
