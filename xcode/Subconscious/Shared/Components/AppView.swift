@@ -1513,9 +1513,16 @@ struct AppModel: ModelProtocol {
         url: URL
     ) -> Update<AppModel> {
         var model = state
-        model.gatewayURL = url.absoluteString
         model.gatewayProvisioningStatus = .succeeded
-        return Update(state: model)
+        
+        return update(
+            state: model,
+            actions: [
+                .submitGatewayURL(url.absoluteString),
+                .syncSphereWithGateway
+            ],
+            environment: environment
+        )
     }
     
     static func failProvisionGateway(
