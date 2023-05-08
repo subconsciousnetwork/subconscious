@@ -250,21 +250,26 @@ final class DatabaseService {
     }
     
     /// List recent entries
-    func listRecentMemos(owner: Did) throws -> [EntryStub] {
+    func listRecentMemos(owner: Did?) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
 
         }
+        
+        var dids = [Did.local.description]
+        if let owner = owner {
+            dids.append(owner.description)
+        }
+        
         let results = try database.execute(
             sql: """
             SELECT id, modified, excerpt
-            FROM memo WHERE (did = ? OR did = ?)
+            FROM memo WHERE did IN (SELECT value FROM json_each(?))
             ORDER BY modified DESC
             LIMIT 1000
             """,
             parameters: [
-                .text(owner.description),
-                .text(Did.local.description)
+                .json(dids, or: "[]")
             ]
         )
         return results.compactMap({ row in

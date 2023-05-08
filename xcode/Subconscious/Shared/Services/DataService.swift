@@ -454,7 +454,7 @@ actor DataService {
     }
     
     func listRecentMemos() async throws -> [EntryStub] {
-        let identity = try await noosphere.identity()
+        let identity = try? await noosphere.identity()
         let recent = try self.database.listRecentMemos(owner: identity)
         return recent.filter { entry in
             !entry.address.slug.isHidden

@@ -209,8 +209,14 @@ extension Slashlink {
     /// "Relativize" a slashlink relative to some base did.
     /// If did is the base did, returns a relative slashlink without a peer.
     /// Otherwise, returns slashlink unchanged.
+    ///
+    /// As a convenience, `did` may be nil. This is for cases where user does
+    /// not have a sphere. If `did` is nil, no relativization will occur.
+    ///
+    /// - Parameters:
+    ///   - did: the base to relativize to. May be nil for "no sphere".
     /// - Returns Slashlink
-    func relativizeIfNeeded(did base: Did) -> Slashlink {
+    func relativizeIfNeeded(did base: Did?) -> Slashlink {
         switch self.peer {
         case .did(let did) where did == base:
             return Slashlink(slug: self.slug)
