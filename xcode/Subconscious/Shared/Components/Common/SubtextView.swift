@@ -10,7 +10,7 @@ import SwiftUI
 struct SubtextView: View {
     private static var renderer = SubtextAttributedStringRenderer()
     var subtext: Subtext
-    var transcludes: Dictionary<Slashlink, EntryStub>
+    var transcludes: [Slashlink: EntryStub]
     var onViewTransclude: (Slashlink) -> Void
 
     var body: some View {
