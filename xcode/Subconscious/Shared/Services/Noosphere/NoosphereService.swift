@@ -407,8 +407,14 @@ actor NoosphereService:
         try await self.sphere().traverse(petname: petname)
     }
     
-    func sphere(did: Did) async throws -> Sphere {
-        try Sphere(noosphere: self.noosphere(), identity: did.did)
+    /// Intelligently open a sphere by traversing or, if this is our address, returning the default sphere.
+    func sphere(address: Slashlink) async throws -> Sphere {
+        switch (address.petname) {
+        case .none:
+            return try self.sphere()
+        case .some(let petname):
+            return try await self.traverse(petname: petname)
+        }
     }
     
     nonisolated func traversePublisher(

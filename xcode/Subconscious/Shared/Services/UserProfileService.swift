@@ -149,7 +149,7 @@ actor UserProfileService {
     }
     
     /// Load the underlying `_profile_` for a user and construct a `UserProfile` from it.
-    private func loadProfile(
+    private func loadProfileFromMemo(
         did: Did,
         petname: Petname,
         address: Slashlink
@@ -176,10 +176,9 @@ actor UserProfileService {
     }
     
     /// Takes a list of slugs and prepares an `EntryStub` for each, excluding hidden slugs.
-    private func loadEntries<Sphere: SphereProtocol>(
-        petname: Petname?,
-        slugs: [Slug],
-        sphere: Sphere
+    private func loadEntries(
+        address: Slashlink,
+        slugs: [Slug]
     ) async throws -> [EntryStub] {
         var entries: [EntryStub] = []
         for slug in slugs {
@@ -187,6 +186,7 @@ actor UserProfileService {
                 continue
             }
             
+            let sphere = try await self.noosphere.sphere(address: address)
             let slashlink = Slashlink(slug: slug)
             let memo = try await sphere.read(slashlink: slashlink)
             
@@ -197,7 +197,7 @@ actor UserProfileService {
             entries.append(
                 EntryStub(
                     address: Slashlink(
-                        petname: petname,
+                        petname: address.petname,
                         slug: slug
                     ),
                     excerpt: memo.excerpt(),
@@ -209,14 +209,24 @@ actor UserProfileService {
         return entries
     }
     
+    /// Produce a reverse-chronological list of the entries passed in
+    private func recentEntries(entries: [EntryStub]) -> [EntryStub] {
+        var recentEntries = entries
+        recentEntries.sort(by: { a, b in
+            a.modified > b.modified
+        })
+        
+        return recentEntries
+    }
+
     /// List all the users followed by the passed sphere.
     /// Each user will be decorated with whether the current app user is following them.
     func getFollowingList(
-        identity: Did,
         address: Slashlink
     ) async throws -> [StoryUser] {
         var following: [StoryUser] = []
-        let sphere = try await self.noosphere.sphere(did: identity)
+        let sphere = try await self.noosphere.sphere(address: address)
+        
         let localAddressBook = AddressBook(sphere: sphere)
         
         let entries = try await localAddressBook.listEntries(refetch: true)
@@ -236,7 +246,7 @@ actor UserProfileService {
                 ? Slashlink.ourProfile
                 : slashlink
             
-            let user = try await self.loadProfile(
+            let user = try await self.loadProfileFromMemo(
                 did: entry.did,
                 petname: address.petname ?? entry.petname,
                 address: address
@@ -278,99 +288,29 @@ actor UserProfileService {
         }
     }
     
-    /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
-    func requestOurProfile() async throws -> UserProfileContentResponse {
-        guard let nickname = AppDefaults.standard.nickname,
-              let nickname = Petname(nickname) else {
-                  throw UserProfileServiceError.missingPreferredPetname
-        }
-        
-        let address = Slashlink.ourProfile
-        let did = try await self.noosphere.identity()
+    func loadProfileData(
+        address: Slashlink,
+        fallbackPetname: Petname
+    ) async throws -> UserProfileContentResponse {
+        let sphere = try await self.noosphere.sphere(address: address)
+        let did = try await sphere.identity()
         
         let following = try await self.getFollowingList(
-            identity: did,
             address: address
         )
-        let notes = try await self.noosphere.list()
-        let entries = try await self.loadEntries(
-            petname: nil,
-            slugs: notes,
-            sphere: self.noosphere
-        )
-        let recentEntries = recentEntries(entries: entries)
-        
-        let profile = try await self.loadProfile(
-            did: did,
-            petname: nickname,
-            address: address
-        )
-        
-        return UserProfileContentResponse(
-            profile: profile,
-            statistics: UserProfileStatistics(
-                noteCount: entries.count,
-                backlinkCount: -1, // TODO: populate with real count
-                followingCount: following.count
-            ),
-            recentEntries: recentEntries,
-            following: following,
-            isFollowingUser: false
-        )
-    }
-    
-    nonisolated func requestOwnProfilePublisher(
-    ) -> AnyPublisher<UserProfileContentResponse, Error> {
-        Future.detached {
-            try await self.requestOurProfile()
-        }
-        .eraseToAnyPublisher()
-    }
-    
-    /// Produce a reverse-chronological list of the entries passed in
-    private func recentEntries(entries: [EntryStub]) -> [EntryStub] {
-        var recentEntries = entries
-        recentEntries.sort(by: { a, b in
-            a.modified > b.modified
-        })
-        
-        return recentEntries
-    }
-    
-    /// Retrieve all the content for the passed user's profile view, fetching their profile, notes and address book.
-    func requestUserProfile(
-        petname: Petname
-    ) async throws -> UserProfileContentResponse {
-        let address = Slashlink(petname: petname)
-        
-        let sphere = try await self.noosphere.traverse(petname: petname)
-        let identity = try await sphere.identity()
-        
-        // Detect your own profile and intercept
-        guard try await self.noosphere.identity() != identity else {
-            return try await requestOurProfile()
-        }
-        
-        let localAddressBook = AddressBook(sphere: sphere)
-        
-        let following: [StoryUser] = try await self.getFollowingList(
-            identity: identity,
-            address: address
-        )
-        
         let notes = try await sphere.list()
-        let isFollowing = await self.addressBook.isFollowingUser(did: identity)
-        let entries = try await self.loadEntries(
-            petname: petname,
-            slugs: notes,
-            sphere: sphere
-        )
+        let isFollowing = await self.addressBook.isFollowingUser(did: did)
         
+        let entries = try await self.loadEntries(
+            address: address,
+            slugs: notes
+        )
+        let topEntries = entries
         let recentEntries = recentEntries(entries: entries)
         
-        let profile = try await self.loadProfile(
-            did: identity,
-            petname: petname,
+        let profile = try await self.loadProfileFromMemo(
+            did: did,
+            petname: fallbackPetname,
             address: address
         )
         
@@ -385,6 +325,33 @@ actor UserProfileService {
             following: following,
             isFollowingUser: isFollowing
         )
+    }
+    
+    /// Retrieve all the content for the App User's profile view, fetching their profile, notes and address book.
+    func requestOurProfile() async throws -> UserProfileContentResponse {
+        guard let nickname = AppDefaults.standard.nickname,
+              let nickname = Petname(nickname) else {
+                  throw UserProfileServiceError.missingPreferredPetname
+        }
+        
+        let address = Slashlink.ourProfile
+        return try await loadProfileData(address: address, fallbackPetname: nickname)
+    }
+    
+    nonisolated func requestOwnProfilePublisher(
+    ) -> AnyPublisher<UserProfileContentResponse, Error> {
+        Future.detached {
+            try await self.requestOurProfile()
+        }
+        .eraseToAnyPublisher()
+    }
+    
+    /// Retrieve all the content for the passed user's profile view, fetching their profile, notes and address book.
+    func requestUserProfile(
+        petname: Petname
+    ) async throws -> UserProfileContentResponse {
+        let address = Slashlink(petname: petname)
+        return try await loadProfileData(address: address, fallbackPetname: petname)
     }
     
     nonisolated func requestUserProfilePublisher(
