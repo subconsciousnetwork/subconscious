@@ -19,12 +19,19 @@ struct ProvisionGatewayErrorResponse: Codable {
 }
 
 struct ProvisionGatewayResponse: Codable {
-    var gateway_url: String
-    var gateway_did: String
+    var gateway_id: String
+}
+
+struct ProvisionGatewayStatusResponse: Codable {
+    var status: String
+    var did: String?
+    var url: String?
 }
 
 enum GatewayProvisioningServiceError: Error {
     case failedToProvisionGateway(String)
+    case failedToCheckGatewayProvisioningStatus(String)
+    case gatewayIsNotReady
 }
 
 extension GatewayProvisioningServiceError: LocalizedError {
@@ -33,6 +40,16 @@ extension GatewayProvisioningServiceError: LocalizedError {
         case .failedToProvisionGateway(let contentType):
             return String(
                 localized: "Failed to provision gateway: \(contentType)",
+                comment: "GatewayProvisioningService error description"
+            )
+        case .failedToCheckGatewayProvisioningStatus(let contentType):
+            return String(
+                localized: "Failed to check gateway status: \(contentType)",
+                comment: "GatewayProvisioningService error description"
+            )
+        case .gatewayIsNotReady:
+            return String(
+                localized: "Gateway is not provisioned yet",
                 comment: "GatewayProvisioningService error description"
             )
         }
@@ -64,6 +81,7 @@ actor GatewayProvisioningService {
     ) async throws -> ProvisionGatewayResponse {
         
         var request = URLRequest(url: Self.provisionGatewayEndpoint)
+        Self.logger.log("POST to \(Self.provisionGatewayEndpoint)")
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
@@ -78,6 +96,10 @@ actor GatewayProvisioningService {
             throw GatewayProvisioningServiceError.failedToProvisionGateway(
                 "Could not read response"
             )
+        }
+        
+        if let s = String(data: data, encoding: .utf8) {
+            Self.logger.log("res: \(s)")
         }
         
         guard response.success else {
@@ -98,6 +120,81 @@ actor GatewayProvisioningService {
         }
         
         return try self.jsonDecoder.decode(ProvisionGatewayResponse.self, from: data)
+    }
+    
+    private func checkGatewayProvisioningStatus(
+        gatewayId: String
+    ) async throws -> ProvisionGatewayStatusResponse {
+        var request = URLRequest(url: Self.provisionGatewayEndpoint.appending(path: gatewayId))
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let response = response as? HTTPURLResponse else {
+            throw GatewayProvisioningServiceError.failedToCheckGatewayProvisioningStatus(
+                "Could not read response"
+            )
+        }
+        
+        guard response.success else {
+            throw GatewayProvisioningServiceError.failedToCheckGatewayProvisioningStatus(
+                "Unexpected status code \(response.statusCode)"
+            )
+        }
+        
+        return try self.jsonDecoder.decode(ProvisionGatewayStatusResponse.self, from: data)
+    }
+    
+    func waitForGatewayProvisioning(
+        gatewayId: String,
+        maxAttempts: Int,
+        attempts: Int = 0
+    ) async throws -> URL? {
+        do {
+            let res = try await self.checkGatewayProvisioningStatus(gatewayId: gatewayId)
+            
+            guard res.status == "Active" else {
+                throw GatewayProvisioningServiceError.gatewayIsNotReady
+            }
+            
+            guard let did = res.did,
+                  let did = Did(did),
+                  let url = res.url,
+                  let url = URL(string: url) else {
+                throw GatewayProvisioningServiceError.gatewayIsNotReady
+            }
+            
+            return url
+        } catch {
+            let attempts = attempts + 1
+            guard attempts >= maxAttempts else {
+                return nil
+            }
+            
+            Self.logger.log("Waiting... Attempts=\(attempts)")
+            
+            sleep(UInt32(attempts * 1000))
+            
+            return try await self.waitForGatewayProvisioning(
+                gatewayId: gatewayId,
+                maxAttempts: maxAttempts,
+                attempts: attempts
+            )
+        }
+    }
+    
+    nonisolated func waitForGatewayProvisioningPublisher(
+        gatewayId: String,
+        maxAttempts: Int
+    ) -> AnyPublisher<URL?, Error> {
+        Future.detached {
+            try await self.waitForGatewayProvisioning(
+                gatewayId: gatewayId,
+                maxAttempts: maxAttempts
+            )
+        }
+        .eraseToAnyPublisher()
     }
     
     nonisolated func provisionGatewayPublisher(

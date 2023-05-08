@@ -110,7 +110,7 @@ struct GatewayURLSettingsView: View {
                     
                     Button(
                         action: {
-                            app.send(.provisionGateway)
+                            app.send(.requestProvisionGateway)
                         },
                         label: {
                             GatewayProvisionLabel(

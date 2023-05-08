@@ -188,8 +188,9 @@ enum AppAction: CustomLogStringConvertible {
     case succeedFollowDefaultGeist
     case failFollowDefaultGeist(String)
     
-    case provisionGateway
-    case succeedProvisionGateway(String)
+    case requestProvisionGateway
+    case beginProvisionGateway(String)
+    case completeProvisionGateway(URL)
     case failProvisionGateway(String)
 
     /// Set settings sheet presented?
@@ -698,13 +699,19 @@ struct AppModel: ModelProtocol {
             logger.error("Failed to follow default geist: \(error)")
             return Update(state: state)
             
-        case .provisionGateway:
+        case .requestProvisionGateway:
             return provisionGateway(
                 state: state,
                 environment: environment
             )
-        case .succeedProvisionGateway(let url):
-            return succeedProvisionGateway(
+        case .beginProvisionGateway(let gatewayId):
+            return beginProvisionGateway(
+                state: state,
+                environment: environment,
+                gatewayId: gatewayId
+            )
+        case .completeProvisionGateway(let url):
+            return completeProvisionGateway(
                 state: state,
                 environment: environment,
                 url: url
@@ -963,7 +970,7 @@ struct AppModel: ModelProtocol {
                 .setSphereIdentity(receipt.identity),
                 .setRecoveryPhrase(receipt.mnemonic),
                 .followDefaultGeist,
-                .provisionGateway
+                .requestProvisionGateway
             ],
             environment: environment
         )
@@ -1459,7 +1466,7 @@ struct AppModel: ModelProtocol {
                 sphere: did
             )
             .map { res in
-                .succeedProvisionGateway(res.gateway_url)
+                .beginProvisionGateway(res.gateway_id)
             }
             .recover { error in
                 .failProvisionGateway(error.localizedDescription)
@@ -1472,13 +1479,41 @@ struct AppModel: ModelProtocol {
         return Update(state: model, fx: fx)
     }
     
-    static func succeedProvisionGateway(
+    static func beginProvisionGateway(
         state: AppModel,
         environment: AppEnvironment,
-        url: String
+        gatewayId: String
     ) -> Update<AppModel> {
         var model = state
-        model.gatewayURL = url
+        model.gatewayProvisioningStatus = .pending
+        
+        let fx: Fx<AppAction> = environment.gatewayProvisioningService
+            .waitForGatewayProvisioningPublisher(
+                gatewayId: gatewayId,
+                maxAttempts: 5
+            )
+            .map { url in
+                guard let url = url else {
+                    return AppAction.failProvisionGateway("Timed out waiting for URL")
+                }
+                
+                return AppAction.completeProvisionGateway(url)
+            }
+            .recover { err in
+                AppAction.failProvisionGateway(err.localizedDescription)
+            }
+            .eraseToAnyPublisher()
+        
+        return Update(state: model, fx: fx)
+    }
+    
+    static func completeProvisionGateway(
+        state: AppModel,
+        environment: AppEnvironment,
+        url: URL
+    ) -> Update<AppModel> {
+        var model = state
+        model.gatewayURL = url.absoluteString
         model.gatewayProvisioningStatus = .succeeded
         return Update(state: model)
     }
