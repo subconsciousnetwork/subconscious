@@ -23,7 +23,7 @@ actor TranscludeService {
         return
             Dictionary(
                 entries.map { entry in
-                    (entry.address.toSlashlink(), entry)
+                    (entry.address, entry)
                 },
                 uniquingKeysWith: { a, b in a}
             )

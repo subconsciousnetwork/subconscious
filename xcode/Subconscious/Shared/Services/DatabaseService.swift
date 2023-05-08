@@ -444,8 +444,8 @@ final class DatabaseService {
             .flatMap { s in
                 // TODO: this is almost certainly the wrong way to do this
                 [
-                    SQLite3Database.Value.text(s.toPublicMemoAddress().description),
-                    SQLite3Database.Value.text(s.toLocalMemoAddress().description)
+                    SQLite3Database.Value.text(s.description),
+                    SQLite3Database.Value.text(s.description)
                 ]
             }
 
@@ -464,7 +464,7 @@ final class DatabaseService {
 
         return results.compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toMemoAddress(),
+                let address = row.col(0)?.toString()?.toSlashlink(),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {

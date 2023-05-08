@@ -16,18 +16,28 @@ struct SubtextView: View {
     var body: some View {
         VStack(alignment: .leading) {
             ForEach(subtext.blocks, id: \.self) { block in
-                if let link = block
-                        .slashlinks
-                        .get(0)?
-                        .toSlashlink(),
-                   let entry = transcludes[link] {
-                    Transclude2View(
-                        address: entry.address,
-                        excerpt: entry.excerpt,
-                        action: { onViewTransclude(link) }
-                    )
-                } else {
-                    Text(Self.renderer.render(block.description))
+                Text(Self.renderer.render(block.description))
+                
+                let entries: [EntryStub] =
+                    block.slashlinks
+                    .compactMap { link in
+                        guard let slashlink = link.toSlashlink() else {
+                            return nil
+                        }
+                        
+                        return transcludes[slashlink]
+                    }
+                
+                if entries.count > 0 {
+                    ForEach(entries, id: \.self) { entry in
+                        Transclude2View(
+                            address: entry.address,
+                            excerpt: entry.excerpt,
+                            action: {
+                                onViewTransclude(entry.address)
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -59,7 +69,7 @@ struct SubtextView_Previews: PreviewProvider {
                     
                     Brief were my days among you, and briefer still the words I have spoken.
                     
-                    But should my voice fade in your ears, and my love vanish in your memory, then I will come again,
+                    But should my /voice fade in your ears, and my love vanish in your /memory, then I will come again,
                     
                     And with a richer heart and lips more yielding to the spirit will I speak.
                     
@@ -67,7 +77,9 @@ struct SubtextView_Previews: PreviewProvider {
                     """
                 ),
                 transcludes: [
-                    Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(address: Slashlink("/wanderer-your-footsteps-are-the-road")!.toPublicMemoAddress(), excerpt: "hello world", modified: Date.now)
+                    Slashlink("/wanderer-your-footsteps-are-the-road")!: EntryStub(address: Slashlink("/wanderer-your-footsteps-are-the-road")!, excerpt: "hello world", modified: Date.now),
+                    Slashlink("/voice")!: EntryStub(address: Slashlink("/voice")!, excerpt: "hello world", modified: Date.now),
+                    Slashlink("/memory")!: EntryStub(address: Slashlink("/memory")!, excerpt: "hello world", modified: Date.now)
                 ],
                 onViewTransclude: { _ in }
             )

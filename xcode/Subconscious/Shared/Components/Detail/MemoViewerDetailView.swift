@@ -465,7 +465,7 @@ struct MemoViewerDetailView_Previews: PreviewProvider {
             ),
             transcludes: [
                 Slashlink("/infinity-paths")!: EntryStub(
-                    address: Slashlink("/infinity-paths")!.toPublicMemoAddress(),
+                    address: Slashlink("/infinity-paths")!,
                     excerpt: "Say not, \"I have discovered the soul's destination,\" but rather, \"I have glimpsed the soul's journey, ever unfolding along the way.\"",
                     modified: Date.now
                 )
