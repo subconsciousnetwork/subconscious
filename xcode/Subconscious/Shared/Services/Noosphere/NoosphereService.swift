@@ -19,11 +19,14 @@ import os
 
 enum NoosphereServiceError: Error, LocalizedError {
     case defaultSphereNotFound
+    case cannotFindSphereForUnknownIdentity
     
     var errorDescription: String? {
         switch self {
         case .defaultSphereNotFound:
             return "Default sphere not found"
+        case .cannotFindSphereForUnknownIdentity:
+            return "Attempted to open a sphere using an unknown DID, this is unsupported."
         }
     }
 }
@@ -409,11 +412,17 @@ actor NoosphereService:
     
     /// Intelligently open a sphere by traversing or, if this is our address, returning the default sphere.
     func sphere(address: Slashlink) async throws -> Sphere {
-        switch (address.petname) {
+        let identity = try await self.identity()
+        
+        switch (address.peer) {
         case .none:
             return try self.sphere()
-        case .some(let petname):
+        case .some(.did(let did)) where did == identity:
+            return try self.sphere()
+        case .some(.petname(let petname)):
             return try await self.traverse(petname: petname)
+        case _:
+            throw NoosphereServiceError.cannotFindSphereForUnknownIdentity
         }
     }
     
