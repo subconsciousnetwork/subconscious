@@ -434,32 +434,30 @@ final class DatabaseService {
         return results.col(0)?.toInt()
     }
     
-    func listEntriesForSlashlinks(slashlinks: [Slashlink]) throws -> [EntryStub] {
+    func listEntries(for slashlinks: [Slashlink]) throws -> [EntryStub] {
+        return try slashlinks.compactMap({ slashlink in
+            return try readEntry(for: slashlink)
+        })
+    }
+    
+    func readEntry(for slashlink: Slashlink) throws -> EntryStub? {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
         }
-
-        let parameters =
-            slashlinks
-            .flatMap { s in
-                // TODO: this is almost certainly the wrong way to do this
-                [
-                    SQLite3Database.Value.text(s.description),
-                    SQLite3Database.Value.text(s.description)
-                ]
-            }
-
-        let parameterPlaceholders = (parameters.map { _ in "?" }).joined(separator: ", ")
 
         let results = try database.execute(
             sql: """
         SELECT id, modified, excerpt
         FROM memo
-        WHERE id IN (\(parameterPlaceholders))
+        WHERE id IN (?, ?)
         ORDER BY modified DESC
         LIMIT 1000
         """,
-            parameters: parameters
+            parameters: [
+                .text(
+                    slashlink.description // TODO: this might be wrong
+                ),
+            ]
         )
 
         return results.compactMap({ row in
@@ -476,6 +474,7 @@ final class DatabaseService {
                 modified: modified
             )
         })
+        .first
     }
     
     /// List recent entries

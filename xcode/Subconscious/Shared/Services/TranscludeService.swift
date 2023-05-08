@@ -18,7 +18,7 @@ actor TranscludeService {
     func fetchTranscludes(
         slashlinks: [Slashlink]
     ) async throws -> [Slashlink: EntryStub] {
-        let entries = try database.listEntriesForSlashlinks(slashlinks: slashlinks)
+        let entries = try database.listEntries(for: slashlinks)
         
         return
             Dictionary(
