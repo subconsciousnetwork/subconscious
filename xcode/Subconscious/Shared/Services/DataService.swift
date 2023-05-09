@@ -102,9 +102,18 @@ actor DataService {
         .eraseToAnyPublisher()
     }
     
-    func syncSphereWithDatabase() async throws -> String {
-        let identity = try await noosphere.identity()
-        let version = try await noosphere.version()
+    /// Index a sphere's content in our database.
+    ///
+    /// - If sphere has been indexed before, we retreive the last-indexed
+    ///   version, and use it to get changes since.
+    /// - If sphere has not been indexed, we get everything, and update
+    ///
+    /// This internal helper just exposes the basics
+    private func indexSphere<Spherelike: SphereProtocol>(
+        _ sphere: Spherelike
+    ) async throws -> String {
+        let identity = try await sphere.identity()
+        let version = try await sphere.version()
         let since = try? database.readSphereSyncInfo(sphereIdentity: identity)
         let changes = try await noosphere.changes(since: since)
         let savepoint = "sync"
@@ -141,52 +150,22 @@ actor DataService {
         return version
     }
     
-    nonisolated func syncSphereWithDatabasePublisher() -> AnyPublisher<String, Error> {
+    /// Index our sphere
+    func indexOurSphere() async throws -> String {
+        try await indexSphere(noosphere)
+    }
+    
+    nonisolated func indexOurSpherePublisher() -> AnyPublisher<String, Error> {
         Future.detached(priority: .utility) {
-            try await self.syncSphereWithDatabase()
+            try await self.indexOurSphere()
         }
         .eraseToAnyPublisher()
     }
 
-    /// Sync the contents of a specific sphere to the database
-    func syncSphereWithDatabase(petname: Petname) async throws -> String {
+    /// Index the contents of a sphere, referenced by petname
+    func indexSphere(petname: Petname) async throws -> String {
         let sphere = try await noosphere.traverse(petname: petname)
-        let identity = try await sphere.identity()
-        let version = try await sphere.version()
-        let since = try database.readSphereSyncInfo(sphereIdentity: identity)
-        let changes = try await sphere.changes(since: since)
-        let savepoint = "sync"
-        try database.savepoint(savepoint)
-        do {
-            for change in changes {
-                let link = Link(did: identity, slug: change)
-                let slashlink = Slashlink(slug: change)
-                // If memo does exist, write it to database
-                if let memo = try? await noosphere
-                    .read(slashlink: slashlink)
-                    .toMemo()
-                {
-                    try database.writeMemo(
-                        link: link,
-                        memo: memo
-                    )
-                }
-                // If memo does not exist, that means change was a remove
-                else {
-                    try database.removeMemo(link)
-                }
-            }
-            try database.writeSphereSyncInfo(
-                sphereIdentity: identity,
-                version: version
-            )
-            try database.release(savepoint)
-        } catch {
-            try database.rollback(savepoint)
-            throw error
-        }
-
-        return version
+        return try await indexSphere(sphere)
     }
 
     /// Sync file system with database.

@@ -1309,7 +1309,7 @@ struct AppModel: ModelProtocol {
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
-        let fx: Fx<AppAction> = environment.data.syncSphereWithDatabasePublisher().map({
+        let fx: Fx<AppAction> = environment.data.indexOurSpherePublisher().map({
             version in
             AppAction.succeedSyncSphereWithDatabase(version: version)
         }).catch({ error in
