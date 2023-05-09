@@ -250,21 +250,26 @@ final class DatabaseService {
     }
     
     /// List recent entries
-    func listRecentMemos(owner: Did) throws -> [EntryStub] {
+    func listRecentMemos(owner: Did?) throws -> [EntryStub] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
 
         }
+        
+        var dids = [Did.local.description]
+        if let owner = owner {
+            dids.append(owner.description)
+        }
+        
         let results = try database.execute(
             sql: """
             SELECT id, modified, excerpt
-            FROM memo WHERE (did = ? OR did = ?)
+            FROM memo WHERE did IN (SELECT value FROM json_each(?))
             ORDER BY modified DESC
             LIMIT 1000
             """,
             parameters: [
-                .text(owner.description),
-                .text(Did.local.description)
+                .json(dids, or: "[]")
             ]
         )
         return results.compactMap({ row in
@@ -319,7 +324,7 @@ final class DatabaseService {
     }
 
     private func searchSuggestionsForZeroQuery(
-        owner: Did
+        owner: Did?
     ) throws -> [Suggestion] {
         guard self.state == .ready else {
             throw DatabaseServiceError.notReady
@@ -376,7 +381,7 @@ final class DatabaseService {
     }
     
     private func searchSuggestionsForQuery(
-        owner: Did,
+        owner: Did?,
         query: String
     ) throws -> [Suggestion] {
         guard self.state == .ready else {
@@ -423,7 +428,7 @@ final class DatabaseService {
     /// Fetch search suggestions
     /// A whitespace query string will fetch zero-query suggestions.
     func searchSuggestions(
-        owner: Did,
+        owner: Did?,
         query: String
     ) throws -> [Suggestion] {
         guard self.state == .ready else {
@@ -490,7 +495,7 @@ final class DatabaseService {
     /// Given a query and a `current` slug, produce an array of suggestions
     /// for renaming the note.
     func searchRenameSuggestions(
-        owner: Did,
+        owner: Did?,
         query: String,
         current: Slashlink
     ) throws -> [RenameSuggestion] {
@@ -505,19 +510,23 @@ final class DatabaseService {
             return Slug(formatting: query)?.toSlashlink(audience: audience)
         })
         
+        var dids = [Did.local.description]
+        if let owner = owner {
+            dids.append(owner.description)
+        }
+
         let results: [Slashlink] = try database
             .execute(
                 sql: """
                 SELECT id
                 FROM memo_search
-                WHERE memo_search MATCH ? AND (did = ? OR did = ?)
+                WHERE memo_search MATCH ? AND did IN (SELECT value FROM json_each(?))
                 ORDER BY rank
                 LIMIT 25
                 """,
                 parameters: [
                     .prefixQueryFTS5(query),
-                    .text(owner.description),
-                    .text(Did.local.description)
+                    .json(dids, or: "[]")
                 ]
             )
             .compactMap({ row in
@@ -629,7 +638,7 @@ final class DatabaseService {
     }
     
     func readEntryBacklinks(
-        owner: Did,
+        owner: Did?,
         link: Link
     ) throws -> [EntryStub] {
         guard self.state == .ready else {
@@ -655,7 +664,11 @@ final class DatabaseService {
         
         return results.compactMap({ row in
             guard
-                let address = row.col(0)?.toString()?.toLink()?.toSlashlink(),
+                let address = row.col(0)?
+                    .toString()?
+                    .toLink()?
+                    .toSlashlink()?
+                    .relativizeIfNeeded(did: owner),
                 let modified = row.col(1)?.toDate(),
                 let excerpt = row.col(2)?.toString()
             else {

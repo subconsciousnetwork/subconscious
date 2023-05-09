@@ -178,7 +178,7 @@ final class Tests_DataService: XCTestCase {
                 noosphere: noosphere,
                 database: database
             )
-           
+            
             let data = DataService(
                 noosphere: noosphere,
                 database: database,
@@ -219,7 +219,7 @@ final class Tests_DataService: XCTestCase {
             noosphere: noosphere,
             database: database
         )
-
+        
         let data = DataService(
             noosphere: noosphere,
             database: database,
@@ -296,7 +296,7 @@ final class Tests_DataService: XCTestCase {
         )
         
         let addressA = Slashlink("/a")!
-
+        
         let detail = await environment.data.readMemoDetail(address: addressA)
         XCTAssertNil(detail)
     }
@@ -345,5 +345,104 @@ final class Tests_DataService: XCTestCase {
         
         XCTAssertEqual(list.count, 2)
         XCTAssertFalse(list.contains(where: { entry in entry.address.slug.isHidden }))
+    }
+    
+    func testListRecentMemosWhenNoosphereOff() async throws {
+        let tmp = try TestUtilities.createTmpDir()
+
+        let globalStorageURL = tmp.appending(path: "noosphere")
+        let sphereStorageURL = tmp.appending(path: "sphere")
+        
+        let noosphere = NoosphereService(
+            globalStorageURL: globalStorageURL,
+            sphereStorageURL: sphereStorageURL,
+            gatewayURL: URL(string: "http://unavailable-gateway.fakewebsite")
+        )
+        
+        let databaseURL = tmp.appending(
+            path: "database.sqlite",
+            directoryHint: .notDirectory
+        )
+
+        let db = SQLite3Database(
+            path: databaseURL.path(percentEncoded: false),
+            mode: .readwrite
+        )
+        
+        let database = DatabaseService(
+            database: db,
+            migrations: Config.migrations
+        )
+        _ = try database.migrate()
+        
+        let files = FileStore(
+            documentURL: tmp.appending(path: "docs")
+        )
+        
+        let local = HeaderSubtextMemoStore(store: files)
+        
+        let addressBook = AddressBookService(
+            noosphere: noosphere,
+            database: database
+        )
+        
+        let data = DataService(
+            noosphere: noosphere,
+            database: database,
+            local: local,
+            addressBook: addressBook
+        )
+                
+        try await data.writeMemo(
+            address: Slashlink(
+                peer: .did(Did.local),
+                slug: Slug("a")!
+            ),
+            memo: Memo(
+                contentType: ContentType.subtext.rawValue,
+                created: Date.now,
+                modified: Date.now,
+                fileExtension: ContentType.subtext.fileExtension,
+                additionalHeaders: [],
+                body: "Test content"
+            )
+        )
+        
+        try await data.writeMemo(
+            address: Slashlink(
+                peer: .did(Did.local),
+                slug: Slug("b")!
+            ),
+            memo: Memo(
+                contentType: ContentType.subtext.rawValue,
+                created: Date.now,
+                modified: Date.now,
+                fileExtension: ContentType.subtext.fileExtension,
+                additionalHeaders: [],
+                body: "Test content"
+            )
+        )
+        
+        let list = try await data.listRecentMemos()
+        
+        XCTAssertEqual(list.count, 2)
+        XCTAssertTrue(
+            list.contains(where: { entry in
+                let comparitor = Slashlink(
+                    peer: .did(Did.local),
+                    slug: Slug("a")!
+                )
+                return entry.address == comparitor
+            })
+        )
+        XCTAssertTrue(
+            list.contains(where: { entry in
+                let comparitor = Slashlink(
+                    peer: .did(Did.local),
+                    slug: Slug("b")!
+                )
+                return entry.address == comparitor
+            })
+        )
     }
 }
