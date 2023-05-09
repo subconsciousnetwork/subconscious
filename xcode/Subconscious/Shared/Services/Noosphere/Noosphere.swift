@@ -175,7 +175,7 @@ public actor Noosphere {
         defer {
             ns_error_free(error)
         }
-        guard let errorMessagePointer = ns_error_string(error) else {
+        guard let errorMessagePointer = ns_error_message_get(error) else {
             return nil
         }
         defer {
@@ -197,7 +197,7 @@ public actor Noosphere {
             defer {
                 ns_error_free(errorPointer)
             }
-            guard let errorMessagePointer = ns_error_string(
+            guard let errorMessagePointer = ns_error_message_get(
                 errorPointer
             ) else {
                 throw NoosphereError.foreignError("Unknown")
