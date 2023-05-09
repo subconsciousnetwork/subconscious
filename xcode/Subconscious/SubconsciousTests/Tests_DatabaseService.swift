@@ -25,64 +25,7 @@ class Tests_DatabaseService: XCTestCase {
         )
         return service
     }
-    
-    func populateDatabaseService(
-        service: DatabaseService
-    ) throws {
-        // Add some entries to DB
-        let now = Date.now
         
-        let foo = Memo(
-            contentType: "text/subtext",
-            created: now,
-            modified: now,
-            fileExtension: "subtext",
-            additionalHeaders: [],
-            body: "Foo"
-        )
-        try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("foo")!
-            ),
-            memo: foo,
-            size: foo.toHeaderSubtext().size()!
-        )
-        
-        let bar = Memo(
-            contentType: "text/subtext",
-            created: now,
-            modified: now,
-            fileExtension: "subtext",
-            additionalHeaders: [],
-            body: "Bar"
-        )
-        try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("bar")!
-            ),
-            memo: bar,
-            size: bar.toHeaderSubtext().size()!
-        )
-        
-        let baz = Memo(
-            contentType: "text/subtext",
-            created: now,
-            modified: now,
-            fileExtension: "subtext",
-            additionalHeaders: [],
-            body: "Baz"
-        )
-        try service.writeMemo(
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
-            memo: baz
-        )
-    }
-    
     func testCollateRenameSuggestionsMove() throws {
         let current = Slashlink("/ye-three-unsurrendered-spires-of-mine")!
         let query = Slashlink("/the-whale-the-whale")!
@@ -148,7 +91,59 @@ class Tests_DatabaseService: XCTestCase {
     func testListLocalMemoFingerprints() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
-        try populateDatabaseService(service: service)
+
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("foo")!
+            ),
+            memo: foo,
+            size: foo.toHeaderSubtext().size()!
+        )
+        
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("bar")!
+            ),
+            memo: bar,
+            size: bar.toHeaderSubtext().size()!
+        )
+        
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did("did:key:abc123")!,
+                slug: Slug("baz")!
+            ),
+            memo: baz
+        )
         
         let fingerprints = try service.listLocalMemoFingerprints()
         XCTAssertEqual(fingerprints.count, 2, "Only selects local memos")
@@ -163,7 +158,59 @@ class Tests_DatabaseService: XCTestCase {
     func testListRecentMemos() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
-        try populateDatabaseService(service: service)
+
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("foo")!
+            ),
+            memo: foo,
+            size: foo.toHeaderSubtext().size()!
+        )
+        
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("bar")!
+            ),
+            memo: bar,
+            size: bar.toHeaderSubtext().size()!
+        )
+        
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did("did:key:abc123")!,
+                slug: Slug("baz")!
+            ),
+            memo: baz
+        )
         
         let recent = try service.listRecentMemos(owner: Did("did:key:abc123")!)
         
@@ -203,7 +250,59 @@ class Tests_DatabaseService: XCTestCase {
     func testListRecentMemosWithoutOwner() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
-        try populateDatabaseService(service: service)
+
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("foo")!
+            ),
+            memo: foo,
+            size: foo.toHeaderSubtext().size()!
+        )
+        
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("bar")!
+            ),
+            memo: bar,
+            size: bar.toHeaderSubtext().size()!
+        )
+        
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did("did:key:abc123")!,
+                slug: Slug("baz")!
+            ),
+            memo: baz
+        )
         
         let recent = try service.listRecentMemos(owner: nil)
         
@@ -236,8 +335,60 @@ class Tests_DatabaseService: XCTestCase {
     func testSearchSuggestions() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
-        try populateDatabaseService(service: service)
 
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("foo")!
+            ),
+            memo: foo,
+            size: foo.toHeaderSubtext().size()!
+        )
+        
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("bar")!
+            ),
+            memo: bar,
+            size: bar.toHeaderSubtext().size()!
+        )
+        
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did("did:key:abc123")!,
+                slug: Slug("baz")!
+            ),
+            memo: baz
+        )
+        
         let results = try service.searchSuggestions(
             owner: Did("did:key:abc123")!,
             query: "baz"
@@ -262,8 +413,60 @@ class Tests_DatabaseService: XCTestCase {
     func testSearchSuggestionsWithoutOwner() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
-        try populateDatabaseService(service: service)
 
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("foo")!
+            ),
+            memo: foo,
+            size: foo.toHeaderSubtext().size()!
+        )
+        
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("bar")!
+            ),
+            memo: bar,
+            size: bar.toHeaderSubtext().size()!
+        )
+        
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did("did:key:abc123")!,
+                slug: Slug("baz")!
+            ),
+            memo: baz
+        )
+        
         let results = try service.searchSuggestions(
             owner: nil,
             query: "baz"
