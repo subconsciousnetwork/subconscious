@@ -25,7 +25,7 @@ class Tests_DatabaseService: XCTestCase {
         )
         return service
     }
-        
+    
     func testCollateRenameSuggestionsMove() throws {
         let current = Slashlink("/ye-three-unsurrendered-spires-of-mine")!
         let query = Slashlink("/the-whale-the-whale")!
@@ -91,7 +91,7 @@ class Tests_DatabaseService: XCTestCase {
     func testListLocalMemoFingerprints() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
-
+        
         // Add some entries to DB
         let now = Date.now
         
@@ -158,7 +158,7 @@ class Tests_DatabaseService: XCTestCase {
     func testListRecentMemos() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
-
+        
         // Add some entries to DB
         let now = Date.now
         
@@ -250,7 +250,7 @@ class Tests_DatabaseService: XCTestCase {
     func testListRecentMemosWithoutOwner() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
-
+        
         // Add some entries to DB
         let now = Date.now
         
@@ -335,7 +335,7 @@ class Tests_DatabaseService: XCTestCase {
     func testSearchSuggestions() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
-
+        
         // Add some entries to DB
         let now = Date.now
         
@@ -413,7 +413,7 @@ class Tests_DatabaseService: XCTestCase {
     func testSearchSuggestionsWithoutOwner() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
-
+        
         // Add some entries to DB
         let now = Date.now
         
@@ -494,7 +494,7 @@ class Tests_DatabaseService: XCTestCase {
     func testReadBacklinks() throws {
         let service = try createDatabaseService()
         _ = try service.migrate()
-
+        
         // Add some entries to DB
         let now = Date.now
         
@@ -573,11 +573,11 @@ class Tests_DatabaseService: XCTestCase {
                 slug: Slug("foo")!
             )
         )
-
+        
         let slashlinks = Set(
             stubs.map({ stub in stub.address })
         )
-
+        
         XCTAssertEqual(slashlinks.count, 2)
         XCTAssertTrue(
             slashlinks.contains(
@@ -595,6 +595,70 @@ class Tests_DatabaseService: XCTestCase {
                 )
             ),
             "Has link, appears in results, with slashlink correctly relativized"
+        )
+    }
+    
+    func testReadBacklinksWithoutOwner() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did("did:key:abc123")!,
+                slug: Slug("foo")!
+            ),
+            memo: foo
+        )
+        
+        // Contains link, should show up in results
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar /foo should appear in results"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did("did:key:abc123")!,
+                slug: Slug("bar")!
+            ),
+            memo: bar
+        )
+        
+        let stubs = try service.readEntryBacklinks(
+            owner: nil,
+            link: Link(
+                did: Did("did:key:abc123")!,
+                slug: Slug("foo")!
+            )
+        )
+
+        let slashlinks = Set(
+            stubs.map({ stub in stub.address })
+        )
+
+        XCTAssertEqual(slashlinks.count, 1)
+        XCTAssertTrue(
+            slashlinks.contains(
+                Slashlink(
+                    peer: Peer.did(Did("did:key:abc123")!),
+                    slug: Slug("bar")!
+                )
+            ),
+            "Has link, appears in results"
         )
     }
 }
