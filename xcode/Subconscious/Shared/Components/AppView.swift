@@ -700,7 +700,7 @@ struct AppModel: ModelProtocol {
             return Update(state: state)
             
         case .requestProvisionGateway:
-            return provisionGateway(
+            return requestProvisionGateway(
                 state: state,
                 environment: environment
             )
@@ -1449,7 +1449,7 @@ struct AppModel: ModelProtocol {
         return Update(state: state, fx: fx)
     }
     
-    static func provisionGateway(
+    static func requestProvisionGateway(
         state: AppModel,
         environment: AppEnvironment
     ) -> Update<AppModel> {
