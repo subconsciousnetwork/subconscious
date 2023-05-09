@@ -159,10 +159,14 @@ actor GatewayProvisioningService {
     
     func waitForGatewayProvisioning(
         gatewayId: String,
-        maxAttempts: Int,
-        attempts: Int = 0
+        maxAttempts: Int
     ) async throws -> URL? {
-        do {
+        return try await Func.retryWithBackoff(maxAttempts: maxAttempts) { attempts in
+            Self.logger.log("""
+            Check provisioning status, \
+            attempt \(attempts) of \(maxAttempts)
+            """)
+            
             let res = try await self.checkGatewayProvisioningStatus(gatewayId: gatewayId)
             
             guard res.status.lowercased() == "active" else {
@@ -178,24 +182,6 @@ actor GatewayProvisioningService {
             }
             
             return url
-        } catch {
-            let attempts = attempts + 1
-            guard attempts < maxAttempts else {
-                return nil
-            }
-            
-            Self.logger.log("""
-            Waiting to re-check provisioning status, \
-            attempt \(attempts) of \(maxAttempts)
-            """)
-            
-            sleep(UInt32(attempts))
-            
-            return try await self.waitForGatewayProvisioning(
-                gatewayId: gatewayId,
-                maxAttempts: maxAttempts,
-                attempts: attempts
-            )
         }
     }
     

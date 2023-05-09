@@ -46,4 +46,39 @@ struct Func {
     ) async throws -> T {
         try await perform()
     }
+    
+    /// Run the passed throwing async closure, retrying up to `maxAttempts` times.
+    /// Will return `nil` if all attempts are used.
+    /// Wait time is `2^attempts` seconds capped at `maxWaitSeconds`.
+    static func retryWithBackoff<T>(
+        maxAttempts: Int,
+        maxWaitSeconds: Int = 32,
+        attempts: Int = 0,
+        _ perform: (_ attempts: Int) async throws -> T
+    ) async throws -> T? {
+        do {
+            return try await perform(attempts)
+        } catch {
+            let attempts = attempts + 1
+            guard attempts < maxAttempts else {
+                return nil
+            }
+            
+            // capped exponential backoff
+            let seconds = UInt32(
+                min(
+                    Float(maxWaitSeconds),
+                    powf(2.0, Float(attempts))
+                )
+            )
+            sleep(seconds)
+            
+            return try await self.retryWithBackoff(
+                maxAttempts: maxAttempts,
+                maxWaitSeconds: maxWaitSeconds,
+                attempts: attempts,
+                perform
+            )
+        }
+    }
 }
