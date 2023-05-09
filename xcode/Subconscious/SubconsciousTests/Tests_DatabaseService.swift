@@ -9,6 +9,80 @@ import XCTest
 @testable import Subconscious
 
 class Tests_DatabaseService: XCTestCase {
+    func createDatabaseService() throws -> DatabaseService {
+        // Setup DB
+        let tmp = try TestUtilities.createTmpDir()
+        let databaseURL = tmp.appending(
+            path: "database.sqlite",
+            directoryHint: .notDirectory
+        )
+        let database = SQLite3Database(
+            path: databaseURL.path(percentEncoded: false)
+        )
+        let service = DatabaseService(
+            database: database,
+            migrations: Config.migrations
+        )
+        return service
+    }
+    
+    func populateDatabaseService(
+        service: DatabaseService
+    ) throws {
+        // Add some entries to DB
+        let now = Date.now
+        
+        let foo = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Foo"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("foo")!
+            ),
+            memo: foo,
+            size: foo.toHeaderSubtext().size()!
+        )
+        
+        let bar = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Bar"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did.local,
+                slug: Slug("bar")!
+            ),
+            memo: bar,
+            size: bar.toHeaderSubtext().size()!
+        )
+        
+        let baz = Memo(
+            contentType: "text/subtext",
+            created: now,
+            modified: now,
+            fileExtension: "subtext",
+            additionalHeaders: [],
+            body: "Baz"
+        )
+        try service.writeMemo(
+            link: Link(
+                did: Did("did:key:abc123")!,
+                slug: Slug("baz")!
+            ),
+            memo: baz
+        )
+    }
+
     func testCollateRenameSuggestionsMove() throws {
         let current = Slashlink("/ye-three-unsurrendered-spires-of-mine")!
         let query = Slashlink("/the-whale-the-whale")!
@@ -72,82 +146,90 @@ class Tests_DatabaseService: XCTestCase {
     }
     
     func testListLocalMemoFingerprints() throws {
-        // Setup DB
-        let tmp = try TestUtilities.createTmpDir()
-        let databaseURL = tmp.appending(
-            path: "database.sqlite",
-            directoryHint: .notDirectory
-        )
-        let database = SQLite3Database(
-            path: databaseURL.path(percentEncoded: false)
-        )
-        let service = DatabaseService(
-            database: database,
-            migrations: Config.migrations
-        )
+        let service = try createDatabaseService()
         _ = try service.migrate()
+        try populateDatabaseService(service: service)
         
-
-        // Add some entries to DB
-        let now = Date.now
-        
-        let foo = Memo(
-            contentType: "text/subtext",
-            created: now,
-            modified: now,
-            fileExtension: "subtext",
-            additionalHeaders: [],
-            body: "Foo"
-        )
-        try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("foo")!
-            ),
-            memo: foo,
-            size: foo.toHeaderSubtext().size()!
-        )
-
-        let bar = Memo(
-            contentType: "text/subtext",
-            created: now,
-            modified: now,
-            fileExtension: "subtext",
-            additionalHeaders: [],
-            body: "Bar"
-        )
-        try service.writeMemo(
-            link: Link(
-                did: Did.local,
-                slug: Slug("bar")!
-            ),
-            memo: bar,
-            size: bar.toHeaderSubtext().size()!
-        )
-        
-        let baz = Memo(
-            contentType: "text/subtext",
-            created: now,
-            modified: now,
-            fileExtension: "subtext",
-            additionalHeaders: [],
-            body: "Baz"
-        )
-        try service.writeMemo(
-            link: Link(
-                did: Did("did:key:abc123")!,
-                slug: Slug("baz")!
-            ),
-            memo: baz
-        )
-
         let fingerprints = try service.listLocalMemoFingerprints()
         XCTAssertEqual(fingerprints.count, 2, "Only selects local memos")
-
+        
         let slugs = Set(
             fingerprints.map({ fingerprint in fingerprint.slug })
         )
         XCTAssertTrue(slugs.contains(Slug("foo")!))
         XCTAssertTrue(slugs.contains(Slug("bar")!))
+    }
+    
+    func testListRecentMemos() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        try populateDatabaseService(service: service)
+        
+        let recent = try service.listRecentMemos(owner: Did("did:key:abc123")!)
+        
+        XCTAssertEqual(recent.count, 3)
+        
+        let slashlinks = Set(
+            recent.compactMap({ stub in
+                stub.address
+            })
+        )
+        XCTAssertEqual(slashlinks.count, 3)
+        XCTAssertTrue(
+            slashlinks.contains(
+                Slashlink(
+                    slug: Slug("baz")!
+                )
+            )
+        )
+        XCTAssertTrue(
+            slashlinks.contains(
+                Slashlink(
+                    peer: Peer.did(Did.local),
+                    slug: Slug("foo")!
+                )
+            )
+        )
+        XCTAssertTrue(
+            slashlinks.contains(
+                Slashlink(
+                    peer: Peer.did(Did.local),
+                    slug: Slug("bar")!
+                )
+            )
+        )
+    }
+    
+    func testListRecentMemosWithoutOwner() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        try populateDatabaseService(service: service)
+
+        let recent = try service.listRecentMemos(owner: nil)
+
+        XCTAssertEqual(recent.count, 2)
+
+        let slashlinks = Set(
+            recent.compactMap({ stub in
+                stub.address
+            })
+        )
+        XCTAssertEqual(slashlinks.count, 2)
+        XCTAssertTrue(
+            slashlinks.contains(
+                Slashlink(
+                    peer: Peer.did(Did.local),
+                    slug: Slug("foo")!
+                )
+            )
+        )
+        XCTAssertTrue(
+            slashlinks.contains(
+                Slashlink(
+                    peer: Peer.did(Did.local),
+                    slug: Slug("bar")!
+                )
+            )
+        )
     }
 }
