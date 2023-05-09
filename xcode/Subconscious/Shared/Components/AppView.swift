@@ -865,8 +865,6 @@ struct AppModel: ModelProtocol {
         environment: AppEnvironment,
         text: String
     ) -> Update<AppModel> {
-        /// First pass down setValue to form field,
-        /// then persist the nickname by reading the updated model.
         return update(
             state: state,
             actions: [

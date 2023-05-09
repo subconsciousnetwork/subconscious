@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// A type representing a valid petname (`@petname`)
+/// A type representing a valid invite code (`four words like this`)
 public struct InviteCode:
     Hashable,
     Equatable,
