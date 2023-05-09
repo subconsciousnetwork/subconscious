@@ -12,18 +12,35 @@ struct FirstRunDoneView: View {
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
+        let did = Did(app.state.sphereIdentity ?? "") ?? Config.default.subconsciousGeistDid
         NavigationStack {
-            VStack {
+            VStack(spacing: AppTheme.padding * 4) {
                 Spacer()
-                VStack(spacing: AppTheme.unit3) {
-                    StackedGlowingImage(
-                        image: Image("ns_logo"),
-                        width: AppTheme.onboarding.heroIconSize,
-                        height: AppTheme.onboarding.heroIconSize
-                    )
-                    Text("Welcome to the Noosphere!")
+                VStack(spacing: AppTheme.padding * 4) {
+                    Text("Your sphere connects you to the Noosphere where you can discover, explore and follow other spheres.")
                         .foregroundColor(.secondary)
+                    StackedGlowingImage(image: {
+                        AnyView(
+                            HStack(spacing: AppTheme.unit * 2) {
+                                GenerativeProfilePic(
+                                    did: did,
+                                    size: 70
+                                )
+                                Line()
+                                    .stroke(style: StrokeStyle(lineWidth: 3,  dash: [10, 3]))
+                                    .frame(height: 1)
+                                    .foregroundColor(.secondary.opacity(0.5))
+                                    .frame(width: 48)
+                                Image("ns_logo")
+                                    .resizable()
+                                    .frame(width: 100, height: 100)
+                            }
+                        )
+                    }, width: 128, height: 64)
                 }
+                Spacer()
+                Text("Ready?")
+                    .foregroundColor(.secondary)
                 Spacer()
                 Button(
                     action: {

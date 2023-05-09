@@ -16,7 +16,7 @@ struct FirstRunCreateSphereView: View {
             VStack {
                 Spacer()
                 VStack(alignment: .center, spacing: AppTheme.padding * 2) {
-                    Text("This is your secret recovery phrase. You can use it to recover your data if you lose access.")
+                    Text("This is your secret recovery phrase. You can use it to recover your sphere if you lose access.")
                         .foregroundColor(.secondary)
                     RecoveryPhraseView(
                         state: app.state.recoveryPhrase,

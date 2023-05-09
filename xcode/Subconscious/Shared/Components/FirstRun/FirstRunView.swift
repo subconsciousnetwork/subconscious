@@ -16,7 +16,7 @@ struct FirstRunView: View {
             VStack(spacing: AppTheme.padding * 2) {
                 Spacer()
                 StackedGlowingImage(
-                    image: Image("sub_logo"),
+                    image: { AnyView(Image("sub_logo").resizable()) },
                     width: AppTheme.onboarding.heroIconSize,
                     height: AppTheme.onboarding.heroIconSize
                 )

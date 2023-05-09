@@ -8,23 +8,49 @@
 import SwiftUI
 import ObservableStore
 
+struct Line: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: 0, y: 0))
+        path.addLine(to: CGPoint(x: rect.width, y: 0))
+        return path
+    }
+}
+
 struct FirstRunProfileView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
+        let did = Did(app.state.sphereIdentity ?? "") ?? Config.default.subconsciousGeistDid
         NavigationStack {
-            VStack {
+            VStack(spacing: AppTheme.padding) {
                 Spacer()
+                
+                StackedGlowingImage(image: {
+                    AnyView(
+                        GenerativeProfilePic(
+                            did: did,
+                            size: 180
+                        )
+                    )
+                }, width: 180, height: 180)
+                
+                
+                Text("This is your sphere, it holds your data.")
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text("What should we name it?")
+                        .foregroundColor(.secondary)
                 VStack(alignment: .leading, spacing: AppTheme.unit4) {
                     ValidatedTextField(
-                        placeholder: "nickname",
+                        placeholder: "my-nickname",
                         text: Binding(
                             get: { app.state.nicknameFormFieldValue },
                             send: app.send,
                             tag: AppAction.setNickname
                         ),
-                        caption: "Lowercase letters, numbers and dashes only.",
+                        caption: "This is how others will see you. Lowercase letters, numbers and dashes only.",
                         hasError: !app.state.isNicknameFormFieldValid
                     )
                     .textFieldStyle(.roundedBorder)

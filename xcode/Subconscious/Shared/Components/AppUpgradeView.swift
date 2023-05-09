@@ -63,7 +63,7 @@ struct AppUpgradeView: View {
                     size: spinnerSize
                 ) {
                     StackedGlowingImage(
-                        image: Image("sub_logo"),
+                        image: { AnyView(Image("sub_logo").resizable()) },
                         width: logoSize,
                         height: logoSize
                     )
