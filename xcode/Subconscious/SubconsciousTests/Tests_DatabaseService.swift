@@ -82,7 +82,7 @@ class Tests_DatabaseService: XCTestCase {
             memo: baz
         )
     }
-
+    
     func testCollateRenameSuggestionsMove() throws {
         let current = Slashlink("/ye-three-unsurrendered-spires-of-mine")!
         let query = Slashlink("/the-whale-the-whale")!
@@ -204,11 +204,11 @@ class Tests_DatabaseService: XCTestCase {
         let service = try createDatabaseService()
         _ = try service.migrate()
         try populateDatabaseService(service: service)
-
+        
         let recent = try service.listRecentMemos(owner: nil)
-
+        
         XCTAssertEqual(recent.count, 2)
-
+        
         let slashlinks = Set(
             recent.compactMap({ stub in
                 stub.address
@@ -230,6 +230,61 @@ class Tests_DatabaseService: XCTestCase {
                     slug: Slug("bar")!
                 )
             )
+        )
+    }
+    
+    func testSearchSuggestions() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        try populateDatabaseService(service: service)
+
+        let results = try service.searchSuggestions(
+            owner: Did("did:key:abc123")!,
+            query: "baz"
+        )
+        let slashlink = results
+            .compactMap({ result in
+                switch result {
+                case let .memo(address, _):
+                    return address
+                default:
+                    return nil
+                }
+            })
+            .first
+        XCTAssertEqual(
+            slashlink,
+            Slashlink("/baz")!,
+            "When owner is present, slashlink is relativized"
+        )
+    }
+    
+    func testSearchSuggestionsWithoutOwner() throws {
+        let service = try createDatabaseService()
+        _ = try service.migrate()
+        try populateDatabaseService(service: service)
+
+        let results = try service.searchSuggestions(
+            owner: nil,
+            query: "baz"
+        )
+        let slashlink = results
+            .compactMap({ result in
+                switch result {
+                case let .memo(address, _):
+                    return address
+                default:
+                    return nil
+                }
+            })
+            .first
+        XCTAssertEqual(
+            slashlink,
+            Slashlink(
+                peer: Peer.did(Did("did:key:abc123")!),
+                slug: Slug("baz")!
+            ),
+            "When owner is not present, slashlink is not relativized"
         )
     }
 }
