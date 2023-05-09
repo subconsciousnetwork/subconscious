@@ -168,6 +168,35 @@ actor DataService {
         return try await indexSphere(sphere)
     }
 
+    /// Index the contents of a sphere, referenced by petname
+    nonisolated func indexSpherePublisher(
+        petname: Petname
+    ) -> AnyPublisher<String, Error> {
+        Future.detached(priority: .utility) {
+            try await self.indexSphere(petname: petname)
+        }
+        .eraseToAnyPublisher()
+    }
+    
+    /// Purge sphere from database with the given petname.
+    ///
+    /// Gets did for petname, then purges everything belonging to did
+    /// from Database.
+    func purgeSphere(petname: Petname) async throws {
+        let did = try await noosphere.getPetname(petname: petname)
+        try database.purgeSphere(did: did)
+    }
+    
+    /// Purge sphere from database with the given petname.
+    nonisolated func purgeSpherePublisher(
+        petname: Petname
+    ) -> AnyPublisher<Void, Error> {
+        Future.detached(priority: .utility) {
+            try await self.purgeSphere(petname: petname)
+        }
+        .eraseToAnyPublisher()
+    }
+    
     /// Sync file system with database.
     /// Note file system is source-of-truth (leader).
     /// Syncing will never delete files on the file system.
