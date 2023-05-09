@@ -35,9 +35,9 @@ struct StackedGlowingImage: View {
                 .blendMode(colorScheme == .dark ? .hardLight : .darken)
             
             img
-                .blur(radius: 8)
+                .blur(radius: 4)
                 .opacity(0.5)
-                .blendMode(colorScheme == .dark ? .darken : .softLight)
+                .blendMode(colorScheme == .dark ? .hardLight : .darken)
             
             img
         }
