@@ -237,18 +237,16 @@ final class Tests_Slashlink: XCTestCase {
     func testRelativizeIfNeededNilDid() throws {
         let did = try Did("did:key:z6MkmCJAZansQ3p1Qwx6wrF4c64yt2rcM8wMrH5Rh7DGb2K7")
             .unwrap()
-        let did2 = try Did("did:key:abc123")
-            .unwrap()
         let slug = try Slug("foo")
             .unwrap()
         let slashlink = Slashlink(
-            peer: Peer.did(did2),
+            peer: Peer.did(did),
             slug: slug
         )
         let relative = slashlink.relativizeIfNeeded(did: nil)
         XCTAssertEqual(
             relative.peer,
-            Peer.did(did2),
+            Peer.did(did),
             "Does not relativize when did is nil"
         )
     }
