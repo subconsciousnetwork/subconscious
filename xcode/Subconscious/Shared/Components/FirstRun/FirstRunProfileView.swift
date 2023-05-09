@@ -48,7 +48,7 @@ struct FirstRunProfileView: View {
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
-                    .shadow(color: shadow, radius: 72)
+                    .shadow(color: shadow.opacity(0.5), radius: 72)
                 }
                 Spacer()
                 NavigationLink(

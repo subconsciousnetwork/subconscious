@@ -43,7 +43,7 @@ struct FirstRunCreateSphereView: View {
                             tag: AppRecoveryPhraseCursor.tag
                         )
                     )
-                    .shadow(color: shadow, radius: 72)
+                    .shadow(color: shadow.opacity(0.5), radius: 72)
                     
                     VStack(alignment: .leading, spacing: AppTheme.unit2) {
                         Text("It's for your eyes only. We don't store it. Write it down or add it to your password manager. Keep it secret, keep it safe.")
