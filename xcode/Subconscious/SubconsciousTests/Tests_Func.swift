@@ -39,4 +39,34 @@ final class Tests_Func: XCTestCase {
             "Propagates error"
         )
     }
+    
+    func testRetryMultipleTimes() async throws {
+        let result = try await Func.retryWithBackoff(
+            maxAttempts: 5,
+            maxWaitSeconds: 1
+        ) { attempt in
+            guard attempt > 3 else {
+                throw TestError.error
+            }
+            
+            return "hello world"
+        }
+        
+        XCTAssertEqual(result, "hello world")
+    }
+    
+    func testGiveUpAfterMaxRetries() async throws {
+        let result = try await Func.retryWithBackoff(
+            maxAttempts: 5,
+            maxWaitSeconds: 1
+        ) { attempt in
+            // Always fails
+            guard attempt > 10 else {
+                throw TestError.error
+            }
+            return 123
+        }
+        
+        XCTAssertNil(result)
+    }
 }
