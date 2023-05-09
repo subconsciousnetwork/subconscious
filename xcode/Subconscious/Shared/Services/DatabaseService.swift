@@ -150,6 +150,37 @@ final class DatabaseService {
             parameters: [.text(sphereIdentity.description), .text(version)]
         )
     }
+    
+    /// Purge all content of sphere with given DID from the database.
+    ///
+    /// This does not delete the content from file system or sphere,
+    /// only removes knowledge of it from the database.
+    func purgeSphere(did: Did) throws {
+        guard self.state == .ready else {
+            throw DatabaseServiceError.notReady
+        }
+        let savepoint = "purge"
+        try database.savepoint(savepoint)
+        do {
+            try database.execute(
+                sql: """
+                DELETE FROM memo WHERE did = ?
+                """,
+                parameters: [.text(did.description)]
+            )
+            // Remove sync info
+            try database.execute(
+                sql: """
+                DELETE FROM sphere_sync_info WHERE did = ?
+                """,
+                parameters: [.text(did.description)]
+            )
+            try database.release(savepoint)
+        } catch {
+            try database.rollback(savepoint)
+            throw error
+        }
+    }
 
     /// Write entry syncronously
     func writeMemo(
