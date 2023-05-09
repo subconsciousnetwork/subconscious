@@ -158,9 +158,9 @@ actor GatewayProvisioningService {
     }
     
     func waitForGatewayProvisioning(
-        gatewayId: String,
-        maxAttempts: Int
+        gatewayId: String
     ) async throws -> URL? {
+        let maxAttempts = 10 // 1+2+4+8+16+32+32+32+32+32 = 191 seconds
         return try await Func.retryWithBackoff(maxAttempts: maxAttempts) { attempts in
             Self.logger.log("""
             Check provisioning status, \
@@ -186,13 +186,11 @@ actor GatewayProvisioningService {
     }
     
     nonisolated func waitForGatewayProvisioningPublisher(
-        gatewayId: String,
-        maxAttempts: Int
+        gatewayId: String
     ) -> AnyPublisher<URL?, Error> {
         Future.detached {
             try await self.waitForGatewayProvisioning(
-                gatewayId: gatewayId,
-                maxAttempts: maxAttempts
+                gatewayId: gatewayId
             )
         }
         .eraseToAnyPublisher()
