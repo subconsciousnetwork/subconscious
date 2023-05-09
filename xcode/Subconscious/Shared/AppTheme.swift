@@ -124,7 +124,7 @@ extension Color {
     
     static let bgGradientLight = LinearGradient(
         gradient: Gradient(
-            colors: [.brandBgTan, .brandBgGrey, .brandBgBlush]
+            colors: [.brandBgTan, .white, .brandBgBlush]
         ),
         startPoint: .topLeading,
         endPoint: .bottomTrailing

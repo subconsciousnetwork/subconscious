@@ -25,7 +25,7 @@ struct FirstRunDoneView: View {
         case .dark:
             return .brandBgPurple
         default:
-            return .brandMarkPurple
+            return .brandMarkPink
         }
     }
 
@@ -34,11 +34,12 @@ struct FirstRunDoneView: View {
             VStack {
                 Spacer()
                 VStack(spacing: AppTheme.unit3) {
-                    Image("ns_logo")
-                        .resizable()
-                        .frame(width: 180, height: 180)
-                        .shadow(color: shadow, radius: 72)
-                    Text("Your sphere is ready!")
+                    StackedGlowingImage(
+                        image: Image("ns_logo"),
+                        width: 180,
+                        height: 180
+                    )
+                    Text("Welcome to the Noosphere!")
                         .foregroundColor(.secondary)
                 }
                 Spacer()

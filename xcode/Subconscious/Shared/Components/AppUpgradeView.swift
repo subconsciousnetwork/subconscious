@@ -71,12 +71,9 @@ struct AppUpgradeView: View {
                     isComplete: state.isComplete,
                     size: spinnerSize
                 ) {
-                    Image("sub_logo")
-                        .resizable()
-                        .frame(width: logoSize, height: logoSize)
+                    StackedGlowingImage(image: Image("sub_logo"), width: logoSize, height: logoSize   )
                         .animation(.none, value: colorScheme)
                 }
-                .shadow(color: shadow, radius: 72)
                 Spacer().frame(height: AppTheme.unit * 12)
                 if !state.isComplete {
                     Text(verbatim: state.progressMessage)

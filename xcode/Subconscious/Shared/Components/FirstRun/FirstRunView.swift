@@ -20,23 +20,16 @@ struct FirstRunView: View {
         }
     }
 
-    private var shadow: Color {
-        switch colorScheme {
-        case .dark:
-            return .brandBgPurple
-        default:
-            return .brandMarkPurple
-        }
-    }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: AppTheme.padding * 2) {
                 Spacer()
-                Image("sub_logo")
-                    .resizable()
-                    .frame(width: 180, height: 180)
-                    .shadow(color: shadow, radius: 72)
+                StackedGlowingImage(
+                    image: Image("sub_logo"),
+                    width: 180,
+                    height: 180
+                )
                 Spacer()
                 VStack(alignment: .leading, spacing: AppTheme.unit3) {
                     Text("Welcome to the Subconscious Beta.")
