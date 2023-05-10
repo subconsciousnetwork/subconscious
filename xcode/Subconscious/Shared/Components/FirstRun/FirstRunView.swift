@@ -17,8 +17,8 @@ struct FirstRunView: View {
                 Spacer()
                 StackedGlowingImage(
                     image: Image("sub_logo"),
-                    width: OnboardingTheme.heroIconSize,
-                    height: OnboardingTheme.heroIconSize
+                    width: AppTheme.onboarding.heroIconSize,
+                    height: AppTheme.onboarding.heroIconSize
                 )
                 Spacer()
                 VStack(alignment: .leading, spacing: AppTheme.unit3) {
@@ -84,7 +84,8 @@ struct FirstRunView: View {
             .navigationBarTitleDisplayMode(.inline)
             .padding()
             .background(
-                OnboardingTheme.appBackgroundGradient(colorScheme)
+                AppTheme.onboarding
+                    .appBackgroundGradient(colorScheme)
             )
         }
     }

@@ -37,6 +37,8 @@ extension AppTheme {
     
     static let brandMark = Image("sub_logo")
     
+    static let onboarding = OnboardingTheme()
+    
     static let defaultRowButtonInsets =
         EdgeInsets(
             top: AppTheme.unit2,

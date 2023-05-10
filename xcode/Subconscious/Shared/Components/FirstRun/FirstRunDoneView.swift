@@ -18,8 +18,8 @@ struct FirstRunDoneView: View {
                 VStack(spacing: AppTheme.unit3) {
                     StackedGlowingImage(
                         image: Image("ns_logo"),
-                        width: OnboardingTheme.heroIconSize,
-                        height: OnboardingTheme.heroIconSize
+                        width: AppTheme.onboarding.heroIconSize,
+                        height: AppTheme.onboarding.heroIconSize
                     )
                     Text("Welcome to the Noosphere!")
                         .foregroundColor(.secondary)
@@ -37,7 +37,8 @@ struct FirstRunDoneView: View {
             }
             .padding()
             .background(
-                OnboardingTheme.appBackgroundGradient(colorScheme)
+                AppTheme.onboarding
+                    .appBackgroundGradient(colorScheme)
             )
         }
     }

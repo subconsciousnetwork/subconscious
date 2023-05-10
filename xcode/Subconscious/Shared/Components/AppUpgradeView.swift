@@ -21,7 +21,7 @@ struct AppUpgradeView: View {
     }
 
     private let spinnerSize: CGFloat = 256
-    private let logoSize: CGFloat = OnboardingTheme.heroIconSize
+    private let logoSize: CGFloat = AppTheme.onboarding.heroIconSize
     // Duration of certain completion transition animations
     private let transitionDuration: CGFloat = 1
 
@@ -105,7 +105,8 @@ struct AppUpgradeView: View {
         .padding()
         .frame(maxWidth: .infinity)
         .background(
-            OnboardingTheme.appBackgroundGradient(colorScheme)
+            AppTheme.onboarding
+                .appBackgroundGradient(colorScheme)
         )
     }
 }

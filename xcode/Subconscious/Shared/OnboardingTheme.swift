@@ -8,10 +8,11 @@
 import Foundation
 import SwiftUI
 
-enum OnboardingTheme {}
-
-extension OnboardingTheme {
-    static let appBackgroundGradientLight = LinearGradient(
+struct OnboardingTheme {
+    let shadowSize: CGFloat = 72
+    let heroIconSize: CGFloat = 180
+    
+    let appBackgroundGradientLight = LinearGradient(
         gradient: Gradient(
             colors: [.brandBgTan, .white, .brandBgBlush]
         ),
@@ -19,7 +20,7 @@ extension OnboardingTheme {
         endPoint: .bottomTrailing
     )
     
-    static let appBackgroundGradientDark = LinearGradient(
+    let appBackgroundGradientDark = LinearGradient(
         gradient: Gradient(
             colors: [.brandBgBlack, .brandBgSlate, .brandBgPurple]
         ),
@@ -27,7 +28,7 @@ extension OnboardingTheme {
         endPoint: .bottomTrailing
     )
     
-    static func appBackgroundGradient(
+    func appBackgroundGradient(
         _ colorScheme: ColorScheme
     ) -> LinearGradient {
         switch (colorScheme) {
@@ -38,10 +39,7 @@ extension OnboardingTheme {
         }
     }
     
-    static let shadowSize: CGFloat = 72
-    static let heroIconSize: CGFloat = 180
-    
-    static func shadow(
+    func shadow(
         _ colorScheme: ColorScheme
     ) -> Color {
         switch (colorScheme) {

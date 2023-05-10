@@ -26,8 +26,9 @@ struct FirstRunCreateSphereView: View {
                         )
                     )
                     .shadow(
-                        color: OnboardingTheme.shadow(colorScheme).opacity(0.5),
-                        radius: OnboardingTheme.shadowSize
+                        color: AppTheme.onboarding
+                            .shadow(colorScheme).opacity(0.5),
+                        radius: AppTheme.onboarding.shadowSize
                     )
                     
                     VStack(alignment: .leading, spacing: AppTheme.unit2) {
@@ -48,7 +49,8 @@ struct FirstRunCreateSphereView: View {
             }
             .padding()
             .background(
-                OnboardingTheme.appBackgroundGradient(colorScheme)
+                AppTheme.onboarding
+                    .appBackgroundGradient(colorScheme)
             )
         }
         .navigationTitle("Recovery Phrase")

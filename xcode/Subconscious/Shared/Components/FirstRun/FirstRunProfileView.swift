@@ -31,8 +31,9 @@ struct FirstRunProfileView: View {
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .shadow(
-                        color: OnboardingTheme.shadow(colorScheme).opacity(0.5),
-                        radius: OnboardingTheme.shadowSize
+                        color: AppTheme.onboarding
+                            .shadow(colorScheme).opacity(0.5),
+                        radius: AppTheme.onboarding.shadowSize
                     )
                 }
                 Spacer()
@@ -54,7 +55,8 @@ struct FirstRunProfileView: View {
             .navigationTitle("Your Profile")
             .navigationBarTitleDisplayMode(.inline)
             .background(
-                OnboardingTheme.appBackgroundGradient(colorScheme)
+                AppTheme.onboarding
+                    .appBackgroundGradient(colorScheme)
             )
         }
     }
