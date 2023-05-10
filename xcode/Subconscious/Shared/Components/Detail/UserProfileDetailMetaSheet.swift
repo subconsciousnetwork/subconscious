@@ -61,6 +61,7 @@ struct UserProfileDetailMetaSheet: View {
                                 label: "Share Link",
                                 item: user.address.verbatimMarkup
                             )
+                            Divider()
                             MetaTableItemShareLinkView(label: "Share DID", item: user.did.did)
                             // Add concepts such as "Block" or "Mute" here later?
                         }
