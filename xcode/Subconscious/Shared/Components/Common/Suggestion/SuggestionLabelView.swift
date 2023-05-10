@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct SuggestionCreateHeading: View {
+    var label: String
     var fallback: String
 
     private var preview: String {
@@ -17,13 +18,13 @@ struct SuggestionCreateHeading: View {
     var body: some View {
         if !preview.isEmpty {
             HStack {
-                Text("New note")
+                Text(label)
                 Text(verbatim: #""\#(preview)""#)
                     .foregroundColor(.secondary)
             }
         } else {
             HStack {
-                Text("New note")
+                Text(label)
             }
         }
     }
@@ -31,7 +32,6 @@ struct SuggestionCreateHeading: View {
 
 struct SuggestionLabelView: View, Equatable {
     var suggestion: Suggestion
-    var empty = String(localized: "Empty note")
 
     var body: some View {
         switch suggestion {
@@ -40,7 +40,9 @@ struct SuggestionLabelView: View, Equatable {
                 title: {
                     TitleGroupView(
                         title: Text(
-                            verbatim: !title.isEmpty ? title : empty
+                            verbatim: !title.isEmpty ?
+                                title :
+                                String(localized: "Empty note")
                         ),
                         subtitle: SlashlinkDisplayView(slashlink: address)
                             .theme(base: .secondary, slug: .secondary)
@@ -54,8 +56,11 @@ struct SuggestionLabelView: View, Equatable {
             Label(
                 title: {
                     TitleGroupView(
-                        title: SuggestionCreateHeading(fallback: fallback),
-                        subtitle: Text("Local note")
+                        title: SuggestionCreateHeading(
+                            label: String(localized: "New draft"),
+                            fallback: fallback
+                        ),
+                        subtitle: Text("Private draft")
                     )
                 },
                 icon: {
@@ -66,7 +71,10 @@ struct SuggestionLabelView: View, Equatable {
             Label(
                 title: {
                     TitleGroupView(
-                        title: SuggestionCreateHeading(fallback: fallback),
+                        title: SuggestionCreateHeading(
+                            label: String(localized: "New note"),
+                            fallback: fallback
+                        ),
                         subtitle: Text("Public note")
                     )
                 },
