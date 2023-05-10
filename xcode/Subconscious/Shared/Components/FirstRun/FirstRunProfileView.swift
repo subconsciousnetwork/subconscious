@@ -12,24 +12,6 @@ struct FirstRunProfileView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
     
-    private var bgGradient: LinearGradient {
-        switch colorScheme {
-        case .dark:
-            return Color.bgGradientDark
-        default:
-            return Color.bgGradientLight
-        }
-    }
-
-    private var shadow: Color {
-        switch colorScheme {
-        case .dark:
-            return .brandBgPurple
-        default:
-            return .brandMarkPurple
-        }
-    }
-
     var body: some View {
         NavigationStack {
             VStack {
@@ -48,7 +30,10 @@ struct FirstRunProfileView: View {
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
-                    .shadow(color: shadow.opacity(0.5), radius: 72)
+                    .shadow(
+                        color: OnboardingTheme.shadow(colorScheme).opacity(0.5),
+                        radius: OnboardingTheme.shadowSize
+                    )
                 }
                 Spacer()
                 NavigationLink(
@@ -68,7 +53,9 @@ struct FirstRunProfileView: View {
             .padding()
             .navigationTitle("Your Profile")
             .navigationBarTitleDisplayMode(.inline)
-            .background(bgGradient)
+            .background(
+                OnboardingTheme.appBackgroundGradient(colorScheme)
+            )
         }
     }
 }

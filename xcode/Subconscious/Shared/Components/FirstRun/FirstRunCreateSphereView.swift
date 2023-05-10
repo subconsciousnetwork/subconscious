@@ -11,24 +11,6 @@ struct FirstRunCreateSphereView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
     
-    private var bgGradient: LinearGradient {
-        switch colorScheme {
-        case .dark:
-            return Color.bgGradientDark
-        default:
-            return Color.bgGradientLight
-        }
-    }
-
-    private var shadow: Color {
-        switch colorScheme {
-        case .dark:
-            return .brandBgPurple
-        default:
-            return .brandMarkPurple
-        }
-    }
-
     var body: some View {
         NavigationStack {
             VStack {
@@ -43,7 +25,10 @@ struct FirstRunCreateSphereView: View {
                             tag: AppRecoveryPhraseCursor.tag
                         )
                     )
-                    .shadow(color: shadow.opacity(0.5), radius: 72)
+                    .shadow(
+                        color: OnboardingTheme.shadow(colorScheme).opacity(0.5),
+                        radius: OnboardingTheme.shadowSize
+                    )
                     
                     VStack(alignment: .leading, spacing: AppTheme.unit2) {
                         Text("It's for your eyes only. We don't store it. Write it down or add it to your password manager. Keep it secret, keep it safe.")
@@ -62,7 +47,9 @@ struct FirstRunCreateSphereView: View {
                 .buttonStyle(PillButtonStyle())
             }
             .padding()
-            .background(bgGradient)
+            .background(
+                OnboardingTheme.appBackgroundGradient(colorScheme)
+            )
         }
         .navigationTitle("Recovery Phrase")
         .navigationBarTitleDisplayMode(.inline)

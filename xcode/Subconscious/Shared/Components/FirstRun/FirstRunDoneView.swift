@@ -10,24 +10,6 @@ import SwiftUI
 struct FirstRunDoneView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
-    
-    private var bgGradient: LinearGradient {
-        switch colorScheme {
-        case .dark:
-            return Color.bgGradientDark
-        default:
-            return Color.bgGradientLight
-        }
-    }
-
-    private var shadow: Color {
-        switch colorScheme {
-        case .dark:
-            return .brandBgPurple
-        default:
-            return .brandMarkPink
-        }
-    }
 
     var body: some View {
         NavigationStack {
@@ -36,8 +18,8 @@ struct FirstRunDoneView: View {
                 VStack(spacing: AppTheme.unit3) {
                     StackedGlowingImage(
                         image: Image("ns_logo"),
-                        width: 180,
-                        height: 180
+                        width: OnboardingTheme.heroIconSize,
+                        height: OnboardingTheme.heroIconSize
                     )
                     Text("Welcome to the Noosphere!")
                         .foregroundColor(.secondary)
@@ -54,7 +36,9 @@ struct FirstRunDoneView: View {
                 .disabled(app.state.sphereIdentity == nil)
             }
             .padding()
-            .background(bgGradient)
+            .background(
+                OnboardingTheme.appBackgroundGradient(colorScheme)
+            )
         }
     }
 }

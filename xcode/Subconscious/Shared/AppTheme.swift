@@ -122,21 +122,6 @@ extension Color {
     static let brandBgBlack = Color(red: 35/255, green: 31/255, blue: 32/255, opacity: 1) // #231F20
     static let brandBgSlate = Color(red: 57/255, green: 50/255, blue: 84/255, opacity: 1) // #393254
     
-    static let bgGradientLight = LinearGradient(
-        gradient: Gradient(
-            colors: [.brandBgTan, .white, .brandBgBlush]
-        ),
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-    static let bgGradientDark = LinearGradient(
-        gradient: Gradient(
-            colors: [.brandBgBlack, .brandBgSlate, .brandBgPurple]
-        ),
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
-    
     static func brandGradient(a: Color, b: Color, c: Color) -> [Gradient.Stop] {
         [
             Gradient.Stop(color: a, location: 0),

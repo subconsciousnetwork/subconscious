@@ -11,15 +11,6 @@ import ObservableStore
 
 /// Displays information to the user when app migration / rebuild happening.
 struct AppUpgradeView: View {
-    private var bgGradient: LinearGradient {
-        switch colorScheme {
-        case .dark:
-            return Color.bgGradientDark
-        default:
-            return Color.bgGradientLight
-        }
-    }
-
     private var shadow: Color {
         switch colorScheme {
         case .dark:
@@ -30,7 +21,7 @@ struct AppUpgradeView: View {
     }
 
     private let spinnerSize: CGFloat = 256
-    private let logoSize: CGFloat = 180
+    private let logoSize: CGFloat = OnboardingTheme.heroIconSize
     // Duration of certain completion transition animations
     private let transitionDuration: CGFloat = 1
 
@@ -113,7 +104,9 @@ struct AppUpgradeView: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(bgGradient)
+        .background(
+            OnboardingTheme.appBackgroundGradient(colorScheme)
+        )
     }
 }
 

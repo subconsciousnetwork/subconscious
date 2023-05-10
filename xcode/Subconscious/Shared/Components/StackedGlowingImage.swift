@@ -9,37 +9,36 @@ import Foundation
 import SwiftUI
 
 struct StackedGlowingImage: View {
+    @Environment(\.colorScheme) var colorScheme
+    
     var image: Image
     var width: CGFloat
     var height: CGFloat
     
-    @Environment(\.colorScheme) var colorScheme
-    private var shadow: Color {
-        switch colorScheme {
-        case .dark:
-            return .brandBgBlack
-        default:
-            return .brandMarkPurple
-        }
+    private var resizedImage: some View {
+        image
+            .resizable()
+            .frame(width: width, height: height)
+    }
+    
+    private var blendMode: BlendMode {
+        colorScheme == .dark
+            ? BlendMode.hardLight
+            : BlendMode.darken
     }
     
     var body: some View {
         ZStack {
-            let img = image
-                .resizable()
-                .frame(width: width, height: height)
-            
-            img
+            resizedImage
                 .blur(radius: 48)
-                .opacity(1)
-                .blendMode(colorScheme == .dark ? .hardLight : .darken)
+                .blendMode(blendMode)
             
-            img
+            resizedImage
                 .blur(radius: 4)
                 .opacity(0.5)
-                .blendMode(colorScheme == .dark ? .hardLight : .darken)
+                .blendMode(blendMode)
             
-            img
+            resizedImage
         }
     }
 }

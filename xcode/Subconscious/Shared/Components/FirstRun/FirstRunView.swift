@@ -10,16 +10,6 @@ import SwiftUI
 struct FirstRunView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
-    
-    private var bgGradient: LinearGradient {
-        switch colorScheme {
-        case .dark:
-            return Color.bgGradientDark
-        default:
-            return Color.bgGradientLight
-        }
-    }
-
 
     var body: some View {
         NavigationStack {
@@ -27,8 +17,8 @@ struct FirstRunView: View {
                 Spacer()
                 StackedGlowingImage(
                     image: Image("sub_logo"),
-                    width: 180,
-                    height: 180
+                    width: OnboardingTheme.heroIconSize,
+                    height: OnboardingTheme.heroIconSize
                 )
                 Spacer()
                 VStack(alignment: .leading, spacing: AppTheme.unit3) {
@@ -93,7 +83,9 @@ struct FirstRunView: View {
             .navigationTitle("Welcome to Subconscious")
             .navigationBarTitleDisplayMode(.inline)
             .padding()
-            .background(bgGradient)
+            .background(
+                OnboardingTheme.appBackgroundGradient(colorScheme)
+            )
         }
     }
 }
