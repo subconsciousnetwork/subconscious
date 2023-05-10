@@ -33,7 +33,9 @@ struct GatewayProvisionBadge: View {
                             .repeatForever(autoreverses: false)
                             .speed(0.4), value: spin)
                         .onAppear() {
-                            self.spin = true
+                            DispatchQueue.main.asyncAfter(deadline: .now()) {
+                                self.spin = true
+                            }
                         }
                 case .succeeded:
                     Image(systemName: "checkmark.icloud")
@@ -59,14 +61,8 @@ struct FirstRunDoneView: View {
             VStack(spacing: AppTheme.padding * 4) {
                 Spacer()
                 VStack(spacing: AppTheme.padding * 2) {
-                if status == .succeeded {
-                    Text("Connected!")
+                Text(status == .succeeded ? "Connected!" : "Connecting to Noosphere...")
                         .foregroundColor(.secondary)
-                        .foregroundColor(.secondary)
-                } else {
-                    Text("Connecting to Noosphere...")
-                        .foregroundColor(.secondary)
-                }
                     StackedGlowingImage(image: {
                         AnyView(
                             HStack(alignment: .center, spacing: AppTheme.unit2) {
@@ -93,13 +89,8 @@ struct FirstRunDoneView: View {
                         )
                     }, width: 128, height: 64)
                 }
-                if status == .succeeded {
-                    Text("Welcome to Subconscious.")
-                        .foregroundColor(.secondary)
-                } else {
-                    Text("You can start exploring the app offline.")
-                        .foregroundColor(.secondary)
-                }
+                Text(status == .succeeded ? "Welcome to Subconscious." : "You can start exploring the app offline.")
+                    .foregroundColor(.secondary)
                 Spacer()
                 Button(
                     action: {
