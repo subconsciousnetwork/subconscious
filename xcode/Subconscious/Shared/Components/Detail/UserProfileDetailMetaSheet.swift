@@ -61,6 +61,7 @@ struct UserProfileDetailMetaSheet: View {
                                 label: "Share Link",
                                 item: user.address.verbatimMarkup
                             )
+                            Divider()
                             MetaTableItemShareLinkView(label: "Share DID", item: user.did.did)
                             // Add concepts such as "Block" or "Mute" here later?
                         }
@@ -75,7 +76,7 @@ struct UserProfileDetailMetaSheet: View {
             }
         }
         .presentationDragIndicator(.hidden)
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
         .confirmationDialog(
             "Are you sure you want to unfollow \(profile.user?.nickname.verbatim ?? "unknown")",
             isPresented: Binding(
