@@ -23,7 +23,9 @@ struct AudienceMenuButtonView: View {
                         }
                     ) {
                         Label(
-                            title: { Text(Audience.local.description) },
+                            title: {
+                                Text(verbatim: Audience.local.userDescription)
+                            },
                             icon: { Image(audience: .local) }
                         )
                     }
@@ -33,7 +35,9 @@ struct AudienceMenuButtonView: View {
                         }
                     ) {
                         Label(
-                            title: { Text(Audience.public.description) },
+                            title: {
+                                Text(verbatim: Audience.public.userDescription)
+                            },
                             icon: { Image(audience: .public) }
                         )
                     }
@@ -42,7 +46,7 @@ struct AudienceMenuButtonView: View {
             label: {
                 MenuButtonView(
                     icon: Image(audience: audience),
-                    label: audience.description
+                    label: audience.userDescription
                 )
                 .frame(width: width)
             }
