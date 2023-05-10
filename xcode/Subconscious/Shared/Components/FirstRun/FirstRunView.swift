@@ -16,10 +16,11 @@ struct FirstRunView: View {
             VStack(spacing: AppTheme.padding * 2) {
                 Spacer()
                 StackedGlowingImage(
-                    image: { AnyView(Image("sub_logo").resizable()) },
                     width: AppTheme.onboarding.heroIconSize,
                     height: AppTheme.onboarding.heroIconSize
-                )
+                ) {
+                    Image("sub_logo").resizable()
+                }
                 Spacer()
                 VStack(alignment: .leading, spacing: AppTheme.unit3) {
                     Text("Subconscious is a place to garden thoughts and share them with others.")

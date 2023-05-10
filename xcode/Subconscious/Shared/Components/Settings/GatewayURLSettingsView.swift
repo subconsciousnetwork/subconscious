@@ -34,6 +34,7 @@ struct GatewayProvisionBadge: View {
                             .repeatForever(autoreverses: false)
                             .speed(0.4), value: spin)
                         .onAppear() {
+                            // Avoids unwanted animation of position after layout
                             DispatchQueue.main.asyncAfter(deadline: .now()) {
                                 self.spin = true
                             }

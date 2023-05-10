@@ -11,46 +11,65 @@ struct FirstRunDoneView: View {
     @ObservedObject var app: Store<AppModel>
     @Environment(\.colorScheme) var colorScheme
     
-    var status: ResourceStatus {
+    private var status: ResourceStatus {
         app.state.gatewayProvisioningStatus
+    }
+    
+    private var dottedLine: some View {
+        Line()
+            .stroke(style: StrokeStyle(
+                lineWidth: 3,
+                dash: [6, 3]
+            ))
+            .frame(height: 1)
+            .foregroundColor(.secondary.opacity(0.5))
+            .frame(width: 24)
+    }
+    
+    private var did: Did {
+        Did(app.state.sphereIdentity ?? "")
+            ?? Config.default.subconsciousGeistDid
     }
 
     var body: some View {
-        let did = Did(app.state.sphereIdentity ?? "") ?? Config.default.subconsciousGeistDid
         NavigationStack {
             VStack(spacing: AppTheme.padding * 4) {
                 Spacer()
                 VStack(spacing: AppTheme.padding * 2) {
-                Text(status == .succeeded ? "Connected!" : "Connecting to Noosphere...")
-                        .foregroundColor(.secondary)
-                    StackedGlowingImage(image: {
-                        AnyView(
-                            HStack(alignment: .center, spacing: AppTheme.unit2) {
-                                GenerativeProfilePic(
-                                    did: did,
-                                    size: 64
-                                )
-                                Line()
-                                    .stroke(style: StrokeStyle(lineWidth: 3,  dash: [6, 3]))
-                                    .frame(height: 1)
-                                    .foregroundColor(.secondary.opacity(0.5))
-                                    .frame(width: 24)
-                                GatewayProvisionBadge(status: status)
-                                Line()
-                                    .stroke(style: StrokeStyle(lineWidth: 3,  dash: [5, 3]))
-                                    .frame(height: 1)
-                                    .foregroundColor(.secondary.opacity(0.5))
-                                    .frame(width: 24)
-                                Image("ns_logo")
-                                    .resizable()
-                                    .frame(width: 80, height: 80)
-                                    .offset(x: -5)
-                            }
-                        )
-                    }, width: 128, height: 64)
-                }
-                Text(status == .succeeded ? "Welcome to Subconscious." : "You can start exploring the app offline.")
+                    Text(
+                        status == .succeeded
+                        ? "Connected!"
+                        : "Connecting to Noosphere..."
+                    )
                     .foregroundColor(.secondary)
+                    StackedGlowingImage(
+                        width: 128,
+                        height: 64
+                    ) {
+                        HStack(
+                            alignment: .center,
+                            spacing: AppTheme.unit2
+                        ) {
+                            GenerativeProfilePic(
+                                did: did,
+                                size: 64
+                            )
+                            dottedLine
+                            GatewayProvisionBadge(status: status)
+                            dottedLine
+                            Image("ns_logo")
+                                .resizable()
+                                .frame(width: 80, height: 80)
+                                .offset(x: -5) // account for padding in image
+                        }
+                    }
+                }
+                Text(
+                    status == .succeeded
+                    ? "Welcome to Subconscious."
+                    : "You can start exploring the app offline."
+                )
+                .foregroundColor(.secondary)
                 Spacer()
                 Button(
                     action: {
@@ -84,7 +103,9 @@ struct FirstRunDoneView_Previews: PreviewProvider {
     static var previews: some View {
         FirstRunDoneView(
             app: Store(
-                state: AppModel(gatewayProvisioningStatus: .pending),
+                state: AppModel(
+                    gatewayProvisioningStatus: .pending
+                ),
                 environment: AppEnvironment()
             )
         )

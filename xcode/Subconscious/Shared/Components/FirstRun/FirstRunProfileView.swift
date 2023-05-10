@@ -17,16 +17,15 @@ struct FirstRunProfileView: View {
         NavigationStack {
             VStack(spacing: AppTheme.padding) {
                 Spacer()
-                
-                StackedGlowingImage(image: {
-                    AnyView(
-                        GenerativeProfilePic(
-                            did: did,
-                            size: 180
-                        )
+                StackedGlowingImage(
+                    width: 180,
+                    height: 180
+                ) {
+                    GenerativeProfilePic(
+                        did: did,
+                        size: 180
                     )
-                }, width: 180, height: 180)
-                
+                }
                 
                 Text("This is your sphere. It stores your notes.")
                     .foregroundColor(.secondary)
