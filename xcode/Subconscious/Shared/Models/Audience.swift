@@ -9,21 +9,35 @@ import Foundation
 
 /// Model enumerating the possible audience/scopes for a piece of content.
 /// Right now we only have two: local-only draft or fully public
-enum Audience: String, Codable {
+enum Audience: String, Codable, CustomStringConvertible {
     /// A local-only draft
     case local = "local"
     /// Public sphere content
     case `public` = "public"
-}
-
-extension Audience: CustomStringConvertible {
-    var description: String {
+    
+    /// The user-facing description of this value.
+    /// For users, we index on the value proposition, not the implementation
+    /// detail of where the note is stored.
+    ///
+    /// - `.local` is draft
+    /// - `.public` is public
+    var userDescription: String {
         switch self {
         case .local:
-            return "Local"
+            return String(localized: "Draft")
         case .public:
-            return "Everyone"
+            return String(localized: "Public")
         }
+    }
+}
+
+extension Audience: LosslessStringConvertible {
+    var description: String {
+        self.rawValue
+    }
+    
+    init?(_ description: String) {
+        self.init(rawValue: description)
     }
 }
 
