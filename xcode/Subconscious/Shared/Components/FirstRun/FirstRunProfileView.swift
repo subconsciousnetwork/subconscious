@@ -63,9 +63,6 @@ struct FirstRunProfileView: View {
                     }
                 )
                 .buttonStyle(PillButtonStyle())
-                .simultaneousGesture(TapGesture().onEnded {
-                    app.send(.createSphere)
-                })
                 .disabled(!app.state.isNicknameFormFieldValid)
             }
             .padding()

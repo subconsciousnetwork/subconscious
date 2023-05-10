@@ -57,6 +57,9 @@ struct FirstRunView: View {
                 )
                 .buttonStyle(PillButtonStyle())
                 .disabled(!app.state.inviteCodeFormField.isValid)
+                .simultaneousGesture(TapGesture().onEnded {
+                    app.send(.createSphere)
+                })
                     
                 // MARK: Use Offline
                 VStack(spacing: AppTheme.unit) {
@@ -76,6 +79,9 @@ struct FirstRunView: View {
                                 .font(.caption)
                         }
                     )
+                    .simultaneousGesture(TapGesture().onEnded {
+                        app.send(.createSphere)
+                    })
                 }
             }
             .navigationTitle("Welcome to Subconscious")
